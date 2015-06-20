@@ -15,6 +15,8 @@
 		45E978591B34CFC900E11814 /* libglfw3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978581B34CFC900E11814 /* libglfw3.a */; };
 		45E9785F1B34D1C600E11814 /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9785D1B34D1C600E11814 /* App.cpp */; };
 		45E978651B34E2BE00E11814 /* Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978631B34E2BE00E11814 /* Window.cpp */; };
+		45E9786C1B35939300E11814 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9786A1B35939300E11814 /* Renderer.cpp */; };
+		45E9786F1B3593E200E11814 /* RenderObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9786D1B3593E200E11814 /* RenderObject.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -42,6 +44,13 @@
 		45E978631B34E2BE00E11814 /* Window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Window.cpp; path = src/Window.cpp; sourceTree = "<group>"; };
 		45E978641B34E2BE00E11814 /* Window.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Window.h; path = src/Window.h; sourceTree = "<group>"; };
 		45E978681B34FAC000E11814 /* Vec2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Vec2.h; path = src/Vec2.h; sourceTree = "<group>"; };
+		45E978691B358E7700E11814 /* Vec3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Vec3.h; path = src/Vec3.h; sourceTree = "<group>"; };
+		45E9786A1B35939300E11814 /* Renderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Renderer.cpp; path = src/Renderer.cpp; sourceTree = "<group>"; };
+		45E9786B1B35939300E11814 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Renderer.h; path = src/Renderer.h; sourceTree = "<group>"; };
+		45E9786D1B3593E200E11814 /* RenderObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderObject.cpp; path = src/RenderObject.cpp; sourceTree = "<group>"; };
+		45E9786E1B3593E200E11814 /* RenderObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderObject.h; path = src/RenderObject.h; sourceTree = "<group>"; };
+		45E978701B35A69B00E11814 /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Buffer.h; path = src/Buffer.h; sourceTree = "<group>"; };
+		45E978711B35C18300E11814 /* Shader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Shader.h; path = src/Shader.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,12 +93,19 @@
 		45E978451B34CE7500E11814 /* GraphicsToolkit */ = {
 			isa = PBXGroup;
 			children = (
-				45E978681B34FAC000E11814 /* Vec2.h */,
 				45E9784E1B34CF0600E11814 /* main.cpp */,
+				45E978681B34FAC000E11814 /* Vec2.h */,
+				45E978691B358E7700E11814 /* Vec3.h */,
 				45E9785D1B34D1C600E11814 /* App.cpp */,
 				45E9785E1B34D1C600E11814 /* App.h */,
 				45E978631B34E2BE00E11814 /* Window.cpp */,
 				45E978641B34E2BE00E11814 /* Window.h */,
+				45E9786A1B35939300E11814 /* Renderer.cpp */,
+				45E9786B1B35939300E11814 /* Renderer.h */,
+				45E9786D1B3593E200E11814 /* RenderObject.cpp */,
+				45E9786E1B3593E200E11814 /* RenderObject.h */,
+				45E978701B35A69B00E11814 /* Buffer.h */,
+				45E978711B35C18300E11814 /* Shader.h */,
 			);
 			path = GraphicsToolkit;
 			sourceTree = "<group>";
@@ -150,6 +166,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45E9786C1B35939300E11814 /* Renderer.cpp in Sources */,
+				45E9786F1B3593E200E11814 /* RenderObject.cpp in Sources */,
 				45E9784F1B34CF0600E11814 /* main.cpp in Sources */,
 				45E978651B34E2BE00E11814 /* Window.cpp in Sources */,
 				45E9785F1B34D1C600E11814 /* App.cpp in Sources */,

@@ -7,7 +7,7 @@ struct GLFWwindow;
 class Window
 {
 private:
-	GLFWwindow* mainWindow = nullptr;
+	GLFWwindow* window = nullptr;
 	
 public:
 	Window();
@@ -16,7 +16,7 @@ public:
 	bool Initialize();
 	bool ShouldClose();
 	
-	Vec2i GetFrameBufferSize();
+	void Swap();
 	
-	void TestDraw();
+	Vec2i GetFrameBufferSize();
 };
