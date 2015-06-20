@@ -13,6 +13,8 @@
 		45E978551B34CFB700E11814 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978541B34CFB700E11814 /* OpenGL.framework */; };
 		45E978571B34CFC100E11814 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978561B34CFC100E11814 /* Cocoa.framework */; };
 		45E978591B34CFC900E11814 /* libglfw3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978581B34CFC900E11814 /* libglfw3.a */; };
+		45E9785F1B34D1C600E11814 /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9785D1B34D1C600E11814 /* App.cpp */; };
+		45E978651B34E2BE00E11814 /* Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978631B34E2BE00E11814 /* Window.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -35,6 +37,11 @@
 		45E978541B34CFB700E11814 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		45E978561B34CFC100E11814 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		45E978581B34CFC900E11814 /* libglfw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libglfw3.a; path = GraphicsToolkit/lib/glfw/libglfw3.a; sourceTree = "<group>"; };
+		45E9785D1B34D1C600E11814 /* App.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = App.cpp; path = src/App.cpp; sourceTree = "<group>"; };
+		45E9785E1B34D1C600E11814 /* App.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = App.h; path = src/App.h; sourceTree = "<group>"; };
+		45E978631B34E2BE00E11814 /* Window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Window.cpp; path = src/Window.cpp; sourceTree = "<group>"; };
+		45E978641B34E2BE00E11814 /* Window.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Window.h; path = src/Window.h; sourceTree = "<group>"; };
+		45E978681B34FAC000E11814 /* Vec2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Vec2.h; path = src/Vec2.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,7 +84,12 @@
 		45E978451B34CE7500E11814 /* GraphicsToolkit */ = {
 			isa = PBXGroup;
 			children = (
+				45E978681B34FAC000E11814 /* Vec2.h */,
 				45E9784E1B34CF0600E11814 /* main.cpp */,
+				45E9785D1B34D1C600E11814 /* App.cpp */,
+				45E9785E1B34D1C600E11814 /* App.h */,
+				45E978631B34E2BE00E11814 /* Window.cpp */,
+				45E978641B34E2BE00E11814 /* Window.h */,
 			);
 			path = GraphicsToolkit;
 			sourceTree = "<group>";
@@ -139,6 +151,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				45E9784F1B34CF0600E11814 /* main.cpp in Sources */,
+				45E978651B34E2BE00E11814 /* Window.cpp in Sources */,
+				45E9785F1B34D1C600E11814 /* App.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
