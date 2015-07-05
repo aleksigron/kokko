@@ -19,6 +19,7 @@
 		45E9786F1B3593E200E11814 /* RenderObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9786D1B3593E200E11814 /* RenderObject.cpp */; };
 		45E978791B3706B800E11814 /* ShaderProgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978771B3706B800E11814 /* ShaderProgram.cpp */; };
 		45E978831B370D7200E11814 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978811B370D7200E11814 /* Camera.cpp */; };
+		45EB3E901B49883100F2092A /* Time.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EB3E8E1B49883100F2092A /* Time.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -61,6 +62,8 @@
 		45E978851B375E4900E11814 /* Transform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Transform.h; path = src/Transform.h; sourceTree = "<group>"; };
 		45EB3E8C1B49568F00F2092A /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Matrix.h; path = src/Matrix.h; sourceTree = "<group>"; };
 		45EB3E8D1B49600500F2092A /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = GraphicsToolkit/res; sourceTree = "<group>"; };
+		45EB3E8E1B49883100F2092A /* Time.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Time.cpp; path = src/Time.cpp; sourceTree = "<group>"; };
+		45EB3E8F1B49883100F2092A /* Time.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Time.h; path = src/Time.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +123,8 @@
 				45E978631B34E2BE00E11814 /* Window.cpp */,
 				45E978641B34E2BE00E11814 /* Window.h */,
 				45E978851B375E4900E11814 /* Transform.h */,
+				45EB3E8E1B49883100F2092A /* Time.cpp */,
+				45EB3E8F1B49883100F2092A /* Time.h */,
 			);
 			path = GraphicsToolkit;
 			sourceTree = "<group>";
@@ -200,6 +205,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45EB3E901B49883100F2092A /* Time.cpp in Sources */,
 				45E9786C1B35939300E11814 /* Renderer.cpp in Sources */,
 				45E9786F1B3593E200E11814 /* RenderObject.cpp in Sources */,
 				45E978831B370D7200E11814 /* Camera.cpp in Sources */,

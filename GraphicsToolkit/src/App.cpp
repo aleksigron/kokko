@@ -41,6 +41,10 @@ bool App::HasRequestedQuit()
 
 void App::Update()
 {
+	this->time.Update();
+	
+	this->mainCamera.position = Vec3f(cosf(Time::GetTime()), sinf(Time::GetTime()), 2.0f);
+	
 	this->mainCamera.SetFrameSize(this->mainWindow.GetFrameBufferSize());
 	this->renderer.Render();
 	this->mainWindow.Swap();
