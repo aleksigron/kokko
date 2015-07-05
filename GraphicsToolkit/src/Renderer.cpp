@@ -4,6 +4,7 @@
 #include "glfw/glfw3.h"
 
 #include "Window.h"
+#include "Camera.h"
 
 Renderer::Renderer()
 {
@@ -15,20 +16,25 @@ Renderer::~Renderer()
 
 void Renderer::Render()
 {
-	if (this->targetWindow != nullptr)
+	if (this->targetWindow != nullptr && this->activeCamera != nullptr)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		for (const RenderObject& obj : this->renderObjects)
 		{
-			glUseProgram(obj.GetShaderProgram());
+			Mat4x4f mvp = this->activeCamera->GetViewProjectionMatrix() * obj.GetTransformMatrix();
 			
-			// 1rst attribute buffer : vertices
+			GLuint shaderId = obj.GetShaderProgramID();
+			
+			glUseProgram(shaderId);
+			GLuint mvpShaderUniform = glGetUniformLocation(shaderId, "MVP");
+			
+			glUniformMatrix4fv(mvpShaderUniform, 1, GL_FALSE, mvp.ValuePointer());
+			
 			glEnableVertexAttribArray(0);
 			glBindBuffer(GL_ARRAY_BUFFER, obj.GetVertexBuffer());
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 			
-			// Draw the triangle !
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 			
 			glDisableVertexAttribArray(0);
@@ -39,6 +45,11 @@ void Renderer::Render()
 void Renderer::AttachTarget(Window* window)
 {
 	this->targetWindow = window;
+}
+
+void Renderer::SetActiveCamera(Camera* camera)
+{
+	this->activeCamera = camera;
 }
 
 RenderObject& Renderer::CreateRenderObject()

@@ -3,8 +3,6 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-#include "Shader.h"
-
 RenderObject::RenderObject()
 {
 }
@@ -32,5 +30,5 @@ void RenderObject::SetVertexBufferData(Buffer<Vec3f>& vertexBuffer)
 	// Give our vertices to OpenGL.
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3f) * vertexBuffer.Count(), vertexBuffer.Data(), GL_STATIC_DRAW);
 	
-	this->shaderProgram = LoadShaders("res/shaders/simple.vert", "res/shaders/simple.frag");
+	this->shader.LoadShaders("res/shaders/simple.vert", "res/shaders/simple.frag");
 }

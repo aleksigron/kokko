@@ -34,10 +34,10 @@ public:
 		this->count = 0;
 	}
 	
-	T* Data() { return this->data; }
-	const T* Data() const { return this->data; }
-	std::size_t Count() const { return this->count; }
+	inline T* Data() { return this->data; }
+	inline const T* Data() const { return this->data; }
+	inline std::size_t Count() const { return this->count; }
 	
-	T& operator[](std::size_t index) { return this->data[index]; }
-	const T& operator[](std::size_t index) const { return this->data[index]; }
+	inline T& operator[](std::size_t index) { return this->data[index]; }
+	inline const T& operator[](std::size_t index) const { return this->data[index]; }
 };

@@ -15,6 +15,7 @@ bool App::Initialize()
 	if (this->mainWindow.Initialize())
 	{
 		this->renderer.AttachTarget(&this->mainWindow);
+		this->renderer.SetActiveCamera(&this->mainCamera);
 		
 		Buffer<Vec3f> vertexData;
 		vertexData.Allocate(3);
@@ -24,6 +25,8 @@ bool App::Initialize()
 		
 		RenderObject& obj = this->renderer.CreateRenderObject();
 		obj.SetVertexBufferData(vertexData);
+		
+		this->mainCamera.position = Vec3f(0.0f, 0.0f, 2.0f);
 		
 		return true;
 	}
@@ -38,6 +41,7 @@ bool App::HasRequestedQuit()
 
 void App::Update()
 {
+	this->mainCamera.SetFrameSize(this->mainWindow.GetFrameBufferSize());
 	this->renderer.Render();
 	this->mainWindow.Swap();
 }
