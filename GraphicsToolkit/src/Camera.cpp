@@ -17,7 +17,7 @@ Mat4x4f Camera::GetViewProjectionMatrix()
 
 Mat4x4f Camera::GetViewMatrix()
 {
-	return Matrix::Translate(-position);
+	return Matrix::Translate(-this->position) * Matrix::Transpose(this->rotation);
 }
 
 Mat4x4f& Camera::GetProjectionMatrix()
@@ -30,7 +30,7 @@ Mat4x4f& Camera::GetProjectionMatrix()
 		}
 		else if (this->projectionType == Projection::Orthographic)
 		{
-			
+			this->projectionMatrix = Matrix::Orthographic(1.0f, 1.0f, nearClipDistance, farClipDistance);
 		}
 		
 		this->projectionMatrixIsDirty = false;

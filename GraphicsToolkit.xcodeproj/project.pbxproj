@@ -64,6 +64,7 @@
 		45EB3E8D1B49600500F2092A /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = GraphicsToolkit/res; sourceTree = "<group>"; };
 		45EB3E8E1B49883100F2092A /* Time.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Time.cpp; path = src/Time.cpp; sourceTree = "<group>"; };
 		45EB3E8F1B49883100F2092A /* Time.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Time.h; path = src/Time.h; sourceTree = "<group>"; };
+		45EB3E911B4EEDF700F2092A /* Math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Math.h; path = src/Math.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +138,7 @@
 				45E978681B34FAC000E11814 /* Vec2.h */,
 				45E978691B358E7700E11814 /* Vec3.h */,
 				45E978751B35E5EB00E11814 /* Vec4.h */,
+				45EB3E911B4EEDF700F2092A /* Math.h */,
 			);
 			name = Math;
 			sourceTree = "<group>";

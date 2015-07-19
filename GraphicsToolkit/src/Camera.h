@@ -3,6 +3,7 @@
 #include "Transform.h"
 #include "Mat4x4.h"
 #include "Vec2.h"
+#include "Math.h"
 
 class Camera : public Transform
 {
@@ -16,7 +17,7 @@ public:
 private:
 	Mat4x4f projectionMatrix;
 	
-	float fieldOfView = 60.0f;
+	float fieldOfView = Mathf::DegreesToRadians(45.0f);
 	float nearClipDistance = 1.0f;
 	float farClipDistance = 100.0f;
 	float aspectRatio = 1.0f;

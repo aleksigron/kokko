@@ -12,7 +12,7 @@ namespace Matrix
 	{
 		T const tanHalfFovy = std::tan(fovVertical / static_cast<T>(2));
 		
-		Mat4x4<T> result;
+		Mat4x4<T> result(Mat4x4<T>::identity);
 		
 		result[0] = static_cast<T>(1) / (aspectRatio * tanHalfFovy);
 		result[5] = static_cast<T>(1) / (tanHalfFovy);
@@ -91,7 +91,7 @@ namespace Matrix
 		const T ca = static_cast<T>(std::cos(angle));
 		const T sa = static_cast<T>(std::sin(angle));
 		
-		Mat4x4<T> result;
+		Mat4x4<T> result(Mat4x4<T>::identity);
 		
 		result[0] = xx + (static_cast<T>(1) - xx) * ca;
 		result[1] = xy * (static_cast<T>(1) - ca) + axis.z * sa;
@@ -105,7 +105,16 @@ namespace Matrix
 		result[9] = yz * (static_cast<T>(1) - ca) - axis.x * sa;
 		result[10] = zz + (static_cast<T>(1) - zz) * ca;
 		
-		result[15] = static_cast<T>(1);
+		return result;
+	}
+	
+	template <typename T>
+	inline Mat4x4<T> Transpose(const Mat4x4<T> m)
+	{
+		Mat4x4<T> result;
+		
+		for (std::size_t i = 0; i < 16; ++i)
+			result[i] = m[(i % 4) * 4 + i / 4];
 		
 		return result;
 	}

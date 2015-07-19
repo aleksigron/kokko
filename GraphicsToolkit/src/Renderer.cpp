@@ -20,9 +20,11 @@ void Renderer::Render()
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
+		Mat4x4f viewProjection = this->activeCamera->GetViewProjectionMatrix();
+		
 		for (const RenderObject& obj : this->renderObjects)
 		{
-			Mat4x4f mvp = this->activeCamera->GetViewProjectionMatrix() * obj.GetTransformMatrix();
+			Mat4x4f mvp = viewProjection * obj.GetTransformMatrix();
 			
 			GLuint shaderId = obj.GetShaderProgramID();
 			
