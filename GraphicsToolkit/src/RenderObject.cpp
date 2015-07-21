@@ -18,10 +18,11 @@ RenderObject::~RenderObject()
 
 void RenderObject::SetVertexBufferData(Buffer<Vec3f>& vertexBuffer)
 {
+	// Create vertex array object
 	glGenVertexArrays(1, &this->vertexArrayObject);
 	glBindVertexArray(this->vertexArrayObject);
 	
-	// Generate 1 buffer, put the resulting identifier in vertexbuffer
+	// Create vertex buffer object
 	glGenBuffers(1, &this->vertexBufferObject);
 	
 	// The following commands will talk about our 'vertexbuffer' buffer
@@ -29,6 +30,8 @@ void RenderObject::SetVertexBufferData(Buffer<Vec3f>& vertexBuffer)
 	
 	// Give our vertices to OpenGL.
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3f) * vertexBuffer.Count(), vertexBuffer.Data(), GL_STATIC_DRAW);
+	
+	this->vertexCount = GLsizei(vertexBuffer.Count());
 	
 	this->shader.LoadShaders("res/shaders/simple.vert", "res/shaders/simple.frag");
 }

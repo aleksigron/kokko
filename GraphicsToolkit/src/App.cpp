@@ -1,9 +1,12 @@
 #include "App.h"
 
-#include "RenderObject.h"
+#include "GeometryBuilder.h"
+
+App* App::instance = nullptr;
 
 App::App()
 {
+	App::instance = this;
 }
 
 App::~App()
@@ -17,14 +20,7 @@ bool App::Initialize()
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
 		
-		Buffer<Vec3f> vertexData;
-		vertexData.Allocate(3);
-		vertexData[0] = Vec3f(-1.0f, -1.0f, 0.0f);
-		vertexData[1] = Vec3f(1.0f, -1.0f, 0.0f);
-		vertexData[2] = Vec3f(0.0f,  1.0f, 0.0f);
-		
-		RenderObject& obj = this->renderer.CreateRenderObject();
-		obj.SetVertexBufferData(vertexData);
+		GeometryBuilder::UnitCube();
 		
 		this->mainCamera.position = Vec3f(0.0f, 0.0f, 2.0f);
 		
@@ -43,11 +39,14 @@ void App::Update()
 {
 	this->time.Update();
 	
-	//this->mainCamera.position = Vec3f(cosf(Time::GetTime()), sinf(Time::GetTime()), 2.0f);
-	
-	this->mainCamera.position = Vec3f(cosf(Time::GetTime()), sinf(Time::GetTime()), 2.0f);
+	this->mainCamera.position = Vec3f(cosf(Time::GetTime() * 0.5f) * 2.0f, sinf(Time::GetTime() * 0.5f) * 2.0f, 8.0f);
 	
 	this->mainCamera.SetFrameSize(this->mainWindow.GetFrameBufferSize());
 	this->renderer.Render();
 	this->mainWindow.Swap();
+}
+
+Renderer* App::GetRenderer()
+{
+	return &(App::instance->renderer);
 }

@@ -8,6 +8,8 @@
 class App
 {
 private:
+	static App* instance;
+	
 	Time time;
 	Window mainWindow;
 	Camera mainCamera;
@@ -21,4 +23,6 @@ public:
 	bool HasRequestedQuit();
 	
 	void Update();
+	
+	static Renderer* GetRenderer();
 };
