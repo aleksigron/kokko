@@ -16,7 +16,6 @@
 		45E9785F1B34D1C600E11814 /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9785D1B34D1C600E11814 /* App.cpp */; };
 		45E978651B34E2BE00E11814 /* Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978631B34E2BE00E11814 /* Window.cpp */; };
 		45E9786C1B35939300E11814 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9786A1B35939300E11814 /* Renderer.cpp */; };
-		45E9786F1B3593E200E11814 /* RenderObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9786D1B3593E200E11814 /* RenderObject.cpp */; };
 		45E978791B3706B800E11814 /* ShaderProgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978771B3706B800E11814 /* ShaderProgram.cpp */; };
 		45E978831B370D7200E11814 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978811B370D7200E11814 /* Camera.cpp */; };
 		45EB3E901B49883100F2092A /* Time.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EB3E8E1B49883100F2092A /* Time.cpp */; };
@@ -51,8 +50,7 @@
 		45E978691B358E7700E11814 /* Vec3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Vec3.h; path = src/Vec3.h; sourceTree = "<group>"; };
 		45E9786A1B35939300E11814 /* Renderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Renderer.cpp; path = src/Renderer.cpp; sourceTree = "<group>"; };
 		45E9786B1B35939300E11814 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Renderer.h; path = src/Renderer.h; sourceTree = "<group>"; };
-		45E9786D1B3593E200E11814 /* RenderObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderObject.cpp; path = src/RenderObject.cpp; sourceTree = "<group>"; };
-		45E9786E1B3593E200E11814 /* RenderObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderObject.h; path = src/RenderObject.h; sourceTree = "<group>"; };
+		45E9786E1B3593E200E11814 /* RenderObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderObject.h; path = src/RenderObject.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		45E978701B35A69B00E11814 /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Buffer.h; path = src/Buffer.h; sourceTree = "<group>"; };
 		45E978751B35E5EB00E11814 /* Vec4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Vec4.h; path = src/Vec4.h; sourceTree = "<group>"; };
 		45E978761B35F2E100E11814 /* Mat4x4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Mat4x4.h; path = src/Mat4x4.h; sourceTree = "<group>"; };
@@ -118,7 +116,6 @@
 				45E978821B370D7200E11814 /* Camera.h */,
 				45E9786A1B35939300E11814 /* Renderer.cpp */,
 				45E9786B1B35939300E11814 /* Renderer.h */,
-				45E9786D1B3593E200E11814 /* RenderObject.cpp */,
 				45E9786E1B3593E200E11814 /* RenderObject.h */,
 				45E978771B3706B800E11814 /* ShaderProgram.cpp */,
 				45E978781B3706B800E11814 /* ShaderProgram.h */,
@@ -211,7 +208,6 @@
 			files = (
 				45EB3E901B49883100F2092A /* Time.cpp in Sources */,
 				45E9786C1B35939300E11814 /* Renderer.cpp in Sources */,
-				45E9786F1B3593E200E11814 /* RenderObject.cpp in Sources */,
 				45E978831B370D7200E11814 /* Camera.cpp in Sources */,
 				45E9784F1B34CF0600E11814 /* main.cpp in Sources */,
 				45E978791B3706B800E11814 /* ShaderProgram.cpp in Sources */,

@@ -86,5 +86,5 @@ float Camera::GetFarClipDistance() const
 void Camera::SetFrameSize(const Vec2i& frameSize)
 {
 	this->projectionMatrixIsDirty = true;
-	this->aspectRatio = frameSize.x / frameSize.y;
+	this->aspectRatio = frameSize.x / static_cast<float>(frameSize.y);
 }

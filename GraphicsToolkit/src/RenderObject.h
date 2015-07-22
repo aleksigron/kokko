@@ -1,32 +1,35 @@
 #pragma once
 
+#include <cstdint>
+
 #include <OpenGL/gltypes.h>
 
 #include "Transform.h"
 #include "ShaderProgram.h"
-#include "Buffer.h"
-#include "Vec3.h"
 
-class RenderObject : public Transform
+struct RenderObjectId
 {
-private:
-	GLuint vertexArrayObject = 0;
-	GLuint vertexBufferObject = 0;
+	uint32_t index;
+	uint32_t innerId;
+};
+
+struct RenderObject
+{
+	RenderObjectId id;
 	
-	GLsizei vertexCount = 0;
+	Transform transform;
+	
+	GLuint vertexArrayObject;
+	GLuint vertexPositionBuffer;
+	GLuint vertexColorBuffer;
+	
+	GLsizei vertexCount;
 	
 	ShaderProgram shader;
 	
-public:
-	RenderObject();
-	~RenderObject();
-	
-	void SetVertexBufferData(Buffer<Vec3f>& vertexBuffer);
-	
-	inline GLuint GetVertexBuffer() const { return this->vertexBufferObject; }
-	
-	inline const ShaderProgram* GetShaderProgram() const { return &this->shader; }
-	inline GLuint GetShaderProgramID() const { return this->shader.GetID(); }
-	
-	GLsizei GetVertexCount() const { return this->vertexCount; }
+//		if (this->vertexBufferObject != 0)
+//			glDeleteBuffers(1, &this->vertexBufferObject);
+//		
+//		if (this->vertexArrayObject != 0)
+//			glDeleteVertexArrays(1, &this->vertexArrayObject);
 };

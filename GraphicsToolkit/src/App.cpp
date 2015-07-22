@@ -17,10 +17,11 @@ bool App::Initialize()
 {
 	if (this->mainWindow.Initialize())
 	{
+		this->renderer.Initialize();
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
 		
-		GeometryBuilder::UnitCube();
+		this->testCube = GeometryBuilder::UnitCubeWithColor();
 		
 		this->mainCamera.position = Vec3f(0.0f, 0.0f, 2.0f);
 		
@@ -40,6 +41,9 @@ void App::Update()
 	this->time.Update();
 	
 	this->mainCamera.position = Vec3f(cosf(Time::GetTime() * 0.5f) * 2.0f, sinf(Time::GetTime() * 0.5f) * 2.0f, 8.0f);
+	
+	RenderObject& cube = this->renderer.GetRenderObject(testCube);
+	cube.transform.rotation = Matrix::Rotate(Vec3f(1.0f, 1.0f, 1.0f), Time::GetTime() * -1.5f);
 	
 	this->mainCamera.SetFrameSize(this->mainWindow.GetFrameBufferSize());
 	this->renderer.Render();

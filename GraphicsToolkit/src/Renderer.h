@@ -1,8 +1,9 @@
 #pragma once
 
-#include <forward_list>
+#include <cstddef>
 
 #include "RenderObject.h"
+#include "Buffer.h"
 
 class Window;
 class Camera;
@@ -13,16 +14,32 @@ private:
 	Window* targetWindow = nullptr;
 	Camera* activeCamera = nullptr;
 	
-	std::forward_list<RenderObject> renderObjects;
+	uint32_t nextInnerId = 0;
+	uint32_t freeList = UINT32_MAX;
+	
+	RenderObject* objects = nullptr;
+	size_t contiguousFree = 0;
+	size_t allocatedCount = 0;
+	
+	static const size_t initialAllocation = 4096;
 	
 public:
 	Renderer();
 	~Renderer();
+	
+	void Initialize();
 	
 	void Render();
 	
 	void AttachTarget(Window* window);
 	void SetActiveCamera(Camera* camera);
 	
-	RenderObject& CreateRenderObject();
+	bool HasRenderObject(RenderObjectId id);
+	RenderObject& GetRenderObject(RenderObjectId id);
+	
+	RenderObjectId AddRenderObject();
+	void RemoveRenderObject(RenderObjectId id);
+	
+	void UploadVertexPositionData(RenderObject& obj, const Buffer<Vec3f>& buffer);
+	void UploadVertexColorData(RenderObject& obj, const Buffer<Vec3f>& buffer);
 };

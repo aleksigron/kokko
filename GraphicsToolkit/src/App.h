@@ -15,6 +15,8 @@ private:
 	Camera mainCamera;
 	Renderer renderer;
 	
+	RenderObjectId testCube;
+	
 public:
 	App();
 	~App();
