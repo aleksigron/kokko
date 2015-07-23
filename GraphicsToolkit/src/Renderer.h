@@ -40,6 +40,4 @@ public:
 	RenderObjectId AddRenderObject();
 	void RemoveRenderObject(RenderObjectId id);
 	
-	void UploadVertexPositionData(RenderObject& obj, const Buffer<Vec3f>& buffer);
-	void UploadVertexColorData(RenderObject& obj, const Buffer<Vec3f>& buffer);
 };

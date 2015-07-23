@@ -2,199 +2,86 @@
 
 #include "App.h"
 #include "Buffer.h"
+#include "VertexFormat.h"
 
 namespace GeometryBuilder
 {
-	RenderObjectId UnitCube()
-	{
-		Buffer<Vec3f> vertexData;
-		vertexData.Allocate(36);
-		
-		// Bottom
-		vertexData[0] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[1] = Vec3f(-0.5f, -0.5f, 0.5f);
-		vertexData[2] = Vec3f(0.5f, -0.5f, 0.5f);
-		
-		vertexData[3] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[4] = Vec3f(0.5f, -0.5f, 0.5f);
-		vertexData[5] = Vec3f(0.5f, -0.5f, -0.5f);
-		
-		// Front
-		vertexData[6] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[7] = Vec3f(0.5f, 0.5f, -0.5f);
-		vertexData[8] = Vec3f(-0.5f, 0.5f, -0.5f);
-		
-		vertexData[9] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[10] = Vec3f(0.5f, -0.5f, -0.5f);
-		vertexData[11] = Vec3f(0.5f, 0.5f, -0.5f);
-		
-		// Left
-		vertexData[12] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[13] = Vec3f(-0.5f, 0.5f, -0.5f);
-		vertexData[14] = Vec3f(-0.5f, 0.5f, 0.5f);
-		
-		vertexData[15] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[16] = Vec3f(-0.5f, 0.5f, 0.5f);
-		vertexData[17] = Vec3f(-0.5f, -0.5f, 0.5f);
-		
-		// Back
-		vertexData[18] = Vec3f(-0.5f, -0.5f, 0.5f);
-		vertexData[19] = Vec3f(-0.5f, 0.5f, 0.5f);
-		vertexData[20] = Vec3f(0.5f, 0.5f, 0.5f);
-		
-		vertexData[21] = Vec3f(-0.5f, -0.5f, 0.5f);
-		vertexData[22] = Vec3f(0.5f, 0.5f, 0.5f);
-		vertexData[23] = Vec3f(0.5f, -0.5f, 0.5f);
-		
-		// Right
-		vertexData[24] = Vec3f(0.5f, -0.5f, -0.5f);
-		vertexData[25] = Vec3f(0.5f, 0.5f, 0.5f);
-		vertexData[26] = Vec3f(0.5f, 0.5f, -0.5f);
-		
-		vertexData[27] = Vec3f(0.5f, -0.5f, -0.5f);
-		vertexData[28] = Vec3f(0.5f, -0.5f, 0.5f);
-		vertexData[29] = Vec3f(0.5f, 0.5f, 0.5f);
-		
-		// Top
-		vertexData[30] = Vec3f(-0.5f, 0.5f, -0.5f);
-		vertexData[31] = Vec3f(0.5f, 0.5f, 0.5f);
-		vertexData[32] = Vec3f(-0.5f, 0.5f, 0.5f);
-		
-		vertexData[33] = Vec3f(-0.5f, 0.5f, -0.5f);
-		vertexData[34] = Vec3f(0.5f, 0.5f, -0.5f);
-		vertexData[35] = Vec3f(0.5f, 0.5f, 0.5f);
-		
-		Renderer* r = App::GetRenderer();
-		
-		RenderObjectId id = r->AddRenderObject();
-		RenderObject& obj = r->GetRenderObject(id);
-		r->UploadVertexPositionData(obj, vertexData);
-		
-		return id;
-	}
-	
 	RenderObjectId UnitCubeWithColor()
 	{
-		Buffer<Vec3f> vertexData;
-		vertexData.Allocate(36);
+		Buffer<Vertex_PosCol> vertex;
+		vertex.Allocate(8);
+		
+		vertex[0] = Vertex_PosCol { Vec3f(-0.5f, -0.5f, -0.5f), Vec3f(0.0f, 0.0f, 0.0f) };
+		vertex[1] = Vertex_PosCol { Vec3f(0.5f, -0.5f, -0.5f), Vec3f(1.0f, 0.0f, 0.0f) };
+		vertex[2] = Vertex_PosCol { Vec3f(-0.5f, -0.5f, 0.5f), Vec3f(0.0f, 0.0f, 1.0f) };
+		vertex[3] = Vertex_PosCol { Vec3f(0.5f, -0.5f, 0.5f), Vec3f(1.0f, 0.0f, 1.0f) };
+		vertex[4] = Vertex_PosCol { Vec3f(-0.5f, 0.5f, -0.5f), Vec3f(0.0f, 1.0f, 0.0f) };
+		vertex[5] = Vertex_PosCol { Vec3f(0.5f, 0.5f, -0.5f), Vec3f(1.0f, 1.0f, 0.0f) };
+		vertex[6] = Vertex_PosCol { Vec3f(-0.5f, 0.5f, 0.5f), Vec3f(0.0f, 1.0f, 1.0f) };
+		vertex[7] = Vertex_PosCol { Vec3f(0.5f, 0.5f, 0.5f), Vec3f(1.0f, 1.0f, 1.0f) };
+		
+		Buffer<uint16_t> index;
+		index.Allocate(36);
 		
 		// Bottom
-		vertexData[0] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[1] = Vec3f(-0.5f, -0.5f, 0.5f);
-		vertexData[2] = Vec3f(0.5f, -0.5f, 0.5f);
+		index[0] = 0;
+		index[1] = 1;
+		index[2] = 3;
 		
-		vertexData[3] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[4] = Vec3f(0.5f, -0.5f, 0.5f);
-		vertexData[5] = Vec3f(0.5f, -0.5f, -0.5f);
-		
-		// Front
-		vertexData[6] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[7] = Vec3f(0.5f, 0.5f, -0.5f);
-		vertexData[8] = Vec3f(-0.5f, 0.5f, -0.5f);
-		
-		vertexData[9] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[10] = Vec3f(0.5f, -0.5f, -0.5f);
-		vertexData[11] = Vec3f(0.5f, 0.5f, -0.5f);
-		
-		// Left
-		vertexData[12] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[13] = Vec3f(-0.5f, 0.5f, -0.5f);
-		vertexData[14] = Vec3f(-0.5f, 0.5f, 0.5f);
-		
-		vertexData[15] = Vec3f(-0.5f, -0.5f, -0.5f);
-		vertexData[16] = Vec3f(-0.5f, 0.5f, 0.5f);
-		vertexData[17] = Vec3f(-0.5f, -0.5f, 0.5f);
-		
-		// Back
-		vertexData[18] = Vec3f(-0.5f, -0.5f, 0.5f);
-		vertexData[19] = Vec3f(-0.5f, 0.5f, 0.5f);
-		vertexData[20] = Vec3f(0.5f, 0.5f, 0.5f);
-		
-		vertexData[21] = Vec3f(-0.5f, -0.5f, 0.5f);
-		vertexData[22] = Vec3f(0.5f, 0.5f, 0.5f);
-		vertexData[23] = Vec3f(0.5f, -0.5f, 0.5f);
-		
-		// Right
-		vertexData[24] = Vec3f(0.5f, -0.5f, -0.5f);
-		vertexData[25] = Vec3f(0.5f, 0.5f, 0.5f);
-		vertexData[26] = Vec3f(0.5f, 0.5f, -0.5f);
-		
-		vertexData[27] = Vec3f(0.5f, -0.5f, -0.5f);
-		vertexData[28] = Vec3f(0.5f, -0.5f, 0.5f);
-		vertexData[29] = Vec3f(0.5f, 0.5f, 0.5f);
-		
-		// Top
-		vertexData[30] = Vec3f(-0.5f, 0.5f, -0.5f);
-		vertexData[31] = Vec3f(0.5f, 0.5f, 0.5f);
-		vertexData[32] = Vec3f(-0.5f, 0.5f, 0.5f);
-		
-		vertexData[33] = Vec3f(-0.5f, 0.5f, -0.5f);
-		vertexData[34] = Vec3f(0.5f, 0.5f, -0.5f);
-		vertexData[35] = Vec3f(0.5f, 0.5f, 0.5f);
-		
-		Buffer<Vec3f> colorData;
-		colorData.Allocate(36);
-		
-		// Bottom
-		colorData[0] = Vec3f(0.0f, 0.0f, 0.0f);
-		colorData[1] = Vec3f(0.0f, 0.0f, 1.0f);
-		colorData[2] = Vec3f(1.0f, 0.0f, 1.0f);
-		
-		colorData[3] = Vec3f(0.0f, 0.0f, 0.0f);
-		colorData[4] = Vec3f(1.0f, 0.0f, 1.0f);
-		colorData[5] = Vec3f(1.0f, 0.0f, 0.0f);
+		index[3] = 3;
+		index[4] = 2;
+		index[5] = 0;
 		
 		// Front
-		colorData[6] = Vec3f(0.0f, 0.0f, 0.0f);
-		colorData[7] = Vec3f(1.0f, 1.0f, 0.0f);
-		colorData[8] = Vec3f(0.0f, 1.0f, 0.0f);
+		index[6] = 0;
+		index[7] = 4;
+		index[8] = 5;
 		
-		colorData[9] = Vec3f(0.0f, 0.0f, 0.0f);
-		colorData[10] = Vec3f(1.0f, 0.0f, 0.0f);
-		colorData[11] = Vec3f(1.0f, 1.0f, 0.0f);
+		index[9] = 5;
+		index[10] = 1;
+		index[11] = 0;
 		
 		// Left
-		colorData[12] = Vec3f(0.0f, 0.0f, 0.0f);
-		colorData[13] = Vec3f(0.0f, 1.0f, 0.0f);
-		colorData[14] = Vec3f(0.0f, 1.0f, 1.0f);
+		index[12] = 0;
+		index[13] = 2;
+		index[14] = 6;
 		
-		colorData[15] = Vec3f(0.0f, 0.0f, 0.0f);
-		colorData[16] = Vec3f(0.0f, 1.0f, 1.0f);
-		colorData[17] = Vec3f(0.0f, 0.0f, 1.0f);
+		index[15] = 6;
+		index[16] = 4;
+		index[17] = 0;
 		
 		// Back
-		colorData[18] = Vec3f(0.0f, 0.0f, 1.0f);
-		colorData[19] = Vec3f(0.0f, 1.0f, 1.0f);
-		colorData[20] = Vec3f(1.0f, 1.0f, 1.0f);
+		index[18] = 2;
+		index[19] = 6;
+		index[20] = 7;
 		
-		colorData[21] = Vec3f(0.0f, 0.0f, 1.0f);
-		colorData[22] = Vec3f(1.0f, 1.0f, 1.0f);
-		colorData[23] = Vec3f(1.0f, 0.0f, 1.0f);
+		index[21] = 7;
+		index[22] = 3;
+		index[23] = 2;
 		
 		// Right
-		colorData[24] = Vec3f(1.0f, 0.0f, 0.0f);
-		colorData[25] = Vec3f(1.0f, 1.0f, 1.0f);
-		colorData[26] = Vec3f(1.0f, 1.0f, 0.0f);
+		index[24] = 3;
+		index[25] = 7;
+		index[26] = 5;
 		
-		colorData[27] = Vec3f(1.0f, 0.0f, 0.0f);
-		colorData[28] = Vec3f(1.0f, 0.0f, 1.0f);
-		colorData[29] = Vec3f(1.0f, 1.0f, 1.0f);
+		index[27] = 5;
+		index[28] = 1;
+		index[29] = 3;
 		
 		// Top
-		colorData[30] = Vec3f(0.0f, 1.0f, 0.0f);
-		colorData[31] = Vec3f(1.0f, 1.0f, 1.0f);
-		colorData[32] = Vec3f(0.0f, 1.0f, 1.0f);
+		index[30] = 4;
+		index[31] = 6;
+		index[32] = 7;
 		
-		colorData[33] = Vec3f(0.0f, 1.0f, 0.0f);
-		colorData[34] = Vec3f(1.0f, 1.0f, 0.0f);
-		colorData[35] = Vec3f(1.0f, 1.0f, 1.0f);
+		index[33] = 7;
+		index[34] = 5;
+		index[35] = 4;
 		
 		Renderer* r = App::GetRenderer();
 		
 		RenderObjectId id = r->AddRenderObject();
 		RenderObject& obj = r->GetRenderObject(id);
-		r->UploadVertexPositionData(obj, vertexData);
-		r->UploadVertexColorData(obj, colorData);
+		obj.UploadVertexData_PosCol(index, vertex);
 		
 		return id;
 	}

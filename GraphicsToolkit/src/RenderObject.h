@@ -5,7 +5,8 @@
 #include <OpenGL/gltypes.h>
 
 #include "Transform.h"
-#include "ShaderProgram.h"
+#include "Buffer.h"
+#include "VertexFormat.h"
 
 struct RenderObjectId
 {
@@ -20,16 +21,14 @@ struct RenderObject
 	Transform transform;
 	
 	GLuint vertexArrayObject;
-	GLuint vertexPositionBuffer;
-	GLuint vertexColorBuffer;
+	
+	GLsizei indexCount;
+	GLuint indexBuffer;
 	
 	GLsizei vertexCount;
+	GLuint vertexBuffer;
 	
-	ShaderProgram shader;
+	GLuint shaderProgram;
 	
-//		if (this->vertexBufferObject != 0)
-//			glDeleteBuffers(1, &this->vertexBufferObject);
-//		
-//		if (this->vertexArrayObject != 0)
-//			glDeleteVertexArrays(1, &this->vertexArrayObject);
+	void UploadVertexData_PosCol(const Buffer<uint16_t>& index, const Buffer<Vertex_PosCol>& vertex);
 };

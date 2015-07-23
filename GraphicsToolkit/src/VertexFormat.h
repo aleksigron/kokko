@@ -1,0 +1,20 @@
+#pragma once
+
+#include "Vec2.h"
+#include "Vec3.h"
+
+struct Vertex_PosCol
+{
+	Vec3f position;
+	Vec3f color;
+	
+	static const int size;
+	
+	static const int posElements;
+	static const unsigned posElemType;
+	static const void* posOffset;
+	
+	static const int colElements;
+	static const unsigned colElemType;
+	static const void* colOffset;
+};

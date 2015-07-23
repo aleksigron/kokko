@@ -21,7 +21,10 @@ bool App::Initialize()
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
 		
+		this->simpleShader.LoadShaders("res/shaders/simple.vert", "res/shaders/simple.frag");
 		this->testCube = GeometryBuilder::UnitCubeWithColor();
+		RenderObject& cube = this->renderer.GetRenderObject(this->testCube);
+		cube.shaderProgram = this->simpleShader.GetID();
 		
 		this->mainCamera.position = Vec3f(0.0f, 0.0f, 2.0f);
 		

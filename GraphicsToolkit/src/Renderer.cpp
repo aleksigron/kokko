@@ -33,32 +33,23 @@ void Renderer::Render()
 		
 		Mat4x4f viewProjection = this->activeCamera->GetViewProjectionMatrix();
 		
-		for (size_t i = 0; i < allocatedCount; ++i)
+		for (size_t i = 0; i < contiguousFree; ++i)
 		{
 			RenderObject& obj = objects[i];
 			
 			Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
 			
-			GLuint shaderOglId = obj.shader.GetID();
-			
-			glUseProgram(shaderOglId);
-			GLuint mvpShaderUniform = glGetUniformLocation(shaderOglId, "MVP");
+			glUseProgram(obj.shaderProgram);
+			GLuint mvpShaderUniform = glGetUniformLocation(obj.shaderProgram, "MVP");
 			
 			glUniformMatrix4fv(mvpShaderUniform, 1, GL_FALSE, mvp.ValuePointer());
 			
-			glEnableVertexAttribArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, obj.vertexPositionBuffer);
-			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+			glBindVertexArray(obj.vertexArrayObject);
 			
-			glEnableVertexAttribArray(1);
-			glBindBuffer(GL_ARRAY_BUFFER, obj.vertexColorBuffer);
-			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-			
-			glDrawArrays(GL_TRIANGLES, 0, obj.vertexCount);
-			
-			glDisableVertexAttribArray(1);
-			glDisableVertexAttribArray(0);
+			glDrawElements(GL_TRIANGLES, obj.indexCount, GL_UNSIGNED_SHORT, (void*)0);
 		}
+
+		glBindVertexArray(0);
 	}
 }
 
@@ -121,36 +112,4 @@ void Renderer::RemoveRenderObject(RenderObjectId id)
 	*next = freeList;
 	
 	freeList = id.index;
-}
-
-void Renderer::UploadVertexPositionData(RenderObject& obj, const Buffer<Vec3f>& buffer)
-{
-	// Create vertex array object
-	glGenVertexArrays(1, &obj.vertexArrayObject);
-	glBindVertexArray(obj.vertexArrayObject);
-
-	// Create vertex buffer object
-	glGenBuffers(1, &obj.vertexPositionBuffer);
-
-	// The following commands will talk about our 'vertexbuffer' buffer
-	glBindBuffer(GL_ARRAY_BUFFER, obj.vertexPositionBuffer);
-
-	// Give our vertices to OpenGL.
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3f) * buffer.Count(), buffer.Data(), GL_STATIC_DRAW);
-
-	obj.vertexCount = GLsizei(buffer.Count());
-
-	obj.shader.LoadShaders("res/shaders/simple.vert", "res/shaders/simple.frag");
-}
-
-void Renderer::UploadVertexColorData(RenderObject& obj, const Buffer<Vec3f>& buffer)
-{
-	// Create vertex buffer object
-	glGenBuffers(1, &obj.vertexColorBuffer);
-	
-	// The following commands will talk about our 'vertexbuffer' buffer
-	glBindBuffer(GL_ARRAY_BUFFER, obj.vertexColorBuffer);
-	
-	// Give our vertices to OpenGL.
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3f) * buffer.Count(), buffer.Data(), GL_STATIC_DRAW);
 }

@@ -4,6 +4,7 @@
 #include "Window.h"
 #include "Camera.h"
 #include "Renderer.h"
+#include "ShaderProgram.h"
 
 class App
 {
@@ -16,6 +17,7 @@ private:
 	Renderer renderer;
 	
 	RenderObjectId testCube;
+	ShaderProgram simpleShader;
 	
 public:
 	App();
