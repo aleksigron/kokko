@@ -6,17 +6,6 @@
 #include <cstddef>
 #include <cstdio>
 
-
-ShaderProgram::ShaderProgram()
-{
-	
-}
-
-ShaderProgram::~ShaderProgram()
-{
-	
-}
-
 bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint& shaderIdOut)
 {
 	GLint shaderType = 0;
@@ -88,15 +77,17 @@ bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint&
 	return false;
 }
 
-bool ShaderProgram::LoadShaders(const char* vertShaderFilePath, const char* fragShaderFilePath)
+bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderFilePath)
 {
 	GLuint vertexShader = 0;
+
 	if (this->CompileShader(ShaderType::Vertex, vertShaderFilePath, vertexShader) == false)
 	{
 		return false;
 	}
 	
 	GLuint fragmentShader = 0;
+
 	if (this->CompileShader(ShaderType::Fragment, fragShaderFilePath, fragmentShader) == false)
 	{
 		// Release already compiled vertex shader
@@ -108,10 +99,10 @@ bool ShaderProgram::LoadShaders(const char* vertShaderFilePath, const char* frag
 	// At this point we know that both shader compilations were successful
 	
 	// Link the program
-	GLuint shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
+	GLuint programId = glCreateProgram();
+	glAttachShader(programId, vertexShader);
+	glAttachShader(programId, fragmentShader);
+	glLinkProgram(programId);
 	
 	// Release shaders
 	glDeleteShader(vertexShader);
@@ -119,25 +110,28 @@ bool ShaderProgram::LoadShaders(const char* vertShaderFilePath, const char* frag
 	
 	// Check link status
 	GLint linkStatus = GL_FALSE;
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &linkStatus);
+	glGetProgramiv(programId, GL_LINK_STATUS, &linkStatus);
 	
 	if (linkStatus == GL_TRUE)
 	{
-		this->shaderProgram = shaderProgram;
+		this->shaderGlId = programId;
+		this->mvpUniformLocation = glGetUniformLocation(programId, "MVP");
 		
 		return true;
 	}
 	else
 	{
+		this->shaderGlId = 0;
+
 		// Get info log length
 		GLint infoLogLength = 0;
-		glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
+		glGetProgramiv(shaderGlId, GL_INFO_LOG_LENGTH, &infoLogLength);
 		
 		if (infoLogLength > 0)
 		{
 			// Print out info log
 			char* infoLog = new char[infoLogLength + 1];
-			glGetProgramInfoLog(shaderProgram, infoLogLength, NULL, infoLog);
+			glGetProgramInfoLog(shaderGlId, infoLogLength, NULL, infoLog);
 			printf("%s\n", infoLog);
 			
 			delete[] infoLog;

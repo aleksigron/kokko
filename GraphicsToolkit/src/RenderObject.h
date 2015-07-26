@@ -7,6 +7,7 @@
 #include "Transform.h"
 #include "Buffer.h"
 #include "VertexFormat.h"
+#include "ShaderProgram.h"
 
 struct RenderObjectId
 {
@@ -17,15 +18,16 @@ struct RenderObjectId
 struct RenderObject
 {
 	RenderObjectId id;
-	
+
 	Transform transform;
+
+	ShaderProgramId shader;
 	
 	GLuint vertexArrayObject;
 	
 	GLsizei indexCount;
 	GLenum indexElementType;
-	
-	GLuint shaderProgram;
+
 	
 	void UploadVertexData_PosCol(const Buffer<uint16_t>& index, const Buffer<Vertex_PosCol>& vertex);
 };

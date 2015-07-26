@@ -2,25 +2,25 @@
 
 #include <OpenGL/gltypes.h>
 
-class ShaderProgram
+struct ShaderProgramId
 {
-private:
-	enum class ShaderType { Vertex, Fragment };
-	
-	GLuint shaderProgram = 0;
-	
-	bool CompileShader(ShaderType type, const char* filePath, GLuint& shaderIdOut);
-	
-public:
-	ShaderProgram();
-	~ShaderProgram();
-	
-	inline GLuint GetID() const { return this->shaderProgram; }
-	
-	bool LoadShaders(const char* vertShaderFilePath, const char* fragShaderFilePath);
+	uint32_t index;
+	uint32_t innerId;
 };
 
+struct ShaderProgram
+{
+public:
+	ShaderProgramId id;
 
+private:
+	enum class ShaderType { Vertex, Fragment };
 
+	bool CompileShader(ShaderType type, const char* filePath, GLuint& shaderIdOut);
 
-
+public:
+	GLuint shaderGlId;
+	GLuint mvpUniformLocation;
+	
+	bool Load(const char* vertShaderFilePath, const char* fragShaderFilePath);
+};

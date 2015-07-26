@@ -4,6 +4,7 @@
 
 #include "RenderObject.h"
 #include "Buffer.h"
+#include "Collection.h"
 
 class Window;
 class Camera;

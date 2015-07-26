@@ -7,6 +7,7 @@
 
 #include "Window.h"
 #include "Camera.h"
+#include "App.h"
 
 Renderer::Renderer()
 {
@@ -38,12 +39,12 @@ void Renderer::Render()
 			RenderObject& obj = objects[i];
 			
 			Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
-			
-			glUseProgram(obj.shaderProgram);
-			GLuint mvpShaderUniform = glGetUniformLocation(obj.shaderProgram, "MVP");
-			
-			glUniformMatrix4fv(mvpShaderUniform, 1, GL_FALSE, mvp.ValuePointer());
-			
+
+			ShaderManager* sm = App::GetShaderManager();
+			ShaderProgram& shader = sm->shaders.Get(obj.shader);
+
+			glUseProgram(shader.shaderGlId);
+			glUniformMatrix4fv(shader.mvpUniformLocation, 1, GL_FALSE, mvp.ValuePointer());
 			glBindVertexArray(obj.vertexArrayObject);
 			
 			glDrawElements(GL_TRIANGLES, obj.indexCount, obj.indexElementType, (void*)0);
