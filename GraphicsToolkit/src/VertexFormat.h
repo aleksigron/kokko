@@ -18,3 +18,19 @@ struct Vertex_PosCol
 	static const unsigned colElemType;
 	static const void* colOffset;
 };
+
+struct Vertex_PosTex
+{
+	Vec3f position;
+	Vec2f texCoord;
+
+	static const int size;
+
+	static const int posElements;
+	static const unsigned posElemType;
+	static const void* posOffset;
+
+	static const int texCoordElements;
+	static const unsigned texCoordElemType;
+	static const void* texCoordOffset;
+};

@@ -3,7 +3,8 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-void RenderObject::UploadVertexData_PosCol(const Buffer<uint16_t>& index, const Buffer<Vertex_PosCol>& vertex)
+void RenderObject::UploadVertexData_PosCol(const Buffer<uint16_t>& index,
+										   const Buffer<Vertex_PosCol>& vertex)
 {
 	using V = Vertex_PosCol;
 	
@@ -18,20 +19,62 @@ void RenderObject::UploadVertexData_PosCol(const Buffer<uint16_t>& index, const 
 	GLuint indexBuffer;
 	glGenBuffers(1, &indexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * index.Count(), index.Data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+				 sizeof(uint16_t) * index.Count(), index.Data(), GL_STATIC_DRAW);
 
 	// Bind and upload vertex buffer
 	GLuint vertexBuffer;
 	glGenBuffers(1, &vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, V::size * vertex.Count(), vertex.Data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER,
+				 V::size * vertex.Count(), vertex.Data(), GL_STATIC_DRAW);
 	
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::posElements, V::posElemType, GL_FALSE, V::size, V::posOffset);
+	glVertexAttribPointer(0, V::posElements, V::posElemType,
+						  GL_FALSE, V::size, V::posOffset);
 	
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::colElements, V::colElemType, GL_FALSE, V::size, V::colOffset);
+	glVertexAttribPointer(1, V::colElements, V::colElemType,
+						  GL_FALSE, V::size, V::colOffset);
 	
+	// Unbind vertex array
+	glBindVertexArray(0);
+}
+
+void RenderObject::UploadVertexData_PosTex(const Buffer<uint16_t>& index,
+										   const Buffer<Vertex_PosTex>& vertex)
+{
+	using V = Vertex_PosTex;
+
+	// Create vertex array object
+	glGenVertexArrays(1, &vertexArrayObject);
+	glBindVertexArray(vertexArrayObject);
+
+	indexCount = GLsizei(index.Count());
+	indexElementType = GL_UNSIGNED_SHORT;
+
+	// Bind and upload index buffer
+	GLuint indexBuffer;
+	glGenBuffers(1, &indexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+				 sizeof(uint16_t) * index.Count(), index.Data(), GL_STATIC_DRAW);
+
+	// Bind and upload vertex buffer
+	GLuint vertexBuffer;
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER,
+				 V::size * vertex.Count(), vertex.Data(), GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, V::posElements, V::posElemType,
+						  GL_FALSE, V::size, V::posOffset);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, V::texCoordElements, V::texCoordElemType,
+						  GL_FALSE, V::size, V::texCoordOffset);
+
 	// Unbind vertex array
 	glBindVertexArray(0);
 }

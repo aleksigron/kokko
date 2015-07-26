@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		455051181B6176E50096FAD2 /* RenderObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455051171B6176E50096FAD2 /* RenderObject.cpp */; };
 		4550511B1B6193070096FAD2 /* VertexFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550511A1B6193070096FAD2 /* VertexFormat.cpp */; };
-		4550511E1B6503610096FAD2 /* ShaderManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550511C1B6503610096FAD2 /* ShaderManager.cpp */; };
+		4550511E1B6503610096FAD2 /* ResourceManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550511C1B6503610096FAD2 /* ResourceManager.cpp */; };
 		45E9784F1B34CF0600E11814 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9784E1B34CF0600E11814 /* main.cpp */; };
 		45E978511B34CFA000E11814 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978501B34CFA000E11814 /* CoreVideo.framework */; };
 		45E978531B34CFA600E11814 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978521B34CFA600E11814 /* IOKit.framework */; };
@@ -41,8 +41,8 @@
 		455051171B6176E50096FAD2 /* RenderObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderObject.cpp; path = src/RenderObject.cpp; sourceTree = "<group>"; };
 		455051191B618CFF0096FAD2 /* VertexFormat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = VertexFormat.h; path = src/VertexFormat.h; sourceTree = "<group>"; };
 		4550511A1B6193070096FAD2 /* VertexFormat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VertexFormat.cpp; path = src/VertexFormat.cpp; sourceTree = "<group>"; };
-		4550511C1B6503610096FAD2 /* ShaderManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ShaderManager.cpp; path = src/ShaderManager.cpp; sourceTree = "<group>"; };
-		4550511D1B6503610096FAD2 /* ShaderManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ShaderManager.h; path = src/ShaderManager.h; sourceTree = "<group>"; };
+		4550511C1B6503610096FAD2 /* ResourceManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ResourceManager.cpp; path = src/ResourceManager.cpp; sourceTree = "<group>"; };
+		4550511D1B6503610096FAD2 /* ResourceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResourceManager.h; path = src/ResourceManager.h; sourceTree = "<group>"; };
 		455051201B6515620096FAD2 /* Collection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Collection.h; path = src/Collection.h; sourceTree = "<group>"; };
 		45E978431B34CE7500E11814 /* GraphicsToolkit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GraphicsToolkit; sourceTree = BUILT_PRODUCTS_DIR; };
 		45E9784E1B34CF0600E11814 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = src/main.cpp; sourceTree = "<group>"; };
@@ -127,8 +127,8 @@
 				45E9786B1B35939300E11814 /* Renderer.h */,
 				455051171B6176E50096FAD2 /* RenderObject.cpp */,
 				45E9786E1B3593E200E11814 /* RenderObject.h */,
-				4550511C1B6503610096FAD2 /* ShaderManager.cpp */,
-				4550511D1B6503610096FAD2 /* ShaderManager.h */,
+				4550511C1B6503610096FAD2 /* ResourceManager.cpp */,
+				4550511D1B6503610096FAD2 /* ResourceManager.h */,
 				45E978771B3706B800E11814 /* ShaderProgram.cpp */,
 				45E978781B3706B800E11814 /* ShaderProgram.h */,
 				45E978851B375E4900E11814 /* Transform.h */,
@@ -221,7 +221,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4550511E1B6503610096FAD2 /* ShaderManager.cpp in Sources */,
+				4550511E1B6503610096FAD2 /* ResourceManager.cpp in Sources */,
 				455051181B6176E50096FAD2 /* RenderObject.cpp in Sources */,
 				4550511B1B6193070096FAD2 /* VertexFormat.cpp in Sources */,
 				45EB3E901B49883100F2092A /* Time.cpp in Sources */,

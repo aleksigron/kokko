@@ -6,14 +6,13 @@
 #include "Collection.h"
 #include "ShaderProgram.h"
 
-class ShaderManager
+class ResourceManager
 {
 private:
-
 
 public:
 	Collection<ShaderProgram, ShaderProgramId, 128> shaders;
 
-	ShaderManager();
-	~ShaderManager();
+	ResourceManager();
+	~ResourceManager();
 };

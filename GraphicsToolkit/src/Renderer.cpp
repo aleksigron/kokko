@@ -40,14 +40,18 @@ void Renderer::Render()
 			
 			Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
 
-			ShaderManager* sm = App::GetShaderManager();
-			ShaderProgram& shader = sm->shaders.Get(obj.shader);
+			ResourceManager* res = App::GetResourceManager();
+			ShaderProgram& shader = res->shaders.Get(obj.shader);
 
 			glUseProgram(shader.shaderGlId);
-			glUniformMatrix4fv(shader.mvpUniformLocation, 1, GL_FALSE, mvp.ValuePointer());
+
+			glUniformMatrix4fv(shader.mvpUniformLocation, 1,
+							   GL_FALSE, mvp.ValuePointer());
+
 			glBindVertexArray(obj.vertexArrayObject);
 			
-			glDrawElements(GL_TRIANGLES, obj.indexCount, obj.indexElementType, (void*)0);
+			glDrawElements(GL_TRIANGLES, obj.indexCount,
+						   obj.indexElementType, (void*)0);
 		}
 
 		glBindVertexArray(0);

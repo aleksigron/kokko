@@ -4,7 +4,7 @@
 #include "Window.h"
 #include "Camera.h"
 #include "Renderer.h"
-#include "ShaderManager.h"
+#include "ResourceManager.h"
 
 class App
 {
@@ -15,9 +15,10 @@ private:
 	Window mainWindow;
 	Camera mainCamera;
 	Renderer renderer;
-	ShaderManager shaderManager;
+	ResourceManager resourceManager;
 	
-	RenderObjectId testCube;
+	RenderObjectId cube0;
+	RenderObjectId cube1;
 	
 public:
 	App();
@@ -31,6 +32,6 @@ public:
 	inline static Renderer* GetRenderer()
 	{ return &(App::instance->renderer); }
 
-	inline static ShaderManager* GetShaderManager()
-	{ return &(App::instance->shaderManager); }
+	inline static ResourceManager* GetResourceManager()
+	{ return &(App::instance->resourceManager); }
 };

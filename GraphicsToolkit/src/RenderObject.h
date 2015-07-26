@@ -28,6 +28,9 @@ struct RenderObject
 	GLsizei indexCount;
 	GLenum indexElementType;
 
+	void UploadVertexData_PosCol(const Buffer<uint16_t>& index,
+								 const Buffer<Vertex_PosCol>& vertex);
 	
-	void UploadVertexData_PosCol(const Buffer<uint16_t>& index, const Buffer<Vertex_PosCol>& vertex);
+	void UploadVertexData_PosTex(const Buffer<uint16_t>& index,
+								 const Buffer<Vertex_PosTex>& vertex);
 };
