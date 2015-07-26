@@ -46,7 +46,7 @@ void Renderer::Render()
 			
 			glBindVertexArray(obj.vertexArrayObject);
 			
-			glDrawElements(GL_TRIANGLES, obj.indexCount, GL_UNSIGNED_SHORT, (void*)0);
+			glDrawElements(GL_TRIANGLES, obj.indexCount, obj.indexElementType, (void*)0);
 		}
 
 		glBindVertexArray(0);

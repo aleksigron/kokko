@@ -23,10 +23,7 @@ struct RenderObject
 	GLuint vertexArrayObject;
 	
 	GLsizei indexCount;
-	GLuint indexBuffer;
-	
-	GLsizei vertexCount;
-	GLuint vertexBuffer;
+	GLenum indexElementType;
 	
 	GLuint shaderProgram;
 	
