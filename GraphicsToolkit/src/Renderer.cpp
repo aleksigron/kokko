@@ -99,8 +99,15 @@ RenderObjectId Renderer::AddRenderObject()
 	{
 		id.index = freeList;
 		
-		// Get pointer to objects[freeList], cast pointer to char*, add sizeof(RenderObjectId) to pointer value, cast pointer to uint32_t*
-		uint32_t* next = (uint32_t*)((char*)(&objects[freeList]) + sizeof(RenderObjectId));
+		/*
+		 Get pointer to objects[freeList],
+		 cast pointer to char*,
+		 add sizeof(RenderObjectId) to pointer value,
+		 cast pointer to uint32_t*
+		*/
+
+		char* ptr = reinterpret_cast<char*>(&objects[freeList]);
+		uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(RenderObjectId));
 		freeList = *next;
 	}
 	
@@ -111,9 +118,16 @@ void Renderer::RemoveRenderObject(RenderObjectId id)
 {
 	RenderObject& o = this->GetRenderObject(id);
 	o.id.innerId = UINT32_MAX;
-	
-	// Get pointer to o, cast pointer to char*, add sizeof(RenderObjectId) to pointer value, cast pointer to uint32_t*, dereference pointer
-	uint32_t* next = (uint32_t*)((char*)(&o) + sizeof(RenderObjectId));
+
+	/*
+	 Get pointer to objects[freeList],
+	 cast pointer to char*,
+	 add sizeof(RenderObjectId) to pointer value,
+	 cast pointer to uint32_t*
+	*/
+
+	char* ptr = reinterpret_cast<char*>(&o);
+	uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(RenderObjectId));
 	*next = freeList;
 	
 	freeList = id.index;

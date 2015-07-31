@@ -59,8 +59,15 @@ public:
 		{
 			id.index = freeList;
 
-			// Get pointer to objects[freeList], cast pointer to char*, add sizeof(RenderObjectId) to pointer value, cast pointer to uint32_t*
-			uint32_t* next = (uint32_t*)((char*)(&objects[freeList]) + sizeof(IdType));
+			/*
+			 Get pointer to objects[freeList],
+			 cast pointer to char*,
+			 add sizeof(RenderObjectId) to pointer value,
+			 cast pointer to uint32_t*
+			 */
+
+			char* ptr = reinterpret_cast<char*>(&objects[freeList]);
+			uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(IdType));
 			freeList = *next;
 		}
 		
@@ -72,8 +79,15 @@ public:
 		ValueType& o = this->Get(id);
 		o.id.innerId = UINT32_MAX;
 
-		// Get pointer to o, cast pointer to char*, add sizeof(RenderObjectId) to pointer value, cast pointer to uint32_t*, dereference pointer
-		uint32_t* next = (uint32_t*)((char*)(&o) + sizeof(IdType));
+		/*
+		 Get pointer to objects[freeList],
+		 cast pointer to char*,
+		 add sizeof(RenderObjectId) to pointer value,
+		 cast pointer to uint32_t*
+		 */
+
+		char* ptr = reinterpret_cast<char*>(&o);
+		uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(IdType));
 		*next = freeList;
 
 		freeList = id.index;
