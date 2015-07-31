@@ -3,7 +3,7 @@
 #include "Vec4.h"
 
 template <typename T>
-struct alignas(sizeof(T) * 4) Vec3
+struct Vec3
 {
 	T x, y, z;
 	

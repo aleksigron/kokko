@@ -3,7 +3,7 @@
 #include <cmath>
 
 template <typename T>
-struct alignas(sizeof(T) * 4) Vec4
+struct Vec4
 {
 	T x, y, z, w;
 	

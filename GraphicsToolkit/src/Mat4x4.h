@@ -4,7 +4,7 @@
 #include "Vec4.h"
 
 template <typename T>
-struct alignas(sizeof(T) * 16) Mat4x4
+struct Mat4x4
 {
 	struct ZeroInit {} static zero;
 	struct IdentityInit {} static identity;
