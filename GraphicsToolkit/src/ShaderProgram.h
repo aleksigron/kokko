@@ -20,7 +20,7 @@ private:
 
 public:
 	GLuint shaderGlId;
-	GLuint mvpUniformLocation;
+	GLint mvpUniformLocation;
 	
 	bool Load(const char* vertShaderFilePath, const char* fragShaderFilePath);
 };

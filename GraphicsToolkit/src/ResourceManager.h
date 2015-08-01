@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include "Collection.h"
+#include "Texture.h"
 #include "ShaderProgram.h"
 
 class ResourceManager
@@ -11,7 +12,8 @@ class ResourceManager
 private:
 
 public:
-	Collection<ShaderProgram, ShaderProgramId, 128> shaders;
+	Collection<Texture, TextureId, 32> textures;
+	Collection<ShaderProgram, ShaderProgramId, 32> shaders;
 
 	ResourceManager();
 	~ResourceManager();

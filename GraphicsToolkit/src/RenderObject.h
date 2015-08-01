@@ -8,6 +8,7 @@
 #include "Buffer.h"
 #include "VertexFormat.h"
 #include "ShaderProgram.h"
+#include "Texture.h"
 
 struct RenderObjectId
 {
@@ -22,11 +23,14 @@ struct RenderObject
 	Transform transform;
 
 	ShaderProgramId shader;
+	TextureId texture;
 	
 	GLuint vertexArrayObject;
 	
 	GLsizei indexCount;
 	GLenum indexElementType;
+
+	bool hasTexture;
 
 	void UploadVertexData_PosCol(const Buffer<uint16_t>& index,
 								 const Buffer<Vertex_PosCol>& vertex);

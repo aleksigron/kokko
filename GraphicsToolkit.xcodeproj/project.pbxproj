@@ -10,6 +10,8 @@
 		455051181B6176E50096FAD2 /* RenderObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455051171B6176E50096FAD2 /* RenderObject.cpp */; };
 		4550511B1B6193070096FAD2 /* VertexFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550511A1B6193070096FAD2 /* VertexFormat.cpp */; };
 		4550511E1B6503610096FAD2 /* ResourceManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550511C1B6503610096FAD2 /* ResourceManager.cpp */; };
+		4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455051291B6ABFA10096FAD2 /* ImageData.cpp */; };
+		4550512E1B6ABFD90096FAD2 /* Texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550512C1B6ABFD90096FAD2 /* Texture.cpp */; };
 		45E9784F1B34CF0600E11814 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9784E1B34CF0600E11814 /* main.cpp */; };
 		45E978511B34CFA000E11814 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978501B34CFA000E11814 /* CoreVideo.framework */; };
 		45E978531B34CFA600E11814 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978521B34CFA600E11814 /* IOKit.framework */; };
@@ -44,6 +46,10 @@
 		4550511C1B6503610096FAD2 /* ResourceManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ResourceManager.cpp; path = src/ResourceManager.cpp; sourceTree = "<group>"; };
 		4550511D1B6503610096FAD2 /* ResourceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResourceManager.h; path = src/ResourceManager.h; sourceTree = "<group>"; };
 		455051201B6515620096FAD2 /* Collection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Collection.h; path = src/Collection.h; sourceTree = "<group>"; };
+		455051291B6ABFA10096FAD2 /* ImageData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ImageData.cpp; path = src/ImageData.cpp; sourceTree = "<group>"; };
+		4550512A1B6ABFA10096FAD2 /* ImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageData.h; path = src/ImageData.h; sourceTree = "<group>"; };
+		4550512C1B6ABFD90096FAD2 /* Texture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Texture.cpp; path = src/Texture.cpp; sourceTree = "<group>"; };
+		4550512D1B6ABFD90096FAD2 /* Texture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Texture.h; path = src/Texture.h; sourceTree = "<group>"; };
 		45E978431B34CE7500E11814 /* GraphicsToolkit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GraphicsToolkit; sourceTree = BUILT_PRODUCTS_DIR; };
 		45E9784E1B34CF0600E11814 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = src/main.cpp; sourceTree = "<group>"; };
 		45E978501B34CFA000E11814 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -123,6 +129,8 @@
 				45E9785E1B34D1C600E11814 /* App.h */,
 				45E978811B370D7200E11814 /* Camera.cpp */,
 				45E978821B370D7200E11814 /* Camera.h */,
+				455051291B6ABFA10096FAD2 /* ImageData.cpp */,
+				4550512A1B6ABFA10096FAD2 /* ImageData.h */,
 				45E9786A1B35939300E11814 /* Renderer.cpp */,
 				45E9786B1B35939300E11814 /* Renderer.h */,
 				455051171B6176E50096FAD2 /* RenderObject.cpp */,
@@ -132,6 +140,8 @@
 				45E978771B3706B800E11814 /* ShaderProgram.cpp */,
 				45E978781B3706B800E11814 /* ShaderProgram.h */,
 				45E978851B375E4900E11814 /* Transform.h */,
+				4550512C1B6ABFD90096FAD2 /* Texture.cpp */,
+				4550512D1B6ABFD90096FAD2 /* Texture.h */,
 				45EB3E8E1B49883100F2092A /* Time.cpp */,
 				45EB3E8F1B49883100F2092A /* Time.h */,
 				455051191B618CFF0096FAD2 /* VertexFormat.h */,
@@ -225,10 +235,12 @@
 				455051181B6176E50096FAD2 /* RenderObject.cpp in Sources */,
 				4550511B1B6193070096FAD2 /* VertexFormat.cpp in Sources */,
 				45EB3E901B49883100F2092A /* Time.cpp in Sources */,
+				4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */,
 				45E9786C1B35939300E11814 /* Renderer.cpp in Sources */,
 				45E978831B370D7200E11814 /* Camera.cpp in Sources */,
 				45E9784F1B34CF0600E11814 /* main.cpp in Sources */,
 				45E978791B3706B800E11814 /* ShaderProgram.cpp in Sources */,
+				4550512E1B6ABFD90096FAD2 /* Texture.cpp in Sources */,
 				45E978651B34E2BE00E11814 /* Window.cpp in Sources */,
 				45E9785F1B34D1C600E11814 /* App.cpp in Sources */,
 			);
@@ -241,7 +253,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -257,7 +269,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -276,6 +288,13 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/GraphicsToolkit/include";
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-padded",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+				);
 			};
 			name = Debug;
 		};
@@ -283,7 +302,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -300,7 +319,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -311,6 +330,13 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/GraphicsToolkit/include";
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-padded",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+				);
 			};
 			name = Release;
 		};

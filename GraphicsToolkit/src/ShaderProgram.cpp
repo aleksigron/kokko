@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <cstdio>
 
+#include <cassert>
+
 bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint& shaderIdOut)
 {
 	GLint shaderType = 0;
@@ -83,6 +85,7 @@ bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderF
 
 	if (this->CompileShader(ShaderType::Vertex, vertShaderFilePath, vertexShader) == false)
 	{
+		assert(false);
 		return false;
 	}
 	
@@ -92,7 +95,8 @@ bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderF
 	{
 		// Release already compiled vertex shader
 		glDeleteShader(vertexShader);
-		
+
+		assert(false);
 		return false;
 	}
 	
@@ -136,7 +140,8 @@ bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderF
 			
 			delete[] infoLog;
 		}
-		
+
+		assert(false);
 		return false;
 	}
 }

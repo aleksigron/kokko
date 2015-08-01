@@ -1,9 +1,10 @@
 #include "Renderer.h"
 
-#include <new>
-
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
+
+#include <new>
+#include <cassert>
 
 #include "Window.h"
 #include "Camera.h"
@@ -48,10 +49,24 @@ void Renderer::Render()
 			glUniformMatrix4fv(shader.mvpUniformLocation, 1,
 							   GL_FALSE, mvp.ValuePointer());
 
+			if (obj.hasTexture) // HORRIBLE & UGLY
+			{
+				Texture& texture = res->textures.Get(obj.texture);
+
+				// Bind our texture in Texture Unit 0
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, texture.textureGlId);
+
+				GLint texUniform = glGetUniformLocation(shader.shaderGlId, "tex");
+
+				// Set texture uniform to texture unit 0
+				glUniform1i(texUniform, 0);
+			}
+
 			glBindVertexArray(obj.vertexArrayObject);
 			
 			glDrawElements(GL_TRIANGLES, obj.indexCount,
-						   obj.indexElementType, (void*)0);
+						   obj.indexElementType, reinterpret_cast<void*>(0));
 		}
 
 		glBindVertexArray(0);

@@ -1,6 +1,7 @@
 #include "App.h"
 
 #include "GeometryBuilder.h"
+#include "ImageData.h"
 
 App* App::instance = nullptr;
 
@@ -21,6 +22,15 @@ bool App::Initialize()
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
 
+		// Test image
+
+		ImageData image;
+		image.LoadTestData();
+
+		TextureId texId = this->resourceManager.textures.Add();
+		Texture& tex = this->resourceManager.textures.Get(texId);
+		tex.Upload(image);
+
 		// First cube
 
 		ShaderProgramId colShaderId = resourceManager.shaders.Add();
@@ -30,6 +40,7 @@ bool App::Initialize()
 		this->cube0 = GeometryBuilder::UnitCubeWithColor();
 		RenderObject& cube0obj = this->renderer.GetRenderObject(this->cube0);
 		cube0obj.shader = colShaderId;
+		cube0obj.hasTexture = false;
 
 		// Second cube
 
@@ -40,6 +51,8 @@ bool App::Initialize()
 		this->cube1 = GeometryBuilder::UnitCubeWithTextureCoords();
 		RenderObject& cube1obj = this->renderer.GetRenderObject(this->cube1);
 		cube1obj.shader = texShaderId;
+		cube1obj.texture = texId;
+		cube1obj.hasTexture = true;
 
 		this->mainCamera.position = Vec3f(0.0f, 0.0f, 8.0f);
 		

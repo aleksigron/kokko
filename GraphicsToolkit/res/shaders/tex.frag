@@ -2,11 +2,11 @@
 
 in vec2 fragTexCoord;
 
-out vec3 color;
+out vec4 color;
 
 uniform sampler2D tex;
 
 void main()
 {
-	color = texture(tex, fragTexCoord).rgb;
+	color = texture(tex, fragTexCoord);
 }
