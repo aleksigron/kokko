@@ -306,6 +306,7 @@
 					"-Wno-padded",
 					"-Wno-c++98-compat",
 					"-Wno-c++98-compat-pedantic",
+					"-Wno-documentation",
 				);
 			};
 			name = Debug;
@@ -348,6 +349,7 @@
 					"-Wno-padded",
 					"-Wno-c++98-compat",
 					"-Wno-c++98-compat-pedantic",
+					"-Wno-documentation",
 				);
 			};
 			name = Release;
