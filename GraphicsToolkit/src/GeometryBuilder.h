@@ -24,58 +24,59 @@ namespace GeometryBuilder
 		index.Allocate(36);
 		
 		// Bottom
+		// Bottom
 		index[0] = 0;
-		index[1] = 1;
-		index[2] = 3;
-		
-		index[3] = 3;
-		index[4] = 2;
-		index[5] = 0;
-		
+		index[1] = 3;
+		index[2] = 2;
+
+		index[3] = 0;
+		index[4] = 1;
+		index[5] = 3;
+
 		// Front
-		index[6] = 0;
-		index[7] = 4;
-		index[8] = 5;
-		
-		index[9] = 5;
-		index[10] = 1;
-		index[11] = 0;
-		
+		index[6] = 2;
+		index[7] = 7;
+		index[8] = 6;
+
+		index[9] = 2;
+		index[10] = 3;
+		index[11] = 7;
+
 		// Left
-		index[12] = 0;
-		index[13] = 2;
-		index[14] = 6;
-		
-		index[15] = 6;
+		index[12] = 2;
+		index[13] = 6;
+		index[14] = 4;
+
+		index[15] = 2;
 		index[16] = 4;
 		index[17] = 0;
-		
+
 		// Back
-		index[18] = 2;
-		index[19] = 6;
-		index[20] = 7;
-		
-		index[21] = 7;
-		index[22] = 3;
-		index[23] = 2;
-		
+		index[18] = 0;
+		index[19] = 4;
+		index[20] = 5;
+
+		index[21] = 0;
+		index[22] = 5;
+		index[23] = 1;
+
 		// Right
-		index[24] = 3;
-		index[25] = 7;
-		index[26] = 5;
-		
-		index[27] = 5;
-		index[28] = 1;
+		index[24] = 1;
+		index[25] = 5;
+		index[26] = 7;
+
+		index[27] = 1;
+		index[28] = 7;
 		index[29] = 3;
-		
+
 		// Top
 		index[30] = 4;
 		index[31] = 6;
 		index[32] = 7;
-		
-		index[33] = 7;
-		index[34] = 5;
-		index[35] = 4;
+
+		index[33] = 4;
+		index[34] = 7;
+		index[35] = 5;
 		
 		Renderer* r = App::GetRenderer();
 		
@@ -105,47 +106,47 @@ namespace GeometryBuilder
 
 		// Bottom
 		index[0] = 0;
-		index[1] = 1;
-		index[2] = 3;
+		index[1] = 3;
+		index[2] = 2;
 
-		index[3] = 3;
-		index[4] = 2;
-		index[5] = 0;
+		index[3] = 0;
+		index[4] = 1;
+		index[5] = 3;
 
 		// Front
-		index[6] = 0;
-		index[7] = 4;
-		index[8] = 5;
+		index[6] = 2;
+		index[7] = 7;
+		index[8] = 6;
 
-		index[9] = 5;
-		index[10] = 1;
-		index[11] = 0;
+		index[9] = 2;
+		index[10] = 3;
+		index[11] = 7;
 
 		// Left
-		index[12] = 0;
-		index[13] = 2;
-		index[14] = 6;
+		index[12] = 2;
+		index[13] = 6;
+		index[14] = 4;
 
-		index[15] = 6;
+		index[15] = 2;
 		index[16] = 4;
 		index[17] = 0;
 
 		// Back
-		index[18] = 2;
-		index[19] = 6;
-		index[20] = 7;
+		index[18] = 0;
+		index[19] = 4;
+		index[20] = 5;
 
-		index[21] = 7;
-		index[22] = 3;
-		index[23] = 2;
+		index[21] = 0;
+		index[22] = 5;
+		index[23] = 1;
 
 		// Right
-		index[24] = 3;
-		index[25] = 7;
-		index[26] = 5;
+		index[24] = 1;
+		index[25] = 5;
+		index[26] = 7;
 
-		index[27] = 5;
-		index[28] = 1;
+		index[27] = 1;
+		index[28] = 7;
 		index[29] = 3;
 
 		// Top
@@ -153,9 +154,9 @@ namespace GeometryBuilder
 		index[31] = 6;
 		index[32] = 7;
 
-		index[33] = 7;
-		index[34] = 5;
-		index[35] = 4;
+		index[33] = 4;
+		index[34] = 7;
+		index[35] = 5;
 
 		Renderer* r = App::GetRenderer();
 
