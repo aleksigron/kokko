@@ -35,10 +35,10 @@ public:
 	void AttachTarget(Window* window);
 	void SetActiveCamera(Camera* camera);
 	
-	bool HasRenderObject(RenderObjectId id);
-	RenderObject& GetRenderObject(RenderObjectId id);
+	bool HasRenderObject(ObjectId id);
+	RenderObject& GetRenderObject(ObjectId id);
 	
-	RenderObjectId AddRenderObject();
-	void RemoveRenderObject(RenderObjectId id);
+	ObjectId AddRenderObject();
+	void RemoveRenderObject(ObjectId id);
 	
 };

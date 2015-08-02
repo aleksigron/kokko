@@ -86,19 +86,19 @@ void Renderer::SetActiveCamera(Camera* camera)
 	this->activeCamera = camera;
 }
 
-bool Renderer::HasRenderObject(RenderObjectId id)
+bool Renderer::HasRenderObject(ObjectId id)
 {
 	return objects[id.index].id.innerId == id.innerId;
 }
 
-RenderObject& Renderer::GetRenderObject(RenderObjectId id)
+RenderObject& Renderer::GetRenderObject(ObjectId id)
 {
 	return objects[id.index];
 }
 
-RenderObjectId Renderer::AddRenderObject()
+ObjectId Renderer::AddRenderObject()
 {
-	RenderObjectId id;
+	ObjectId id;
 	id.innerId = nextInnerId++;
 	
 	if (freeList == UINT32_MAX)
@@ -125,14 +125,14 @@ RenderObjectId Renderer::AddRenderObject()
 		*/
 
 		char* ptr = reinterpret_cast<char*>(&objects[freeList]);
-		uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(RenderObjectId));
+		uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(ObjectId));
 		freeList = *next;
 	}
 	
 	return id;
 }
 
-void Renderer::RemoveRenderObject(RenderObjectId id)
+void Renderer::RemoveRenderObject(ObjectId id)
 {
 	RenderObject& o = this->GetRenderObject(id);
 	o.id.innerId = UINT32_MAX;
@@ -145,7 +145,7 @@ void Renderer::RemoveRenderObject(RenderObjectId id)
 	*/
 
 	char* ptr = reinterpret_cast<char*>(&o);
-	uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(RenderObjectId));
+	uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(ObjectId));
 	*next = freeList;
 	
 	freeList = id.index;

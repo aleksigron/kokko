@@ -17,8 +17,8 @@ private:
 	Renderer renderer;
 	ResourceManager resourceManager;
 	
-	RenderObjectId cube0;
-	RenderObjectId cube1;
+	ObjectId cube0;
+	ObjectId cube1;
 	
 public:
 	App();

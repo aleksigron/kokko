@@ -27,7 +27,7 @@ bool App::Initialize()
 		ImageData image;
 		image.LoadPng("res/textures/test.png");
 
-		TextureId texId = this->resourceManager.textures.Add();
+		ObjectId texId = this->resourceManager.textures.Add();
 		Texture& tex = this->resourceManager.textures.Get(texId);
 		tex.Upload(image);
 
@@ -35,7 +35,7 @@ bool App::Initialize()
 
 		// First cube
 
-		ShaderProgramId colShaderId = resourceManager.shaders.Add();
+		ObjectId colShaderId = resourceManager.shaders.Add();
 		ShaderProgram& colShader = resourceManager.shaders.Get(colShaderId);
 		colShader.Load("res/shaders/simple.vert", "res/shaders/simple.frag");
 
@@ -46,7 +46,7 @@ bool App::Initialize()
 
 		// Second cube
 
-		ShaderProgramId texShaderId = resourceManager.shaders.Add();
+		ObjectId texShaderId = resourceManager.shaders.Add();
 		ShaderProgram& texShader = resourceManager.shaders.Get(texShaderId);
 		texShader.Load("res/shaders/tex.vert", "res/shaders/tex.frag");
 

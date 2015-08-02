@@ -2,16 +2,12 @@
 
 #include <OpenGL/gltypes.h>
 
-struct ShaderProgramId
-{
-	uint32_t index;
-	uint32_t innerId;
-};
+#include "ObjectId.h"
 
 struct ShaderProgram
 {
 public:
-	ShaderProgramId id;
+	ObjectId id;
 
 private:
 	enum class ShaderType { Vertex, Fragment };

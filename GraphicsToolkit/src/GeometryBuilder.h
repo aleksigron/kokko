@@ -6,7 +6,7 @@
 
 namespace GeometryBuilder
 {
-	RenderObjectId UnitCubeWithColor()
+	ObjectId UnitCubeWithColor()
 	{
 		Buffer<Vertex_PosCol> vertex;
 		vertex.Allocate(8);
@@ -23,7 +23,6 @@ namespace GeometryBuilder
 		Buffer<uint16_t> index;
 		index.Allocate(36);
 		
-		// Bottom
 		// Bottom
 		index[0] = 0;
 		index[1] = 3;
@@ -80,14 +79,14 @@ namespace GeometryBuilder
 		
 		Renderer* r = App::GetRenderer();
 		
-		RenderObjectId id = r->AddRenderObject();
+		ObjectId id = r->AddRenderObject();
 		RenderObject& obj = r->GetRenderObject(id);
 		obj.UploadVertexData_PosCol(index, vertex);
 		
 		return id;
 	}
 
-	RenderObjectId UnitCubeWithTextureCoords()
+	ObjectId UnitCubeWithTextureCoords()
 	{
 		Buffer<Vertex_PosTex> vertex;
 		vertex.Allocate(8);
@@ -160,7 +159,7 @@ namespace GeometryBuilder
 
 		Renderer* r = App::GetRenderer();
 
-		RenderObjectId id = r->AddRenderObject();
+		ObjectId id = r->AddRenderObject();
 		RenderObject& obj = r->GetRenderObject(id);
 		obj.UploadVertexData_PosTex(index, vertex);
 

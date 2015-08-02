@@ -1,29 +1,20 @@
 #pragma once
 
-#include <cstdint>
-
 #include <OpenGL/gltypes.h>
 
 #include "Transform.h"
 #include "Buffer.h"
 #include "VertexFormat.h"
-#include "ShaderProgram.h"
-#include "Texture.h"
-
-struct RenderObjectId
-{
-	uint32_t index;
-	uint32_t innerId;
-};
+#include "ObjectId.h"
 
 struct RenderObject
 {
-	RenderObjectId id;
+	ObjectId id;
 
 	Transform transform;
 
-	ShaderProgramId shader;
-	TextureId texture;
+	ObjectId shader;
+	ObjectId texture;
 	
 	GLuint vertexArrayObject;
 	

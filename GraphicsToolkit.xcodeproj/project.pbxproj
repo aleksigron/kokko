@@ -50,6 +50,7 @@
 		4550512A1B6ABFA10096FAD2 /* ImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageData.h; path = src/ImageData.h; sourceTree = "<group>"; };
 		4550512C1B6ABFD90096FAD2 /* Texture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Texture.cpp; path = src/Texture.cpp; sourceTree = "<group>"; };
 		4550512D1B6ABFD90096FAD2 /* Texture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Texture.h; path = src/Texture.h; sourceTree = "<group>"; };
+		459122AA1B6E71F500CF3D2A /* ObjectId.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ObjectId.h; path = src/ObjectId.h; sourceTree = "<group>"; };
 		45E978431B34CE7500E11814 /* GraphicsToolkit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GraphicsToolkit; sourceTree = BUILT_PRODUCTS_DIR; };
 		45E9784E1B34CF0600E11814 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = src/main.cpp; sourceTree = "<group>"; };
 		45E978501B34CFA000E11814 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -97,6 +98,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		459122A91B6E63AB00CF3D2A /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				45E9786A1B35939300E11814 /* Renderer.cpp */,
+				45E9786B1B35939300E11814 /* Renderer.h */,
+				455051171B6176E50096FAD2 /* RenderObject.cpp */,
+				45E9786E1B3593E200E11814 /* RenderObject.h */,
+				45E978771B3706B800E11814 /* ShaderProgram.cpp */,
+				45E978781B3706B800E11814 /* ShaderProgram.h */,
+				4550512C1B6ABFD90096FAD2 /* Texture.cpp */,
+				4550512D1B6ABFD90096FAD2 /* Texture.h */,
+				455051191B618CFF0096FAD2 /* VertexFormat.h */,
+				4550511A1B6193070096FAD2 /* VertexFormat.cpp */,
+			);
+			name = Rendering;
+			sourceTree = "<group>";
+		};
 		45E9783A1B34CE7500E11814 = {
 			isa = PBXGroup;
 			children = (
@@ -122,6 +140,7 @@
 		45E978451B34CE7500E11814 /* GraphicsToolkit */ = {
 			isa = PBXGroup;
 			children = (
+				459122A91B6E63AB00CF3D2A /* Rendering */,
 				45E9787A1B37071100E11814 /* Util */,
 				45E978741B35E54500E11814 /* Math */,
 				45E9784E1B34CF0600E11814 /* main.cpp */,
@@ -131,21 +150,12 @@
 				45E978821B370D7200E11814 /* Camera.h */,
 				455051291B6ABFA10096FAD2 /* ImageData.cpp */,
 				4550512A1B6ABFA10096FAD2 /* ImageData.h */,
-				45E9786A1B35939300E11814 /* Renderer.cpp */,
-				45E9786B1B35939300E11814 /* Renderer.h */,
-				455051171B6176E50096FAD2 /* RenderObject.cpp */,
-				45E9786E1B3593E200E11814 /* RenderObject.h */,
+				459122AA1B6E71F500CF3D2A /* ObjectId.h */,
 				4550511C1B6503610096FAD2 /* ResourceManager.cpp */,
 				4550511D1B6503610096FAD2 /* ResourceManager.h */,
-				45E978771B3706B800E11814 /* ShaderProgram.cpp */,
-				45E978781B3706B800E11814 /* ShaderProgram.h */,
 				45E978851B375E4900E11814 /* Transform.h */,
-				4550512C1B6ABFD90096FAD2 /* Texture.cpp */,
-				4550512D1B6ABFD90096FAD2 /* Texture.h */,
 				45EB3E8E1B49883100F2092A /* Time.cpp */,
 				45EB3E8F1B49883100F2092A /* Time.h */,
-				455051191B618CFF0096FAD2 /* VertexFormat.h */,
-				4550511A1B6193070096FAD2 /* VertexFormat.cpp */,
 				45E978631B34E2BE00E11814 /* Window.cpp */,
 				45E978641B34E2BE00E11814 /* Window.h */,
 			);

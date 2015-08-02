@@ -5,7 +5,9 @@
 #include <cstdint>
 #include <cstddef>
 
-template <typename ValueType, typename IdType, size_t InitialAllocation>
+#include "ObjectId.h"
+
+template <typename ValueType, size_t InitialAllocation>
 class Collection
 {
 private:
@@ -28,19 +30,19 @@ public:
 		delete[] objects;
 	}
 
-	bool Has(IdType id)
+	bool Has(ObjectId id)
 	{
 		return objects[id.index].id.innerId == id.innerId;
 	}
 
-	ValueType& Get(IdType id)
+	ValueType& Get(ObjectId id)
 	{
 		return objects[id.index];
 	}
 
-	IdType Add()
+	ObjectId Add()
 	{
-		IdType id;
+		ObjectId id;
 		id.innerId = nextInnerId++;
 
 		if (freeList == UINT32_MAX)
@@ -67,14 +69,14 @@ public:
 			 */
 
 			char* ptr = reinterpret_cast<char*>(&objects[freeList]);
-			uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(IdType));
+			uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(ObjectId));
 			freeList = *next;
 		}
 		
 		return id;
 	}
 
-	void Remove(IdType id)
+	void Remove(ObjectId id)
 	{
 		ValueType& o = this->Get(id);
 		o.id.innerId = UINT32_MAX;
@@ -87,7 +89,7 @@ public:
 		 */
 
 		char* ptr = reinterpret_cast<char*>(&o);
-		uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(IdType));
+		uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(ObjectId));
 		*next = freeList;
 
 		freeList = id.index;

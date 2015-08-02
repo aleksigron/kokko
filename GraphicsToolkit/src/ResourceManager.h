@@ -12,8 +12,8 @@ class ResourceManager
 private:
 
 public:
-	Collection<Texture, TextureId, 32> textures;
-	Collection<ShaderProgram, ShaderProgramId, 32> shaders;
+	Collection<Texture, 32> textures;
+	Collection<ShaderProgram, 32> shaders;
 
 	ResourceManager();
 	~ResourceManager();
