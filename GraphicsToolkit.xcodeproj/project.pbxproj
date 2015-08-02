@@ -39,6 +39,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4508A57F1B6EBFA700C965EF /* Material.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Material.h; path = src/Material.h; sourceTree = "<group>"; };
 		451C61521B5EF4F900DC1501 /* GeometryBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GeometryBuilder.h; path = src/GeometryBuilder.h; sourceTree = "<group>"; };
 		455051171B6176E50096FAD2 /* RenderObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderObject.cpp; path = src/RenderObject.cpp; sourceTree = "<group>"; };
 		455051191B618CFF0096FAD2 /* VertexFormat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = VertexFormat.h; path = src/VertexFormat.h; sourceTree = "<group>"; };
@@ -112,6 +113,7 @@
 				4550512D1B6ABFD90096FAD2 /* Texture.h */,
 				455051191B618CFF0096FAD2 /* VertexFormat.h */,
 				4550511A1B6193070096FAD2 /* VertexFormat.cpp */,
+				4508A57F1B6EBFA700C965EF /* Material.h */,
 			);
 			name = Rendering;
 			sourceTree = "<group>";
