@@ -1,7 +1,16 @@
 #include "App.h"
 
+#include <cstdio>
+
+#include "Hash.h"
+
 #include "GeometryBuilder.h"
 #include "ImageData.h"
+
+template<uint32_t n> struct PrintConstexprUint
+{
+	PrintConstexprUint() { printf("%x", n); }
+};
 
 App* App::instance = nullptr;
 
@@ -16,6 +25,8 @@ App::~App()
 
 bool App::Initialize()
 {
+	PrintConstexprUint<"Stuff"_hash>();
+
 	if (this->mainWindow.Initialize())
 	{
 		this->renderer.Initialize();

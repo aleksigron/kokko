@@ -5,12 +5,23 @@
 
 namespace Hash
 {
-	constexpr void Murmur3_32(const void* key, int length, uint32_t seed, void* out);
+	constexpr uint32_t FNV1a_32(const char *string, size_t length)
+	{
+		// FNV1a-32 basis
+		uint32_t hash = 0x811c9dc5;
+
+		for (size_t i = 0; i < length; ++i)
+		{
+			// FNV-32 magic prime
+			hash *= 0x01000193;
+			hash ^= static_cast<uint32_t>(*(string + i));
+		}
+
+		return hash;
+	}
 }
 
-constexpr uint32_t operator ""_hash (const char * string, size_t size)
+constexpr uint32_t operator ""_hash(const char* string, size_t size)
 {
-	uint32_t hash = 0;
-	Hash::Murmur3_32(string, static_cast<int>(size), 0, &hash);
-	return hash;
+	return Hash::FNV1a_32(string, size);
 }
