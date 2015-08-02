@@ -25,11 +25,13 @@ bool App::Initialize()
 		// Test image
 
 		ImageData image;
-		image.LoadTestData();
+		image.LoadPng("res/textures/test.png");
 
 		TextureId texId = this->resourceManager.textures.Add();
 		Texture& tex = this->resourceManager.textures.Get(texId);
 		tex.Upload(image);
+
+		image.DeallocateData();
 
 		// First cube
 
@@ -54,7 +56,7 @@ bool App::Initialize()
 		cube1obj.texture = texId;
 		cube1obj.hasTexture = true;
 
-		this->mainCamera.position = Vec3f(0.0f, 0.0f, 8.0f);
+		this->mainCamera.position = Vec3f(0.0f, 0.0f, 5.0f);
 		
 		return true;
 	}
@@ -74,12 +76,12 @@ void App::Update()
 	float t = Time::GetTime();
 	
 	RenderObject& cube0obj = this->renderer.GetRenderObject(this->cube0);
-	cube0obj.transform.position = Vec3f(cosf(t * 0.5f) * 2.0f, sinf(t * 0.5f) * 2.0f, 0.0f);
-	cube0obj.transform.rotation = Matrix::Rotate(Vec3f(1.0f, 1.0f, 1.0f), t * -1.5f);
+	cube0obj.transform.position = Vec3f(cosf(t * 0.5f) * 1.2f, sinf(t * 0.5f) * 1.2f, 0.0f);
+	cube0obj.transform.rotation = Matrix::Rotate(Vec3f(1.0f, 1.0f, 1.0f), t * -1.0f);
 
 	RenderObject& cube1obj = this->renderer.GetRenderObject(this->cube1);
-	cube1obj.transform.rotation = Matrix::Rotate(Vec3f(1.0f, 1.0f, -1.0f), t * 1.5f);
-	cube1obj.transform.position = Vec3f(cosf(t * 0.5f) * -2.0f, sinf(t * 0.5f) * -2.0f, 0.0f);
+	cube1obj.transform.rotation = Matrix::Rotate(Vec3f(1.0f, 1.0f, -1.0f), t * 1.0f);
+	cube1obj.transform.position = Vec3f(cosf(t * 0.5f) * -1.2f, sinf(t * 0.5f) * -1.2f, 0.0f);
 	
 	this->mainCamera.SetFrameSize(this->mainWindow.GetFrameBufferSize());
 	this->renderer.Render();

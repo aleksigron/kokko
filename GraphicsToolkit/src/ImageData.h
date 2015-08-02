@@ -11,6 +11,9 @@ struct ImageData
 
 	bool hasAlpha;
 
-	void LoadTga(const char* filePath);
+	bool LoadPng(const char* filePath);
+	
 	void LoadTestData();
+
+	void DeallocateData();
 };
