@@ -67,7 +67,10 @@ bool App::Initialize()
 		cube1obj.texture = texId;
 		cube1obj.hasTexture = true;
 
-		this->mainCamera.position = Vec3f(0.0f, 0.0f, 5.0f);
+		this->mainCamera.transform.position = Vec3f(0.0f, 0.0f, 5.0f);
+
+		Vec2i frameSize = this->mainWindow.GetFrameBufferSize();
+		this->mainCamera.SetAspectRatio(frameSize.x, frameSize.y);
 		
 		return true;
 	}
@@ -93,8 +96,7 @@ void App::Update()
 	RenderObject& cube1obj = this->renderer.GetRenderObject(this->cube1);
 	cube1obj.transform.rotation = Matrix::Rotate(Vec3f(1.0f, 1.0f, -1.0f), t * 1.0f);
 	cube1obj.transform.position = Vec3f(cosf(t * 0.5f) * -1.2f, sinf(t * 0.5f) * -1.2f, 0.0f);
-	
-	this->mainCamera.SetFrameSize(this->mainWindow.GetFrameBufferSize());
+
 	this->renderer.Render();
 	this->mainWindow.Swap();
 }

@@ -22,7 +22,6 @@
 		45E978651B34E2BE00E11814 /* Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978631B34E2BE00E11814 /* Window.cpp */; };
 		45E9786C1B35939300E11814 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9786A1B35939300E11814 /* Renderer.cpp */; };
 		45E978791B3706B800E11814 /* ShaderProgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978771B3706B800E11814 /* ShaderProgram.cpp */; };
-		45E978831B370D7200E11814 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E978811B370D7200E11814 /* Camera.cpp */; };
 		45EB3E901B49883100F2092A /* Time.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EB3E8E1B49883100F2092A /* Time.cpp */; };
 /* End PBXBuildFile section */
 
@@ -74,7 +73,6 @@
 		45E978761B35F2E100E11814 /* Mat4x4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Mat4x4.h; path = src/Mat4x4.h; sourceTree = "<group>"; };
 		45E978771B3706B800E11814 /* ShaderProgram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ShaderProgram.cpp; path = src/ShaderProgram.cpp; sourceTree = "<group>"; };
 		45E978781B3706B800E11814 /* ShaderProgram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ShaderProgram.h; path = src/ShaderProgram.h; sourceTree = "<group>"; };
-		45E978811B370D7200E11814 /* Camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Camera.cpp; path = src/Camera.cpp; sourceTree = "<group>"; };
 		45E978821B370D7200E11814 /* Camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Camera.h; path = src/Camera.h; sourceTree = "<group>"; };
 		45E978851B375E4900E11814 /* Transform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Transform.h; path = src/Transform.h; sourceTree = "<group>"; };
 		45EB3E8C1B49568F00F2092A /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Matrix.h; path = src/Matrix.h; sourceTree = "<group>"; };
@@ -149,7 +147,6 @@
 				45E9784E1B34CF0600E11814 /* main.cpp */,
 				45E9785D1B34D1C600E11814 /* App.cpp */,
 				45E9785E1B34D1C600E11814 /* App.h */,
-				45E978811B370D7200E11814 /* Camera.cpp */,
 				45E978821B370D7200E11814 /* Camera.h */,
 				455051291B6ABFA10096FAD2 /* ImageData.cpp */,
 				4550512A1B6ABFA10096FAD2 /* ImageData.h */,
@@ -251,7 +248,6 @@
 				45EB3E901B49883100F2092A /* Time.cpp in Sources */,
 				4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */,
 				45E9786C1B35939300E11814 /* Renderer.cpp in Sources */,
-				45E978831B370D7200E11814 /* Camera.cpp in Sources */,
 				45E9784F1B34CF0600E11814 /* main.cpp in Sources */,
 				45E978791B3706B800E11814 /* ShaderProgram.cpp in Sources */,
 				4550512E1B6ABFD90096FAD2 /* Texture.cpp in Sources */,

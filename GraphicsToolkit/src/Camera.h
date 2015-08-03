@@ -5,47 +5,57 @@
 #include "Vec2.h"
 #include "Math.h"
 
-class Camera : public Transform
+struct Camera
 {
-public:
 	enum class Projection
 	{
 		Perspective,
 		Orthographic
 	};
-	
-private:
-	Mat4x4f projectionMatrix;
-	
-	float fieldOfView = Mathf::DegreesToRadians(45.0f);
+
+	Transform transform;
+
+	// The camera's vertical field of view in radians
+	float perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
+
+	// The height of the camera's orthogonal viewport
+	float orthogonalHeight = 1.0f;
+
+	// The ratio of the viewport's width to its height (x / y)
+	float aspectRatio = 1.0f;
+
 	float nearClipDistance = 1.0f;
 	float farClipDistance = 100.0f;
-	float aspectRatio = 1.0f;
 	
 	Projection projectionType = Projection::Perspective;
-	
-	bool projectionMatrixIsDirty = true;
-	
-public:
-	Camera();
-	~Camera();
-	
-	void SetProjectionType(Projection projectionType);
-	Projection GetProjectionType() const;
-	
-	void SetFieldOfView(float fieldOfView);
-	float GetFieldOfView() const;
-	
-	void SetNearClipDistance(float nearClipDistance);
-	float GetNearClipDistance() const;
-	
-	void SetFarClipDistance(float farClipDistance);
-	float GetFarClipDistance() const;
-	
-	void SetFrameSize(const Vec2i& frameSize);
-	
-	Mat4x4f GetViewProjectionMatrix();
-	
-	Mat4x4f GetViewMatrix();
-	Mat4x4f& GetProjectionMatrix();
+
+	inline Mat4x4f GetProjectionMatrix()
+	{
+		if (projectionType == Projection::Perspective)
+			return Matrix::Perspective(perspectiveFieldOfView, aspectRatio,
+											 nearClipDistance, farClipDistance);
+
+		else if (projectionType == Projection::Orthographic)
+			return Matrix::Orthographic(orthogonalHeight / aspectRatio * 0.5f,
+										orthogonalHeight * 0.5f,
+										nearClipDistance, farClipDistance);
+
+		return Mat4x4f(Mat4x4f::identity);
+	}
+
+	inline Mat4x4f GetViewProjectionMatrix()
+	{
+		return this->GetProjectionMatrix() * this->GetViewMatrix();
+	}
+
+	inline Mat4x4f GetViewMatrix()
+	{
+		return Matrix::Translate(
+			-(transform.position)) * Matrix::Transpose(transform.rotation);
+	}
+
+	inline void SetAspectRatio(int width, int height)
+	{
+		aspectRatio = width / static_cast<float>(height);
+	}
 };

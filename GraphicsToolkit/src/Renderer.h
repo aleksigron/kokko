@@ -7,7 +7,7 @@
 #include "Collection.h"
 
 class Window;
-class Camera;
+struct Camera;
 
 class Renderer
 {
