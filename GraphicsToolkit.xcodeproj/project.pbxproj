@@ -101,6 +101,7 @@
 		459122A91B6E63AB00CF3D2A /* Rendering */ = {
 			isa = PBXGroup;
 			children = (
+				45E978821B370D7200E11814 /* Camera.h */,
 				45E9786A1B35939300E11814 /* Renderer.cpp */,
 				45E9786B1B35939300E11814 /* Renderer.h */,
 				455051171B6176E50096FAD2 /* RenderObject.cpp */,
@@ -147,7 +148,6 @@
 				45E9784E1B34CF0600E11814 /* main.cpp */,
 				45E9785D1B34D1C600E11814 /* App.cpp */,
 				45E9785E1B34D1C600E11814 /* App.h */,
-				45E978821B370D7200E11814 /* Camera.h */,
 				455051291B6ABFA10096FAD2 /* ImageData.cpp */,
 				4550512A1B6ABFA10096FAD2 /* ImageData.h */,
 				459122AA1B6E71F500CF3D2A /* ObjectId.h */,
