@@ -2,9 +2,14 @@
 
 #include <OpenGL/gl3.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Wunused-function"
+#pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
 #include "stb/stb_image.h"
+#pragma clang diagnostic pop
 
 bool ImageData::LoadPng(const char* filePath)
 {
