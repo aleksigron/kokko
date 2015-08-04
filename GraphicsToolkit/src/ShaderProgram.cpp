@@ -118,24 +118,24 @@ bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderF
 	
 	if (linkStatus == GL_TRUE)
 	{
-		this->shaderGlId = programId;
+		this->oglId = programId;
 		this->mvpUniformLocation = glGetUniformLocation(programId, "MVP");
 		
 		return true;
 	}
 	else
 	{
-		this->shaderGlId = 0;
+		this->oglId = 0;
 
 		// Get info log length
 		GLint infoLogLength = 0;
-		glGetProgramiv(shaderGlId, GL_INFO_LOG_LENGTH, &infoLogLength);
+		glGetProgramiv(this->oglId, GL_INFO_LOG_LENGTH, &infoLogLength);
 		
 		if (infoLogLength > 0)
 		{
 			// Print out info log
 			char* infoLog = new char[infoLogLength + 1];
-			glGetProgramInfoLog(shaderGlId, infoLogLength, NULL, infoLog);
+			glGetProgramInfoLog(this->oglId, infoLogLength, NULL, infoLog);
 			printf("%s\n", infoLog);
 			
 			delete[] infoLog;

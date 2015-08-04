@@ -47,7 +47,7 @@ void Renderer::Render()
 			ResourceManager* res = App::GetResourceManager();
 			ShaderProgram& shader = res->shaders.Get(obj.shader);
 
-			glUseProgram(shader.shaderGlId);
+			glUseProgram(shader.oglId);
 
 			glUniformMatrix4fv(shader.mvpUniformLocation, 1,
 							   GL_FALSE, mvp.ValuePointer());
@@ -60,7 +60,7 @@ void Renderer::Render()
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, texture.textureGlId);
 
-				GLint texUniform = glGetUniformLocation(shader.shaderGlId, "tex");
+				GLint texUniform = glGetUniformLocation(shader.oglId, "tex");
 
 				// Set texture uniform to texture unit 0
 				glUniform1i(texUniform, 0);
