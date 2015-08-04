@@ -18,7 +18,11 @@ bool ImageData::LoadPng(const char* filePath)
 
 	if (data != nullptr)
 	{
-		pixelFormat = (components == 4 ? GL_RGBA : GL_RGB);
+		assert(components >= 0 && components < 4);
+
+		static const GLenum formats[] = { GL_RED, GL_RG, GL_RGB, GL_RGBA };
+		pixelFormat = formats[components - 1];
+
 		return true;
 	}
 	else
