@@ -1,14 +1,15 @@
 #include "Renderer.h"
 
-#define GLFW_INCLUDE_GLCOREARB
-#include "glfw/glfw3.h"
-
 #include <new>
 #include <cassert>
+
+#define GLFW_INCLUDE_GLCOREARB
+#include "glfw/glfw3.h"
 
 #include "Window.h"
 #include "Camera.h"
 #include "App.h"
+#include "Material.h"
 
 Renderer::Renderer()
 {
@@ -35,44 +36,71 @@ void Renderer::Render()
 	if (this->targetWindow != nullptr && this->activeCamera != nullptr)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		Mat4x4f viewProjection = this->activeCamera->GetViewProjectionMatrix();
-		
-		for (size_t i = 0; i < contiguousFree; ++i)
+
+		if (contiguousFree > 0)
 		{
-			RenderObject& obj = objects[i];
-			
-			Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
-
 			ResourceManager* res = App::GetResourceManager();
-			ShaderProgram& shader = res->shaders.Get(obj.shader);
 
-			glUseProgram(shader.oglId);
+			Mat4x4f viewProjection = this->activeCamera->GetViewProjectionMatrix();
 
-			glUniformMatrix4fv(shader.mvpUniformLocation, 1,
-							   GL_FALSE, mvp.ValuePointer());
-
-			if (obj.hasTexture) // HORRIBLE & UGLY
+			for (size_t i = 0; i < contiguousFree; ++i)
 			{
-				Texture& texture = res->textures.Get(obj.texture);
+				RenderObject& obj = objects[i];
+				Material material = res->materials.Get(obj.material);
+				ShaderProgram& shader = res->shaders.Get(material.shader);
 
-				// Bind our texture in Texture Unit 0
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, texture.textureGlId);
+				glUseProgram(shader.oglId);
 
-				GLint texUniform = glGetUniformLocation(shader.oglId, "tex");
+				// Bind each material uniform with a value
+				for (unsigned uIndex = 0; uIndex < material.materialUniformCount; ++uIndex)
+				{
+					ShaderMaterialUniform& u = material.materialUniforms[uIndex];
 
-				// Set texture uniform to texture unit 0
-				glUniform1i(texUniform, 0);
+					unsigned char* uData = &material.uniformData[u.dataOffset];
+
+					switch (u.type)
+					{
+						case ShaderUniformType::Mat4x4:
+							glUniformMatrix4fv(u.location, 1, GL_FALSE,
+											   reinterpret_cast<float*>(uData));
+							break;
+
+						case ShaderUniformType::Vec3:
+							glUniform3fv(u.location, 1,
+										 reinterpret_cast<float*>(uData));
+							break;
+
+						case ShaderUniformType::Vec2:
+							glUniform2fv(u.location, 1,
+										 reinterpret_cast<float*>(uData));
+							break;
+
+						case ShaderUniformType::Float:
+							glUniform1f(u.location,
+										*reinterpret_cast<float*>(uData));
+							break;
+
+						case ShaderUniformType::Texture2D:
+							glActiveTexture(GL_TEXTURE0);
+							glBindTexture(GL_TEXTURE_2D, *reinterpret_cast<int*>(uData));
+							glUniform1i(u.location, 0);
+							break;
+					}
+				}
+
+				Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
+
+				glUniformMatrix4fv(shader.mvpUniformLocation, 1,
+								   GL_FALSE, mvp.ValuePointer());
+
+				glBindVertexArray(obj.vertexArrayObject);
+
+				glDrawElements(GL_TRIANGLES, obj.indexCount,
+							   obj.indexElementType, reinterpret_cast<void*>(0));
 			}
-
-			glBindVertexArray(obj.vertexArrayObject);
 			
-			glDrawElements(GL_TRIANGLES, obj.indexCount,
-						   obj.indexElementType, reinterpret_cast<void*>(0));
+			glBindVertexArray(0);
 		}
-
-		glBindVertexArray(0);
 	}
 }
 

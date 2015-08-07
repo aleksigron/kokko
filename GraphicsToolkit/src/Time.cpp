@@ -1,5 +1,8 @@
 #include "Time.h"
 
+#define GLFW_INCLUDE_NONE
+#include "glfw/glfw3.h"
+
 Time* Time::instance = nullptr;
 
 Time::Time() :

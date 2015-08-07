@@ -1,16 +1,10 @@
 #include "App.h"
 
-#include <cstdio>
-
-#include "Hash.h"
-
 #include "GeometryBuilder.h"
 #include "ImageData.h"
 
-template<uint32_t n> struct PrintConstexprUint
-{
-	PrintConstexprUint() { printf("%x", n); }
-};
+#define GLFW_INCLUDE_GLCOREARB
+#include "glfw/glfw3.h"
 
 App* App::instance = nullptr;
 
@@ -25,8 +19,6 @@ App::~App()
 
 bool App::Initialize()
 {
-	PrintConstexprUint<"Stuff"_hash>();
-
 	if (this->mainWindow.Initialize())
 	{
 		this->renderer.Initialize();
@@ -34,7 +26,6 @@ bool App::Initialize()
 		this->renderer.SetActiveCamera(&this->mainCamera);
 
 		// Test image
-
 		ImageData image;
 		image.LoadPng("res/textures/test.png");
 
@@ -44,28 +35,44 @@ bool App::Initialize()
 
 		image.DeallocateData();
 
-		// First cube
-
+		// Color shader
 		ObjectId colShaderId = resourceManager.shaders.Add();
 		ShaderProgram& colShader = resourceManager.shaders.Get(colShaderId);
 		colShader.Load("res/shaders/simple.vert", "res/shaders/simple.frag");
 
+		// Color material
+		ObjectId colorMaterialId = resourceManager.materials.Add();
+		Material& colorMaterial = resourceManager.materials.Get(colorMaterialId);
+		colorMaterial.shader = colShaderId;
+		colorMaterial.materialUniformCount = 0;
+
+		// Color object
 		this->cube0 = GeometryBuilder::UnitCubeWithColor();
 		RenderObject& cube0obj = this->renderer.GetRenderObject(this->cube0);
-		cube0obj.shader = colShaderId;
-		cube0obj.hasTexture = false;
+		cube0obj.material = colorMaterialId;
 
-		// Second cube
-
+		// Texture shader
 		ObjectId texShaderId = resourceManager.shaders.Add();
 		ShaderProgram& texShader = resourceManager.shaders.Get(texShaderId);
 		texShader.Load("res/shaders/tex.vert", "res/shaders/tex.frag");
 
+		// Texture material
+		ObjectId texMaterialId = resourceManager.materials.Add();
+		Material& texMaterial = resourceManager.materials.Get(texMaterialId);
+		texMaterial.shader = texShaderId;
+		texMaterial.materialUniformCount = 1;
+		texMaterial.materialUniforms[0].location = glGetUniformLocation(texShader.oglId, "tex");
+		texMaterial.materialUniforms[0].type = ShaderUniformType::Texture2D;
+		texMaterial.materialUniforms[0].dataOffset = 0;
+
+		texMaterial.uniformData = new unsigned char[4];
+		*texMaterial.uniformData = tex.textureGlId;
+
+		// Second cube
+
 		this->cube1 = GeometryBuilder::UnitCubeWithTextureCoords();
 		RenderObject& cube1obj = this->renderer.GetRenderObject(this->cube1);
-		cube1obj.shader = texShaderId;
-		cube1obj.texture = texId;
-		cube1obj.hasTexture = true;
+		cube1obj.material = texMaterialId;
 
 		this->mainCamera.transform.position = Vec3f(0.0f, 0.0f, 5.0f);
 

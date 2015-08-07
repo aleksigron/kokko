@@ -1,6 +1,6 @@
 #pragma once
 
-#include <OpenGL/gltypes.h>
+#include <cstdint>
 
 #include "Transform.h"
 #include "Buffer.h"
@@ -11,17 +11,14 @@ struct RenderObject
 {
 	ObjectId id;
 
+	ObjectId material;
+
 	Transform transform;
-
-	ObjectId shader;
-	ObjectId texture;
 	
-	GLuint vertexArrayObject;
+	uint32_t vertexArrayObject;
 	
-	GLsizei indexCount;
-	GLenum indexElementType;
-
-	bool hasTexture;
+	int32_t indexCount;
+	uint32_t indexElementType;
 
 	void UploadVertexData_PosCol(const Buffer<uint16_t>& index,
 								 const Buffer<Vertex_PosCol>& vertex);

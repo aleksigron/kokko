@@ -1,23 +1,6 @@
 #pragma once
 
-#include "ImmutableString.h"
 #include "ObjectId.h"
-
-struct ShaderUniform
-{
-	enum class Type
-	{
-		Texture2D,
-		Mat4x4,
-		Vec3,
-		Vec2,
-		Float
-	};
-
-	ImmutableString name;
-	int layoutLocation;
-	Type type;
-};
 
 struct ShaderProgram
 {
@@ -33,7 +16,7 @@ private:
 public:
 	ObjectId id;
 
-	unsigned oglId;
+	unsigned int oglId;
 	int mvpUniformLocation;
 	
 	bool Load(const char* vertShaderFilePath, const char* fragShaderFilePath);

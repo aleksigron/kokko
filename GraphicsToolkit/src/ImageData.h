@@ -1,7 +1,5 @@
 #pragma once
 
-#include <OpenGL/gltypes.h>
-
 #include "Vec2.h"
 
 struct ImageData
@@ -11,7 +9,7 @@ struct ImageData
 	unsigned char* data;
 	unsigned long dataSize;
 
-	GLenum pixelFormat;
+	unsigned int pixelFormat;
 
 	bool LoadPng(const char* filePath);
 
