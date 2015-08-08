@@ -16,8 +16,8 @@ struct Material
 
 	int mvpUniformLocation;
 
-	unsigned int materialUniformCount;
-	ShaderMaterialUniform materialUniforms[MaxUniformCount];
+	unsigned int uniformCount;
+	ShaderMaterialUniform uniforms[MaxUniformCount];
 
 	unsigned char* uniformData;
 };

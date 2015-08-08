@@ -33,75 +33,77 @@ void Renderer::Initialize()
 
 void Renderer::Render()
 {
-	if (this->targetWindow != nullptr && this->activeCamera != nullptr)
+	assert(targetWindow != nullptr);
+	assert(activeCamera != nullptr);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	ResourceManager* res = App::GetResourceManager();
+
+	Mat4x4f viewProjection = this->activeCamera->GetViewProjectionMatrix();
+
+	for (unsigned i = 0; i < contiguousFree; ++i)
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		if (contiguousFree > 0)
+		if (this->RenderObjectIsAlive(i) == true)
 		{
-			ResourceManager* res = App::GetResourceManager();
+			RenderObject& obj = objects[i];
 
-			Mat4x4f viewProjection = this->activeCamera->GetViewProjectionMatrix();
+			Material& material = res->materials.Get(obj.material);
+			ShaderProgram& shader = res->shaders.Get(material.shader);
 
-			for (size_t i = 0; i < contiguousFree; ++i)
+			glUseProgram(shader.oglId);
+
+			// Bind each material uniform with a value
+			for (unsigned uIndex = 0; uIndex < material.uniformCount; ++uIndex)
 			{
-				RenderObject& obj = objects[i];
-				Material material = res->materials.Get(obj.material);
-				ShaderProgram& shader = res->shaders.Get(material.shader);
+				ShaderMaterialUniform& u = material.uniforms[uIndex];
 
-				glUseProgram(shader.oglId);
+				unsigned char* uData = material.uniformData + u.dataOffset;
 
-				// Bind each material uniform with a value
-				for (unsigned uIndex = 0; uIndex < material.materialUniformCount; ++uIndex)
+				switch (u.type)
 				{
-					ShaderMaterialUniform& u = material.materialUniforms[uIndex];
+					case ShaderUniformType::Mat4x4:
+						glUniformMatrix4fv(u.location, 1, GL_FALSE,
+										   reinterpret_cast<float*>(uData));
+						break;
 
-					unsigned char* uData = &material.uniformData[u.dataOffset];
+					case ShaderUniformType::Vec3:
+						glUniform3fv(u.location, 1,
+									 reinterpret_cast<float*>(uData));
+						break;
 
-					switch (u.type)
-					{
-						case ShaderUniformType::Mat4x4:
-							glUniformMatrix4fv(u.location, 1, GL_FALSE,
-											   reinterpret_cast<float*>(uData));
-							break;
+					case ShaderUniformType::Vec2:
+						glUniform2fv(u.location, 1,
+									 reinterpret_cast<float*>(uData));
+						break;
 
-						case ShaderUniformType::Vec3:
-							glUniform3fv(u.location, 1,
-										 reinterpret_cast<float*>(uData));
-							break;
+					case ShaderUniformType::Float:
+						glUniform1f(u.location,
+									*reinterpret_cast<float*>(uData));
+						break;
 
-						case ShaderUniformType::Vec2:
-							glUniform2fv(u.location, 1,
-										 reinterpret_cast<float*>(uData));
-							break;
-
-						case ShaderUniformType::Float:
-							glUniform1f(u.location,
-										*reinterpret_cast<float*>(uData));
-							break;
-
-						case ShaderUniformType::Texture2D:
-							glActiveTexture(GL_TEXTURE0);
-							glBindTexture(GL_TEXTURE_2D, *reinterpret_cast<int*>(uData));
-							glUniform1i(u.location, 0);
-							break;
-					}
+					case ShaderUniformType::Texture2D:
+						glActiveTexture(GL_TEXTURE0);
+						glBindTexture(GL_TEXTURE_2D, *reinterpret_cast<int*>(uData));
+						glUniform1i(u.location, 0);
+						break;
 				}
-
-				Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
-
-				glUniformMatrix4fv(shader.mvpUniformLocation, 1,
-								   GL_FALSE, mvp.ValuePointer());
-
-				glBindVertexArray(obj.vertexArrayObject);
-
-				glDrawElements(GL_TRIANGLES, obj.indexCount,
-							   obj.indexElementType, reinterpret_cast<void*>(0));
 			}
-			
-			glBindVertexArray(0);
+
+			Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
+
+			glUniformMatrix4fv(shader.mvpUniformLocation, 1,
+							   GL_FALSE, mvp.ValuePointer());
+
+			glBindVertexArray(obj.vertexArrayObject);
+
+			glDrawElements(GL_TRIANGLES, obj.indexCount,
+						   obj.indexElementType, reinterpret_cast<void*>(0));
+
 		}
 	}
+
+	glBindVertexArray(0);
 }
 
 void Renderer::AttachTarget(Window* window)
@@ -114,63 +116,53 @@ void Renderer::SetActiveCamera(Camera* camera)
 	this->activeCamera = camera;
 }
 
-bool Renderer::HasRenderObject(ObjectId id)
-{
-	return objects[id.index].id.innerId == id.innerId;
-}
-
-RenderObject& Renderer::GetRenderObject(ObjectId id)
-{
-	return objects[id.index];
-}
-
 ObjectId Renderer::AddRenderObject()
 {
 	ObjectId id;
 	id.innerId = nextInnerId++;
-	
-	if (freeList == UINT32_MAX)
+
+	if (freeList == UINT_MAX)
 	{
 		// TODO: Reallocate and copy if contiguousFree == allocatedCount
-		
-		// Placement new the RenderObject into the allocated memory
+
+		// Place the RenderObject into the allocated memory
 		RenderObject* o = new (objects + contiguousFree) RenderObject();
-		
+
 		id.index = static_cast<uint32_t>(contiguousFree);
 		o->id = id;
-		
+
 		++contiguousFree;
 	}
 	else
 	{
 		id.index = freeList;
-		
+
 		/*
 		 Get pointer to objects[freeList],
 		 cast pointer to char*,
 		 add sizeof(RenderObjectId) to pointer value,
 		 cast pointer to uint32_t*
-		*/
+		 */
 
 		char* ptr = reinterpret_cast<char*>(&objects[freeList]);
 		uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(ObjectId));
 		freeList = *next;
 	}
-	
+
 	return id;
 }
 
 void Renderer::RemoveRenderObject(ObjectId id)
 {
 	RenderObject& o = this->GetRenderObject(id);
-	o.id.innerId = UINT32_MAX;
+	o.id.innerId = UINT_MAX;
 
 	/*
 	 Get pointer to objects[freeList],
 	 cast pointer to char*,
 	 add sizeof(RenderObjectId) to pointer value,
 	 cast pointer to uint32_t*
-	*/
+	 */
 
 	char* ptr = reinterpret_cast<char*>(&o);
 	uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(ObjectId));

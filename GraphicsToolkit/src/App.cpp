@@ -44,7 +44,7 @@ bool App::Initialize()
 		ObjectId colorMaterialId = resourceManager.materials.Add();
 		Material& colorMaterial = resourceManager.materials.Get(colorMaterialId);
 		colorMaterial.shader = colShaderId;
-		colorMaterial.materialUniformCount = 0;
+		colorMaterial.uniformCount = 0;
 
 		// Color object
 		this->cube0 = GeometryBuilder::UnitCubeWithColor();
@@ -60,13 +60,15 @@ bool App::Initialize()
 		ObjectId texMaterialId = resourceManager.materials.Add();
 		Material& texMaterial = resourceManager.materials.Get(texMaterialId);
 		texMaterial.shader = texShaderId;
-		texMaterial.materialUniformCount = 1;
-		texMaterial.materialUniforms[0].location = glGetUniformLocation(texShader.oglId, "tex");
-		texMaterial.materialUniforms[0].type = ShaderUniformType::Texture2D;
-		texMaterial.materialUniforms[0].dataOffset = 0;
+		texMaterial.uniformCount = 1;
+		texMaterial.uniforms[0].location = glGetUniformLocation(texShader.oglId, "tex");
+		texMaterial.uniforms[0].type = ShaderUniformType::Texture2D;
+		texMaterial.uniforms[0].dataOffset = 0;
 
 		texMaterial.uniformData = new unsigned char[4];
-		*texMaterial.uniformData = tex.textureGlId;
+
+		unsigned* textureIdPtr = reinterpret_cast<unsigned*>(texMaterial.uniformData);
+		*textureIdPtr = tex.textureGlId;
 
 		// Second cube
 

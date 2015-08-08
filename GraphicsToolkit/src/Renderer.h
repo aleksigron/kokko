@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <climits>
 
 #include "RenderObject.h"
 #include "Buffer.h"
@@ -23,6 +24,11 @@ private:
 	size_t allocatedCount = 0;
 	
 	static const size_t initialAllocation = 4096;
+
+	inline bool RenderObjectIsAlive(unsigned int index)
+	{
+		return objects[index].id.innerId != UINT_MAX;
+	}
 	
 public:
 	Renderer();
@@ -34,9 +40,16 @@ public:
 	
 	void AttachTarget(Window* window);
 	void SetActiveCamera(Camera* camera);
-	
-	bool HasRenderObject(ObjectId id);
-	RenderObject& GetRenderObject(ObjectId id);
+
+	inline bool HasRenderObject(ObjectId id)
+	{
+		return objects[id.index].id.innerId == id.innerId;
+	}
+
+	inline RenderObject& GetRenderObject(ObjectId id)
+	{
+		return objects[id.index];
+	}
 	
 	ObjectId AddRenderObject();
 	void RemoveRenderObject(ObjectId id);
