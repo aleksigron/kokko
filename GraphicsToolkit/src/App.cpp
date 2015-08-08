@@ -2,6 +2,8 @@
 
 #include "GeometryBuilder.h"
 #include "ImageData.h"
+#include "JsonReader.h"
+#include <string>
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
@@ -17,6 +19,29 @@ App::~App()
 {
 }
 
+static void ReadString(const JsonReader::String& key,
+					   const JsonReader::String& value,
+					   void* userData)
+{
+	std::string k;
+	k.append(key.str, key.len);
+
+	std::string v;
+	v.append(value.str, value.len);
+
+	int i = 0;
+}
+
+static void OpenObject(void* userData)
+{
+	int i(0);
+}
+
+static void CloseObject(void* userData)
+{
+	int i(0);
+}
+
 bool App::Initialize()
 {
 	if (this->mainWindow.Initialize())
@@ -24,6 +49,14 @@ bool App::Initialize()
 		this->renderer.Initialize();
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
+
+		const char* json = "{\"vertexShaderFile\": \"res/shaders/simple.vert\", \"fragmentShaderFile\": \"res/shaders/simple.frag\"}";
+		JsonReader reader(json);
+		JsonReader::CallbackInfo cb;
+		cb.readString = ReadString;
+		cb.openObject = OpenObject;
+		cb.closeObject = CloseObject;
+		reader.Parse(cb);
 
 		// Test image
 		ImageData image;

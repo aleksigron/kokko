@@ -40,6 +40,7 @@
 /* Begin PBXFileReference section */
 		4508A57F1B6EBFA700C965EF /* Material.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Material.h; path = src/Material.h; sourceTree = "<group>"; };
 		451C61521B5EF4F900DC1501 /* GeometryBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GeometryBuilder.h; path = src/GeometryBuilder.h; sourceTree = "<group>"; };
+		453596081B768CBE0045DC04 /* JsonReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JsonReader.h; path = src/JsonReader.h; sourceTree = "<group>"; };
 		454546C41B71596C00998248 /* ImmutableString.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ImmutableString.h; path = src/ImmutableString.h; sourceTree = "<group>"; };
 		454546C51B74088900998248 /* ShaderUniform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ShaderUniform.h; path = src/ShaderUniform.h; sourceTree = "<group>"; };
 		455051171B6176E50096FAD2 /* RenderObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderObject.cpp; path = src/RenderObject.cpp; sourceTree = "<group>"; };
@@ -186,6 +187,7 @@
 				451C61521B5EF4F900DC1501 /* GeometryBuilder.h */,
 				459122AF1B6E865A00CF3D2A /* Hash.h */,
 				454546C41B71596C00998248 /* ImmutableString.h */,
+				453596081B768CBE0045DC04 /* JsonReader.h */,
 			);
 			name = Util;
 			sourceTree = "<group>";
