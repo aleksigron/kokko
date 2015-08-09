@@ -12,7 +12,7 @@ public:
 		{
 			if (len != other.len)
 				return false;
-			for (int i = 0; i < len; ++i)
+			for (unsigned i = 0; i < len; ++i)
 				if (str[i] != other.str[i])
 					return false;
 			return true;
@@ -22,20 +22,29 @@ public:
 		{ return operator == (other) == false; }
 	};
 
-	using ReadStringCallbackFn = void(*)(const String&, const String&, void*);
-	using OpenCloseCallbackFn = void(*)(void*);
+	using ReadStringUnnamedFn = void(*)(const String&, void*);
+	using ReadStringFn = void(*)(const String&, const String&, void*);
+	using OpenCloseUnnamedFn = void(*)(void*);
+	using OpenCloseFn = void(*)(const String&, void*);
 
 	struct CallbackInfo
 	{
 		void* userData = nullptr;
 
-		OpenCloseCallbackFn openObject = nullptr;
-		OpenCloseCallbackFn closeObject = nullptr;
+		OpenCloseUnnamedFn openObjectUnnamed = nullptr;
+		OpenCloseUnnamedFn closeObjectUnnamed = nullptr;
 
-		OpenCloseCallbackFn openArray = nullptr;
-		OpenCloseCallbackFn closeArray = nullptr;
+		OpenCloseFn openObject = nullptr;
+		OpenCloseFn closeObject = nullptr;
 
-		ReadStringCallbackFn readString = nullptr;
+		OpenCloseUnnamedFn openArrayUnnamed = nullptr;
+		OpenCloseUnnamedFn closeArrayUnnamed = nullptr;
+
+		OpenCloseFn openArray = nullptr;
+		OpenCloseFn closeArray = nullptr;
+
+		ReadStringUnnamedFn readStringUnnamed = nullptr;
+		ReadStringFn readString = nullptr;
 	};
 
 private:
@@ -43,7 +52,7 @@ private:
 
 public:
 	// Initialize JsonReader instance with a null-terminated string
-	JsonReader(const char* string)
+	void SetContent(const char* string)
 	{
 		content.str = string;
 
@@ -53,13 +62,13 @@ public:
 	}
 
 	// Initialize JsonReader instance with a specific size string
-	JsonReader(const char* buffer, unsigned int size)
+	void SetContent(const char* buffer, unsigned int size)
 	{
 		content.str = buffer;
 		content.len = size;
 	}
 
-	void Parse(const CallbackInfo& callbackInfo)
+	void Parse(const CallbackInfo& callback)
 	{
 		enum class St : unsigned char
 		{
@@ -74,13 +83,16 @@ public:
 		static const int maxDepth = 32;
 		int currDepth = 0;
 
-		St stack[maxDepth];
-		stack[currDepth] = St::Root;
+		St typeStack[maxDepth];
+		typeStack[currDepth] = St::Root;
+
+		String keyStack[maxDepth];
+
+		// Array of String should be value initialized already, but let's be safe
+		keyStack[currDepth].str = nullptr;
 
 		int scopeStart = 0;
 		char prevChar = 0;
-
-		String key;
 
 		while (charIndex < content.len)
 		{
@@ -92,35 +104,49 @@ public:
 				{
 					if (prevChar != '\\')
 					{
-						// Double quotation mark wasn't escaped
+						// Quotation mark wasn't escaped
+						// This is a real quotation mark
 
-						if (stack[currDepth] == St::String)
+						if (typeStack[currDepth] == St::String)
 						{
-							// A key has been defined in this scope
-							if (key.str != nullptr)
+							// End string literal
+							--currDepth;
+
+							// No key is needed in this scope
+							if (typeStack[currDepth] == St::Array ||
+								typeStack[currDepth] == St::Root)
 							{
 								String value;
 								value.str = content.str + scopeStart;
 								value.len = charIndex - scopeStart;
 
-								callbackInfo.readString(key, value,
-														callbackInfo.userData);
-
-								key.str = nullptr;
+								callback.readStringUnnamed(value,
+									callback.userData);
 							}
-							else // Key has not been defined
+							// A key has been defined in this scope
+							else if (keyStack[currDepth].str != nullptr)
 							{
-								key.str = content.str + scopeStart;
-								key.len = charIndex - scopeStart;
-							}
+								String value;
+								value.str = content.str + scopeStart;
+								value.len = charIndex - scopeStart;
 
-							// End string literal
-							--currDepth;
+								callback.readString(keyStack[currDepth],
+									value, callback.userData);
+
+								// Unset key
+								keyStack[currDepth].str = nullptr;
+							}
+							// Key has not been defined, use this as the key
+							else
+							{
+								keyStack[currDepth].str = content.str + scopeStart;
+								keyStack[currDepth].len = charIndex - scopeStart;
+							}
 						}
 						else
 						{
 							// Start string literal
-							stack[++currDepth] = St::String;
+							typeStack[++currDepth] = St::String;
 							scopeStart = charIndex + 1;
 						}
 					}
@@ -139,32 +165,71 @@ public:
 */
 				case '{':
 				{
-					if (stack[currDepth] != St::String)
+					// We're not within a string literal
+					if (typeStack[currDepth] != St::String)
 					{
-						callbackInfo.openObject(callbackInfo.userData);
-						stack[++currDepth] = St::Object;
+						if (keyStack[currDepth].str != nullptr)
+							callback.openObject(keyStack[currDepth], callback.userData);
+						else
+							callback.openObjectUnnamed(callback.userData);
+
+						// Start object scope
+						typeStack[++currDepth] = St::Object;
 					}
 				}
 					break;
 
 				case '}':
 				{
-					if (stack[currDepth] == St::Object)
+					if (typeStack[currDepth] == St::Object)
 					{
-						callbackInfo.closeObject(callbackInfo.userData);
+						// End object scope
 						--currDepth;
+
+						if (keyStack[currDepth].str != nullptr)
+						{
+							callback.closeObject(keyStack[currDepth], callback.userData);
+							keyStack[currDepth].str = nullptr; // Unset key
+						}
+						else
+							callback.closeObjectUnnamed(callback.userData);
 					}
 				}
 					break;
-/*
-				case '[':
 
+				case '[':
+				{
+					// We're not within a string literal
+					if (typeStack[currDepth] != St::String)
+					{
+						if (keyStack[currDepth].str != nullptr)
+							callback.openArray(keyStack[currDepth], callback.userData);
+						else
+							callback.openArrayUnnamed(callback.userData);
+
+						// Start object scope
+						typeStack[++currDepth] = St::Array;
+					}
+				}
 					break;
 
 				case ']':
+				{
+					if (typeStack[currDepth] == St::Array)
+					{
+						// End object scope
+						--currDepth;
 
+						if (keyStack[currDepth].str != nullptr)
+						{
+							callback.closeArray(keyStack[currDepth], callback.userData);
+							keyStack[currDepth].str = nullptr; // Unset key
+						}
+						else
+							callback.closeArrayUnnamed(callback.userData);
+					}
+				}
 					break;
- */
 			}
 
 			prevChar = c;
