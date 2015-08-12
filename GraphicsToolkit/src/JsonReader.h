@@ -4,6 +4,10 @@
 
 class JsonReader
 {
+private:
+	static void ReadStringNoOp(const StringRef&, const StringRef&, void*) {}
+	static void OpenCloseNoOp(const StringRef&, void*) {}
+
 public:
 	using ReadStringFn = void(*)(const StringRef&, const StringRef&, void*);
 	using OpenCloseFn = void(*)(const StringRef&, void*);
@@ -12,13 +16,13 @@ public:
 	{
 		void* userData = nullptr;
 
-		OpenCloseFn openObject = nullptr;
-		OpenCloseFn closeObject = nullptr;
+		OpenCloseFn openObject = OpenCloseNoOp;
+		OpenCloseFn closeObject = OpenCloseNoOp;
 
-		OpenCloseFn openArray = nullptr;
-		OpenCloseFn closeArray = nullptr;
+		OpenCloseFn openArray = OpenCloseNoOp;
+		OpenCloseFn closeArray = OpenCloseNoOp;
 
-		ReadStringFn readString = nullptr;
+		ReadStringFn readString = ReadStringNoOp;
 	};
 
 private:

@@ -17,5 +17,5 @@ struct ShaderUniform
 
 struct ShaderMaterialUniform : ShaderUniform
 {
-	uint16_t dataOffset;
+	unsigned short dataOffset;
 };

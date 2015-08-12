@@ -2,6 +2,8 @@
 
 #include "ObjectId.h"
 
+#include "ShaderUniform.h"
+
 struct ShaderProgram
 {
 private:
@@ -11,7 +13,7 @@ private:
 		Fragment
 	};
 
-	bool CompileShader(ShaderType type, const char* filePath, unsigned int& idOut);
+	bool CompileShader(ShaderType type, const char* path, unsigned& idOut);
 
 public:
 	ObjectId id;
@@ -20,4 +22,5 @@ public:
 	int mvpUniformLocation;
 	
 	bool Load(const char* vertShaderFilePath, const char* fragShaderFilePath);
+	bool LoadFromConfiguration(const char* configurationPath);
 };

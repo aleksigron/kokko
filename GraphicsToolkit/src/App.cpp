@@ -2,98 +2,12 @@
 
 #include "GeometryBuilder.h"
 #include "ImageData.h"
-#include "JsonReader.h"
-#include "ReadFile.h"
 
 #include <string>
 #include <iostream>
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
-
-struct JsonInput
-{
-	void Read(const JsonReader& reader)
-	{
-		JsonReader::CallbackInfo callbackInfo;
-
-		callbackInfo.readString = JsonInput::ReadString;
-		callbackInfo.openObject = JsonInput::OpenObject;
-		callbackInfo.closeObject = JsonInput::CloseObject;
-		callbackInfo.openArray = JsonInput::OpenArray;
-		callbackInfo.closeArray = JsonInput::CloseArray;
-
-		reader.Parse(callbackInfo);
-	}
-
-	static void ReadString(const StringRef& key,
-						   const StringRef& value,
-						   void* userData)
-	{
-		if (key.IsValid())
-		{
-			std::string k;
-			k.append(key.str, key.len);
-
-			std::cout << "String \"" << k << "\": ";
-		}
-		else
-			std::cout << "String (unnamed): ";
-
-		std::string v;
-		v.append(value.str, value.len);
-
-		std::cout << "\"" << v << "\"\n";
-	}
-	static void OpenObject(const StringRef& key, void* userData)
-	{
-		if (key.IsValid())
-		{
-			std::string k;
-			k.append(key.str, key.len);
-
-			std::cout << "Object \"" << k << "\" opened\n";
-		}
-		else
-			std::cout << "Object (unnamed) opened\n";
-	}
-	static void CloseObject(const StringRef& key, void* userData)
-	{
-		if (key.IsValid())
-		{
-			std::string k;
-			k.append(key.str, key.len);
-
-			std::cout << "Object \"" << k << "\" closed\n";
-		}
-		else
-			std::cout << "Object (unnamed) closed\n";
-	}
-	static void OpenArray(const StringRef& key, void* userData)
-	{
-		if (key.IsValid())
-		{
-			std::string k;
-			k.append(key.str, key.len);
-
-			std::cout << "Array \"" << k << "\" opened\n";
-		}
-		else
-			std::cout << "Array (unnamed) opened\n";
-	}
-	static void CloseArray(const StringRef& key, void* userData)
-	{
-		if (key.IsValid())
-		{
-			std::string k;
-			k.append(key.str, key.len);
-
-			std::cout << "Array \"" << k << "\" closed\n";
-		}
-		else
-			std::cout << "Array (unnamed) closed\n";
-	}
-};
 
 App* App::instance = nullptr;
 
@@ -114,20 +28,6 @@ bool App::Initialize()
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
 
-		Buffer<unsigned char> fileContents = File::Read("res/shaders/simple.json");
-
-		if (fileContents.IsValid())
-		{
-			std::cout << reinterpret_cast<const char*>(fileContents.Data()) << "\n";
-
-			JsonReader reader;
-			reader.SetContent(reinterpret_cast<const char*>(fileContents.Data()),
-							  static_cast<unsigned int>(fileContents.Count()));
-
-			JsonInput input;
-			input.Read(reader);
-		}
-
 		// Test image
 		ImageData image;
 		image.LoadPng("res/textures/test.png");
@@ -141,7 +41,7 @@ bool App::Initialize()
 		// Color shader
 		ObjectId colShaderId = resourceManager.shaders.Add();
 		ShaderProgram& colShader = resourceManager.shaders.Get(colShaderId);
-		colShader.Load("res/shaders/simple.vert", "res/shaders/simple.frag");
+		colShader.LoadFromConfiguration("res/shaders/simple.json");
 
 		// Color material
 		ObjectId colorMaterialId = resourceManager.materials.Add();

@@ -8,6 +8,10 @@
 
 #include <cassert>
 
+#include "File.h"
+#include "JsonReader.h"
+#include "ShaderConfigReader.h"
+
 bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint& shaderIdOut)
 {
 	GLint shaderType = 0;
@@ -76,6 +80,25 @@ bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint&
 		}
 	}
 	
+	return false;
+}
+
+bool ShaderProgram::LoadFromConfiguration(const char* configurationPath)
+{
+	Buffer<unsigned char> configBuffer = File::Read(configurationPath);
+
+	if (configBuffer.IsValid())
+	{
+		JsonReader reader;
+		reader.SetContent(reinterpret_cast<const char*>(configBuffer.Data()),
+						  static_cast<unsigned int>(configBuffer.Count()));
+
+		ShaderConfigReader configReader;
+		configReader.Read(reader, *this);
+
+		return true;
+	}
+
 	return false;
 }
 
