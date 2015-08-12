@@ -1,0 +1,12 @@
+{
+	"vertexShaderFile": "res/shaders/simple.vert",
+	"fragmentShaderFile": "res/shaders/simple.frag",
+	"objectUniforms": [{
+		"name": "MVP",
+		"type": "mat4"
+	}],
+	"materialUniforms": [{
+		"name": "tex",
+		"type": "tex2d"
+	}]
+}

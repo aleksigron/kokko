@@ -1,54 +1,28 @@
 #pragma once
 
+#include "StringRef.h"
+
 class JsonReader
 {
 public:
-	struct String
-	{
-		const char* str = nullptr;
-		unsigned int len = 0;
-
-		bool operator == (const String& other)
-		{
-			if (len != other.len)
-				return false;
-			for (unsigned i = 0; i < len; ++i)
-				if (str[i] != other.str[i])
-					return false;
-			return true;
-		}
-
-		inline bool operator != (const String& other)
-		{ return operator == (other) == false; }
-	};
-
-	using ReadStringUnnamedFn = void(*)(const String&, void*);
-	using ReadStringFn = void(*)(const String&, const String&, void*);
-	using OpenCloseUnnamedFn = void(*)(void*);
-	using OpenCloseFn = void(*)(const String&, void*);
+	using ReadStringFn = void(*)(const StringRef&, const StringRef&, void*);
+	using OpenCloseFn = void(*)(const StringRef&, void*);
 
 	struct CallbackInfo
 	{
 		void* userData = nullptr;
 
-		OpenCloseUnnamedFn openObjectUnnamed = nullptr;
-		OpenCloseUnnamedFn closeObjectUnnamed = nullptr;
-
 		OpenCloseFn openObject = nullptr;
 		OpenCloseFn closeObject = nullptr;
-
-		OpenCloseUnnamedFn openArrayUnnamed = nullptr;
-		OpenCloseUnnamedFn closeArrayUnnamed = nullptr;
 
 		OpenCloseFn openArray = nullptr;
 		OpenCloseFn closeArray = nullptr;
 
-		ReadStringUnnamedFn readStringUnnamed = nullptr;
 		ReadStringFn readString = nullptr;
 	};
 
 private:
-	String content;
+	StringRef content;
 
 public:
 	// Initialize JsonReader instance with a null-terminated string
@@ -68,7 +42,7 @@ public:
 		content.len = size;
 	}
 
-	void Parse(const CallbackInfo& callback)
+	void Parse(const CallbackInfo& callback) const
 	{
 		enum class St : unsigned char
 		{
@@ -86,7 +60,7 @@ public:
 		St typeStack[maxDepth];
 		typeStack[currDepth] = St::Root;
 
-		String keyStack[maxDepth];
+		StringRef keyStack[maxDepth];
 
 		// Array of String should be value initialized already, but let's be safe
 		keyStack[currDepth].str = nullptr;
@@ -116,17 +90,17 @@ public:
 							if (typeStack[currDepth] == St::Array ||
 								typeStack[currDepth] == St::Root)
 							{
-								String value;
+								StringRef value;
 								value.str = content.str + scopeStart;
 								value.len = charIndex - scopeStart;
 
-								callback.readStringUnnamed(value,
+								callback.readString(keyStack[currDepth], value,
 									callback.userData);
 							}
 							// A key has been defined in this scope
 							else if (keyStack[currDepth].str != nullptr)
 							{
-								String value;
+								StringRef value;
 								value.str = content.str + scopeStart;
 								value.len = charIndex - scopeStart;
 
@@ -134,7 +108,7 @@ public:
 									value, callback.userData);
 
 								// Unset key
-								keyStack[currDepth].str = nullptr;
+								keyStack[currDepth].Invalidate();
 							}
 							// Key has not been defined, use this as the key
 							else
@@ -168,10 +142,8 @@ public:
 					// We're not within a string literal
 					if (typeStack[currDepth] != St::String)
 					{
-						if (keyStack[currDepth].str != nullptr)
-							callback.openObject(keyStack[currDepth], callback.userData);
-						else
-							callback.openObjectUnnamed(callback.userData);
+						// If there's a key defined, the callee can detect it
+						callback.openObject(keyStack[currDepth], callback.userData);
 
 						// Start object scope
 						typeStack[++currDepth] = St::Object;
@@ -186,13 +158,11 @@ public:
 						// End object scope
 						--currDepth;
 
-						if (keyStack[currDepth].str != nullptr)
-						{
-							callback.closeObject(keyStack[currDepth], callback.userData);
-							keyStack[currDepth].str = nullptr; // Unset key
-						}
-						else
-							callback.closeObjectUnnamed(callback.userData);
+						// If there's a key defined, the callee can detect it
+						callback.closeObject(keyStack[currDepth], callback.userData);
+
+						// Unset key, if it existed anyway
+						keyStack[currDepth].Invalidate();
 					}
 				}
 					break;
@@ -202,12 +172,10 @@ public:
 					// We're not within a string literal
 					if (typeStack[currDepth] != St::String)
 					{
-						if (keyStack[currDepth].str != nullptr)
-							callback.openArray(keyStack[currDepth], callback.userData);
-						else
-							callback.openArrayUnnamed(callback.userData);
+						// If there's a key defined, the callee can detect it
+						callback.openArray(keyStack[currDepth], callback.userData);
 
-						// Start object scope
+						// Start array scope
 						typeStack[++currDepth] = St::Array;
 					}
 				}
@@ -217,16 +185,14 @@ public:
 				{
 					if (typeStack[currDepth] == St::Array)
 					{
-						// End object scope
+						// End array scope
 						--currDepth;
 
-						if (keyStack[currDepth].str != nullptr)
-						{
-							callback.closeArray(keyStack[currDepth], callback.userData);
-							keyStack[currDepth].str = nullptr; // Unset key
-						}
-						else
-							callback.closeArrayUnnamed(callback.userData);
+						// If there's a key defined, the callee can detect it
+						callback.closeArray(keyStack[currDepth], callback.userData);
+
+						// Unset key, if it existed anyway
+						keyStack[currDepth].Invalidate(); // Unset key
 					}
 				}
 					break;

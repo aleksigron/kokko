@@ -3,6 +3,7 @@
 #include "GeometryBuilder.h"
 #include "ImageData.h"
 #include "JsonReader.h"
+#include "ReadFile.h"
 
 #include <string>
 #include <iostream>
@@ -12,59 +13,85 @@
 
 struct JsonInput
 {
-	JsonReader::CallbackInfo callback;
-
-	static void ReadStringUnnamed(const JsonReader::String& value,
-								  void* userData)
+	void Read(const JsonReader& reader)
 	{
-		std::string v;
-		v.append(value.str, value.len);
+		JsonReader::CallbackInfo callbackInfo;
 
-		std::cout << "String (unnamed): \"" << v << "\"\n";
+		callbackInfo.readString = JsonInput::ReadString;
+		callbackInfo.openObject = JsonInput::OpenObject;
+		callbackInfo.closeObject = JsonInput::CloseObject;
+		callbackInfo.openArray = JsonInput::OpenArray;
+		callbackInfo.closeArray = JsonInput::CloseArray;
+
+		reader.Parse(callbackInfo);
 	}
-	static void ReadString(const JsonReader::String& key,
-						   const JsonReader::String& value,
+
+	static void ReadString(const StringRef& key,
+						   const StringRef& value,
 						   void* userData)
 	{
-		std::string k;
-		k.append(key.str, key.len);
+		if (key.IsValid())
+		{
+			std::string k;
+			k.append(key.str, key.len);
+
+			std::cout << "String \"" << k << "\": ";
+		}
+		else
+			std::cout << "String (unnamed): ";
 
 		std::string v;
 		v.append(value.str, value.len);
 
-		std::cout << "String \"" << k << "\": \"" << v << "\"\n";
+		std::cout << "\"" << v << "\"\n";
 	}
-	static void OpenObjectNamed(const JsonReader::String& key, void* userData)
+	static void OpenObject(const StringRef& key, void* userData)
 	{
-		std::string k;
-		k.append(key.str, key.len);
-		std::cout << "Object open: \"" << k << "\"\n";
+		if (key.IsValid())
+		{
+			std::string k;
+			k.append(key.str, key.len);
+
+			std::cout << "Object \"" << k << "\" opened\n";
+		}
+		else
+			std::cout << "Object (unnamed) opened\n";
 	}
-	static void CloseObjectNamed(const JsonReader::String& key, void* userData)
+	static void CloseObject(const StringRef& key, void* userData)
 	{
-		std::string k;
-		k.append(key.str, key.len);
-		std::cout << "Object close: \"" << k << "\"\n";
+		if (key.IsValid())
+		{
+			std::string k;
+			k.append(key.str, key.len);
+
+			std::cout << "Object \"" << k << "\" closed\n";
+		}
+		else
+			std::cout << "Object (unnamed) closed\n";
 	}
-	static void OpenObject(void* userData)
+	static void OpenArray(const StringRef& key, void* userData)
 	{
-		std::cout << "Object open: (unnamed)\n";
+		if (key.IsValid())
+		{
+			std::string k;
+			k.append(key.str, key.len);
+
+			std::cout << "Array \"" << k << "\" opened\n";
+		}
+		else
+			std::cout << "Array (unnamed) opened\n";
 	}
-	static void CloseObject(void* userData)
+	static void CloseArray(const StringRef& key, void* userData)
 	{
-		std::cout << "Object close: (unnamed)\n";
-	}
-	static void OpenArrayNamed(const JsonReader::String& key, void* userData)
-	{
-		std::string k;
-		k.append(key.str, key.len);
-		std::cout << "Array open: \"" << k << "\"\n";
-	}
-	static void CloseArrayNamed(const JsonReader::String& key, void* userData)
-	{
-		std::string k;
-		k.append(key.str, key.len);
-		std::cout << "Array close: \"" << k << "\"\n";
+		if (key.IsValid())
+		{
+			std::string k;
+			k.append(key.str, key.len);
+
+			std::cout << "Array \"" << k << "\" closed\n";
+		}
+		else
+			std::cout << "Array (unnamed) closed\n";
 	}
 };
 
@@ -87,24 +114,19 @@ bool App::Initialize()
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
 
-		//const char* json = "{\"vertexShaderFile\": \"res/shaders/simple.vert\", \"fragmentShaderFile\": \"res/shaders/simple.frag\"}";
-		const char* json = "{\"vertexShaderFile\":{\"name\":\"1\",\"ids\":[\"0\",\"1\"]}}";
+		Buffer<unsigned char> fileContents = File::Read("res/shaders/simple.json");
 
-		std::cout << json << "\n";
+		if (fileContents.IsValid())
+		{
+			std::cout << reinterpret_cast<const char*>(fileContents.Data()) << "\n";
 
-		JsonInput input;
-		input.callback.readStringUnnamed = JsonInput::ReadStringUnnamed;
-		input.callback.readString = JsonInput::ReadString;
-		input.callback.openObject = JsonInput::OpenObjectNamed;
-		input.callback.closeObject = JsonInput::CloseObjectNamed;
-		input.callback.openObjectUnnamed = JsonInput::OpenObject;
-		input.callback.closeObjectUnnamed = JsonInput::CloseObject;
-		input.callback.openArray = JsonInput::OpenArrayNamed;
-		input.callback.closeArray = JsonInput::CloseArrayNamed;
+			JsonReader reader;
+			reader.SetContent(reinterpret_cast<const char*>(fileContents.Data()),
+							  static_cast<unsigned int>(fileContents.Count()));
 
-		JsonReader reader;
-		reader.SetContent(json);
-		reader.Parse(input.callback);
+			JsonInput input;
+			input.Read(reader);
+		}
 
 		// Test image
 		ImageData image;
