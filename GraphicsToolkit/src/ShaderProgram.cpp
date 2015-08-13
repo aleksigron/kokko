@@ -3,7 +3,6 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-#include <cstddef>
 #include <cstdio>
 
 #include <cassert>
@@ -14,42 +13,28 @@
 
 bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint& shaderIdOut)
 {
-	GLint shaderType = 0;
+	GLenum shaderType = 0;
 	if (type == ShaderType::Vertex)
 		shaderType = GL_VERTEX_SHADER;
 	else if (type == ShaderType::Fragment)
 		shaderType = GL_FRAGMENT_SHADER;
 	else
 		return false;
-	
-	GLuint shaderId = 0;
-	
-	// Get the vertex shader content
-	FILE* fileHandle = fopen(filePath, "rb");
-	
-	if (fileHandle != nullptr)
+
+	Buffer<unsigned char> fileContents = File::Read(filePath);
+
+	if (fileContents.IsValid())
 	{
-		// Find the size of the file
-		fseek(fileHandle, 0L, SEEK_END);
-		std::size_t shaderLength = ftell(fileHandle);
-		rewind(fileHandle);
+		const char* data = reinterpret_cast<const char*>(fileContents.Data());
+		int length = static_cast<int>(fileContents.Count());
+
+		GLuint shaderId = glCreateShader(shaderType);
 		
-		// Get the file contents
-		char* shaderContent = new char[shaderLength + 1];
-		fread(shaderContent, sizeof(char), shaderLength, fileHandle);
-		fclose(fileHandle);
-		
-		// Null-terminate the string
-		shaderContent[shaderLength] = '\0';
-		
-		shaderId = glCreateShader(shaderType);
-		
-		// Copy shader source
-		glShaderSource(shaderId, 1, &shaderContent , NULL);
-		delete[] shaderContent;
-		shaderContent = nullptr;
-		
-		// Compile shader
+		// Copy shader source to OpenGL
+		glShaderSource(shaderId, 1, &data, &length);
+
+		fileContents.Deallocate();
+
 		glCompileShader(shaderId);
 		
 		// Check compile status
@@ -59,7 +44,6 @@ bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint&
 		if (compileStatus == GL_TRUE)
 		{
 			shaderIdOut = shaderId;
-			
 			return true;
 		}
 		else
@@ -72,7 +56,7 @@ bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint&
 			{
 				// Print out info log
 				char* infoLog = new char[infoLogLength + 1];
-				glGetShaderInfoLog(shaderId, infoLogLength, NULL, infoLog);
+				glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLog);
 				printf("%s\n", infoLog);
 				
 				delete[] infoLog;
