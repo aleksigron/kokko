@@ -1,4 +1,4 @@
 {
-	"vertexShaderFile": "res/shaders/simple.vert",
-	"fragmentShaderFile": "res/shaders/simple.frag"
+	"vertexShaderFile": "res/shaders/simple.vertex.glsl",
+	"fragmentShaderFile": "res/shaders/simple.fragment.glsl"
 }
