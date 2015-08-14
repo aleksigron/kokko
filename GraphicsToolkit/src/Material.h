@@ -39,8 +39,3 @@ struct Material
 		}
 	}
 };
-
-inline bool operator < (const Material& lhs, const Material& rhs)
-{
-	return lhs.shader < rhs.shader;
-}
