@@ -12,19 +12,18 @@ struct ShaderMaterialUniform : ShaderUniform
 
 struct Material
 {
-	static const unsigned MaxUniformCount = 8;
-
 	ObjectId id;
 
 	ObjectId shader;
 
-	int mvpUniformLocation;
+	int mvpUniformLocation = -1;
 
-	unsigned int uniformCount;
+	static const unsigned int MaxUniformCount = 8;
+	unsigned int uniformCount = 0;
 	ShaderMaterialUniform uniforms[MaxUniformCount];
 
-	unsigned int usedUniformData;
-	unsigned char* uniformData;
+	unsigned int usedUniformData = 0;
+	unsigned char* uniformData = nullptr;
 
 	void SetShader(const ShaderProgram& shader);
 
