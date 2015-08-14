@@ -5,7 +5,7 @@ struct StringRef
 	const char* str = nullptr;
 	unsigned int len = 0;
 
-	inline bool ReferenceEquals(const StringRef& other)
+	inline bool ReferenceEquals(const StringRef& other) const
 	{ return this->str == other.str && this->len == other.len; }
 
 	bool ValueEquals(const StringRef& other) const

@@ -152,3 +152,32 @@ bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderF
 		return false;
 	}
 }
+
+void ShaderProgram::AddMaterialUniforms(unsigned int count,
+										const ShaderUniformType* types,
+										const StringRef* names)
+{
+	static const unsigned int maxUniformNameLength = 63;
+	char buffer[maxUniformNameLength + 1];
+
+	this->materialUniformCount = count;
+
+	for (unsigned uIndex = 0; uIndex < count; ++uIndex)
+	{
+		const StringRef* name = names + uIndex;
+
+		// The name length is within allowed limits
+		assert(name->len <= maxUniformNameLength);
+
+		// Copy string to a local buffer because it needs to be null terminated
+		for (unsigned charIndex = 0; charIndex < name->len; ++charIndex)
+			buffer[charIndex] = name->str[charIndex];
+		buffer[name->len] = '\0';
+
+		ShaderUniform& uniform = this->materialUniforms[uIndex];
+		uniform.location = glGetUniformLocation(this->oglId, buffer);
+
+		// The uniform could be found
+		assert(uniform.location >= 0);
+	}
+}

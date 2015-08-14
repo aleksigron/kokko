@@ -1,0 +1,8 @@
+{
+	"vertexShaderFile": "res/shaders/tex.vert",
+	"fragmentShaderFile": "res/shaders/tex.frag",
+	"materialUniforms":
+	[
+		{ "name": "tex", "type": "tex2d" }
+	]
+}

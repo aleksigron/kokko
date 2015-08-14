@@ -2,7 +2,22 @@
 
 #include "ObjectId.h"
 
-#include "ShaderUniform.h"
+#include "StringRef.h"
+
+enum class ShaderUniformType
+{
+	Texture2D,
+	Mat4x4,
+	Vec3,
+	Vec2,
+	Float
+};
+
+struct ShaderUniform
+{
+	int location;
+	ShaderUniformType type;
+};
 
 struct ShaderProgram
 {
@@ -20,6 +35,14 @@ public:
 
 	unsigned int oglId;
 	int mvpUniformLocation;
+
+	static const unsigned MaxMaterialUniforms = 8;
+	unsigned int materialUniformCount;
+	ShaderUniform materialUniforms[MaxMaterialUniforms];
+
+	void AddMaterialUniforms(unsigned int count,
+							 const ShaderUniformType* types,
+							 const StringRef* names);
 	
 	bool Load(const char* vertShaderFilePath, const char* fragShaderFilePath);
 	bool LoadFromConfiguration(const char* configurationPath);

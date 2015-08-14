@@ -9,15 +9,23 @@ class ShaderConfigReader
 {
 private:
 	StringRef currentKey;
+
 	StringRef vertexShader;
 	StringRef fragmentShader;
 
+	StringRef uniformNames[ShaderProgram::MaxMaterialUniforms];
+	ShaderUniformType uniformTypes[ShaderProgram::MaxMaterialUniforms];
+	unsigned int uniformCount = 0;
+
 public:
-	void Read(JsonReader& reader, ShaderProgram& shader)
+	bool Read(JsonReader& reader, ShaderProgram& shader)
 	{
 		JsonReader::CallbackInfo cb;
 		cb.userData = this;
 		cb.readString = reinterpret_cast<JsonReader::ReadStringFn>(rs);
+		cb.closeObject = reinterpret_cast<JsonReader::OpenCloseFn>(co);
+		cb.openArray = reinterpret_cast<JsonReader::OpenCloseFn>(oa);
+		cb.closeArray = reinterpret_cast<JsonReader::OpenCloseFn>(ca);
 
 		reader.Parse(cb);
 
@@ -33,8 +41,33 @@ public:
 				fs[i] = fragmentShader.str[i];
 			fs[fragmentShader.len] = '\0';
 
-			shader.Load(vs, fs);
+			if (shader.Load(vs, fs))
+			{
+				shader.AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
+
+				return true;
+			}
 		}
+		
+		return false;
+	}
+
+	static void co(const StringRef& k, ShaderConfigReader* self)
+	{
+		if (self->currentKey.ValueEquals("materialUniforms"))
+			self->uniformCount++;
+	}
+
+	static void oa(const StringRef& k, ShaderConfigReader* self)
+	{
+		if (k.IsValid())
+			self->currentKey = k;
+	}
+
+	static void ca(const StringRef& k, ShaderConfigReader* self)
+	{
+		if (k.ReferenceEquals(self->currentKey))
+			self->currentKey.Invalidate();
 	}
 
 	static void rs(const StringRef& k, const StringRef& v, ShaderConfigReader* self)
@@ -45,6 +78,21 @@ public:
 				self->vertexShader = v;
 			else if (k.ValueEquals("fragmentShaderFile"))
 				self->fragmentShader = v;
+		}
+		else if (self->currentKey.ValueEquals("materialUniforms"))
+		{
+			if (k.ValueEquals("name"))
+			{
+				self->uniformNames[self->uniformCount] = v;
+			}
+			else if (k.ValueEquals("type"))
+			{
+				// Just handle the texture uniform type for now
+				if (v.ValueEquals("tex2d"))
+				{
+					self->uniformTypes[self->uniformCount] = ShaderUniformType::Texture2D;
+				}
+			}
 		}
 	}
 };

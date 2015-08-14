@@ -3,11 +3,15 @@
 #include <cstdint>
 
 #include "ObjectId.h"
-#include "ShaderUniform.h"
+#include "ShaderProgram.h"
+
+struct ShaderMaterialUniform : ShaderUniform
+{
+	unsigned short dataOffset;
+};
 
 struct Material
 {
-	// sizeof(ShaderMaterialUniform) is likely 8, so 8 nicely fit in 64 bytes
 	static const unsigned MaxUniformCount = 8;
 
 	ObjectId id;
@@ -19,7 +23,22 @@ struct Material
 	unsigned int uniformCount;
 	ShaderMaterialUniform uniforms[MaxUniformCount];
 
+	unsigned int usedUniformData;
 	unsigned char* uniformData;
+
+	void SetShader(const ShaderProgram& shader);
+
+	template <typename T>
+	void SetUniformValue(unsigned int uniformIndex, const T& value)
+	{
+		if (uniformIndex < uniformCount && uniformData != nullptr)
+		{
+			unsigned char* data = uniformData + uniforms[uniformIndex].dataOffset;
+
+			T* uniform = reinterpret_cast<T*>(data);
+			*uniform = value;
+		}
+	}
 };
 
 inline bool operator < (const Material& lhs, const Material& rhs)
