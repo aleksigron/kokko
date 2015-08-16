@@ -45,6 +45,27 @@ struct Vec3
 	{
 		return Vec3(-x, -y, -z);
 	}
+
+	// In-place addition
+	inline Vec3& operator+=(const Vec3& value)
+	{
+		x += value.x;
+		y += value.y;
+		z += value.z;
+
+		return *this;
+	}
+
+	// In-place subtraction
+	inline Vec3& operator-=(const Vec3& value)
+	{
+		x -= value.x;
+		y -= value.y;
+		z -= value.z;
+
+		return *this;
+	}
+
 	// A Vec4 of the this vector as a position
 	Vec4<T> AsPosition() const
 	{

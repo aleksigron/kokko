@@ -43,6 +43,24 @@ struct Vec2
 	{
 		return Vec2(-x, -y);
 	}
+
+	// In-place addition
+	inline Vec2& operator+=(const Vec2& value)
+	{
+		x += value.x;
+		y += value.y;
+
+		return *this;
+	}
+
+	// In-place subtraction
+	inline Vec2& operator-=(const Vec2& value)
+	{
+		x -= value.x;
+		y -= value.y;
+
+		return *this;
+	}
 	
 	// Dot product of two vectors
 	static inline T Dot(const Vec2& lhs, const Vec2& rhs)
