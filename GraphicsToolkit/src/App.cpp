@@ -3,11 +3,15 @@
 #include "GeometryBuilder.h"
 #include "ImageData.h"
 
-#include <string>
-#include <iostream>
+#include <cstdio>
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
+
+static void OnGlfwError(int errorCode, const char* description)
+{
+	printf("Error: %d, \"%s\"", errorCode, description);
+}
 
 App* App::instance = nullptr;
 
@@ -22,6 +26,8 @@ App::~App()
 
 bool App::Initialize()
 {
+	glfwSetErrorCallback(OnGlfwError);
+
 	if (this->mainWindow.Initialize())
 	{
 		this->renderer.Initialize();

@@ -3,20 +3,7 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-#include <iostream>
-
-#include "Vec3.h"
-
-static void GlfwErrorCallback(int error, const char* description)
-{
-	std::cout << error << ": " << description << std::endl;
-}
-
-static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-}
+#include "Vec2.h"
 
 Window::Window()
 {
@@ -29,8 +16,6 @@ Window::~Window()
 
 bool Window::Initialize()
 {
-	glfwSetErrorCallback(GlfwErrorCallback);
-	
 	if (glfwInit())
 	{
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -44,9 +29,7 @@ bool Window::Initialize()
 		{
 			glfwMakeContextCurrent(this->window);
 			glfwSwapInterval(1);
-			
-			glfwSetKeyCallback(this->window, GlfwKeyCallback);
-			
+
 			return true;
 		}
 		
