@@ -59,3 +59,8 @@ Vec2i Window::GetFrameBufferSize()
 	
 	return result;
 }
+
+GLFWwindow* Window::GetWindowHandle()
+{
+	return this->window;
+}

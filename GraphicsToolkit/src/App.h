@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "Renderer.h"
 #include "ResourceManager.h"
+#include "CameraController.h"
 
 class App
 {
@@ -16,6 +17,7 @@ private:
 	Camera mainCamera;
 	Renderer renderer;
 	ResourceManager resourceManager;
+	CameraController cameraController;
 	
 public:
 	App();
@@ -25,6 +27,9 @@ public:
 	bool HasRequestedQuit();
 	
 	void Update();
+
+	inline static Window* GetMainWindow()
+	{ return &(App::instance->mainWindow); }
 
 	inline static Renderer* GetRenderer()
 	{ return &(App::instance->renderer); }

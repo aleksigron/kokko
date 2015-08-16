@@ -33,6 +33,7 @@ bool App::Initialize()
 		this->renderer.Initialize();
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
+		this->cameraController.SetControlledCamera(&this->mainCamera);
 
 		// Test image
 		ImageData image;
@@ -96,6 +97,7 @@ bool App::HasRequestedQuit()
 void App::Update()
 {
 	this->time.Update();
+	this->cameraController.Update();
 
 	this->renderer.Render();
 	this->mainWindow.Swap();

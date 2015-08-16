@@ -17,4 +17,13 @@ public:
 	{
 		return Matrix::Translate(position) * Mat4x4f(rotation) * Matrix::Scale(scale);
 	}
+
+	inline Vec3f Forward() const
+	{ return rotation * Vec3f(0.0f, 0.0f, 1.0f); }
+
+	inline Vec3f Right() const
+	{ return rotation * Vec3f(1.0f, 0.0f, 0.0f); }
+
+	inline Vec3f Up() const
+	{ return rotation * Vec3f(0.0f, 1.0f, 0.0f); }
 };

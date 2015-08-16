@@ -19,4 +19,6 @@ public:
 	void Swap();
 	
 	Vec2i GetFrameBufferSize();
+
+	GLFWwindow* GetWindowHandle();
 };
