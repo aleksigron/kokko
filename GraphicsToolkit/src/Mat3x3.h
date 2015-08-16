@@ -33,7 +33,7 @@ inline Vec3f operator*(const Vec3f& v, const Mat3x3f& m)
 
 inline Mat3x3f operator*(const Mat3x3f& a, const Mat3x3f& b)
 {
-	Mat3x3f result(uninit);
+	Mat3x3f result(Mat3x3f::uninit);
 
 	result[0] = a[0] * b[0] + a[3] * b[1] + a[6] * b[2];
 	result[1] = a[1] * b[0] + a[4] * b[1] + a[7] * b[2];

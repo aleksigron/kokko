@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vec4.h"
+#include "Mat3x3.h"
 
 struct Mat4x4f
 {
@@ -50,7 +51,7 @@ inline Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
 
 inline Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
 {
-	Mat4x4f result;
+	Mat4x4f result(Mat4x4f::uninit);
 	
 	result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3];
 	result[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3];
