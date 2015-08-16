@@ -40,7 +40,7 @@ struct Camera
 										orthogonalHeight * 0.5f,
 										nearClipDistance, farClipDistance);
 
-		return Mat4x4f(Mat4x4f::identity);
+		return Mat4x4f();
 	}
 
 	inline Mat4x4f GetViewProjectionMatrix()

@@ -1,53 +1,41 @@
 #pragma once
 
-#include "Vec3.h"
 #include "Vec4.h"
 
-template <typename T>
-struct Mat4x4
+struct Mat4x4f
 {
-	struct ZeroInit {} static zero;
-	struct IdentityInit {} static identity;
+	struct Uninitialize {} static uninit;
 	
-	T m[16];
+	float m[16];
 	
-	inline Mat4x4() {}
-	inline Mat4x4(ZeroInit): m{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } {}
-	inline Mat4x4(IdentityInit): m{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 } {}
-	inline Mat4x4(T fill):
-		m { fill, fill, fill, fill, fill, fill, fill, fill,
-			fill, fill, fill, fill, fill, fill, fill, fill }
-	{
-	}
+	inline Mat4x4f(Uninitialize) {}
+	inline Mat4x4f(): m{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 } {}
 	
-	inline T& operator[](std::size_t index) { return m[index]; }
-	inline const T& operator[](std::size_t index) const { return m[index]; }
+	inline float& operator[](std::size_t index) { return m[index]; }
+	inline const float& operator[](std::size_t index) const { return m[index]; }
 	
-	inline T* ValuePointer() { return &m[0]; }
+	inline float* ValuePointer() { return m; }
 };
 
-template <typename T>
-inline Vec4<T> operator*(const Mat4x4<T>& m, const Vec4<T>& v)
+inline Vec4f operator*(const Mat4x4f& m, const Vec4f& v)
 {
-	return Vec4<T>(m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12] * v.w,
+	return Vec4f(m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12] * v.w,
 				   m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13] * v.w,
 				   m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14] * v.w,
 				   m[3] * v.x + m[7] * v.y + m[11] * v.z + m[15] * v.w);
 }
 
-template <typename T>
-inline Vec4<T> operator*(const Vec4<T>& v, const Mat4x4<T>& m)
+inline Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
 {
-	return Vec4<T>(m[0] * v.x + m[1] * v.x + m[2] * v.x + m[3] * v.x,
+	return Vec4f(m[0] * v.x + m[1] * v.x + m[2] * v.x + m[3] * v.x,
 				   m[4] * v.y + m[5] * v.y + m[6] * v.y + m[7] * v.y,
 				   m[8] * v.z + m[9] * v.z + m[10] * v.z + m[11] * v.z,
 				   m[12] * v.w + m[13] * v.w + m[14] * v.w + m[15] * v.w);
 }
 
-template <typename T>
-Mat4x4<T> operator*(const Mat4x4<T>& a, const Mat4x4<T>& b)
+inline Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
 {
-	Mat4x4<T> result;
+	Mat4x4f result;
 	
 	result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3];
 	result[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3];
@@ -71,6 +59,3 @@ Mat4x4<T> operator*(const Mat4x4<T>& a, const Mat4x4<T>& b)
 	
 	return result;
 }
-
-using Mat4x4f = Mat4x4<float>;
-using Mat4x4d = Mat4x4<double>;

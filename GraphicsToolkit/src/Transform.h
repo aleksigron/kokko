@@ -9,7 +9,7 @@ class Transform
 {
 public:
 	Vec3f position;
-	Mat4x4f rotation = Mat4x4f(Mat4x4f::identity);
+	Mat4x4f rotation;
 	Vec3f scale = Vec3f(1.0f, 1.0f, 1.0f);
 	
 	inline Mat4x4f GetTransformMatrix() const

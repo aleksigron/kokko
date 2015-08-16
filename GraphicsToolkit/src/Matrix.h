@@ -7,54 +7,36 @@
 
 namespace Matrix
 {
-	template <typename T>
-	Mat4x4<T> Perspective(T fovVertical, T aspectRatio, T near, T far)
+	inline Mat4x4f Perspective(float fovVertical, float aspectRatio, float near, float far)
 	{
-		T const tanHalfFovy = std::tan(fovVertical / static_cast<T>(2));
+		float const tanHalfFovy = std::tan(fovVertical / 2.0f);
 		
-		Mat4x4<T> result(Mat4x4<T>::identity);
+		Mat4x4f result;
 		
-		result[0] = static_cast<T>(1) / (aspectRatio * tanHalfFovy);
-		result[5] = static_cast<T>(1) / (tanHalfFovy);
+		result[0] = 1.0f / (aspectRatio * tanHalfFovy);
+		result[5] = 1.0f / (tanHalfFovy);
 		result[10] = - (far + near) / (far - near);
-		result[11] = - static_cast<T>(1);
-		result[14] = - (static_cast<T>(2) * far * near) / (far - near);
+		result[11] = - 1.0f;
+		result[14] = - (2.0f * far * near) / (far - near);
 		
 		return result;
 	}
-	
-	template <typename T>
-	Mat4x4<T> Orthographic(T left, T right, T bottom, T top, T near, T far)
+
+	inline Mat4x4f Orthographic(float halfWidth, float halfHeight, float near, float far)
 	{
-		Mat4x4<T> result(Mat4x4<T>::identity);
+		Mat4x4f result;
 		
-		result[0] = static_cast<T>(2) / (right - left);
-		result[5] = static_cast<T>(2) / (top - bottom);
-		result[10] = - static_cast<T>(2) / (far - near);
-		result[12] = - (right + left) / (right - left);
-		result[13] = - (top + bottom) / (top - bottom);
+		result[0] = 1.0f / halfWidth;
+		result[5] = 1.0f / halfHeight;
+		result[10] = -2.0f / (far - near);
 		result[14] = - (far + near) / (far - near);
 		
 		return result;
 	}
-	
-	template <typename T>
-	Mat4x4<T> Orthographic(T halfWidth, T halfHeight, T near, T far)
+
+	inline Mat4x4f Translate(const Vec3f& translation)
 	{
-		Mat4x4<T> result(Mat4x4<T>::identity);
-		
-		result[0] = static_cast<T>(1) / halfWidth;
-		result[5] = static_cast<T>(1) / halfHeight;
-		result[10] = static_cast<T>(-2) / (far - near);
-		result[14] = - (far + near) / (far - near);
-		
-		return result;
-	}
-	
-	template <typename T>
-	inline Mat4x4<T> Translate(const Vec3<T>& translation)
-	{
-		Mat4x4<T> result(Mat4x4<T>::identity);
+		Mat4x4f result;
 		
 		result[12] = translation.x;
 		result[13] = translation.y;
@@ -62,11 +44,10 @@ namespace Matrix
 		
 		return result;
 	}
-	
-	template <typename T>
-	inline Mat4x4<T> Scale(const Vec3<T> scaling)
+
+	inline Mat4x4f Scale(const Vec3f& scaling)
 	{
-		Mat4x4<T> result(Mat4x4<T>::identity);
+		Mat4x4f result;
 		
 		result[0] = scaling.x;
 		result[5] = scaling.y;
@@ -74,44 +55,42 @@ namespace Matrix
 		
 		return result;
 	}
-	
-	template <typename T>
-	inline Mat4x4<T> Rotate(Vec3<T> axis, T angle)
+
+	inline Mat4x4f Rotate(Vec3f axis, float angle)
 	{
 		axis.Normalize();
 		
-		const T xx = axis.x * axis.x;
-		const T yy = axis.y * axis.y;
-		const T zz = axis.z * axis.z;
+		const float xx = axis.x * axis.x;
+		const float yy = axis.y * axis.y;
+		const float zz = axis.z * axis.z;
 		
-		const T xy = axis.x * axis.y;
-		const T xz = axis.x * axis.z;
-		const T yz = axis.y * axis.z;
+		const float xy = axis.x * axis.y;
+		const float xz = axis.x * axis.z;
+		const float yz = axis.y * axis.z;
 		
-		const T ca = static_cast<T>(std::cos(angle));
-		const T sa = static_cast<T>(std::sin(angle));
+		const float ca = std::cosf(angle);
+		const float sa = std::sinf(angle);
 		
-		Mat4x4<T> result(Mat4x4<T>::identity);
+		Mat4x4f result;
 		
-		result[0] = xx + (static_cast<T>(1) - xx) * ca;
-		result[1] = xy * (static_cast<T>(1) - ca) + axis.z * sa;
-		result[2] = xz * (static_cast<T>(1) - ca) - axis.y * sa;
+		result[0] = xx + (1.0f - xx) * ca;
+		result[1] = xy * (1.0f - ca) + axis.z * sa;
+		result[2] = xz * (1.0f - ca) - axis.y * sa;
 		
-		result[4] = xy * (static_cast<T>(1) - ca) - axis.z * sa;
-		result[5] = yy + (static_cast<T>(1) - yy) * ca;
-		result[6] = yz * (static_cast<T>(1) - ca) + axis.x * sa;
+		result[4] = xy * (1.0f - ca) - axis.z * sa;
+		result[5] = yy + (1.0f - yy) * ca;
+		result[6] = yz * (1.0f - ca) + axis.x * sa;
 		
-		result[8] = xz * (static_cast<T>(1) - ca) + axis.y * sa;
-		result[9] = yz * (static_cast<T>(1) - ca) - axis.x * sa;
-		result[10] = zz + (static_cast<T>(1) - zz) * ca;
+		result[8] = xz * (1.0f - ca) + axis.y * sa;
+		result[9] = yz * (1.0f - ca) - axis.x * sa;
+		result[10] = zz + (1.0f - zz) * ca;
 		
 		return result;
 	}
-	
-	template <typename T>
-	inline Mat4x4<T> Transpose(const Mat4x4<T> m)
+
+	inline Mat4x4f Transpose(const Mat4x4f& m)
 	{
-		Mat4x4<T> result;
+		Mat4x4f result(Mat4x4f::uninit);
 		
 		for (std::size_t i = 0; i < 16; ++i)
 			result[i] = m[(i % 4) * 4 + i / 4];
