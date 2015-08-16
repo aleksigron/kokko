@@ -60,7 +60,8 @@
 		4578F41D1B7C0507003E7AFC /* File.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = File.h; path = src/File.h; sourceTree = "<group>"; };
 		459122AA1B6E71F500CF3D2A /* ObjectId.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ObjectId.h; path = src/ObjectId.h; sourceTree = "<group>"; };
 		459122AF1B6E865A00CF3D2A /* Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hash.h; path = src/Hash.h; sourceTree = "<group>"; };
-		45E75BDE1B7D629E0096E93A /* Material.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Material.cpp; path = src/Material.cpp; sourceTree = "<group>"; };
+		45E75BDE1B7D629E0096E93A /* Material.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = Material.cpp; path = src/Material.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		45E75BE31B80CC260096E93A /* Mat3x3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Mat3x3.h; path = src/Mat3x3.h; sourceTree = "<group>"; };
 		45E978431B34CE7500E11814 /* GraphicsToolkit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GraphicsToolkit; sourceTree = BUILT_PRODUCTS_DIR; };
 		45E9784E1B34CF0600E11814 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = src/main.cpp; sourceTree = "<group>"; };
 		45E978501B34CFA000E11814 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -79,12 +80,12 @@
 		45E9786E1B3593E200E11814 /* RenderObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderObject.h; path = src/RenderObject.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		45E978701B35A69B00E11814 /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Buffer.h; path = src/Buffer.h; sourceTree = "<group>"; };
 		45E978751B35E5EB00E11814 /* Vec4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Vec4.h; path = src/Vec4.h; sourceTree = "<group>"; };
-		45E978761B35F2E100E11814 /* Mat4x4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Mat4x4.h; path = src/Mat4x4.h; sourceTree = "<group>"; };
+		45E978761B35F2E100E11814 /* Mat4x4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = Mat4x4.h; path = src/Mat4x4.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		45E978771B3706B800E11814 /* ShaderProgram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ShaderProgram.cpp; path = src/ShaderProgram.cpp; sourceTree = "<group>"; };
 		45E978781B3706B800E11814 /* ShaderProgram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ShaderProgram.h; path = src/ShaderProgram.h; sourceTree = "<group>"; };
-		45E978821B370D7200E11814 /* Camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Camera.h; path = src/Camera.h; sourceTree = "<group>"; };
+		45E978821B370D7200E11814 /* Camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = Camera.h; path = src/Camera.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		45E978851B375E4900E11814 /* Transform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Transform.h; path = src/Transform.h; sourceTree = "<group>"; };
-		45EB3E8C1B49568F00F2092A /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Matrix.h; path = src/Matrix.h; sourceTree = "<group>"; };
+		45EB3E8C1B49568F00F2092A /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = Matrix.h; path = src/Matrix.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		45EB3E8D1B49600500F2092A /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = GraphicsToolkit/res; sourceTree = "<group>"; };
 		45EB3E8E1B49883100F2092A /* Time.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Time.cpp; path = src/Time.cpp; sourceTree = "<group>"; };
 		45EB3E8F1B49883100F2092A /* Time.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Time.h; path = src/Time.h; sourceTree = "<group>"; };
@@ -177,6 +178,7 @@
 			isa = PBXGroup;
 			children = (
 				45EB3E8C1B49568F00F2092A /* Matrix.h */,
+				45E75BE31B80CC260096E93A /* Mat3x3.h */,
 				45E978761B35F2E100E11814 /* Mat4x4.h */,
 				45E978681B34FAC000E11814 /* Vec2.h */,
 				45E978691B358E7700E11814 /* Vec3.h */,

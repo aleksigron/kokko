@@ -9,7 +9,22 @@ struct Mat4x4f
 	float m[16];
 	
 	inline Mat4x4f(Uninitialize) {}
-	inline Mat4x4f(): m{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 } {}
+
+	inline Mat4x4f():
+	m { 1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1 }
+	{
+	}
+
+	inline Mat4x4f(const Mat3x3f& m3):
+	m { m3[0], m3[1], m3[2], 0,
+		m3[3], m3[4], m3[5], 0,
+		m3[6], m3[7], m3[8], 0,
+		0,     0,     0,     1 }
+	{
+	}
 	
 	inline float& operator[](std::size_t index) { return m[index]; }
 	inline const float& operator[](std::size_t index) const { return m[index]; }
