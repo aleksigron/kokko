@@ -56,6 +56,38 @@ namespace Matrix
 		return result;
 	}
 
+	inline Mat3x3f Rotate3(Vec3f axis, float angle)
+	{
+		axis.Normalize();
+
+		const float xx = axis.x * axis.x;
+		const float yy = axis.y * axis.y;
+		const float zz = axis.z * axis.z;
+
+		const float xy = axis.x * axis.y;
+		const float xz = axis.x * axis.z;
+		const float yz = axis.y * axis.z;
+
+		const float ca = std::cosf(angle);
+		const float sa = std::sinf(angle);
+
+		Mat3x3f result;
+
+		result[0] = xx + (1.0f - xx) * ca;
+		result[1] = xy * (1.0f - ca) + axis.z * sa;
+		result[2] = xz * (1.0f - ca) - axis.y * sa;
+
+		result[3] = xy * (1.0f - ca) - axis.z * sa;
+		result[4] = yy + (1.0f - yy) * ca;
+		result[5] = yz * (1.0f - ca) + axis.x * sa;
+
+		result[6] = xz * (1.0f - ca) + axis.y * sa;
+		result[7] = yz * (1.0f - ca) - axis.x * sa;
+		result[8] = zz + (1.0f - zz) * ca;
+
+		return result;
+	}
+
 	inline Mat4x4f Rotate(Vec3f axis, float angle)
 	{
 		axis.Normalize();
