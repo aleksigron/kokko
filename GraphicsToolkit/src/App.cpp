@@ -50,7 +50,7 @@ bool App::Initialize()
 
 		ObjectId colShaderId = resourceManager.shaders.Add();
 		ShaderProgram& colShader = resourceManager.shaders.Get(colShaderId);
-		colShader.LoadFromConfiguration("res/shaders/simple.shader");
+		colShader.LoadFromConfiguration("res/shaders/simple.shader.json");
 
 		ObjectId colorMaterialId = resourceManager.materials.Add();
 		Material& colorMaterial = resourceManager.materials.Get(colorMaterialId);
@@ -60,7 +60,7 @@ bool App::Initialize()
 
 		ObjectId texShaderId = resourceManager.shaders.Add();
 		ShaderProgram& texShader = resourceManager.shaders.Get(texShaderId);
-		texShader.LoadFromConfiguration("res/shaders/tex.shader");
+		texShader.LoadFromConfiguration("res/shaders/tex.shader.json");
 
 		ObjectId texMaterialId = resourceManager.materials.Add();
 		Material& texMaterial = resourceManager.materials.Get(texMaterialId);
