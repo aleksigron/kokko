@@ -52,16 +52,14 @@ void CameraController::Update()
 		Matrix::Rotate3(cameraTransform.Up(), static_cast<float>(-move.x)) * cameraTransform.rotation;
 	}
 
+	KeyboardInput* kb = &(App::GetInput()->keyboard);
+
 	Vec3f dir;
 
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		dir -= cameraTransform.Forward();
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		dir -= cameraTransform.Right();
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		dir += cameraTransform.Forward();
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		dir += cameraTransform.Right();
+	dir -= float(int(kb->GetKey(Key::W))) * cameraTransform.Forward();
+	dir -= float(int(kb->GetKey(Key::A))) * cameraTransform.Right();
+	dir += float(int(kb->GetKey(Key::S))) * cameraTransform.Forward();
+	dir += float(int(kb->GetKey(Key::D))) * cameraTransform.Right();
 
 	if (dir.SqrMagnitude() > 1.0f)
 		dir.Normalize();

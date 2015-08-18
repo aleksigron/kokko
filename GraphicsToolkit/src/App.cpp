@@ -30,6 +30,7 @@ bool App::Initialize()
 
 	if (this->mainWindow.Initialize())
 	{
+		this->input.Initialize();
 		this->renderer.Initialize();
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);

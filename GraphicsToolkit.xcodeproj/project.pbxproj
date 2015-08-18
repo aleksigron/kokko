@@ -12,6 +12,8 @@
 		4550511E1B6503610096FAD2 /* ResourceManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550511C1B6503610096FAD2 /* ResourceManager.cpp */; };
 		4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455051291B6ABFA10096FAD2 /* ImageData.cpp */; };
 		4550512E1B6ABFD90096FAD2 /* Texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550512C1B6ABFD90096FAD2 /* Texture.cpp */; };
+		457519BA1B83BAF00007412E /* Input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457519B81B83BAF00007412E /* Input.cpp */; };
+		457519BE1B83C01A0007412E /* KeyboardInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457519BC1B83C01A0007412E /* KeyboardInput.cpp */; };
 		4578F41E1B7C0507003E7AFC /* File.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4578F41C1B7C0507003E7AFC /* File.cpp */; };
 		45E75BDF1B7D629E0096E93A /* Material.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E75BDE1B7D629E0096E93A /* Material.cpp */; };
 		45E75C391B811A960096E93A /* CameraController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E75C371B811A960096E93A /* CameraController.cpp */; };
@@ -57,6 +59,10 @@
 		4550512A1B6ABFA10096FAD2 /* ImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageData.h; path = src/ImageData.h; sourceTree = "<group>"; };
 		4550512C1B6ABFD90096FAD2 /* Texture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Texture.cpp; path = src/Texture.cpp; sourceTree = "<group>"; };
 		4550512D1B6ABFD90096FAD2 /* Texture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Texture.h; path = src/Texture.h; sourceTree = "<group>"; };
+		457519B81B83BAF00007412E /* Input.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Input.cpp; path = src/Input.cpp; sourceTree = "<group>"; };
+		457519B91B83BAF00007412E /* Input.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Input.h; path = src/Input.h; sourceTree = "<group>"; };
+		457519BC1B83C01A0007412E /* KeyboardInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = KeyboardInput.cpp; path = src/KeyboardInput.cpp; sourceTree = "<group>"; };
+		457519BD1B83C01A0007412E /* KeyboardInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeyboardInput.h; path = src/KeyboardInput.h; sourceTree = "<group>"; };
 		4578F41C1B7C0507003E7AFC /* File.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = File.cpp; path = src/File.cpp; sourceTree = "<group>"; };
 		4578F41D1B7C0507003E7AFC /* File.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = File.h; path = src/File.h; sourceTree = "<group>"; };
 		459122AA1B6E71F500CF3D2A /* ObjectId.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ObjectId.h; path = src/ObjectId.h; sourceTree = "<group>"; };
@@ -111,6 +117,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		457519BB1B83BFFF0007412E /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				457519B81B83BAF00007412E /* Input.cpp */,
+				457519B91B83BAF00007412E /* Input.h */,
+				457519BC1B83C01A0007412E /* KeyboardInput.cpp */,
+				457519BD1B83C01A0007412E /* KeyboardInput.h */,
+			);
+			name = Input;
+			sourceTree = "<group>";
+		};
 		459122A91B6E63AB00CF3D2A /* Rendering */ = {
 			isa = PBXGroup;
 			children = (
@@ -157,6 +174,7 @@
 		45E978451B34CE7500E11814 /* GraphicsToolkit */ = {
 			isa = PBXGroup;
 			children = (
+				457519BB1B83BFFF0007412E /* Input */,
 				459122A91B6E63AB00CF3D2A /* Rendering */,
 				45E9787A1B37071100E11814 /* Util */,
 				45E978741B35E54500E11814 /* Math */,
@@ -268,12 +286,14 @@
 				4550511E1B6503610096FAD2 /* ResourceManager.cpp in Sources */,
 				45E75BDF1B7D629E0096E93A /* Material.cpp in Sources */,
 				455051181B6176E50096FAD2 /* RenderObject.cpp in Sources */,
+				457519BE1B83C01A0007412E /* KeyboardInput.cpp in Sources */,
 				4550511B1B6193070096FAD2 /* VertexFormat.cpp in Sources */,
 				45E75C391B811A960096E93A /* CameraController.cpp in Sources */,
 				45EB3E901B49883100F2092A /* Time.cpp in Sources */,
 				4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */,
 				45E9786C1B35939300E11814 /* Renderer.cpp in Sources */,
 				45E9784F1B34CF0600E11814 /* main.cpp in Sources */,
+				457519BA1B83BAF00007412E /* Input.cpp in Sources */,
 				45E978791B3706B800E11814 /* ShaderProgram.cpp in Sources */,
 				4550512E1B6ABFD90096FAD2 /* Texture.cpp in Sources */,
 				4578F41E1B7C0507003E7AFC /* File.cpp in Sources */,
