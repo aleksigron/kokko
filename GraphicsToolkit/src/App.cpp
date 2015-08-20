@@ -98,6 +98,7 @@ bool App::HasRequestedQuit()
 void App::Update()
 {
 	this->time.Update();
+	this->input.Update();
 	this->cameraController.Update();
 
 	this->renderer.Render();

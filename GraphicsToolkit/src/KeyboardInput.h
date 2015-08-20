@@ -1,5 +1,7 @@
 #pragma once
 
+#include "InternalKeyMap.h"
+
 enum class Key
 {
 	Unknown = -1,
@@ -122,8 +124,7 @@ enum class Key
 	RightControl = 345,
 	RightAlt = 346,
 	RightSuper = 347,
-	Menu = 348,
-	_Max
+	Menu = 348
 };
 
 struct GLFWwindow;
@@ -131,10 +132,31 @@ struct GLFWwindow;
 class KeyboardInput
 {
 private:
-	GLFWwindow* window;
+	GLFWwindow* window = nullptr;
+
+	enum KeyState : unsigned char { Up, UpFirst, Down, DownFirst };
+	unsigned char keyState[InternalKeyMap::ForwardSize] = {};
 
 public:
 	void Initialize();
+	void Update();
+	void PostFrameUpdate();
 
-	bool GetKey(Key key);
+	inline bool GetKey(Key key)
+	{
+		int index = InternalKeyMap::Reverse[static_cast<unsigned int>(key)];
+		return (keyState[index] & 2) != 0;
+	}
+
+	inline bool GetKeyDown(Key key)
+	{
+		int index = InternalKeyMap::Reverse[static_cast<unsigned int>(key)];
+		return keyState[index] == DownFirst;
+	}
+
+	inline bool GetKeyUp(Key key)
+	{
+		int index = InternalKeyMap::Reverse[static_cast<unsigned int>(key)];
+		return keyState[index] == UpFirst;
+	}
 };

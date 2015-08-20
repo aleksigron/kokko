@@ -4,10 +4,9 @@
 
 class Input
 {
-private:
-
 public:
-	void Initialize();
-
 	KeyboardInput keyboard;
+
+	void Initialize() { keyboard.Initialize(); }
+	void Update() { keyboard.Update(); }
 };

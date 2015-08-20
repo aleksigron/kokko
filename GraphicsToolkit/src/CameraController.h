@@ -17,8 +17,6 @@ private:
 	Vec2d prevCursorPos;
 	bool mouseControlEnable = false;
 
-	static void KeyCallback(GLFWwindow* window, int key, int code, int act, int mods);
-
 public:
 	void SetControlledCamera(Camera* camera);
 	void Update();
