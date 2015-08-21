@@ -45,10 +45,11 @@ void CameraController::Update()
 		Matrix::Rotate3(cameraTransform.Up(), static_cast<float>(-move.x)) * cameraTransform.rotation;
 	}
 
-
 	Vec3f dir;
 
+	dir -= float(int(kb->GetKey(Key::Q))) * cameraTransform.Up();
 	dir -= float(int(kb->GetKey(Key::W))) * cameraTransform.Forward();
+	dir += float(int(kb->GetKey(Key::E))) * cameraTransform.Up();
 	dir -= float(int(kb->GetKey(Key::A))) * cameraTransform.Right();
 	dir += float(int(kb->GetKey(Key::S))) * cameraTransform.Forward();
 	dir += float(int(kb->GetKey(Key::D))) * cameraTransform.Right();
@@ -56,7 +57,12 @@ void CameraController::Update()
 	if (dir.SqrMagnitude() > 1.0f)
 		dir.Normalize();
 
-	cameraVelocity += (dir * cameraMaximumSpeed - cameraVelocity) * 0.15f;
+	float targetSpeed = cameraMaximumSpeed;
+
+	if (kb->GetKey(Key::LeftShift))
+		targetSpeed *= 2.0f;
+
+	cameraVelocity += (dir * targetSpeed - cameraVelocity) * 0.15f;
 
 	cameraTransform.position += cameraVelocity * Time::GetDeltaTime();
 }
