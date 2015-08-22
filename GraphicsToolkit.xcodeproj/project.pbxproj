@@ -68,6 +68,7 @@
 		457519BD1B83C01A0007412E /* KeyboardInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeyboardInput.h; path = src/KeyboardInput.h; sourceTree = "<group>"; };
 		4578F41C1B7C0507003E7AFC /* File.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = File.cpp; path = src/File.cpp; sourceTree = "<group>"; };
 		4578F41D1B7C0507003E7AFC /* File.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = File.h; path = src/File.h; sourceTree = "<group>"; };
+		4588CC481B890CAA0002AEC6 /* Mat2x2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Mat2x2.h; path = src/Mat2x2.h; sourceTree = "<group>"; };
 		459122AA1B6E71F500CF3D2A /* ObjectId.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ObjectId.h; path = src/ObjectId.h; sourceTree = "<group>"; };
 		459122AF1B6E865A00CF3D2A /* Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hash.h; path = src/Hash.h; sourceTree = "<group>"; };
 		45E75BDE1B7D629E0096E93A /* Material.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = Material.cpp; path = src/Material.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -206,6 +207,7 @@
 			isa = PBXGroup;
 			children = (
 				45EB3E8C1B49568F00F2092A /* Matrix.h */,
+				4588CC481B890CAA0002AEC6 /* Mat2x2.h */,
 				45E75BE31B80CC260096E93A /* Mat3x3.h */,
 				45E978761B35F2E100E11814 /* Mat4x4.h */,
 				45E978681B34FAC000E11814 /* Vec2.h */,
