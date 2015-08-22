@@ -29,7 +29,7 @@ struct Vec2
 	// Magnitude of the vector
 	inline T Magnitude() const
 	{
-		return T(sqrt((x * x) + (y * y)));
+		return T(std::sqrt((x * x) + (y * y)));
 	}
 	
 	// Squared magnitude of the vector

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vec4.h"
+#include <cmath>
 
 template <typename T>
 struct Vec3
@@ -9,7 +9,6 @@ struct Vec3
 	
 	inline Vec3(): x(0), y(0), z(0) {}
 	inline Vec3(T x, T y, T z): x(x), y(y), z(z) {}
-	inline Vec3(const Vec4<T>& v): x(v.x), y(v.y), z(v.z) {}
 	
 	// Normalize the vector
 	inline void Normalize()
@@ -31,7 +30,7 @@ struct Vec3
 	// Magnitude of the vector
 	inline T Magnitude() const
 	{
-		return T(sqrt((x * x) + (y * y) + (z * z)));
+		return T(std::sqrt((x * x) + (y * y) + (z * z)));
 	}
 	
 	// Squared magnitude of the vector
@@ -64,18 +63,6 @@ struct Vec3
 		z -= value.z;
 
 		return *this;
-	}
-
-	// A Vec4 of the this vector as a position
-	Vec4<T> AsPosition() const
-	{
-		return Vec4<T>(x, y, z, static_cast<T>(0));
-	}
-	
-	// A Vec4 of the this vector as a direction
-	Vec4<T> AsDirection() const
-	{
-		return Vec4<T>(x, y, z, static_cast<T>(0));
 	}
 	
 	// Dot product of two vectors
