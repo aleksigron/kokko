@@ -17,13 +17,7 @@ public:
 
 	Buffer(const Buffer& other): data(nullptr), count(0)
 	{
-		if (this != &other && other.data != nullptr && other.count > 0)
-		{
-			this->Allocate(other.count);
-
-			for (SizeType i = 0; i < this->count; ++i)
-				data[i] = other.data[i];
-		}
+		this->operator=(other);
 	}
 
 	Buffer(Buffer&& other): data(other.data), count(other.count)
@@ -37,14 +31,53 @@ public:
 		// Deleting a nullptr is a no-op
 		delete[] this->data;
 	}
+
+	Buffer& operator=(const Buffer& other)
+	{
+		if (this != &other)
+		{
+			if (other.data != nullptr && other.count > 0)
+			{
+				this->Allocate(other.count);
+
+				for (SizeType i = 0; i < this->count; ++i)
+					data[i] = other.data[i];
+			}
+			else
+			{
+				this->data = nullptr;
+				this->count = 0;
+			}
+		}
+
+		return *this;
+	}
+
+	Buffer& operator=(Buffer&& other)
+	{
+		// Deleting a nullptr is a no-op
+		delete[] this->data;
+
+		this->data = other.data;
+		this->count = other.count;
+
+		other.data = nullptr;
+		other.count = 0;
+
+		return *this;
+	}
 	
 	void Allocate(SizeType count)
 	{
 		// Deleting a nullptr is a no-op
 		delete[] this->data;
-		
-		this->data = new T[count];
+
 		this->count = count;
+
+		if (count > 0)
+			this->data = new T[count];
+		else
+			this->data = nullptr;
 	}
 	
 	void Deallocate()
