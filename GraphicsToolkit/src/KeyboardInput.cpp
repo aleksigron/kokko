@@ -5,12 +5,14 @@
 
 #include "App.h"
 
-void KeyboardInput::Initialize()
+void KeyboardInput::Initialize(GLFWwindow* windowHandle)
 {
+	this->windowHandle = windowHandle;
 }
 
-void KeyboardInput::Update(GLFWwindow* windowHandle)
+void KeyboardInput::Update()
 {
+	GLFWwindow* w = this->windowHandle;
 	unsigned int count = InternalKeyMap::ForwardSize;
 	unsigned int i = 0;
 	do
@@ -19,7 +21,7 @@ void KeyboardInput::Update(GLFWwindow* windowHandle)
 		int oldState = keyState[i];
 
 		// Up: 0, Down: 1
-		int keyIsDown = glfwGetKey(windowHandle, InternalKeyMap::Forward[i]);
+		int keyIsDown = glfwGetKey(w, InternalKeyMap::Forward[i]);
 
 		int keyWasDown = (oldState >> 1); // Up: 0, Down: 1
 		int diff = (keyWasDown - keyIsDown) & 1; // Same: 0, different: 1

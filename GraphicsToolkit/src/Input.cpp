@@ -4,12 +4,12 @@ void Input::Initialize(GLFWwindow* window)
 {
 	this->windowHandle = window;
 
-	keyboard.Initialize();
-	pointer.Initialize();
+	keyboard.Initialize(this->windowHandle);
+	pointer.Initialize(this->windowHandle);
 }
 
 void Input::Update()
 {
-	keyboard.Update(windowHandle);
-	pointer.Update(windowHandle);
+	keyboard.Update();
+	pointer.Update();
 }

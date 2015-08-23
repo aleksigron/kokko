@@ -3,9 +3,6 @@
 #include "App.h"
 #include "Time.h"
 
-#define GLFW_INCLUDE_NONE
-#include "glfw/glfw3.h"
-
 void CameraController::SetControlledCamera(Camera* camera)
 {
 	controlledCamera = camera;
@@ -13,29 +10,22 @@ void CameraController::SetControlledCamera(Camera* camera)
 
 void CameraController::Update()
 {
-	GLFWwindow* window = App::GetMainWindow()->GetWindowHandle();
-
 	Transform& ct = controlledCamera->transform;
 
+	PointerInput* pi = &(App::GetInput()->pointer);
 	KeyboardInput* kb = &(App::GetInput()->keyboard);
 
 	if (kb->GetKeyDown(Key::Space))
 	{
-		if (mouseControlEnable)
-		{
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			mouseControlEnable = false;
-		}
-		else
-		{
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			mouseControlEnable = true;
-		}
+		mouseControlEnable = mouseControlEnable == false;
+		pi->SetCursorMode(mouseControlEnable ?
+						  PointerInput::CursorMode::Disabled :
+						  PointerInput::CursorMode::Normal );
+
 	}
 
 	if (mouseControlEnable)
 	{
-		PointerInput* pi = &(App::GetInput()->pointer);
 		Vec2f movement = pi->GetCursorMovement() * 0.004f;
 
 		ct.rotation = Mat3x3f::RotateAroundAxis(ct.Right(), -movement.y) *
