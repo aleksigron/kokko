@@ -11,8 +11,9 @@ void Texture::Upload(const ImageData& image)
 	glBindTexture(GL_TEXTURE_2D, textureGlId);
 
 	// Upload texture data
-	glTexImage2D(GL_TEXTURE_2D, 0, image.pixelFormat, image.size.x, image.size.y,
-				 0, image.pixelFormat, GL_UNSIGNED_BYTE, image.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, image.pixelFormat,
+				 image.imageSize.x, image.imageSize.y, 0,
+				 image.pixelFormat, image.componentDataType, image.imageData);
 
 	// Set filter
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

@@ -1,39 +1,66 @@
 #include "ImageData.h"
 
-#include <OpenGL/gl3.h>
+#include <cstdint>
+#include <cstring>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wold-style-cast"
-#pragma clang diagnostic ignored "-Wunused-function"
-#pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
-#define STB_IMAGE_IMPLEMENTATION
-#define STBI_ONLY_PNG
-#include "stb/stb_image.h"
-#pragma clang diagnostic pop
+#include "File.h"
 
-bool ImageData::LoadPng(const char* filePath)
+bool ImageData::LoadGlraw(const char *filePath)
 {
-	int components = 0;
-	data = stbi_load(filePath, &size.x, &size.y, &components, 0);
+	this->dataBuffer = File::Read(filePath);
 
-	if (data != nullptr)
+	if (this->dataBuffer.IsValid())
 	{
-		assert(components >= 0 && components < 4);
+		unsigned char* d = this->dataBuffer.Data();
 
-		static const GLenum formats[] = { GL_RED, GL_RG, GL_RGB, GL_RGBA };
-		pixelFormat = formats[components - 1];
+		// File is probably a glraw file
+		if (*reinterpret_cast<uint16_t*>(d) == 0xC6F5)
+		{
+			const uint64_t preHeaderSize = sizeof(uint16_t) + sizeof(uint64_t);
+			const uint64_t dataOffset = *reinterpret_cast<uint64_t*>(d + sizeof(uint16_t));
+			const uint64_t headerSize = preHeaderSize + dataOffset;
+			unsigned char* const imageData = d + dataOffset;
 
-		return true;
+			unsigned char* it = d + preHeaderSize;
+
+			// One loop iteration reads one property
+			while (it < imageData)
+			{
+				unsigned char* inIt = it;
+				uint8_t type = *inIt;
+				inIt += 1;
+
+				if (type == 1) // 32-bit integer
+				{
+					char* propertyKey = reinterpret_cast<char*>(inIt);
+					unsigned long propertyKeyLen = strlen(propertyKey);
+
+					// Move iterator to data starting point
+					inIt += propertyKeyLen + 1;
+
+					int32_t* propertyValue = reinterpret_cast<int32_t*>(inIt);
+
+					if (strcmp(propertyKey, "height") == 0)
+						imageSize.y = *propertyValue;
+					else if (strcmp(propertyKey, "format") == 0)
+						pixelFormat = *propertyValue;
+					if (strcmp(propertyKey, "width") == 0)
+						imageSize.x = *propertyValue;
+					if (strcmp(propertyKey, "type") == 0)
+						componentDataType = *propertyValue;
+
+					inIt += sizeof(int32_t);
+				}
+
+				it = inIt;
+			}
+
+			this->imageData = imageData;
+			this->imageDataSize = dataBuffer.Count() - headerSize;
+
+			return true;
+		}
 	}
-	else
-	{
-		assert(false);
-		return false;
-	}
-}
 
-void ImageData::DeallocateData()
-{
-	if (data != nullptr)
-		stbi_image_free(data);
+	return false;
 }

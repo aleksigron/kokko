@@ -1,17 +1,18 @@
 #pragma once
 
 #include "Vec2.h"
+#include "Buffer.h"
 
 struct ImageData
 {
-	Vec2i size;
+	Buffer<unsigned char> dataBuffer;
 
-	unsigned char* data;
-	unsigned long dataSize;
+	unsigned char* imageData = nullptr;
+	unsigned long imageDataSize = 0;
 
+	Vec2i imageSize;
 	unsigned int pixelFormat;
+	unsigned int componentDataType;
 
-	bool LoadPng(const char* filePath);
-
-	void DeallocateData();
+	bool LoadGlraw(const char* filePath);
 };

@@ -38,13 +38,11 @@ bool App::Initialize()
 
 		// Test image
 		ImageData image;
-		image.LoadPng("res/textures/test.png");
+		image.LoadGlraw("res/textures/test.glraw");
 
 		ObjectId texId = this->resourceManager.textures.Add();
 		Texture& tex = this->resourceManager.textures.Get(texId);
 		tex.Upload(image);
-
-		image.DeallocateData();
 
 		// Color material
 
