@@ -15,21 +15,34 @@ void CameraController::Update()
 	PointerInput* pi = &(App::GetInput()->pointer);
 	KeyboardInput* kb = &(App::GetInput()->keyboard);
 
-	if (kb->GetKeyDown(Key::Space))
+	if (kb->GetKeyDown(Key::Space) && mouseGrabActive == false)
 	{
-		mouseControlEnable = mouseControlEnable == false;
-		pi->SetCursorMode(mouseControlEnable ?
+		mouseLookEnable = mouseLookEnable == false;
+		pi->SetCursorMode(mouseLookEnable ?
 						  PointerInput::CursorMode::Disabled :
-						  PointerInput::CursorMode::Normal );
+						  PointerInput::CursorMode::Normal);
 
 	}
 
-	if (mouseControlEnable)
+	if (mouseLookEnable)
 	{
 		Vec2f movement = pi->GetCursorMovement() * 0.004f;
 
 		ct.rotation = Mat3x3f::RotateAroundAxis(ct.Right(), -movement.y) *
 		Mat3x3f::RotateAroundAxis(ct.Up(), -movement.x) * ct.rotation;
+	}
+	else
+	{
+		if (pi->GetMouseButtonDown(0))
+			mouseGrabActive = true;
+		else if (pi->GetMouseButtonUp(0))
+			mouseGrabActive = false;
+
+		if (mouseGrabActive)
+		{
+			Vec2f movement = pi->GetCursorMovement() * 0.02f;
+			ct.position += ct.Right() * -movement.x + ct.Up() * movement.y;
+		}
 	}
 
 	Vec3f dir;

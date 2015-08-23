@@ -14,7 +14,8 @@ private:
 	Vec3f cameraVelocity;
 	float cameraMaximumSpeed = 3.0f;
 
-	bool mouseControlEnable = false;
+	bool mouseLookEnable = false;
+	bool mouseGrabActive = false;
 
 public:
 	void SetControlledCamera(Camera* camera);

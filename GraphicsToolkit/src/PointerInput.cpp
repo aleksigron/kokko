@@ -10,13 +10,36 @@ void PointerInput::Initialize(GLFWwindow* windowHandle)
 
 void PointerInput::Update()
 {
+	GLFWwindow* w = this->windowHandle;
+
 	Vec2d posd;
-	glfwGetCursorPos(this->windowHandle, &(posd.x), &(posd.y));
+	glfwGetCursorPos(w, &(posd.x), &(posd.y));
 
 	Vec2f posf(static_cast<float>(posd.x), static_cast<float>(posd.y));
 
-	cursorMovement = posf - cursorPosition;
-	cursorPosition = posf;
+	this->cursorMovement = posf - this->cursorPosition;
+	this->cursorPosition = posf;
+
+	int i = 0;
+	int count = PointerInput::mouseButtonCount;
+	unsigned char* state = this->mouseButtonState;
+	do
+	{
+		// Up: 0, UpFirst: 1, Down: 2, DownFirst: 3
+		int oldState = state[i];
+
+		// Up: 0, Down: 1
+		int keyIsDown = glfwGetMouseButton(w, i);
+
+		int keyWasDown = (oldState >> 1); // Up: 0, Down: 1
+		int diff = (keyWasDown - keyIsDown) & 1; // Same: 0, different: 1
+
+		state[i] = (keyIsDown << 1) | diff;
+
+		++i;
+
+	}
+	while (i < count);
 }
 
 void PointerInput::SetCursorMode(CursorMode mode)
