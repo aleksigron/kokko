@@ -14,7 +14,6 @@ private:
 	Vec3f cameraVelocity;
 	float cameraMaximumSpeed = 3.0f;
 
-	Vec2d prevCursorPos;
 	bool mouseControlEnable = false;
 
 public:

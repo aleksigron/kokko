@@ -35,14 +35,11 @@ void CameraController::Update()
 
 	if (mouseControlEnable)
 	{
-		Vec2d cursorPos;
-		glfwGetCursorPos(window, &cursorPos.x, &cursorPos.y);
+		PointerInput* pi = &(App::GetInput()->pointer);
+		Vec2f movement = pi->GetCursorMovement() * 0.004f;
 
-		Vec2d move = (cursorPos - prevCursorPos) * 0.005;
-		prevCursorPos = cursorPos;
-
-		ct.rotation = Mat3x3f::RotateAroundAxis(ct.Right(), -move.y) *
-		Mat3x3f::RotateAroundAxis(ct.Up(), -move.x) * ct.rotation;
+		ct.rotation = Mat3x3f::RotateAroundAxis(ct.Right(), -movement.y) *
+		Mat3x3f::RotateAroundAxis(ct.Up(), -movement.x) * ct.rotation;
 	}
 
 	Vec3f dir;

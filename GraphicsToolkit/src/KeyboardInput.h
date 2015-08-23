@@ -132,15 +132,12 @@ struct GLFWwindow;
 class KeyboardInput
 {
 private:
-	GLFWwindow* window = nullptr;
-
 	enum KeyState : unsigned char { Up, UpFirst, Down, DownFirst };
 	unsigned char keyState[InternalKeyMap::ForwardSize] = {};
 
 public:
 	void Initialize();
-	void Update();
-	void PostFrameUpdate();
+	void Update(GLFWwindow* windowHandle);
 
 	inline bool GetKey(Key key)
 	{

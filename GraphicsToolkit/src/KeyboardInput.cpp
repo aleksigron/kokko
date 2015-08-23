@@ -7,10 +7,9 @@
 
 void KeyboardInput::Initialize()
 {
-	this->window = App::GetMainWindow()->GetWindowHandle();
 }
 
-void KeyboardInput::Update()
+void KeyboardInput::Update(GLFWwindow* windowHandle)
 {
 	unsigned int count = InternalKeyMap::ForwardSize;
 	unsigned int i = 0;
@@ -20,7 +19,7 @@ void KeyboardInput::Update()
 		int oldState = keyState[i];
 
 		// Up: 0, Down: 1
-		int keyIsDown = glfwGetKey(window, InternalKeyMap::Forward[i]);
+		int keyIsDown = glfwGetKey(windowHandle, InternalKeyMap::Forward[i]);
 
 		int keyWasDown = (oldState >> 1); // Up: 0, Down: 1
 		int diff = (keyWasDown - keyIsDown) & 1; // Same: 0, different: 1
