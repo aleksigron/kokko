@@ -31,6 +31,46 @@ struct Mat4x4f
 	inline const float& operator[](std::size_t index) const { return m[index]; }
 	
 	inline float* ValuePointer() { return m; }
+
+	static inline Mat4x4f RotateAroundAxis(Vec3f axis, float angle)
+	{
+		axis.Normalize();
+
+		const float xx = axis.x * axis.x;
+		const float yy = axis.y * axis.y;
+		const float zz = axis.z * axis.z;
+
+		const float xy = axis.x * axis.y;
+		const float xz = axis.x * axis.z;
+		const float yz = axis.y * axis.z;
+
+		const float ca = std::cosf(angle);
+		const float sa = std::sinf(angle);
+
+		Mat4x4f result(uninit);
+
+		result[0] = xx + (1.0f - xx) * ca;
+		result[1] = xy * (1.0f - ca) + axis.z * sa;
+		result[2] = xz * (1.0f - ca) - axis.y * sa;
+		result[3] = 0.0f;
+
+		result[4] = xy * (1.0f - ca) - axis.z * sa;
+		result[5] = yy + (1.0f - yy) * ca;
+		result[6] = yz * (1.0f - ca) + axis.x * sa;
+		result[7] = 0.0f;
+
+		result[8] = xz * (1.0f - ca) + axis.y * sa;
+		result[9] = yz * (1.0f - ca) - axis.x * sa;
+		result[10] = zz + (1.0f - zz) * ca;
+		result[11] = 0.0f;
+
+		result[12] = 0.0f;
+		result[13] = 0.0f;
+		result[14] = 0.0f;
+		result[15] = 1.0f;
+
+		return result;
+	}
 };
 
 inline Vec4f operator*(const Mat4x4f& m, const Vec4f& v)

@@ -15,7 +15,7 @@ void CameraController::Update()
 {
 	GLFWwindow* window = App::GetMainWindow()->GetWindowHandle();
 
-	Transform& cameraTransform = controlledCamera->transform;
+	Transform& ct = controlledCamera->transform;
 
 	KeyboardInput* kb = &(App::GetInput()->keyboard);
 
@@ -41,18 +41,18 @@ void CameraController::Update()
 		Vec2d move = (cursorPos - prevCursorPos) * 0.005;
 		prevCursorPos = cursorPos;
 
-		cameraTransform.rotation = Matrix::Rotate3(cameraTransform.Right(), static_cast<float>(-move.y)) *
-		Matrix::Rotate3(cameraTransform.Up(), static_cast<float>(-move.x)) * cameraTransform.rotation;
+		ct.rotation = Mat3x3f::RotateAroundAxis(ct.Right(), -move.y) *
+		Mat3x3f::RotateAroundAxis(ct.Up(), -move.x) * ct.rotation;
 	}
 
 	Vec3f dir;
 
-	dir -= float(int(kb->GetKey(Key::Q))) * cameraTransform.Up();
-	dir -= float(int(kb->GetKey(Key::W))) * cameraTransform.Forward();
-	dir += float(int(kb->GetKey(Key::E))) * cameraTransform.Up();
-	dir -= float(int(kb->GetKey(Key::A))) * cameraTransform.Right();
-	dir += float(int(kb->GetKey(Key::S))) * cameraTransform.Forward();
-	dir += float(int(kb->GetKey(Key::D))) * cameraTransform.Right();
+	dir -= float(int(kb->GetKey(Key::Q))) * ct.Up();
+	dir -= float(int(kb->GetKey(Key::W))) * ct.Forward();
+	dir += float(int(kb->GetKey(Key::E))) * ct.Up();
+	dir -= float(int(kb->GetKey(Key::A))) * ct.Right();
+	dir += float(int(kb->GetKey(Key::S))) * ct.Forward();
+	dir += float(int(kb->GetKey(Key::D))) * ct.Right();
 
 	if (dir.SqrMagnitude() > 1.0f)
 		dir.Normalize();
@@ -64,5 +64,5 @@ void CameraController::Update()
 
 	cameraVelocity += (dir * targetSpeed - cameraVelocity) * 0.15f;
 
-	cameraTransform.position += cameraVelocity * Time::GetDeltaTime();
+	ct.position += cameraVelocity * Time::GetDeltaTime();
 }
