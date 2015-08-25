@@ -78,11 +78,6 @@ struct Vec3
 					lhs.z * rhs.x - lhs.x * rhs.z,
 					lhs.x * rhs.y - lhs.y * rhs.x);
 	}
-
-	static inline Vec3 ComponentWiseAbs(const Vec3& v)
-	{
-		return Vec3(fabsf(v.x), fabsf(v.y), fabsf(v.z));
-	}
 };
 
 // Vector-vector addition

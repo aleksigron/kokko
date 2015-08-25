@@ -63,7 +63,7 @@ void Renderer::Render()
 	frustum.UpdateFrustum(*cam);
 
 	// Do frustum culling
-	frustum.Cull(oCount, bb, bbcs);
+	frustum.CullAABB(oCount, bb, bbcs);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -75,7 +75,7 @@ void Renderer::Render()
 	{
 		if (this->RenderObjectIsAlive(arrayIndex) == true)
 		{
-			if (/*bbcs[objectIndex] != 0*/ true)
+			if (bbcs[objectIndex] != 0)
 			{
 				RenderObject& obj = o[arrayIndex];
 

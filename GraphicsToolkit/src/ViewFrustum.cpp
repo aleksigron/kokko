@@ -36,35 +36,37 @@ void ViewFrustum::UpdateFrustum(const Camera& camera)
 	planes[5].SetPointAndNormal(position + forward * camera.farClipDistance, -forward);
 }
 
-void ViewFrustum::Cull(unsigned int boxCount, const BoundingBox* boxes, unsigned char* state) const
+void ViewFrustum::CullAABB(unsigned int boxCount, const BoundingBox* boxes, unsigned char* state) const
 {
+	const Plane* pl = this->planes;
 	Vec3f absNormal[6];
 
 	for (int i = 0; i < 6; ++i)
-		absNormal[i] = Vec3f::ComponentWiseAbs(planes[i].normal);
+	{
+		absNormal[i].x = fabsf(pl[i].normal.x);
+		absNormal[i].y = fabsf(pl[i].normal.y);
+		absNormal[i].z = fabsf(pl[i].normal.z);
+	}
 
 	for (unsigned int boxIndex = 0; boxIndex < boxCount; ++boxIndex)
 	{
-		const Vec3f& center = boxes[boxIndex].center;
-		const Vec3f& extent = boxes[boxIndex].extents;
+		const BoundingBox* const box = boxes + boxIndex;
 
 		// Inside: 2, intersect: 1, outside: 0
 		unsigned char result = 2;
 
 		for (unsigned int planeIndex = 0; planeIndex < 6; ++planeIndex)
 		{
-			const Plane& pl = planes[planeIndex];
-			const Vec3f& absNor = absNormal[planeIndex];
+			const float planeDistNeg = -planes[planeIndex].distance;
+			const float d = Vec3f::Dot(box->center, planes[planeIndex].normal);
+			const float r = Vec3f::Dot(box->extents, absNormal[planeIndex]);
 
-			const float d = center.x * pl.normal.x + center.y * pl.normal.y + center.z * pl.normal.z;
-			const float r = extent.x * absNor.x + extent.y * absNor.y + extent.z * absNor.z;
-
-			if (d + r < -pl.distance)
+			if (d + r < planeDistNeg)
 			{
 				result = 0;
 				break;
 			}
-			else if (d - r < -pl.distance)
+			else if (d - r < planeDistNeg)
 				result = 1;
 		}
 
