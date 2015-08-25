@@ -48,10 +48,10 @@ void CameraController::Update()
 	Vec3f dir;
 
 	dir -= float(int(kb->GetKey(Key::Q))) * ct.Up();
-	dir -= float(int(kb->GetKey(Key::W))) * ct.Forward();
+	dir += float(int(kb->GetKey(Key::W))) * ct.Forward();
 	dir += float(int(kb->GetKey(Key::E))) * ct.Up();
 	dir -= float(int(kb->GetKey(Key::A))) * ct.Right();
-	dir += float(int(kb->GetKey(Key::S))) * ct.Forward();
+	dir -= float(int(kb->GetKey(Key::S))) * ct.Forward();
 	dir += float(int(kb->GetKey(Key::D))) * ct.Right();
 
 	if (dir.SqrMagnitude() > 1.0f)
