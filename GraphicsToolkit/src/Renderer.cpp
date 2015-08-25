@@ -10,10 +10,15 @@
 #include "Camera.h"
 #include "App.h"
 #include "Material.h"
+#include "ViewFrustum.h"
+#include "BoundingBox.h"
 
 Renderer::Renderer()
 {
 	objects = new RenderObject[initialAllocation];
+	boundingBoxes = new BoundingBox[initialAllocation];
+	bboxCullingState = new unsigned char[initialAllocation];
+
 	allocatedCount = initialAllocation;
 }
 
@@ -33,73 +38,101 @@ void Renderer::Initialize()
 
 void Renderer::Render()
 {
-	assert(targetWindow != nullptr);
-	assert(activeCamera != nullptr);
+	RenderObject* o = this->objects;
+	BoundingBox* bb = this->boundingBoxes;
+	unsigned char* bbcs = this->bboxCullingState;
+
+	size_t size = this->contiguousFree;
+	unsigned oCount = 0;
+
+	Camera* cam = this->activeCamera;
+
+	// Update bounding boxes
+	for (unsigned i = 0; i < size; ++i)
+	{
+		if (this->RenderObjectIsAlive(i))
+		{
+			bb[oCount].center = o[i].transform.position;
+			bb[oCount].extents = Vec3f(0.5f, 0.5f, 0.5f);
+			++oCount;
+		}
+	}
+
+	// Update view frustum
+	ViewFrustum frustum;
+	frustum.UpdateFrustum(*cam);
+
+	// Do frustum culling
+	frustum.Cull(oCount, bb, bbcs);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	ResourceManager* res = App::GetResourceManager();
 
-	Mat4x4f viewProjection = this->activeCamera->GetViewProjectionMatrix();
+	Mat4x4f viewProjection = cam->GetViewProjectionMatrix();
 
-	for (unsigned i = 0; i < contiguousFree; ++i)
+	for (unsigned arrayIndex = 0, objectIndex = 0; arrayIndex < size; ++arrayIndex)
 	{
-		if (this->RenderObjectIsAlive(i) == true)
+		if (this->RenderObjectIsAlive(arrayIndex) == true)
 		{
-			RenderObject& obj = objects[i];
-
-			Material& material = res->materials.Get(obj.material);
-			ShaderProgram& shader = res->shaders.Get(material.shader);
-
-			glUseProgram(shader.oglId);
-
-			// Bind each material uniform with a value
-			for (unsigned uIndex = 0; uIndex < material.uniformCount; ++uIndex)
+			if (/*bbcs[objectIndex] != 0*/ true)
 			{
-				ShaderMaterialUniform& u = material.uniforms[uIndex];
+				RenderObject& obj = o[arrayIndex];
 
-				unsigned char* uData = material.uniformData + u.dataOffset;
+				Material& material = res->materials.Get(obj.material);
+				ShaderProgram& shader = res->shaders.Get(material.shader);
 
-				switch (u.type)
+				glUseProgram(shader.oglId);
+
+				// Bind each material uniform with a value
+				for (unsigned uIndex = 0; uIndex < material.uniformCount; ++uIndex)
 				{
-					case ShaderUniformType::Mat4x4:
-						glUniformMatrix4fv(u.location, 1, GL_FALSE,
-										   reinterpret_cast<float*>(uData));
-						break;
+					ShaderMaterialUniform& u = material.uniforms[uIndex];
 
-					case ShaderUniformType::Vec3:
-						glUniform3fv(u.location, 1,
-									 reinterpret_cast<float*>(uData));
-						break;
+					unsigned char* uData = material.uniformData + u.dataOffset;
 
-					case ShaderUniformType::Vec2:
-						glUniform2fv(u.location, 1,
-									 reinterpret_cast<float*>(uData));
-						break;
+					switch (u.type)
+					{
+						case ShaderUniformType::Mat4x4:
+							glUniformMatrix4fv(u.location, 1, GL_FALSE,
+											   reinterpret_cast<float*>(uData));
+							break;
 
-					case ShaderUniformType::Float:
-						glUniform1f(u.location,
-									*reinterpret_cast<float*>(uData));
-						break;
+						case ShaderUniformType::Vec3:
+							glUniform3fv(u.location, 1,
+										 reinterpret_cast<float*>(uData));
+							break;
 
-					case ShaderUniformType::Texture2D:
-						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, *reinterpret_cast<int*>(uData));
-						glUniform1i(u.location, 0);
-						break;
+						case ShaderUniformType::Vec2:
+							glUniform2fv(u.location, 1,
+										 reinterpret_cast<float*>(uData));
+							break;
+
+						case ShaderUniformType::Float:
+							glUniform1f(u.location,
+										*reinterpret_cast<float*>(uData));
+							break;
+
+						case ShaderUniformType::Texture2D:
+							glActiveTexture(GL_TEXTURE0);
+							glBindTexture(GL_TEXTURE_2D, *reinterpret_cast<int*>(uData));
+							glUniform1i(u.location, 0);
+							break;
+					}
 				}
+
+				Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
+
+				glUniformMatrix4fv(shader.mvpUniformLocation, 1,
+								   GL_FALSE, mvp.ValuePointer());
+
+				glBindVertexArray(obj.vertexArrayObject);
+
+				glDrawElements(GL_TRIANGLES, obj.indexCount,
+							   obj.indexElementType, reinterpret_cast<void*>(0));
 			}
 
-			Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
-
-			glUniformMatrix4fv(shader.mvpUniformLocation, 1,
-							   GL_FALSE, mvp.ValuePointer());
-
-			glBindVertexArray(obj.vertexArrayObject);
-
-			glDrawElements(GL_TRIANGLES, obj.indexCount,
-						   obj.indexElementType, reinterpret_cast<void*>(0));
-
+			++objectIndex;
 		}
 	}
 

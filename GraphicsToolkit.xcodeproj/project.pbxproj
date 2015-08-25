@@ -17,6 +17,7 @@
 		457519BE1B83C01A0007412E /* KeyboardInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457519BC1B83C01A0007412E /* KeyboardInput.cpp */; };
 		4578F41E1B7C0507003E7AFC /* File.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4578F41C1B7C0507003E7AFC /* File.cpp */; };
 		4588CC4B1B8A144D0002AEC6 /* PointerInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4588CC491B8A144D0002AEC6 /* PointerInput.cpp */; };
+		45E42CDD1B8BF5700071A3A9 /* ViewFrustum.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E42CDC1B8BF5700071A3A9 /* ViewFrustum.cpp */; };
 		45E75BDF1B7D629E0096E93A /* Material.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E75BDE1B7D629E0096E93A /* Material.cpp */; };
 		45E75C391B811A960096E93A /* CameraController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E75C371B811A960096E93A /* CameraController.cpp */; };
 		45E9784F1B34CF0600E11814 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9784E1B34CF0600E11814 /* main.cpp */; };
@@ -75,6 +76,10 @@
 		4588CC4C1B8A70580002AEC6 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = GraphicsToolkit/include; sourceTree = "<group>"; };
 		459122AA1B6E71F500CF3D2A /* ObjectId.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ObjectId.h; path = src/ObjectId.h; sourceTree = "<group>"; };
 		459122AF1B6E865A00CF3D2A /* Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hash.h; path = src/Hash.h; sourceTree = "<group>"; };
+		45E42CD91B8B925A0071A3A9 /* BoundingBox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BoundingBox.h; path = src/BoundingBox.h; sourceTree = "<group>"; };
+		45E42CDA1B8BA1E40071A3A9 /* ViewFrustum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ViewFrustum.h; path = src/ViewFrustum.h; sourceTree = "<group>"; };
+		45E42CDB1B8BEEA00071A3A9 /* Plane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Plane.h; path = src/Plane.h; sourceTree = "<group>"; };
+		45E42CDC1B8BF5700071A3A9 /* ViewFrustum.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ViewFrustum.cpp; path = src/ViewFrustum.cpp; sourceTree = "<group>"; };
 		45E75BDE1B7D629E0096E93A /* Material.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = Material.cpp; path = src/Material.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		45E75BE31B80CC260096E93A /* Mat3x3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Mat3x3.h; path = src/Mat3x3.h; sourceTree = "<group>"; };
 		45E75C371B811A960096E93A /* CameraController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CameraController.cpp; path = src/CameraController.cpp; sourceTree = "<group>"; };
@@ -93,7 +98,7 @@
 		45E978681B34FAC000E11814 /* Vec2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Vec2.h; path = src/Vec2.h; sourceTree = "<group>"; };
 		45E978691B358E7700E11814 /* Vec3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Vec3.h; path = src/Vec3.h; sourceTree = "<group>"; };
 		45E9786A1B35939300E11814 /* Renderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Renderer.cpp; path = src/Renderer.cpp; sourceTree = "<group>"; };
-		45E9786B1B35939300E11814 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Renderer.h; path = src/Renderer.h; sourceTree = "<group>"; };
+		45E9786B1B35939300E11814 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Renderer.h; path = src/Renderer.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		45E9786E1B3593E200E11814 /* RenderObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderObject.h; path = src/RenderObject.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		45E978701B35A69B00E11814 /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Buffer.h; path = src/Buffer.h; sourceTree = "<group>"; };
 		45E978751B35E5EB00E11814 /* Vec4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Vec4.h; path = src/Vec4.h; sourceTree = "<group>"; };
@@ -155,8 +160,10 @@
 				45E978781B3706B800E11814 /* ShaderProgram.h */,
 				4550512C1B6ABFD90096FAD2 /* Texture.cpp */,
 				4550512D1B6ABFD90096FAD2 /* Texture.h */,
-				455051191B618CFF0096FAD2 /* VertexFormat.h */,
 				4550511A1B6193070096FAD2 /* VertexFormat.cpp */,
+				455051191B618CFF0096FAD2 /* VertexFormat.h */,
+				45E42CDC1B8BF5700071A3A9 /* ViewFrustum.cpp */,
+				45E42CDA1B8BA1E40071A3A9 /* ViewFrustum.h */,
 			);
 			name = Rendering;
 			sourceTree = "<group>";
@@ -213,14 +220,16 @@
 		45E978741B35E54500E11814 /* Math */ = {
 			isa = PBXGroup;
 			children = (
+				45E42CD91B8B925A0071A3A9 /* BoundingBox.h */,
+				45EB3E911B4EEDF700F2092A /* Math.h */,
 				45EB3E8C1B49568F00F2092A /* Matrix.h */,
 				4588CC481B890CAA0002AEC6 /* Mat2x2.h */,
 				45E75BE31B80CC260096E93A /* Mat3x3.h */,
 				45E978761B35F2E100E11814 /* Mat4x4.h */,
+				45E42CDB1B8BEEA00071A3A9 /* Plane.h */,
 				45E978681B34FAC000E11814 /* Vec2.h */,
 				45E978691B358E7700E11814 /* Vec3.h */,
 				45E978751B35E5EB00E11814 /* Vec4.h */,
-				45EB3E911B4EEDF700F2092A /* Math.h */,
 			);
 			name = Math;
 			sourceTree = "<group>";
@@ -301,6 +310,7 @@
 				45E75BDF1B7D629E0096E93A /* Material.cpp in Sources */,
 				455051181B6176E50096FAD2 /* RenderObject.cpp in Sources */,
 				4502610A1B8644C70040A310 /* InternalKeyMap.cpp in Sources */,
+				45E42CDD1B8BF5700071A3A9 /* ViewFrustum.cpp in Sources */,
 				457519BE1B83C01A0007412E /* KeyboardInput.cpp in Sources */,
 				4550511B1B6193070096FAD2 /* VertexFormat.cpp in Sources */,
 				45E75C391B811A960096E93A /* CameraController.cpp in Sources */,

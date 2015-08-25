@@ -9,6 +9,7 @@
 
 class Window;
 struct Camera;
+struct BoundingBox;
 
 class Renderer
 {
@@ -22,6 +23,9 @@ private:
 	RenderObject* objects = nullptr;
 	size_t contiguousFree = 0;
 	size_t allocatedCount = 0;
+
+	BoundingBox* boundingBoxes = nullptr;
+	unsigned char* bboxCullingState = nullptr;
 	
 	static const size_t initialAllocation = 4096;
 
