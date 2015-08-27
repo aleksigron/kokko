@@ -11,55 +11,54 @@ void ViewFrustum::UpdateFrustum(const Camera& camera)
 {
 	const Vec3f position = camera.transform.position;
 	const Vec3f forward = camera.transform.Forward();
-	const Vec3f right = camera.transform.Right();
-	const Vec3f up = camera.transform.Up();
 
-	const float tanHalfFov = tanf(camera.perspectiveFieldOfView * 0.5f);
+	const float near = camera.nearClipDistance;
+	const float far = camera.farClipDistance;
 
-	const float halfNearHeight = tanHalfFov * camera.nearClipDistance;
-	const float halfNearWidth = halfNearHeight * camera.aspectRatio;
+	const float halfFarHeight = std::tan(camera.perspectiveFieldOfView * 0.5f) * far;
+	const float halfFarWidth = halfFarHeight * camera.aspectRatio;
 
-	const Vec3f nearCenter = position + forward * camera.nearClipDistance;
-	const Vec3f nearRight = right * halfNearWidth;
-	const Vec3f nearUp = up * halfNearHeight;
+	const Vec3f farForward = forward * far;
+	const Vec3f farRight = camera.transform.Right() * halfFarWidth;
+	const Vec3f farUp = camera.transform.Up() * halfFarHeight;
 
-	const Vec3f dirTopLeft = (nearCenter - nearRight + nearUp - position).Normalized();
-	const Vec3f dirBottomRight = (nearCenter + nearRight - nearUp - position).Normalized();
+	const Vec3f dirTopLeft = farForward - farRight + farUp;
+	const Vec3f dirBottomRight = farForward + farRight - farUp;
 
 	// Order: near, left, top, right, bottom, far
 
-	planes[0].SetPointAndNormal(nearCenter, forward);
-	planes[1].SetPointAndNormal(position, Vec3f::Cross(dirTopLeft, up));
-	planes[2].SetPointAndNormal(position, Vec3f::Cross(dirTopLeft, right));
-	planes[3].SetPointAndNormal(position, Vec3f::Cross(up, dirBottomRight));
-	planes[4].SetPointAndNormal(position, Vec3f::Cross(right, dirBottomRight));
-	planes[5].SetPointAndNormal(position + forward * camera.farClipDistance, -forward);
+	planes[0].SetPointAndNormal(position + forward * near, forward);
+	planes[1].SetPointAndNormal(position, Vec3f::Cross(dirTopLeft, farUp).Normalized());
+	planes[2].SetPointAndNormal(position, Vec3f::Cross(dirTopLeft, farRight).Normalized());
+	planes[3].SetPointAndNormal(position, Vec3f::Cross(farUp, dirBottomRight).Normalized());
+	planes[4].SetPointAndNormal(position, Vec3f::Cross(farRight, dirBottomRight).Normalized());
+	planes[5].SetPointAndNormal(position + farForward, -forward);
 }
 
-void ViewFrustum::CullAABB(unsigned int boxCount, const BoundingBox* boxes, unsigned char* state) const
+void ViewFrustum::CullAABB(unsigned int count, const BoundingBox* boxes, unsigned char* state) const
 {
-	const Plane* pl = this->planes;
-	Vec3f absNormal[6];
+	const Plane* frustumPlanes = this->planes;
+	Vec3f planeNormalAbs[6];
 
 	for (int i = 0; i < 6; ++i)
 	{
-		absNormal[i].x = fabsf(pl[i].normal.x);
-		absNormal[i].y = fabsf(pl[i].normal.y);
-		absNormal[i].z = fabsf(pl[i].normal.z);
+		planeNormalAbs[i].x = std::abs(frustumPlanes[i].normal.x);
+		planeNormalAbs[i].y = std::abs(frustumPlanes[i].normal.y);
+		planeNormalAbs[i].z = std::abs(frustumPlanes[i].normal.z);
 	}
 
-	for (unsigned int boxIndex = 0; boxIndex < boxCount; ++boxIndex)
+	// For each axis aligned bounding box
+	for (unsigned int boxIdx = 0; boxIdx < count; ++boxIdx)
 	{
-		const BoundingBox* const box = boxes + boxIndex;
-
 		// Inside: 2, intersect: 1, outside: 0
 		unsigned char result = 2;
 
-		for (unsigned int planeIndex = 0; planeIndex < 6; ++planeIndex)
+		// For each plane in view frustum
+		for (unsigned int planeIdx = 0; planeIdx < 6; ++planeIdx)
 		{
-			const float planeDistNeg = -planes[planeIndex].distance;
-			const float d = Vec3f::Dot(box->center, planes[planeIndex].normal);
-			const float r = Vec3f::Dot(box->extents, absNormal[planeIndex]);
+			const float planeDistNeg = -frustumPlanes[planeIdx].distance;
+			const float d = Vec3f::Dot(boxes[boxIdx].center, frustumPlanes[planeIdx].normal);
+			const float r = Vec3f::Dot(boxes[boxIdx].extents, planeNormalAbs[planeIdx]);
 
 			if (d + r < planeDistNeg)
 			{
@@ -70,6 +69,6 @@ void ViewFrustum::CullAABB(unsigned int boxCount, const BoundingBox* boxes, unsi
 				result = 1;
 		}
 
-		state[boxIndex] = result;
+		state[boxIdx] = result;
 	}
 }
