@@ -18,6 +18,7 @@ namespace Matrix
 		result[10] = - (far + near) / (far - near);
 		result[11] = - 1.0f;
 		result[14] = - (2.0f * far * near) / (far - near);
+		result[15] = 0.0f;
 		
 		return result;
 	}
