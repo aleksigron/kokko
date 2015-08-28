@@ -24,24 +24,12 @@ struct Camera
 	// The ratio of the viewport's width to its height (x / y)
 	float aspectRatio = 1.0f;
 
-	float nearClipDistance = 1.0f;
+	float nearClipDistance = 0.1f;
 	float farClipDistance = 100.0f;
 	
 	Projection projectionType = Projection::Perspective;
 
-	inline Mat4x4f GetProjectionMatrix()
-	{
-		if (projectionType == Projection::Perspective)
-			return Matrix::Perspective(perspectiveFieldOfView, aspectRatio,
-											 nearClipDistance, farClipDistance);
-
-		else if (projectionType == Projection::Orthographic)
-			return Matrix::Orthographic(orthogonalHeight / aspectRatio * 0.5f,
-										orthogonalHeight * 0.5f,
-										nearClipDistance, farClipDistance);
-
-		return Mat4x4f();
-	}
+	Mat4x4f GetProjectionMatrix() const;
 
 	inline Mat4x4f GetViewProjectionMatrix()
 	{
