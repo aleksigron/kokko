@@ -14,6 +14,25 @@ struct Mat2x2f
 	inline float& operator[](std::size_t index) { return m[index]; }
 	inline const float& operator[](std::size_t index) const { return m[index]; }
 
+	inline void Transpose()
+	{
+		float temp = m[1];
+		m[1] = m[2];
+		m[2] = temp;
+	}
+
+	inline Mat2x2f GetTransposed() const
+	{
+		Mat2x2f result(uninit);
+
+		result[0] = m[0];
+		result[1] = m[2];
+		result[2] = m[1];
+		result[3] = m[3];
+
+		return result;
+	}
+
 	inline float* ValuePointer() { return m; }
 };
 

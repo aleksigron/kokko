@@ -16,6 +16,31 @@ struct Mat3x3f
 
 	inline float* ValuePointer() { return m; }
 
+	inline void Transpose()
+	{
+		float temp = m[1];
+		m[1] = m[3];
+		m[3] = temp;
+
+		temp = m[2];
+		m[2] = m[6];
+		m[6] = temp;
+
+		temp = m[5];
+		m[5] = m[8];
+		m[8] = temp;
+	}
+
+	inline Mat3x3f GetTransposed() const
+	{
+		Mat3x3f result(Mat3x3f::uninit);
+
+		for (unsigned int i = 0; i < 9; ++i)
+			result[i] = m[(i % 3) * 3 + i / 3];
+
+		return result;
+	}
+
 	static inline Mat3x3f RotateAroundAxis(Vec3f axis, float angle)
 	{
 		axis.Normalize();

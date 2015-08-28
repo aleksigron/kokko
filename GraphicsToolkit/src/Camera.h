@@ -38,7 +38,7 @@ struct Camera
 
 	inline Mat4x4f GetViewMatrix()
 	{
-		return Matrix::Transpose(transform.rotation) * Matrix::Translate(-(transform.position));
+		return Mat4x4f(transform.rotation.GetTransposed()) * Matrix::Translate(-(transform.position));
 	}
 
 	inline void SetAspectRatio(int width, int height)

@@ -28,14 +28,4 @@ namespace Matrix
 		
 		return result;
 	}
-
-	inline Mat4x4f Transpose(const Mat4x4f& m)
-	{
-		Mat4x4f result(Mat4x4f::uninit);
-		
-		for (std::size_t i = 0; i < 16; ++i)
-			result[i] = m[(i % 4) * 4 + i / 4];
-		
-		return result;
-	}
 }

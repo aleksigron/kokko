@@ -32,6 +32,36 @@ struct Mat4x4f
 	
 	inline float* ValuePointer() { return m; }
 
+	inline void Transpose()
+	{
+		float temp;
+		unsigned int pri = 1, sec;
+
+		do
+		{
+			if (pri % 4 == 0)
+				pri += pri / 4 + 1;
+
+			sec = (pri % 4) * 4 + pri / 4;
+			temp = m[sec];
+			m[sec] = m[pri];
+			m[pri] = temp;
+
+			++pri;
+		}
+		while (pri < 12);
+	}
+
+	inline Mat4x4f GetTransposed() const
+	{
+		Mat4x4f result(Mat4x4f::uninit);
+
+		for (unsigned int i = 0; i < 16; ++i)
+			result[i] = m[(i % 4) * 4 + i / 4];
+
+		return result;
+	}
+
 	static inline Mat4x4f RotateAroundAxis(Vec3f axis, float angle)
 	{
 		axis.Normalize();
