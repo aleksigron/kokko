@@ -28,10 +28,10 @@ void ViewFrustum::UpdateFrustum(const Camera& camera)
 	// Order: near, left, top, right, bottom, far
 
 	planes[0].SetPointAndNormal(position + forward * near, forward);
-	planes[1].SetPointAndNormal(position, Vec3f::Cross(dirTopLeft, farUp).Normalized());
-	planes[2].SetPointAndNormal(position, Vec3f::Cross(dirTopLeft, farRight).Normalized());
-	planes[3].SetPointAndNormal(position, Vec3f::Cross(farUp, dirBottomRight).Normalized());
-	planes[4].SetPointAndNormal(position, Vec3f::Cross(farRight, dirBottomRight).Normalized());
+	planes[1].SetPointAndNormal(position, Vec3f::Cross(dirTopLeft, farUp).GetNormalized());
+	planes[2].SetPointAndNormal(position, Vec3f::Cross(dirTopLeft, farRight).GetNormalized());
+	planes[3].SetPointAndNormal(position, Vec3f::Cross(farUp, dirBottomRight).GetNormalized());
+	planes[4].SetPointAndNormal(position, Vec3f::Cross(farRight, dirBottomRight).GetNormalized());
 	planes[5].SetPointAndNormal(position + farForward, -forward);
 }
 

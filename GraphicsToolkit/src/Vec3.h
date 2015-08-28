@@ -20,7 +20,7 @@ struct Vec3
 	}
 	
 	// Return a normalized version of the vector
-	inline Vec3 Normalized() const
+	inline Vec3 GetNormalized() const
 	{
 		Vec3 normalized = *this;
 		normalized.Normalize();

@@ -19,7 +19,7 @@ struct Vec2
 	}
 	
 	// Return a normalized version of the vector
-	inline Vec2 Normalized() const
+	inline Vec2 GetNormalized() const
 	{
 		Vec2<T> normalized = *this;
 		normalized.Normalize();
