@@ -24,6 +24,8 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
+	delete[] bboxCullingState;
+	delete[] boundingBoxes;
 	delete[] objects;
 }
 
