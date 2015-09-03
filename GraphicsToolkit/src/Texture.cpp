@@ -7,6 +7,8 @@
 
 void Texture::Upload(const ImageData& image)
 {
+	textureSize = image.imageSize;
+
 	glGenTextures(1, &textureGlId);
 	glBindTexture(GL_TEXTURE_2D, textureGlId);
 
