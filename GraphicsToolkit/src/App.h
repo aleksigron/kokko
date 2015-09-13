@@ -7,6 +7,7 @@
 #include "Renderer.h"
 #include "ResourceManager.h"
 #include "CameraController.h"
+#include "Scene.h"
 
 class App
 {
@@ -20,6 +21,7 @@ private:
 	Renderer renderer;
 	ResourceManager resourceManager;
 	CameraController cameraController;
+	Scene scene;
 	
 public:
 	App();

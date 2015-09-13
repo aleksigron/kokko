@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-
 #include "Mat4x4.h"
 #include "Vec3.h"
 

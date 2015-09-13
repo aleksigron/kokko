@@ -12,6 +12,7 @@
 #include "Material.h"
 #include "ViewFrustum.h"
 #include "BoundingBox.h"
+#include "Scene.h"
 
 Renderer::Renderer()
 {
@@ -38,7 +39,7 @@ void Renderer::Initialize()
 	glDepthFunc(GL_LESS);
 }
 
-void Renderer::Render()
+void Renderer::Render(Scene& scene)
 {
 	RenderObject* o = this->objects;
 	BoundingBox* bb = this->boundingBoxes;
@@ -54,7 +55,7 @@ void Renderer::Render()
 	{
 		if (this->RenderObjectIsAlive(i))
 		{
-			bb[oCount].center = o[i].transform.position;
+			bb[oCount].center = scene.GetLocalTransformRef(o[i].sceneObjectId).position;
 			bb[oCount].extents = Vec3f(0.5f, 0.5f, 0.5f);
 			++oCount;
 		}
@@ -81,6 +82,7 @@ void Renderer::Render()
 			{
 				RenderObject& obj = o[arrayIndex];
 
+				Mesh& mesh = res->meshes.Get(obj.mesh);
 				Material& material = res->materials.Get(obj.material);
 				ShaderProgram& shader = res->shaders.Get(material.shader);
 
@@ -123,15 +125,15 @@ void Renderer::Render()
 					}
 				}
 
-				Mat4x4f mvp = viewProjection * obj.transform.GetTransformMatrix();
+				Mat4x4f mvp = viewProjection * scene.GetWorldTransformMatrix(obj.sceneObjectId);
 
 				glUniformMatrix4fv(shader.mvpUniformLocation, 1,
 								   GL_FALSE, mvp.ValuePointer());
 
-				glBindVertexArray(obj.vertexArrayObject);
+				glBindVertexArray(mesh.vertexArrayObject);
 
-				glDrawElements(GL_TRIANGLES, obj.indexCount,
-							   obj.indexElementType, reinterpret_cast<void*>(0));
+				glDrawElements(GL_TRIANGLES, mesh.indexCount,
+							   mesh.indexElementType, reinterpret_cast<void*>(0));
 			}
 
 			++objectIndex;

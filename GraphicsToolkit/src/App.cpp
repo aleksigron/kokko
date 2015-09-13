@@ -65,15 +65,23 @@ bool App::Initialize()
 		texMaterial.SetShader(texShader);
 		texMaterial.SetUniformValue(0, tex.textureGlId);
 
-		for (unsigned i = 0; i < 512; ++i)
-		{
-			ObjectId objId = GeometryBuilder::UnitCubeWithColor();
-			RenderObject& obj = this->renderer.GetRenderObject(objId);
-			obj.material = i < 256 ? colorMaterialId : texMaterialId;
+		ObjectId colorCubeMeshId = GeometryBuilder::UnitCubeWithColor();
+		ObjectId textureCubeMeshId = GeometryBuilder::UnitCubeWithTextureCoords();
 
-			obj.transform.position.x = -7.0f + (i / 64 * 2.0f);
-			obj.transform.position.y = -7.0f + (i % 8 * 2.0f);
-			obj.transform.position.z = -7.0f + (i / 8 % 8 * 2.0f);
+		SceneObjectId parent0 = this->scene.AddSceneObject();
+		SceneObjectId parent1 = this->scene.AddSceneObject();
+
+		for (unsigned i = 0; i < 64; ++i)
+		{
+			ObjectId objId = this->renderer.AddRenderObject();
+			RenderObject& obj = this->renderer.GetRenderObject(objId);
+			obj.mesh = i < 32 ? colorCubeMeshId : textureCubeMeshId;
+			obj.material = i < 32 ? colorMaterialId : texMaterialId;
+
+			obj.sceneObjectId = this->scene.AddSceneObject();
+			this->scene.SetParent(obj.sceneObjectId, i < 32 ? parent0 : parent1);
+
+			this->scene.SetLocalTransform(obj.sceneObjectId, Matrix::Translate(Vec3f(-3.0f + (i / 16 * 2.0f), -3.0f + (i % 4 * 2.0f), -3.0f + (i / 4 % 4 * 2.0f))));
 		}
 
 		this->mainCamera.transform.position = Vec3f(0.0f, 0.0f, 15.0f);
@@ -99,6 +107,7 @@ void App::Update()
 	this->input.Update();
 	this->cameraController.Update();
 
-	this->renderer.Render();
+	this->scene.CalculateWorldTransforms();
+	this->renderer.Render(this->scene);
 	this->mainWindow.Swap();
 }

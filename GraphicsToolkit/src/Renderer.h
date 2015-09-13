@@ -10,6 +10,7 @@
 class Window;
 struct Camera;
 struct BoundingBox;
+class Scene;
 
 class Renderer
 {
@@ -40,7 +41,7 @@ public:
 	
 	void Initialize();
 	
-	void Render();
+	void Render(Scene& scene);
 	
 	void AttachTarget(Window* window);
 	void SetActiveCamera(Camera* camera);

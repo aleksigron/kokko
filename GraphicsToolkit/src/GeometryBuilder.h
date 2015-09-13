@@ -77,10 +77,10 @@ namespace GeometryBuilder
 		index[34] = 7;
 		index[35] = 5;
 		
-		Renderer* r = App::GetRenderer();
+		ResourceManager* r = App::GetResourceManager();
 		
-		ObjectId id = r->AddRenderObject();
-		RenderObject& obj = r->GetRenderObject(id);
+		ObjectId id = r->meshes.Add();
+		Mesh& obj = r->meshes.Get(id);
 		obj.UploadVertexData_PosCol(index, vertex);
 		
 		return id;
@@ -157,10 +157,10 @@ namespace GeometryBuilder
 		index[34] = 7;
 		index[35] = 5;
 
-		Renderer* r = App::GetRenderer();
+		ResourceManager* r = App::GetResourceManager();
 
-		ObjectId id = r->AddRenderObject();
-		RenderObject& obj = r->GetRenderObject(id);
+		ObjectId id = r->meshes.Add();
+		Mesh& obj = r->meshes.Get(id);
 		obj.UploadVertexData_PosTex(index, vertex);
 
 		return id;

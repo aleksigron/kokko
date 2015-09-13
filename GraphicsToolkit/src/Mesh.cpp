@@ -1,13 +1,13 @@
-#include "RenderObject.h"
+#include "Mesh.h"
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-void RenderObject::UploadVertexData_PosCol(const Buffer<uint16_t>& index,
-										   const Buffer<Vertex_PosCol>& vertex)
+void Mesh::UploadVertexData_PosCol(const Buffer<unsigned short>& index,
+								   const Buffer<Vertex_PosCol>& vertex)
 {
 	using V = Vertex_PosCol;
-	
+
 	// Create vertex array object
 	glGenVertexArrays(1, &vertexArrayObject);
 	glBindVertexArray(vertexArrayObject);
@@ -28,21 +28,21 @@ void RenderObject::UploadVertexData_PosCol(const Buffer<uint16_t>& index,
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER,
 				 V::size * vertex.Count(), vertex.Data(), GL_STATIC_DRAW);
-	
+
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, V::posElements, V::posElemType,
 						  GL_FALSE, V::size, V::posOffset);
-	
+
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, V::colElements, V::colElemType,
 						  GL_FALSE, V::size, V::colOffset);
-	
+
 	// Unbind vertex array
 	glBindVertexArray(0);
 }
 
-void RenderObject::UploadVertexData_PosTex(const Buffer<uint16_t>& index,
-										   const Buffer<Vertex_PosTex>& vertex)
+void Mesh::UploadVertexData_PosTex(const Buffer<unsigned short>& index,
+								   const Buffer<Vertex_PosTex>& vertex)
 {
 	using V = Vertex_PosTex;
 

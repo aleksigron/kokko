@@ -8,11 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		4502610A1B8644C70040A310 /* InternalKeyMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450261081B8644C70040A310 /* InternalKeyMap.cpp */; };
-		455051181B6176E50096FAD2 /* RenderObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455051171B6176E50096FAD2 /* RenderObject.cpp */; };
+		45113BE71B98ED2200C35390 /* Scene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45113BE51B98ED2200C35390 /* Scene.cpp */; };
 		4550511B1B6193070096FAD2 /* VertexFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550511A1B6193070096FAD2 /* VertexFormat.cpp */; };
 		4550511E1B6503610096FAD2 /* ResourceManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550511C1B6503610096FAD2 /* ResourceManager.cpp */; };
 		4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455051291B6ABFA10096FAD2 /* ImageData.cpp */; };
 		4550512E1B6ABFD90096FAD2 /* Texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550512C1B6ABFD90096FAD2 /* Texture.cpp */; };
+		455326D61BA4BFBD007EE3AE /* Mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455326D41BA4BFBD007EE3AE /* Mesh.cpp */; };
 		45535A491B8FDA0B000CBFE8 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45535A481B8FDA0B000CBFE8 /* Camera.cpp */; };
 		457519BA1B83BAF00007412E /* Input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457519B81B83BAF00007412E /* Input.cpp */; };
 		457519BE1B83C01A0007412E /* KeyboardInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457519BC1B83C01A0007412E /* KeyboardInput.cpp */; };
@@ -50,12 +51,13 @@
 		450261081B8644C70040A310 /* InternalKeyMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InternalKeyMap.cpp; path = src/InternalKeyMap.cpp; sourceTree = "<group>"; };
 		4502610B1B86457B0040A310 /* InternalKeyMap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = InternalKeyMap.h; path = src/InternalKeyMap.h; sourceTree = "<group>"; };
 		4508A57F1B6EBFA700C965EF /* Material.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Material.h; path = src/Material.h; sourceTree = "<group>"; };
+		45113BE51B98ED2200C35390 /* Scene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Scene.cpp; path = src/Scene.cpp; sourceTree = "<group>"; };
+		45113BE61B98ED2200C35390 /* Scene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scene.h; path = src/Scene.h; sourceTree = "<group>"; };
 		451C61521B5EF4F900DC1501 /* GeometryBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GeometryBuilder.h; path = src/GeometryBuilder.h; sourceTree = "<group>"; };
 		453596081B768CBE0045DC04 /* JsonReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JsonReader.h; path = src/JsonReader.h; sourceTree = "<group>"; };
 		4535960A1B7BABC40045DC04 /* StringRef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = StringRef.h; path = src/StringRef.h; sourceTree = "<group>"; };
 		4535960C1B7BE2290045DC04 /* ShaderConfigReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ShaderConfigReader.h; path = src/ShaderConfigReader.h; sourceTree = "<group>"; };
 		454546C41B71596C00998248 /* ImmutableString.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ImmutableString.h; path = src/ImmutableString.h; sourceTree = "<group>"; };
-		455051171B6176E50096FAD2 /* RenderObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderObject.cpp; path = src/RenderObject.cpp; sourceTree = "<group>"; };
 		455051191B618CFF0096FAD2 /* VertexFormat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = VertexFormat.h; path = src/VertexFormat.h; sourceTree = "<group>"; };
 		4550511A1B6193070096FAD2 /* VertexFormat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VertexFormat.cpp; path = src/VertexFormat.cpp; sourceTree = "<group>"; };
 		4550511C1B6503610096FAD2 /* ResourceManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ResourceManager.cpp; path = src/ResourceManager.cpp; sourceTree = "<group>"; };
@@ -65,6 +67,8 @@
 		4550512A1B6ABFA10096FAD2 /* ImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageData.h; path = src/ImageData.h; sourceTree = "<group>"; };
 		4550512C1B6ABFD90096FAD2 /* Texture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Texture.cpp; path = src/Texture.cpp; sourceTree = "<group>"; };
 		4550512D1B6ABFD90096FAD2 /* Texture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Texture.h; path = src/Texture.h; sourceTree = "<group>"; };
+		455326D41BA4BFBD007EE3AE /* Mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Mesh.cpp; path = src/Mesh.cpp; sourceTree = "<group>"; };
+		455326D51BA4BFBD007EE3AE /* Mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Mesh.h; path = src/Mesh.h; sourceTree = "<group>"; };
 		45535A481B8FDA0B000CBFE8 /* Camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Camera.cpp; path = src/Camera.cpp; sourceTree = "<group>"; };
 		457519B81B83BAF00007412E /* Input.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Input.cpp; path = src/Input.cpp; sourceTree = "<group>"; };
 		457519B91B83BAF00007412E /* Input.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Input.h; path = src/Input.h; sourceTree = "<group>"; };
@@ -154,9 +158,10 @@
 				45E978821B370D7200E11814 /* Camera.h */,
 				45E75BDE1B7D629E0096E93A /* Material.cpp */,
 				4508A57F1B6EBFA700C965EF /* Material.h */,
+				455326D41BA4BFBD007EE3AE /* Mesh.cpp */,
+				455326D51BA4BFBD007EE3AE /* Mesh.h */,
 				45E9786A1B35939300E11814 /* Renderer.cpp */,
 				45E9786B1B35939300E11814 /* Renderer.h */,
-				455051171B6176E50096FAD2 /* RenderObject.cpp */,
 				45E9786E1B3593E200E11814 /* RenderObject.h */,
 				4535960C1B7BE2290045DC04 /* ShaderConfigReader.h */,
 				45E978771B3706B800E11814 /* ShaderProgram.cpp */,
@@ -216,6 +221,8 @@
 				45EB3E8F1B49883100F2092A /* Time.h */,
 				45E978631B34E2BE00E11814 /* Window.cpp */,
 				45E978641B34E2BE00E11814 /* Window.h */,
+				45113BE51B98ED2200C35390 /* Scene.cpp */,
+				45113BE61B98ED2200C35390 /* Scene.h */,
 			);
 			path = GraphicsToolkit;
 			sourceTree = "<group>";
@@ -311,13 +318,14 @@
 			files = (
 				4550511E1B6503610096FAD2 /* ResourceManager.cpp in Sources */,
 				45E75BDF1B7D629E0096E93A /* Material.cpp in Sources */,
-				455051181B6176E50096FAD2 /* RenderObject.cpp in Sources */,
 				4502610A1B8644C70040A310 /* InternalKeyMap.cpp in Sources */,
 				45E42CDD1B8BF5700071A3A9 /* ViewFrustum.cpp in Sources */,
 				457519BE1B83C01A0007412E /* KeyboardInput.cpp in Sources */,
 				4550511B1B6193070096FAD2 /* VertexFormat.cpp in Sources */,
 				45E75C391B811A960096E93A /* CameraController.cpp in Sources */,
+				45113BE71B98ED2200C35390 /* Scene.cpp in Sources */,
 				45EB3E901B49883100F2092A /* Time.cpp in Sources */,
+				455326D61BA4BFBD007EE3AE /* Mesh.cpp in Sources */,
 				4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */,
 				45E9786C1B35939300E11814 /* Renderer.cpp in Sources */,
 				45E9784F1B34CF0600E11814 /* main.cpp in Sources */,
