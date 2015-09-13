@@ -51,6 +51,6 @@ void Scene::CalculateWorldTransforms()
 
 	for (unsigned i = 1; i < objectBatch.used; ++i)
 	{
-		world[i] = local[i] * world[parent[i]];
+		world[i] = world[parent[i]] * local[i];
 	}
 }

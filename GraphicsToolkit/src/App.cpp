@@ -68,8 +68,8 @@ bool App::Initialize()
 		ObjectId colorCubeMeshId = GeometryBuilder::UnitCubeWithColor();
 		ObjectId textureCubeMeshId = GeometryBuilder::UnitCubeWithTextureCoords();
 
-		SceneObjectId parent0 = this->scene.AddSceneObject();
-		SceneObjectId parent1 = this->scene.AddSceneObject();
+		root0 = this->scene.AddSceneObject();
+		root1 = this->scene.AddSceneObject();
 
 		for (unsigned i = 0; i < 64; ++i)
 		{
@@ -79,9 +79,11 @@ bool App::Initialize()
 			obj.material = i < 32 ? colorMaterialId : texMaterialId;
 
 			obj.sceneObjectId = this->scene.AddSceneObject();
-			this->scene.SetParent(obj.sceneObjectId, i < 32 ? parent0 : parent1);
+			this->scene.SetParent(obj.sceneObjectId, i < 32 ? root0 : root1);
 
-			this->scene.SetLocalTransform(obj.sceneObjectId, Matrix::Translate(Vec3f(-3.0f + (i / 16 * 2.0f), -3.0f + (i % 4 * 2.0f), -3.0f + (i / 4 % 4 * 2.0f))));
+			Vec3f pos(-3.0f + (i / 16 * 2.0f), -3.0f + (i % 4 * 2.0f), -3.0f + (i / 4 % 4 * 2.0f));
+
+			this->scene.SetLocalTransform(obj.sceneObjectId, Matrix::Translate(pos));
 		}
 
 		this->mainCamera.transform.position = Vec3f(0.0f, 0.0f, 15.0f);
@@ -103,9 +105,22 @@ bool App::HasRequestedQuit()
 
 void App::Update()
 {
+	static float angle = 0.0f;
+
 	this->time.Update();
 	this->input.Update();
 	this->cameraController.Update();
+
+	Transform& r0t = this->scene.GetLocalTransformRef(root0);
+	Transform& r1t = this->scene.GetLocalTransformRef(root1);
+
+	angle += Time::GetDeltaTime() * 0.1f;
+
+	r0t.rotation = Mat3x3f::RotateAroundAxis(Vec3f(1.0f, 0.0f, 0.0f), angle);
+	r1t.rotation = Mat3x3f::RotateAroundAxis(Vec3f(1.0f, 0.0f, 0.0f), -angle);
+
+	this->scene.SetLocalTransform(root0, r0t.GetTransformMatrix());
+	this->scene.SetLocalTransform(root1, r1t.GetTransformMatrix());
 
 	this->scene.CalculateWorldTransforms();
 	this->renderer.Render(this->scene);

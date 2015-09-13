@@ -22,6 +22,8 @@ private:
 	ResourceManager resourceManager;
 	CameraController cameraController;
 	Scene scene;
+
+	SceneObjectId root0, root1;
 	
 public:
 	App();

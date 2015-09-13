@@ -136,6 +136,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		455326D71BA58FEA007EE3AE /* Scene */ = {
+			isa = PBXGroup;
+			children = (
+				45E978851B375E4900E11814 /* Transform.h */,
+				45113BE51B98ED2200C35390 /* Scene.cpp */,
+				45113BE61B98ED2200C35390 /* Scene.h */,
+			);
+			name = Scene;
+			sourceTree = "<group>";
+		};
 		457519BB1B83BFFF0007412E /* Input */ = {
 			isa = PBXGroup;
 			children = (
@@ -203,9 +213,10 @@
 			isa = PBXGroup;
 			children = (
 				457519BB1B83BFFF0007412E /* Input */,
-				459122A91B6E63AB00CF3D2A /* Rendering */,
-				45E9787A1B37071100E11814 /* Util */,
 				45E978741B35E54500E11814 /* Math */,
+				459122A91B6E63AB00CF3D2A /* Rendering */,
+				455326D71BA58FEA007EE3AE /* Scene */,
+				45E9787A1B37071100E11814 /* Util */,
 				45E9784E1B34CF0600E11814 /* main.cpp */,
 				45E9785D1B34D1C600E11814 /* App.cpp */,
 				45E9785E1B34D1C600E11814 /* App.h */,
@@ -216,13 +227,10 @@
 				459122AA1B6E71F500CF3D2A /* ObjectId.h */,
 				4550511C1B6503610096FAD2 /* ResourceManager.cpp */,
 				4550511D1B6503610096FAD2 /* ResourceManager.h */,
-				45E978851B375E4900E11814 /* Transform.h */,
 				45EB3E8E1B49883100F2092A /* Time.cpp */,
 				45EB3E8F1B49883100F2092A /* Time.h */,
 				45E978631B34E2BE00E11814 /* Window.cpp */,
 				45E978641B34E2BE00E11814 /* Window.h */,
-				45113BE51B98ED2200C35390 /* Scene.cpp */,
-				45113BE61B98ED2200C35390 /* Scene.h */,
 			);
 			path = GraphicsToolkit;
 			sourceTree = "<group>";
