@@ -14,5 +14,8 @@ struct ImageData
 	unsigned int pixelFormat;
 	unsigned int componentDataType;
 
+	unsigned int compressedSize;
+	bool compressed;
+
 	bool LoadGlraw(const char* filePath);
 };

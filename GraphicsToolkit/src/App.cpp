@@ -37,12 +37,19 @@ bool App::Initialize()
 		this->cameraController.SetControlledCamera(&this->mainCamera);
 
 		// Test image
-		ImageData image;
-		image.LoadGlraw("res/textures/test.glraw");
+		ImageData rawImage;
+		rawImage.LoadGlraw("res/textures/test.glraw");
 
 		ObjectId texId = this->resourceManager.textures.Add();
 		Texture& tex = this->resourceManager.textures.Get(texId);
-		tex.Upload(image);
+		tex.Upload(rawImage);
+
+		ImageData compressedImage;
+		compressedImage.LoadGlraw("res/textures/concrete.dxt1.glraw");
+
+		ObjectId compressedTexId = this->resourceManager.textures.Add();
+		Texture& compressedTex = this->resourceManager.textures.Get(compressedTexId);
+		compressedTex.Upload(compressedImage);
 
 		// Color material
 
@@ -63,7 +70,7 @@ bool App::Initialize()
 		ObjectId texMaterialId = resourceManager.materials.Add();
 		Material& texMaterial = resourceManager.materials.Get(texMaterialId);
 		texMaterial.SetShader(texShader);
-		texMaterial.SetUniformValue(0, tex.textureGlId);
+		texMaterial.SetUniformValue(0, compressedTex.textureGlId);
 
 		ObjectId colorCubeMeshId = GeometryBuilder::UnitCubeWithColor();
 		ObjectId textureCubeMeshId = GeometryBuilder::UnitCubeWithTextureCoords();

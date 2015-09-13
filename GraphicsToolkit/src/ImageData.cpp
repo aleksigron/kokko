@@ -42,11 +42,23 @@ bool ImageData::LoadGlraw(const char *filePath)
 
 					if (strcmp(propertyKey, "height") == 0)
 						imageSize.y = *propertyValue;
-					else if (strcmp(propertyKey, "format") == 0)
-						pixelFormat = *propertyValue;
-					if (strcmp(propertyKey, "width") == 0)
+					else if (strcmp(propertyKey, "width") == 0)
 						imageSize.x = *propertyValue;
-					if (strcmp(propertyKey, "type") == 0)
+					else if (strcmp(propertyKey, "compressedFormat") == 0)
+					{
+						pixelFormat = *propertyValue;
+						compressed = true;
+					}
+					else if (strcmp(propertyKey, "size") == 0)
+					{
+						compressedSize = *propertyValue;
+					}
+					else if (strcmp(propertyKey, "format") == 0)
+					{
+						pixelFormat = *propertyValue;
+						compressed = false;
+					}
+					else if (strcmp(propertyKey, "type") == 0)
 						componentDataType = *propertyValue;
 
 					inIt += sizeof(int32_t);

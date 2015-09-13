@@ -12,10 +12,20 @@ void Texture::Upload(const ImageData& image)
 	glGenTextures(1, &textureGlId);
 	glBindTexture(GL_TEXTURE_2D, textureGlId);
 
-	// Upload texture data
-	glTexImage2D(GL_TEXTURE_2D, 0, image.pixelFormat,
-				 image.imageSize.x, image.imageSize.y, 0,
-				 image.pixelFormat, image.componentDataType, image.imageData);
+	if (image.compressed)
+	{
+		// Upload compressed texture data
+		glCompressedTexImage2D(GL_TEXTURE_2D, 0, image.pixelFormat,
+							   image.imageSize.x, image.imageSize.y, 0,
+							   image.compressedSize, image.imageData);
+	}
+	else
+	{
+		// Upload uncompressed texture data
+		glTexImage2D(GL_TEXTURE_2D, 0, image.pixelFormat,
+					 image.imageSize.x, image.imageSize.y, 0,
+					 image.pixelFormat, image.componentDataType, image.imageData);
+	}
 
 	// Set filter
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
