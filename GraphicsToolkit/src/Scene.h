@@ -14,7 +14,7 @@ struct SceneObjectBatch
 	SceneObjectId parentIds[BatchSize];
 	Mat4x4f localTransforms[BatchSize];
 	Mat4x4f worldTransforms[BatchSize];
-	Transform localSources[BatchSize];
+	TransformSource localSources[BatchSize];
 };
 
 class Scene
@@ -39,7 +39,7 @@ public:
 		return objectBatch.worldTransforms[object];
 	}
 
-	inline Transform& GetLocalTransformRef(SceneObjectId object)
+	inline TransformSource& GetLocalTransformSource(SceneObjectId object)
 	{
 		return objectBatch.localSources[object];
 	}

@@ -119,6 +119,20 @@ inline Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
 				   m[12] * v.w + m[13] * v.w + m[14] * v.w + m[15] * v.w);
 }
 
+inline Vec3f operator*(const Mat4x4f& m, const Vec3f& v)
+{
+	return Vec3f(m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12],
+				 m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13],
+				 m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14]);
+}
+
+inline Vec3f operator*(const Vec3f& v, const Mat4x4f& m)
+{
+	return Vec3f(m[0] * v.x + m[1] * v.x + m[2] * v.x + m[3] * v.x,
+				 m[4] * v.y + m[5] * v.y + m[6] * v.y + m[7] * v.y,
+				 m[8] * v.z + m[9] * v.z + m[10] * v.z + m[11] * v.z);
+}
+
 inline Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
 {
 	Mat4x4f result(Mat4x4f::uninit);

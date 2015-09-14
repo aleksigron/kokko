@@ -55,7 +55,8 @@ void Renderer::Render(Scene& scene)
 	{
 		if (this->RenderObjectIsAlive(i))
 		{
-			bb[oCount].center = scene.GetLocalTransformRef(o[i].sceneObjectId).position;
+			const Mat4x4f& matrix = scene.GetWorldTransformMatrix(o[i].sceneObjectId);
+			bb[oCount].center = matrix * Vec3f(0.0f, 0.0f, 0.0f);
 			bb[oCount].extents = Vec3f(0.5f, 0.5f, 0.5f);
 			++oCount;
 		}

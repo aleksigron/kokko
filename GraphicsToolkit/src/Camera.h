@@ -13,7 +13,7 @@ struct Camera
 		Orthographic
 	};
 
-	Transform transform;
+	TransformSource transform;
 
 	// The camera's vertical field of view in radians
 	float perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);

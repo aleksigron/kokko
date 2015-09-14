@@ -6,7 +6,7 @@
 
 #include "Matrix.h"
 
-class Transform
+class TransformSource
 {
 public:
 	Vec3f position;

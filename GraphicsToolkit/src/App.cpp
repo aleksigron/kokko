@@ -118,8 +118,8 @@ void App::Update()
 	this->input.Update();
 	this->cameraController.Update();
 
-	Transform& r0t = this->scene.GetLocalTransformRef(root0);
-	Transform& r1t = this->scene.GetLocalTransformRef(root1);
+	TransformSource& r0t = this->scene.GetLocalTransformSource(root0);
+	TransformSource& r1t = this->scene.GetLocalTransformSource(root1);
 
 	angle += Time::GetDeltaTime() * 0.1f;
 

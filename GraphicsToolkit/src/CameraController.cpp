@@ -10,7 +10,7 @@ void CameraController::SetControlledCamera(Camera* camera)
 
 void CameraController::Update()
 {
-	Transform& ct = controlledCamera->transform;
+	TransformSource& ct = controlledCamera->transform;
 
 	PointerInput* pi = &(App::GetInput()->pointer);
 	KeyboardInput* kb = &(App::GetInput()->keyboard);
