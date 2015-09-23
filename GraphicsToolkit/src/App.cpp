@@ -15,7 +15,7 @@ static void OnGlfwError(int errorCode, const char* description)
 
 App* App::instance = nullptr;
 
-App::App()
+App::App() : stackAllocator(1 << 14)
 {
 	App::instance = this;
 }
@@ -55,6 +55,7 @@ bool App::Initialize()
 
 		ObjectId colShaderId = resourceManager.shaders.Add();
 		ShaderProgram& colShader = resourceManager.shaders.Get(colShaderId);
+		colShader.SetAllocator(&this->stackAllocator);
 		colShader.LoadFromConfiguration("res/shaders/simple.shader.json");
 
 		ObjectId colorMaterialId = resourceManager.materials.Add();
@@ -65,6 +66,7 @@ bool App::Initialize()
 
 		ObjectId texShaderId = resourceManager.shaders.Add();
 		ShaderProgram& texShader = resourceManager.shaders.Get(texShaderId);
+		texShader.SetAllocator(&this->stackAllocator);
 		texShader.LoadFromConfiguration("res/shaders/tex.shader.json");
 
 		ObjectId texMaterialId = resourceManager.materials.Add();

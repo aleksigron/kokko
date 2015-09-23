@@ -19,6 +19,8 @@
 		457519BE1B83C01A0007412E /* KeyboardInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457519BC1B83C01A0007412E /* KeyboardInput.cpp */; };
 		4578F41E1B7C0507003E7AFC /* File.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4578F41C1B7C0507003E7AFC /* File.cpp */; };
 		4588CC4B1B8A144D0002AEC6 /* PointerInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4588CC491B8A144D0002AEC6 /* PointerInput.cpp */; };
+		45AE56301BB31F5F00A6B7FE /* StackAllocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45AE562E1BB31F5F00A6B7FE /* StackAllocator.cpp */; settings = {ASSET_TAGS = (); }; };
+		45AE56331BB32E5300A6B7FE /* StackAllocation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45AE56311BB32E5300A6B7FE /* StackAllocation.cpp */; settings = {ASSET_TAGS = (); }; };
 		45E42CDD1B8BF5700071A3A9 /* ViewFrustum.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E42CDC1B8BF5700071A3A9 /* ViewFrustum.cpp */; };
 		45E75BDF1B7D629E0096E93A /* Material.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E75BDE1B7D629E0096E93A /* Material.cpp */; };
 		45E75C391B811A960096E93A /* CameraController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E75C371B811A960096E93A /* CameraController.cpp */; };
@@ -82,6 +84,10 @@
 		4588CC4C1B8A70580002AEC6 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = GraphicsToolkit/include; sourceTree = "<group>"; };
 		459122AA1B6E71F500CF3D2A /* ObjectId.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ObjectId.h; path = src/ObjectId.h; sourceTree = "<group>"; };
 		459122AF1B6E865A00CF3D2A /* Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hash.h; path = src/Hash.h; sourceTree = "<group>"; };
+		45AE562E1BB31F5F00A6B7FE /* StackAllocator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StackAllocator.cpp; path = src/StackAllocator.cpp; sourceTree = "<group>"; };
+		45AE562F1BB31F5F00A6B7FE /* StackAllocator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StackAllocator.h; path = src/StackAllocator.h; sourceTree = "<group>"; };
+		45AE56311BB32E5300A6B7FE /* StackAllocation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StackAllocation.cpp; path = src/StackAllocation.cpp; sourceTree = "<group>"; };
+		45AE56321BB32E5300A6B7FE /* StackAllocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StackAllocation.h; path = src/StackAllocation.h; sourceTree = "<group>"; };
 		45E42CD91B8B925A0071A3A9 /* BoundingBox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BoundingBox.h; path = src/BoundingBox.h; sourceTree = "<group>"; };
 		45E42CDA1B8BA1E40071A3A9 /* ViewFrustum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ViewFrustum.h; path = src/ViewFrustum.h; sourceTree = "<group>"; };
 		45E42CDB1B8BEEA00071A3A9 /* Plane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Plane.h; path = src/Plane.h; sourceTree = "<group>"; };
@@ -186,6 +192,18 @@
 			name = Rendering;
 			sourceTree = "<group>";
 		};
+		45AE562D1BB31F0300A6B7FE /* Memory */ = {
+			isa = PBXGroup;
+			children = (
+				45E978701B35A69B00E11814 /* Buffer.h */,
+				45AE562E1BB31F5F00A6B7FE /* StackAllocator.cpp */,
+				45AE562F1BB31F5F00A6B7FE /* StackAllocator.h */,
+				45AE56311BB32E5300A6B7FE /* StackAllocation.cpp */,
+				45AE56321BB32E5300A6B7FE /* StackAllocation.h */,
+			);
+			name = Memory;
+			sourceTree = "<group>";
+		};
 		45E9783A1B34CE7500E11814 = {
 			isa = PBXGroup;
 			children = (
@@ -214,6 +232,7 @@
 			children = (
 				457519BB1B83BFFF0007412E /* Input */,
 				45E978741B35E54500E11814 /* Math */,
+				45AE562D1BB31F0300A6B7FE /* Memory */,
 				459122A91B6E63AB00CF3D2A /* Rendering */,
 				455326D71BA58FEA007EE3AE /* Scene */,
 				45E9787A1B37071100E11814 /* Util */,
@@ -255,7 +274,6 @@
 		45E9787A1B37071100E11814 /* Util */ = {
 			isa = PBXGroup;
 			children = (
-				45E978701B35A69B00E11814 /* Buffer.h */,
 				455051201B6515620096FAD2 /* Collection.h */,
 				451C61521B5EF4F900DC1501 /* GeometryBuilder.h */,
 				459122AF1B6E865A00CF3D2A /* Hash.h */,
@@ -336,12 +354,14 @@
 				455326D61BA4BFBD007EE3AE /* Mesh.cpp in Sources */,
 				4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */,
 				45E9786C1B35939300E11814 /* Renderer.cpp in Sources */,
+				45AE56331BB32E5300A6B7FE /* StackAllocation.cpp in Sources */,
 				45E9784F1B34CF0600E11814 /* main.cpp in Sources */,
 				45535A491B8FDA0B000CBFE8 /* Camera.cpp in Sources */,
 				457519BA1B83BAF00007412E /* Input.cpp in Sources */,
 				45E978791B3706B800E11814 /* ShaderProgram.cpp in Sources */,
 				4550512E1B6ABFD90096FAD2 /* Texture.cpp in Sources */,
 				4588CC4B1B8A144D0002AEC6 /* PointerInput.cpp in Sources */,
+				45AE56301BB31F5F00A6B7FE /* StackAllocator.cpp in Sources */,
 				4578F41E1B7C0507003E7AFC /* File.cpp in Sources */,
 				45E978651B34E2BE00E11814 /* Window.cpp in Sources */,
 				45E9785F1B34D1C600E11814 /* App.cpp in Sources */,

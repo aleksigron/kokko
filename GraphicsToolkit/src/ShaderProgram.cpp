@@ -10,6 +10,12 @@
 #include "File.h"
 #include "JsonReader.h"
 #include "ShaderConfigReader.h"
+#include "StackAllocator.h"
+
+void ShaderProgram::SetAllocator(StackAllocator* allocator)
+{
+	this->allocator = allocator;
+}
 
 bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint& shaderIdOut)
 {
@@ -54,12 +60,12 @@ bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint&
 			
 			if (infoLogLength > 0)
 			{
+				StackAllocation infoLog = allocator->Allocate(infoLogLength + 1);
+				char* infoLogBuffer = reinterpret_cast<char*>(infoLog.data);
+
 				// Print out info log
-				char* infoLog = new char[infoLogLength + 1];
-				glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLog);
-				printf("%s\n", infoLog);
-				
-				delete[] infoLog;
+				glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLogBuffer);
+				printf("%s\n", infoLogBuffer);
 			}
 		}
 	}
@@ -140,12 +146,12 @@ bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderF
 		
 		if (infoLogLength > 0)
 		{
+			StackAllocation infoLog = allocator->Allocate(infoLogLength + 1);
+			char* infoLogBuffer = reinterpret_cast<char*>(infoLog.data);
+
 			// Print out info log
-			char* infoLog = new char[infoLogLength + 1];
-			glGetProgramInfoLog(this->oglId, infoLogLength, NULL, infoLog);
-			printf("%s\n", infoLog);
-			
-			delete[] infoLog;
+			glGetProgramInfoLog(this->oglId, infoLogLength, NULL, infoLogBuffer);
+			printf("%s\n", infoLogBuffer);
 		}
 
 		assert(false);
@@ -157,22 +163,20 @@ void ShaderProgram::AddMaterialUniforms(unsigned int count,
 										const ShaderUniformType* types,
 										const StringRef* names)
 {
-	static const unsigned int maxUniformNameLength = 63;
-	char buffer[maxUniformNameLength + 1];
-
 	this->materialUniformCount = count;
 
 	for (unsigned uIndex = 0; uIndex < count; ++uIndex)
 	{
 		const StringRef* name = names + uIndex;
 
-		// The name length is within allowed limits
-		assert(name->len <= maxUniformNameLength);
+		StackAllocation nameBuffer = this->allocator->Allocate(name->len);
+		char* buffer = reinterpret_cast<char*>(nameBuffer.data);
 
 		// Copy string to a local buffer because it needs to be null terminated
 		for (unsigned charIndex = 0; charIndex < name->len; ++charIndex)
 			buffer[charIndex] = name->str[charIndex];
-		buffer[name->len] = '\0';
+
+		buffer[name->len] = '\0'; // Null-terminate
 
 		ShaderUniform& uniform = this->materialUniforms[uIndex];
 		uniform.location = glGetUniformLocation(this->oglId, buffer);

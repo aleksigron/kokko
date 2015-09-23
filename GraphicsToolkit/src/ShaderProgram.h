@@ -4,6 +4,8 @@
 
 #include "StringRef.h"
 
+class StackAllocator;
+
 enum class ShaderUniformType
 {
 	Texture2D,
@@ -30,6 +32,8 @@ private:
 
 	bool CompileShader(ShaderType type, const char* path, unsigned& idOut);
 
+	StackAllocator* allocator;
+
 public:
 	ObjectId id;
 
@@ -39,6 +43,8 @@ public:
 	static const unsigned MaxMaterialUniforms = 8;
 	unsigned int materialUniformCount;
 	ShaderUniform materialUniforms[MaxMaterialUniforms];
+
+	void SetAllocator(StackAllocator* allocator);
 
 	void AddMaterialUniforms(unsigned int count,
 							 const ShaderUniformType* types,

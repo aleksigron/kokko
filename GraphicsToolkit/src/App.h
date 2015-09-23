@@ -8,6 +8,7 @@
 #include "ResourceManager.h"
 #include "CameraController.h"
 #include "Scene.h"
+#include "StackAllocator.h"
 
 class App
 {
@@ -22,6 +23,8 @@ private:
 	ResourceManager resourceManager;
 	CameraController cameraController;
 	Scene scene;
+
+	StackAllocator stackAllocator;
 
 	SceneObjectId root0, root1;
 	
@@ -45,4 +48,7 @@ public:
 
 	inline static ResourceManager* GetResourceManager()
 	{ return &(App::instance->resourceManager); }
+
+	inline static StackAllocator* GetStackAllocator()
+	{ return &(App::instance->stackAllocator); }
 };
