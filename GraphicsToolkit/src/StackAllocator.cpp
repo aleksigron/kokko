@@ -21,8 +21,8 @@ StackAllocation StackAllocator::Allocate(size_t size)
 {
 	StackAllocation allocation;
 
-	// Allocation can be satisfied
-	if (freeStart - buffer + size <= this->allocatedSize)
+	// Allocation is valid and can be satisfied
+	if (size > 0 && freeStart - buffer + size <= this->allocatedSize)
 	{
 		allocation.allocator = this;
 		allocation.data = freeStart;
