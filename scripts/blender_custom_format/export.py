@@ -1,24 +1,28 @@
 import bpy
 from array import array
+from struct import pack
 
 def write(context, filepath, applyMods=True):
-    try:
-        outfile = open(filepath, "wb")
+    
+    vertices = context.active_object.data.vertices
+    vertexCount = len(vertices)
+    
+    # '=' for native byte-order, standard packing
+    header = pack('=h', vertexCount)
+    
+    # 'f' for 4-byte floating point
+    vertexData = array('f')
 
-        # File type magic number
+    for v in vertices:
+        vertexData.extend([v.co.x, v.co.y, v.co.z])
+
+    with open(filepath, 'wb') as outfile:
+
+        # Start with file type magic number
         outfile.write(b'\x10\x10\x19\x91');
-
-        vertexPos = array('f')
-
-        for v in bpy.context.active_object.data.vertices:
-            vertexPos.extend([v.co.x, v.co.y, v.co.z])
-
-        vertexPositions.tofile(outfile)
-
-    except Exception as err:
-        return "An error occurred:\n{}".format(err)
         
-    finally:
-        outfile.close()
-
-    return "Success"
+        # Write header data
+        outfile.write(header)
+        
+        # Write vertex data
+        vertexData.tofile(outfile)
