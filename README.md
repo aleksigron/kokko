@@ -16,5 +16,11 @@ scheme and go to the _Options_ tab. Enable _Custom working directory_ and set
 the working directory to the GraphicsToolkit folder next to the XCode project.
 
 ## Other tools
-I'm currently using [glraw](https://github.com/cginternals/glraw) to process
+I'm currently developing a custom model export script for Blender. The
+motivation behind it is to better understand the content pipeline. Also, I'm not
+aware of a simple format for meshes that is optimized for runtime load speed.
+Pretty much all simple formats I could find were text-based and that's not good
+for efficiency.
+
+[Glraw](https://github.com/cginternals/glraw) is used to process
 textures to a runtime-friendly format.
