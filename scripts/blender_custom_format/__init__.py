@@ -1,6 +1,6 @@
 bl_info = {
-    "name": "Custom file export",
-    "description": "Export to custom file format",
+    "name": "Custom mesh export",
+    "description": "Export mesh to custom file format",
     "author": "Aleksi Grön",
     "version": (0, 2),
     "blender": (2, 57, 0),
@@ -13,12 +13,12 @@ from bpy.props import StringProperty, BoolProperty
 from bpy_extras.io_utils import ExportHelper
 
 class CustomExportFormat(bpy.types.Operator, ExportHelper):
-    """My custom format export script"""
+    """Custom format mesh export script"""
     bl_idname = "export_mesh.gtk_mesh"
-    bl_label = "Export oag custom"
+    bl_label = "Export custom mesh"
     
-    filename_ext = ".raw"
-    filter_glob = StringProperty(default="*.oag", options={'HIDDEN'})
+    filename_ext = ".mesh"
+    filter_glob = StringProperty(default="*.mesh", options={'HIDDEN'})
     
     apply_modifiers = BoolProperty(
         name = "Apply Modifiers",
@@ -34,7 +34,7 @@ class CustomExportFormat(bpy.types.Operator, ExportHelper):
 
 
 def menuItemFunc_Export(self, context):
-    self.layout.operator(CustomExportFormat.bl_idname, text="Custom file (*.*)")
+    self.layout.operator(CustomExportFormat.bl_idname, text="Custom file (.mesh)")
 
 def register():
     bpy.utils.register_module(__name__)
