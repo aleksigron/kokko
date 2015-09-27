@@ -2,6 +2,7 @@
 
 #include "GeometryBuilder.h"
 #include "ImageData.h"
+#include "MeshLoader.h"
 
 #include <cstdio>
 
@@ -35,6 +36,9 @@ bool App::Initialize()
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
 		this->cameraController.SetControlledCamera(&this->mainCamera);
+
+		Mesh testMesh;
+		bool meshLoaded = MeshLoader::LoadMesh("res/models/test.mesh", testMesh);
 
 		// Test image
 		ImageData rawImage;
