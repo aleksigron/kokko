@@ -7,7 +7,7 @@ good, small game engine that might offer some new ways to solve old problems.
 This project is currently available only as an Xcode project on OS X, but I
 always try to consider cross-platform compatibility when writing new features.
 
-![Screenshot](http://aleksigron.com/s/graphics-toolkit_2015-09-04_21.16.44.png)
+![Screenshot](http://aleksigron.com/s/graphics-toolkit_2015-09-30_00.28.41.png)
 
 ## Running
 You need to set a custom working directory in XCode when running the project.
