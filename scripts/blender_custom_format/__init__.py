@@ -3,7 +3,7 @@ bl_info = {
     "description": "Export mesh to custom file format",
     "author": "Aleksi Grön",
     "version": (0, 2),
-    "blender": (2, 57, 0),
+    "blender": (2, 63, 0),
     "location": "File > Export",
     "category": "Import-Export"
 }
@@ -19,16 +19,10 @@ class CustomExportFormat(bpy.types.Operator, ExportHelper):
     
     filename_ext = ".mesh"
     filter_glob = StringProperty(default="*.mesh", options={'HIDDEN'})
-    
-    apply_modifiers = BoolProperty(
-        name = "Apply Modifiers",
-        description = "Apply mesh modifiers before exporting",
-        default = True)
 
     def execute(self, context):
         from . import export
-        err = export.write(context, self.filepath, self.apply_modifiers)
-        if err: print(err)
+        export.write(context, self.filepath)
         
         return {'FINISHED'}
 
