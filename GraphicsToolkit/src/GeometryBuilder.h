@@ -81,7 +81,7 @@ namespace GeometryBuilder
 		
 		ObjectId id = r->meshes.Add();
 		Mesh& obj = r->meshes.Get(id);
-		obj.UploadVertexData_PosCol(index, vertex);
+		obj.Upload_PosCol(reinterpret_cast<float*>(vertex.Data()), vertex.Count(), index.Data(), index.Count());
 		
 		return id;
 	}

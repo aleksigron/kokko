@@ -26,7 +26,7 @@ private:
 
 	StackAllocator stackAllocator;
 
-	SceneObjectId root0, root1;
+	SceneObjectId root0;
 	
 public:
 	App();
