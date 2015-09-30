@@ -29,7 +29,7 @@ def write(context, filepath):
     vert_color_comp = 1 << 2 # [0,3] colors
     vert_texcoord_comp = 1 << 4 # [0,3] texture coordinates
     
-    vert_comps = vert_position_comp | vert_color_comp
+    vert_comps = vert_position_comp | vert_normal_comp | vert_color_comp
     
     verts = mesh_data.vertices
     
@@ -38,7 +38,9 @@ def write(context, filepath):
     
     # Put vertex data in the array
     for v in verts:
-        vertex_data.extend([v.co.x, v.co.y, v.co.z,
+        vertex_data.extend([
+            v.co.x, v.co.y, v.co.z,
+            v.normal.x, v.normal.y, v.normal.z
             v.co.x * 0.5 + 0.5, v.co.y * 0.5 + 0.5, v.co.z * 0.5 + 0.5])
         # For now, just position and fake color
         # TODO: Get more vertex data
