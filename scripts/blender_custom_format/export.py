@@ -2,15 +2,15 @@ import bpy
 from array import array
 from struct import pack
 
-def mesh_triangulate(original, triangulated):
+def process_mesh(original, triangulated):
     import bmesh
     bm = bmesh.new()
     bm.from_mesh(original)
-    bmesh.ops.triangulate(bm, faces=bm.faces)
+    bmesh.ops.triangulate(bm, faces = bm.faces)
     bm.to_mesh(triangulated)
     bm.free()
 
-def write(context, filepath):
+def write(context, filepath, options):
     
     scene = context.scene
     obj = context.active_object
@@ -21,15 +21,28 @@ def write(context, filepath):
     mesh_data = bpy.data.meshes.new(obj.data.name)
     
     # Triangulate mesh copy
-    mesh_triangulate(obj.data, mesh_data)
+    process_mesh(obj.data, mesh_data)
+    
+    # Get vertex color and texture coordinate layer counts
+    vert_color_count = len(mesh_data.vertex_colors)
+    tex_coord_count = len(mesh_data.uv_layers)
+    
+    # Decide which vertex data components to save
+    save_normal = options.save_normal
+    save_vert_color = options.save_vert_color and vert_color_count > 0
+    save_tex_coord = options.save_tex_coord and tex_coord_count > 0
     
     # Vertex data components
     vert_position_comp = 1 << 0 # 1 position
-    vert_normal_comp = 1 << 1 # [0,1] normals 
-    vert_color_comp = 1 << 2 # [0,3] colors
-    vert_texcoord_comp = 1 << 4 # [0,3] texture coordinates
+    vert_normal_comp = 1 << 1 # [0,1] normals
+    vert_color_comp = 1 << 2 # [0,1] colors
+    vert_texcoord_comp = 1 << 3 # [0,1] texture coords
     
-    vert_comps = vert_position_comp | vert_normal_comp | vert_color_comp
+    # Combine vertex data components to one integer
+    vert_comps = vert_position_comp
+    if save_normal: vert_comps = vert_comps | vert_normal_comp
+    if save_vert_color: vert_comps = vert_comps | vert_color_comp
+    if save_tex_coord: vert_comps = vert_comps | vert_texcoord_comp
     
     verts = mesh_data.vertices
     
@@ -40,8 +53,7 @@ def write(context, filepath):
     for v in verts:
         vertex_data.extend([
             v.co.x, v.co.y, v.co.z,
-            v.normal.x, v.normal.y, v.normal.z
-            v.co.x * 0.5 + 0.5, v.co.y * 0.5 + 0.5, v.co.z * 0.5 + 0.5])
+            v.normal.x, v.normal.y, v.normal.z)
         # For now, just position and fake color
         # TODO: Get more vertex data
     
