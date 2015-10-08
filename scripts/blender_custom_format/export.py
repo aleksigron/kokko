@@ -28,9 +28,9 @@ def write(context, filepath, options):
     tex_coord_count = len(mesh_data.uv_layers)
     
     # Decide which vertex data components to save
-    save_normal = options.save_normal
-    save_vert_color = options.save_vert_color and vert_color_count > 0
-    save_tex_coord = options.save_tex_coord and tex_coord_count > 0
+    save_normal = options['save_normal']
+    save_vert_color = options['save_vert_color'] and vert_color_count > 0
+    save_tex_coord = options['save_tex_coord'] and tex_coord_count > 0
     
     # Vertex data components
     vert_position_comp = 1 << 0 # 1 position
@@ -44,20 +44,69 @@ def write(context, filepath, options):
     if save_vert_color: vert_comps = vert_comps | vert_color_comp
     if save_tex_coord: vert_comps = vert_comps | vert_texcoord_comp
     
+    vert_count = len(verts)
+    
+    #epsilon = 1 / (2 ** 20)
+    
+    vert_col_data = array('f')
+    
+    if save_vert_color:
+        # Create an empty array of required size
+        for i in range(0, vert_count * 3):
+            vert_col_data.append(0.0)
+        
+        # Shorter name for vertex color data
+        mesh_vert_col = mesh_data.vertex_colors.active
+        
+        # Get the vertex color for each corner of each polygon
+        # Write colors to the corresponding vertex index in the array
+        for i in range(0, len(mesh_data.loops)):
+            v_index = mesh_data.loops[i].vertex_index
+            v_color = mesh_vert_col.data[i].color
+            vert_col_data[v_index * 3 + 0] = v_color[0]
+            vert_col_data[v_index * 3 + 1] = v_color[1]
+            vert_col_data[v_index * 3 + 2] = v_color[2]
+    
     verts = mesh_data.vertices
     
     # 'f' for 4-byte floating point
     vertex_data = array('f')
     
     # Put vertex data in the array
-    for v in verts:
-        vertex_data.extend([
-            v.co.x, v.co.y, v.co.z,
-            v.normal.x, v.normal.y, v.normal.z)
-        # For now, just position and fake color
-        # TODO: Get more vertex data
     
-    vert_count = len(verts)
+    # Just vertex position
+    if vert_comps == vert_position_comp:
+        for v in verts:
+            vertex_data.extend([v.co.x, v.co.y, v.co.z])
+            
+    # Vertex position and normal
+    elif vert_comps == (vert_position_comp | vert_normal_comp):
+        for v in verts:
+            vertex_data.extend([v.co.x, v.co.y, v.co.z])
+            vertex_data.extend([v.normal.x, v.normal.y, v.normal.z])
+    
+    # Vertex position and color
+    elif vert_comps == (vert_position_comp | vert_color_comp):
+        for i in range(0, vert_count):
+            vertex_data.append(verts[i].co.x)
+            vertex_data.append(verts[i].co.y)
+            vertex_data.append(verts[i].co.z)
+            vertex_data.append(vert_col_data[i * 3 + 0])
+            vertex_data.append(vert_col_data[i * 3 + 1])
+            vertex_data.append(vert_col_data[i * 3 + 2])
+    
+    # Vertex position, normal and color
+    elif vert_comps == (vert_position_comp | vert_normal_comp | vert_color_comp):
+        for i in range(0, vert_count):
+            vertex_data.append(verts[i].co.x)
+            vertex_data.append(verts[i].co.y)
+            vertex_data.append(verts[i].co.z)
+            vertex_data.append(verts[i].normal.x)
+            vertex_data.append(verts[i].normal.y)
+            vertex_data.append(verts[i].normal.z)
+            vertex_data.append(vert_col_data[i * 3 + 0])
+            vertex_data.append(vert_col_data[i * 3 + 1])
+            vertex_data.append(vert_col_data[i * 3 + 2])
     
     # 'H': unsigned 2-byte int, 'I': unsigned 4-byte int
     if vert_count <= (1 << 16):

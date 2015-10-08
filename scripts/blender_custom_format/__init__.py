@@ -39,10 +39,10 @@ class CustomExportFormat(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         
         options = {}
-        options.apply_modifiers = self.apply_modifiers
-        options.save_normal = self.save_normal
-        options.save_tex_coord = self.save_tex_coord
-        options.save_vert_color = self.save_vert_color
+        options["apply_modifiers"] = self.apply_modifiers
+        options["save_normal"] = self.save_normal
+        options["save_tex_coord"] = self.save_tex_coord
+        options["save_vert_color"] = self.save_vert_color
         
         from . import export
         export.write(context, self.filepath, options)
