@@ -15,17 +15,12 @@ void Mesh::Upload_PosCol(float* vertexData, unsigned int vertexCount,
 	this->indexCount = GLsizei(indexCount);
 	indexElementType = GL_UNSIGNED_SHORT;
 
-	int error0 = glGetError();
-
 	// Bind and upload index buffer
 	GLuint indexBuffer;
 	glGenBuffers(1, &indexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 				 sizeof(uint16_t) * indexCount, indexData, GL_STATIC_DRAW);
-
-
-	int error1 = glGetError();
 
 	// Bind and upload vertex buffer
 	GLuint vertexBuffer;
@@ -34,19 +29,13 @@ void Mesh::Upload_PosCol(float* vertexData, unsigned int vertexCount,
 	glBufferData(GL_ARRAY_BUFFER,
 				 V::size * vertexCount, vertexData, GL_STATIC_DRAW);
 
-	int error2 = glGetError();
-
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, V::posElements, V::posElemType,
 						  GL_FALSE, V::size, V::posOffset);
 
-	int error3 = glGetError();
-
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, V::colElements, V::colElemType,
 						  GL_FALSE, V::size, V::colOffset);
-
-	int error4 = glGetError();
 
 	// Unbind vertex array
 	glBindVertexArray(0);

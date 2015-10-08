@@ -89,8 +89,6 @@ void Renderer::Render(Scene& scene)
 
 				glUseProgram(shader.oglId);
 
-				int error0 = glGetError();
-
 				// Bind each material uniform with a value
 				for (unsigned uIndex = 0; uIndex < material.uniformCount; ++uIndex)
 				{
@@ -133,17 +131,10 @@ void Renderer::Render(Scene& scene)
 				glUniformMatrix4fv(shader.mvpUniformLocation, 1,
 								   GL_FALSE, mvp.ValuePointer());
 
-				int error1 = glGetError();
-
 				glBindVertexArray(mesh.vertexArrayObject);
-
-				int error2 = glGetError();
 
 				glDrawElements(GL_TRIANGLES, mesh.indexCount,
 							   mesh.indexElementType, reinterpret_cast<void*>(0));
-
-				int error3 = glGetError();
-				int i = 0;
 			}
 
 			++objectIndex;
