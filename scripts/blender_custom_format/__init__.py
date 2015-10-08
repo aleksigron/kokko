@@ -29,7 +29,7 @@ class CustomExportFormat(bpy.types.Operator, ExportHelper):
         default = True)
         
     save_tex_coord = BoolProperty(
-        name = "Save texture coordinates (if available)",
+        name = "Save texture coords (if available)",
         default = True)
         
     save_vert_color = BoolProperty(

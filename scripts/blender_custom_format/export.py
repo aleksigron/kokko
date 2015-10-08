@@ -44,7 +44,7 @@ def write(context, filepath, options):
     if save_vert_color: vert_comps = vert_comps | vert_color_comp
     if save_tex_coord: vert_comps = vert_comps | vert_texcoord_comp
     
-    vert_count = len(verts)
+    vert_count = len(mesh_data.vertices)
     
     #epsilon = 1 / (2 ** 20)
     
@@ -67,6 +67,7 @@ def write(context, filepath, options):
             vert_col_data[v_index * 3 + 1] = v_color[1]
             vert_col_data[v_index * 3 + 2] = v_color[2]
     
+    # Shorter name for mesh vertices
     verts = mesh_data.vertices
     
     # 'f' for 4-byte floating point
