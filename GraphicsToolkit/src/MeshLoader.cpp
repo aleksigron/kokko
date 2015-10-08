@@ -13,22 +13,23 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 	if (file.IsValid() && fileSize >= headerSize)
 	{
 		unsigned char* d = file.Data();
-		unsigned int fileMagic = *reinterpret_cast<unsigned int*>(d);
+		unsigned int* headerData = reinterpret_cast<unsigned int*>(d);
+		unsigned int fileMagic = headerData[0];
 
 		if (fileMagic == 0x91191010)
 		{
 			// Get header data
 
-			unsigned vertComps = *reinterpret_cast<unsigned int*>(d + 4);
-			unsigned vertCount = *reinterpret_cast<unsigned int*>(d + 8);
-			unsigned indexCount = *reinterpret_cast<unsigned int*>(d + 12);
+			unsigned vertComps = headerData[1];
+			unsigned vertCount = headerData[2];
+			unsigned indexCount = headerData[3];
 
 			// Get vertex data components count and size
 
 			unsigned posSize = ((vertComps & 0x01) >> 0) * 3 * sizeof(float);
 			unsigned normSize = ((vertComps & 0x02) >> 1) * 3 * sizeof(float);
-			unsigned colSize = ((vertComps & 0x0C) >> 2) * 3 * sizeof(float);
-			unsigned texSize = ((vertComps & 0x30) >> 4) * 2 * sizeof(float);
+			unsigned colSize = ((vertComps & 0x04) >> 2) * 3 * sizeof(float);
+			unsigned texSize = ((vertComps & 0x08) >> 3) * 2 * sizeof(float);
 			unsigned vertSize = posSize + normSize + colSize + texSize;
 			unsigned vertexDataSize = vertCount * vertSize;
 
