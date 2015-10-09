@@ -1,0 +1,4 @@
+{
+	"vertexShaderFile": "res/shaders/lighting.vertex.glsl",
+	"fragmentShaderFile": "res/shaders/lighting.fragment.glsl"
+}
