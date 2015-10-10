@@ -1,6 +1,5 @@
 #include "App.h"
 
-#include "GeometryBuilder.h"
 #include "ImageData.h"
 #include "MeshLoader.h"
 
