@@ -2,26 +2,25 @@ import bpy
 from array import array
 from struct import pack
 
-def process_mesh(original, triangulated):
+def process_mesh(mesh):
     import bmesh
     bm = bmesh.new()
-    bm.from_mesh(original)
+    bm.from_mesh(mesh)
     bmesh.ops.triangulate(bm, faces = bm.faces)
-    bm.to_mesh(triangulated)
+    bm.to_mesh(mesh)
     bm.free()
 
 def write(context, filepath, options):
     
-    scene = context.scene
     obj = context.active_object
     
     if obj.type != 'MESH': return False
     
-    # Create a new mesh we can edit
-    mesh_data = bpy.data.meshes.new(obj.data.name)
+    # Create a new mesh from the active object
+    mesh_data = obj.to_mesh(context.scene, options['apply_modifiers'], 'PREVIEW')
     
     # Triangulate mesh copy
-    process_mesh(obj.data, mesh_data)
+    process_mesh(mesh_data)
     
     # Get vertex color and texture coordinate layer counts
     vert_color_count = len(mesh_data.vertex_colors)
