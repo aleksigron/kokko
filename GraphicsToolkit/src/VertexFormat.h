@@ -3,10 +3,10 @@
 #include "Vec2.h"
 #include "Vec3.h"
 
-struct Vertex_PosCol
+struct Vertex_PosNor
 {
 	Vec3f position;
-	Vec3f color;
+	Vec3f normal;
 	
 	static const int size;
 	
@@ -14,6 +14,22 @@ struct Vertex_PosCol
 	static const unsigned posElemType;
 	static const void* posOffset;
 	
+	static const int norElements;
+	static const unsigned norElemType;
+	static const void* norOffset;
+};
+
+struct Vertex_PosCol
+{
+	Vec3f position;
+	Vec3f color;
+
+	static const int size;
+
+	static const int posElements;
+	static const unsigned posElemType;
+	static const void* posOffset;
+
 	static const int colElements;
 	static const unsigned colElemType;
 	static const void* colOffset;

@@ -36,16 +36,25 @@ bool App::Initialize()
 		this->renderer.SetActiveCamera(&this->mainCamera);
 		this->cameraController.SetControlledCamera(&this->mainCamera);
 
-		//ObjectId meshId = GeometryBuilder::UnitCubeWithColor();
+		// Meshes from files
 
+		ObjectId groundMeshId = this->resourceManager.meshes.Add();
+		Mesh& groundMesh = this->resourceManager.meshes.Get(groundMeshId);
+		MeshLoader::LoadMesh("res/models/ground_plane.mesh", groundMesh);
 
-		// Mesh from file
+		ObjectId sphereMeshId = this->resourceManager.meshes.Add();
+		Mesh& sphereMesh = this->resourceManager.meshes.Get(sphereMeshId);
+		MeshLoader::LoadMesh("res/models/sphere.mesh", sphereMesh);
 
-		ObjectId meshId = this->resourceManager.meshes.Add();
-		Mesh& mesh = this->resourceManager.meshes.Get(meshId);
-		MeshLoader::LoadMesh("res/models/test.mesh", mesh);
+		ObjectId icoMeshId = this->resourceManager.meshes.Add();
+		Mesh& icoMesh = this->resourceManager.meshes.Get(icoMeshId);
+		MeshLoader::LoadMesh("res/models/icosahedron.mesh", icoMesh);
+
+		ObjectId cubeMeshId = this->resourceManager.meshes.Add();
+		Mesh& cubeMesh = this->resourceManager.meshes.Get(cubeMeshId);
+		MeshLoader::LoadMesh("res/models/cube.mesh", cubeMesh);
 		
-		// Color material
+		// Shader & material
 
 		ObjectId colShaderId = resourceManager.shaders.Add();
 		ShaderProgram& colShader = resourceManager.shaders.Get(colShaderId);
@@ -56,22 +65,36 @@ bool App::Initialize()
 		Material& colorMaterial = resourceManager.materials.Get(colorMaterialId);
 		colorMaterial.SetShader(colShader);
 
+		// Objects
+
+		SceneObjectId groundSceneObj = scene.AddSceneObject();
+		RenderObject& groundRenderObj = renderer.GetRenderObject(renderer.AddRenderObject());
+		groundRenderObj.mesh = groundMeshId;
+		groundRenderObj.material = colorMaterialId;
+		groundRenderObj.sceneObjectId = groundSceneObj;
+
+		SceneObjectId sphereSceneObj = scene.AddSceneObject();
+		RenderObject& sphereRenderObj = renderer.GetRenderObject(renderer.AddRenderObject());
+		sphereRenderObj.mesh = sphereMeshId;
+		sphereRenderObj.material = colorMaterialId;
+		sphereRenderObj.sceneObjectId = sphereSceneObj;
+		scene.SetLocalTransform(sphereSceneObj, Matrix::Translate(Vec3f(-2.0f, 1.0f, 0.0f)));
+
+		SceneObjectId icoSceneObj = scene.AddSceneObject();
+		RenderObject& icoRenderObj = renderer.GetRenderObject(renderer.AddRenderObject());
+		icoRenderObj.mesh = icoMeshId;
+		icoRenderObj.material = colorMaterialId;
+		icoRenderObj.sceneObjectId = icoSceneObj;
+		scene.SetLocalTransform(icoSceneObj, Matrix::Translate(Vec3f(0.0f, 1.0f, 0.0f)));
+
+		SceneObjectId cubeSceneObj = scene.AddSceneObject();
+		RenderObject& cubeRenderObj = renderer.GetRenderObject(renderer.AddRenderObject());
+		cubeRenderObj.mesh = cubeMeshId;
+		cubeRenderObj.material = colorMaterialId;
+		cubeRenderObj.sceneObjectId = cubeSceneObj;
+		scene.SetLocalTransform(cubeSceneObj, Matrix::Translate(Vec3f(2.0f, 1.0f, 0.0f)));
+
 		root0 = this->scene.AddSceneObject();
-
-		for (unsigned i = 0; i < 64; ++i)
-		{
-			ObjectId objId = this->renderer.AddRenderObject();
-			RenderObject& obj = this->renderer.GetRenderObject(objId);
-			obj.mesh = meshId;
-			obj.material = colorMaterialId;
-
-			obj.sceneObjectId = this->scene.AddSceneObject();
-			this->scene.SetParent(obj.sceneObjectId, root0);
-
-			Vec3f pos(-3.0f + (i / 16 * 2.0f), -3.0f + (i % 4 * 2.0f), -3.0f + (i / 4 % 4 * 2.0f));
-
-			this->scene.SetLocalTransform(obj.sceneObjectId, Matrix::Translate(pos));
-		}
 
 		this->mainCamera.transform.position = Vec3f(0.0f, 0.0f, 15.0f);
 		this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(50.0f);

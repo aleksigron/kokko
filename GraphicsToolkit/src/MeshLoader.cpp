@@ -52,7 +52,10 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 				float* vertData = reinterpret_cast<float*>(d + headerSize);
 				unsigned short* indexData = reinterpret_cast<unsigned short*>(d + headerSize + vertexDataSize);
 
-				if (normCount == 0 && colCount == 1 && texCount == 0)
+				if (normCount == 1 && colCount == 0 && texCount == 0)
+					mesh.Upload_PosNor(vertData, vertCount, indexData, indexCount);
+
+				else if (normCount == 0 && colCount == 1 && texCount == 0)
 					mesh.Upload_PosCol(vertData, vertCount, indexData, indexCount);
 
 				else if (normCount == 1 && colCount == 1 && texCount == 0)

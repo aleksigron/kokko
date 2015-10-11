@@ -22,6 +22,29 @@ void Mesh::CreateBuffers(void* vertexData, unsigned int vertexDataSize,
 	glBufferData(GL_ARRAY_BUFFER, vertexDataSize, vertexData, GL_STATIC_DRAW);
 }
 
+void Mesh::Upload_PosNor(float* vertexData, unsigned int vertexCount,
+						 unsigned short* indexData, unsigned int indexCount)
+{
+	using V = Vertex_PosNor;
+
+	this->indexCount = GLsizei(indexCount);
+	this->indexElementType = GL_UNSIGNED_SHORT;
+
+	this->CreateBuffers(vertexData, V::size * vertexCount,
+						indexData, sizeof(uint16_t) * indexCount);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, V::posElements, V::posElemType,
+						  GL_FALSE, V::size, V::posOffset);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, V::norElements, V::norElemType,
+						  GL_FALSE, V::size, V::norOffset);
+
+	// Unbind vertex array
+	glBindVertexArray(0);
+}
+
 void Mesh::Upload_PosCol(float* vertexData, unsigned int vertexCount,
 						 unsigned short* indexData, unsigned int indexCount)
 {

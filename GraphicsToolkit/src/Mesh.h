@@ -18,6 +18,9 @@ public:
 	int indexCount;
 	unsigned int indexElementType;
 
+	void Upload_PosNor(float* vertexData, unsigned int vertexCount,
+					   unsigned short* indexData, unsigned int indexCount);
+
 	void Upload_PosCol(float* vertexData, unsigned int vertexCount,
 					   unsigned short* indexData, unsigned int indexCount);
 

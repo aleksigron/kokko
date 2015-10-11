@@ -2,6 +2,17 @@
 
 #include <OpenGL/gl3.h>
 
+const int Vertex_PosNor::size = static_cast<int>(sizeof(Vertex_PosNor));
+
+const int Vertex_PosNor::posElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex_PosNor::posElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex_PosNor::posOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNor, position));
+
+const int Vertex_PosNor::norElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex_PosNor::norElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex_PosNor::norOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNor, normal));
+
+
 const int Vertex_PosCol::size = static_cast<int>(sizeof(Vertex_PosCol));
 
 const int Vertex_PosCol::posElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
