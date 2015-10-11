@@ -78,20 +78,20 @@ def write(context, filepath, options):
     # Just vertex position
     if vert_comps == vert_position_comp:
         for v in verts:
-            vertex_data.extend([v.co.x, v.co.y, v.co.z])
+            vertex_data.extend([v.co.x, v.co.z, -v.co.y])
             
     # Vertex position and normal
     elif vert_comps == (vert_position_comp | vert_normal_comp):
         for v in verts:
-            vertex_data.extend([v.co.x, v.co.y, v.co.z])
-            vertex_data.extend([v.normal.x, v.normal.y, v.normal.z])
+            vertex_data.extend([v.co.x, v.co.z, -v.co.y])
+            vertex_data.extend([v.normal.x, v.normal.z, -v.normal.y])
     
     # Vertex position and color
     elif vert_comps == (vert_position_comp | vert_color_comp):
         for i in range(0, vert_count):
             vertex_data.append(verts[i].co.x)
-            vertex_data.append(verts[i].co.y)
             vertex_data.append(verts[i].co.z)
+            vertex_data.append(-verts[i].co.y)
             vertex_data.append(vert_col_data[i * 3 + 0])
             vertex_data.append(vert_col_data[i * 3 + 1])
             vertex_data.append(vert_col_data[i * 3 + 2])
@@ -100,11 +100,11 @@ def write(context, filepath, options):
     elif vert_comps == (vert_position_comp | vert_normal_comp | vert_color_comp):
         for i in range(0, vert_count):
             vertex_data.append(verts[i].co.x)
-            vertex_data.append(verts[i].co.y)
             vertex_data.append(verts[i].co.z)
+            vertex_data.append(-verts[i].co.y)
             vertex_data.append(verts[i].normal.x)
-            vertex_data.append(verts[i].normal.y)
             vertex_data.append(verts[i].normal.z)
+            vertex_data.append(-verts[i].normal.y)
             vertex_data.append(vert_col_data[i * 3 + 0])
             vertex_data.append(vert_col_data[i * 3 + 1])
             vertex_data.append(vert_col_data[i * 3 + 2])
