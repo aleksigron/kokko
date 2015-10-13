@@ -96,8 +96,8 @@ bool App::Initialize()
 
 		root0 = this->scene.AddSceneObject();
 
-		this->mainCamera.transform.position = Vec3f(0.0f, 0.0f, 15.0f);
-		this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(50.0f);
+		this->mainCamera.transform.position = Vec3f(0.0f, 1.0f, 8.0f);
+		this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
 
 		Vec2i frameSize = this->mainWindow.GetFrameBufferSize();
 		this->mainCamera.SetAspectRatio(frameSize.x, frameSize.y);
