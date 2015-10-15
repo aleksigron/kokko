@@ -2,6 +2,46 @@ import bpy
 from array import array
 from struct import pack
 
+def get_bounding_box(verts, bounding_box_data):
+    if len(verts) > 0:
+        min_x = verts[0].co.x
+        max_x = verts[0].co.x
+        min_y = verts[0].co.z
+        max_y = verts[0].co.z
+        min_z = -verts[0].co.y
+        max_z = -verts[0].co.y
+        
+        for v in verts:
+            if v.co.x < min_x: min_x = v.co.x
+            elif v.co.x > max_x: max_x = v.co.x
+            if v.co.z < min_y: min_y = v.co.z
+            elif v.co.z > max_y: max_y = v.co.z
+            if -v.co.y < min_z: min_z = -v.co.y
+            elif -v.co.y > max_z: max_z = -v.co.y
+        
+        # Center X
+        bounding_box_data.append((min_x + max_x) * 0.5)
+        
+        # Center Y
+        bounding_box_data.append((min_y + max_y) * 0.5)
+        
+        # Center Z
+        bounding_box_data.append((min_z + max_z) * 0.5)
+        
+        # Extent X
+        bounding_box_data.append((max_x - min_x) * 0.5)
+        
+        # Extent Y
+        bounding_box_data.append((max_y - min_y) * 0.5)
+        
+        # Extent Z
+        bounding_box_data.append((max_z - min_z) * 0.5)
+        
+    # Empty bounding box
+    else:
+        for i in range(0, 6):
+            bounding_box_data.append(0.0)
+
 def process_mesh(mesh):
     import bmesh
     bm = bmesh.new()
@@ -21,6 +61,10 @@ def write(context, filepath, options):
     
     # Triangulate mesh copy
     process_mesh(mesh_data)
+    
+    # Calculate bounding box from processed mesh
+    bounding_box_data = array('f')
+    get_bounding_box(mesh_data.vertices, bounding_box_data)
     
     # Get vertex color and texture coordinate layer counts
     vert_color_count = len(mesh_data.vertex_colors)
@@ -136,6 +180,9 @@ def write(context, filepath, options):
         
         # Write header data
         outfile.write(header)
+        
+        # Write bounding box
+        bounding_box_data.tofile(outfile)
         
         # Write vertex data
         vertex_data.tofile(outfile)
