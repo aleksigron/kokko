@@ -1,6 +1,6 @@
-#include "Material.h"
+#include "Material.hpp"
 
-#include "ShaderProgram.h"
+#include "ShaderProgram.hpp"
 
 static const unsigned int UniformDataSize[] = {
 	4, // Texture2D

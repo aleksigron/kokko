@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vec3.h"
+#include "Vec3.hpp"
 
 template <typename T>
 struct Vec4

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "StringRef.h"
+#include "StringRef.hpp"
 
 class JsonReader
 {

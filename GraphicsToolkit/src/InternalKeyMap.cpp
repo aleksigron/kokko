@@ -1,6 +1,6 @@
-#include "InternalKeyMap.h"
+#include "InternalKeyMap.hpp"
 
-#include "KeyboardInput.h"
+#include "KeyboardInput.hpp"
 
 extern const short InternalKeyMap::Forward[] =
 {

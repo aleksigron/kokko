@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ShaderProgram.h"
-#include "JsonReader.h"
+#include "ShaderProgram.hpp"
+#include "JsonReader.hpp"
 
 #include <cstring>
 

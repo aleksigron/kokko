@@ -1,9 +1,9 @@
-#include "Window.h"
+#include "Window.hpp"
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-#include "Vec2.h"
+#include "Vec2.hpp"
 
 Window::Window()
 {

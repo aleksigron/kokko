@@ -1,9 +1,9 @@
-#include "Texture.h"
+#include "Texture.hpp"
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-#include "ImageData.h"
+#include "ImageData.hpp"
 
 void Texture::Upload(const ImageData& image)
 {

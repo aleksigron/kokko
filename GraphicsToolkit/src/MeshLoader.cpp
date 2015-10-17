@@ -1,7 +1,7 @@
-#include "MeshLoader.h"
+#include "MeshLoader.hpp"
 
-#include "File.h"
-#include "Mesh.h"
+#include "File.hpp"
+#include "Mesh.hpp"
 
 bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 {

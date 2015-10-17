@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vec2.h"
-#include "Buffer.h"
+#include "Vec2.hpp"
+#include "Buffer.hpp"
 
 struct ImageData
 {

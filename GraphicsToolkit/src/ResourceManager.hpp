@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Collection.h"
-#include "Texture.h"
-#include "ShaderProgram.h"
-#include "Material.h"
-#include "Mesh.h"
+#include "Collection.hpp"
+#include "Texture.hpp"
+#include "ShaderProgram.hpp"
+#include "Material.hpp"
+#include "Mesh.hpp"
 
 class ResourceManager
 {

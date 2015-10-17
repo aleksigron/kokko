@@ -1,4 +1,4 @@
-#include "Scene.h"
+#include "Scene.hpp"
 
 Scene::Scene()
 {

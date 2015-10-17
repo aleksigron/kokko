@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Vec3.h"
-#include "Mat3x3.h"
-#include "Mat4x4.h"
+#include "Vec3.hpp"
+#include "Mat3x3.hpp"
+#include "Mat4x4.hpp"
 
-#include "Matrix.h"
+#include "Matrix.hpp"
 
 class TransformSource
 {

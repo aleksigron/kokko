@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Plane.h"
+#include "Plane.hpp"
 
 struct Camera;
 struct BoundingBox;
@@ -12,7 +12,3 @@ struct ViewFrustum
 	void UpdateFrustum(const Camera& camera);
 	void CullAABB(unsigned int boxCount, const BoundingBox* boxes, unsigned char* state) const;
 };
-
-
-
-

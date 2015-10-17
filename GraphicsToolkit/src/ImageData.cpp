@@ -1,9 +1,9 @@
-#include "ImageData.h"
+#include "ImageData.hpp"
 
 #include <cstdint>
 #include <cstring>
 
-#include "File.h"
+#include "File.hpp"
 
 bool ImageData::LoadGlraw(const char *filePath)
 {

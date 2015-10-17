@@ -1,7 +1,7 @@
-#include "App.h"
+#include "App.hpp"
 
-#include "ImageData.h"
-#include "MeshLoader.h"
+#include "ImageData.hpp"
+#include "MeshLoader.hpp"
 
 #include <cstdio>
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Mat4x4.h"
-#include "Transform.h"
+#include "Mat4x4.hpp"
+#include "Transform.hpp"
 
 using SceneObjectId = unsigned int;
 

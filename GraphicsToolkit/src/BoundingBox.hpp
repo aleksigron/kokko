@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vec3.h"
+#include "Vec3.hpp"
 
 struct BoundingBox
 {

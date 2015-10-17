@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Mat4x4.h"
-#include "Vec3.h"
+#include "Mat4x4.hpp"
+#include "Vec3.hpp"
 
 namespace Matrix
 {

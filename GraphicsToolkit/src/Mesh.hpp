@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ObjectId.h"
-#include "Buffer.h"
-#include "VertexFormat.h"
+#include "ObjectId.hpp"
+#include "Buffer.hpp"
+#include "VertexFormat.hpp"
 
 struct Mesh
 {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vec2.h"
-#include "Vec3.h"
+#include "Vec2.hpp"
+#include "Vec3.hpp"
 
 struct Vertex_PosNor
 {

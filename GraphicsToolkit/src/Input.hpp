@@ -1,7 +1,7 @@
 #pragma once
 
-#include "KeyboardInput.h"
-#include "PointerInput.h"
+#include "KeyboardInput.hpp"
+#include "PointerInput.hpp"
 
 struct GLFWwindow;
 

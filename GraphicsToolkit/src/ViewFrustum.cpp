@@ -1,11 +1,11 @@
-#include "ViewFrustum.h"
+#include "ViewFrustum.hpp"
 
 #include <cmath>
 
-#include "Vec3.h"
-#include "Camera.h"
-#include "Plane.h"
-#include "BoundingBox.h"
+#include "Vec3.hpp"
+#include "Camera.hpp"
+#include "Plane.hpp"
+#include "BoundingBox.hpp"
 
 void ViewFrustum::UpdateFrustum(const Camera& camera)
 {

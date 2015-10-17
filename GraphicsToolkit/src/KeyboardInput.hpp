@@ -1,6 +1,6 @@
 #pragma once
 
-#include "InternalKeyMap.h"
+#include "InternalKeyMap.hpp"
 
 enum class Key
 {

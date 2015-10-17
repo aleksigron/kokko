@@ -1,9 +1,9 @@
-#include "KeyboardInput.h"
+#include "KeyboardInput.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include "glfw/glfw3.h"
 
-#include "App.h"
+#include "App.hpp"
 
 void KeyboardInput::Initialize(GLFWwindow* windowHandle)
 {

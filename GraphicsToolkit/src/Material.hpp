@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include "ObjectId.h"
-#include "ShaderProgram.h"
+#include "ObjectId.hpp"
+#include "ShaderProgram.hpp"
 
 struct ShaderMaterialUniform : ShaderUniform
 {

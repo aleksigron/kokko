@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Transform.h"
-#include "Mat4x4.h"
-#include "Vec2.h"
-#include "Math.h"
+#include "Transform.hpp"
+#include "Mat4x4.hpp"
+#include "Vec2.hpp"
+#include "Math.hpp"
 
 struct Camera
 {

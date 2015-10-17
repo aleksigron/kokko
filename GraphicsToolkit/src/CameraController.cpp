@@ -1,7 +1,7 @@
-#include "CameraController.h"
+#include "CameraController.hpp"
 
-#include "App.h"
-#include "Time.h"
+#include "App.hpp"
+#include "Time.hpp"
 
 void CameraController::SetControlledCamera(Camera* camera)
 {

@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Time.h"
-#include "Input.h"
-#include "Window.h"
-#include "Camera.h"
-#include "Renderer.h"
-#include "ResourceManager.h"
-#include "CameraController.h"
-#include "Scene.h"
-#include "StackAllocator.h"
+#include "Time.hpp"
+#include "Input.hpp"
+#include "Window.hpp"
+#include "Camera.hpp"
+#include "Renderer.hpp"
+#include "ResourceManager.hpp"
+#include "CameraController.hpp"
+#include "Scene.hpp"
+#include "StackAllocator.hpp"
 
 class App
 {

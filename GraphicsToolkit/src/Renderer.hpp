@@ -3,9 +3,9 @@
 #include <cstddef>
 #include <climits>
 
-#include "RenderObject.h"
-#include "Buffer.h"
-#include "Collection.h"
+#include "RenderObject.hpp"
+#include "Buffer.hpp"
+#include "Collection.hpp"
 
 class Window;
 struct Camera;

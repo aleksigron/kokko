@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ObjectId.h"
+#include "ObjectId.hpp"
 
 struct RenderObject
 {

@@ -1,4 +1,4 @@
-#include "Input.h"
+#include "Input.hpp"
 
 void Input::Initialize(GLFWwindow* window)
 {

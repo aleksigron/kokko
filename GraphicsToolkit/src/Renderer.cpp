@@ -1,4 +1,4 @@
-#include "Renderer.h"
+#include "Renderer.hpp"
 
 #include <new>
 #include <cassert>
@@ -6,13 +6,13 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-#include "Window.h"
-#include "Camera.h"
-#include "App.h"
-#include "Material.h"
-#include "ViewFrustum.h"
-#include "BoundingBox.h"
-#include "Scene.h"
+#include "Window.hpp"
+#include "Camera.hpp"
+#include "App.hpp"
+#include "Material.hpp"
+#include "ViewFrustum.hpp"
+#include "BoundingBox.hpp"
+#include "Scene.hpp"
 
 Renderer::Renderer()
 {

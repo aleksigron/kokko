@@ -1,4 +1,4 @@
-#include "ShaderProgram.h"
+#include "ShaderProgram.hpp"
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
@@ -7,10 +7,10 @@
 
 #include <cassert>
 
-#include "File.h"
-#include "JsonReader.h"
-#include "ShaderConfigReader.h"
-#include "StackAllocator.h"
+#include "File.hpp"
+#include "JsonReader.hpp"
+#include "ShaderConfigReader.hpp"
+#include "StackAllocator.hpp"
 
 void ShaderProgram::SetAllocator(StackAllocator* allocator)
 {

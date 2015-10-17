@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ObjectId.h"
-#include "Vec2.h"
+#include "ObjectId.hpp"
+#include "Vec2.hpp"
 
 struct ImageData;
 

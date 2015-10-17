@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ObjectId.h"
+#include "ObjectId.hpp"
 
-#include "StringRef.h"
+#include "StringRef.hpp"
 
 class StackAllocator;
 
