@@ -5,52 +5,65 @@
 
 bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 {
+	using uint = unsigned int;
+	using ushort = unsigned short;
+
 	Buffer<unsigned char> file = File::Read(filePath);
 	size_t fileSize = file.Count();
 
-	const unsigned int headerSize = 16;
+	const uint headerSize = 16;
+	const uint boundsSize = 6 * sizeof(float);
 
 	if (file.IsValid() && fileSize >= headerSize)
 	{
 		unsigned char* d = file.Data();
-		unsigned int* headerData = reinterpret_cast<unsigned int*>(d);
-		unsigned int fileMagic = headerData[0];
+		uint* headerData = reinterpret_cast<uint*>(d);
+		uint fileMagic = headerData[0];
 
 		if (fileMagic == 0x91191010)
 		{
 			// Get header data
 
-			unsigned vertComps = headerData[1];
-			unsigned vertCount = headerData[2];
-			unsigned indexCount = headerData[3];
+			uint vertComps = headerData[1];
+			uint vertCount = headerData[2];
+			uint indexCount = headerData[3];
 
 			// Get vertex data components count and size
 
-			unsigned posCount = (vertComps & 0x01) >> 0;
-			unsigned posSize = posCount * 3 * sizeof(float);
+			uint posCount = (vertComps & 0x01) >> 0;
+			uint posSize = posCount * 3 * sizeof(float);
 
-			unsigned normCount = (vertComps & 0x02) >> 1;
-			unsigned normSize = normCount * 3 * sizeof(float);
+			uint normCount = (vertComps & 0x02) >> 1;
+			uint normSize = normCount * 3 * sizeof(float);
 
-			unsigned colCount = (vertComps & 0x04) >> 2;
-			unsigned colSize = colCount * 3 * sizeof(float);
+			uint colCount = (vertComps & 0x04) >> 2;
+			uint colSize = colCount * 3 * sizeof(float);
 
-			unsigned texCount = (vertComps & 0x08) >> 3;
-			unsigned texSize = texCount * 2 * sizeof(float);
+			uint texCount = (vertComps & 0x08) >> 3;
+			uint texSize = texCount * 2 * sizeof(float);
 
-			unsigned vertSize = posSize + normSize + colSize + texSize;
-			unsigned vertexDataSize = vertCount * vertSize;
+			uint vertSize = posSize + normSize + colSize + texSize;
+			uint vertexDataSize = vertCount * vertSize;
 
-			unsigned indexSize = indexCount > (1 << 16) ? 4 : 2;
-			unsigned indexDataSize = indexCount * indexSize;
+			uint indexSize = indexCount > (1 << 16) ? 4 : 2;
+			uint indexDataSize = indexCount * indexSize;
 
-			unsigned expectedSize = headerSize + vertexDataSize + indexDataSize;
+			uint expectedSize = headerSize + boundsSize + vertexDataSize + indexDataSize;
 
 			// Check that the file size matches the header description
 			if (expectedSize == fileSize)
 			{
-				float* vertData = reinterpret_cast<float*>(d + headerSize);
-				unsigned short* indexData = reinterpret_cast<unsigned short*>(d + headerSize + vertexDataSize);
+				float* boundsData = reinterpret_cast<float*>(d + headerSize);
+				float* vertData = reinterpret_cast<float*>(d + headerSize + boundsSize);
+				ushort* indexData = reinterpret_cast<ushort*>(d + headerSize + boundsSize + vertexDataSize);
+
+				mesh.bounds.center.x = boundsData[0];
+				mesh.bounds.center.y = boundsData[1];
+				mesh.bounds.center.z = boundsData[2];
+
+				mesh.bounds.extents.x = boundsData[3];
+				mesh.bounds.extents.y = boundsData[4];
+				mesh.bounds.extents.z = boundsData[5];
 
 				if (normCount == 1 && colCount == 0 && texCount == 0)
 					mesh.Upload_PosNor(vertData, vertCount, indexData, indexCount);

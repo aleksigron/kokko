@@ -3,6 +3,7 @@
 #include "ObjectId.hpp"
 #include "Buffer.hpp"
 #include "VertexFormat.hpp"
+#include "BoundingBox.hpp"
 
 struct Mesh
 {
@@ -17,6 +18,8 @@ public:
 
 	int indexCount;
 	unsigned int indexElementType;
+
+	BoundingBox bounds;
 
 	void Upload_PosNor(float* vertexData, unsigned int vertexCount,
 					   unsigned short* indexData, unsigned int indexCount);
