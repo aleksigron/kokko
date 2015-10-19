@@ -41,6 +41,8 @@ void Renderer::Initialize()
 
 void Renderer::Render(Scene& scene)
 {
+	ResourceManager* res = App::GetResourceManager();
+
 	RenderObject* o = this->objects;
 	BoundingBox* bb = this->boundingBoxes;
 	unsigned char* bbcs = this->bboxCullingState;
@@ -55,9 +57,14 @@ void Renderer::Render(Scene& scene)
 	{
 		if (this->RenderObjectIsAlive(i))
 		{
+			Mesh& mesh = res->meshes.Get(o[i].mesh);
+
 			const Mat4x4f& matrix = scene.GetWorldTransformMatrix(o[i].sceneObjectId);
-			bb[oCount].center = matrix * Vec3f(0.0f, 0.0f, 0.0f);
-			bb[oCount].extents = Vec3f(0.5f, 0.5f, 0.5f);
+			bb[oCount].center = matrix * mesh.bounds.center;
+			bb[oCount].extents = mesh.bounds.extents;
+
+			// TODO: Calculate a bounding box that contains a rotated AABB
+
 			++oCount;
 		}
 	}
@@ -70,8 +77,6 @@ void Renderer::Render(Scene& scene)
 	frustum.CullAABB(oCount, bb, bbcs);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	ResourceManager* res = App::GetResourceManager();
 
 	Mat4x4f viewProjection = cam->GetViewProjectionMatrix();
 
