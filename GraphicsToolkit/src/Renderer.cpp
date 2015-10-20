@@ -60,10 +60,7 @@ void Renderer::Render(Scene& scene)
 			Mesh& mesh = res->meshes.Get(o[i].mesh);
 
 			const Mat4x4f& matrix = scene.GetWorldTransformMatrix(o[i].sceneObjectId);
-			bb[oCount].center = matrix * mesh.bounds.center;
-			bb[oCount].extents = mesh.bounds.extents;
-
-			// TODO: Calculate a bounding box that contains a rotated AABB
+			bb[oCount] = mesh.bounds.Transform(matrix);
 
 			++oCount;
 		}
