@@ -2,6 +2,7 @@
 
 #include "ImageData.hpp"
 #include "MeshLoader.hpp"
+#include "MemoryAmount.hpp"
 
 #include <cstdio>
 
@@ -15,7 +16,7 @@ static void OnGlfwError(int errorCode, const char* description)
 
 App* App::instance = nullptr;
 
-App::App() : stackAllocator(1 << 14)
+App::App() : stackAllocator(32_MB, 256_kB)
 {
 	App::instance = this;
 }

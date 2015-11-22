@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4502610A1B8644C70040A310 /* InternalKeyMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450261081B8644C70040A310 /* InternalKeyMap.cpp */; };
-		4505F5981BB812AD00AEECDD /* MeshLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4505F5961BB812AD00AEECDD /* MeshLoader.cpp */; settings = {ASSET_TAGS = (); }; };
+		4505F5981BB812AD00AEECDD /* MeshLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4505F5961BB812AD00AEECDD /* MeshLoader.cpp */; };
 		45113BE71B98ED2200C35390 /* Scene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45113BE51B98ED2200C35390 /* Scene.cpp */; };
 		4550511B1B6193070096FAD2 /* VertexFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4550511A1B6193070096FAD2 /* VertexFormat.cpp */; };
 		4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455051291B6ABFA10096FAD2 /* ImageData.cpp */; };
@@ -19,9 +19,10 @@
 		457519BE1B83C01A0007412E /* KeyboardInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457519BC1B83C01A0007412E /* KeyboardInput.cpp */; };
 		4578F41E1B7C0507003E7AFC /* File.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4578F41C1B7C0507003E7AFC /* File.cpp */; };
 		4588CC4B1B8A144D0002AEC6 /* PointerInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4588CC491B8A144D0002AEC6 /* PointerInput.cpp */; };
-		45AE56301BB31F5F00A6B7FE /* StackAllocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45AE562E1BB31F5F00A6B7FE /* StackAllocator.cpp */; settings = {ASSET_TAGS = (); }; };
-		45AE56331BB32E5300A6B7FE /* StackAllocation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45AE56311BB32E5300A6B7FE /* StackAllocation.cpp */; settings = {ASSET_TAGS = (); }; };
+		45AE56301BB31F5F00A6B7FE /* StackAllocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45AE562E1BB31F5F00A6B7FE /* StackAllocator.cpp */; };
+		45AE56331BB32E5300A6B7FE /* StackAllocation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45AE56311BB32E5300A6B7FE /* StackAllocation.cpp */; };
 		45E42CDD1B8BF5700071A3A9 /* ViewFrustum.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E42CDC1B8BF5700071A3A9 /* ViewFrustum.cpp */; };
+		45E729E51C00F490005812AE /* VirtualMemory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E729E31C00F490005812AE /* VirtualMemory.cpp */; };
 		45E75BDF1B7D629E0096E93A /* Material.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E75BDE1B7D629E0096E93A /* Material.cpp */; };
 		45E75C391B811A960096E93A /* CameraController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E75C371B811A960096E93A /* CameraController.cpp */; };
 		45E9784F1B34CF0600E11814 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E9784E1B34CF0600E11814 /* main.cpp */; };
@@ -92,6 +93,9 @@
 		45E42CDA1B8BA1E40071A3A9 /* ViewFrustum.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = ViewFrustum.hpp; path = src/ViewFrustum.hpp; sourceTree = "<group>"; };
 		45E42CDB1B8BEEA00071A3A9 /* Plane.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Plane.hpp; path = src/Plane.hpp; sourceTree = "<group>"; };
 		45E42CDC1B8BF5700071A3A9 /* ViewFrustum.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ViewFrustum.cpp; path = src/ViewFrustum.cpp; sourceTree = "<group>"; };
+		45E729E31C00F490005812AE /* VirtualMemory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VirtualMemory.cpp; path = src/VirtualMemory.cpp; sourceTree = "<group>"; };
+		45E729E41C00F490005812AE /* VirtualMemory.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = VirtualMemory.hpp; path = src/VirtualMemory.hpp; sourceTree = "<group>"; };
+		45E729E71C011566005812AE /* MemoryAmount.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MemoryAmount.hpp; path = src/MemoryAmount.hpp; sourceTree = "<group>"; };
 		45E75BDE1B7D629E0096E93A /* Material.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = Material.cpp; path = src/Material.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		45E75BE31B80CC260096E93A /* Mat3x3.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Mat3x3.hpp; path = src/Mat3x3.hpp; sourceTree = "<group>"; };
 		45E75C371B811A960096E93A /* CameraController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CameraController.cpp; path = src/CameraController.cpp; sourceTree = "<group>"; };
@@ -211,6 +215,9 @@
 				45AE562F1BB31F5F00A6B7FE /* StackAllocator.hpp */,
 				45AE56311BB32E5300A6B7FE /* StackAllocation.cpp */,
 				45AE56321BB32E5300A6B7FE /* StackAllocation.hpp */,
+				45E729E31C00F490005812AE /* VirtualMemory.cpp */,
+				45E729E41C00F490005812AE /* VirtualMemory.hpp */,
+				45E729E71C011566005812AE /* MemoryAmount.hpp */,
 			);
 			name = Memory;
 			sourceTree = "<group>";
@@ -253,7 +260,6 @@
 				45E9785E1B34D1C600E11814 /* App.hpp */,
 				45E75C371B811A960096E93A /* CameraController.cpp */,
 				45E75C381B811A960096E93A /* CameraController.hpp */,
-				459122AA1B6E71F500CF3D2A /* ObjectId.hpp */,
 				4550511D1B6503610096FAD2 /* ResourceManager.hpp */,
 				45EB3E8E1B49883100F2092A /* Time.cpp */,
 				45EB3E8F1B49883100F2092A /* Time.hpp */,
@@ -284,12 +290,13 @@
 			isa = PBXGroup;
 			children = (
 				455051201B6515620096FAD2 /* Collection.hpp */,
+				4578F41C1B7C0507003E7AFC /* File.cpp */,
+				4578F41D1B7C0507003E7AFC /* File.hpp */,
 				459122AF1B6E865A00CF3D2A /* Hash.hpp */,
 				454546C41B71596C00998248 /* ImmutableString.hpp */,
 				453596081B768CBE0045DC04 /* JsonReader.hpp */,
+				459122AA1B6E71F500CF3D2A /* ObjectId.hpp */,
 				4535960A1B7BABC40045DC04 /* StringRef.hpp */,
-				4578F41C1B7C0507003E7AFC /* File.cpp */,
-				4578F41D1B7C0507003E7AFC /* File.hpp */,
 			);
 			name = Util;
 			sourceTree = "<group>";
@@ -360,6 +367,7 @@
 				45113BE71B98ED2200C35390 /* Scene.cpp in Sources */,
 				45EB3E901B49883100F2092A /* Time.cpp in Sources */,
 				455326D61BA4BFBD007EE3AE /* Mesh.cpp in Sources */,
+				45E729E51C00F490005812AE /* VirtualMemory.cpp in Sources */,
 				4550512B1B6ABFA10096FAD2 /* ImageData.cpp in Sources */,
 				45E9786C1B35939300E11814 /* Renderer.cpp in Sources */,
 				45AE56331BB32E5300A6B7FE /* StackAllocation.cpp in Sources */,
