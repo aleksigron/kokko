@@ -96,6 +96,7 @@
 		45E729E31C00F490005812AE /* VirtualMemory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VirtualMemory.cpp; path = src/VirtualMemory.cpp; sourceTree = "<group>"; };
 		45E729E41C00F490005812AE /* VirtualMemory.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = VirtualMemory.hpp; path = src/VirtualMemory.hpp; sourceTree = "<group>"; };
 		45E729E71C011566005812AE /* MemoryAmount.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MemoryAmount.hpp; path = src/MemoryAmount.hpp; sourceTree = "<group>"; };
+		45E729F71C03A640005812AE /* MultiArray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MultiArray.hpp; path = src/MultiArray.hpp; sourceTree = "<group>"; };
 		45E75BDE1B7D629E0096E93A /* Material.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = Material.cpp; path = src/Material.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		45E75BE31B80CC260096E93A /* Mat3x3.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Mat3x3.hpp; path = src/Mat3x3.hpp; sourceTree = "<group>"; };
 		45E75C371B811A960096E93A /* CameraController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CameraController.cpp; path = src/CameraController.cpp; sourceTree = "<group>"; };
@@ -295,6 +296,7 @@
 				459122AF1B6E865A00CF3D2A /* Hash.hpp */,
 				454546C41B71596C00998248 /* ImmutableString.hpp */,
 				453596081B768CBE0045DC04 /* JsonReader.hpp */,
+				45E729F71C03A640005812AE /* MultiArray.hpp */,
 				459122AA1B6E71F500CF3D2A /* ObjectId.hpp */,
 				4535960A1B7BABC40045DC04 /* StringRef.hpp */,
 			);
