@@ -8,13 +8,11 @@ template <typename T, unsigned int BlockSize = 64>
 class MultiArray
 {
 private:
-	using Byte = unsigned char;
-
 	size_t itemCount;
 
-	Byte** arrays;
+	T** arrays;
 	size_t arrayCount;
-	size_t allocatedArrayCount;
+	size_t allocArrayCount;
 
 	T* AllocateForPushBack()
 	{
@@ -25,27 +23,32 @@ private:
 		if (itemCount == arrayCount * BlockSize)
 		{
 			// The array list is full
-			if (arrayCount == allocatedArrayCount)
+			if (arrayCount == allocArrayCount)
 			{
-				size_t newArrayCount = allocatedArrayCount > 0 ? allocatedArrayCount * 2 : 4;
-				Byte** oldArrays = arrays;
+				// New array list size
+				size_t newArrayCount = allocArrayCount > 0 ? allocArrayCount * 2 : 4;
+				T** oldArrays = arrays;
 
-				arrays = new Byte*[newArrayCount];
+				// Allocate a new array list
+				arrays = static_cast<T**>(operator new(sizeof(T*) * newArrayCount));
 
+				// Copy the old array pointers to new array list
 				for (size_t i = 0; i < arrayCount; ++i)
 					arrays[i] = oldArrays[i];
 
-				delete[] oldArrays;
+				// Deallocate old array list
+				operator delete(oldArrays);
 
-				allocatedArrayCount = newArrayCount;
+				allocArrayCount = newArrayCount;
 			}
 
-			arrays[arrayIndex] = new Byte[sizeof(T) * BlockSize];
+			// Allocate a new element array
+			arrays[arrayIndex] = static_cast<T*>(operator new(sizeof(T) * BlockSize));
 			++arrayCount;
 		}
 
 		++itemCount;
-		return reinterpret_cast<T**>(arrays)[arrayIndex] + itemIndex;
+		return arrays[arrayIndex] + itemIndex;
 	}
 
 public:
@@ -53,27 +56,33 @@ public:
 	itemCount(0),
 	arrays(nullptr),
 	arrayCount(0),
-	allocatedArrayCount(0)
+	allocArrayCount(0)
 	{
 	}
 
 	~MultiArray()
 	{
+		// We have allocated some storage
 		if (arrays != nullptr)
 		{
+			// For each used array in the array list
 			for (size_t i = 0; i < arrayCount; ++i)
 			{
-				T* arr = reinterpret_cast<T**>(arrays)[i];
+				T* arr = arrays[i];
+
+				// The number of in-use elements in this array
 				size_t c = (i + 1 == arrayCount) ? itemCount % BlockSize : BlockSize;
 
-				// Run destructors
+				// Run destructors for each element
 				for (size_t j = 0; j < c; ++j)
 					arr[j].~T();
 
-				delete[] arr;
+				// Deallocate the array
+				operator delete(arr);
 			}
 
-			delete[] arrays;
+			// Deallocate the array list
+			operator delete(arrays);
 		}
 	}
 
@@ -84,34 +93,38 @@ public:
 
 	inline T& At(size_t index)
 	{
-		return reinterpret_cast<T**>(arrays)[index / BlockSize][index % BlockSize];
+		return arrays[index / BlockSize][index % BlockSize];
 	}
 
 	inline const T& At(size_t index) const
 	{
-		return reinterpret_cast<T**>(arrays)[index / BlockSize][index % BlockSize];
+		return arrays[index / BlockSize][index % BlockSize];
 	}
 
 	inline T& operator[](size_t index)
 	{
-		return reinterpret_cast<T**>(arrays)[index / BlockSize][index % BlockSize];
+		return arrays[index / BlockSize][index % BlockSize];
 	}
 
 	inline const T& operator[](size_t index) const
 	{
-		return reinterpret_cast<T**>(arrays)[index / BlockSize][index % BlockSize];
+		return arrays[index / BlockSize][index % BlockSize];
 	}
 
 	void Clear()
 	{
+		// We have allocated some storage
 		if (arrays != nullptr)
 		{
+			// For each used array in the array list
 			for (size_t i = 0; i < arrayCount; ++i)
 			{
-				T* arr = reinterpret_cast<T**>(arrays)[i];
+				T* arr = arrays[i];
+
+				// The number of in-use elements in this array
 				size_t c = (i + 1 == arrayCount) ? itemCount % BlockSize : BlockSize;
 
-				// Run destructors
+				// Run destructors for each element
 				for (size_t j = 0; j < c; ++j)
 					arr[j].~T();
 			}
