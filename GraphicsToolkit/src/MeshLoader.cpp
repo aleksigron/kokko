@@ -1,5 +1,7 @@
 #include "MeshLoader.hpp"
 
+#include <cassert>
+
 #include "File.hpp"
 #include "Mesh.hpp"
 
@@ -49,6 +51,8 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 			uint indexDataSize = indexCount * indexSize;
 
 			uint expectedSize = headerSize + boundsSize + vertexDataSize + indexDataSize;
+
+			assert(expectedSize == fileSize);
 
 			// Check that the file size matches the header description
 			if (expectedSize == fileSize)
