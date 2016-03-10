@@ -19,6 +19,9 @@ struct ShaderUniform
 {
 	int location;
 	ShaderUniformType type;
+
+	static const unsigned int TypeCount = 5;
+	static const char* const TypeNames[TypeCount];
 };
 
 struct ShaderProgram

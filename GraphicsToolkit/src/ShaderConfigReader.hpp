@@ -87,10 +87,14 @@ public:
 			}
 			else if (k.ValueEquals("type"))
 			{
-				// Just handle the texture uniform type for now
-				if (v.ValueEquals("tex2d"))
+				for (unsigned i = 0; i < ShaderUniform::TypeCount; ++i)
 				{
-					self->uniformTypes[self->uniformCount] = ShaderUniformType::Texture2D;
+					// Check what type of uniform this is
+					if (v.ValueEquals(ShaderUniform::TypeNames[i]))
+					{
+						self->uniformTypes[self->uniformCount] = static_cast<ShaderUniformType>(i);
+						break;
+					}
 				}
 			}
 		}

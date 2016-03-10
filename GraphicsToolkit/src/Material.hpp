@@ -16,8 +16,6 @@ struct Material
 
 	ObjectId shader;
 
-	int mvpUniformLocation = -1;
-
 	static const unsigned int MaxUniformCount = 8;
 	unsigned int uniformCount = 0;
 	ShaderMaterialUniform uniforms[MaxUniformCount];

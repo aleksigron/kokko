@@ -4,13 +4,15 @@
 #include "glfw/glfw3.h"
 
 #include <cstdio>
-
+#include <cstring>
 #include <cassert>
 
 #include "File.hpp"
 #include "JsonReader.hpp"
 #include "ShaderConfigReader.hpp"
 #include "StackAllocator.hpp"
+
+const char* const ShaderUniform::TypeNames[] = { "tex2d", "mat4x4", "vec3", "vec2", "float" };
 
 void ShaderProgram::SetAllocator(StackAllocator* allocator)
 {
@@ -169,16 +171,15 @@ void ShaderProgram::AddMaterialUniforms(unsigned int count,
 	{
 		const StringRef* name = names + uIndex;
 
-		StackAllocation nameBuffer = this->allocator->Allocate(name->len);
+		StackAllocation nameBuffer = this->allocator->Allocate(name->len + 1);
 		char* buffer = reinterpret_cast<char*>(nameBuffer.data);
 
 		// Copy string to a local buffer because it needs to be null terminated
-		for (unsigned charIndex = 0; charIndex < name->len; ++charIndex)
-			buffer[charIndex] = name->str[charIndex];
-
+		std::memcpy(buffer, name->str, name->len);
 		buffer[name->len] = '\0'; // Null-terminate
 
 		ShaderUniform& uniform = this->materialUniforms[uIndex];
+		uniform.type = types[uIndex];
 		uniform.location = glGetUniformLocation(this->oglId, buffer);
 
 		// The uniform could be found
