@@ -158,77 +158,117 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		45A004E61C933EFE002D6134 /* Source */ = {
+		454102E91C93480B00D2841F /* Input */ = {
 			isa = PBXGroup;
 			children = (
-				45A004E71C933F43002D6134 /* App.cpp */,
-				45A004E81C933F43002D6134 /* App.hpp */,
-				45A004E91C933F43002D6134 /* BoundingBox.hpp */,
-				45A004EA1C933F43002D6134 /* Buffer.hpp */,
-				45A004EB1C933F43002D6134 /* Camera.cpp */,
-				45A004EC1C933F43002D6134 /* Camera.hpp */,
-				45A004ED1C933F43002D6134 /* CameraController.cpp */,
-				45A004EE1C933F43002D6134 /* CameraController.hpp */,
-				45A004EF1C933F43002D6134 /* Collection.hpp */,
-				45A004F01C933F43002D6134 /* File.cpp */,
-				45A004F11C933F43002D6134 /* File.hpp */,
-				45A004F21C933F43002D6134 /* Hash.hpp */,
-				45A004F31C933F43002D6134 /* ImageData.cpp */,
-				45A004F41C933F43002D6134 /* ImageData.hpp */,
-				45A004F51C933F43002D6134 /* ImmutableString.hpp */,
 				45A004F61C933F43002D6134 /* Input.cpp */,
 				45A004F71C933F43002D6134 /* Input.hpp */,
 				45A004F81C933F43002D6134 /* InternalKeyMap.cpp */,
 				45A004F91C933F43002D6134 /* InternalKeyMap.hpp */,
-				45A004FA1C933F43002D6134 /* JsonReader.hpp */,
 				45A004FB1C933F43002D6134 /* KeyboardInput.cpp */,
 				45A004FC1C933F43002D6134 /* KeyboardInput.hpp */,
-				45A004FD1C933F43002D6134 /* main.cpp */,
-				45A004FE1C933F43002D6134 /* Mat2x2.hpp */,
-				45A004FF1C933F43002D6134 /* Mat3x3.hpp */,
-				45A005001C933F43002D6134 /* Mat4x4.hpp */,
-				45A005011C933F43002D6134 /* Material.cpp */,
-				45A005021C933F43002D6134 /* Material.hpp */,
-				45A005031C933F43002D6134 /* Math.hpp */,
-				45A005041C933F43002D6134 /* Matrix.hpp */,
-				45A005051C933F43002D6134 /* MemoryAmount.hpp */,
-				45A005061C933F43002D6134 /* Mesh.cpp */,
-				45A005071C933F43002D6134 /* Mesh.hpp */,
-				45A005081C933F43002D6134 /* MeshLoader.cpp */,
-				45A005091C933F43002D6134 /* MeshLoader.hpp */,
-				45A0050A1C933F43002D6134 /* MultiArray.hpp */,
-				45A0050B1C933F43002D6134 /* ObjectId.hpp */,
-				45A0050C1C933F43002D6134 /* Plane.hpp */,
 				45A0050D1C933F43002D6134 /* PointerInput.cpp */,
 				45A0050E1C933F43002D6134 /* PointerInput.hpp */,
-				45A0050F1C933F43002D6134 /* Renderer.cpp */,
-				45A005101C933F43002D6134 /* Renderer.hpp */,
-				45A005111C933F43002D6134 /* RenderObject.hpp */,
-				45A005121C933F43002D6134 /* ResourceManager.hpp */,
-				45A005131C933F43002D6134 /* Scene.cpp */,
-				45A005141C933F43002D6134 /* Scene.hpp */,
-				45A005151C933F43002D6134 /* ShaderConfigReader.hpp */,
-				45A005161C933F43002D6134 /* ShaderProgram.cpp */,
-				45A005171C933F43002D6134 /* ShaderProgram.hpp */,
+			);
+			name = Input;
+			sourceTree = "<group>";
+		};
+		454102EA1C93488700D2841F /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				45A004EA1C933F43002D6134 /* Buffer.hpp */,
+				45A004EF1C933F43002D6134 /* Collection.hpp */,
+				45A004F01C933F43002D6134 /* File.cpp */,
+				45A004F11C933F43002D6134 /* File.hpp */,
+				45A004F21C933F43002D6134 /* Hash.hpp */,
+				45A004F51C933F43002D6134 /* ImmutableString.hpp */,
+				45A004FA1C933F43002D6134 /* JsonReader.hpp */,
+				45A005051C933F43002D6134 /* MemoryAmount.hpp */,
+				45A0050A1C933F43002D6134 /* MultiArray.hpp */,
+				45A0050B1C933F43002D6134 /* ObjectId.hpp */,
 				45A005181C933F43002D6134 /* StackAllocation.cpp */,
 				45A005191C933F43002D6134 /* StackAllocation.hpp */,
 				45A0051A1C933F43002D6134 /* StackAllocator.cpp */,
 				45A0051B1C933F43002D6134 /* StackAllocator.hpp */,
 				45A0051C1C933F43002D6134 /* StringRef.hpp */,
-				45A0051D1C933F43002D6134 /* Texture.cpp */,
-				45A0051E1C933F43002D6134 /* Texture.hpp */,
-				45A0051F1C933F43002D6134 /* Time.cpp */,
-				45A005201C933F43002D6134 /* Time.hpp */,
+				45A005291C933F43002D6134 /* VirtualMemory.cpp */,
+				45A0052A1C933F43002D6134 /* VirtualMemory.hpp */,
+			);
+			name = Util;
+			sourceTree = "<group>";
+		};
+		454102EB1C9348B000D2841F /* Math */ = {
+			isa = PBXGroup;
+			children = (
+				45A004E91C933F43002D6134 /* BoundingBox.hpp */,
+				45A004FE1C933F43002D6134 /* Mat2x2.hpp */,
+				45A004FF1C933F43002D6134 /* Mat3x3.hpp */,
+				45A005001C933F43002D6134 /* Mat4x4.hpp */,
+				45A005031C933F43002D6134 /* Math.hpp */,
+				45A005041C933F43002D6134 /* Matrix.hpp */,
+				45A0050C1C933F43002D6134 /* Plane.hpp */,
 				45A005211C933F43002D6134 /* Transform.hpp */,
 				45A005221C933F43002D6134 /* Vec2.hpp */,
 				45A005231C933F43002D6134 /* Vec3.hpp */,
 				45A005241C933F43002D6134 /* Vec4.hpp */,
-				45A005251C933F43002D6134 /* VertexFormat.cpp */,
-				45A005261C933F43002D6134 /* VertexFormat.hpp */,
 				45A005271C933F43002D6134 /* ViewFrustum.cpp */,
 				45A005281C933F43002D6134 /* ViewFrustum.hpp */,
-				45A005291C933F43002D6134 /* VirtualMemory.cpp */,
-				45A0052A1C933F43002D6134 /* VirtualMemory.hpp */,
+			);
+			name = Math;
+			sourceTree = "<group>";
+		};
+		454102EC1C9348FD00D2841F /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				45A004EB1C933F43002D6134 /* Camera.cpp */,
+				45A004EC1C933F43002D6134 /* Camera.hpp */,
+				45A005011C933F43002D6134 /* Material.cpp */,
+				45A005021C933F43002D6134 /* Material.hpp */,
+				45A0050F1C933F43002D6134 /* Renderer.cpp */,
+				45A005101C933F43002D6134 /* Renderer.hpp */,
+				45A005111C933F43002D6134 /* RenderObject.hpp */,
+				45A005151C933F43002D6134 /* ShaderConfigReader.hpp */,
+				45A005161C933F43002D6134 /* ShaderProgram.cpp */,
+				45A005171C933F43002D6134 /* ShaderProgram.hpp */,
+				45A0051D1C933F43002D6134 /* Texture.cpp */,
+				45A0051E1C933F43002D6134 /* Texture.hpp */,
+				45A005251C933F43002D6134 /* VertexFormat.cpp */,
+				45A005261C933F43002D6134 /* VertexFormat.hpp */,
+			);
+			name = Rendering;
+			sourceTree = "<group>";
+		};
+		454102ED1C93491800D2841F /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				45A004F31C933F43002D6134 /* ImageData.cpp */,
+				45A004F41C933F43002D6134 /* ImageData.hpp */,
+				45A005061C933F43002D6134 /* Mesh.cpp */,
+				45A005071C933F43002D6134 /* Mesh.hpp */,
+				45A005081C933F43002D6134 /* MeshLoader.cpp */,
+				45A005091C933F43002D6134 /* MeshLoader.hpp */,
+			);
+			name = Assets;
+			sourceTree = "<group>";
+		};
+		45A004E61C933EFE002D6134 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				454102ED1C93491800D2841F /* Assets */,
+				454102E91C93480B00D2841F /* Input */,
+				454102EB1C9348B000D2841F /* Math */,
+				454102EC1C9348FD00D2841F /* Rendering */,
+				454102EA1C93488700D2841F /* Util */,
+				45A004FD1C933F43002D6134 /* main.cpp */,
+				45A004E71C933F43002D6134 /* App.cpp */,
+				45A004E81C933F43002D6134 /* App.hpp */,
+				45A004ED1C933F43002D6134 /* CameraController.cpp */,
+				45A004EE1C933F43002D6134 /* CameraController.hpp */,
+				45A005121C933F43002D6134 /* ResourceManager.hpp */,
+				45A005131C933F43002D6134 /* Scene.cpp */,
+				45A005141C933F43002D6134 /* Scene.hpp */,
+				45A0051F1C933F43002D6134 /* Time.cpp */,
+				45A005201C933F43002D6134 /* Time.hpp */,
 				45A0052B1C933F43002D6134 /* Window.cpp */,
 				45A0052C1C933F43002D6134 /* Window.hpp */,
 			);
