@@ -51,7 +51,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4588CC4C1B8A70580002AEC6 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = GraphicsToolkit/include; sourceTree = "<group>"; };
+		4588CC4C1B8A70580002AEC6 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 		45A004E71C933F43002D6134 /* App.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = App.cpp; path = src/App.cpp; sourceTree = "<group>"; };
 		45A004E81C933F43002D6134 /* App.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = App.hpp; path = src/App.hpp; sourceTree = "<group>"; };
 		45A004E91C933F43002D6134 /* BoundingBox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BoundingBox.hpp; path = src/BoundingBox.hpp; sourceTree = "<group>"; };
@@ -127,8 +127,8 @@
 		45E978521B34CFA600E11814 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		45E978541B34CFB700E11814 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		45E978561B34CFC100E11814 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		45E978581B34CFC900E11814 /* libglfw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libglfw3.a; path = GraphicsToolkit/lib/glfw/libglfw3.a; sourceTree = "<group>"; };
-		45EB3E8D1B49600500F2092A /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = GraphicsToolkit/res; sourceTree = "<group>"; };
+		45E978581B34CFC900E11814 /* libglfw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libglfw3.a; path = lib/glfw/libglfw3.a; sourceTree = "<group>"; };
+		45EB3E8D1B49600500F2092A /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; path = res; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
