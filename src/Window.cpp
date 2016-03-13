@@ -14,7 +14,7 @@ Window::~Window()
 	glfwTerminate();
 }
 
-bool Window::Initialize()
+bool Window::Initialize(const char* windowTitle)
 {
 	if (glfwInit())
 	{
@@ -23,7 +23,7 @@ bool Window::Initialize()
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		
-		this->window = glfwCreateWindow(960, 640, "Simple example", NULL, NULL);
+		this->window = glfwCreateWindow(960, 640, windowTitle, NULL, NULL);
 		
 		if (this->window != nullptr)
 		{

@@ -13,7 +13,7 @@ public:
 	Window();
 	~Window();
 	
-	bool Initialize();
+	bool Initialize(const char* windowTitle);
 	bool ShouldClose();
 	
 	void Swap();

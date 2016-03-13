@@ -29,7 +29,7 @@ bool App::Initialize()
 {
 	glfwSetErrorCallback(OnGlfwError);
 
-	if (this->mainWindow.Initialize())
+	if (this->mainWindow.Initialize("Kokko"))
 	{
 		this->input.Initialize(mainWindow.GetWindowHandle());
 		this->renderer.Initialize();
