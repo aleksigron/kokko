@@ -12,7 +12,16 @@
 #include "ShaderConfigReader.hpp"
 #include "StackAllocator.hpp"
 
-const char* const ShaderUniform::TypeNames[] = { "tex2d", "mat4x4", "vec3", "vec2", "float" };
+const char* const ShaderUniform::TypeNames[] =
+{
+	"tex2d",
+	"mat4x4",
+	"vec4",
+	"vec3",
+	"vec2",
+	"float",
+	"int"
+};
 
 void ShaderProgram::SetAllocator(StackAllocator* allocator)
 {

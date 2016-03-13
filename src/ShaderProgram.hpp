@@ -8,11 +8,13 @@ class StackAllocator;
 
 enum class ShaderUniformType
 {
-	Texture2D,
+	Tex2D,
 	Mat4x4,
+	Vec4,
 	Vec3,
 	Vec2,
-	Float
+	Float,
+	Int
 };
 
 struct ShaderUniform
@@ -20,7 +22,7 @@ struct ShaderUniform
 	int location;
 	ShaderUniformType type;
 
-	static const unsigned int TypeCount = 5;
+	static const unsigned int TypeCount = 7;
 	static const char* const TypeNames[TypeCount];
 };
 

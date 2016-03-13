@@ -100,31 +100,41 @@ void Renderer::Render(Scene& scene)
 
 					switch (u.type)
 					{
-						case ShaderUniformType::Mat4x4:
-							glUniformMatrix4fv(u.location, 1, GL_FALSE,
-											   reinterpret_cast<float*>(uData));
-							break;
+					case ShaderUniformType::Mat4x4:
+						glUniformMatrix4fv(u.location, 1, GL_FALSE,
+										   reinterpret_cast<float*>(uData));
+						break;
 
-						case ShaderUniformType::Vec3:
-							glUniform3fv(u.location, 1,
-										 reinterpret_cast<float*>(uData));
-							break;
+					case ShaderUniformType::Vec4:
+						glUniform4fv(u.location, 1,
+									 reinterpret_cast<float*>(uData));
+						break;
 
-						case ShaderUniformType::Vec2:
-							glUniform2fv(u.location, 1,
-										 reinterpret_cast<float*>(uData));
-							break;
+					case ShaderUniformType::Vec3:
+						glUniform3fv(u.location, 1,
+									 reinterpret_cast<float*>(uData));
+						break;
 
-						case ShaderUniformType::Float:
-							glUniform1f(u.location,
-										*reinterpret_cast<float*>(uData));
-							break;
+					case ShaderUniformType::Vec2:
+						glUniform2fv(u.location, 1,
+									 reinterpret_cast<float*>(uData));
+						break;
 
-						case ShaderUniformType::Texture2D:
-							glActiveTexture(GL_TEXTURE0);
-							glBindTexture(GL_TEXTURE_2D, *reinterpret_cast<int*>(uData));
-							glUniform1i(u.location, 0);
-							break;
+					case ShaderUniformType::Float:
+						glUniform1f(u.location,
+									*reinterpret_cast<float*>(uData));
+						break;
+
+					case ShaderUniformType::Int:
+						glUniform1i(u.location,
+									*reinterpret_cast<float*>(uData));
+						break;
+
+					case ShaderUniformType::Tex2D:
+						glActiveTexture(GL_TEXTURE0);
+						glBindTexture(GL_TEXTURE_2D, *reinterpret_cast<int*>(uData));
+						glUniform1i(u.location, 0);
+						break;
 					}
 				}
 
