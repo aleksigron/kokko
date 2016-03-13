@@ -1,2 +1,2 @@
-GraphicsToolkit/include/* linguist-vendored
-GraphicsToolkit/lib/* linguist-vendored
+include/* linguist-vendored
+lib/* linguist-vendored
