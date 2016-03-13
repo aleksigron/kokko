@@ -48,7 +48,7 @@ bool App::Initialize()
 		ObjectId colShaderId = resourceManager.shaders.Add();
 		ShaderProgram& colShader = resourceManager.shaders.Get(colShaderId);
 		colShader.SetAllocator(&this->stackAllocator);
-		colShader.LoadFromConfiguration("res/shaders/simple.shader.json");
+		colShader.LoadFromConfiguration("res/shaders/lighting.shader.json");
 
 		ObjectId colorMaterialId = resourceManager.materials.Add();
 		Material& colorMaterial = resourceManager.materials.Get(colorMaterialId);
