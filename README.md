@@ -1,4 +1,4 @@
-# Graphics Toolkit
+# Kokko Engine
 
 This is a personal project that lets me test out new ideas and learn some OpenGL
 programming in the process. I hope that little by little, this will become a
@@ -13,7 +13,7 @@ always try to consider cross-platform compatibility when writing new features.
 You need to set a custom working directory in Xcode when running the project.
 From the menu bar, choose _Product_ > _Scheme_ > _Edit Scheme_. Select the _Run_
 scheme and go to the _Options_ tab. Enable _Custom working directory_ and set
-the working directory to the GraphicsToolkit folder next to the Xcode project.
+the working directory to the repository root.
 
 ## Other tools
 I'm using a proprietary model export script for Blender. The motivation behind
