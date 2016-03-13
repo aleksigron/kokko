@@ -4,6 +4,8 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 programming in the process. I hope that little by little, this will become a
 good, small game engine that might offer some new ways to solve old problems.
 
+For more information, look in the docs folder.
+
 This project is currently available only as an Xcode project on OS X, but I
 always try to consider cross-platform compatibility when writing new features.
 
