@@ -3,13 +3,13 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
+#include "rapidjson/document.h"
+
 #include <cstdio>
 #include <cstring>
 #include <cassert>
 
 #include "File.hpp"
-#include "JsonReader.hpp"
-#include "ShaderConfigReader.hpp"
 #include "StackAllocator.hpp"
 
 const char* const ShaderUniform::TypeNames[] =
@@ -90,14 +90,109 @@ bool ShaderProgram::LoadFromConfiguration(const char* configurationPath)
 
 	if (configBuffer.IsValid())
 	{
-		JsonReader reader;
-		reader.SetContent(reinterpret_cast<const char*>(configBuffer.Data()),
-						  static_cast<unsigned int>(configBuffer.Count()));
+		const char* vsFilePath = nullptr;
+		const char* fsFilePath = nullptr;
 
-		ShaderConfigReader configReader;
-		configReader.Read(reader, *this);
+		StringRef uniformNames[ShaderProgram::MaxMaterialUniforms];
+		ShaderUniformType uniformTypes[ShaderProgram::MaxMaterialUniforms];
+		unsigned int uniformCount = 0;
 
-		return true;
+		char* data = reinterpret_cast<char*>(configBuffer.Data());
+		unsigned long size = configBuffer.Count();
+
+		using namespace rapidjson;
+
+		Document config;
+		config.Parse(data, size);
+
+		Value::ConstMemberIterator itr = config.FindMember("vertexShaderFile");
+
+		if (itr != config.MemberEnd())
+		{
+			const Value& v = itr->value;
+
+			if (v.IsString())
+			{
+				vsFilePath = v.GetString();
+			}
+		}
+
+		itr = config.FindMember("fragmentShaderFile");
+
+		if (itr != config.MemberEnd())
+		{
+			const Value& v = itr->value;
+
+			if (v.IsString())
+			{
+				fsFilePath = v.GetString();
+			}
+		}
+
+		itr = config.FindMember("materialUniforms");
+
+		if (itr != config.MemberEnd())
+		{
+			const Value& v = itr->value;
+
+			if (v.IsArray())
+			{
+				for (unsigned muIndex = 0, muCount = v.Size(); muIndex < muCount; ++muIndex)
+				{
+					const Value& mu = v[muIndex];
+
+					if (mu.IsObject())
+					{
+						Value::ConstMemberIterator nameItr = mu.FindMember("name");
+
+						if (nameItr != mu.MemberEnd())
+						{
+							const Value& name = nameItr->value;
+
+							if (name.IsString())
+							{
+								uniformNames[uniformCount].str = name.GetString();
+								uniformNames[uniformCount].len = name.GetStringLength();
+							}
+						}
+
+						Value::ConstMemberIterator typeItr = mu.FindMember("type");
+
+						if (typeItr->value.IsString())
+						{
+							const Value& type = typeItr->value;
+
+							if (type.IsString())
+							{
+								const char* typeStr = type.GetString();
+
+								for (unsigned typeIndex = 0; typeIndex < ShaderUniform::TypeCount; ++typeIndex)
+								{
+									// Check what type of uniform this is
+									if (std::strcmp(typeStr, ShaderUniform::TypeNames[typeIndex]) == 0)
+									{
+										uniformTypes[uniformCount] = static_cast<ShaderUniformType>(typeIndex);
+										break;
+									}
+								}
+							}
+						}
+					}
+
+					++uniformCount;
+				}
+			}
+		}
+
+		if (vsFilePath != nullptr && fsFilePath != nullptr)
+		{
+			if (this->Load(vsFilePath, fsFilePath))
+			{
+				this->AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
+
+				return true;
+			}
+		}
 	}
 
 	return false;

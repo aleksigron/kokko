@@ -99,7 +99,6 @@
 		45A005121C933F43002D6134 /* ResourceManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ResourceManager.hpp; path = ../src/ResourceManager.hpp; sourceTree = "<group>"; };
 		45A005131C933F43002D6134 /* Scene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Scene.cpp; path = ../src/Scene.cpp; sourceTree = "<group>"; };
 		45A005141C933F43002D6134 /* Scene.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Scene.hpp; path = ../src/Scene.hpp; sourceTree = "<group>"; };
-		45A005151C933F43002D6134 /* ShaderConfigReader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ShaderConfigReader.hpp; path = ../src/ShaderConfigReader.hpp; sourceTree = "<group>"; };
 		45A005161C933F43002D6134 /* ShaderProgram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ShaderProgram.cpp; path = ../src/ShaderProgram.cpp; sourceTree = "<group>"; };
 		45A005171C933F43002D6134 /* ShaderProgram.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ShaderProgram.hpp; path = ../src/ShaderProgram.hpp; sourceTree = "<group>"; };
 		45A005181C933F43002D6134 /* StackAllocation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StackAllocation.cpp; path = ../src/StackAllocation.cpp; sourceTree = "<group>"; };
@@ -227,7 +226,6 @@
 				45A0050F1C933F43002D6134 /* Renderer.cpp */,
 				45A005101C933F43002D6134 /* Renderer.hpp */,
 				45A005111C933F43002D6134 /* RenderObject.hpp */,
-				45A005151C933F43002D6134 /* ShaderConfigReader.hpp */,
 				45A005161C933F43002D6134 /* ShaderProgram.cpp */,
 				45A005171C933F43002D6134 /* ShaderProgram.hpp */,
 				45A0051D1C933F43002D6134 /* Texture.cpp */,
