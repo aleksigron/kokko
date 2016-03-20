@@ -5,11 +5,11 @@ layout(location = 1) in vec2 texCoord;
 
 out vec2 fragTexCoord;
 
-uniform mat4 MVP;
+uniform mat4 _MVP;
 
 void main() {
 
-	gl_Position = MVP * vec4(position, 1);
+	gl_Position = _MVP * vec4(position, 1);
 	fragTexCoord = texCoord;
 }
 

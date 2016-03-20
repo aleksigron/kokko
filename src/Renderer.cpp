@@ -75,7 +75,9 @@ void Renderer::Render(Scene& scene)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	Mat4x4f viewProjection = cam->GetViewProjectionMatrix();
+	Mat4x4f viewMatrix = cam->GetViewMatrix();
+	Mat4x4f projectionMatrix = cam->GetProjectionMatrix();
+	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
 
 	for (unsigned arrayIndex = 0, objectIndex = 0; arrayIndex < size; ++arrayIndex)
 	{
@@ -89,7 +91,7 @@ void Renderer::Render(Scene& scene)
 				Material& material = res->materials.Get(obj.material);
 				ShaderProgram& shader = res->shaders.Get(material.shader);
 
-				glUseProgram(shader.oglId);
+				glUseProgram(shader.driverId);
 
 				// Bind each material uniform with a value
 				for (unsigned uIndex = 0; uIndex < material.uniformCount; ++uIndex)
@@ -106,28 +108,23 @@ void Renderer::Render(Scene& scene)
 						break;
 
 					case ShaderUniformType::Vec4:
-						glUniform4fv(u.location, 1,
-									 reinterpret_cast<float*>(uData));
+						glUniform4fv(u.location, 1, reinterpret_cast<float*>(uData));
 						break;
 
 					case ShaderUniformType::Vec3:
-						glUniform3fv(u.location, 1,
-									 reinterpret_cast<float*>(uData));
+						glUniform3fv(u.location, 1, reinterpret_cast<float*>(uData));
 						break;
 
 					case ShaderUniformType::Vec2:
-						glUniform2fv(u.location, 1,
-									 reinterpret_cast<float*>(uData));
+						glUniform2fv(u.location, 1, reinterpret_cast<float*>(uData));
 						break;
 
 					case ShaderUniformType::Float:
-						glUniform1f(u.location,
-									*reinterpret_cast<float*>(uData));
+						glUniform1f(u.location, *reinterpret_cast<float*>(uData));
 						break;
 
 					case ShaderUniformType::Int:
-						glUniform1i(u.location,
-									*reinterpret_cast<float*>(uData));
+						glUniform1i(u.location, *reinterpret_cast<int*>(uData));
 						break;
 
 					case ShaderUniformType::Tex2D:
@@ -138,10 +135,19 @@ void Renderer::Render(Scene& scene)
 					}
 				}
 
-				Mat4x4f mvp = viewProjection * scene.GetWorldTransformMatrix(obj.sceneObjectId);
+				Mat4x4f modelMatrix = scene.GetWorldTransformMatrix(obj.sceneObjectId);
 
-				glUniformMatrix4fv(shader.mvpUniformLocation, 1,
-								   GL_FALSE, mvp.ValuePointer());
+				if (shader.uniformMVP >= 0)
+				{
+					Mat4x4f mvp = viewProjection * modelMatrix;
+					glUniformMatrix4fv(shader.uniformMVP, 1, GL_FALSE, mvp.ValuePointer());
+				}
+
+				if (shader.uniformMV >= 0)
+				{
+					Mat4x4f mv = viewMatrix * modelMatrix;
+					glUniformMatrix4fv(shader.uniformMV, 1, GL_FALSE, mv.ValuePointer());
+				}
 
 				glBindVertexArray(mesh.vertexArrayObject);
 

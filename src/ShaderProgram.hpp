@@ -42,8 +42,9 @@ private:
 public:
 	ObjectId id;
 
-	unsigned int oglId;
-	int mvpUniformLocation;
+	unsigned int driverId;
+	int uniformMVP;
+	int uniformMV;
 
 	static const unsigned MaxMaterialUniforms = 8;
 	unsigned int materialUniformCount;

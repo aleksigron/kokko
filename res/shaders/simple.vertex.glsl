@@ -5,11 +5,11 @@ layout(location = 1) in vec3 normal;
 
 out vec3 fragColor;
 
-uniform mat4 MVP;
+uniform mat4 _MVP;
 uniform vec3 base_color;
 
 void main()
 {
-	gl_Position = MVP * vec4(position, 1);
+	gl_Position = _MVP * vec4(position, 1);
 	fragColor = base_color;
 }

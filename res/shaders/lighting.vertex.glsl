@@ -5,10 +5,11 @@ layout(location = 1) in vec3 normal;
 
 out vec3 fs_w_norm;
 
-uniform mat4 MVP;
+uniform mat4 _MVP;
+uniform mat4 _MV;
 
 void main()
 {
-	gl_Position = MVP * vec4(position, 1);
-	fs_w_norm = normalize((MVP * vec4(normal, 0)).xyz);
+	gl_Position = _MVP * vec4(position, 1.0);
+	fs_w_norm = (_MV * vec4(normal, 0.0)).xyz;
 }

@@ -53,7 +53,6 @@ bool App::Initialize()
 		ObjectId colorMaterialId = resourceManager.materials.Add();
 		Material& colorMaterial = resourceManager.materials.Get(colorMaterialId);
 		colorMaterial.SetShader(colShader);
-		colorMaterial.SetUniformValue(0, Vec3f(0.8f, 0.8f, 0.8f));
 
 		// Objects
 

@@ -237,18 +237,19 @@ bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderF
 	
 	if (linkStatus == GL_TRUE)
 	{
-		this->oglId = programId;
-		this->mvpUniformLocation = glGetUniformLocation(programId, "MVP");
+		driverId = programId;
+		uniformMVP = glGetUniformLocation(programId, "_MVP");
+		uniformMV = glGetUniformLocation(programId, "_MV");
 		
 		return true;
 	}
 	else
 	{
-		this->oglId = 0;
+		driverId = 0;
 
 		// Get info log length
 		GLint infoLogLength = 0;
-		glGetProgramiv(this->oglId, GL_INFO_LOG_LENGTH, &infoLogLength);
+		glGetProgramiv(driverId, GL_INFO_LOG_LENGTH, &infoLogLength);
 		
 		if (infoLogLength > 0)
 		{
@@ -256,7 +257,7 @@ bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderF
 			char* infoLogBuffer = reinterpret_cast<char*>(infoLog.data);
 
 			// Print out info log
-			glGetProgramInfoLog(this->oglId, infoLogLength, NULL, infoLogBuffer);
+			glGetProgramInfoLog(driverId, infoLogLength, NULL, infoLogBuffer);
 			printf("%s\n", infoLogBuffer);
 		}
 
@@ -284,7 +285,7 @@ void ShaderProgram::AddMaterialUniforms(unsigned int count,
 
 		ShaderUniform& uniform = this->materialUniforms[uIndex];
 		uniform.type = types[uIndex];
-		uniform.location = glGetUniformLocation(this->oglId, buffer);
+		uniform.location = glGetUniformLocation(driverId, buffer);
 
 		// The uniform could be found
 		assert(uniform.location >= 0);
