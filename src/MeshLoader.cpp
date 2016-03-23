@@ -10,7 +10,7 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 	using uint = unsigned int;
 	using ushort = unsigned short;
 
-	Buffer<unsigned char> file = File::Read(filePath);
+	Buffer<unsigned char> file = File::ReadBinary(filePath);
 	size_t fileSize = file.Count();
 
 	const uint headerSize = 16;

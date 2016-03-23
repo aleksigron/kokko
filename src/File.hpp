@@ -4,5 +4,6 @@
 
 namespace File
 {
-	Buffer<unsigned char> Read(const char* path);
+	Buffer<unsigned char> ReadBinary(const char* path);
+	Buffer<char> ReadText(const char* path);
 }

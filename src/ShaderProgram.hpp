@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ObjectId.hpp"
-
+#include "Buffer.hpp"
 #include "StringRef.hpp"
 
 class StackAllocator;
@@ -35,7 +35,7 @@ private:
 		Fragment
 	};
 
-	bool CompileShader(ShaderType type, const char* path, unsigned& idOut);
+	bool Compile(ShaderType type, Buffer<char>& source, unsigned& idOut);
 
 	StackAllocator* allocator;
 
@@ -56,6 +56,7 @@ public:
 							 const ShaderUniformType* types,
 							 const StringRef* names);
 	
-	bool Load(const char* vertShaderFilePath, const char* fragShaderFilePath);
+	bool CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSource);
+	
 	bool LoadFromConfiguration(const char* configurationPath);
 };

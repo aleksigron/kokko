@@ -28,7 +28,7 @@ void ShaderProgram::SetAllocator(StackAllocator* allocator)
 	this->allocator = allocator;
 }
 
-bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint& shaderIdOut)
+bool ShaderProgram::Compile(ShaderType type, Buffer<char>& source, GLuint& shaderIdOut)
 {
 	GLenum shaderType = 0;
 	if (type == ShaderType::Vertex)
@@ -38,19 +38,17 @@ bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint&
 	else
 		return false;
 
-	Buffer<unsigned char> fileContents = File::Read(filePath);
-
-	if (fileContents.IsValid())
+	if (source.IsValid())
 	{
-		const char* data = reinterpret_cast<const char*>(fileContents.Data());
-		int length = static_cast<int>(fileContents.Count());
+		const char* data = source.Data();
+		int length = static_cast<int>(source.Count());
 
 		GLuint shaderId = glCreateShader(shaderType);
 		
 		// Copy shader source to OpenGL
 		glShaderSource(shaderId, 1, &data, &length);
 
-		fileContents.Deallocate();
+		source.Deallocate();
 
 		glCompileShader(shaderId);
 		
@@ -86,7 +84,7 @@ bool ShaderProgram::CompileShader(ShaderType type, const char* filePath, GLuint&
 
 bool ShaderProgram::LoadFromConfiguration(const char* configurationPath)
 {
-	Buffer<unsigned char> configBuffer = File::Read(configurationPath);
+	Buffer<char> configBuffer = File::ReadText(configurationPath);
 
 	if (configBuffer.IsValid())
 	{
@@ -97,7 +95,7 @@ bool ShaderProgram::LoadFromConfiguration(const char* configurationPath)
 		ShaderUniformType uniformTypes[ShaderProgram::MaxMaterialUniforms];
 		unsigned int uniformCount = 0;
 
-		char* data = reinterpret_cast<char*>(configBuffer.Data());
+		char* data = configBuffer.Data();
 		unsigned long size = configBuffer.Count();
 
 		using namespace rapidjson;
@@ -186,7 +184,10 @@ bool ShaderProgram::LoadFromConfiguration(const char* configurationPath)
 
 		if (vsFilePath != nullptr && fsFilePath != nullptr)
 		{
-			if (this->Load(vsFilePath, fsFilePath))
+			Buffer<char> vertexSource = File::ReadText(vsFilePath);
+			Buffer<char> fragmentSource = File::ReadText(fsFilePath);
+
+			if (this->CompileAndLink(vertexSource, fragmentSource))
 			{
 				this->AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
 
@@ -198,11 +199,11 @@ bool ShaderProgram::LoadFromConfiguration(const char* configurationPath)
 	return false;
 }
 
-bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderFilePath)
+bool ShaderProgram::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSource)
 {
 	GLuint vertexShader = 0;
 
-	if (this->CompileShader(ShaderType::Vertex, vertShaderFilePath, vertexShader) == false)
+	if (this->Compile(ShaderType::Vertex, vertexSource, vertexShader) == false)
 	{
 		assert(false);
 		return false;
@@ -210,7 +211,7 @@ bool ShaderProgram::Load(const char* vertShaderFilePath, const char* fragShaderF
 	
 	GLuint fragmentShader = 0;
 
-	if (this->CompileShader(ShaderType::Fragment, fragShaderFilePath, fragmentShader) == false)
+	if (this->Compile(ShaderType::Fragment, fragmentSource, fragmentShader) == false)
 	{
 		// Release already compiled vertex shader
 		glDeleteShader(vertexShader);

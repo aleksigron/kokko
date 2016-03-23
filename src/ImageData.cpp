@@ -7,7 +7,7 @@
 
 bool ImageData::LoadGlraw(const char *filePath)
 {
-	this->dataBuffer = File::Read(filePath);
+	this->dataBuffer = File::ReadBinary(filePath);
 
 	if (this->dataBuffer.IsValid())
 	{
