@@ -28,60 +28,6 @@ void ShaderProgram::SetAllocator(StackAllocator* allocator)
 	this->allocator = allocator;
 }
 
-bool ShaderProgram::Compile(ShaderType type, Buffer<char>& source, GLuint& shaderIdOut)
-{
-	GLenum shaderType = 0;
-	if (type == ShaderType::Vertex)
-		shaderType = GL_VERTEX_SHADER;
-	else if (type == ShaderType::Fragment)
-		shaderType = GL_FRAGMENT_SHADER;
-	else
-		return false;
-
-	if (source.IsValid())
-	{
-		const char* data = source.Data();
-		int length = static_cast<int>(source.Count());
-
-		GLuint shaderId = glCreateShader(shaderType);
-		
-		// Copy shader source to OpenGL
-		glShaderSource(shaderId, 1, &data, &length);
-
-		source.Deallocate();
-
-		glCompileShader(shaderId);
-		
-		// Check compile status
-		GLint compileStatus = GL_FALSE;
-		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
-		
-		if (compileStatus == GL_TRUE)
-		{
-			shaderIdOut = shaderId;
-			return true;
-		}
-		else
-		{
-			// Get info log length
-			GLint infoLogLength = 0;
-			glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
-			
-			if (infoLogLength > 0)
-			{
-				StackAllocation infoLog = allocator->Allocate(infoLogLength + 1);
-				char* infoLogBuffer = reinterpret_cast<char*>(infoLog.data);
-
-				// Print out info log
-				glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLogBuffer);
-				printf("%s\n", infoLogBuffer);
-			}
-		}
-	}
-	
-	return false;
-}
-
 bool ShaderProgram::LoadFromConfiguration(const char* configurationPath)
 {
 	Buffer<char> configBuffer = File::ReadText(configurationPath);
@@ -103,82 +49,41 @@ bool ShaderProgram::LoadFromConfiguration(const char* configurationPath)
 		Document config;
 		config.Parse(data, size);
 
-		Value::ConstMemberIterator itr = config.FindMember("vertexShaderFile");
+		assert(config.HasMember("vertexShaderFile"));
+		assert(config.HasMember("fragmentShaderFile"));
 
-		if (itr != config.MemberEnd())
+		vsFilePath = config["vertexShaderFile"].GetString();
+		fsFilePath = config["fragmentShaderFile"].GetString();
+
+		Value::ConstMemberIterator uniformListItr = config.FindMember("materialUniforms");
+
+		if (uniformListItr != config.MemberEnd())
 		{
-			const Value& v = itr->value;
+			const Value& list = uniformListItr->value;
 
-			if (v.IsString())
+			for (unsigned muIndex = 0, muCount = list.Size(); muIndex < muCount; ++muIndex)
 			{
-				vsFilePath = v.GetString();
-			}
-		}
+				const Value& mu = list[muIndex];
 
-		itr = config.FindMember("fragmentShaderFile");
+				assert(mu.HasMember("name"));
+				assert(mu.HasMember("type"));
 
-		if (itr != config.MemberEnd())
-		{
-			const Value& v = itr->value;
+				const Value& name = mu["name"];
+				uniformNames[uniformCount].str = name.GetString();
+				uniformNames[uniformCount].len = name.GetStringLength();
 
-			if (v.IsString())
-			{
-				fsFilePath = v.GetString();
-			}
-		}
-
-		itr = config.FindMember("materialUniforms");
-
-		if (itr != config.MemberEnd())
-		{
-			const Value& v = itr->value;
-
-			if (v.IsArray())
-			{
-				for (unsigned muIndex = 0, muCount = v.Size(); muIndex < muCount; ++muIndex)
+				const char* typeStr = mu["type"].GetString();
+				for (unsigned typeIndex = 0; typeIndex < ShaderUniform::TypeCount; ++typeIndex)
 				{
-					const Value& mu = v[muIndex];
-
-					if (mu.IsObject())
+					// Check what type of uniform this is
+					if (std::strcmp(typeStr, ShaderUniform::TypeNames[typeIndex]) == 0)
 					{
-						Value::ConstMemberIterator nameItr = mu.FindMember("name");
-
-						if (nameItr != mu.MemberEnd())
-						{
-							const Value& name = nameItr->value;
-
-							if (name.IsString())
-							{
-								uniformNames[uniformCount].str = name.GetString();
-								uniformNames[uniformCount].len = name.GetStringLength();
-							}
-						}
-
-						Value::ConstMemberIterator typeItr = mu.FindMember("type");
-
-						if (typeItr->value.IsString())
-						{
-							const Value& type = typeItr->value;
-
-							if (type.IsString())
-							{
-								const char* typeStr = type.GetString();
-
-								for (unsigned typeIndex = 0; typeIndex < ShaderUniform::TypeCount; ++typeIndex)
-								{
-									// Check what type of uniform this is
-									if (std::strcmp(typeStr, ShaderUniform::TypeNames[typeIndex]) == 0)
-									{
-										uniformTypes[uniformCount] = static_cast<ShaderUniformType>(typeIndex);
-										break;
-									}
-								}
-							}
-						}
+						uniformTypes[uniformCount] = static_cast<ShaderUniformType>(typeIndex);
+						break;
 					}
-
-					++uniformCount;
 				}
+
+				++uniformCount;
 			}
 		}
 
@@ -265,6 +170,60 @@ bool ShaderProgram::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fra
 		assert(false);
 		return false;
 	}
+}
+
+bool ShaderProgram::Compile(ShaderType type, Buffer<char>& source, GLuint& shaderIdOut)
+{
+	GLenum shaderType = 0;
+	if (type == ShaderType::Vertex)
+	shaderType = GL_VERTEX_SHADER;
+	else if (type == ShaderType::Fragment)
+	shaderType = GL_FRAGMENT_SHADER;
+	else
+	return false;
+
+	if (source.IsValid())
+	{
+		const char* data = source.Data();
+		int length = static_cast<int>(source.Count());
+
+		GLuint shaderId = glCreateShader(shaderType);
+
+		// Copy shader source to OpenGL
+		glShaderSource(shaderId, 1, &data, &length);
+
+		source.Deallocate();
+
+		glCompileShader(shaderId);
+
+		// Check compile status
+		GLint compileStatus = GL_FALSE;
+		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
+
+		if (compileStatus == GL_TRUE)
+		{
+			shaderIdOut = shaderId;
+			return true;
+		}
+		else
+		{
+			// Get info log length
+			GLint infoLogLength = 0;
+			glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+			if (infoLogLength > 0)
+			{
+				StackAllocation infoLog = allocator->Allocate(infoLogLength + 1);
+				char* infoLogBuffer = reinterpret_cast<char*>(infoLog.data);
+
+				// Print out info log
+				glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLogBuffer);
+				printf("%s\n", infoLogBuffer);
+			}
+		}
+	}
+
+	return false;
 }
 
 void ShaderProgram::AddMaterialUniforms(unsigned int count,
