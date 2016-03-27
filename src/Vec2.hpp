@@ -9,6 +9,12 @@ struct Vec2
 	
 	inline Vec2(): x(0), y(0) {}
 	inline Vec2(T x, T y): x(x), y(y) {}
+
+	inline T* ValuePointer() { return &x; }
+	inline const T* ValuePointer() const { return &x; }
+
+	inline T& operator[](std::size_t index) { return (&x)[index]; }
+	inline const T& operator[](std::size_t index) const { return (&x)[index]; }
 	
 	// Normalize the vector
 	inline void Normalize()

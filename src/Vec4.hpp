@@ -11,6 +11,12 @@ struct Vec4
 	inline Vec4(const Vec3<T>& xyz, T w): x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
 	inline Vec4(T x, T y, T z, T w): x(x), y(y), z(z), w(w) {}
 
+	inline T* ValuePointer() { return &x; }
+	inline const T* ValuePointer() const { return &x; }
+
+	inline T& operator[](std::size_t index) { return (&x)[index]; }
+	inline const T& operator[](std::size_t index) const { return (&x)[index]; }
+
 	inline Vec3<T> xyz() const { return Vec3<T>(x, y, z); }
 };
 

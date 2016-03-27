@@ -9,6 +9,12 @@ struct Vec3
 	
 	inline Vec3(): x(0), y(0), z(0) {}
 	inline Vec3(T x, T y, T z): x(x), y(y), z(z) {}
+
+	inline T* ValuePointer() { return &x; }
+	inline const T* ValuePointer() const { return &x; }
+
+	inline T& operator[](std::size_t index) { return (&x)[index]; }
+	inline const T& operator[](std::size_t index) const { return (&x)[index]; }
 	
 	// Normalize the vector
 	inline void Normalize()
