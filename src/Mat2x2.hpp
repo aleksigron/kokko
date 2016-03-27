@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vec2.h"
+#include "Vec2.hpp"
 
 struct Mat2x2f
 {
@@ -38,7 +38,7 @@ struct Mat2x2f
 
 inline Vec2f operator*(const Mat2x2f& m, const Vec2f& v)
 {
-	return Vec3f(m[0] * v.x + m[2] * v.y,
+	return Vec2f(m[0] * v.x + m[2] * v.y,
 				 m[1] * v.x + m[3] * v.y);
 }
 
