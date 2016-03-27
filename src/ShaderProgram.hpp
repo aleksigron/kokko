@@ -1,9 +1,10 @@
 #pragma once
 
-#include "ObjectId.hpp"
-#include "Buffer.hpp"
-#include "StringRef.hpp"
+#include <cstdint>
 
+#include "Buffer.hpp"
+
+struct StringRef;
 class StackAllocator;
 
 enum class ShaderUniformType
@@ -20,10 +21,12 @@ enum class ShaderUniformType
 struct ShaderUniform
 {
 	int location;
+	uint32_t nameHash;
 	ShaderUniformType type;
 
 	static const unsigned int TypeCount = 7;
 	static const char* const TypeNames[TypeCount];
+	static const unsigned int TypeSizes[TypeCount];
 };
 
 struct ShaderProgram
@@ -40,13 +43,15 @@ private:
 	StackAllocator* allocator;
 
 public:
-	ObjectId id;
+	uint32_t nameHash;
 
 	unsigned int driverId;
+
 	int uniformMVP;
 	int uniformMV;
 
 	static const unsigned MaxMaterialUniforms = 8;
+
 	unsigned int materialUniformCount;
 	ShaderUniform materialUniforms[MaxMaterialUniforms];
 
@@ -58,5 +63,5 @@ public:
 	
 	bool CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSource);
 	
-	bool LoadFromConfiguration(const char* configurationPath);
+	bool LoadFromConfiguration(Buffer<char>& configuration);
 };

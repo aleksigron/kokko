@@ -88,17 +88,17 @@ void Renderer::Render(Scene& scene)
 				RenderObject& obj = o[arrayIndex];
 
 				Mesh& mesh = res->meshes.Get(obj.mesh);
-				Material& material = res->materials.Get(obj.material);
-				ShaderProgram& shader = res->shaders.Get(material.shader);
+				Material* material = res->GetMaterial(obj.materialId);
+				ShaderProgram* shader = res->GetShader(material->shaderId);
 
-				glUseProgram(shader.driverId);
+				glUseProgram(shader->driverId);
 
 				// Bind each material uniform with a value
-				for (unsigned uIndex = 0; uIndex < material.uniformCount; ++uIndex)
+				for (unsigned uIndex = 0; uIndex < material->uniformCount; ++uIndex)
 				{
-					ShaderMaterialUniform& u = material.uniforms[uIndex];
+					ShaderMaterialUniform& u = material->uniforms[uIndex];
 
-					unsigned char* uData = material.uniformData + u.dataOffset;
+					unsigned char* uData = material->uniformData + u.dataOffset;
 
 					switch (u.type)
 					{
@@ -137,16 +137,16 @@ void Renderer::Render(Scene& scene)
 
 				Mat4x4f modelMatrix = scene.GetWorldTransformMatrix(obj.sceneObjectId);
 
-				if (shader.uniformMVP >= 0)
+				if (shader->uniformMVP >= 0)
 				{
 					Mat4x4f mvp = viewProjection * modelMatrix;
-					glUniformMatrix4fv(shader.uniformMVP, 1, GL_FALSE, mvp.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMVP, 1, GL_FALSE, mvp.ValuePointer());
 				}
 
-				if (shader.uniformMV >= 0)
+				if (shader->uniformMV >= 0)
 				{
 					Mat4x4f mv = viewMatrix * modelMatrix;
-					glUniformMatrix4fv(shader.uniformMV, 1, GL_FALSE, mv.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMV, 1, GL_FALSE, mv.ValuePointer());
 				}
 
 				glBindVertexArray(mesh.vertexArrayObject);

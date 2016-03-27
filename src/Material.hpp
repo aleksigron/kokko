@@ -2,8 +2,9 @@
 
 #include <cstdint>
 
-#include "ObjectId.hpp"
 #include "ShaderProgram.hpp"
+
+class ResourceManager;
 
 struct ShaderMaterialUniform : ShaderUniform
 {
@@ -12,28 +13,44 @@ struct ShaderMaterialUniform : ShaderUniform
 
 struct Material
 {
-	ObjectId id;
+	uint32_t nameHash;
 
-	ObjectId shader;
+	unsigned int shaderId;
 
-	static const unsigned int MaxUniformCount = 8;
 	unsigned int uniformCount = 0;
-	ShaderMaterialUniform uniforms[MaxUniformCount];
+	ShaderMaterialUniform uniforms[ShaderProgram::MaxMaterialUniforms];
+	uint32_t uniformNameHashes[ShaderProgram::MaxMaterialUniforms];
 
 	unsigned int usedUniformData = 0;
 	unsigned char* uniformData = nullptr;
 
-	void SetShader(const ShaderProgram& shader);
+	void SetShader(const ShaderProgram* shader);
 
 	template <typename T>
-	void SetUniformValue(unsigned int uniformIndex, const T& value)
+	void SetUniformValueByIndex(unsigned int uniformIndex, const T& value)
 	{
-		if (uniformIndex < uniformCount && uniformData != nullptr)
-		{
-			unsigned char* data = uniformData + uniforms[uniformIndex].dataOffset;
+		unsigned char* data = uniformData + uniforms[uniformIndex].dataOffset;
 
-			T* uniform = reinterpret_cast<T*>(data);
-			*uniform = value;
+		T* uniform = reinterpret_cast<T*>(data);
+		*uniform = value;
+	}
+
+	template <typename T>
+	void SetUniformValueByHash(uint32_t uniformNameHash, const T& value)
+	{
+		for (unsigned i = 0; i < uniformCount; ++i)
+		{
+			if (uniformNameHashes[i] == uniformNameHash)
+			{
+				unsigned char* data = uniformData + uniforms[i].dataOffset;
+
+				T* uniform = reinterpret_cast<T*>(data);
+				*uniform = value;
+
+				break;
+			}
 		}
 	}
+
+	bool LoadFromConfiguration(Buffer<char>& configuration, ResourceManager* res);
 };

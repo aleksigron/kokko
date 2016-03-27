@@ -8,7 +8,6 @@
 #include "ResourceManager.hpp"
 #include "CameraController.hpp"
 #include "Scene.hpp"
-#include "StackAllocator.hpp"
 
 class App
 {
@@ -23,8 +22,6 @@ private:
 	ResourceManager resourceManager;
 	CameraController cameraController;
 	Scene scene;
-
-	StackAllocator stackAllocator;
 	
 public:
 	App();
@@ -46,7 +43,4 @@ public:
 
 	inline static ResourceManager* GetResourceManager()
 	{ return &(App::instance->resourceManager); }
-
-	inline static StackAllocator* GetStackAllocator()
-	{ return &(App::instance->stackAllocator); }
 };

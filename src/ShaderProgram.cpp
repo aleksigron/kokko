@@ -10,6 +10,8 @@
 #include <cassert>
 
 #include "File.hpp"
+#include "Hash.hpp"
+#include "StringRef.hpp"
 #include "StackAllocator.hpp"
 
 const char* const ShaderUniform::TypeNames[] =
@@ -23,81 +25,86 @@ const char* const ShaderUniform::TypeNames[] =
 	"int"
 };
 
+const unsigned int ShaderUniform::TypeSizes[] = {
+	4, // Texture2D
+	64, // Mat4x4
+	16, // Vec4
+	12, // Vec3
+	8, // Vec2
+	4, // Float
+	4 // Int
+};
+
 void ShaderProgram::SetAllocator(StackAllocator* allocator)
 {
 	this->allocator = allocator;
 }
 
-bool ShaderProgram::LoadFromConfiguration(const char* configurationPath)
+bool ShaderProgram::LoadFromConfiguration(Buffer<char>& configuration)
 {
-	Buffer<char> configBuffer = File::ReadText(configurationPath);
+	const char* vsFilePath = nullptr;
+	const char* fsFilePath = nullptr;
 
-	if (configBuffer.IsValid())
+	StringRef uniformNames[ShaderProgram::MaxMaterialUniforms];
+	ShaderUniformType uniformTypes[ShaderProgram::MaxMaterialUniforms];
+	unsigned int uniformCount = 0;
+
+	char* data = configuration.Data();
+	unsigned long size = configuration.Count();
+
+	using namespace rapidjson;
+
+	Document config;
+	config.Parse(data, size);
+
+	assert(config.HasMember("vertexShaderFile"));
+	assert(config.HasMember("fragmentShaderFile"));
+
+	vsFilePath = config["vertexShaderFile"].GetString();
+	fsFilePath = config["fragmentShaderFile"].GetString();
+
+	Value::ConstMemberIterator uniformListItr = config.FindMember("materialUniforms");
+
+	if (uniformListItr != config.MemberEnd())
 	{
-		const char* vsFilePath = nullptr;
-		const char* fsFilePath = nullptr;
+		const Value& list = uniformListItr->value;
 
-		StringRef uniformNames[ShaderProgram::MaxMaterialUniforms];
-		ShaderUniformType uniformTypes[ShaderProgram::MaxMaterialUniforms];
-		unsigned int uniformCount = 0;
-
-		char* data = configBuffer.Data();
-		unsigned long size = configBuffer.Count();
-
-		using namespace rapidjson;
-
-		Document config;
-		config.Parse(data, size);
-
-		assert(config.HasMember("vertexShaderFile"));
-		assert(config.HasMember("fragmentShaderFile"));
-
-		vsFilePath = config["vertexShaderFile"].GetString();
-		fsFilePath = config["fragmentShaderFile"].GetString();
-
-		Value::ConstMemberIterator uniformListItr = config.FindMember("materialUniforms");
-
-		if (uniformListItr != config.MemberEnd())
+		for (unsigned muIndex = 0, muCount = list.Size(); muIndex < muCount; ++muIndex)
 		{
-			const Value& list = uniformListItr->value;
+			const Value& mu = list[muIndex];
 
-			for (unsigned muIndex = 0, muCount = list.Size(); muIndex < muCount; ++muIndex)
+			assert(mu.HasMember("name"));
+			assert(mu.HasMember("type"));
+
+			const Value& name = mu["name"];
+			uniformNames[uniformCount].str = name.GetString();
+			uniformNames[uniformCount].len = name.GetStringLength();
+
+			const char* typeStr = mu["type"].GetString();
+			for (unsigned typeIndex = 0; typeIndex < ShaderUniform::TypeCount; ++typeIndex)
 			{
-				const Value& mu = list[muIndex];
-
-				assert(mu.HasMember("name"));
-				assert(mu.HasMember("type"));
-
-				const Value& name = mu["name"];
-				uniformNames[uniformCount].str = name.GetString();
-				uniformNames[uniformCount].len = name.GetStringLength();
-
-				const char* typeStr = mu["type"].GetString();
-				for (unsigned typeIndex = 0; typeIndex < ShaderUniform::TypeCount; ++typeIndex)
+				// Check what type of uniform this is
+				if (std::strcmp(typeStr, ShaderUniform::TypeNames[typeIndex]) == 0)
 				{
-					// Check what type of uniform this is
-					if (std::strcmp(typeStr, ShaderUniform::TypeNames[typeIndex]) == 0)
-					{
-						uniformTypes[uniformCount] = static_cast<ShaderUniformType>(typeIndex);
-						break;
-					}
+					uniformTypes[uniformCount] = static_cast<ShaderUniformType>(typeIndex);
+					break;
 				}
-
-				++uniformCount;
 			}
+
+			++uniformCount;
 		}
+	}
 
-		if (vsFilePath != nullptr && fsFilePath != nullptr)
+	if (vsFilePath != nullptr && fsFilePath != nullptr)
+	{
+		Buffer<char> vertexSource = File::ReadText(vsFilePath);
+		Buffer<char> fragmentSource = File::ReadText(fsFilePath);
+
+		if (this->CompileAndLink(vertexSource, fragmentSource))
 		{
-			Buffer<char> vertexSource = File::ReadText(vsFilePath);
-			Buffer<char> fragmentSource = File::ReadText(fsFilePath);
+			this->AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
 
-			if (this->CompileAndLink(vertexSource, fragmentSource))
-			{
-				this->AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
-
-				return true;
-			}
+			return true;
 		}
 	}
 
@@ -244,10 +251,16 @@ void ShaderProgram::AddMaterialUniforms(unsigned int count,
 		buffer[name->len] = '\0'; // Null-terminate
 
 		ShaderUniform& uniform = this->materialUniforms[uIndex];
-		uniform.type = types[uIndex];
+
+		// Get the uniform location from OpenGL
 		uniform.location = glGetUniformLocation(driverId, buffer);
 
-		// The uniform could be found
+		// Compute uniform name hash
+		uniform.nameHash = Hash::FNV1a_32(name->str, name->len);
+
+		uniform.type = types[uIndex];
+
+		// Make sure the uniform was found
 		assert(uniform.location >= 0);
 	}
 }

@@ -2,7 +2,8 @@
 
 #include "ImageData.hpp"
 #include "MeshLoader.hpp"
-#include "MemoryAmount.hpp"
+
+#include "Material.hpp"
 
 #include <cstdio>
 
@@ -16,7 +17,7 @@ static void OnGlfwError(int errorCode, const char* description)
 
 App* App::instance = nullptr;
 
-App::App() : stackAllocator(32_MB, 256_kB)
+App::App()
 {
 	App::instance = this;
 }
@@ -43,23 +44,16 @@ bool App::Initialize()
 		Mesh& tableMesh = this->resourceManager.meshes.Get(tableMeshId);
 		MeshLoader::LoadMesh("res/models/small_table.mesh", tableMesh);
 
-		// Shader & material
+		// Material
 
-		ObjectId colShaderId = resourceManager.shaders.Add();
-		ShaderProgram& colShader = resourceManager.shaders.Get(colShaderId);
-		colShader.SetAllocator(&this->stackAllocator);
-		colShader.LoadFromConfiguration("res/shaders/lighting.shader.json");
-
-		ObjectId colorMaterialId = resourceManager.materials.Add();
-		Material& colorMaterial = resourceManager.materials.Get(colorMaterialId);
-		colorMaterial.SetShader(colShader);
+		Material* diffuseMat = resourceManager.GetMaterial("res/materials/diffuse_gray.material.json");
 
 		// Objects
 
 		SceneObjectId tableSceneObj = scene.AddSceneObject();
 		RenderObject& tableRenderObj = renderer.GetRenderObject(renderer.AddRenderObject());
 		tableRenderObj.mesh = tableMeshId;
-		tableRenderObj.material = colorMaterialId;
+		tableRenderObj.materialId = diffuseMat->nameHash;
 		tableRenderObj.sceneObjectId = tableSceneObj;
 
 		this->mainCamera.transform.position = Vec3f(0.0f, 0.3f, 1.5f);
