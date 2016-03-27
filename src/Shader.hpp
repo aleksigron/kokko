@@ -47,8 +47,10 @@ public:
 
 	unsigned int driverId;
 
-	int uniformMVP;
-	int uniformMV;
+	int uniformMatMVP;
+	int uniformMatMV;
+	int uniformMatM;
+	int uniformMatV;
 
 	static const unsigned MaxMaterialUniforms = 8;
 

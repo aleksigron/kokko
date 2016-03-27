@@ -137,16 +137,26 @@ void Renderer::Render(Scene& scene)
 
 				Mat4x4f modelMatrix = scene.GetWorldTransformMatrix(obj.sceneObjectId);
 
-				if (shader->uniformMVP >= 0)
+				if (shader->uniformMatMVP >= 0)
 				{
 					Mat4x4f mvp = viewProjection * modelMatrix;
-					glUniformMatrix4fv(shader->uniformMVP, 1, GL_FALSE, mvp.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
 				}
 
-				if (shader->uniformMV >= 0)
+				if (shader->uniformMatMV >= 0)
 				{
 					Mat4x4f mv = viewMatrix * modelMatrix;
-					glUniformMatrix4fv(shader->uniformMV, 1, GL_FALSE, mv.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
+				}
+
+				if (shader->uniformMatM >= 0)
+				{
+					glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
+				}
+
+				if (shader->uniformMatMV >= 0)
+				{
+					glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
 				}
 
 				glBindVertexArray(mesh.vertexArrayObject);
