@@ -4,16 +4,18 @@ in vec3 fs_w_norm;
 
 out vec3 color;
 
+uniform mat4x4 _V;
+
 uniform vec3 base_color;
 
 void main()
 {
-	vec3 light_0_dir = vec3(0.577, 0.577, 0.577);
+	vec3 light_0_dir = (_V * vec4(0.577, 0.577, 0.577, 0.0)).xyz;
 	vec3 light_0_col = vec3(1.0, 1.0, 1.0);
 	float intensity_0 = clamp(dot(fs_w_norm, light_0_dir), 0.0, 1.0);
 
-	vec3 light_1_dir = vec3(-0.577, -0.577, -0.577);
-	vec3 light_1_col = vec3(0.45, 0.45, 0.5);
+	vec3 light_1_dir = (_V * vec4(-0.577, 0.577, -0.577, 0.0)).xyz;
+	vec3 light_1_col = vec3(0.45, 0.45, 0.55);
 	float intensity_1 = clamp(dot(fs_w_norm, light_1_dir), 0.0, 1.0);
 
 	vec3 lit_color = light_0_col * intensity_0 + light_1_col * intensity_1;
