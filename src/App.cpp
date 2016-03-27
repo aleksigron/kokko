@@ -44,17 +44,28 @@ bool App::Initialize()
 		Mesh& tableMesh = this->resourceManager.meshes.Get(tableMeshId);
 		MeshLoader::LoadMesh("res/models/small_table.mesh", tableMesh);
 
-		// Material
+		ObjectId groundMeshId = this->resourceManager.meshes.Add();
+		Mesh& groundMesh = this->resourceManager.meshes.Get(groundMeshId);
+		MeshLoader::LoadMesh("res/models/ground_plane.mesh", groundMesh);
 
-		Material* diffuseMat = resourceManager.GetMaterial("res/materials/diffuse_gray.material.json");
+		// Materials
+
+		Material* diffuseGray = resourceManager.GetMaterial("res/materials/diffuse_gray.material.json");
+		Material* diffuseRed = resourceManager.GetMaterial("res/materials/diffuse_red.material.json");
 
 		// Objects
 
 		SceneObjectId tableSceneObj = scene.AddSceneObject();
 		RenderObject& tableRenderObj = renderer.GetRenderObject(renderer.AddRenderObject());
 		tableRenderObj.mesh = tableMeshId;
-		tableRenderObj.materialId = diffuseMat->nameHash;
+		tableRenderObj.materialId = diffuseRed->nameHash;
 		tableRenderObj.sceneObjectId = tableSceneObj;
+
+		SceneObjectId groundSceneObj = scene.AddSceneObject();
+		RenderObject& groundRenderObj = renderer.GetRenderObject(renderer.AddRenderObject());
+		groundRenderObj.mesh = groundMeshId;
+		groundRenderObj.materialId = diffuseGray->nameHash;
+		groundRenderObj.sceneObjectId = groundSceneObj;
 
 		this->mainCamera.transform.position = Vec3f(0.0f, 0.3f, 1.5f);
 		this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
