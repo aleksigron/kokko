@@ -29,7 +29,7 @@ struct ShaderUniform
 	static const unsigned int TypeSizes[TypeCount];
 };
 
-struct ShaderProgram
+struct Shader
 {
 private:
 	enum class ShaderType

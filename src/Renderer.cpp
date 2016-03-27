@@ -89,7 +89,7 @@ void Renderer::Render(Scene& scene)
 
 				Mesh& mesh = res->meshes.Get(obj.mesh);
 				Material* material = res->GetMaterial(obj.materialId);
-				ShaderProgram* shader = res->GetShader(material->shaderId);
+				Shader* shader = res->GetShader(material->shaderId);
 
 				glUseProgram(shader->driverId);
 

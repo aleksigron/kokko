@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include "ShaderProgram.hpp"
+#include "Shader.hpp"
 #include "Material.hpp"
 
 #include "MemoryAmount.hpp"
@@ -18,7 +18,7 @@ ResourceManager::~ResourceManager()
 {
 	
 }
-ShaderProgram* ResourceManager::GetShader(uint32_t hash) const
+Shader* ResourceManager::GetShader(uint32_t hash) const
 {
 	for (unsigned int i = 0; i < shaderCount; ++i)
 	{
@@ -31,20 +31,20 @@ ShaderProgram* ResourceManager::GetShader(uint32_t hash) const
 	return nullptr;
 }
 
-ShaderProgram* ResourceManager::GetShader(const char* path)
+Shader* ResourceManager::GetShader(const char* path)
 {
 	size_t shaderNameLen = std::strlen(path);
 	uint32_t shaderNameHash = Hash::FNV1a_32(path, shaderNameLen);
 
 	// Try to find the shader using shader path hash
-	ShaderProgram* result = this->GetShader(shaderNameHash);
+	Shader* result = this->GetShader(shaderNameHash);
 
 	if (result == nullptr)
 	{
 		if (shaderCount == shaderAllocated)
 		{
 			unsigned int newAllocatedCount = (shaderAllocated > 0) ? shaderAllocated * 2 : 32;
-			ShaderProgram* newShaders = new ShaderProgram[newAllocatedCount];
+			Shader* newShaders = new Shader[newAllocatedCount];
 
 			for (unsigned int i = 0; i < shaderCount; ++i)
 			{
@@ -56,7 +56,7 @@ ShaderProgram* ResourceManager::GetShader(const char* path)
 			shaderAllocated = newAllocatedCount;
 		}
 
-		ShaderProgram& shader = shaders[shaderCount];
+		Shader& shader = shaders[shaderCount];
 		shader.SetAllocator(&stackAllocator);
 
 		if (this->LoadShader(shader, path))
@@ -72,7 +72,7 @@ ShaderProgram* ResourceManager::GetShader(const char* path)
 	return result;
 }
 
-bool ResourceManager::LoadShader(ShaderProgram& shader, const char* configPath)
+bool ResourceManager::LoadShader(Shader& shader, const char* configPath)
 {
 	Buffer<char> configuration = File::ReadText(configPath);
 

@@ -1,4 +1,4 @@
-#include "ShaderProgram.hpp"
+#include "Shader.hpp"
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
@@ -35,18 +35,18 @@ const unsigned int ShaderUniform::TypeSizes[] = {
 	4 // Int
 };
 
-void ShaderProgram::SetAllocator(StackAllocator* allocator)
+void Shader::SetAllocator(StackAllocator* allocator)
 {
 	this->allocator = allocator;
 }
 
-bool ShaderProgram::LoadFromConfiguration(Buffer<char>& configuration)
+bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 {
 	const char* vsFilePath = nullptr;
 	const char* fsFilePath = nullptr;
 
-	StringRef uniformNames[ShaderProgram::MaxMaterialUniforms];
-	ShaderUniformType uniformTypes[ShaderProgram::MaxMaterialUniforms];
+	StringRef uniformNames[Shader::MaxMaterialUniforms];
+	ShaderUniformType uniformTypes[Shader::MaxMaterialUniforms];
 	unsigned int uniformCount = 0;
 
 	char* data = configuration.Data();
@@ -111,7 +111,7 @@ bool ShaderProgram::LoadFromConfiguration(Buffer<char>& configuration)
 	return false;
 }
 
-bool ShaderProgram::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSource)
+bool Shader::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSource)
 {
 	GLuint vertexShader = 0;
 
@@ -179,7 +179,7 @@ bool ShaderProgram::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fra
 	}
 }
 
-bool ShaderProgram::Compile(ShaderType type, Buffer<char>& source, GLuint& shaderIdOut)
+bool Shader::Compile(ShaderType type, Buffer<char>& source, GLuint& shaderIdOut)
 {
 	GLenum shaderType = 0;
 	if (type == ShaderType::Vertex)
@@ -233,7 +233,7 @@ bool ShaderProgram::Compile(ShaderType type, Buffer<char>& source, GLuint& shade
 	return false;
 }
 
-void ShaderProgram::AddMaterialUniforms(unsigned int count,
+void Shader::AddMaterialUniforms(unsigned int count,
 										const ShaderUniformType* types,
 										const StringRef* names)
 {

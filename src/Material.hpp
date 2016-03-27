@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "ShaderProgram.hpp"
+#include "Shader.hpp"
 
 class ResourceManager;
 
@@ -18,13 +18,13 @@ struct Material
 	unsigned int shaderId;
 
 	unsigned int uniformCount = 0;
-	ShaderMaterialUniform uniforms[ShaderProgram::MaxMaterialUniforms];
-	uint32_t uniformNameHashes[ShaderProgram::MaxMaterialUniforms];
+	ShaderMaterialUniform uniforms[Shader::MaxMaterialUniforms];
+	uint32_t uniformNameHashes[Shader::MaxMaterialUniforms];
 
 	unsigned int usedUniformData = 0;
 	unsigned char* uniformData = nullptr;
 
-	void SetShader(const ShaderProgram* shader);
+	void SetShader(const Shader* shader);
 
 	template <typename T>
 	void SetUniformValueByIndex(unsigned int uniformIndex, const T& value)

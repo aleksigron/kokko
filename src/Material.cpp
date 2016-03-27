@@ -3,14 +3,14 @@
 #include "rapidjson/document.h"
 
 #include "ResourceManager.hpp"
-#include "ShaderProgram.hpp"
+#include "Shader.hpp"
 #include "StringRef.hpp"
 #include "File.hpp"
 #include "Hash.hpp"
 
 #include "ValueSerialization.hpp"
 
-void Material::SetShader(const ShaderProgram* shader)
+void Material::SetShader(const Shader* shader)
 {
 	if (this->uniformData != nullptr) // Release old uniform data
 	{
@@ -56,7 +56,7 @@ bool Material::LoadFromConfiguration(Buffer<char>& configuration, ResourceManage
 	assert(config.HasMember("shader"));
 
 	const char* shaderName = config["shader"].GetString();
-	ShaderProgram* shader = res->GetShader(shaderName);
+	Shader* shader = res->GetShader(shaderName);
 
 	if (shader != nullptr)
 	{
