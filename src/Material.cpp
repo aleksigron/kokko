@@ -81,7 +81,7 @@ bool Material::LoadFromConfiguration(Buffer<char>& configuration, ResourceManage
 				const char* varNameStr = varName.GetString();
 				unsigned int varNameStrLen = varName.GetStringLength();
 
-				int variableIndex = -1;
+				int varIndex = -1;
 				uint32_t varNameHash = Hash::FNV1a_32(varNameStr, varNameStrLen);
 
 				// Find the index at which there's a variable with the same name
@@ -89,26 +89,51 @@ bool Material::LoadFromConfiguration(Buffer<char>& configuration, ResourceManage
 				{
 					if (shader->materialUniforms[j].nameHash == varNameHash)
 					{
-						variableIndex = j;
+						varIndex = j;
 						break;
 					}
 				}
 
 				// The variable was found
-				if (variableIndex >= 0)
+				if (varIndex >= 0)
 				{
 					// Now let's try to read the value
 
-					ShaderMaterialUniform& u = uniforms[variableIndex];
+					ShaderUniformType type = uniforms[varIndex].type;
 
 					const Value& varVal = var["value"];
 
-					switch (u.type)
+					using namespace ValueSerialization;
+
+					switch (type)
 					{
-					case ShaderUniformType::Vec3:
-						Vec3f v3 = ValueSerialization::Deserialize_Vec3f(varVal);
-						this->SetUniformValueByIndex(variableIndex, v3);
-						break;
+						case ShaderUniformType::Vec4:
+							this->SetUniformValueByIndex(varIndex, Deserialize_Vec4f(varVal));
+							break;
+
+						case ShaderUniformType::Vec2:
+							this->SetUniformValueByIndex(varIndex, Deserialize_Vec2f(varVal));
+							break;
+
+						case ShaderUniformType::Vec3:
+							this->SetUniformValueByIndex(varIndex, Deserialize_Vec3f(varVal));
+							break;
+
+						case ShaderUniformType::Float:
+							this->SetUniformValueByIndex(varIndex, Deserialize_Float(varVal));
+							break;
+
+						case ShaderUniformType::Int:
+							this->SetUniformValueByIndex(varIndex, Deserialize_Int(varVal));
+							break;
+
+						case ShaderUniformType::Mat4x4:
+							this->SetUniformValueByIndex(varIndex, Deserialize_Mat4x4f(varVal));
+							break;
+
+						case ShaderUniformType::Tex2D:
+							// TODO: Figure out how to set texture handles for materials
+							break;
 					}
 				}
 			}
