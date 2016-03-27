@@ -28,8 +28,22 @@ void CameraController::Update()
 	{
 		Vec2f movement = pi->GetCursorMovement() * 0.004f;
 
-		ct.rotation = Mat3x3f::RotateAroundAxis(ct.Right(), -movement.y) *
-		Mat3x3f::RotateAroundAxis(ct.Up(), -movement.x) * ct.rotation;
+		cameraYaw += movement.x;
+
+		if (cameraYaw < -180.0f)
+			cameraYaw += 360.0f;
+		else if (cameraYaw >= 180.0f)
+			cameraYaw -= 360.0f;
+
+		cameraPitch += movement.y;
+
+		if (cameraPitch < -80.0f)
+			cameraPitch = -80.0f;
+		else if (cameraPitch > 80.0f)
+			cameraPitch = 80.0f;
+
+		ct.rotation = Mat3x3f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), -cameraYaw) *
+		Mat3x3f::RotateAroundAxis(Vec3f(1.0f, 0.0f, 0.0f), -cameraPitch);
 	}
 	else
 	{

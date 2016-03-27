@@ -11,6 +11,9 @@ class CameraController
 private:
 	Camera* controlledCamera = nullptr;
 
+	float cameraYaw = 0.0f;
+	float cameraPitch = 0.0f;
+
 	Vec3f cameraVelocity;
 	float cameraMaximumSpeed = 3.0f;
 
