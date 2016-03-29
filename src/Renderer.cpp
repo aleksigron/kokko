@@ -154,7 +154,7 @@ void Renderer::Render(Scene& scene)
 					glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
 				}
 
-				if (shader->uniformMatMV >= 0)
+				if (shader->uniformMatV >= 0)
 				{
 					glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
 				}
