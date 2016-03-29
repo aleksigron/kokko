@@ -19,8 +19,8 @@ struct BoundingBox
 
 		BoundingBox result;
 
-		result.center = (Vec4f(this->center, 1.0f) * m).xyz();
-		result.extents = (Vec4f(this->extents, 0.0f) * absm).xyz();
+		result.center = (m * Vec4f(this->center, 1.0f)).xyz();
+		result.extents = (absm * Vec4f(this->extents, 0.0f)).xyz();
 
 		return result;
 	}
