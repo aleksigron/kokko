@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		454ADD261CAB00740060443D /* FrustumCulling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454ADD241CAB00740060443D /* FrustumCulling.cpp */; };
 		45A0052D1C933F43002D6134 /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004E71C933F43002D6134 /* App.cpp */; };
 		45A0052E1C933F43002D6134 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004EB1C933F43002D6134 /* Camera.cpp */; };
 		45A0052F1C933F43002D6134 /* CameraController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004ED1C933F43002D6134 /* CameraController.cpp */; };
@@ -54,6 +55,8 @@
 /* Begin PBXFileReference section */
 		454102E61C93473100D2841F /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../res; sourceTree = "<group>"; };
 		454102E71C93476E00D2841F /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = ../include; sourceTree = "<group>"; };
+		454ADD241CAB00740060443D /* FrustumCulling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FrustumCulling.cpp; path = ../src/FrustumCulling.cpp; sourceTree = "<group>"; };
+		454ADD251CAB00740060443D /* FrustumCulling.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = FrustumCulling.hpp; path = ../src/FrustumCulling.hpp; sourceTree = "<group>"; };
 		45A004E71C933F43002D6134 /* App.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = App.cpp; path = ../src/App.cpp; sourceTree = "<group>"; };
 		45A004E81C933F43002D6134 /* App.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = App.hpp; path = ../src/App.hpp; sourceTree = "<group>"; };
 		45A004E91C933F43002D6134 /* BoundingBox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BoundingBox.hpp; path = ../src/BoundingBox.hpp; sourceTree = "<group>"; };
@@ -236,6 +239,8 @@
 				45A0051E1C933F43002D6134 /* Texture.hpp */,
 				45A005251C933F43002D6134 /* VertexFormat.cpp */,
 				45A005261C933F43002D6134 /* VertexFormat.hpp */,
+				454ADD241CAB00740060443D /* FrustumCulling.cpp */,
+				454ADD251CAB00740060443D /* FrustumCulling.hpp */,
 			);
 			name = Rendering;
 			sourceTree = "<group>";
@@ -363,6 +368,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				45A0052E1C933F43002D6134 /* Camera.cpp in Sources */,
+				454ADD261CAB00740060443D /* FrustumCulling.cpp in Sources */,
 				45A0053C1C933F43002D6134 /* Shader.cpp in Sources */,
 				45A005381C933F43002D6134 /* MeshLoader.cpp in Sources */,
 				45A005341C933F43002D6134 /* KeyboardInput.cpp in Sources */,
