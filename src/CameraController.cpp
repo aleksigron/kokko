@@ -26,7 +26,7 @@ void CameraController::Update()
 
 	if (mouseLookEnable)
 	{
-		Vec2f movement = pi->GetCursorMovement() * 0.004f;
+		Vec2f movement = pi->GetCursorMovement() * 0.003f;
 
 		cameraYaw += movement.x;
 
@@ -54,7 +54,7 @@ void CameraController::Update()
 
 		if (mouseGrabActive)
 		{
-			Vec2f movement = pi->GetCursorMovement() * 0.02f;
+			Vec2f movement = pi->GetCursorMovement() * 0.015f;
 			ct.position += ct.Right() * -movement.x + ct.Up() * movement.y;
 		}
 	}

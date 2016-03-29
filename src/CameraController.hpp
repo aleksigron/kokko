@@ -15,7 +15,7 @@ private:
 	float cameraPitch = 0.0f;
 
 	Vec3f cameraVelocity;
-	float cameraMaximumSpeed = 3.0f;
+	float cameraMaximumSpeed = 2.0f;
 
 	bool mouseLookEnable = false;
 	bool mouseGrabActive = false;
