@@ -9,8 +9,8 @@ void Texture::Upload(const ImageData& image)
 {
 	textureSize = image.imageSize;
 
-	glGenTextures(1, &textureGlId);
-	glBindTexture(GL_TEXTURE_2D, textureGlId);
+	glGenTextures(1, &driverId);
+	glBindTexture(GL_TEXTURE_2D, driverId);
 
 	if (image.compressed)
 	{
@@ -29,6 +29,7 @@ void Texture::Upload(const ImageData& image)
 
 	// Set filter
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	// Unbind texture
 	glBindTexture(GL_TEXTURE_2D, 0);

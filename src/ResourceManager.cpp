@@ -4,6 +4,8 @@
 
 #include "Shader.hpp"
 #include "Material.hpp"
+#include "Texture.hpp"
+#include "ImageData.hpp"
 
 #include "MemoryAmount.hpp"
 #include "File.hpp"
@@ -81,7 +83,7 @@ bool ResourceManager::LoadShader(Shader& shader, const char* configPath)
 
 Material* ResourceManager::GetMaterial(uint32_t hash) const
 {
-	// Try to find the shader using shader path hash
+	// Try to find the material using material path hash
 	for (unsigned int i = 0; i < materialCount; ++i)
 	{
 		if (materials[i].nameHash == hash)
@@ -138,4 +140,72 @@ bool ResourceManager::LoadMaterial(Material& material, const char* configPath)
 	Buffer<char> configuration = File::ReadText(configPath);
 
 	return material.LoadFromConfiguration(configuration, this);
+}
+
+Texture* ResourceManager::GetTexture(uint32_t hash) const
+{
+	// Try to find the texture using texture path hash
+	for (unsigned int i = 0; i < textureCount; ++i)
+	{
+		if (textures[i].nameHash == hash)
+		{
+			return textures + i;
+		}
+	}
+
+	return nullptr;
+}
+
+Texture* ResourceManager::GetTexture(const char* path)
+{
+	size_t textureNameLen = std::strlen(path);
+	uint32_t textureNameHash = Hash::FNV1a_32(path, textureNameLen);
+
+	// Try to find the shader using shader path hash
+	Texture* result = this->GetTexture(textureNameHash);
+
+	if (result == nullptr) // Shader not yet loaded
+	{
+		if (textureCount == textureAllocated)
+		{
+			unsigned int newAllocatedCount = (textureAllocated > 0) ? textureAllocated * 2 : 32;
+			Texture* newTextures = new Texture[newAllocatedCount];
+
+			for (unsigned int i = 0; i < textureCount; ++i)
+			{
+				newTextures[i] = textures[i];
+			}
+
+			delete[] textures; // Deleting a null pointer is a no-op
+			textures = newTextures;
+			textureAllocated = newAllocatedCount;
+		}
+
+		Texture& texture = textures[textureCount];
+
+		if (this->LoadTexture(texture, path))
+		{
+			++textureCount;
+
+			texture.nameHash = textureNameHash;
+
+			result = &texture;
+		}
+	}
+	
+	return result;
+}
+
+bool ResourceManager::LoadTexture(Texture& texture, const char* path)
+{
+	ImageData imageData;
+
+	if (imageData.LoadGlraw(path))
+	{
+		texture.Upload(imageData);
+
+		return true;
+	}
+	else
+		return false;
 }

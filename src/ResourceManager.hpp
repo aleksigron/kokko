@@ -2,11 +2,11 @@
 
 #include "StackAllocator.hpp"
 #include "Collection.hpp"
-#include "Texture.hpp"
 #include "Mesh.hpp"
 
 struct Shader;
 struct Material;
+struct Texture;
 
 class ResourceManager
 {
@@ -25,11 +25,16 @@ private:
 
 	bool LoadMaterial(Material& material, const char* configPath);
 
+	Texture* textures = nullptr;
+	unsigned int textureCount = 0;
+	unsigned int textureAllocated = 0;
+
+	bool LoadTexture(Texture& texture, const char* configPath);
+
 public:
 	ResourceManager();
 	~ResourceManager();
 
-	Collection<Texture, 32> textures;
 	Collection<Mesh, 32> meshes;
 
 	Shader* GetShader(uint32_t hash) const;
@@ -37,4 +42,7 @@ public:
 
 	Material* GetMaterial(uint32_t hash) const;
 	Material* GetMaterial(const char* path);
+
+	Texture* GetTexture(uint32_t hash) const;
+	Texture* GetTexture(const char* path);
 };

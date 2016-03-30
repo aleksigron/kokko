@@ -10,6 +10,8 @@
 #include "Camera.hpp"
 #include "App.hpp"
 #include "Material.hpp"
+#include "Shader.hpp"
+#include "Texture.hpp"
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
 #include "Scene.hpp"
@@ -128,9 +130,14 @@ void Renderer::Render(Scene& scene)
 						break;
 
 					case ShaderUniformType::Tex2D:
+					{
+						uint32_t textureHash = *reinterpret_cast<uint32_t*>(d);
+						Texture* texture = res->GetTexture(textureHash);
+
 						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, *reinterpret_cast<int*>(d));
+						glBindTexture(GL_TEXTURE_2D, texture->driverId);
 						glUniform1i(u.location, 0);
+					}
 						break;
 					}
 				}

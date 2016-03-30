@@ -3,6 +3,7 @@
 #include "rapidjson/document.h"
 
 #include "ResourceManager.hpp"
+#include "Texture.hpp"
 #include "Shader.hpp"
 #include "StringRef.hpp"
 #include "File.hpp"
@@ -132,7 +133,12 @@ bool Material::LoadFromConfiguration(Buffer<char>& configuration, ResourceManage
 							break;
 
 						case ShaderUniformType::Tex2D:
-							// TODO: Figure out how to set texture handles for materials
+						{
+							const char* texturePath = varVal.GetString();
+							Texture* texture = res->GetTexture(texturePath);
+							if (texture != nullptr)
+								this->SetUniformValueByIndex(varIndex, texture->nameHash);
+						}
 							break;
 					}
 				}

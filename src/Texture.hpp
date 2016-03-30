@@ -1,15 +1,16 @@
 #pragma once
 
-#include "ObjectId.hpp"
+#include <cstdint>
+
 #include "Vec2.hpp"
 
 struct ImageData;
 
 struct Texture
 {
-	ObjectId id;
+	uint32_t nameHash;
 	Vec2i textureSize;
-	unsigned int textureGlId;
+	unsigned int driverId;
 
 	void Upload(const ImageData& image);
 };
