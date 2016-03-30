@@ -9,7 +9,7 @@ struct Mesh
 {
 private:
 	void CreateBuffers(void* vertexBuffer, unsigned int vertexBufferSize,
-						   void* indexBuffer, unsigned int indexBufferSize);
+					   void* indexBuffer, unsigned int indexBufferSize);
 
 public:
 	ObjectId id;
@@ -30,6 +30,9 @@ public:
 	void Upload_PosNorCol(float* vertexData, unsigned int vertexCount,
 						  unsigned short* indexData, unsigned int indexCount);
 
-	void UploadVertexData_PosTex(const Buffer<unsigned short>& index,
-								 const Buffer<Vertex_PosTex>& vertex);
+	void Upload_PosTex(float* vertexData, unsigned int vertexCount,
+					   unsigned short* indexData, unsigned int indexCount);
+
+	void Upload_PosNorTex(float* vertexData, unsigned int vertexCount,
+						  unsigned short* indexData, unsigned int indexCount);
 };

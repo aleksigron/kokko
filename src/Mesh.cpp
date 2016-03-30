@@ -95,31 +95,16 @@ void Mesh::Upload_PosNorCol(float* vertexData, unsigned int vertexCount,
 	glBindVertexArray(0);
 }
 
-void Mesh::UploadVertexData_PosTex(const Buffer<unsigned short>& index,
-								   const Buffer<Vertex_PosTex>& vertex)
+void Mesh::Upload_PosTex(float* vertexData, unsigned int vertexCount,
+						 unsigned short* indexData, unsigned int indexCount)
 {
 	using V = Vertex_PosTex;
 
-	// Create vertex array object
-	glGenVertexArrays(1, &vertexArrayObject);
-	glBindVertexArray(vertexArrayObject);
+	this->indexCount = GLsizei(indexCount);
+	this->indexElementType = GL_UNSIGNED_SHORT;
 
-	indexCount = GLsizei(index.Count());
-	indexElementType = GL_UNSIGNED_SHORT;
-
-	// Bind and upload index buffer
-	GLuint indexBuffer;
-	glGenBuffers(1, &indexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-				 sizeof(uint16_t) * index.Count(), index.Data(), GL_STATIC_DRAW);
-
-	// Bind and upload vertex buffer
-	GLuint vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER,
-				 V::size * vertex.Count(), vertex.Data(), GL_STATIC_DRAW);
+	this->CreateBuffers(vertexData, V::size * vertexCount,
+						indexData, sizeof(uint16_t) * indexCount);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, V::posElements, V::posElemType,
@@ -127,6 +112,33 @@ void Mesh::UploadVertexData_PosTex(const Buffer<unsigned short>& index,
 
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, V::texCoordElements, V::texCoordElemType,
+						  GL_FALSE, V::size, V::texCoordOffset);
+
+	// Unbind vertex array
+	glBindVertexArray(0);
+}
+
+void Mesh::Upload_PosNorTex(float* vertexData, unsigned int vertexCount,
+							unsigned short* indexData, unsigned int indexCount)
+{
+	using V = Vertex_PosNorTex;
+
+	this->indexCount = GLsizei(indexCount);
+	this->indexElementType = GL_UNSIGNED_SHORT;
+
+	this->CreateBuffers(vertexData, V::size * vertexCount,
+						indexData, sizeof(uint16_t) * indexCount);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, V::posElements, V::posElemType,
+						  GL_FALSE, V::size, V::posOffset);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, V::norElements, V::norElemType,
+						  GL_FALSE, V::size, V::norOffset);
+
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, V::texCoordElements, V::texCoordElemType,
 						  GL_FALSE, V::size, V::texCoordOffset);
 
 	// Unbind vertex array

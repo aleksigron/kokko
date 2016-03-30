@@ -78,6 +78,12 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 				else if (normCount == 1 && colCount == 1 && texCount == 0)
 					mesh.Upload_PosNorCol(vertData, vertCount, indexData, indexCount);
 
+				else if (normCount == 0 && colCount == 0 && texCount == 1)
+					mesh.Upload_PosTex(vertData, vertCount, indexData, indexCount);
+
+				else if (normCount == 1 && colCount == 0 && texCount == 1)
+					mesh.Upload_PosNorTex(vertData, vertCount, indexData, indexCount);
+
 				return true;
 			}
 		}

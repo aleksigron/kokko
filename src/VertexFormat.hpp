@@ -71,3 +71,24 @@ struct Vertex_PosTex
 	static const unsigned texCoordElemType;
 	static const void* texCoordOffset;
 };
+
+struct Vertex_PosNorTex
+{
+	Vec3f position;
+	Vec3f normal;
+	Vec2f texCoord;
+
+	static const int size;
+
+	static const int posElements;
+	static const unsigned posElemType;
+	static const void* posOffset;
+
+	static const int norElements;
+	static const unsigned norElemType;
+	static const void* norOffset;
+
+	static const int texCoordElements;
+	static const unsigned texCoordElemType;
+	static const void* texCoordOffset;
+};
