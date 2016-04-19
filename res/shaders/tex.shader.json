@@ -3,6 +3,7 @@
 	"fragmentShaderFile": "res/shaders/tex.fragment.glsl",
 	"materialUniforms":
 	[
-		{ "name": "tex", "type": "tex2d" }
+		{ "name": "base_color", "type": "vec3" },
+		{ "name": "color_map", "type": "tex2d" }
 	]
 }

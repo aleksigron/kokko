@@ -48,17 +48,22 @@ bool App::Initialize()
 		Mesh& groundMesh = this->resourceManager.meshes.Get(groundMeshId);
 		MeshLoader::LoadMesh("res/models/ground_plane.mesh", groundMesh);
 
+		ObjectId cupMeshId = this->resourceManager.meshes.Add();
+		Mesh& cupMesh = this->resourceManager.meshes.Get(cupMeshId);
+		MeshLoader::LoadMesh("res/models/tea_cup.mesh", cupMesh);
+
 		// Materials
 
 		Material* diffuseGray = resourceManager.GetMaterial("res/materials/diffuse_gray.material.json");
 		Material* diffuseRed = resourceManager.GetMaterial("res/materials/diffuse_red.material.json");
+		Material* concreteMat = resourceManager.GetMaterial("res/materials/concrete.material.json");
 
 		// Objects
 
 		SceneObjectId tableSceneObj = scene.AddSceneObject();
 		RenderObject& tableRenderObj = renderer.GetRenderObject(renderer.AddRenderObject());
 		tableRenderObj.mesh = tableMeshId;
-		tableRenderObj.materialId = diffuseRed->nameHash;
+		tableRenderObj.materialId = concreteMat->nameHash;
 		tableRenderObj.sceneObjectId = tableSceneObj;
 
 		SceneObjectId groundSceneObj = scene.AddSceneObject();
@@ -66,6 +71,16 @@ bool App::Initialize()
 		groundRenderObj.mesh = groundMeshId;
 		groundRenderObj.materialId = diffuseGray->nameHash;
 		groundRenderObj.sceneObjectId = groundSceneObj;
+
+		SceneObjectId cupSceneObj = scene.AddSceneObject();
+		RenderObject& cupRenderObj = renderer.GetRenderObject(renderer.AddRenderObject());
+		cupRenderObj.mesh = cupMeshId;
+		cupRenderObj.materialId = diffuseRed->nameHash;
+		cupRenderObj.sceneObjectId = cupSceneObj;
+
+		Mat4x4f cupTransform = Matrix::Translate(Vec3f(0.0f, 0.439f, 0.0f)) *
+		Mat4x4f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), Mathf::DegreesToRadians(135.0f));
+		scene.SetLocalTransform(cupSceneObj, cupTransform);
 
 		this->mainCamera.transform.position = Vec3f(0.0f, 0.3f, 1.5f);
 		this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
