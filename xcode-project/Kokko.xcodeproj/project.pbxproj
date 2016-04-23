@@ -126,6 +126,7 @@
 		45A0052A1C933F43002D6134 /* VirtualMemory.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = VirtualMemory.hpp; path = ../src/VirtualMemory.hpp; sourceTree = "<group>"; };
 		45A0052B1C933F43002D6134 /* Window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Window.cpp; path = ../src/Window.cpp; sourceTree = "<group>"; };
 		45A0052C1C933F43002D6134 /* Window.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Window.hpp; path = ../src/Window.hpp; sourceTree = "<group>"; };
+		45A0AC021CC8143B001F2564 /* Rectangle.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Rectangle.hpp; path = ../src/Rectangle.hpp; sourceTree = "<group>"; };
 		45C6E5D21CA335EE004B2F54 /* ResourceManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ResourceManager.cpp; path = ../src/ResourceManager.cpp; sourceTree = "<group>"; };
 		45C6E5D51CA762B3004B2F54 /* ValueSerialization.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ValueSerialization.hpp; path = ../src/ValueSerialization.hpp; sourceTree = "<group>"; };
 		45E978431B34CE7500E11814 /* Kokko */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Kokko; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -219,6 +220,7 @@
 				45A005241C933F43002D6134 /* Vec4.hpp */,
 				45A005271C933F43002D6134 /* ViewFrustum.cpp */,
 				45A005281C933F43002D6134 /* ViewFrustum.hpp */,
+				45A0AC021CC8143B001F2564 /* Rectangle.hpp */,
 			);
 			name = Math;
 			sourceTree = "<group>";
