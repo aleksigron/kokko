@@ -2,8 +2,11 @@
 
 struct StringRef
 {
-	const char* str = nullptr;
-	unsigned int len = 0;
+	const char* str;
+	unsigned int len;
+
+	StringRef() : str(nullptr), len(0) {}
+	StringRef(const char* string, unsigned int length) : str(string), len(length) {}
 
 	inline bool ReferenceEquals(const StringRef& other) const
 	{ return this->str == other.str && this->len == other.len; }
@@ -55,5 +58,24 @@ struct StringRef
 	{
 		str = nullptr;
 		len = 0;
+	}
+
+	void TrimBeginning(unsigned int amount)
+	{
+		if (amount < len)
+		{
+			str = str + amount;
+			len = len - amount;
+		}
+		else
+			this->Invalidate();
+	}
+
+	void TrimEnd(unsigned int amount)
+	{
+		if (amount < len)
+			len = len - amount;
+		else
+			this->Invalidate();
 	}
 };
