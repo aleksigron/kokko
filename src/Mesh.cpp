@@ -3,23 +3,30 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
+#include "VertexFormat.hpp"
+
 void Mesh::CreateBuffers(void* vertexData, unsigned int vertexDataSize,
 						 void* indexData, unsigned int indexDataSize)
 {
 	glGenVertexArrays(1, &vertexArrayObject);
 	glBindVertexArray(vertexArrayObject);
 
+	// Create buffers
+	glGenBuffers(2, bufferObjects);
+
 	// Bind and upload index buffer
-	GLuint indexBuffer;
-	glGenBuffers(1, &indexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferObjects[IndexBuffer]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexDataSize, indexData, GL_STATIC_DRAW);
 
 	// Bind and upload vertex buffer
-	GLuint vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, bufferObjects[VertexBuffer]);
 	glBufferData(GL_ARRAY_BUFFER, vertexDataSize, vertexData, GL_STATIC_DRAW);
+}
+
+void Mesh::DeleteBuffers()
+{
+	glDeleteVertexArrays(1, &vertexArrayObject);
+	glDeleteBuffers(2, bufferObjects);
 }
 
 void Mesh::Upload_PosNor(float* vertexData, unsigned int vertexCount,

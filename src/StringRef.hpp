@@ -8,6 +8,18 @@ struct StringRef
 	StringRef() : str(nullptr), len(0) {}
 	StringRef(const char* string, unsigned int length) : str(string), len(length) {}
 
+	explicit StringRef(const char* string) : str(string)
+	{
+		const char* itr = str;
+
+		while (*itr != '\0')
+		{
+			++itr;
+		}
+
+		len = static_cast<unsigned int>(itr - str);
+	}
+
 	inline bool ReferenceEquals(const StringRef& other) const
 	{ return this->str == other.str && this->len == other.len; }
 

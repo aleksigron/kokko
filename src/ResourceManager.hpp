@@ -29,7 +29,7 @@ private:
 	unsigned int textureCount = 0;
 	unsigned int textureAllocated = 0;
 
-	bool LoadTexture(Texture& texture, const char* configPath);
+	bool LoadTexture(Texture* texture, const char* texturePath);
 
 public:
 	ResourceManager();
@@ -45,4 +45,5 @@ public:
 
 	Texture* GetTexture(uint32_t hash) const;
 	Texture* GetTexture(const char* path);
+	Texture* CreateTexture();
 };

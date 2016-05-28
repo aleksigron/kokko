@@ -7,8 +7,8 @@ struct ImageData
 {
 	Buffer<unsigned char> dataBuffer;
 
-	unsigned char* imageData = nullptr;
-	unsigned long imageDataSize = 0;
+	unsigned char* imageData;
+	unsigned long imageDataSize;
 
 	Vec2i imageSize;
 	unsigned int pixelFormat;
@@ -16,6 +16,8 @@ struct ImageData
 
 	unsigned int compressedSize;
 	bool compressed;
+
+	ImageData();
 
 	bool LoadGlraw(const char* filePath);
 };

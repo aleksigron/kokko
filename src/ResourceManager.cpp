@@ -166,43 +166,55 @@ Texture* ResourceManager::GetTexture(const char* path)
 
 	if (result == nullptr) // Shader not yet loaded
 	{
-		if (textureCount == textureAllocated)
-		{
-			unsigned int newAllocatedCount = (textureAllocated > 0) ? textureAllocated * 2 : 32;
-			Texture* newTextures = new Texture[newAllocatedCount];
-
-			for (unsigned int i = 0; i < textureCount; ++i)
-			{
-				newTextures[i] = textures[i];
-			}
-
-			delete[] textures; // Deleting a null pointer is a no-op
-			textures = newTextures;
-			textureAllocated = newAllocatedCount;
-		}
-
-		Texture& texture = textures[textureCount];
+		Texture* texture = this->CreateTexture();
 
 		if (this->LoadTexture(texture, path))
 		{
-			++textureCount;
-
-			texture.nameHash = textureNameHash;
-
-			result = &texture;
+			texture->nameHash = textureNameHash;
+			result = texture;
+		}
+		else
+		{
+			texture->~Texture();
+			--textureCount;
 		}
 	}
 	
 	return result;
 }
 
-bool ResourceManager::LoadTexture(Texture& texture, const char* path)
+Texture* ResourceManager::CreateTexture()
+{
+	Texture* result = nullptr;
+
+	if (textureCount == textureAllocated)
+	{
+		unsigned int newAllocatedCount = (textureAllocated > 0) ? textureAllocated * 2 : 32;
+		Texture* newTextures = new Texture[newAllocatedCount];
+
+		for (unsigned int i = 0; i < textureCount; ++i)
+		{
+			newTextures[i] = textures[i];
+		}
+
+		delete[] textures; // Deleting a null pointer is a no-op
+		textures = newTextures;
+		textureAllocated = newAllocatedCount;
+	}
+
+	result = textures + textureCount;
+	++textureCount;
+
+	return result;
+}
+
+bool ResourceManager::LoadTexture(Texture* texture, const char* path)
 {
 	ImageData imageData;
 
 	if (imageData.LoadGlraw(path))
 	{
-		texture.Upload(imageData);
+		texture->Upload(imageData);
 
 		return true;
 	}
