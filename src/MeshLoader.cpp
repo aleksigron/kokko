@@ -69,20 +69,18 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 				mesh.bounds.extents.y = boundsData[4];
 				mesh.bounds.extents.z = boundsData[5];
 
-				if (normCount == 1 && colCount == 0 && texCount == 0)
-					mesh.Upload_PosNor(vertData, vertCount, indexData, indexCount);
+				if (normCount == 0 && colCount == 0 && texCount == 1)
+					mesh.Upload_3f2f(vertData, vertCount, indexData, indexCount);
 
-				else if (normCount == 0 && colCount == 1 && texCount == 0)
-					mesh.Upload_PosCol(vertData, vertCount, indexData, indexCount);
-
-				else if (normCount == 1 && colCount == 1 && texCount == 0)
-					mesh.Upload_PosNorCol(vertData, vertCount, indexData, indexCount);
-
-				else if (normCount == 0 && colCount == 0 && texCount == 1)
-					mesh.Upload_PosTex(vertData, vertCount, indexData, indexCount);
+				else if ((normCount == 1 && colCount == 0 && texCount == 0) ||
+					(normCount == 0 && colCount == 1 && texCount == 0))
+					mesh.Upload_3f3f(vertData, vertCount, indexData, indexCount);
 
 				else if (normCount == 1 && colCount == 0 && texCount == 1)
-					mesh.Upload_PosNorTex(vertData, vertCount, indexData, indexCount);
+					mesh.Upload_3f3f2f(vertData, vertCount, indexData, indexCount);
+
+				else if (normCount == 1 && colCount == 1 && texCount == 0)
+					mesh.Upload_3f3f3f(vertData, vertCount, indexData, indexCount);
 
 				return true;
 			}

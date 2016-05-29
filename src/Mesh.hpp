@@ -24,18 +24,15 @@ public:
 
 	void DeleteBuffers();
 
-	void Upload_PosNor(float* vertexData, unsigned int vertexCount,
+	void Upload_3f2f(float* vertexData, unsigned int vertexCount,
+					 unsigned short* indexData, unsigned int indexCount);
+	
+	void Upload_3f3f(float* vertexData, unsigned int vertexCount,
 					   unsigned short* indexData, unsigned int indexCount);
 
-	void Upload_PosCol(float* vertexData, unsigned int vertexCount,
-					   unsigned short* indexData, unsigned int indexCount);
-
-	void Upload_PosNorCol(float* vertexData, unsigned int vertexCount,
+	void Upload_3f3f2f(float* vertexData, unsigned int vertexCount,
 						  unsigned short* indexData, unsigned int indexCount);
 
-	void Upload_PosTex(float* vertexData, unsigned int vertexCount,
-					   unsigned short* indexData, unsigned int indexCount);
-
-	void Upload_PosNorTex(float* vertexData, unsigned int vertexCount,
+	void Upload_3f3f3f(float* vertexData, unsigned int vertexCount,
 						  unsigned short* indexData, unsigned int indexCount);
 };

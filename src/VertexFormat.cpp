@@ -1,71 +1,60 @@
 #include "VertexFormat.hpp"
 
-#include <OpenGL/gl3.h>
+#define GLFW_INCLUDE_GLCOREARB
+#include "glfw/glfw3.h"
 
-// Position + Normal
+// Generic: 3 float, 2 float
 
-const int Vertex_PosNor::size = static_cast<int>(sizeof(Vertex_PosNor));
+const int Vertex3f2f::size = static_cast<int>(sizeof(Vertex3f2f));
 
-const int Vertex_PosNor::posElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosNor::posElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosNor::posOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNor, position));
+const int Vertex3f2f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex3f2f::aElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f2f::aOffset = reinterpret_cast<void*>(offsetof(Vertex3f2f, a));
 
-const int Vertex_PosNor::norElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosNor::norElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosNor::norOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNor, normal));
+const int Vertex3f2f::bElemCount = static_cast<int>(sizeof(Vec2f) / sizeof(float));
+const unsigned Vertex3f2f::bElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f2f::bOffset = reinterpret_cast<void*>(offsetof(Vertex3f2f, b));
 
-// Position + Color
+// Generic: 3 float, 3 float
 
-const int Vertex_PosCol::size = static_cast<int>(sizeof(Vertex_PosCol));
+const int Vertex3f3f::size = static_cast<int>(sizeof(Vertex3f3f));
 
-const int Vertex_PosCol::posElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosCol::posElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosCol::posOffset = reinterpret_cast<void*>(offsetof(Vertex_PosCol, position));
+const int Vertex3f3f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex3f3f::aElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f3f::aOffset = reinterpret_cast<void*>(offsetof(Vertex3f3f, a));
 
-const int Vertex_PosCol::colElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosCol::colElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosCol::colOffset = reinterpret_cast<void*>(offsetof(Vertex_PosCol, color));
+const int Vertex3f3f::bElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex3f3f::bElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f3f::bOffset = reinterpret_cast<void*>(offsetof(Vertex3f3f, b));
 
-// Position + Normal + Color
+// Generic: 3 float, 3 float, 2 float
 
-const int Vertex_PosNorCol::size = static_cast<int>(sizeof(Vertex_PosNorCol));
+const int Vertex3f3f2f::size = static_cast<int>(sizeof(Vertex3f3f2f));
 
-const int Vertex_PosNorCol::posElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosNorCol::posElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosNorCol::posOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNorCol, position));
+const int Vertex3f3f2f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex3f3f2f::aElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f3f2f::aOffset = reinterpret_cast<void*>(offsetof(Vertex3f3f2f, a));
 
-const int Vertex_PosNorCol::norElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosNorCol::norElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosNorCol::norOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNorCol, normal));
+const int Vertex3f3f2f::bElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex3f3f2f::bElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f3f2f::bOffset = reinterpret_cast<void*>(offsetof(Vertex3f3f2f, b));
 
-const int Vertex_PosNorCol::colElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosNorCol::colElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosNorCol::colOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNorCol, color));
+const int Vertex3f3f2f::cElemCount = static_cast<int>(sizeof(Vec2f) / sizeof(float));
+const unsigned Vertex3f3f2f::cElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f3f2f::cOffset = reinterpret_cast<void*>(offsetof(Vertex3f3f2f, c));
 
-// Position + Texture coordinate
+// Generic: 3 float, 3 float, 3 float
 
-const int Vertex_PosTex::size = static_cast<int>(sizeof(Vertex_PosTex));
+const int Vertex3f3f3f::size = static_cast<int>(sizeof(Vertex3f3f3f));
 
-const int Vertex_PosTex::posElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosTex::posElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosTex::posOffset = reinterpret_cast<void*>(offsetof(Vertex_PosTex, position));
+const int Vertex3f3f3f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex3f3f3f::aElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f3f3f::aOffset = reinterpret_cast<void*>(offsetof(Vertex3f3f3f, a));
 
-const int Vertex_PosTex::texCoordElements = static_cast<int>(sizeof(Vec2f) / sizeof(float));
-const unsigned Vertex_PosTex::texCoordElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosTex::texCoordOffset = reinterpret_cast<void*>(offsetof(Vertex_PosTex, texCoord));
+const int Vertex3f3f3f::bElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex3f3f3f::bElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f3f3f::bOffset = reinterpret_cast<void*>(offsetof(Vertex3f3f3f, b));
 
-// Position + Normal + Texture coordinate
-
-const int Vertex_PosNorTex::size = static_cast<int>(sizeof(Vertex_PosNorTex));
-
-const int Vertex_PosNorTex::posElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosNorTex::posElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosNorTex::posOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNorTex, position));
-
-const int Vertex_PosNorTex::norElements = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex_PosNorTex::norElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosNorTex::norOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNorTex, normal));
-
-const int Vertex_PosNorTex::texCoordElements = static_cast<int>(sizeof(Vec2f) / sizeof(float));
-const unsigned Vertex_PosNorTex::texCoordElemType = static_cast<unsigned>(GL_FLOAT);
-const void* Vertex_PosNorTex::texCoordOffset = reinterpret_cast<void*>(offsetof(Vertex_PosNorTex, texCoord));
+const int Vertex3f3f3f::cElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex3f3f3f::cElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f3f3f::cOffset = reinterpret_cast<void*>(offsetof(Vertex3f3f3f, c));

@@ -29,10 +29,10 @@ void Mesh::DeleteBuffers()
 	glDeleteBuffers(2, bufferObjects);
 }
 
-void Mesh::Upload_PosNor(float* vertexData, unsigned int vertexCount,
-						 unsigned short* indexData, unsigned int indexCount)
+void Mesh::Upload_3f2f(float* vertexData, unsigned int vertexCount,
+					   unsigned short* indexData, unsigned int indexCount)
 {
-	using V = Vertex_PosNor;
+	using V = Vertex3f2f;
 
 	this->indexCount = GLsizei(indexCount);
 	this->indexElementType = GL_UNSIGNED_SHORT;
@@ -41,21 +41,19 @@ void Mesh::Upload_PosNor(float* vertexData, unsigned int vertexCount,
 						indexData, sizeof(uint16_t) * indexCount);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::posElements, V::posElemType,
-						  GL_FALSE, V::size, V::posOffset);
+	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
 
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::norElements, V::norElemType,
-						  GL_FALSE, V::size, V::norOffset);
+	glVertexAttribPointer(1, V::bElemCount, V::bElemType, GL_FALSE, V::size, V::bOffset);
 
 	// Unbind vertex array
 	glBindVertexArray(0);
 }
 
-void Mesh::Upload_PosCol(float* vertexData, unsigned int vertexCount,
+void Mesh::Upload_3f3f(float* vertexData, unsigned int vertexCount,
 						 unsigned short* indexData, unsigned int indexCount)
 {
-	using V = Vertex_PosCol;
+	using V = Vertex3f3f;
 
 	this->indexCount = GLsizei(indexCount);
 	this->indexElementType = GL_UNSIGNED_SHORT;
@@ -64,48 +62,43 @@ void Mesh::Upload_PosCol(float* vertexData, unsigned int vertexCount,
 						indexData, sizeof(uint16_t) * indexCount);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::posElements, V::posElemType,
-						  GL_FALSE, V::size, V::posOffset);
+	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
 
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::colElements, V::colElemType,
-						  GL_FALSE, V::size, V::colOffset);
+	glVertexAttribPointer(1, V::bElemCount, V::bElemType, GL_FALSE, V::size, V::bOffset);
 
 	// Unbind vertex array
 	glBindVertexArray(0);
 }
 
-void Mesh::Upload_PosNorCol(float* vertexData, unsigned int vertexCount,
-							unsigned short* indexData, unsigned int indexCount)
+void Mesh::Upload_3f3f2f(float* vertexData, unsigned int vertexCount,
+						 unsigned short* indexData, unsigned int indexCount)
 {
-	using V = Vertex_PosNorCol;
+	using V = Vertex3f3f2f;
 
 	this->indexCount = GLsizei(indexCount);
 	this->indexElementType = GL_UNSIGNED_SHORT;
-	
+
 	this->CreateBuffers(vertexData, V::size * vertexCount,
 						indexData, sizeof(uint16_t) * indexCount);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::posElements, V::posElemType,
-						  GL_FALSE, V::size, V::posOffset);
+	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
 
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::norElements, V::norElemType,
-						  GL_FALSE, V::size, V::norOffset);
+	glVertexAttribPointer(1, V::bElemCount, V::bElemType, GL_FALSE, V::size, V::bOffset);
 
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, V::colElements, V::colElemType,
-						  GL_FALSE, V::size, V::colOffset);
+	glVertexAttribPointer(2, V::cElemCount, V::cElemType, GL_FALSE, V::size, V::cOffset);
 
 	// Unbind vertex array
 	glBindVertexArray(0);
 }
 
-void Mesh::Upload_PosTex(float* vertexData, unsigned int vertexCount,
+void Mesh::Upload_3f3f3f(float* vertexData, unsigned int vertexCount,
 						 unsigned short* indexData, unsigned int indexCount)
 {
-	using V = Vertex_PosTex;
+	using V = Vertex3f3f3f;
 
 	this->indexCount = GLsizei(indexCount);
 	this->indexElementType = GL_UNSIGNED_SHORT;
@@ -114,39 +107,13 @@ void Mesh::Upload_PosTex(float* vertexData, unsigned int vertexCount,
 						indexData, sizeof(uint16_t) * indexCount);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::posElements, V::posElemType,
-						  GL_FALSE, V::size, V::posOffset);
+	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
 
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::texCoordElements, V::texCoordElemType,
-						  GL_FALSE, V::size, V::texCoordOffset);
-
-	// Unbind vertex array
-	glBindVertexArray(0);
-}
-
-void Mesh::Upload_PosNorTex(float* vertexData, unsigned int vertexCount,
-							unsigned short* indexData, unsigned int indexCount)
-{
-	using V = Vertex_PosNorTex;
-
-	this->indexCount = GLsizei(indexCount);
-	this->indexElementType = GL_UNSIGNED_SHORT;
-
-	this->CreateBuffers(vertexData, V::size * vertexCount,
-						indexData, sizeof(uint16_t) * indexCount);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::posElements, V::posElemType,
-						  GL_FALSE, V::size, V::posOffset);
-
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::norElements, V::norElemType,
-						  GL_FALSE, V::size, V::norOffset);
+	glVertexAttribPointer(1, V::bElemCount, V::bElemType, GL_FALSE, V::size, V::bOffset);
 
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, V::texCoordElements, V::texCoordElemType,
-						  GL_FALSE, V::size, V::texCoordOffset);
+	glVertexAttribPointer(2, V::cElemCount, V::cElemType, GL_FALSE, V::size, V::cOffset);
 
 	// Unbind vertex array
 	glBindVertexArray(0);

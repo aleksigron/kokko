@@ -212,5 +212,5 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 	unsigned short* ib = indexBuffer.Data();
 	unsigned int ibs = static_cast<unsigned int>(indexBuffer.Count());
 
-	mesh.Upload_PosTex(vb, vbs, ib, ibs);
+	mesh.Upload_3f2f(vb, vbs, ib, ibs);
 }
