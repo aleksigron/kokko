@@ -9,6 +9,8 @@
 #include "CameraController.hpp"
 #include "Scene.hpp"
 
+#include "DebugTextRenderer.hpp"
+
 class App
 {
 private:
@@ -22,6 +24,7 @@ private:
 	ResourceManager resourceManager;
 	CameraController cameraController;
 	Scene scene;
+	DebugTextRenderer debugTextRenderer;
 	
 public:
 	App();
@@ -43,4 +46,7 @@ public:
 
 	inline static ResourceManager* GetResourceManager()
 	{ return &(App::instance->resourceManager); }
+
+	static DebugTextRenderer* GetDebugTextRenderer()
+	{ return &(App::instance->debugTextRenderer); }
 };

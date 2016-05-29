@@ -38,6 +38,11 @@ bool App::Initialize()
 		this->renderer.SetActiveCamera(&this->mainCamera);
 		this->cameraController.SetControlledCamera(&this->mainCamera);
 
+		this->debugTextRenderer.LoadBitmapFont("res/fonts/gohufont-uni-14.bdf");
+
+		Vec2i frameSize = mainWindow.GetFrameBufferSize();
+		debugTextRenderer.SetFrameSize(Vec2f(frameSize.x * 0.5f, frameSize.y * 0.5f));
+
 		// Meshes from files
 
 		ObjectId tableMeshId = this->resourceManager.meshes.Add();
@@ -85,7 +90,6 @@ bool App::Initialize()
 		this->mainCamera.transform.position = Vec3f(0.0f, 0.3f, 1.5f);
 		this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
 
-		Vec2i frameSize = this->mainWindow.GetFrameBufferSize();
 		this->mainCamera.SetAspectRatio(frameSize.x, frameSize.y);
 		
 		return true;
@@ -105,7 +109,12 @@ void App::Update()
 	this->input.Update();
 	this->cameraController.Update();
 
+	this->debugTextRenderer.AddText(StringRef("Testing this shit out"), Vec2f(0.0f, 0.0f));
+
 	this->scene.CalculateWorldTransforms();
 	this->renderer.Render(this->scene);
+
+	this->debugTextRenderer.Render();
+
 	this->mainWindow.Swap();
 }
