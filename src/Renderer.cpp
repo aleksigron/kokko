@@ -78,6 +78,9 @@ void Renderer::Render(Scene& scene)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+
 	Mat4x4f viewMatrix = cam->GetViewMatrix();
 	Mat4x4f projectionMatrix = cam->GetProjectionMatrix();
 	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
