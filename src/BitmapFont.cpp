@@ -17,7 +17,8 @@
 BitmapFont::BitmapFont() :
 	textureId(0),
 	glyphs(nullptr),
-	glyphCount(0)
+	glyphCount(0),
+	lineHeight(0)
 {
 
 }
@@ -100,8 +101,10 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 			{
 				case "FONTBOUNDINGBOX"_hash:
 				{
+					this->lineHeight = ParseInt(tokens[2]);
+
 					genericGlyphSize.x = float(ParseInt(tokens[1]));
-					genericGlyphSize.y = float(ParseInt(tokens[2]));
+					genericGlyphSize.y = float(this->lineHeight);
 
 					glyphSafeSize = genericGlyphSize + Vec2f(2.0f, 2.0f);
 				}
@@ -119,7 +122,8 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 						this->glyphCount = glyphCount;
 
 						textureSize = CalculateTextureSize(glyphCount, glyphSafeSize);
-						textureBuffer.Allocate(static_cast<int>(textureSize.x * textureSize.y));
+						int pixelCount = static_cast<int>(textureSize.x * textureSize.y);
+						textureBuffer.Allocate(pixelCount);
 
 						// Set buffer to zero so we don't have to worry about unused parts
 						std::memset(textureBuffer.Data(), 0, textureBuffer.Count());
@@ -143,9 +147,12 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 					currentGlyph->drawOffset.x = float(ParseInt(tokens[3]));
 					currentGlyph->drawOffset.y = float(ParseInt(tokens[4]));
 
+					int col = readGlyphs % glyphsOnAxes.x;
+					int row = readGlyphs / glyphsOnAxes.x;
+
 					Vec2f* uv = &(currentGlyph->texturePosition);
-					uv->x = (readGlyphs % glyphsOnAxes.x) * glyphSafeSize.x + 1.0f;
-					uv->y = (readGlyphs / glyphsOnAxes.x) * glyphSafeSize.y + 1.0f;
+					uv->x = col * glyphSafeSize.x + 1.0f;
+					uv->y = row * glyphSafeSize.y + 1.0f;
 				}
 					break;
 

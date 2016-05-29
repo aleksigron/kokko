@@ -41,7 +41,8 @@ bool App::Initialize()
 		this->debugTextRenderer.LoadBitmapFont("res/fonts/gohufont-uni-14.bdf");
 
 		Vec2i frameSize = mainWindow.GetFrameBufferSize();
-		debugTextRenderer.SetFrameSize(Vec2f(frameSize.x * 0.5f, frameSize.y * 0.5f));
+		debugTextRenderer.SetFrameSize(Vec2f(frameSize.x, frameSize.y));
+		debugTextRenderer.SetScaleFactor(2.0f);
 
 		// Meshes from files
 
@@ -109,7 +110,7 @@ void App::Update()
 	this->input.Update();
 	this->cameraController.Update();
 
-	this->debugTextRenderer.AddText(StringRef("Testing this shit out"), Vec2f(0.0f, 0.0f));
+	this->debugTextRenderer.AddText(StringRef("Morbi condimentum, mauris vitae accumsan ullamcorper, risus nunc vulputate lectus, condimentum hendrerit arcu nulla id enim. Praesent sagittis, dui et semper pharetra, ligula mauris convallis nulla, eu blandit orci nulla non ipsum. Praesent porttitor ipsum sit amet nunc mollis, vitae rhoncus mauris ornare."), Vec2f(0.0f, 0.0f));
 
 	this->scene.CalculateWorldTransforms();
 	this->renderer.Render(this->scene);

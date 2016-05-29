@@ -15,7 +15,8 @@
 #include "ResourceManager.hpp"
 #include "App.hpp"
 
-DebugTextRenderer::DebugTextRenderer()
+DebugTextRenderer::DebugTextRenderer() :
+	scaleFactor(1.0f)
 {
 	font = nullptr;
 
@@ -25,7 +26,7 @@ DebugTextRenderer::DebugTextRenderer()
 
 	stringDataUsed = 0;
 	stringDataAllocated = 4096;
-	stringData = new char[renderDataAllocated];
+	stringData = new char[stringDataAllocated];
 }
 
 DebugTextRenderer::~DebugTextRenderer()
@@ -67,7 +68,8 @@ void DebugTextRenderer::AddText(StringRef str, Vec2f position)
 
 			// Set draw area
 
-			rd->area = Rectangle(position, Vec2f(1024.0f, 1024.0f));
+			rd->area.position = position;
+			rd->area.size = scaledFrameSize - position;
 
 			++renderDataCount;
 		}
@@ -114,7 +116,7 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 {
 	assert(stringDataUsed * 4 < (1 << 16));
 
-	Buffer<Vertex_PosTex> vertexBuffer;
+	Buffer<Vertex3f2f> vertexBuffer;
 	vertexBuffer.Allocate(stringDataUsed * 4);
 
 	Buffer<unsigned short> indexBuffer;
@@ -123,10 +125,14 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 	const BitmapGlyph* glyphBegin = font->GlyphsBegin();
 	const BitmapGlyph* glyphEnd = font->GlyphsEnd();
 
+	int fontLineHeight = font->GetLineHeight();
 	Vec2f textureSize = font->GetTextureSize();
+	Vec2f invTexSize = Vec2f(1.0f / textureSize.x, 1.0f / textureSize.y);
 
-	Vertex_PosTex* vertexBegin = vertexBuffer.Data();
-	Vertex_PosTex* vertexItr = vertexBegin;
+	Vec2f scaledInvFrame = Vec2f(2.0f / scaledFrameSize.x, 2.0f / scaledFrameSize.y);
+
+	Vertex3f2f* vertexBegin = vertexBuffer.Data();
+	Vertex3f2f* vertexItr = vertexBegin;
 	unsigned short* indexItr = indexBuffer.Data();
 
 	RenderData* rdItr = renderData;
@@ -134,13 +140,14 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 	for (; rdItr != rdEnd; ++rdItr)
 	{
 		RenderData rd = *rdItr;
-		Vec2f drawPos = rd.area.position;
+		Vec2f drawPos = Vec2f(rd.area.position.x, -rd.area.position.y);
 
 		const char* strItr = rd.string.str;
 		const char* strEnd = strItr + rd.string.len;
 		for (; strItr != strEnd; ++strItr)
 		{
 			uint32_t c = *strItr;
+			unsigned short vertexIndex = static_cast<unsigned short>(vertexItr - vertexBegin);
 
 			for (const BitmapGlyph* gItr = glyphBegin; gItr != glyphEnd; ++gItr)
 			{
@@ -148,55 +155,56 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 				{
 					const BitmapGlyph& glyph = *gItr;
 
-					Vertex_PosTex& v00 = vertexItr[0];
-					Vertex_PosTex& v10 = vertexItr[1];
-					Vertex_PosTex& v01 = vertexItr[2];
-					Vertex_PosTex& v11 = vertexItr[3];
-
 					Vec2f quadPos = drawPos + glyph.drawOffset;
 					float quadRight = glyph.size.x;
 					float quadDown = -glyph.size.y;
 
-					Vec2f uvPos;
-					uvPos.x = glyph.texturePosition.x / textureSize.x;
-					uvPos.y = glyph.texturePosition.y / textureSize.y;
-					float uvRight = glyph.size.x / textureSize.x;
-					float uvDown = glyph.size.y / textureSize.y;
+					float uvX = glyph.texturePosition.x * invTexSize.x;
+					float uvY = glyph.texturePosition.y * invTexSize.y;
+					float uvRight = glyph.size.x * invTexSize.x;
+					float uvDown = glyph.size.y * invTexSize.y;
+
+					Vertex3f2f& v00 = vertexItr[0];
+					v00.a.x = quadPos.x * scaledInvFrame.x - 1.0f;
+					v00.a.y = quadPos.y * scaledInvFrame.y + 1.0f;
+					v00.a.z = 0.0f;
+					v00.b.x = uvX;
+					v00.b.y = uvY;
+
+					Vertex3f2f& v10 = vertexItr[1];
+					v10.a.x = (quadPos.x + quadRight) * scaledInvFrame.x - 1.0f;
+					v10.a.y = quadPos.y * scaledInvFrame.y + 1.0f;
+					v10.a.z = 0.0f;
+					v10.b.x = uvX + uvRight;
+					v10.b.y = uvY;
+
+					Vertex3f2f& v01 = vertexItr[2];
+					v01.a.x = quadPos.x * scaledInvFrame.x - 1.0f;
+					v01.a.y = (quadPos.y + quadDown) * scaledInvFrame.y + 1.0f;
+					v01.a.z = 0.0f;
+					v01.b.x = uvX;
+					v01.b.y = uvY + uvDown;
+
+					Vertex3f2f& v11 = vertexItr[3];
+					v11.a.x = (quadPos.x + quadRight) * scaledInvFrame.x - 1.0f;
+					v11.a.y = (quadPos.y + quadDown) * scaledInvFrame.y + 1.0f;
+					v11.a.z = 0.0f;
+					v11.b.x = uvX + uvRight;
+					v11.b.y = uvY + uvDown;
+
+					indexItr[0] = vertexIndex + 0;
+					indexItr[1] = vertexIndex + 3;
+					indexItr[2] = vertexIndex + 1;
+					indexItr[3] = vertexIndex + 0;
+					indexItr[4] = vertexIndex + 2;
+					indexItr[5] = vertexIndex + 3;
 
 					drawPos = drawPos + glyph.advance;
-
-					v00.position.x = quadPos.x / frameSize.x;
-					v00.position.y = quadPos.y / frameSize.y;
-					v00.position.z = 0.0f;
-					v00.texCoord.x = uvPos.x;
-					v00.texCoord.y = uvPos.y;
-
-					v10.position.x = (quadPos.x + quadRight) / frameSize.x;
-					v10.position.y = quadPos.y / frameSize.y;
-					v10.position.z = 0.0f;
-					v10.texCoord.x = uvPos.x + uvRight;
-					v10.texCoord.y = uvPos.y;
-
-					v01.position.x = quadPos.x / frameSize.x;
-					v01.position.y = (quadPos.y + quadDown) / frameSize.y;
-					v01.position.z = 0.0f;
-					v01.texCoord.x = uvPos.x;
-					v01.texCoord.y = uvPos.y + uvDown;
-
-					v11.position.x = (quadPos.x + quadRight) / frameSize.x;
-					v11.position.y = (quadPos.y + quadDown) / frameSize.y;
-					v11.position.z = 0.0f;
-					v11.texCoord.x = uvPos.x + uvRight;
-					v11.texCoord.y = uvPos.y + uvDown;
-
-					unsigned short idx = static_cast<unsigned short>(vertexItr - vertexBegin);
-
-					indexItr[0] = idx + 0;
-					indexItr[1] = idx + 3;
-					indexItr[2] = idx + 1;
-					indexItr[3] = idx + 0;
-					indexItr[4] = idx + 2;
-					indexItr[5] = idx + 3;
+					if (drawPos.x >= scaledFrameSize.x)
+					{
+						drawPos.x = rd.area.position.x;
+						drawPos.y = drawPos.y - fontLineHeight;
+					}
 
 					break;
 				}

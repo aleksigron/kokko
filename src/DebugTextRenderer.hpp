@@ -27,6 +27,8 @@ private:
 	unsigned int renderDataAllocated;
 
 	Vec2f frameSize;
+	Vec2f scaledFrameSize;
+	float scaleFactor;
 
 	void CreateAndUploadData(Mesh& mesh);
 
@@ -37,7 +39,17 @@ public:
 	bool LoadBitmapFont(const char* filePath);
 	bool HasValidFont() const { return font != nullptr; }
 
-	void SetFrameSize(const Vec2f& size) { frameSize = size; }
+	void SetFrameSize(const Vec2f& size)
+	{
+		frameSize = size;
+		scaledFrameSize = size * (1.0f / scaleFactor);
+	}
+
+	void SetScaleFactor(float scale)
+	{
+		scaleFactor = scale;
+		scaledFrameSize = frameSize * (1.0f / scaleFactor);
+	}
 
 	/**
 	 * Add a text to be rendered this frame at a specified position.
