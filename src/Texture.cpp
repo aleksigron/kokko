@@ -5,7 +5,9 @@
 
 #include "ImageData.hpp"
 
-void Texture::Upload(const ImageData& image)
+static const int textureFilteringModeValues[] = { GL_NEAREST, GL_LINEAR };
+
+void Texture::Upload(const ImageData& image, FilteringMode mode)
 {
 	textureSize = image.imageSize;
 
@@ -27,9 +29,11 @@ void Texture::Upload(const ImageData& image)
 					 image.pixelFormat, image.componentDataType, image.imageData);
 	}
 
+	int filteringMode = textureFilteringModeValues[static_cast<int>(mode)];
+
 	// Set filter
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filteringMode);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filteringMode);
 
 	// Unbind texture
 	glBindTexture(GL_TEXTURE_2D, 0);
