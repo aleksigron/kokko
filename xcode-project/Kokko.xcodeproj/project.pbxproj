@@ -64,6 +64,7 @@
 		454102E71C93476E00D2841F /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = ../include; sourceTree = "<group>"; };
 		454ADD241CAB00740060443D /* FrustumCulling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FrustumCulling.cpp; path = ../src/FrustumCulling.cpp; sourceTree = "<group>"; };
 		454ADD251CAB00740060443D /* FrustumCulling.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = FrustumCulling.hpp; path = ../src/FrustumCulling.hpp; sourceTree = "<group>"; };
+		4583750A1CFE242E00D37A1B /* Sort.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Sort.hpp; path = ../src/Sort.hpp; sourceTree = "<group>"; };
 		45A004E71C933F43002D6134 /* App.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = App.cpp; path = ../src/App.cpp; sourceTree = "<group>"; };
 		45A004E81C933F43002D6134 /* App.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = App.hpp; path = ../src/App.hpp; sourceTree = "<group>"; };
 		45A004E91C933F43002D6134 /* BoundingBox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BoundingBox.hpp; path = ../src/BoundingBox.hpp; sourceTree = "<group>"; };
@@ -222,6 +223,7 @@
 				45A005291C933F43002D6134 /* VirtualMemory.cpp */,
 				45A0052A1C933F43002D6134 /* VirtualMemory.hpp */,
 				45C6E5D51CA762B3004B2F54 /* ValueSerialization.hpp */,
+				4583750A1CFE242E00D37A1B /* Sort.hpp */,
 			);
 			name = Util;
 			sourceTree = "<group>";

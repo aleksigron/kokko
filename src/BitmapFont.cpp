@@ -10,22 +10,53 @@
 #include "Texture.hpp"
 #include "ImageData.hpp"
 #include "ResourceManager.hpp"
+#include "Sort.hpp"
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
+static bool CompareGlyphCodePointAsc(const BitmapGlyph& lhs, const BitmapGlyph& rhs)
+{
+	return lhs.codePoint < rhs.codePoint;
+}
+
 BitmapFont::BitmapFont() :
 	textureId(0),
+	glyphSkipList(nullptr),
 	glyphs(nullptr),
 	glyphCount(0),
 	lineHeight(0)
 {
-
 }
 
 BitmapFont::~BitmapFont()
 {
+	delete[] glyphs;
+}
 
+const BitmapGlyph* BitmapFont::GetGlyph(unsigned int codePoint) const
+{
+	unsigned int skipStep = glyphSkipListStep;
+	unsigned int skipListLength = glyphCount + ((skipStep - 1)) / skipStep;
+
+	for (unsigned int i = 0; i < skipListLength; ++i)
+	{
+		if (glyphSkipList[i] >= codePoint)
+		{
+			const BitmapGlyph* itr = glyphs + (i * skipStep);
+			const BitmapGlyph* end = itr + skipStep;
+
+			for (; itr != end; ++itr)
+			{
+				if (itr->codePoint == codePoint)
+				{
+					return itr;
+				}
+			}
+		}
+	}
+
+	return nullptr;
 }
 
 bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
@@ -118,6 +149,10 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 
 					if (glyphCount > 0)
 					{
+						uint skipStep = glyphSkipListStep;
+						uint skipListLength = glyphCount + ((skipStep - 1)) / skipStep;
+						this->glyphSkipList = new uint[skipListLength];
+
 						this->glyphs = new BitmapGlyph[glyphCount];
 						this->glyphCount = glyphCount;
 
@@ -135,17 +170,13 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 					break;
 
 				case "ENCODING"_hash:
-				{
 					currentGlyph->codePoint = ParseInt(tokens[1]);
-				}
 					break;
 
 				case "BBX"_hash:
 				{
 					currentGlyph->size.x = float(ParseInt(tokens[1]));
 					currentGlyph->size.y = float(ParseInt(tokens[2]));
-					currentGlyph->drawOffset.x = float(ParseInt(tokens[3]));
-					currentGlyph->drawOffset.y = float(ParseInt(tokens[4]));
 
 					int col = readGlyphs % glyphsOnAxes.x;
 					int row = readGlyphs / glyphsOnAxes.x;
@@ -153,13 +184,6 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 					Vec2f* uv = &(currentGlyph->texturePosition);
 					uv->x = col * glyphSafeSize.x + 1.0f;
 					uv->y = row * glyphSafeSize.y + 1.0f;
-				}
-					break;
-
-				case "DWIDTH"_hash:
-				{
-					currentGlyph->advance.x = float(ParseInt(tokens[1]));
-					currentGlyph->advance.y = float(ParseInt(tokens[2]));
 				}
 					break;
 
@@ -216,6 +240,24 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 		}
 	}
 
+	if (readGlyphs > 0)
+	{
+		// Let's create a skip list
+
+		// First make sure the glyphs are sorted by code point value
+		InsertionSortPred(glyphs, glyphCount, CompareGlyphCodePointAsc);
+
+		// Update skip values
+		for (uint i = glyphSkipListStep - 1; i < glyphCount; i += glyphSkipListStep)
+		{
+			glyphSkipList[i / glyphSkipListStep] = glyphs[i].codePoint;
+		}
+
+		// Set last skip value
+		uint skipIndex = (readGlyphs + (glyphSkipListStep - 1)) / glyphSkipListStep;
+		glyphSkipList[skipIndex] = glyphs[readGlyphs - 1].codePoint;
+	}
+
 	if (textureBuffer.IsValid())
 	{
 		ImageData imageData;
@@ -228,8 +270,10 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 		imageData.componentDataType = GL_UNSIGNED_BYTE;
 
 		ResourceManager* rm = App::GetResourceManager();
+
 		Texture* texture = rm->CreateTexture();
 		texture->Upload(imageData);
+
 		textureId = texture->driverId;
 		
 		return true;

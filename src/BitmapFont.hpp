@@ -10,8 +10,6 @@ struct BitmapGlyph
 {
 	unsigned int codePoint;
 	Vec2f size;
-	Vec2f advance;
-	Vec2f drawOffset;
 	Vec2f texturePosition;
 };
 
@@ -20,6 +18,9 @@ class BitmapFont
 private:
 	unsigned int textureId;
 	Vec2f textureSize;
+
+	unsigned int* glyphSkipList;
+	static const unsigned int glyphSkipListStep = 16;
 
 	BitmapGlyph* glyphs;
 	unsigned int glyphCount;
@@ -33,8 +34,7 @@ public:
 	BitmapFont();
 	~BitmapFont();
 
-	const BitmapGlyph* GlyphsBegin() const { return glyphs; }
-	const BitmapGlyph* GlyphsEnd() const { return glyphs + glyphCount; }
+	const BitmapGlyph* GetGlyph(unsigned int codePoint) const;
 
 	int GetLineHeight() const { return lineHeight; }
 
