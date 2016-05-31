@@ -110,7 +110,13 @@ void App::Update()
 	this->input.Update();
 	this->cameraController.Update();
 
-	this->debugTextRenderer.AddText(StringRef("Morbi condimentum, mauris vitae accumsan ullamcorper, risus nunc vulputate lectus, condimentum hendrerit arcu nulla id enim. Praesent sagittis, dui et semper pharetra, ligula mauris convallis nulla, eu blandit orci nulla non ipsum. Praesent porttitor ipsum sit amet nunc mollis, vitae rhoncus mauris ornare."), Vec2f(0.0f, 0.0f));
+	float deltaTime = time.GetDeltaTime();
+	float fps = 1.0f / deltaTime;
+	float ms = deltaTime * 1000.0f;
+	char frameRateText[64];
+	sprintf(frameRateText, "%.2f frames per second, %.2f ms per frame", double(fps), double(ms));
+
+	this->debugTextRenderer.AddText(StringRef(frameRateText), Vec2f(0.0f, 0.0f));
 
 	this->scene.CalculateWorldTransforms();
 	this->renderer.Render(this->scene);
