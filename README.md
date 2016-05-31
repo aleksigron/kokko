@@ -9,7 +9,7 @@ For more information, look in the docs folder.
 This project is currently available only as an Xcode project on OS X, but I
 always try to consider cross-platform compatibility when writing new features.
 
-![Screenshot](http://aleksigron.com/s/kokko_2016-03-17_23.52.53.png)
+![Screenshot](http://aleksigron.com/s/kokko_2016-06-01_00.20.08.png)
 
 ## Running
 You need to set a custom working directory in Xcode when running the project.
