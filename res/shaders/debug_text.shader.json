@@ -3,6 +3,7 @@
 	"fragmentShaderFile": "res/shaders/debug_text.fragment.glsl",
 	"materialUniforms":
 	[
-		{ "name": "glyph_texture", "type": "tex2d" }
+		{ "name": "glyph_tex", "type": "tex2d" },
+		{ "name": "shadow_offset", "type": "float" }
 	]
 }

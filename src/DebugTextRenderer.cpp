@@ -36,6 +36,22 @@ DebugTextRenderer::~DebugTextRenderer()
 	delete[] stringData;
 }
 
+void DebugTextRenderer::SetFrameSize(const Vec2f& size)
+{
+	assert(renderDataCount == 0);
+
+	frameSize = size;
+	scaledFrameSize = size * (1.0f / scaleFactor);
+}
+
+void DebugTextRenderer::SetScaleFactor(float scale)
+{
+	assert(renderDataCount == 0);
+
+	scaleFactor = scale;
+	scaledFrameSize = frameSize * (1.0f / scaleFactor);
+}
+
 bool DebugTextRenderer::LoadBitmapFont(const char* filePath)
 {
 	Buffer<char> content = File::ReadText(filePath);
@@ -86,12 +102,19 @@ void DebugTextRenderer::Render()
 		ResourceManager* rm = App::GetResourceManager();
 		Shader* shader = rm->GetShader("res/shaders/debug_text.shader.json");
 
-		const ShaderUniform* u = nullptr;
+		const ShaderUniform* textureUniform = nullptr;
+		const ShaderUniform* shadowOffsetUniform = nullptr;
 		for (unsigned int i = 0; i < shader->materialUniformCount; ++i)
 		{
-			if (shader->materialUniforms[i].type == ShaderUniformType::Tex2D)
+			ShaderUniformType type = shader->materialUniforms[i].type;
+
+			if (type == ShaderUniformType::Tex2D)
 			{
-				u = shader->materialUniforms + i;
+				textureUniform = shader->materialUniforms + i;
+			}
+			else if (type == ShaderUniformType::Float)
+			{
+				shadowOffsetUniform = shader->materialUniforms + i;
 			}
 		}
 
@@ -100,14 +123,22 @@ void DebugTextRenderer::Render()
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		// Use shader
 		glUseProgram(shader->driverId);
 
+		// Bind shadow offset
+		Vec2f texSize = font->GetTextureSize();
+		glUniform1f(shadowOffsetUniform->location, 1.0f / texSize.y);
+
+		// Bind texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
-		glUniform1i(u->location, 0);
+		glUniform1i(textureUniform->location, 0);
 
+		// Bind vertex array object
 		glBindVertexArray(mesh.vertexArrayObject);
 
+		// Draw
 		glDrawElements(GL_TRIANGLES, mesh.indexCount, mesh.indexElementType, nullptr);
 
 		mesh.DeleteBuffers();
@@ -159,12 +190,12 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 
 				Vec2f quadPos = drawPos;
 				float quadRight = glyph.size.x;
-				float quadDown = -glyph.size.y;
+				float quadDown = -(glyph.size.y + 1.0f);
 
 				float uvX = glyph.texturePosition.x * invTexSize.x;
 				float uvY = glyph.texturePosition.y * invTexSize.y;
 				float uvRight = glyph.size.x * invTexSize.x;
-				float uvDown = glyph.size.y * invTexSize.y;
+				float uvDown = glyph.size.y * invTexSize.y + invTexSize.y;
 
 				Vertex3f2f& v00 = vertexItr[0];
 				v00.a.x = quadPos.x * scaledInvFrame.x - 1.0f;

@@ -39,17 +39,8 @@ public:
 	bool LoadBitmapFont(const char* filePath);
 	bool HasValidFont() const { return font != nullptr; }
 
-	void SetFrameSize(const Vec2f& size)
-	{
-		frameSize = size;
-		scaledFrameSize = size * (1.0f / scaleFactor);
-	}
-
-	void SetScaleFactor(float scale)
-	{
-		scaleFactor = scale;
-		scaledFrameSize = frameSize * (1.0f / scaleFactor);
-	}
+	void SetFrameSize(const Vec2f& size);
+	void SetScaleFactor(float scale);
 
 	/**
 	 * Add a text to be rendered this frame at a specified position.
