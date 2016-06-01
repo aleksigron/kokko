@@ -67,6 +67,13 @@ bool DebugTextRenderer::LoadBitmapFont(const char* filePath)
 
 void DebugTextRenderer::AddText(StringRef str, Vec2f position)
 {
+	Rectangle area(position, scaledFrameSize - position);
+
+	this->AddText(str, area);
+}
+
+void DebugTextRenderer::AddText(StringRef str, Rectangle area)
+{
 	if (renderDataCount < renderDataAllocated)
 	{
 		if (stringDataUsed + str.len <= stringDataAllocated)
@@ -83,9 +90,7 @@ void DebugTextRenderer::AddText(StringRef str, Vec2f position)
 			std::memcpy(stringLocation, str.str, str.len);
 
 			// Set draw area
-
-			rd->area.position = position;
-			rd->area.size = scaledFrameSize - position;
+			rd->area = area;
 
 			++renderDataCount;
 		}
