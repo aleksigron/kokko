@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Time.hpp"
-#include "Input.hpp"
 #include "Window.hpp"
 #include "Camera.hpp"
 #include "Renderer.hpp"
@@ -17,7 +16,6 @@ private:
 	static App* instance;
 	
 	Time time;
-	Input input;
 	Window mainWindow;
 	Camera mainCamera;
 	Renderer renderer;
@@ -34,9 +32,6 @@ public:
 	bool HasRequestedQuit();
 	
 	void Update();
-
-	inline static Input* GetInput()
-	{ return &(App::instance->input); }
 
 	inline static Window* GetMainWindow()
 	{ return &(App::instance->mainWindow); }

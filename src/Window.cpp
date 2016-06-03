@@ -3,31 +3,46 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-#include "Vec2.hpp"
+#include "KeyboardInput.hpp"
+#include "PointerInput.hpp"
 
-Window::Window()
+Window::Window() :
+	windowHandle(nullptr),
+	keyboardInput(nullptr),
+	pointerInput(nullptr)
 {
 }
 
 Window::~Window()
 {
 	glfwTerminate();
+
+	delete pointerInput;
+	delete keyboardInput;
 }
 
 bool Window::Initialize(const char* windowTitle)
 {
-	if (glfwInit())
+	if (glfwInit() == GL_TRUE)
 	{
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		
-		this->window = glfwCreateWindow(960, 640, windowTitle, NULL, NULL);
+		windowHandle = glfwCreateWindow(960, 640, windowTitle, NULL, NULL);
 		
-		if (this->window != nullptr)
+		if (windowHandle != nullptr)
 		{
-			glfwMakeContextCurrent(this->window);
+			keyboardInput = new KeyboardInput;
+			keyboardInput->Initialize(windowHandle);
+
+			pointerInput = new PointerInput;
+			pointerInput->Initialize(windowHandle);
+
+			glfwSetWindowUserPointer(windowHandle, this);
+			glfwMakeContextCurrent(windowHandle);
+
 			glfwSwapInterval(1);
 
 			return true;
@@ -42,25 +57,37 @@ bool Window::Initialize(const char* windowTitle)
 
 bool Window::ShouldClose()
 {
-	return glfwWindowShouldClose(this->window);
+	return glfwWindowShouldClose(windowHandle);
+}
+
+void Window::UpdateInput()
+{
+	if (keyboardInput != nullptr)
+	{
+		keyboardInput->Update();
+	}
+
+	if (pointerInput != nullptr)
+	{
+		pointerInput->Update();
+	}
 }
 
 void Window::Swap()
 {
-	glfwSwapBuffers(this->window);
+	glfwSwapBuffers(windowHandle);
 	glfwPollEvents();
 }
 
-Vec2i Window::GetFrameBufferSize()
+Vec2f Window::GetFrameBufferSize()
 {
-	Vec2i result;
-	
-	glfwGetFramebufferSize(this->window, &result.x, &result.y);
-	
-	return result;
+	int width, height;
+	glfwGetFramebufferSize(windowHandle, &width, &height);
+
+	return Vec2f(width, height);
 }
 
-GLFWwindow* Window::GetWindowHandle()
+Window* Window::GetWindowObject(GLFWwindow* windowHandle)
 {
-	return this->window;
+	return static_cast<Window*>(glfwGetWindowUserPointer(windowHandle));
 }

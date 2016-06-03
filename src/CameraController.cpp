@@ -2,6 +2,8 @@
 
 #include "App.hpp"
 #include "Time.hpp"
+#include "PointerInput.hpp"
+#include "KeyboardInput.hpp"
 
 void CameraController::SetControlledCamera(Camera* camera)
 {
@@ -12,8 +14,9 @@ void CameraController::Update()
 {
 	TransformSource& ct = controlledCamera->transform;
 
-	PointerInput* pi = &(App::GetInput()->pointer);
-	KeyboardInput* kb = &(App::GetInput()->keyboard);
+	Window* mainWindow = App::GetMainWindow();
+	PointerInput* pi = mainWindow->GetPointerInput();
+	KeyboardInput* kb = mainWindow->GetKeyboardInput();
 
 	if (kb->GetKeyDown(Key::Space) && mouseGrabActive == false)
 	{

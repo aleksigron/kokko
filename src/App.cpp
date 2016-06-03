@@ -32,7 +32,6 @@ bool App::Initialize()
 
 	if (this->mainWindow.Initialize("Kokko"))
 	{
-		this->input.Initialize(mainWindow.GetWindowHandle());
 		this->renderer.Initialize();
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
@@ -40,8 +39,8 @@ bool App::Initialize()
 
 		this->debugTextRenderer.LoadBitmapFont("res/fonts/gohufont-uni-14.bdf");
 
-		Vec2i frameSize = mainWindow.GetFrameBufferSize();
-		debugTextRenderer.SetFrameSize(Vec2f(frameSize.x, frameSize.y));
+		Vec2f frameSize = mainWindow.GetFrameBufferSize();
+		debugTextRenderer.SetFrameSize(frameSize);
 		debugTextRenderer.SetScaleFactor(2.0f);
 
 		// Meshes from files
@@ -106,7 +105,6 @@ bool App::HasRequestedQuit()
 void App::Update()
 {
 	this->time.Update();
-	this->input.Update();
 	this->cameraController.Update();
 
 	float deltaTime = time.GetDeltaTime();
@@ -121,6 +119,8 @@ void App::Update()
 	this->renderer.Render(this->scene);
 
 	this->debugTextRenderer.Render();
+
+	this->mainWindow.UpdateInput();
 
 	this->mainWindow.Swap();
 }

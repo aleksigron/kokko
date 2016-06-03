@@ -1,7 +1,5 @@
 #pragma once
 
-#include "InternalKeyMap.hpp"
-
 enum class Key
 {
 	Unknown = -1,
@@ -132,31 +130,37 @@ struct GLFWwindow;
 class KeyboardInput
 {
 private:
+	enum KeyState : unsigned char
+	{
+		Up = 0,
+		UpFirst = 1,
+		Down = 2,
+		DownFirst = 3
+	};
+
+	struct KeyData
+	{
+		Key code;
+		KeyState state;
+	};
+
 	GLFWwindow* windowHandle;
 
-	unsigned char keyState[InternalKeyMap::ForwardSize] = {};
+	static const unsigned int maxPressedKeys = 64;
+	KeyData keyState[maxPressedKeys];
+	unsigned int keyStateCount;
 
-	enum KeyState : unsigned char { Up, UpFirst, Down, DownFirst };
+	static void _KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	void KeyCallback(int key, int scancode, int action, int mods);
 
 public:
+	KeyboardInput();
+	~KeyboardInput();
+
 	void Initialize(GLFWwindow* windowHandle);
 	void Update();
 
-	inline bool GetKey(Key key)
-	{
-		int index = InternalKeyMap::Reverse[static_cast<unsigned int>(key)];
-		return (keyState[index] & 0x2) != 0;
-	}
-
-	inline bool GetKeyDown(Key key)
-	{
-		int index = InternalKeyMap::Reverse[static_cast<unsigned int>(key)];
-		return keyState[index] == DownFirst;
-	}
-
-	inline bool GetKeyUp(Key key)
-	{
-		int index = InternalKeyMap::Reverse[static_cast<unsigned int>(key)];
-		return keyState[index] == UpFirst;
-	}
+	bool GetKey(Key key) const;
+	bool GetKeyDown(Key key) const;
+	bool GetKeyUp(Key key) const;
 };

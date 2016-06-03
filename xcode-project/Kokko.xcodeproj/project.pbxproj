@@ -15,8 +15,6 @@
 		45A0052F1C933F43002D6134 /* CameraController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004ED1C933F43002D6134 /* CameraController.cpp */; };
 		45A005301C933F43002D6134 /* File.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004F01C933F43002D6134 /* File.cpp */; };
 		45A005311C933F43002D6134 /* ImageData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004F31C933F43002D6134 /* ImageData.cpp */; };
-		45A005321C933F43002D6134 /* Input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004F61C933F43002D6134 /* Input.cpp */; };
-		45A005331C933F43002D6134 /* InternalKeyMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004F81C933F43002D6134 /* InternalKeyMap.cpp */; };
 		45A005341C933F43002D6134 /* KeyboardInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004FB1C933F43002D6134 /* KeyboardInput.cpp */; };
 		45A005351C933F43002D6134 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004FD1C933F43002D6134 /* main.cpp */; };
 		45A005361C933F43002D6134 /* Material.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A005011C933F43002D6134 /* Material.cpp */; };
@@ -80,10 +78,6 @@
 		45A004F31C933F43002D6134 /* ImageData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ImageData.cpp; path = ../src/ImageData.cpp; sourceTree = "<group>"; };
 		45A004F41C933F43002D6134 /* ImageData.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ImageData.hpp; path = ../src/ImageData.hpp; sourceTree = "<group>"; };
 		45A004F51C933F43002D6134 /* ImmutableString.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ImmutableString.hpp; path = ../src/ImmutableString.hpp; sourceTree = "<group>"; };
-		45A004F61C933F43002D6134 /* Input.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Input.cpp; path = ../src/Input.cpp; sourceTree = "<group>"; };
-		45A004F71C933F43002D6134 /* Input.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Input.hpp; path = ../src/Input.hpp; sourceTree = "<group>"; };
-		45A004F81C933F43002D6134 /* InternalKeyMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InternalKeyMap.cpp; path = ../src/InternalKeyMap.cpp; sourceTree = "<group>"; };
-		45A004F91C933F43002D6134 /* InternalKeyMap.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = InternalKeyMap.hpp; path = ../src/InternalKeyMap.hpp; sourceTree = "<group>"; };
 		45A004FA1C933F43002D6134 /* JsonReader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = JsonReader.hpp; path = ../src/JsonReader.hpp; sourceTree = "<group>"; };
 		45A004FB1C933F43002D6134 /* KeyboardInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = KeyboardInput.cpp; path = ../src/KeyboardInput.cpp; sourceTree = "<group>"; };
 		45A004FC1C933F43002D6134 /* KeyboardInput.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = KeyboardInput.hpp; path = ../src/KeyboardInput.hpp; sourceTree = "<group>"; };
@@ -174,6 +168,21 @@
 			name = Debug;
 			sourceTree = "<group>";
 		};
+		45238CB31D02206800DF2EB3 /* System */ = {
+			isa = PBXGroup;
+			children = (
+				45A004FB1C933F43002D6134 /* KeyboardInput.cpp */,
+				45A004FC1C933F43002D6134 /* KeyboardInput.hpp */,
+				45A0050D1C933F43002D6134 /* PointerInput.cpp */,
+				45A0050E1C933F43002D6134 /* PointerInput.hpp */,
+				45A0051F1C933F43002D6134 /* Time.cpp */,
+				45A005201C933F43002D6134 /* Time.hpp */,
+				45A0052B1C933F43002D6134 /* Window.cpp */,
+				45A0052C1C933F43002D6134 /* Window.hpp */,
+			);
+			name = System;
+			sourceTree = "<group>";
+		};
 		454102E81C93479400D2841F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -188,14 +197,6 @@
 		454102E91C93480B00D2841F /* Input */ = {
 			isa = PBXGroup;
 			children = (
-				45A004F61C933F43002D6134 /* Input.cpp */,
-				45A004F71C933F43002D6134 /* Input.hpp */,
-				45A004F81C933F43002D6134 /* InternalKeyMap.cpp */,
-				45A004F91C933F43002D6134 /* InternalKeyMap.hpp */,
-				45A004FB1C933F43002D6134 /* KeyboardInput.cpp */,
-				45A004FC1C933F43002D6134 /* KeyboardInput.hpp */,
-				45A0050D1C933F43002D6134 /* PointerInput.cpp */,
-				45A0050E1C933F43002D6134 /* PointerInput.hpp */,
 			);
 			name = Input;
 			sourceTree = "<group>";
@@ -300,6 +301,7 @@
 				454102E91C93480B00D2841F /* Input */,
 				454102EB1C9348B000D2841F /* Math */,
 				454102EC1C9348FD00D2841F /* Rendering */,
+				45238CB31D02206800DF2EB3 /* System */,
 				454102EA1C93488700D2841F /* Util */,
 				45A004FD1C933F43002D6134 /* main.cpp */,
 				45A004E71C933F43002D6134 /* App.cpp */,
@@ -310,10 +312,6 @@
 				45A005121C933F43002D6134 /* ResourceManager.hpp */,
 				45A005131C933F43002D6134 /* Scene.cpp */,
 				45A005141C933F43002D6134 /* Scene.hpp */,
-				45A0051F1C933F43002D6134 /* Time.cpp */,
-				45A005201C933F43002D6134 /* Time.hpp */,
-				45A0052B1C933F43002D6134 /* Window.cpp */,
-				45A0052C1C933F43002D6134 /* Window.hpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -401,7 +399,6 @@
 				45A005381C933F43002D6134 /* MeshLoader.cpp in Sources */,
 				45A005341C933F43002D6134 /* KeyboardInput.cpp in Sources */,
 				45CB91111CDFD8D500FF12D2 /* AsciiStringUtil.cpp in Sources */,
-				45A005331C933F43002D6134 /* InternalKeyMap.cpp in Sources */,
 				45C6E5D31CA335EE004B2F54 /* ResourceManager.cpp in Sources */,
 				45A0053D1C933F43002D6134 /* StackAllocation.cpp in Sources */,
 				45A0053E1C933F43002D6134 /* StackAllocator.cpp in Sources */,
@@ -416,7 +413,6 @@
 				45A0052D1C933F43002D6134 /* App.cpp in Sources */,
 				45A005391C933F43002D6134 /* PointerInput.cpp in Sources */,
 				45A005351C933F43002D6134 /* main.cpp in Sources */,
-				45A005321C933F43002D6134 /* Input.cpp in Sources */,
 				45A005431C933F43002D6134 /* VirtualMemory.cpp in Sources */,
 				45A005411C933F43002D6134 /* VertexFormat.cpp in Sources */,
 				45A005421C933F43002D6134 /* ViewFrustum.cpp in Sources */,

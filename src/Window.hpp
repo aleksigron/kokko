@@ -4,10 +4,16 @@
 
 struct GLFWwindow;
 
+class KeyboardInput;
+class PointerInput;
+
 class Window
 {
 private:
-	GLFWwindow* window = nullptr;
+	GLFWwindow* windowHandle;
+
+	KeyboardInput* keyboardInput;
+	PointerInput* pointerInput;
 	
 public:
 	Window();
@@ -15,10 +21,13 @@ public:
 	
 	bool Initialize(const char* windowTitle);
 	bool ShouldClose();
-	
+	void UpdateInput();
 	void Swap();
 	
-	Vec2i GetFrameBufferSize();
+	Vec2f GetFrameBufferSize();
 
-	GLFWwindow* GetWindowHandle();
+	KeyboardInput* GetKeyboardInput() { return keyboardInput; }
+	PointerInput* GetPointerInput() { return pointerInput; }
+	
+	static Window* GetWindowObject(GLFWwindow* windowHandle);
 };
