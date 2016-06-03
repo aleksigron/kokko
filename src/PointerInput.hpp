@@ -9,9 +9,9 @@ class PointerInput
 public:
 	enum class CursorMode
 	{
-		Normal = 0x00034001,
-		Hidden = 0x00034002,
-		Disabled = 0x00034003
+		Normal,
+		Hidden,
+		Disabled
 	};
 
 	static const unsigned int mouseButtonCount = 8;
@@ -23,6 +23,8 @@ private:
 	Vec2f cursorMovement;
 
 	unsigned char mouseButtonState[mouseButtonCount];
+
+	static const int cursorModeValues[3];
 
 	enum ButtonState : unsigned char { Up, UpFirst, Down, DownFirst };
 

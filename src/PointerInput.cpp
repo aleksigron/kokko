@@ -3,6 +3,13 @@
 #define GLFW_INCLUDE_NONE
 #include "glfw/glfw3.h"
 
+const int PointerInput::cursorModeValues[] =
+{
+	GLFW_CURSOR_NORMAL,
+	GLFW_CURSOR_HIDDEN,
+	GLFW_CURSOR_DISABLED
+};
+
 void PointerInput::Initialize(GLFWwindow* windowHandle)
 {
 	this->windowHandle = windowHandle;
@@ -44,10 +51,20 @@ void PointerInput::Update()
 
 void PointerInput::SetCursorMode(CursorMode mode)
 {
-	glfwSetInputMode(windowHandle, GLFW_CURSOR, static_cast<int>(mode));
+	int cursorModeValue = cursorModeValues[static_cast<unsigned int>(mode)];
+	glfwSetInputMode(windowHandle, GLFW_CURSOR, cursorModeValue);
 }
 
 PointerInput::CursorMode PointerInput::GetCursorMode() const
 {
-	return static_cast<CursorMode>(glfwGetInputMode(windowHandle, GLFW_CURSOR));
+	int cursorModeValue = glfwGetInputMode(windowHandle, GLFW_CURSOR);
+
+	CursorMode mode = CursorMode::Normal;
+
+	if (cursorModeValue == GLFW_CURSOR_HIDDEN)
+		mode = CursorMode::Hidden;
+	else if (cursorModeValue == GLFW_CURSOR_DISABLED)
+		mode = CursorMode::Disabled;
+
+	return mode;
 }
