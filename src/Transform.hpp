@@ -19,11 +19,11 @@ public:
 	}
 
 	inline Vec3f Forward() const
-	{ return rotation * Vec3f(0.0f, 0.0f, -1.0f); }
+	{ return Vec3f(-rotation[6], -rotation[7], -rotation[8]); }
 
 	inline Vec3f Right() const
-	{ return rotation * Vec3f(1.0f, 0.0f, 0.0f); }
+	{ return Vec3f(rotation[0], rotation[1], rotation[2]); }
 
 	inline Vec3f Up() const
-	{ return rotation * Vec3f(0.0f, 1.0f, 0.0f); }
+	{ return Vec3f(rotation[3], rotation[4], rotation[5]); }
 };
