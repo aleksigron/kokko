@@ -39,6 +39,7 @@
 		45E978551B34CFB700E11814 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978541B34CFB700E11814 /* OpenGL.framework */; };
 		45E978571B34CFC100E11814 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978561B34CFC100E11814 /* Cocoa.framework */; };
 		45E978591B34CFC900E11814 /* libglfw3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978581B34CFC900E11814 /* libglfw3.a */; };
+		45F031F21D0356DE00184214 /* StringRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45F031F11D0356DE00184214 /* StringRef.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -139,6 +140,7 @@
 		45E978541B34CFB700E11814 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		45E978561B34CFC100E11814 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		45E978581B34CFC900E11814 /* libglfw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libglfw3.a; path = ../lib/glfw/libglfw3.a; sourceTree = "<group>"; };
+		45F031F11D0356DE00184214 /* StringRef.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StringRef.cpp; path = ../src/StringRef.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -194,13 +196,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		454102E91C93480B00D2841F /* Input */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Input;
-			sourceTree = "<group>";
-		};
 		454102EA1C93488700D2841F /* Util */ = {
 			isa = PBXGroup;
 			children = (
@@ -220,6 +215,7 @@
 				45A005191C933F43002D6134 /* StackAllocation.hpp */,
 				45A0051A1C933F43002D6134 /* StackAllocator.cpp */,
 				45A0051B1C933F43002D6134 /* StackAllocator.hpp */,
+				45F031F11D0356DE00184214 /* StringRef.cpp */,
 				45A0051C1C933F43002D6134 /* StringRef.hpp */,
 				45A005291C933F43002D6134 /* VirtualMemory.cpp */,
 				45A0052A1C933F43002D6134 /* VirtualMemory.hpp */,
@@ -299,7 +295,6 @@
 			isa = PBXGroup;
 			children = (
 				451949771CCC0E4B009DF07A /* Debug */,
-				454102E91C93480B00D2841F /* Input */,
 				454102EB1C9348B000D2841F /* Math */,
 				454102EC1C9348FD00D2841F /* Rendering */,
 				454102ED1C93491800D2841F /* Resources */,
@@ -398,6 +393,7 @@
 				4519497D1CCC0F14009DF07A /* BitmapFont.cpp in Sources */,
 				45A005381C933F43002D6134 /* MeshLoader.cpp in Sources */,
 				45A005341C933F43002D6134 /* KeyboardInput.cpp in Sources */,
+				45F031F21D0356DE00184214 /* StringRef.cpp in Sources */,
 				45CB91111CDFD8D500FF12D2 /* AsciiStringUtil.cpp in Sources */,
 				45C6E5D31CA335EE004B2F54 /* ResourceManager.cpp in Sources */,
 				45A0053D1C933F43002D6134 /* StackAllocation.cpp in Sources */,
