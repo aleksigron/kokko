@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4519497A1CCC0E95009DF07A /* DebugTextRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 451949781CCC0E95009DF07A /* DebugTextRenderer.cpp */; };
 		4519497D1CCC0F14009DF07A /* BitmapFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4519497B1CCC0F14009DF07A /* BitmapFont.cpp */; };
+		45446ACE1D0625E300B90BB4 /* DebugLog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45446ACC1D0625E300B90BB4 /* DebugLog.cpp */; };
 		454ADD261CAB00740060443D /* FrustumCulling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454ADD241CAB00740060443D /* FrustumCulling.cpp */; };
 		45A0052D1C933F43002D6134 /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004E71C933F43002D6134 /* App.cpp */; };
 		45A0052E1C933F43002D6134 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004EB1C933F43002D6134 /* Camera.cpp */; };
@@ -34,6 +35,7 @@
 		45A005441C933F43002D6134 /* Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A0052B1C933F43002D6134 /* Window.cpp */; };
 		45C6E5D31CA335EE004B2F54 /* ResourceManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45C6E5D21CA335EE004B2F54 /* ResourceManager.cpp */; };
 		45CB91111CDFD8D500FF12D2 /* AsciiStringUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45CB910F1CDFD8D500FF12D2 /* AsciiStringUtil.cpp */; };
+		45D488DB1D0B6DA700ADDA6F /* Debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45D488D91D0B6DA700ADDA6F /* Debug.cpp */; };
 		45E978511B34CFA000E11814 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978501B34CFA000E11814 /* CoreVideo.framework */; };
 		45E978531B34CFA600E11814 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978521B34CFA600E11814 /* IOKit.framework */; };
 		45E978551B34CFB700E11814 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978541B34CFB700E11814 /* OpenGL.framework */; };
@@ -61,6 +63,8 @@
 		4519497C1CCC0F14009DF07A /* BitmapFont.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BitmapFont.hpp; path = ../src/BitmapFont.hpp; sourceTree = "<group>"; };
 		454102E61C93473100D2841F /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../res; sourceTree = "<group>"; };
 		454102E71C93476E00D2841F /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = ../include; sourceTree = "<group>"; };
+		45446ACC1D0625E300B90BB4 /* DebugLog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugLog.cpp; path = ../src/DebugLog.cpp; sourceTree = "<group>"; };
+		45446ACD1D0625E300B90BB4 /* DebugLog.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DebugLog.hpp; path = ../src/DebugLog.hpp; sourceTree = "<group>"; };
 		454ADD241CAB00740060443D /* FrustumCulling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FrustumCulling.cpp; path = ../src/FrustumCulling.cpp; sourceTree = "<group>"; };
 		454ADD251CAB00740060443D /* FrustumCulling.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = FrustumCulling.hpp; path = ../src/FrustumCulling.hpp; sourceTree = "<group>"; };
 		4583750A1CFE242E00D37A1B /* Sort.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Sort.hpp; path = ../src/Sort.hpp; sourceTree = "<group>"; };
@@ -134,6 +138,8 @@
 		45C6E5D51CA762B3004B2F54 /* ValueSerialization.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ValueSerialization.hpp; path = ../src/ValueSerialization.hpp; sourceTree = "<group>"; };
 		45CB910F1CDFD8D500FF12D2 /* AsciiStringUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AsciiStringUtil.cpp; path = ../src/AsciiStringUtil.cpp; sourceTree = "<group>"; };
 		45CB91101CDFD8D500FF12D2 /* AsciiStringUtil.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = AsciiStringUtil.hpp; path = ../src/AsciiStringUtil.hpp; sourceTree = "<group>"; };
+		45D488D91D0B6DA700ADDA6F /* Debug.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Debug.cpp; path = ../src/Debug.cpp; sourceTree = "<group>"; };
+		45D488DA1D0B6DA700ADDA6F /* Debug.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Debug.hpp; path = ../src/Debug.hpp; sourceTree = "<group>"; };
 		45E978431B34CE7500E11814 /* Kokko */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Kokko; sourceTree = BUILT_PRODUCTS_DIR; };
 		45E978501B34CFA000E11814 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		45E978521B34CFA600E11814 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
@@ -162,6 +168,10 @@
 		451949771CCC0E4B009DF07A /* Debug */ = {
 			isa = PBXGroup;
 			children = (
+				45D488D91D0B6DA700ADDA6F /* Debug.cpp */,
+				45D488DA1D0B6DA700ADDA6F /* Debug.hpp */,
+				45446ACC1D0625E300B90BB4 /* DebugLog.cpp */,
+				45446ACD1D0625E300B90BB4 /* DebugLog.hpp */,
 				451949781CCC0E95009DF07A /* DebugTextRenderer.cpp */,
 				451949791CCC0E95009DF07A /* DebugTextRenderer.hpp */,
 				4519497B1CCC0F14009DF07A /* BitmapFont.cpp */,
@@ -392,11 +402,13 @@
 				45A0053C1C933F43002D6134 /* Shader.cpp in Sources */,
 				4519497D1CCC0F14009DF07A /* BitmapFont.cpp in Sources */,
 				45A005381C933F43002D6134 /* MeshLoader.cpp in Sources */,
+				45446ACE1D0625E300B90BB4 /* DebugLog.cpp in Sources */,
 				45A005341C933F43002D6134 /* KeyboardInput.cpp in Sources */,
 				45F031F21D0356DE00184214 /* StringRef.cpp in Sources */,
 				45CB91111CDFD8D500FF12D2 /* AsciiStringUtil.cpp in Sources */,
 				45C6E5D31CA335EE004B2F54 /* ResourceManager.cpp in Sources */,
 				45A0053D1C933F43002D6134 /* StackAllocation.cpp in Sources */,
+				45D488DB1D0B6DA700ADDA6F /* Debug.cpp in Sources */,
 				45A0053E1C933F43002D6134 /* StackAllocator.cpp in Sources */,
 				45A005441C933F43002D6134 /* Window.cpp in Sources */,
 				45A005301C933F43002D6134 /* File.cpp in Sources */,

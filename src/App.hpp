@@ -10,6 +10,8 @@
 
 #include "DebugTextRenderer.hpp"
 
+class Debug;
+
 class App
 {
 private:
@@ -22,7 +24,8 @@ private:
 	ResourceManager resourceManager;
 	CameraController cameraController;
 	Scene scene;
-	DebugTextRenderer debugTextRenderer;
+
+	Debug* debug;
 	
 public:
 	App();
@@ -33,6 +36,8 @@ public:
 	
 	void Update();
 
+	static App* GetInstance() { return App::instance; }
+
 	inline static Window* GetMainWindow()
 	{ return &(App::instance->mainWindow); }
 
@@ -42,6 +47,5 @@ public:
 	inline static ResourceManager* GetResourceManager()
 	{ return &(App::instance->resourceManager); }
 
-	static DebugTextRenderer* GetDebugTextRenderer()
-	{ return &(App::instance->debugTextRenderer); }
+	Debug* GetDebug() { return debug; }
 };

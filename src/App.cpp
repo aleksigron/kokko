@@ -1,5 +1,8 @@
 #include "App.hpp"
 
+#include "Debug.hpp"
+#include "DebugTextRenderer.hpp"
+
 #include "ImageData.hpp"
 #include "MeshLoader.hpp"
 
@@ -20,10 +23,13 @@ App* App::instance = nullptr;
 App::App()
 {
 	App::instance = this;
+
+	debug = new Debug;
 }
 
 App::~App()
 {
+	delete debug;
 }
 
 bool App::Initialize()
@@ -37,11 +43,12 @@ bool App::Initialize()
 		this->renderer.SetActiveCamera(&this->mainCamera);
 		this->cameraController.SetControlledCamera(&this->mainCamera);
 
-		this->debugTextRenderer.LoadBitmapFont("res/fonts/gohufont-uni-14.bdf");
+		DebugTextRenderer* dtr = this->debug->GetTextRenderer();
+		dtr->LoadBitmapFont("res/fonts/gohufont-uni-14.bdf");
 
 		Vec2f frameSize = mainWindow.GetFrameBufferSize();
-		debugTextRenderer.SetFrameSize(frameSize);
-		debugTextRenderer.SetScaleFactor(2.0f);
+		dtr->SetFrameSize(frameSize);
+		dtr->SetScaleFactor(2.0f);
 
 		// Meshes from files
 
@@ -113,12 +120,12 @@ void App::Update()
 	char frameRateText[64];
 	sprintf(frameRateText, "%.2f frames per second, %.2f ms per frame", double(fps), double(ms));
 
-	this->debugTextRenderer.AddText(StringRef(frameRateText), Vec2f(0.0f, 0.0f));
+	this->debug->GetTextRenderer()->AddText(StringRef(frameRateText), Vec2f(0.0f, 0.0f));
 
 	this->scene.CalculateWorldTransforms();
 	this->renderer.Render(this->scene);
 
-	this->debugTextRenderer.Render();
+	this->debug->GetTextRenderer()->Render();
 
 	this->mainWindow.UpdateInput();
 
