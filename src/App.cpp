@@ -1,6 +1,7 @@
 #include "App.hpp"
 
 #include "Debug.hpp"
+#include "DebugLog.hpp"
 #include "DebugTextRenderer.hpp"
 
 #include "ImageData.hpp"
@@ -42,6 +43,8 @@ bool App::Initialize()
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
 		this->cameraController.SetControlledCamera(&this->mainCamera);
+
+		this->debug->GetLog()->OpenLogFile("log.txt", false);
 
 		DebugTextRenderer* dtr = this->debug->GetTextRenderer();
 		dtr->LoadBitmapFont("res/fonts/gohufont-uni-14.bdf");
@@ -119,8 +122,11 @@ void App::Update()
 	float ms = deltaTime * 1000.0f;
 	char frameRateText[64];
 	sprintf(frameRateText, "%.2f frames per second, %.2f ms per frame", double(fps), double(ms));
+	StringRef frameRateTextRef(frameRateText);
 
-	this->debug->GetTextRenderer()->AddText(StringRef(frameRateText), Vec2f(0.0f, 0.0f));
+	this->debug->GetTextRenderer()->AddText(frameRateTextRef, Vec2f(0.0f, 0.0f));
+
+	this->debug->GetLog()->Log(frameRateTextRef);
 
 	this->scene.CalculateWorldTransforms();
 	this->renderer.Render(this->scene);
