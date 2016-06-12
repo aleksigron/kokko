@@ -46,15 +46,13 @@ public:
 
 	/**
 	 * Add a text to be rendered this frame at a specified position.
-	 * String data will be copied, there's no need to keep it around.
 	 */
-	void AddText(StringRef str, Vec2f position);
+	void AddText(StringRef str, Vec2f position, bool copyString);
 
 	/**
 	 * Add a text to be rendered this frame in a specified area.
-	 * String data will be copied, there's no need to keep it around.
 	 */
-	void AddText(StringRef str, Rectangle area);
+	void AddText(StringRef str, Rectangle area, bool copyString);
 
 	void Render();
 };

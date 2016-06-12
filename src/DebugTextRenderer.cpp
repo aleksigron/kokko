@@ -65,29 +65,37 @@ bool DebugTextRenderer::LoadBitmapFont(const char* filePath)
 		return false;
 }
 
-void DebugTextRenderer::AddText(StringRef str, Vec2f position)
+void DebugTextRenderer::AddText(StringRef str, Vec2f position, bool copyString)
 {
 	Rectangle area(position, scaledFrameSize - position);
 
-	this->AddText(str, area);
+	this->AddText(str, area, copyString);
 }
 
-void DebugTextRenderer::AddText(StringRef str, Rectangle area)
+void DebugTextRenderer::AddText(StringRef str, Rectangle area, bool copyString)
 {
 	if (renderDataCount < renderDataAllocated)
 	{
-		if (stringDataUsed + str.len <= stringDataAllocated)
+		if (copyString == false || stringDataUsed + str.len <= stringDataAllocated)
 		{
 			RenderData* rd = renderData + renderDataCount;
 
-			// Copy string data
+			if (copyString == true)
+			{
+				// Copy string data
 
-			char* stringLocation = stringData + stringDataUsed;
-			rd->string.str = stringLocation;
+				char* stringLocation = stringData + stringDataUsed;
+				rd->string.str = stringLocation;
+
+				stringDataUsed += str.len;
+				std::memcpy(stringLocation, str.str, str.len);
+			}
+			else
+			{
+				rd->string.str = str.str;
+			}
+
 			rd->string.len = str.len;
-
-			stringDataUsed += str.len;
-			std::memcpy(stringLocation, str.str, str.len);
 
 			// Set draw area
 			rd->area = area;

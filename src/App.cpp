@@ -124,7 +124,7 @@ void App::Update()
 	sprintf(frameRateText, "%.2f frames per second, %.2f ms per frame", double(fps), double(ms));
 	StringRef frameRateTextRef(frameRateText);
 
-	this->debug->GetTextRenderer()->AddText(frameRateTextRef, Vec2f(0.0f, 0.0f));
+	this->debug->GetTextRenderer()->AddText(frameRateTextRef, Vec2f(0.0f, 0.0f), true);
 
 	this->debug->GetLog()->Log(frameRateTextRef);
 
