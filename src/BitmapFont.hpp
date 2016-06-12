@@ -25,7 +25,7 @@ private:
 	BitmapGlyph* glyphs;
 	unsigned int glyphCount;
 
-	int lineHeight;
+	Vec2i genericGlyphSize;
 
 	static void ParseBitmapRow(StringRef line, unsigned int pixels, unsigned char* bitmapOut);
 	static Vec2f CalculateTextureSize(int glyphCount, Vec2f glyphSize);
@@ -36,7 +36,8 @@ public:
 
 	const BitmapGlyph* GetGlyph(unsigned int codePoint) const;
 
-	int GetLineHeight() const { return lineHeight; }
+	int GetLineHeight() const { return genericGlyphSize.y; }
+	int GetGlyphWidth() const { return genericGlyphSize.x; }
 
 	unsigned int GetTextureDriverId() const { return textureId; }
 	Vec2f GetTextureSize() const { return textureSize; }

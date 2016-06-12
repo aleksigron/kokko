@@ -24,8 +24,7 @@ BitmapFont::BitmapFont() :
 	textureId(0),
 	glyphSkipList(nullptr),
 	glyphs(nullptr),
-	glyphCount(0),
-	lineHeight(0)
+	glyphCount(0)
 {
 }
 
@@ -83,7 +82,7 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 	int readGlyphs = -1;
 	int readBitmapRows = -1;
 
-	Vec2f genericGlyphSize(0.0f, 0.0f);
+	Vec2f glyphSize(0.0f, 0.0f);
 	Vec2f glyphSafeSize(0.0f, 0.0f);
 
 	Buffer<unsigned char> textureBuffer;
@@ -132,12 +131,13 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 			{
 				case "FONTBOUNDINGBOX"_hash:
 				{
-					this->lineHeight = ParseInt(tokens[2]);
+					genericGlyphSize.x = ParseInt(tokens[1]);
+					genericGlyphSize.y = ParseInt(tokens[2]);
 
-					genericGlyphSize.x = float(ParseInt(tokens[1]));
-					genericGlyphSize.y = float(this->lineHeight);
+					glyphSize.x = static_cast<float>(genericGlyphSize.x);
+					glyphSize.y = static_cast<float>(genericGlyphSize.y);
 
-					glyphSafeSize = genericGlyphSize + Vec2f(2.0f, 2.0f);
+					glyphSafeSize = glyphSize + Vec2f(2.0f, 2.0f);
 				}
 					break;
 
