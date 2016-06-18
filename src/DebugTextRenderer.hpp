@@ -44,6 +44,10 @@ public:
 
 	Vec2f GetScaledFrameSize() const { return scaledFrameSize; }
 
+	const BitmapFont* GetFont() const { return font; }
+
+	int GetRowCountForTextLength(unsigned int characterCount) const;
+
 	/**
 	 * Add a text to be rendered this frame at a specified position.
 	 */

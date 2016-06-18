@@ -1,16 +1,19 @@
 #include "Debug.hpp"
 
-#include "DebugLog.hpp"
 #include "DebugTextRenderer.hpp"
+#include "DebugLogView.hpp"
+#include "DebugLog.hpp"
 
 Debug::Debug()
 {
-	log = new DebugLog;
 	textRenderer = new DebugTextRenderer;
+	logView = new DebugLogView(textRenderer);
+	log = new DebugLog(logView);
 }
 
 Debug::~Debug()
 {
-	delete textRenderer;
 	delete log;
+	delete logView;
+	delete textRenderer;
 }

@@ -52,6 +52,15 @@ void DebugTextRenderer::SetScaleFactor(float scale)
 	scaledFrameSize = frameSize * (1.0f / scaleFactor);
 }
 
+int DebugTextRenderer::GetRowCountForTextLength(unsigned int characterCount) const
+{
+	int glyphWidth = font->GetGlyphWidth();
+	int screenWidth = static_cast<int>(scaledFrameSize.x);
+	int charsPerRow = screenWidth / glyphWidth;
+
+	return (characterCount + charsPerRow - 1) / charsPerRow;
+}
+
 bool DebugTextRenderer::LoadBitmapFont(const char* filePath)
 {
 	Buffer<char> content = File::ReadText(filePath);
@@ -163,13 +172,20 @@ void DebugTextRenderer::Render()
 
 void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 {
-	assert(stringDataUsed * 4 < (1 << 16));
+	unsigned int charCount = 0;
+	for (unsigned i = 0, count = renderDataCount; i < count; ++i)
+	{
+		charCount += renderData[i].string.len;
+	}
+
+	// Make sure vertex indices fit in unsigned short type
+	assert(charCount * 4 < (1 << 16));
 
 	Buffer<Vertex3f2f> vertexBuffer;
-	vertexBuffer.Allocate(stringDataUsed * 4);
+	vertexBuffer.Allocate(charCount * 4);
 
 	Buffer<unsigned short> indexBuffer;
-	indexBuffer.Allocate(stringDataUsed * 6);
+	indexBuffer.Allocate(charCount * 6);
 
 	int fontLineHeight = font->GetLineHeight();
 	Vec2f textureSize = font->GetTextureSize();

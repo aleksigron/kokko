@@ -2,7 +2,11 @@
 
 #include <cstdio>
 
-DebugLog::DebugLog() : fileHandle(nullptr)
+#include "DebugLogView.hpp"
+
+DebugLog::DebugLog(DebugLogView* logView) :
+	fileHandle(nullptr),
+	logView(logView)
 {
 
 }
@@ -47,6 +51,9 @@ void DebugLog::Log(StringRef text)
 	// Write to standard output (console)
 	std::fwrite(text.str, 1, text.len, stdout);
 	std::fwrite("\n", 1, 1, stdout);
+
+	// Add debug log view
+	logView->AddLogEntry(text);
 }
 
 void DebugLog::FlushFileWrites()

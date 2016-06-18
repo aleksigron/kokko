@@ -11,6 +11,7 @@
 		4519497D1CCC0F14009DF07A /* BitmapFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4519497B1CCC0F14009DF07A /* BitmapFont.cpp */; };
 		45446ACE1D0625E300B90BB4 /* DebugLog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45446ACC1D0625E300B90BB4 /* DebugLog.cpp */; };
 		454ADD261CAB00740060443D /* FrustumCulling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454ADD241CAB00740060443D /* FrustumCulling.cpp */; };
+		4594E7371D0D8DE500E732EC /* DebugLogView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4594E7351D0D8DE500E732EC /* DebugLogView.cpp */; };
 		45A0052D1C933F43002D6134 /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004E71C933F43002D6134 /* App.cpp */; };
 		45A0052E1C933F43002D6134 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004EB1C933F43002D6134 /* Camera.cpp */; };
 		45A0052F1C933F43002D6134 /* CameraController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004ED1C933F43002D6134 /* CameraController.cpp */; };
@@ -68,6 +69,8 @@
 		454ADD241CAB00740060443D /* FrustumCulling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FrustumCulling.cpp; path = ../src/FrustumCulling.cpp; sourceTree = "<group>"; };
 		454ADD251CAB00740060443D /* FrustumCulling.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = FrustumCulling.hpp; path = ../src/FrustumCulling.hpp; sourceTree = "<group>"; };
 		4583750A1CFE242E00D37A1B /* Sort.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Sort.hpp; path = ../src/Sort.hpp; sourceTree = "<group>"; };
+		4594E7351D0D8DE500E732EC /* DebugLogView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugLogView.cpp; path = ../src/DebugLogView.cpp; sourceTree = "<group>"; };
+		4594E7361D0D8DE500E732EC /* DebugLogView.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DebugLogView.hpp; path = ../src/DebugLogView.hpp; sourceTree = "<group>"; };
 		45A004E71C933F43002D6134 /* App.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = App.cpp; path = ../src/App.cpp; sourceTree = "<group>"; };
 		45A004E81C933F43002D6134 /* App.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = App.hpp; path = ../src/App.hpp; sourceTree = "<group>"; };
 		45A004E91C933F43002D6134 /* BoundingBox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BoundingBox.hpp; path = ../src/BoundingBox.hpp; sourceTree = "<group>"; };
@@ -168,14 +171,16 @@
 		451949771CCC0E4B009DF07A /* Debug */ = {
 			isa = PBXGroup;
 			children = (
+				4519497B1CCC0F14009DF07A /* BitmapFont.cpp */,
+				4519497C1CCC0F14009DF07A /* BitmapFont.hpp */,
 				45D488D91D0B6DA700ADDA6F /* Debug.cpp */,
 				45D488DA1D0B6DA700ADDA6F /* Debug.hpp */,
 				45446ACC1D0625E300B90BB4 /* DebugLog.cpp */,
 				45446ACD1D0625E300B90BB4 /* DebugLog.hpp */,
+				4594E7351D0D8DE500E732EC /* DebugLogView.cpp */,
+				4594E7361D0D8DE500E732EC /* DebugLogView.hpp */,
 				451949781CCC0E95009DF07A /* DebugTextRenderer.cpp */,
 				451949791CCC0E95009DF07A /* DebugTextRenderer.hpp */,
-				4519497B1CCC0F14009DF07A /* BitmapFont.cpp */,
-				4519497C1CCC0F14009DF07A /* BitmapFont.hpp */,
 			);
 			name = Debug;
 			sourceTree = "<group>";
@@ -412,6 +417,7 @@
 				45A0053E1C933F43002D6134 /* StackAllocator.cpp in Sources */,
 				45A005441C933F43002D6134 /* Window.cpp in Sources */,
 				45A005301C933F43002D6134 /* File.cpp in Sources */,
+				4594E7371D0D8DE500E732EC /* DebugLogView.cpp in Sources */,
 				45A0052F1C933F43002D6134 /* CameraController.cpp in Sources */,
 				45A005311C933F43002D6134 /* ImageData.cpp in Sources */,
 				45A005401C933F43002D6134 /* Time.cpp in Sources */,

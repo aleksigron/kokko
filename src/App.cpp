@@ -2,6 +2,7 @@
 
 #include "Debug.hpp"
 #include "DebugLog.hpp"
+#include "DebugLogView.hpp"
 #include "DebugTextRenderer.hpp"
 
 #include "ImageData.hpp"
@@ -122,15 +123,13 @@ void App::Update()
 	float ms = deltaTime * 1000.0f;
 	char frameRateText[64];
 	sprintf(frameRateText, "%.2f frames per second, %.2f ms per frame", double(fps), double(ms));
-	StringRef frameRateTextRef(frameRateText);
 
-	this->debug->GetTextRenderer()->AddText(frameRateTextRef, Vec2f(0.0f, 0.0f), true);
-
-	this->debug->GetLog()->Log(frameRateTextRef);
+	this->debug->GetLog()->Log(StringRef(frameRateText));
 
 	this->scene.CalculateWorldTransforms();
 	this->renderer.Render(this->scene);
 
+	this->debug->GetLogView()->DrawToTextRenderer();
 	this->debug->GetTextRenderer()->Render();
 
 	this->mainWindow.UpdateInput();
