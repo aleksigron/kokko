@@ -10,6 +10,7 @@ private:
 	struct LogEntry
 	{
 		StringRef text;
+		unsigned lengthWithPad;
 		int rows;
 	};
 

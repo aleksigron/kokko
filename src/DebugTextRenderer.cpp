@@ -21,7 +21,7 @@ DebugTextRenderer::DebugTextRenderer() :
 	font = nullptr;
 
 	renderDataCount = 0;
-	renderDataAllocated = 32;
+	renderDataAllocated = 64;
 	renderData = new RenderData[renderDataAllocated];
 
 	stringDataUsed = 0;

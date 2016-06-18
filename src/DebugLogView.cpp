@@ -53,9 +53,10 @@ void DebugLogView::AddLogEntry(StringRef text)
 		unsigned int newEntryIndex = entryFirst + entryCount;
 		++entryCount;
 
-		LogEntry& entry = entries[newEntryIndex % entryAllocated];
-		entry.text = StringRef();
-		entry.rows = textRenderer->GetRowCountForTextLength(text.len);
+		LogEntry& newEntry = entries[newEntryIndex % entryAllocated];
+		newEntry.text = StringRef();
+		newEntry.rows = textRenderer->GetRowCountForTextLength(text.len);
+		newEntry.lengthWithPad = 0;
 
 		int currentRows = 0;
 
@@ -65,13 +66,21 @@ void DebugLogView::AddLogEntry(StringRef text)
 			currentRows += entries[index].rows;
 		}
 
-		// Check if we can remove
+		// Check if we can remove entries
 		while (entryCount > 0)
 		{
-			if (currentRows - entries[entryFirst].rows >= screenRows)
+			LogEntry& oldEntry = entries[entryFirst];
+
+			// Even if we remove the oldest entry, we still have at least screenRows rows
+			if (currentRows - oldEntry.rows >= screenRows)
 			{
+				stringDataUsed -= oldEntry.lengthWithPad;
+				stringDataFirst = (stringDataFirst + oldEntry.lengthWithPad) % stringDataAllocated;
+
 				entryFirst = (entryFirst + 1) % entryAllocated;
 				--entryCount;
+
+				currentRows -= oldEntry.rows;
 			}
 			else
 			{
@@ -87,6 +96,7 @@ void DebugLogView::AddLogEntry(StringRef text)
 		{
 			unsigned int padding = stringDataAllocated - index;
 			stringDataUsed += padding;
+			newEntry.lengthWithPad += padding;
 
 			index = 0;
 		}
@@ -94,8 +104,9 @@ void DebugLogView::AddLogEntry(StringRef text)
 		if (stringDataUsed + text.len <= stringDataAllocated)
 		{
 			char* stringLocation = stringData + index;
-			entry.text.str = stringLocation;
-			entry.text.len = text.len;
+			newEntry.text.str = stringLocation;
+			newEntry.text.len = text.len;
+			newEntry.lengthWithPad += text.len;
 
 			stringDataUsed += text.len;
 			std::memcpy(stringLocation, text.str, text.len);
@@ -123,7 +134,7 @@ void DebugLogView::DrawToTextRenderer()
 		area.position.x = 0.0f;
 		area.position.y = frame.y - (lineHeight * rowsUsed);
 		area.size.x = frame.x;
-		area.size.y = lineHeight * rowsUsed;
+		area.size.y = lineHeight * entry.rows;
 
 		textRenderer->AddText(entry.text, area, false);
 	}
