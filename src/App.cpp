@@ -5,7 +5,6 @@
 #include "DebugLogView.hpp"
 #include "DebugTextRenderer.hpp"
 
-#include "ImageData.hpp"
 #include "MeshLoader.hpp"
 
 #include "Material.hpp"
@@ -26,7 +25,6 @@ App::App()
 {
 	App::instance = this;
 
-	debug = new Debug;
 }
 
 App::~App()
@@ -40,6 +38,8 @@ bool App::Initialize()
 
 	if (this->mainWindow.Initialize("Kokko"))
 	{
+		this->debug = new Debug(mainWindow.GetKeyboardInput());
+
 		this->renderer.Initialize();
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
@@ -129,8 +129,7 @@ void App::Update()
 	this->scene.CalculateWorldTransforms();
 	this->renderer.Render(this->scene);
 
-	this->debug->GetLogView()->DrawToTextRenderer();
-	this->debug->GetTextRenderer()->Render();
+	this->debug->Render();
 
 	this->mainWindow.UpdateInput();
 

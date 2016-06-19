@@ -3,6 +3,7 @@
 class DebugTextRenderer;
 class DebugLogView;
 class DebugLog;
+class KeyboardInput;
 
 class Debug
 {
@@ -11,9 +12,20 @@ private:
 	DebugLogView* logView;
 	DebugLog* log;
 
+	KeyboardInput* keyboardInput;
+
+	enum class DebugMode
+	{
+		None,
+		LogView
+	}
+	mode;
+
 public:
-	Debug();
+	Debug(KeyboardInput* keyboardInput);
 	~Debug();
+	
+	void Render();
 
 	DebugLog* GetLog() { return log; }
 	DebugLogView* GetLogView() { return logView; }
