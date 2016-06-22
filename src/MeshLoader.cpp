@@ -9,8 +9,9 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 {
 	using uint = unsigned int;
 	using ushort = unsigned short;
+	using ubyte = unsigned char;
 
-	Buffer<unsigned char> file = File::ReadBinary(filePath);
+	Buffer<ubyte> file = File::ReadBinary(filePath);
 	size_t fileSize = file.Count();
 
 	const uint headerSize = 16;
@@ -18,7 +19,7 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 
 	if (file.IsValid() && fileSize >= headerSize)
 	{
-		unsigned char* d = file.Data();
+		ubyte* d = file.Data();
 		uint* headerData = reinterpret_cast<uint*>(d);
 		uint fileMagic = headerData[0];
 
@@ -58,7 +59,7 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 			if (expectedSize == fileSize)
 			{
 				float* boundsData = reinterpret_cast<float*>(d + headerSize);
-				float* vertData = reinterpret_cast<float*>(d + headerSize + boundsSize);
+				ubyte* vertData = d + headerSize + boundsSize;
 				ushort* indexData = reinterpret_cast<ushort*>(d + headerSize + boundsSize + vertexDataSize);
 
 				mesh.bounds.center.x = boundsData[0];
@@ -70,17 +71,42 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 				mesh.bounds.extents.z = boundsData[5];
 
 				if (normCount == 0 && colCount == 0 && texCount == 1)
-					mesh.Upload_3f2f(vertData, vertCount, indexData, indexCount);
+				{
+					BufferRef<unsigned short> indices(indexData, indexCount);
+					BufferRef<Vertex3f2f> vertices;
+					vertices.data = reinterpret_cast<Vertex3f2f*>(vertData);
+					vertices.count = vertCount;
 
+					mesh.Upload_3f2f(vertices, indices);
+				}
 				else if ((normCount == 1 && colCount == 0 && texCount == 0) ||
 					(normCount == 0 && colCount == 1 && texCount == 0))
-					mesh.Upload_3f3f(vertData, vertCount, indexData, indexCount);
+				{
+					BufferRef<unsigned short> indices(indexData, indexCount);
+					BufferRef<Vertex3f3f> vertices;
+					vertices.data = reinterpret_cast<Vertex3f3f*>(vertData);
+					vertices.count = vertCount;
 
+					mesh.Upload_3f3f(vertices, indices);
+				}
 				else if (normCount == 1 && colCount == 0 && texCount == 1)
-					mesh.Upload_3f3f2f(vertData, vertCount, indexData, indexCount);
+				{
+					BufferRef<unsigned short> indices(indexData, indexCount);
+					BufferRef<Vertex3f3f2f> vertices;
+					vertices.data = reinterpret_cast<Vertex3f3f2f*>(vertData);
+					vertices.count = vertCount;
 
+					mesh.Upload_3f3f2f(vertices, indices);
+				}
 				else if (normCount == 1 && colCount == 1 && texCount == 0)
-					mesh.Upload_3f3f3f(vertData, vertCount, indexData, indexCount);
+				{
+					BufferRef<unsigned short> indices(indexData, indexCount);
+					BufferRef<Vertex3f3f3f> vertices;
+					vertices.data = reinterpret_cast<Vertex3f3f3f*>(vertData);
+					vertices.count = vertCount;
+
+					mesh.Upload_3f3f3f(vertices, indices);
+				}
 
 				return true;
 			}

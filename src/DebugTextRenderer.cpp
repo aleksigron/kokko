@@ -275,10 +275,13 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 		}
 	}
 
-	float* vb = reinterpret_cast<float*>(vertexBuffer.Data());
-	unsigned int vbs = static_cast<unsigned int>(vertexBuffer.Count());
-	unsigned short* ib = indexBuffer.Data();
-	unsigned int ibs = static_cast<unsigned int>(indexBuffer.Count());
+	BufferRef<Vertex3f2f> vertices;
+	vertices.data = vertexBuffer.Data();
+	vertices.count = vertexBuffer.Count();
 
-	mesh.Upload_3f2f(vb, vbs, ib, ibs);
+	BufferRef<unsigned short> indices;
+	indices.data = indexBuffer.Data();
+	indices.count = indexBuffer.Count();
+
+	mesh.Upload_3f2f(vertices, indices);
 }

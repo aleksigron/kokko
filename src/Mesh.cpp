@@ -29,16 +29,17 @@ void Mesh::DeleteBuffers()
 	glDeleteBuffers(2, bufferObjects);
 }
 
-void Mesh::Upload_3f2f(float* vertexData, unsigned int vertexCount,
-					   unsigned short* indexData, unsigned int indexCount)
+void Mesh::Upload_3f2f(BufferRef<Vertex3f2f> vertices, BufferRef<unsigned short> indices)
 {
 	using V = Vertex3f2f;
 
-	this->indexCount = GLsizei(indexCount);
+	unsigned int verticesSize = static_cast<unsigned int>(V::size * vertices.count);
+	unsigned int indicesSize = static_cast<unsigned int>(sizeof(unsigned short) * indices.count);
+
+	this->indexCount = GLsizei(indices.count);
 	this->indexElementType = GL_UNSIGNED_SHORT;
 
-	this->CreateBuffers(vertexData, V::size * vertexCount,
-						indexData, sizeof(uint16_t) * indexCount);
+	this->CreateBuffers(vertices.data, verticesSize, indices.data, indicesSize);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
@@ -50,16 +51,17 @@ void Mesh::Upload_3f2f(float* vertexData, unsigned int vertexCount,
 	glBindVertexArray(0);
 }
 
-void Mesh::Upload_3f3f(float* vertexData, unsigned int vertexCount,
-						 unsigned short* indexData, unsigned int indexCount)
+void Mesh::Upload_3f3f(BufferRef<Vertex3f3f> vertices, BufferRef<unsigned short> indices)
 {
 	using V = Vertex3f3f;
 
-	this->indexCount = GLsizei(indexCount);
+	unsigned int verticesSize = static_cast<unsigned int>(V::size * vertices.count);
+	unsigned int indicesSize = static_cast<unsigned int>(sizeof(unsigned short) * indices.count);
+
+	this->indexCount = GLsizei(indices.count);
 	this->indexElementType = GL_UNSIGNED_SHORT;
 
-	this->CreateBuffers(vertexData, V::size * vertexCount,
-						indexData, sizeof(uint16_t) * indexCount);
+	this->CreateBuffers(vertices.data, verticesSize, indices.data, indicesSize);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
@@ -71,16 +73,17 @@ void Mesh::Upload_3f3f(float* vertexData, unsigned int vertexCount,
 	glBindVertexArray(0);
 }
 
-void Mesh::Upload_3f3f2f(float* vertexData, unsigned int vertexCount,
-						 unsigned short* indexData, unsigned int indexCount)
+void Mesh::Upload_3f3f2f(BufferRef<Vertex3f3f2f> vertices, BufferRef<unsigned short> indices)
 {
 	using V = Vertex3f3f2f;
 
-	this->indexCount = GLsizei(indexCount);
+	unsigned int verticesSize = static_cast<unsigned int>(V::size * vertices.count);
+	unsigned int indicesSize = static_cast<unsigned int>(sizeof(unsigned short) * indices.count);
+
+	this->indexCount = GLsizei(indices.count);
 	this->indexElementType = GL_UNSIGNED_SHORT;
 
-	this->CreateBuffers(vertexData, V::size * vertexCount,
-						indexData, sizeof(uint16_t) * indexCount);
+	this->CreateBuffers(vertices.data, verticesSize, indices.data, indicesSize);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
@@ -95,16 +98,17 @@ void Mesh::Upload_3f3f2f(float* vertexData, unsigned int vertexCount,
 	glBindVertexArray(0);
 }
 
-void Mesh::Upload_3f3f3f(float* vertexData, unsigned int vertexCount,
-						 unsigned short* indexData, unsigned int indexCount)
+void Mesh::Upload_3f3f3f(BufferRef<Vertex3f3f3f> vertices, BufferRef<unsigned short> indices)
 {
 	using V = Vertex3f3f3f;
 
-	this->indexCount = GLsizei(indexCount);
+	unsigned int verticesSize = static_cast<unsigned int>(V::size * vertices.count);
+	unsigned int indicesSize = static_cast<unsigned int>(sizeof(unsigned short) * indices.count);
+
+	this->indexCount = GLsizei(indices.count);
 	this->indexElementType = GL_UNSIGNED_SHORT;
 
-	this->CreateBuffers(vertexData, V::size * vertexCount,
-						indexData, sizeof(uint16_t) * indexCount);
+	this->CreateBuffers(vertices.data, verticesSize, indices.data, indicesSize);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
