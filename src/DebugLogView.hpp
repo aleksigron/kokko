@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StringRef.hpp"
+#include "Rectangle.hpp"
 
 class DebugTextRenderer;
 
@@ -16,6 +17,8 @@ private:
 
 	DebugTextRenderer* textRenderer;
 
+	Rectangle drawArea;
+
 	LogEntry* entries;
 	unsigned int entryFirst;
 	unsigned int entryCount;
@@ -29,6 +32,8 @@ private:
 public:
 	DebugLogView(DebugTextRenderer* textRenderer);
 	~DebugLogView();
+
+	void SetDrawArea(const Rectangle& area);
 
 	void AddLogEntry(StringRef text);
 

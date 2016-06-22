@@ -53,6 +53,7 @@ bool App::Initialize()
 		Vec2f frameSize = mainWindow.GetFrameBufferSize();
 		dtr->SetFrameSize(frameSize);
 		dtr->SetScaleFactor(2.0f);
+		debug->UpdateLogViewDrawArea();
 
 		// Meshes from files
 

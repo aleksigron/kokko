@@ -5,6 +5,7 @@
 #include "DebugTextRenderer.hpp"
 #include "DebugLogView.hpp"
 #include "DebugLog.hpp"
+#include "BitmapFont.hpp"
 
 #include "KeyboardInput.hpp"
 
@@ -22,6 +23,20 @@ Debug::~Debug()
 	delete log;
 	delete logView;
 	delete textRenderer;
+}
+
+void Debug::UpdateLogViewDrawArea()
+{
+	Vec2f size = textRenderer->GetScaledFrameSize();
+	int lineHeight = textRenderer->GetFont()->GetLineHeight();
+
+	Rectangle logArea;
+	logArea.position.x = 0.0f;
+	logArea.position.y = lineHeight;
+	logArea.size.x = size.x;
+	logArea.size.y = size.y - lineHeight;
+
+	logView->SetDrawArea(logArea);
 }
 
 void Debug::Render()

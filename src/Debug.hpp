@@ -24,6 +24,8 @@ private:
 public:
 	Debug(KeyboardInput* keyboardInput);
 	~Debug();
+
+	void UpdateLogViewDrawArea();
 	
 	void Render();
 

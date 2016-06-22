@@ -24,14 +24,19 @@ DebugLogView::~DebugLogView()
 	delete[] entries;
 }
 
+void DebugLogView::SetDrawArea(const Rectangle& area)
+{
+	this->drawArea = area;
+}
+
 void DebugLogView::AddLogEntry(StringRef text)
 {
-	Vec2f frameSize = textRenderer->GetScaledFrameSize();
+	Vec2f areaSize = this->drawArea.size;
 
 	const BitmapFont* font = textRenderer->GetFont();
 	int lineHeight = font->GetLineHeight();
 
-	int screenRows = (static_cast<int>(frameSize.y) + lineHeight - 1) / lineHeight;
+	int screenRows = areaSize.y / lineHeight;
 
 	// Check if we have to allocate the buffer
 	if (entries == nullptr && stringData == nullptr)
@@ -39,7 +44,7 @@ void DebugLogView::AddLogEntry(StringRef text)
 		entryAllocated = screenRows + 1;
 		entries = new LogEntry[entryAllocated];
 
-		int rowChars = static_cast<int>(frameSize.x) / font->GetGlyphWidth();
+		int rowChars = static_cast<int>(areaSize.x) / font->GetGlyphWidth();
 
 		stringDataAllocated = entryAllocated * rowChars;
 		stringData = new char[stringDataAllocated];
@@ -71,8 +76,8 @@ void DebugLogView::AddLogEntry(StringRef text)
 		{
 			LogEntry& oldEntry = entries[entryFirst];
 
-			// Even if we remove the oldest entry, we still have at least screenRows rows
-			if (currentRows - oldEntry.rows >= screenRows)
+			// We have more than screenRows rows
+			if (currentRows > screenRows)
 			{
 				stringDataUsed -= oldEntry.lengthWithPad;
 				stringDataFirst = (stringDataFirst + oldEntry.lengthWithPad) % stringDataAllocated;
@@ -119,7 +124,8 @@ void DebugLogView::DrawToTextRenderer()
 	// Go over each entry
 	// Add them to the DebugTextRenderer
 
-	Vec2f frame = textRenderer->GetScaledFrameSize();
+	Vec2f areaSize = this->drawArea.size;
+	Vec2f areaPos = this->drawArea.position;
 	int lineHeight = textRenderer->GetFont()->GetLineHeight();
 	int rowsUsed = 0;
 
@@ -131,15 +137,11 @@ void DebugLogView::DrawToTextRenderer()
 		rowsUsed += entry.rows;
 
 		Rectangle area;
-		area.position.x = 0.0f;
-		area.position.y = frame.y - (lineHeight * rowsUsed);
-		area.size.x = frame.x;
+		area.position.x = areaPos.x;
+		area.position.y = areaPos.y + areaSize.y - (lineHeight * rowsUsed);
+		area.size.x = areaSize.x;
 		area.size.y = lineHeight * entry.rows;
 
 		textRenderer->AddText(entry.text, area, false);
 	}
 }
-
-
-
-
