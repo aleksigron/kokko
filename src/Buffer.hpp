@@ -89,12 +89,12 @@ public:
 		this->count = 0;
 	}
 
-	inline bool IsValid() { return this->data != nullptr; }
+	bool IsValid() { return this->data != nullptr; }
 	
-	inline T* Data() { return this->data; }
-	inline const T* Data() const { return this->data; }
-	inline SizeType Count() const { return this->count; }
+	T* Data() { return this->data; }
+	const T* Data() const { return this->data; }
+	SizeType Count() const { return this->count; }
 	
-	inline T& operator[](SizeType index) { return this->data[index]; }
-	inline const T& operator[](SizeType index) const { return this->data[index]; }
+	T& operator[](SizeType index) { return this->data[index]; }
+	const T& operator[](SizeType index) const { return this->data[index]; }
 };

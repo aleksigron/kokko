@@ -69,6 +69,7 @@
 		454ADD241CAB00740060443D /* FrustumCulling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FrustumCulling.cpp; path = ../src/FrustumCulling.cpp; sourceTree = "<group>"; };
 		454ADD251CAB00740060443D /* FrustumCulling.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = FrustumCulling.hpp; path = ../src/FrustumCulling.hpp; sourceTree = "<group>"; };
 		4583750A1CFE242E00D37A1B /* Sort.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Sort.hpp; path = ../src/Sort.hpp; sourceTree = "<group>"; };
+		458C7A3E1D1B0FC200591AC5 /* BufferRef.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BufferRef.hpp; path = ../src/BufferRef.hpp; sourceTree = "<group>"; };
 		4594E7351D0D8DE500E732EC /* DebugLogView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugLogView.cpp; path = ../src/DebugLogView.cpp; sourceTree = "<group>"; };
 		4594E7361D0D8DE500E732EC /* DebugLogView.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DebugLogView.hpp; path = ../src/DebugLogView.hpp; sourceTree = "<group>"; };
 		45A004E71C933F43002D6134 /* App.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = App.cpp; path = ../src/App.cpp; sourceTree = "<group>"; };
@@ -217,6 +218,7 @@
 				45CB910F1CDFD8D500FF12D2 /* AsciiStringUtil.cpp */,
 				45CB91101CDFD8D500FF12D2 /* AsciiStringUtil.hpp */,
 				45A004EA1C933F43002D6134 /* Buffer.hpp */,
+				458C7A3E1D1B0FC200591AC5 /* BufferRef.hpp */,
 				45A004EF1C933F43002D6134 /* Collection.hpp */,
 				45A004F01C933F43002D6134 /* File.cpp */,
 				45A004F11C933F43002D6134 /* File.hpp */,
