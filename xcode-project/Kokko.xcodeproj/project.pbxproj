@@ -62,6 +62,8 @@
 		451949791CCC0E95009DF07A /* DebugTextRenderer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DebugTextRenderer.hpp; path = ../src/DebugTextRenderer.hpp; sourceTree = "<group>"; };
 		4519497B1CCC0F14009DF07A /* BitmapFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BitmapFont.cpp; path = ../src/BitmapFont.cpp; sourceTree = "<group>"; };
 		4519497C1CCC0F14009DF07A /* BitmapFont.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BitmapFont.hpp; path = ../src/BitmapFont.hpp; sourceTree = "<group>"; };
+		4520796A1D1B2A3900CDB065 /* Color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Color.hpp; path = ../src/Color.hpp; sourceTree = "<group>"; };
+		4520796B1D1B2A3900CDB065 /* ColorSrgb.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ColorSrgb.hpp; path = ../src/ColorSrgb.hpp; sourceTree = "<group>"; };
 		454102E61C93473100D2841F /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../res; sourceTree = "<group>"; };
 		454102E71C93476E00D2841F /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = ../include; sourceTree = "<group>"; };
 		45446ACC1D0625E300B90BB4 /* DebugLog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugLog.cpp; path = ../src/DebugLog.cpp; sourceTree = "<group>"; };
@@ -246,6 +248,8 @@
 			isa = PBXGroup;
 			children = (
 				45A004E91C933F43002D6134 /* BoundingBox.hpp */,
+				4520796A1D1B2A3900CDB065 /* Color.hpp */,
+				4520796B1D1B2A3900CDB065 /* ColorSrgb.hpp */,
 				45A004FE1C933F43002D6134 /* Mat2x2.hpp */,
 				45A004FF1C933F43002D6134 /* Mat3x3.hpp */,
 				45A005001C933F43002D6134 /* Mat4x4.hpp */,
