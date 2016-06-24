@@ -6,8 +6,6 @@
 
 struct ColorSrgb
 {
-	using Component = unsigned char;
-
 	unsigned char r, g, b, a;
 
 	ColorSrgb() : r(0), g(0), b(0), a(0)
@@ -46,9 +44,9 @@ struct ColorSrgb
 
 	void FromLinear(const Color& linear)
 	{
-		this->r = static_cast<Component>(std::pow(linear.r, 2.2f) * 255.99998474f);
-		this->g = static_cast<Component>(std::pow(linear.g, 2.2f) * 255.99998474f);
-		this->b = static_cast<Component>(std::pow(linear.b, 2.2f) * 255.99998474f);
-		this->a = static_cast<Component>(linear.a * 255.0f);
+		this->r = static_cast<unsigned char>(std::pow(linear.r, 2.2f) * 255.99998474f);
+		this->g = static_cast<unsigned char>(std::pow(linear.g, 2.2f) * 255.99998474f);
+		this->b = static_cast<unsigned char>(std::pow(linear.b, 2.2f) * 255.99998474f);
+		this->a = static_cast<unsigned char>(linear.a * 255.0f);
 	}
 };
