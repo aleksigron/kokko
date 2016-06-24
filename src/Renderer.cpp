@@ -99,6 +99,8 @@ void Renderer::Render(Scene& scene)
 
 				glUseProgram(shader->driverId);
 
+				unsigned int usedTextures = 0;
+
 				// Bind each material uniform with a value
 				for (unsigned uIndex = 0; uIndex < material->uniformCount; ++uIndex)
 				{
@@ -133,13 +135,16 @@ void Renderer::Render(Scene& scene)
 						break;
 
 					case ShaderUniformType::Tex2D:
+					case ShaderUniformType::TexCube:
 					{
 						uint32_t textureHash = *reinterpret_cast<uint32_t*>(d);
 						Texture* texture = res->GetTexture(textureHash);
 
-						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, texture->driverId);
-						glUniform1i(u.location, 0);
+						glActiveTexture(GL_TEXTURE0 + usedTextures);
+						glBindTexture(texture->targetType, texture->driverId);
+						glUniform1i(u.location, usedTextures);
+
+						++usedTextures;
 					}
 						break;
 					}

@@ -272,7 +272,9 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 		ResourceManager* rm = App::GetResourceManager();
 
 		Texture* texture = rm->CreateTexture();
-		texture->Upload(imageData, Texture::FilteringMode::Nearest);
+		TextureOptions options;
+		options.filter = TextureFilterMode::Nearest;
+		texture->Upload(imageData, options);
 
 		textureId = texture->driverId;
 		

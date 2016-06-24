@@ -17,6 +17,7 @@
 const char* const ShaderUniform::TypeNames[] =
 {
 	"tex2d",
+	"texCube",
 	"mat4x4",
 	"vec4",
 	"vec3",
@@ -27,6 +28,7 @@ const char* const ShaderUniform::TypeNames[] =
 
 const unsigned int ShaderUniform::TypeSizes[] = {
 	4, // Texture2D
+	4, // TextureCube
 	64, // Mat4x4
 	16, // Vec4
 	12, // Vec3

@@ -6,17 +6,33 @@
 
 struct ImageData;
 
+enum class TextureFilterMode
+{
+	Nearest,
+	Linear
+};
+
+enum class TextureWrapMode
+{
+	Repeat,
+	MirroredRepeat,
+	ClampToEdge,
+	ClampToBorder
+};
+
+struct TextureOptions
+{
+	TextureFilterMode filter = TextureFilterMode::Linear;
+	TextureWrapMode wrap = TextureWrapMode::Repeat;
+};
+
 struct Texture
 {
-	enum class FilteringMode
-	{
-		Nearest,
-		Linear
-	};
-
 	uint32_t nameHash;
-	Vec2i textureSize;
+	unsigned int targetType;
 	unsigned int driverId;
+	Vec2f textureSize;
 
-	void Upload(const ImageData& image, FilteringMode mode);
+	void Upload(const ImageData& image);
+	void Upload(const ImageData& image, const TextureOptions& options);
 };

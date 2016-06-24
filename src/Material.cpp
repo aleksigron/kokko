@@ -140,6 +140,15 @@ bool Material::LoadFromConfiguration(Buffer<char>& configuration, ResourceManage
 								this->SetUniformValueByIndex(varIndex, texture->nameHash);
 						}
 							break;
+
+						case ShaderUniformType::TexCube:
+						{
+							const char* texturePath = varVal.GetString();
+							Texture* texture = res->GetTexture(texturePath);
+							if (texture != nullptr)
+								this->SetUniformValueByIndex(varIndex, texture->nameHash);
+						}
+							break;
 					}
 				}
 			}

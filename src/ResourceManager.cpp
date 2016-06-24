@@ -214,7 +214,7 @@ bool ResourceManager::LoadTexture(Texture* texture, const char* path)
 
 	if (imageData.LoadGlraw(path))
 	{
-		texture->Upload(imageData, Texture::FilteringMode::Linear);
+		texture->Upload(imageData);
 
 		return true;
 	}
