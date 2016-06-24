@@ -6,15 +6,18 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
-#include "Window.hpp"
-#include "Camera.hpp"
 #include "App.hpp"
+#include "Window.hpp"
+
 #include "Material.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "World.hpp"
+#include "Scene.hpp"
+
+#include "Camera.hpp"
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
-#include "Scene.hpp"
 #include "FrustumCulling.hpp"
 
 Renderer::Renderer()
@@ -42,7 +45,7 @@ void Renderer::Initialize()
 	glDepthFunc(GL_LESS);
 }
 
-void Renderer::Render(Scene& scene)
+void Renderer::Render(const World* world, Scene* scene)
 {
 	ResourceManager* res = App::GetResourceManager();
 
@@ -62,7 +65,7 @@ void Renderer::Render(Scene& scene)
 		{
 			Mesh& mesh = res->meshes.Get(o[i].mesh);
 
-			const Mat4x4f& matrix = scene.GetWorldTransformMatrix(o[i].sceneObjectId);
+			const Mat4x4f& matrix = scene->GetWorldTransformMatrix(o[i].sceneObjectId);
 			bb[oCount] = mesh.bounds.Transform(matrix);
 
 			++oCount;
@@ -75,6 +78,10 @@ void Renderer::Render(Scene& scene)
 
 	// Do frustum culling
 	FrustumCulling::CullAABB(&frustum, oCount, bb, bbcs);
+
+	// Get the background color for view
+	Color clearCol = world->GetBackgroundColor();
+	glClearColor(clearCol.r, clearCol.r, clearCol.r, 1.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -150,7 +157,7 @@ void Renderer::Render(Scene& scene)
 					}
 				}
 
-				Mat4x4f modelMatrix = scene.GetWorldTransformMatrix(obj.sceneObjectId);
+				Mat4x4f modelMatrix = scene->GetWorldTransformMatrix(obj.sceneObjectId);
 
 				if (shader->uniformMatMVP >= 0)
 				{

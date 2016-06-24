@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		4519497A1CCC0E95009DF07A /* DebugTextRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 451949781CCC0E95009DF07A /* DebugTextRenderer.cpp */; };
 		4519497D1CCC0F14009DF07A /* BitmapFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4519497B1CCC0F14009DF07A /* BitmapFont.cpp */; };
+		4520797A1D1DB82900CDB065 /* Skybox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 452079761D1DB82900CDB065 /* Skybox.cpp */; };
+		4520797B1D1DB82900CDB065 /* World.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 452079781D1DB82900CDB065 /* World.cpp */; };
 		45446ACE1D0625E300B90BB4 /* DebugLog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45446ACC1D0625E300B90BB4 /* DebugLog.cpp */; };
 		454ADD261CAB00740060443D /* FrustumCulling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454ADD241CAB00740060443D /* FrustumCulling.cpp */; };
 		4594E7371D0D8DE500E732EC /* DebugLogView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4594E7351D0D8DE500E732EC /* DebugLogView.cpp */; };
@@ -64,6 +66,10 @@
 		4519497C1CCC0F14009DF07A /* BitmapFont.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BitmapFont.hpp; path = ../src/BitmapFont.hpp; sourceTree = "<group>"; };
 		4520796A1D1B2A3900CDB065 /* Color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Color.hpp; path = ../src/Color.hpp; sourceTree = "<group>"; };
 		4520796B1D1B2A3900CDB065 /* ColorSrgb.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ColorSrgb.hpp; path = ../src/ColorSrgb.hpp; sourceTree = "<group>"; };
+		452079761D1DB82900CDB065 /* Skybox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Skybox.cpp; path = ../src/Skybox.cpp; sourceTree = "<group>"; };
+		452079771D1DB82900CDB065 /* Skybox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Skybox.hpp; path = ../src/Skybox.hpp; sourceTree = "<group>"; };
+		452079781D1DB82900CDB065 /* World.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = World.cpp; path = ../src/World.cpp; sourceTree = "<group>"; };
+		452079791D1DB82900CDB065 /* World.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = World.hpp; path = ../src/World.hpp; sourceTree = "<group>"; };
 		454102E61C93473100D2841F /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../res; sourceTree = "<group>"; };
 		454102E71C93476E00D2841F /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = ../include; sourceTree = "<group>"; };
 		45446ACC1D0625E300B90BB4 /* DebugLog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugLog.cpp; path = ../src/DebugLog.cpp; sourceTree = "<group>"; };
@@ -328,6 +334,10 @@
 				45A004EE1C933F43002D6134 /* CameraController.hpp */,
 				45A005131C933F43002D6134 /* Scene.cpp */,
 				45A005141C933F43002D6134 /* Scene.hpp */,
+				452079761D1DB82900CDB065 /* Skybox.cpp */,
+				452079771D1DB82900CDB065 /* Skybox.hpp */,
+				452079781D1DB82900CDB065 /* World.cpp */,
+				452079791D1DB82900CDB065 /* World.hpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -425,6 +435,7 @@
 				45A005301C933F43002D6134 /* File.cpp in Sources */,
 				4594E7371D0D8DE500E732EC /* DebugLogView.cpp in Sources */,
 				45A0052F1C933F43002D6134 /* CameraController.cpp in Sources */,
+				4520797B1D1DB82900CDB065 /* World.cpp in Sources */,
 				45A005311C933F43002D6134 /* ImageData.cpp in Sources */,
 				45A005401C933F43002D6134 /* Time.cpp in Sources */,
 				45A005371C933F43002D6134 /* Mesh.cpp in Sources */,
@@ -435,6 +446,7 @@
 				45A005351C933F43002D6134 /* main.cpp in Sources */,
 				45A005431C933F43002D6134 /* VirtualMemory.cpp in Sources */,
 				45A005411C933F43002D6134 /* VertexFormat.cpp in Sources */,
+				4520797A1D1DB82900CDB065 /* Skybox.cpp in Sources */,
 				45A005421C933F43002D6134 /* ViewFrustum.cpp in Sources */,
 				45A0053A1C933F43002D6134 /* Renderer.cpp in Sources */,
 				45A005361C933F43002D6134 /* Material.cpp in Sources */,

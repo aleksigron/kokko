@@ -7,9 +7,10 @@
 #include "Buffer.hpp"
 #include "Collection.hpp"
 
-class Window;
-struct Camera;
 struct BoundingBox;
+struct Camera;
+class Window;
+class World;
 class Scene;
 
 class Renderer
@@ -41,7 +42,7 @@ public:
 	
 	void Initialize();
 	
-	void Render(Scene& scene);
+	void Render(const World* world, Scene* scene);
 	
 	void AttachTarget(Window* window);
 	void SetActiveCamera(Camera* camera);

@@ -5,6 +5,8 @@
 #include "DebugLogView.hpp"
 #include "DebugTextRenderer.hpp"
 
+#include "World.hpp"
+
 #include "MeshLoader.hpp"
 
 #include "Material.hpp"
@@ -21,10 +23,11 @@ static void OnGlfwError(int errorCode, const char* description)
 
 App* App::instance = nullptr;
 
-App::App()
+App::App() :
+	world(nullptr),
+	debug(nullptr)
 {
 	App::instance = this;
-
 }
 
 App::~App()
@@ -38,6 +41,9 @@ bool App::Initialize()
 
 	if (this->mainWindow.Initialize("Kokko"))
 	{
+		this->world = new World;
+		this->world->SetBackgroundColor(Color(0.1f, 0.1f, 0.1f, 1.0f));
+
 		this->debug = new Debug(mainWindow.GetKeyboardInput());
 
 		this->renderer.Initialize();
@@ -128,7 +134,7 @@ void App::Update()
 	this->debug->GetLog()->Log(StringRef(frameRateText));
 
 	this->scene.CalculateWorldTransforms();
-	this->renderer.Render(this->scene);
+	this->renderer.Render(world, &scene);
 
 	this->debug->Render();
 

@@ -10,6 +10,8 @@
 
 #include "DebugTextRenderer.hpp"
 
+class World;
+
 class Debug;
 
 class App
@@ -24,6 +26,8 @@ private:
 	ResourceManager resourceManager;
 	CameraController cameraController;
 	Scene scene;
+
+	World* world;
 
 	Debug* debug;
 	
