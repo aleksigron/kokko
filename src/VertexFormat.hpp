@@ -2,6 +2,29 @@
 
 #include "Vec2.hpp"
 #include "Vec3.hpp"
+#include "Vec4.hpp"
+
+struct Vertex3f
+{
+	Vec3f a;
+
+	static const int size;
+
+	static const int aElemCount;
+	static const unsigned aElemType;
+	static const void* aOffset;
+};
+
+struct Vertex4f
+{
+	Vec4f a;
+
+	static const int size;
+
+	static const int aElemCount;
+	static const unsigned aElemType;
+	static const void* aOffset;
+};
 
 struct Vertex3f2f
 {

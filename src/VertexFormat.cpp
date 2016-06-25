@@ -3,6 +3,22 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
+// Generic: 3 float
+
+const int Vertex3f::size = static_cast<int>(sizeof(Vertex3f));
+
+const int Vertex3f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
+const unsigned Vertex3f::aElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex3f::aOffset = reinterpret_cast<void*>(offsetof(Vertex3f, a));
+
+// Generic: 4 float
+
+const int Vertex4f::size = static_cast<int>(sizeof(Vertex4f));
+
+const int Vertex4f::aElemCount = static_cast<int>(sizeof(Vec4f) / sizeof(float));
+const unsigned Vertex4f::aElemType = static_cast<unsigned>(GL_FLOAT);
+const void* Vertex4f::aOffset = reinterpret_cast<void*>(offsetof(Vertex4f, a));
+
 // Generic: 3 float, 2 float
 
 const int Vertex3f2f::size = static_cast<int>(sizeof(Vertex3f2f));

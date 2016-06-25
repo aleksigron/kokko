@@ -5,6 +5,19 @@
 
 #include "VertexFormat.hpp"
 
+Mesh::Mesh() :
+	vertexArrayObject(0),
+	bufferObjects{ 0, 0 },
+	indexCount(0),
+	indexElementType(0)
+{
+}
+
+Mesh::~Mesh()
+{
+	this->DeleteBuffers();
+}
+
 void Mesh::CreateBuffers(void* vertexData, unsigned int vertexDataSize,
 						 void* indexData, unsigned int indexDataSize)
 {
@@ -27,6 +40,25 @@ void Mesh::DeleteBuffers()
 {
 	glDeleteVertexArrays(1, &vertexArrayObject);
 	glDeleteBuffers(2, bufferObjects);
+}
+
+void Mesh::Upload_3f(BufferRef<Vertex3f> vertices, BufferRef<unsigned short> indices)
+{
+	using V = Vertex3f;
+
+	unsigned int verticesSize = static_cast<unsigned int>(V::size * vertices.count);
+	unsigned int indicesSize = static_cast<unsigned int>(sizeof(unsigned short) * indices.count);
+
+	this->indexCount = GLsizei(indices.count);
+	this->indexElementType = GL_UNSIGNED_SHORT;
+
+	this->CreateBuffers(vertices.data, verticesSize, indices.data, indicesSize);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
+
+	// Unbind vertex array
+	glBindVertexArray(0);
 }
 
 void Mesh::Upload_3f2f(BufferRef<Vertex3f2f> vertices, BufferRef<unsigned short> indices)

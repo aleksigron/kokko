@@ -24,8 +24,12 @@ public:
 
 	BoundingBox bounds;
 
+	Mesh();
+	~Mesh();
+
 	void DeleteBuffers();
 
+	void Upload_3f(BufferRef<Vertex3f> vertices, BufferRef<unsigned short> indices);
 	void Upload_3f2f(BufferRef<Vertex3f2f> vertices, BufferRef<unsigned short> indices);
 	void Upload_3f3f(BufferRef<Vertex3f3f> vertices, BufferRef<unsigned short> indices);
 	void Upload_3f3f2f(BufferRef<Vertex3f3f2f> vertices, BufferRef<unsigned short> indices);
