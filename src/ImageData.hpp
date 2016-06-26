@@ -1,12 +1,10 @@
 #pragma once
 
 #include "Vec2.hpp"
-#include "Buffer.hpp"
+#include "BufferRef.hpp"
 
 struct ImageData
 {
-	Buffer<unsigned char> dataBuffer;
-
 	unsigned char* imageData;
 	unsigned long imageDataSize;
 
@@ -19,5 +17,5 @@ struct ImageData
 
 	ImageData();
 
-	bool LoadGlraw(const char* filePath);
+	bool LoadGlraw(BufferRef<unsigned char> fileContent);
 };

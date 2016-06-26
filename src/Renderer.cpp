@@ -47,6 +47,8 @@ void Renderer::Initialize()
 
 void Renderer::Render(const World* world, Scene* scene)
 {
+	unsigned int error = glGetError();
+
 	ResourceManager* res = App::GetResourceManager();
 
 	RenderObject* o = this->objects;
@@ -86,11 +88,55 @@ void Renderer::Render(const World* world, Scene* scene)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
 
 	Mat4x4f viewMatrix = cam->GetViewMatrix();
 	Mat4x4f projectionMatrix = cam->GetProjectionMatrix();
 	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
+
+	// Draw the skybox first
+	{
+		Mat4x4f cameraRotation = Mat4x4f(cam->transform.rotation.GetTransposed());
+		Mat4x4f skyboxTransform = projectionMatrix * cameraRotation;
+
+		const Mesh& skyboxMesh = res->meshes.Get(world->GetSkyboxMeshId());
+		const Material* skyboxMaterial = res->GetMaterial(world->GetSkyboxMaterialId());
+		const Shader* skyboxShader = res->GetShader(skyboxMaterial->shaderId);
+
+		int textureUniformLocation = -1;
+		uint32_t textureId = 0;
+
+		for (unsigned int i = 0, count = skyboxMaterial->uniformCount; i < count; ++i)
+		{
+			const ShaderMaterialUniform& u = skyboxMaterial->uniforms[i];
+
+			if (u.type == ShaderUniformType::TexCube)
+			{
+				unsigned char* d = skyboxMaterial->uniformData + u.dataOffset;
+				textureId = *reinterpret_cast<uint32_t*>(d);
+
+				textureUniformLocation = u.location;
+			}
+		}
+
+		Texture* skyboxTexture = res->GetTexture(textureId);
+
+		glDisable(GL_DEPTH_TEST);
+
+		glUseProgram(skyboxShader->driverId);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(skyboxTexture->targetType, skyboxTexture->driverId);
+		glUniform1i(textureUniformLocation, 0);
+		
+		glUniformMatrix4fv(skyboxShader->uniformMatVP, 1, GL_FALSE, skyboxTransform.ValuePointer());
+
+		glBindVertexArray(skyboxMesh.vertexArrayObject);
+
+		glDrawElements(GL_TRIANGLES, skyboxMesh.indexCount, skyboxMesh.indexElementType,
+					   reinterpret_cast<void*>(0));
+	}
+
+	glEnable(GL_DEPTH_TEST);
 
 	for (unsigned arrayIndex = 0, objectIndex = 0; arrayIndex < size; ++arrayIndex)
 	{

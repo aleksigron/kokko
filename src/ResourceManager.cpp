@@ -210,14 +210,12 @@ Texture* ResourceManager::CreateTexture()
 
 bool ResourceManager::LoadTexture(Texture* texture, const char* path)
 {
-	ImageData imageData;
+	Buffer<char> textureConfig = File::ReadText(path);
 
-	if (imageData.LoadGlraw(path))
+	if (textureConfig.IsValid())
 	{
-		texture->Upload(imageData);
-
-		return true;
+		return texture->LoadFromConfiguration(textureConfig.GetRef());
 	}
-	else
-		return false;
+
+	return false;
 }

@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "Vec2.hpp"
+#include "BufferRef.hpp"
 
 struct ImageData;
 
@@ -17,7 +18,13 @@ enum class TextureWrapMode
 	Repeat,
 	MirroredRepeat,
 	ClampToEdge,
-	ClampToBorder
+};
+
+enum class TextureType
+{
+	Undefined,
+	Texture2D,
+	TextureCube
 };
 
 struct TextureOptions
@@ -29,10 +36,18 @@ struct TextureOptions
 struct Texture
 {
 	uint32_t nameHash;
+
+	TextureType textureType;
 	unsigned int targetType;
+
 	unsigned int driverId;
 	Vec2f textureSize;
 
-	void Upload(const ImageData& image);
-	void Upload(const ImageData& image, const TextureOptions& options);
+	bool LoadFromConfiguration(BufferRef<char> configuration);
+
+	void Upload_2D(const ImageData& image);
+	void Upload_2D(const ImageData& image, const TextureOptions& options);
+
+	void Upload_Cube(const ImageData* images);
+	void Upload_Cube(const ImageData* images, const TextureOptions& options);
 };

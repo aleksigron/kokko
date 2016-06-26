@@ -19,7 +19,6 @@ struct Material
 
 	unsigned int uniformCount = 0;
 	ShaderMaterialUniform uniforms[Shader::MaxMaterialUniforms];
-	uint32_t uniformNameHashes[Shader::MaxMaterialUniforms];
 
 	unsigned int usedUniformData = 0;
 	unsigned char* uniformData = nullptr;
@@ -40,7 +39,7 @@ struct Material
 	{
 		for (unsigned i = 0; i < uniformCount; ++i)
 		{
-			if (uniformNameHashes[i] == uniformNameHash)
+			if (uniforms[i].nameHash == uniformNameHash)
 			{
 				unsigned char* data = uniformData + uniforms[i].dataOffset;
 

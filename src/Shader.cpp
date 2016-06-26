@@ -155,8 +155,10 @@ bool Shader::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSo
 		driverId = programId;
 		uniformMatMVP = glGetUniformLocation(programId, "_MVP");
 		uniformMatMV = glGetUniformLocation(programId, "_MV");
+		uniformMatVP = glGetUniformLocation(programId, "_VP");
 		uniformMatM = glGetUniformLocation(programId, "_M");
 		uniformMatV = glGetUniformLocation(programId, "_V");
+		uniformMatP = glGetUniformLocation(programId, "_P");
 		
 		return true;
 	}

@@ -104,6 +104,12 @@ bool App::Initialize()
 		Mat4x4f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), Mathf::DegreesToRadians(135.0f));
 		scene.SetLocalTransform(cupSceneObj, cupTransform);
 
+		// Skybox
+
+		Material* skyboxMaterial = resourceManager.GetMaterial("res/materials/skybox.material.json");
+		this->world->SetSkyboxMaterialId(skyboxMaterial->nameHash);
+		this->world->InitializeSkyboxMesh(&resourceManager);
+
 		this->mainCamera.transform.position = Vec3f(0.0f, 0.3f, 1.5f);
 		this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
 

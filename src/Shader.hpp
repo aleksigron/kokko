@@ -50,8 +50,10 @@ public:
 
 	int uniformMatMVP;
 	int uniformMatMV;
+	int uniformMatVP;
 	int uniformMatM;
 	int uniformMatV;
+	int uniformMatP;
 
 	static const unsigned MaxMaterialUniforms = 8;
 
