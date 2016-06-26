@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BufferRef.hpp"
+
 template <typename T>
 class Buffer
 {
@@ -97,4 +99,7 @@ public:
 	
 	T& operator[](SizeType index) { return this->data[index]; }
 	const T& operator[](SizeType index) const { return this->data[index]; }
+
+	BufferRef<T> GetRef() { return BufferRef<T>(data, count); }
+	BufferRef<const T> GetRef() const { return BufferRef<const T>(data, count); }
 };
