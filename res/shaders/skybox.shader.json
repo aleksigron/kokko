@@ -1,0 +1,8 @@
+{
+	"vertexShaderFile": "res/shaders/skybox.vertex.glsl",
+	"fragmentShaderFile": "res/shaders/skybox.fragment.glsl",
+	"materialUniforms":
+	[
+		{ "name": "tex", "type": "texCube" }
+	]
+}

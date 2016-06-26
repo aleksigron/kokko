@@ -1,0 +1,12 @@
+{
+	"type": "texCube",
+	"texture":
+	[
+	 "res/textures/skybox_xp.dxt1.glraw",
+	 "res/textures/skybox_xn.dxt1.glraw",
+	 "res/textures/skybox_yp.dxt1.glraw",
+	 "res/textures/skybox_yn.dxt1.glraw",
+	 "res/textures/skybox_zp.dxt1.glraw",
+	 "res/textures/skybox_zn.dxt1.glraw"
+	]
+}
