@@ -26,4 +26,7 @@ not good for efficiency. I'm hoping to develop the format and export enough to
 release it as a separate repository with proper documentation and examples.
 
 [glraw](https://github.com/cginternals/glraw) is used to process textures to a
-runtime-friendly format.
+runtime-friendly format. Example command to convert image to compressed texture:
+```
+glraw-cmd --compressed-format GL_COMPRESSED_RGB_S3TC_DXT1_EXT example.jpg
+```
