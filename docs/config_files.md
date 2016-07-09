@@ -32,8 +32,42 @@ numbers.
   "shader": "diffuse.shader.json",
   "variables":
   [
-    { "name": "diffuse_map", "value": "diffuse.glraw" },
-    { "name": "color_tint", "value": [ 1.0, 0.8, 0.6 ] }
+    {
+      "name": "diffuse_map",
+      "value": "diffuse.texture.json"
+    },
+    {
+      "name": "color_tint",
+      "value": [ 1.0, 0.8, 0.6 ]
+    }
+  ]
+}
+```
+
+## Textures
+Texture configuration files define the image file or files that comprise the
+texture as well as the type of the texture. Allowed values for type are tex2d
+and texCube. Value for texture is a string defining the image file for 2D
+texture, or a array of string defining the image files for a cube texture.
+
+```
+{
+  "type": "tex2d",
+  "texture": "diffuse.glraw"
+}
+```
+
+```
+{
+  "type": "texCube",
+  "texture":
+  [
+    "cube_x_positive.glraw",
+    "cube_x_negative.glraw",
+    "cube_y_positive.glraw",
+    "cube_y_negative.glraw",
+    "cube_z_positive.glraw",
+    "cube_z_negative.glraw"
   ]
 }
 ```
