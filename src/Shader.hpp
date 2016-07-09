@@ -7,6 +7,13 @@
 struct StringRef;
 class StackAllocator;
 
+enum class ShaderRenderType
+{
+	Opaque,
+	AlphaTest,
+	Transparent
+};
+
 enum class ShaderUniformType
 {
 	Tex2D,
@@ -40,6 +47,10 @@ private:
 	};
 
 	bool Compile(ShaderType type, Buffer<char>& source, unsigned& idOut);
+	bool CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSource);
+	void AddMaterialUniforms(unsigned int count,
+							 const ShaderUniformType* types,
+							 const StringRef* names);
 
 	StackAllocator* allocator;
 
@@ -55,18 +66,14 @@ public:
 	int uniformMatV;
 	int uniformMatP;
 
+	ShaderRenderType renderType;
+
 	static const unsigned MaxMaterialUniforms = 8;
 
 	unsigned int materialUniformCount;
 	ShaderUniform materialUniforms[MaxMaterialUniforms];
 
 	void SetAllocator(StackAllocator* allocator);
-
-	void AddMaterialUniforms(unsigned int count,
-							 const ShaderUniformType* types,
-							 const StringRef* names);
-	
-	bool CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSource);
 	
 	bool LoadFromConfiguration(Buffer<char>& configuration);
 };

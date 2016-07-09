@@ -44,6 +44,8 @@ void Shader::SetAllocator(StackAllocator* allocator)
 
 bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 {
+	using MemberIterator = rapidjson::Value::ConstMemberIterator;
+
 	const char* vsFilePath = nullptr;
 	const char* fsFilePath = nullptr;
 
@@ -54,9 +56,7 @@ bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 	char* data = configuration.Data();
 	unsigned long size = configuration.Count();
 
-	using namespace rapidjson;
-
-	Document config;
+	rapidjson::Document config;
 	config.Parse(data, size);
 
 	assert(config.HasMember("vertexShaderFile"));
@@ -65,20 +65,51 @@ bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 	vsFilePath = config["vertexShaderFile"].GetString();
 	fsFilePath = config["fragmentShaderFile"].GetString();
 
-	Value::ConstMemberIterator uniformListItr = config.FindMember("materialUniforms");
+	// Default render type is opaque
+	this->renderType = ShaderRenderType::Opaque;
+
+	MemberIterator renderTypeItr = config.FindMember("renderType");
+	if (renderTypeItr != config.MemberEnd())
+	{
+		if (renderTypeItr->value.IsString())
+		{
+			StringRef renderTypeStr;
+			renderTypeStr.str = renderTypeItr->value.GetString();
+			renderTypeStr.len = renderTypeItr->value.GetStringLength();
+
+			uint32_t renderTypeHash = Hash::FNV1a_32(renderTypeStr.str, renderTypeStr.len);
+
+			switch (renderTypeHash)
+			{
+				case "opaque"_hash:
+					this->renderType = ShaderRenderType::Opaque;
+					break;
+
+				case "alphaTest"_hash:
+					this->renderType = ShaderRenderType::AlphaTest;
+					break;
+
+				case "transparent"_hash:
+					this->renderType = ShaderRenderType::Transparent;
+					break;
+			}
+		}
+	}
+
+	MemberIterator uniformListItr = config.FindMember("materialUniforms");
 
 	if (uniformListItr != config.MemberEnd())
 	{
-		const Value& list = uniformListItr->value;
+		const rapidjson::Value& list = uniformListItr->value;
 
 		for (unsigned muIndex = 0, muCount = list.Size(); muIndex < muCount; ++muIndex)
 		{
-			const Value& mu = list[muIndex];
+			const rapidjson::Value& mu = list[muIndex];
 
 			assert(mu.HasMember("name"));
 			assert(mu.HasMember("type"));
 
-			const Value& name = mu["name"];
+			const rapidjson::Value& name = mu["name"];
 			uniformNames[uniformCount].str = name.GetString();
 			uniformNames[uniformCount].len = name.GetStringLength();
 
@@ -240,8 +271,8 @@ bool Shader::Compile(ShaderType type, Buffer<char>& source, GLuint& shaderIdOut)
 }
 
 void Shader::AddMaterialUniforms(unsigned int count,
-										const ShaderUniformType* types,
-										const StringRef* names)
+								 const ShaderUniformType* types,
+								 const StringRef* names)
 {
 	this->materialUniformCount = count;
 
