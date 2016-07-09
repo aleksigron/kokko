@@ -233,6 +233,7 @@
 				45A005051C933F43002D6134 /* MemoryAmount.hpp */,
 				45A0050A1C933F43002D6134 /* MultiArray.hpp */,
 				45A0050B1C933F43002D6134 /* ObjectId.hpp */,
+				4583750A1CFE242E00D37A1B /* Sort.hpp */,
 				45A005181C933F43002D6134 /* StackAllocation.cpp */,
 				45A005191C933F43002D6134 /* StackAllocation.hpp */,
 				45A0051A1C933F43002D6134 /* StackAllocator.cpp */,
@@ -242,7 +243,6 @@
 				45A005291C933F43002D6134 /* VirtualMemory.cpp */,
 				45A0052A1C933F43002D6134 /* VirtualMemory.hpp */,
 				45C6E5D51CA762B3004B2F54 /* ValueSerialization.hpp */,
-				4583750A1CFE242E00D37A1B /* Sort.hpp */,
 			);
 			name = Util;
 			sourceTree = "<group>";

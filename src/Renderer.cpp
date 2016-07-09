@@ -41,14 +41,11 @@ void Renderer::Initialize()
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 }
 
 void Renderer::Render(const World* world, Scene* scene)
 {
-	unsigned int error = glGetError();
-
 	ResourceManager* res = App::GetResourceManager();
 
 	RenderObject* o = this->objects;

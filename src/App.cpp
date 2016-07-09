@@ -13,7 +13,7 @@
 
 #include <cstdio>
 
-#define GLFW_INCLUDE_GLCOREARB
+#define GLFW_INCLUDE_NONE
 #include "glfw/glfw3.h"
 
 static void OnGlfwError(int errorCode, const char* description)
