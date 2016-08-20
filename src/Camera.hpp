@@ -36,7 +36,7 @@ struct Camera
 		return this->GetProjectionMatrix() * this->GetViewMatrix();
 	}
 
-	inline Mat4x4f GetViewMatrix()
+	inline Mat4x4f GetViewMatrix() const
 	{
 		return Mat4x4f(transform.rotation.GetTransposed()) * Matrix::Translate(-(transform.position));
 	}

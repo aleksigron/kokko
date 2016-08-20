@@ -16,6 +16,9 @@ struct Color
 	{
 	}
 
+	float* ValuePointer() { return &r; }
+	const float* ValuePointer() const { return &r; }
+
 	Color& operator*=(const Color& value)
 	{
 		this->r *= value.r;
