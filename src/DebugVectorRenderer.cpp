@@ -156,7 +156,7 @@ void DebugVectorRenderer::DrawLine(const Vec3f& start, const Vec3f& end, const C
 
 		Primitive* prim = primitives + primitiveCount;
 		prim->type = PrimitiveType::Line;
-		prim->transform = Mat4x4f::LookAt(start, end, up) * Matrix::Scale(len);
+		prim->transform = Mat4x4f::LookAt(start, end, up) * Mat4x4f::Scale(len);
 		prim->color = color;
 
 		++primitiveCount;
@@ -182,7 +182,7 @@ void DebugVectorRenderer::DrawSphere(const Vec3f& position, float radius, const 
 	{
 		Primitive* prim = primitives + primitiveCount;
 		prim->type = PrimitiveType::Sphere;
-		prim->transform = Matrix::Translate(position) * Matrix::Scale(radius);
+		prim->transform = Mat4x4f::Translate(position) * Mat4x4f::Scale(radius);
 		prim->color = color;
 
 		++primitiveCount;

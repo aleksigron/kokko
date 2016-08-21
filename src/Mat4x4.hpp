@@ -133,9 +133,42 @@ struct Mat4x4f
 
 		return result;
 	}
+
+	static Mat4x4f Translate(const Vec3f& translation)
+	{
+		Mat4x4f result;
+
+		result[12] = translation.x;
+		result[13] = translation.y;
+		result[14] = translation.z;
+
+		return result;
+	}
+
+	static Mat4x4f Scale(const Vec3f& scale)
+	{
+		Mat4x4f result;
+
+		result[0] = scale.x;
+		result[5] = scale.y;
+		result[10] = scale.z;
+
+		return result;
+	}
+
+	static Mat4x4f Scale(float scale)
+	{
+		Mat4x4f result;
+
+		result[0] = scale;
+		result[5] = scale;
+		result[10] = scale;
+
+		return result;
+	}
 };
 
-Vec4f operator*(const Mat4x4f& m, const Vec4f& v)
+inline Vec4f operator*(const Mat4x4f& m, const Vec4f& v)
 {
 	return Vec4f(m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12] * v.w,
 				 m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13] * v.w,
@@ -143,7 +176,7 @@ Vec4f operator*(const Mat4x4f& m, const Vec4f& v)
 				 m[3] * v.x + m[7] * v.y + m[11] * v.z + m[15] * v.w);
 }
 
-Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
+inline Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
 {
 	return Vec4f(m[0] * v.x + m[1] * v.x + m[2] * v.x + m[3] * v.x,
 				 m[4] * v.y + m[5] * v.y + m[6] * v.y + m[7] * v.y,
@@ -151,7 +184,7 @@ Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
 				 m[12] * v.w + m[13] * v.w + m[14] * v.w + m[15] * v.w);
 }
 
-Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
+inline Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
 {
 	Mat4x4f result(Mat4x4f::uninit);
 	

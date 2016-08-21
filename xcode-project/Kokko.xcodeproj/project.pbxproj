@@ -103,7 +103,6 @@
 		45A005011C933F43002D6134 /* Material.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Material.cpp; path = ../src/Material.cpp; sourceTree = "<group>"; };
 		45A005021C933F43002D6134 /* Material.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Material.hpp; path = ../src/Material.hpp; sourceTree = "<group>"; };
 		45A005031C933F43002D6134 /* Math.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Math.hpp; path = ../src/Math.hpp; sourceTree = "<group>"; };
-		45A005041C933F43002D6134 /* Matrix.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Matrix.hpp; path = ../src/Matrix.hpp; sourceTree = "<group>"; };
 		45A005051C933F43002D6134 /* MemoryAmount.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MemoryAmount.hpp; path = ../src/MemoryAmount.hpp; sourceTree = "<group>"; };
 		45A005061C933F43002D6134 /* Mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Mesh.cpp; path = ../src/Mesh.cpp; sourceTree = "<group>"; };
 		45A005071C933F43002D6134 /* Mesh.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Mesh.hpp; path = ../src/Mesh.hpp; sourceTree = "<group>"; };
@@ -262,7 +261,6 @@
 				45A004FF1C933F43002D6134 /* Mat3x3.hpp */,
 				45A005001C933F43002D6134 /* Mat4x4.hpp */,
 				45A005031C933F43002D6134 /* Math.hpp */,
-				45A005041C933F43002D6134 /* Matrix.hpp */,
 				45A0050C1C933F43002D6134 /* Plane.hpp */,
 				45A005211C933F43002D6134 /* Transform.hpp */,
 				45A005221C933F43002D6134 /* Vec2.hpp */,

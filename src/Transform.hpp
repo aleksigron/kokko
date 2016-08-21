@@ -4,8 +4,6 @@
 #include "Mat3x3.hpp"
 #include "Mat4x4.hpp"
 
-#include "Matrix.hpp"
-
 class TransformSource
 {
 public:
@@ -15,7 +13,7 @@ public:
 	
 	inline Mat4x4f GetTransformMatrix() const
 	{
-		return Matrix::Translate(position) * Mat4x4f(rotation) * Matrix::Scale(scale);
+		return Mat4x4f::Translate(position) * Mat4x4f(rotation) * Mat4x4f::Scale(scale);
 	}
 
 	inline Vec3f Forward() const

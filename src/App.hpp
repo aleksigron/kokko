@@ -8,8 +8,6 @@
 #include "CameraController.hpp"
 #include "Scene.hpp"
 
-#include "DebugTextRenderer.hpp"
-
 class World;
 
 class Debug;
