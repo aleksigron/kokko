@@ -26,4 +26,15 @@ namespace Matrix
 		
 		return result;
 	}
+
+	inline Mat4x4f Scale(float scaling)
+	{
+		Mat4x4f result;
+
+		result[0] = scaling;
+		result[5] = scaling;
+		result[10] = scaling;
+
+		return result;
+	}
 }

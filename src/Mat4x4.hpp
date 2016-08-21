@@ -9,9 +9,9 @@ struct Mat4x4f
 	
 	float m[16];
 	
-	inline Mat4x4f(Uninitialize) {}
+	Mat4x4f(Uninitialize) {}
 
-	inline Mat4x4f():
+	Mat4x4f():
 	m { 1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
@@ -19,7 +19,7 @@ struct Mat4x4f
 	{
 	}
 
-	inline Mat4x4f(const Mat3x3f& m3):
+	Mat4x4f(const Mat3x3f& m3):
 	m { m3[0], m3[1], m3[2], 0,
 		m3[3], m3[4], m3[5], 0,
 		m3[6], m3[7], m3[8], 0,
@@ -27,12 +27,13 @@ struct Mat4x4f
 	{
 	}
 	
-	inline float& operator[](std::size_t index) { return m[index]; }
-	inline const float& operator[](std::size_t index) const { return m[index]; }
+	float& operator[](std::size_t index) { return m[index]; }
+	const float& operator[](std::size_t index) const { return m[index]; }
 	
-	inline float* ValuePointer() { return m; }
+	float* ValuePointer() { return m; }
+	const float* ValuePointer() const { return m; }
 
-	inline void Transpose()
+	void Transpose()
 	{
 		float temp;
 		unsigned int pri = 1, sec;
@@ -52,7 +53,7 @@ struct Mat4x4f
 		while (pri < 12);
 	}
 
-	inline Mat4x4f GetTransposed() const
+	Mat4x4f GetTransposed() const
 	{
 		Mat4x4f result(Mat4x4f::uninit);
 
@@ -62,7 +63,7 @@ struct Mat4x4f
 		return result;
 	}
 
-	static inline Mat4x4f RotateAroundAxis(Vec3f axis, float angle)
+	static Mat4x4f RotateAroundAxis(Vec3f axis, float angle)
 	{
 		axis.Normalize();
 
@@ -101,9 +102,40 @@ struct Mat4x4f
 
 		return result;
 	}
+
+	static Mat4x4f LookAt(Vec3f eye, Vec3f target, Vec3f up)
+	{
+		Mat4x4f result;
+
+		Vec3f zaxis = (eye - target).GetNormalized();
+		Vec3f xaxis = (Vec3f::Cross(up, zaxis)).GetNormalized();
+		Vec3f yaxis = Vec3f::Cross(zaxis, xaxis);
+
+		result[0] = xaxis.x;
+		result[1] = xaxis.y;
+		result[2] = xaxis.z;
+		result[3] = 0.0f;
+
+		result[4] = yaxis.x;
+		result[5] = yaxis.y;
+		result[6] = yaxis.z;
+		result[7] = 0.0f;
+
+		result[8] = zaxis.x;
+		result[9] = zaxis.y;
+		result[10] = zaxis.z;
+		result[11] = 0.0f;
+
+		result[12] = eye.x;
+		result[13] = eye.y;
+		result[14] = eye.z;
+		result[15] = 1.0f;
+
+		return result;
+	}
 };
 
-inline Vec4f operator*(const Mat4x4f& m, const Vec4f& v)
+Vec4f operator*(const Mat4x4f& m, const Vec4f& v)
 {
 	return Vec4f(m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12] * v.w,
 				 m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13] * v.w,
@@ -111,7 +143,7 @@ inline Vec4f operator*(const Mat4x4f& m, const Vec4f& v)
 				 m[3] * v.x + m[7] * v.y + m[11] * v.z + m[15] * v.w);
 }
 
-inline Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
+Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
 {
 	return Vec4f(m[0] * v.x + m[1] * v.x + m[2] * v.x + m[3] * v.x,
 				 m[4] * v.y + m[5] * v.y + m[6] * v.y + m[7] * v.y,
@@ -119,7 +151,7 @@ inline Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
 				 m[12] * v.w + m[13] * v.w + m[14] * v.w + m[15] * v.w);
 }
 
-inline Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
+Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
 {
 	Mat4x4f result(Mat4x4f::uninit);
 	

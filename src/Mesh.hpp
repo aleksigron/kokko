@@ -21,6 +21,7 @@ public:
 
 	int indexCount;
 	unsigned int indexElementType;
+	unsigned int primitiveMode;
 
 	BoundingBox bounds;
 

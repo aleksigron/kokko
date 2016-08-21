@@ -3,7 +3,6 @@
 #include "Transform.hpp"
 #include "Mat4x4.hpp"
 #include "Vec2.hpp"
-#include "Math.hpp"
 
 struct Camera
 {
@@ -16,7 +15,7 @@ struct Camera
 	TransformSource transform;
 
 	// The camera's vertical field of view in radians
-	float perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
+	float perspectiveFieldOfView = 1.0f;
 
 	// The height of the camera's orthogonal viewport
 	float orthogonalHeight = 1.0f;
@@ -31,7 +30,7 @@ struct Camera
 
 	Mat4x4f GetProjectionMatrix() const;
 
-	inline Mat4x4f GetViewProjectionMatrix()
+	inline Mat4x4f GetViewProjectionMatrix() const
 	{
 		return this->GetProjectionMatrix() * this->GetViewMatrix();
 	}

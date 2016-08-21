@@ -9,7 +9,8 @@ Mesh::Mesh() :
 	vertexArrayObject(0),
 	bufferObjects{ 0, 0 },
 	indexCount(0),
-	indexElementType(0)
+	indexElementType(0),
+	primitiveMode(GL_TRIANGLES)
 {
 }
 
