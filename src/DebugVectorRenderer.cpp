@@ -51,7 +51,7 @@ void DebugVectorRenderer::CreateMeshes()
 		indices.data = lineIndexData;
 		indices.count = sizeof(lineIndexData) / sizeof(unsigned short);
 
-		lineMesh.primitiveMode = GL_LINES;
+		lineMesh.SetPrimitiveMode(Mesh::PrimitiveMode::Lines);
 		lineMesh.Upload_3f(vertices, indices);
 	}
 
@@ -85,7 +85,7 @@ void DebugVectorRenderer::CreateMeshes()
 		indices.data = cubeIndexData;
 		indices.count = sizeof(cubeIndexData) / sizeof(unsigned short);
 
-		cubeMesh.primitiveMode = GL_LINES;
+		cubeMesh.SetPrimitiveMode(Mesh::PrimitiveMode::Lines);
 		cubeMesh.Upload_3f(vertices, indices);
 	}
 
@@ -141,7 +141,7 @@ void DebugVectorRenderer::CreateMeshes()
 		indices.data = sphereIndexData;
 		indices.count = sizeof(sphereIndexData) / sizeof(unsigned short);
 
-		sphereMesh.primitiveMode = GL_LINES;
+		sphereMesh.SetPrimitiveMode(Mesh::PrimitiveMode::Lines);
 		sphereMesh.Upload_3f(vertices, indices);
 	}
 }

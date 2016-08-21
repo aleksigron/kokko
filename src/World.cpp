@@ -46,5 +46,6 @@ void World::InitializeSkyboxMesh(ResourceManager* resourceManager)
 	indices.data = indexData;
 	indices.count = sizeof(indexData) / sizeof(unsigned short);
 
+	mesh.SetPrimitiveMode(Mesh::PrimitiveMode::Triangles);
 	mesh.Upload_3f(vertices, indices);
 }

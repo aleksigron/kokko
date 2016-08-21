@@ -70,6 +70,8 @@ bool MeshLoader::LoadMesh(const char* filePath, Mesh& mesh)
 				mesh.bounds.extents.y = boundsData[4];
 				mesh.bounds.extents.z = boundsData[5];
 
+				mesh.SetPrimitiveMode(Mesh::PrimitiveMode::Triangles);
+
 				if (normCount == 0 && colCount == 0 && texCount == 1)
 				{
 					BufferRef<unsigned short> indices(indexData, indexCount);

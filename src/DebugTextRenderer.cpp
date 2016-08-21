@@ -283,5 +283,6 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 	indices.data = indexBuffer.Data();
 	indices.count = indexBuffer.Count();
 
+	mesh.SetPrimitiveMode(Mesh::PrimitiveMode::Triangles);
 	mesh.Upload_3f2f(vertices, indices);
 }

@@ -226,8 +226,7 @@ void Renderer::Render(const World* world, Scene* scene)
 
 				glBindVertexArray(mesh.vertexArrayObject);
 
-				glDrawElements(GL_TRIANGLES, mesh.indexCount,
-							   mesh.indexElementType, reinterpret_cast<void*>(0));
+				glDrawElements(mesh.primitiveMode, mesh.indexCount, mesh.indexElementType, nullptr);
 			}
 
 			++objectIndex;

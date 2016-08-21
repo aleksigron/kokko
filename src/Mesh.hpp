@@ -7,8 +7,22 @@
 
 struct Mesh
 {
+public:
+	enum class PrimitiveMode
+	{
+		Points,
+		LineStrip,
+		LineLoop,
+		Lines,
+		TriangleStrip,
+		TriangleFan,
+		Triangles
+	};
+
 private:
 	enum BufferType { VertexBuffer, IndexBuffer };
+
+	static const unsigned int primitiveModeValues[7];
 
 	void CreateBuffers(void* vertexBuffer, unsigned int vertexBufferSize,
 					   void* indexBuffer, unsigned int indexBufferSize);
@@ -35,4 +49,9 @@ public:
 	void Upload_3f3f(BufferRef<Vertex3f3f> vertices, BufferRef<unsigned short> indices);
 	void Upload_3f3f2f(BufferRef<Vertex3f3f2f> vertices, BufferRef<unsigned short> indices);
 	void Upload_3f3f3f(BufferRef<Vertex3f3f3f> vertices, BufferRef<unsigned short> indices);
+
+	void SetPrimitiveMode(PrimitiveMode mode)
+	{
+		this->primitiveMode = primitiveModeValues[static_cast<unsigned int>(mode)];
+	}
 };
