@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include "DebugVectorRenderer.hpp"
 #include "DebugTextRenderer.hpp"
 #include "DebugLogView.hpp"
 #include "DebugLog.hpp"
@@ -13,6 +14,7 @@ Debug::Debug(KeyboardInput* keyboardInput) :
 	keyboardInput(keyboardInput),
 	mode(DebugMode::None)
 {
+	vectorRenderer = new DebugVectorRenderer;
 	textRenderer = new DebugTextRenderer;
 	logView = new DebugLogView(textRenderer);
 	log = new DebugLog(logView);
@@ -39,7 +41,7 @@ void Debug::UpdateLogViewDrawArea()
 	logView->SetDrawArea(logArea);
 }
 
-void Debug::Render()
+void Debug::Render(const Camera& camera)
 {
 	// Update mode
 	if (keyboardInput->GetKeyDown(Key::N_1))
@@ -58,6 +60,8 @@ void Debug::Render()
 	char buffer[32];
 	sprintf(buffer, "Debug mode: [1]None%c [2]Log%c", modeNoneChar, modeLogChar);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f), true);
+
+	vectorRenderer->Render(camera);
 
 	// Draw mode content
 	switch (this->mode)

@@ -4,12 +4,12 @@
 #include "DebugLog.hpp"
 #include "DebugLogView.hpp"
 #include "DebugTextRenderer.hpp"
+#include "DebugVectorRenderer.hpp"
 
 #include "World.hpp"
-
-#include "MeshLoader.hpp"
-
 #include "Material.hpp"
+#include "MeshLoader.hpp"
+#include "Math.hpp"
 
 #include <cstdio>
 
@@ -139,10 +139,22 @@ void App::Update()
 
 	this->debug->GetLog()->Log(StringRef(frameRateText));
 
+	Color green(0.0f, 1.0f, 0.0f, 1.0f);
+	Color yellow(1.0f, 1.0f, 0.0f, 1.0f);
+	Color white(1.0f, 1.0f, 1.0f, 1.0f);
+
+	DebugVectorRenderer* debugVector = this->debug->GetVectorRenderer();
+	debugVector->DrawCube(Mat4x4f(), green);
+	debugVector->DrawSphere(Vec3f(), 0.5f, yellow);
+	debugVector->DrawLine(Vec3f(), Vec3f(0.2f, 0.2f, 0.2f), white);
+	debugVector->DrawLine(Vec3f(), Vec3f(-0.2f, 0.2f, 0.2f), white);
+	debugVector->DrawLine(Vec3f(), Vec3f(0.2f, 0.2f, -0.2f), white);
+	debugVector->DrawLine(Vec3f(), Vec3f(-0.2f, 0.2f, -0.2f), white);
+
 	this->scene.CalculateWorldTransforms();
 	this->renderer.Render(world, &scene);
 
-	this->debug->Render();
+	this->debug->Render(this->mainCamera);
 
 	this->mainWindow.UpdateInput();
 
