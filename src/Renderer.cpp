@@ -1,7 +1,7 @@
 #include "Renderer.hpp"
 
-#include <new>
 #include <cassert>
+#include <cstring>
 
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
@@ -20,13 +20,15 @@
 #include "BoundingBox.hpp"
 #include "FrustumCulling.hpp"
 
-Renderer::Renderer()
+Renderer::Renderer() :
+	indexList(nullptr),
+	freeListFirst(0),
+	objects(nullptr),
+	objectCount(0),
+	allocatedCount(0),
+	boundingBoxes(nullptr),
+	bboxCullingState(nullptr)
 {
-	objects = new RenderObject[initialAllocation];
-	boundingBoxes = new BoundingBox[initialAllocation];
-	bboxCullingState = new unsigned char[initialAllocation];
-
-	allocatedCount = initialAllocation;
 }
 
 Renderer::~Renderer()
@@ -34,14 +36,7 @@ Renderer::~Renderer()
 	delete[] bboxCullingState;
 	delete[] boundingBoxes;
 	delete[] objects;
-}
-
-void Renderer::Initialize()
-{
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	glDepthFunc(GL_LESS);
+	delete[] indexList;
 }
 
 void Renderer::Render(const World* world, Scene* scene)
@@ -52,37 +47,27 @@ void Renderer::Render(const World* world, Scene* scene)
 	BoundingBox* bb = this->boundingBoxes;
 	unsigned char* bbcs = this->bboxCullingState;
 
-	size_t size = this->contiguousFree;
-	unsigned oCount = 0;
-
 	Camera* cam = this->activeCamera;
-
-	// Update bounding boxes
-	for (unsigned i = 0; i < size; ++i)
-	{
-		if (this->RenderObjectIsAlive(i))
-		{
-			Mesh& mesh = res->meshes.Get(o[i].mesh);
-
-			const Mat4x4f& matrix = scene->GetWorldTransformMatrix(o[i].sceneObjectId);
-			bb[oCount] = mesh.bounds.Transform(matrix);
-
-			++oCount;
-		}
-	}
 
 	// Update view frustum
 	ViewFrustum frustum;
 	frustum.UpdateFrustum(*cam);
 
+	this->UpdateBoundingBoxes(scene);
+
 	// Do frustum culling
-	FrustumCulling::CullAABB(&frustum, oCount, bb, bbcs);
+	FrustumCulling::CullAABB(&frustum, objectCount, bb, bbcs);
 
 	// Get the background color for view
 	Color clearCol = world->GetBackgroundColor();
 	glClearColor(clearCol.r, clearCol.r, clearCol.r, 1.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glDepthFunc(GL_LESS);
 
 	glDisable(GL_BLEND);
 
@@ -95,7 +80,7 @@ void Renderer::Render(const World* world, Scene* scene)
 		Mat4x4f cameraRotation = Mat4x4f(cam->transform.rotation.GetTransposed());
 		Mat4x4f skyboxTransform = projectionMatrix * cameraRotation;
 
-		const Mesh& skyboxMesh = res->meshes.Get(world->GetSkyboxMeshId());
+		const Mesh& mesh = res->meshes.Get(world->GetSkyboxMeshId());
 		const Material* skyboxMaterial = res->GetMaterial(world->GetSkyboxMaterialId());
 		const Shader* skyboxShader = res->GetShader(skyboxMaterial->shaderId);
 
@@ -127,39 +112,36 @@ void Renderer::Render(const World* world, Scene* scene)
 		
 		glUniformMatrix4fv(skyboxShader->uniformMatVP, 1, GL_FALSE, skyboxTransform.ValuePointer());
 
-		glBindVertexArray(skyboxMesh.vertexArrayObject);
+		glBindVertexArray(mesh.vertexArrayObject);
 
-		glDrawElements(GL_TRIANGLES, skyboxMesh.indexCount, skyboxMesh.indexElementType,
-					   reinterpret_cast<void*>(0));
+		glDrawElements(mesh.primitiveMode, mesh.indexCount, mesh.indexElementType, nullptr);
 	}
 
 	glEnable(GL_DEPTH_TEST);
 
-	for (unsigned arrayIndex = 0, objectIndex = 0; arrayIndex < size; ++arrayIndex)
+	for (unsigned index = 0; index < objectCount; ++index)
 	{
-		if (this->RenderObjectIsAlive(arrayIndex) == true)
+		if (bbcs[index] != 0)
 		{
-			if (bbcs[objectIndex] != 0)
+			RenderObject& obj = o[index];
+
+			Mesh& mesh = res->meshes.Get(obj.mesh);
+			Material* material = res->GetMaterial(obj.materialId);
+			Shader* shader = res->GetShader(material->shaderId);
+
+			glUseProgram(shader->driverId);
+
+			unsigned int usedTextures = 0;
+
+			// Bind each material uniform with a value
+			for (unsigned uIndex = 0; uIndex < material->uniformCount; ++uIndex)
 			{
-				RenderObject& obj = o[arrayIndex];
+				ShaderMaterialUniform& u = material->uniforms[uIndex];
 
-				Mesh& mesh = res->meshes.Get(obj.mesh);
-				Material* material = res->GetMaterial(obj.materialId);
-				Shader* shader = res->GetShader(material->shaderId);
+				unsigned char* d = material->uniformData + u.dataOffset;
 
-				glUseProgram(shader->driverId);
-
-				unsigned int usedTextures = 0;
-
-				// Bind each material uniform with a value
-				for (unsigned uIndex = 0; uIndex < material->uniformCount; ++uIndex)
+				switch (u.type)
 				{
-					ShaderMaterialUniform& u = material->uniforms[uIndex];
-
-					unsigned char* d = material->uniformData + u.dataOffset;
-
-					switch (u.type)
-					{
 					case ShaderUniformType::Mat4x4:
 						glUniformMatrix4fv(u.location, 1, GL_FALSE, reinterpret_cast<float*>(d));
 						break;
@@ -197,39 +179,36 @@ void Renderer::Render(const World* world, Scene* scene)
 						++usedTextures;
 					}
 						break;
-					}
 				}
-
-				Mat4x4f modelMatrix = scene->GetWorldTransformMatrix(obj.sceneObjectId);
-
-				if (shader->uniformMatMVP >= 0)
-				{
-					Mat4x4f mvp = viewProjection * modelMatrix;
-					glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
-				}
-
-				if (shader->uniformMatMV >= 0)
-				{
-					Mat4x4f mv = viewMatrix * modelMatrix;
-					glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
-				}
-
-				if (shader->uniformMatM >= 0)
-				{
-					glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
-				}
-
-				if (shader->uniformMatV >= 0)
-				{
-					glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
-				}
-
-				glBindVertexArray(mesh.vertexArrayObject);
-
-				glDrawElements(mesh.primitiveMode, mesh.indexCount, mesh.indexElementType, nullptr);
 			}
 
-			++objectIndex;
+			Mat4x4f modelMatrix = scene->GetWorldTransformMatrix(obj.sceneObjectId);
+
+			if (shader->uniformMatMVP >= 0)
+			{
+				Mat4x4f mvp = viewProjection * modelMatrix;
+				glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
+			}
+
+			if (shader->uniformMatMV >= 0)
+			{
+				Mat4x4f mv = viewMatrix * modelMatrix;
+				glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
+			}
+
+			if (shader->uniformMatM >= 0)
+			{
+				glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
+			}
+
+			if (shader->uniformMatV >= 0)
+			{
+				glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
+			}
+
+			glBindVertexArray(mesh.vertexArrayObject);
+
+			glDrawElements(mesh.primitiveMode, mesh.indexCount, mesh.indexElementType, nullptr);
 		}
 	}
 
@@ -246,57 +225,99 @@ void Renderer::SetActiveCamera(Camera* camera)
 	this->activeCamera = camera;
 }
 
-ObjectId Renderer::AddRenderObject()
+void Renderer::UpdateBoundingBoxes(Scene* scene)
 {
-	ObjectId id;
-	id.innerId = nextInnerId++;
+	ResourceManager* rm = App::GetResourceManager();
 
-	if (freeList == UINT_MAX)
+	for (unsigned i = 0; i < objectCount; ++i)
 	{
-		// TODO: Reallocate and copy if contiguousFree == allocatedCount
+		const Mesh& mesh = rm->meshes.Get(objects[i].mesh);
 
-		// Place the RenderObject into the allocated memory
-		RenderObject* o = new (objects + contiguousFree) RenderObject();
+		const Mat4x4f& matrix = scene->GetWorldTransformMatrix(objects[i].sceneObjectId);
+		boundingBoxes[i] = mesh.bounds.Transform(matrix);
+	}
+}
 
-		id.index = static_cast<uint32_t>(contiguousFree);
-		o->id = id;
+void Renderer::Reallocate()
+{
+	unsigned int newAllocatedCount;
 
-		++contiguousFree;
+	if (allocatedCount == 0)
+	{
+		newAllocatedCount = 1023;
 	}
 	else
 	{
-		id.index = freeList;
+		newAllocatedCount = allocatedCount * 2 + 1;
+	}
 
-		/*
-		 Get pointer to objects[freeList],
-		 cast pointer to char*,
-		 add sizeof(RenderObjectId) to pointer value,
-		 cast pointer to uint32_t*
-		 */
+	unsigned int* newIndexList = new unsigned int[newAllocatedCount + 1];
+	RenderObject* newObjects = new RenderObject[newAllocatedCount];
+	boundingBoxes = new BoundingBox[newAllocatedCount];
+	bboxCullingState = new unsigned char[newAllocatedCount];
 
-		char* ptr = reinterpret_cast<char*>(&objects[freeList]);
-		uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(ObjectId));
-		freeList = *next;
+	// We have old data
+	if (allocatedCount > 0)
+	{
+		// Copy old data to new buffers
+		std::memcpy(newIndexList, this->indexList, allocatedCount);
+		std::memcpy(newObjects, this->objects, allocatedCount);
+
+		// Delete old buffers
+		delete[] this->indexList;
+		delete[] this->objects;
+
+		// We can delete bounding box data without copying, because it is recreated on every frame
+		delete[] boundingBoxes;
+		delete[] bboxCullingState;
+	}
+
+	this->indexList = newIndexList;
+	this->objects = newObjects;
+
+	allocatedCount = newAllocatedCount;
+}
+
+unsigned int Renderer::AddRenderObject()
+{
+	unsigned int id;
+
+	if (freeListFirst == 0)
+	{
+		if (objectCount == allocatedCount)
+		{
+			this->Reallocate();
+		}
+
+		// If there are no freelist entries, first <objectCount> indices must be in use
+		id = objectCount + 1;
+		indexList[id] = objectCount;
+
+		++objectCount;
+	}
+	else
+	{
+		id = freeListFirst;
+		indexList[id] = objectCount;
+
+		freeListFirst = indexList[freeListFirst];
 	}
 
 	return id;
 }
 
-void Renderer::RemoveRenderObject(ObjectId id)
+void Renderer::RemoveRenderObject(unsigned int id)
 {
-	RenderObject& o = this->GetRenderObject(id);
-	o.id.innerId = UINT_MAX;
+	assert(id != 0);
 
-	/*
-	 Get pointer to objects[freeList],
-	 cast pointer to char*,
-	 add sizeof(RenderObjectId) to pointer value,
-	 cast pointer to uint32_t*
-	 */
+	// Put last object in removed objects place
+	if (indexList[id] < objectCount - 1)
+	{
+		objects[indexList[id]] = objects[objectCount - 1];
+	}
 
-	char* ptr = reinterpret_cast<char*>(&o);
-	uint32_t* next = reinterpret_cast<uint32_t*>(ptr + sizeof(ObjectId));
-	*next = freeList;
-	
-	freeList = id.index;
+	indexList[id] = freeListFirst;
+	freeListFirst = id;
+
+	--objectCount;
 }

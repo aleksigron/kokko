@@ -46,9 +46,9 @@ bool App::Initialize()
 
 		this->debug = new Debug(mainWindow.GetKeyboardInput());
 
-		this->renderer.Initialize();
 		this->renderer.AttachTarget(&this->mainWindow);
 		this->renderer.SetActiveCamera(&this->mainCamera);
+		
 		this->cameraController.SetControlledCamera(&this->mainCamera);
 
 		this->debug->GetLog()->OpenLogFile("log.txt", false);
