@@ -1,18 +1,25 @@
+#include "Engine.hpp"
 #include "App.hpp"
+#include "Window.hpp"
 
 int main(void)
 {
-	App app;
-	
-	if (app.Initialize())
+	Engine engine;
+
+	if (engine.Initialize())
 	{
-		while (app.HasRequestedQuit() == false)
+		App app;
+
+		app.Initialize();
+
+		while (engine.GetMainWindow()->ShouldClose() == false)
 		{
+			engine.Update();
 			app.Update();
 		}
 	}
 	else
 		return -1;
-	
+
 	return 0;
 }

@@ -1,5 +1,7 @@
 #include "CameraController.hpp"
 
+#include "Engine.hpp"
+#include "Window.hpp"
 #include "App.hpp"
 #include "Time.hpp"
 #include "PointerInput.hpp"
@@ -14,7 +16,8 @@ void CameraController::Update()
 {
 	TransformSource& ct = controlledCamera->transform;
 
-	Window* mainWindow = App::GetMainWindow();
+	Engine* engine = Engine::GetInstance();
+	Window* mainWindow = engine->GetMainWindow();
 	PointerInput* pi = mainWindow->GetPointerInput();
 	KeyboardInput* kb = mainWindow->GetKeyboardInput();
 

@@ -6,6 +6,7 @@
 #include "Hash.hpp"
 #include "AsciiStringUtil.hpp"
 
+#include "Engine.hpp"
 #include "App.hpp"
 #include "Texture.hpp"
 #include "ImageData.hpp"
@@ -269,7 +270,8 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 		imageData.pixelFormat = GL_RED;
 		imageData.componentDataType = GL_UNSIGNED_BYTE;
 
-		ResourceManager* rm = App::GetResourceManager();
+		Engine* engine = Engine::GetInstance();
+		ResourceManager* rm = engine->GetResourceManager();
 
 		Texture* texture = rm->CreateTexture();
 		TextureOptions options;

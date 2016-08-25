@@ -12,6 +12,7 @@
 		4520797B1D1DB82900CDB065 /* World.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 452079781D1DB82900CDB065 /* World.cpp */; };
 		45446ACE1D0625E300B90BB4 /* DebugLog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45446ACC1D0625E300B90BB4 /* DebugLog.cpp */; };
 		454ADD261CAB00740060443D /* FrustumCulling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454ADD241CAB00740060443D /* FrustumCulling.cpp */; };
+		457884CD1D6E7D1A000430F6 /* Engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457884CB1D6E7D1A000430F6 /* Engine.cpp */; };
 		4594E7371D0D8DE500E732EC /* DebugLogView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4594E7351D0D8DE500E732EC /* DebugLogView.cpp */; };
 		45A0052D1C933F43002D6134 /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004E71C933F43002D6134 /* App.cpp */; };
 		45A0052E1C933F43002D6134 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004EB1C933F43002D6134 /* Camera.cpp */; };
@@ -74,6 +75,8 @@
 		45446ACD1D0625E300B90BB4 /* DebugLog.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DebugLog.hpp; path = ../src/DebugLog.hpp; sourceTree = "<group>"; };
 		454ADD241CAB00740060443D /* FrustumCulling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FrustumCulling.cpp; path = ../src/FrustumCulling.cpp; sourceTree = "<group>"; };
 		454ADD251CAB00740060443D /* FrustumCulling.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = FrustumCulling.hpp; path = ../src/FrustumCulling.hpp; sourceTree = "<group>"; };
+		457884CB1D6E7D1A000430F6 /* Engine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Engine.cpp; path = ../src/Engine.cpp; sourceTree = "<group>"; };
+		457884CC1D6E7D1A000430F6 /* Engine.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Engine.hpp; path = ../src/Engine.hpp; sourceTree = "<group>"; };
 		4583750A1CFE242E00D37A1B /* Sort.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Sort.hpp; path = ../src/Sort.hpp; sourceTree = "<group>"; };
 		458C7A3E1D1B0FC200591AC5 /* BufferRef.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BufferRef.hpp; path = ../src/BufferRef.hpp; sourceTree = "<group>"; };
 		4594E7351D0D8DE500E732EC /* DebugLogView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugLogView.cpp; path = ../src/DebugLogView.cpp; sourceTree = "<group>"; };
@@ -318,10 +321,20 @@
 			name = Libraries;
 			sourceTree = "<group>";
 		};
+		457884CA1D6E7CE2000430F6 /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				457884CB1D6E7D1A000430F6 /* Engine.cpp */,
+				457884CC1D6E7D1A000430F6 /* Engine.hpp */,
+			);
+			name = Engine;
+			sourceTree = "<group>";
+		};
 		45A004E61C933EFE002D6134 /* Source */ = {
 			isa = PBXGroup;
 			children = (
 				451949771CCC0E4B009DF07A /* Debug */,
+				457884CA1D6E7CE2000430F6 /* Engine */,
 				454102EB1C9348B000D2841F /* Math */,
 				454102EC1C9348FD00D2841F /* Rendering */,
 				454102ED1C93491800D2841F /* Resources */,
@@ -441,6 +454,7 @@
 				45A0053B1C933F43002D6134 /* Scene.cpp in Sources */,
 				45A0052D1C933F43002D6134 /* App.cpp in Sources */,
 				45A005391C933F43002D6134 /* PointerInput.cpp in Sources */,
+				457884CD1D6E7D1A000430F6 /* Engine.cpp in Sources */,
 				45A005351C933F43002D6134 /* main.cpp in Sources */,
 				45C7F1A61D5392DB0035B70D /* DebugVectorRenderer.cpp in Sources */,
 				45A005431C933F43002D6134 /* VirtualMemory.cpp in Sources */,

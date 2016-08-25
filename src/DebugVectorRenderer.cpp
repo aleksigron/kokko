@@ -6,6 +6,7 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
+#include "Engine.hpp"
 #include "Math.hpp"
 #include "App.hpp"
 #include "Camera.hpp"
@@ -13,13 +14,12 @@
 #include "Shader.hpp"
 #include "ResourceManager.hpp"
 
-DebugVectorRenderer::DebugVectorRenderer()
+DebugVectorRenderer::DebugVectorRenderer() :
+	meshesInitialized(false)
 {
 	primitiveCount = 0;
 	primitiveAllocated = 64;
 	primitives = new Primitive[primitiveAllocated];
-
-	this->CreateMeshes();
 }
 
 DebugVectorRenderer::~DebugVectorRenderer()
@@ -29,7 +29,8 @@ DebugVectorRenderer::~DebugVectorRenderer()
 
 void DebugVectorRenderer::CreateMeshes()
 {
-	ResourceManager* rm = App::GetResourceManager();
+	Engine* engine = Engine::GetInstance();
+	ResourceManager* rm = engine->GetResourceManager();
 
 	{
 		Vertex3f lineVertexData[] = {
@@ -144,6 +145,8 @@ void DebugVectorRenderer::CreateMeshes()
 		sphereMesh.SetPrimitiveMode(Mesh::PrimitiveMode::Lines);
 		sphereMesh.Upload_3f(vertices, indices);
 	}
+
+	meshesInitialized = true;
 }
 
 void DebugVectorRenderer::DrawLine(const Vec3f& start, const Vec3f& end, const Color& color)
@@ -189,13 +192,21 @@ void DebugVectorRenderer::DrawSphere(const Vec3f& position, float radius, const 
 	}
 }
 
-void DebugVectorRenderer::Render(const Camera& camera)
+void DebugVectorRenderer::Render()
 {
 	if (primitiveCount > 0)
 	{
-		Mat4x4f viewProjection = camera.GetProjectionMatrix() * camera.GetViewMatrix();
+		if (meshesInitialized == false)
+		{
+			this->CreateMeshes();
+		}
 
-		ResourceManager* rm = App::GetResourceManager();
+		Engine* engine = Engine::GetInstance();
+		Camera* camera = this->activeCamera;
+
+		Mat4x4f viewProjection = camera->GetProjectionMatrix() * camera->GetViewMatrix();
+
+		ResourceManager* rm = engine->GetResourceManager();
 		Shader* shader = rm->GetShader("res/shaders/debug_vector.shader.json");
 
 		int colorUniformLocation = -1;

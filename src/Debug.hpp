@@ -6,8 +6,6 @@ class DebugLogView;
 class DebugLog;
 class KeyboardInput;
 
-struct Camera;
-
 class Debug
 {
 private:
@@ -26,12 +24,14 @@ private:
 	mode;
 
 public:
-	Debug(KeyboardInput* keyboardInput);
+	Debug();
 	~Debug();
+
+	void SetKeyboardInput(KeyboardInput* keyboardInput) { this->keyboardInput = keyboardInput; }
 
 	void UpdateLogViewDrawArea();
 	
-	void Render(const Camera& camera);
+	void Render();
 
 	DebugLog* GetLog() { return log; }
 	DebugLogView* GetLogView() { return logView; }

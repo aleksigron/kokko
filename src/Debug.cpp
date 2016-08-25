@@ -10,8 +10,8 @@
 
 #include "KeyboardInput.hpp"
 
-Debug::Debug(KeyboardInput* keyboardInput) :
-	keyboardInput(keyboardInput),
+Debug::Debug() :
+	keyboardInput(nullptr),
 	mode(DebugMode::None)
 {
 	vectorRenderer = new DebugVectorRenderer;
@@ -41,16 +41,19 @@ void Debug::UpdateLogViewDrawArea()
 	logView->SetDrawArea(logArea);
 }
 
-void Debug::Render(const Camera& camera)
+void Debug::Render()
 {
-	// Update mode
-	if (keyboardInput->GetKeyDown(Key::N_1))
+	if (keyboardInput != nullptr)
 	{
-		this->mode = DebugMode::None;
-	}
-	else if (keyboardInput->GetKeyDown(Key::N_2))
-	{
-		this->mode = DebugMode::LogView;
+		// Update mode
+		if (keyboardInput->GetKeyDown(Key::N_1))
+		{
+			this->mode = DebugMode::None;
+		}
+		else if (keyboardInput->GetKeyDown(Key::N_2))
+		{
+			this->mode = DebugMode::LogView;
+		}
 	}
 
 	char modeNoneChar = (mode == DebugMode::None) ? '*' : ' ';
@@ -61,7 +64,7 @@ void Debug::Render(const Camera& camera)
 	sprintf(buffer, "Debug mode: [1]None%c [2]Log%c", modeNoneChar, modeLogChar);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f), true);
 
-	vectorRenderer->Render(camera);
+	vectorRenderer->Render();
 
 	// Draw mode content
 	switch (this->mode)

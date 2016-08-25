@@ -6,14 +6,17 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
+#include "Engine.hpp"
 #include "App.hpp"
 #include "Window.hpp"
 
+#include "ResourceManager.hpp"
 #include "Material.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "World.hpp"
 #include "Scene.hpp"
+#include "Mesh.hpp"
 
 #include "Camera.hpp"
 #include "ViewFrustum.hpp"
@@ -41,7 +44,8 @@ Renderer::~Renderer()
 
 void Renderer::Render(const World* world, Scene* scene)
 {
-	ResourceManager* res = App::GetResourceManager();
+	Engine* engine = Engine::GetInstance();
+	ResourceManager* res = engine->GetResourceManager();
 
 	RenderObject* o = this->objects;
 	BoundingBox* bb = this->boundingBoxes;
@@ -227,7 +231,8 @@ void Renderer::SetActiveCamera(Camera* camera)
 
 void Renderer::UpdateBoundingBoxes(Scene* scene)
 {
-	ResourceManager* rm = App::GetResourceManager();
+	Engine* engine = Engine::GetInstance();
+	ResourceManager* rm = engine->GetResourceManager();
 
 	for (unsigned i = 0; i < objectCount; ++i)
 	{

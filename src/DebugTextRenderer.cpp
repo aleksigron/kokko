@@ -10,6 +10,7 @@
 #include "BitmapFont.hpp"
 #include "VertexFormat.hpp"
 
+#include "Engine.hpp"
 #include "Mesh.hpp"
 #include "Material.hpp"
 #include "ResourceManager.hpp"
@@ -121,7 +122,8 @@ void DebugTextRenderer::Render()
 		Mesh mesh;
 		this->CreateAndUploadData(mesh);
 
-		ResourceManager* rm = App::GetResourceManager();
+		Engine* engine = Engine::GetInstance();
+		ResourceManager* rm = engine->GetResourceManager();
 		Shader* shader = rm->GetShader("res/shaders/debug_text.shader.json");
 
 		const ShaderUniform* textureUniform = nullptr;

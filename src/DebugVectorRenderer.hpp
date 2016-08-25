@@ -28,7 +28,10 @@ private:
 	unsigned int primitiveCount;
 	unsigned int primitiveAllocated;
 
+	bool meshesInitialized;
 	ObjectId meshIds[3];
+
+	Camera* activeCamera;
 
 	void CreateMeshes();
 
@@ -36,9 +39,11 @@ public:
 	DebugVectorRenderer();
 	~DebugVectorRenderer();
 
+	void SetActiveCamera(Camera* camera) { this->activeCamera = camera; }
+
 	void DrawLine(const Vec3f& start, const Vec3f& end, const Color& color);
 	void DrawCube(const Mat4x4f& transform, const Color& color);
 	void DrawSphere(const Vec3f& position, float radius, const Color& color);
 
-	void Render(const Camera& camera);
+	void Render();
 };
