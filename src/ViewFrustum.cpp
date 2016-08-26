@@ -3,13 +3,18 @@
 #include <cmath>
 
 #include "Vec3.hpp"
-#include "Camera.hpp"
+#include "Vec4.hpp"
+#include "Mat4x4.hpp"
 #include "BoundingBox.hpp"
 
-void ViewFrustum::UpdateFrustum(const Camera& camera)
+#include "Camera.hpp"
+
+void ViewFrustum::UpdateFrustum(const Camera& camera, const Mat4x4f& cameraTransform)
 {
-	const Vec3f position = camera.transform.position;
-	const Vec3f forward = camera.transform.Forward();
+	const Vec3f position = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+	const Vec3f forward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+	const Vec3f right = (cameraTransform * Vec4f(1.0f, 0.0f, 0.0f, 0.0f)).xyz();
+	const Vec3f up = (cameraTransform * Vec4f(0.0f, 1.0f, 0.0f, 0.0f)).xyz();
 
 	const float near = camera.nearClipDistance;
 	const float far = camera.farClipDistance;
@@ -18,8 +23,8 @@ void ViewFrustum::UpdateFrustum(const Camera& camera)
 	const float halfFarWidth = halfFarHeight * camera.aspectRatio;
 
 	const Vec3f farForward = forward * far;
-	const Vec3f farRight = camera.transform.Right() * halfFarWidth;
-	const Vec3f farUp = camera.transform.Up() * halfFarHeight;
+	const Vec3f farRight = right * halfFarWidth;
+	const Vec3f farUp = up * halfFarHeight;
 
 	const Vec3f dirTopLeft = farForward - farRight + farUp;
 	const Vec3f dirBottomRight = farForward + farRight - farUp;

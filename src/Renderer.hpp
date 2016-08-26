@@ -7,7 +7,7 @@
 #include "Buffer.hpp"
 
 struct BoundingBox;
-struct Camera;
+class Camera;
 class Window;
 class World;
 class Scene;

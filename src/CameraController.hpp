@@ -3,8 +3,9 @@
 #include "Vec2.hpp"
 #include "Vec3.hpp"
 
-struct Camera;
 struct GLFWwindow;
+
+class Camera;
 
 class CameraController
 {
@@ -13,7 +14,7 @@ private:
 
 	float cameraYaw = 0.0f;
 	float cameraPitch = 0.0f;
-
+	
 	Vec3f cameraVelocity;
 	float cameraMaximumSpeed = 2.0f;
 
@@ -21,6 +22,10 @@ private:
 	bool mouseGrabActive = false;
 
 public:
-	void SetControlledCamera(Camera* camera);
+	void SetControlledCamera(Camera* camera)
+	{
+		controlledCamera = camera;
+	}
+	
 	void Update();
 };

@@ -1,36 +1,41 @@
 #include "CameraController.hpp"
 
+#include "Mat3x3.hpp"
+#include "Mat4x4.hpp"
+
 #include "Engine.hpp"
-#include "Window.hpp"
-#include "App.hpp"
+
 #include "Time.hpp"
+
+#include "Window.hpp"
 #include "PointerInput.hpp"
 #include "KeyboardInput.hpp"
 
-void CameraController::SetControlledCamera(Camera* camera)
-{
-	controlledCamera = camera;
-}
+#include "Scene.hpp"
+
+#include "Camera.hpp"
 
 void CameraController::Update()
 {
-	TransformSource& ct = controlledCamera->transform;
-
 	Engine* engine = Engine::GetInstance();
+
+	Scene* scene = engine->GetScene();
+
 	Window* mainWindow = engine->GetMainWindow();
 	PointerInput* pi = mainWindow->GetPointerInput();
 	KeyboardInput* kb = mainWindow->GetKeyboardInput();
 
 	if (kb->GetKeyDown(Key::Space) && mouseGrabActive == false)
 	{
-		mouseLookEnable = mouseLookEnable == false;
+		mouseLookEnable = !mouseLookEnable;
+
 		pi->SetCursorMode(mouseLookEnable ?
 						  PointerInput::CursorMode::Disabled :
 						  PointerInput::CursorMode::Normal);
 
 	}
 
-	if (mouseLookEnable)
+	if (mouseLookEnable == true)
 	{
 		Vec2f movement = pi->GetCursorMovement() * 0.003f;
 
@@ -47,11 +52,19 @@ void CameraController::Update()
 			cameraPitch = -80.0f;
 		else if (cameraPitch > 80.0f)
 			cameraPitch = 80.0f;
-
-		ct.rotation = Mat3x3f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), -cameraYaw) *
-		Mat3x3f::RotateAroundAxis(Vec3f(1.0f, 0.0f, 0.0f), -cameraPitch);
 	}
-	else
+
+	Mat3x3f rotation = Mat3x3f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), -cameraYaw) *
+	Mat3x3f::RotateAroundAxis(Vec3f(1.0f, 0.0f, 0.0f), -cameraPitch);
+
+	Vec3f up = rotation.Up();
+	Vec3f right = rotation.Right();
+	Vec3f forward = rotation.Forward();
+
+	Mat4x4f currentTransform = scene->GetLocalTransform(controlledCamera->GetSceneObjectId());
+	Vec3f position = (currentTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+
+	if (mouseLookEnable == false)
 	{
 		if (pi->GetMouseButtonDown(0))
 			mouseGrabActive = true;
@@ -61,18 +74,18 @@ void CameraController::Update()
 		if (mouseGrabActive)
 		{
 			Vec2f movement = pi->GetCursorMovement() * 0.015f;
-			ct.position += ct.Right() * -movement.x + ct.Up() * movement.y;
+			position += right * -movement.x + up * movement.y;
 		}
 	}
 
 	Vec3f dir;
 
-	dir -= float(int(kb->GetKey(Key::Q))) * ct.Up();
-	dir += float(int(kb->GetKey(Key::W))) * ct.Forward();
-	dir += float(int(kb->GetKey(Key::E))) * ct.Up();
-	dir -= float(int(kb->GetKey(Key::A))) * ct.Right();
-	dir -= float(int(kb->GetKey(Key::S))) * ct.Forward();
-	dir += float(int(kb->GetKey(Key::D))) * ct.Right();
+	dir -= float(int(kb->GetKey(Key::Q))) * up;
+	dir += float(int(kb->GetKey(Key::W))) * forward;
+	dir += float(int(kb->GetKey(Key::E))) * up;
+	dir -= float(int(kb->GetKey(Key::A))) * right;
+	dir -= float(int(kb->GetKey(Key::S))) * forward;
+	dir += float(int(kb->GetKey(Key::D))) * right;
 
 	if (dir.SqrMagnitude() > 1.0f)
 		dir.Normalize();
@@ -83,6 +96,8 @@ void CameraController::Update()
 		targetSpeed *= 2.0f;
 
 	cameraVelocity += (dir * targetSpeed - cameraVelocity) * 0.15f;
+	position += cameraVelocity * Time::GetDeltaTime();
 
-	ct.position += cameraVelocity * Time::GetDeltaTime();
+	Mat4x4f newTransform = Mat4x4f::Translate(position) * Mat4x4f(rotation);
+	scene->SetLocalTransform(controlledCamera->GetSceneObjectId(), newTransform);
 }

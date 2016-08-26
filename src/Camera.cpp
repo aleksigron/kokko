@@ -1,5 +1,43 @@
 #include "Camera.hpp"
 
+#include "Engine.hpp"
+#include "Scene.hpp"
+
+Camera::Camera() : sceneObjectId(0)
+{
+}
+
+Camera::~Camera()
+{
+}
+
+void Camera::InitializeSceneObject()
+{
+	if (sceneObjectId == 0)
+	{
+		Engine* engine = Engine::GetInstance();
+		Scene* scene = engine->GetScene();
+		this->sceneObjectId = scene->AddSceneObject();
+	}
+}
+
+Mat4x4f Camera::GetViewMatrix() const
+{
+	Engine* engine = Engine::GetInstance();
+	Scene* scene = engine->GetScene();
+
+	Mat4x4f m = scene->GetWorldTransform(sceneObjectId);
+	Mat3x3f inverseRotation = m.Get3x3().GetTransposed();
+	Vec3f translation = -(inverseRotation * Vec3f(m[12], m[13], m[14]));
+
+	Mat4x4f v(inverseRotation);
+	v[12] = translation.x;
+	v[13] = translation.y;
+	v[14] = translation.z;
+	 
+	return v;
+}
+
 Mat4x4f Camera::GetProjectionMatrix() const
 {
 	Mat4x4f result;

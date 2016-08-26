@@ -102,8 +102,13 @@ void App::Initialize()
 	Material* skyboxMaterial = resourceManager->GetMaterial("res/materials/skybox.material.json");
 	world->skybox.Initialize(scene, skyboxMaterial->nameHash);
 
-	this->mainCamera.transform.position = Vec3f(0.0f, 0.3f, 1.5f);
+	// Camera
+
 	this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
+	
+	this->mainCamera.InitializeSceneObject();
+	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.3f, 1.5f));
+	scene->SetLocalTransform(this->mainCamera.GetSceneObjectId(), cameraTransform);
 
 	Window* window = engine->GetMainWindow();
 	Vec2f frameSize = window->GetFrameBufferSize();

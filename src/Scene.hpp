@@ -7,14 +7,13 @@ using SceneObjectId = unsigned int;
 
 struct SceneObjectBatch
 {
-	static const unsigned int BatchSize = 1 << 9;
+	static const unsigned int BatchSize = 512;
 
 	unsigned int used;
 
 	SceneObjectId parentIds[BatchSize];
 	Mat4x4f localTransforms[BatchSize];
 	Mat4x4f worldTransforms[BatchSize];
-	TransformSource localSources[BatchSize];
 };
 
 class Scene
@@ -34,14 +33,14 @@ public:
 	void SetParent(SceneObjectId object, SceneObjectId parent);
 	void SetLocalTransform(SceneObjectId object, const Mat4x4f& transform);
 
-	inline Mat4x4f& GetWorldTransformMatrix(SceneObjectId object)
+	Mat4x4f& GetWorldTransform(SceneObjectId object)
 	{
 		return objectBatch.worldTransforms[object];
 	}
-
-	inline TransformSource& GetLocalTransformSource(SceneObjectId object)
+	
+	Mat4x4f& GetLocalTransform(SceneObjectId object)
 	{
-		return objectBatch.localSources[object];
+		return objectBatch.localTransforms[object];
 	}
 
 	void CalculateWorldTransforms();

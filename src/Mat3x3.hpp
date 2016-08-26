@@ -8,15 +8,19 @@ struct Mat3x3f
 
 	float m[9];
 
-	inline Mat3x3f(Uninitialize) {}
-	inline Mat3x3f(): m{ 1, 0, 0, 0, 1, 0, 0, 0, 1 } {}
+	Mat3x3f(Uninitialize) {}
+	Mat3x3f(): m{ 1, 0, 0, 0, 1, 0, 0, 0, 1 } {}
 
-	inline float& operator[](std::size_t index) { return m[index]; }
-	inline const float& operator[](std::size_t index) const { return m[index]; }
+	float& operator[](unsigned int index) { return m[index]; }
+	const float& operator[](unsigned int index) const { return m[index]; }
 
-	inline float* ValuePointer() { return m; }
+	float* ValuePointer() { return m; }
 
-	inline void Transpose()
+	Vec3f Right() const { return Vec3f(m[0], m[1], m[2]); }
+	Vec3f Up() const { return Vec3f(m[3], m[4], m[5]); }
+	Vec3f Forward() const { return Vec3f(-m[6], -m[7], -m[8]); }
+
+	void Transpose()
 	{
 		float temp = m[1];
 		m[1] = m[3];
@@ -31,7 +35,7 @@ struct Mat3x3f
 		m[8] = temp;
 	}
 
-	inline Mat3x3f GetTransposed() const
+	Mat3x3f GetTransposed() const
 	{
 		Mat3x3f result(Mat3x3f::uninit);
 
@@ -41,7 +45,7 @@ struct Mat3x3f
 		return result;
 	}
 
-	static inline Mat3x3f RotateAroundAxis(Vec3f axis, float angle)
+	static Mat3x3f RotateAroundAxis(Vec3f axis, float angle)
 	{
 		axis.Normalize();
 

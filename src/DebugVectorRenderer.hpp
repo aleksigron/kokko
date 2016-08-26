@@ -5,7 +5,7 @@
 #include "Color.hpp"
 #include "ObjectId.hpp"
 
-struct Camera;
+class Camera;
 
 class DebugVectorRenderer
 {

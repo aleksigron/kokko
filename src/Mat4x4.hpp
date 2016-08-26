@@ -33,6 +33,25 @@ struct Mat4x4f
 	float* ValuePointer() { return m; }
 	const float* ValuePointer() const { return m; }
 
+	Mat3x3f Get3x3() const
+	{
+		Mat3x3f result;
+
+		result[0] = m[0];
+		result[1] = m[1];
+		result[2] = m[2];
+
+		result[3] = m[4];
+		result[4] = m[5];
+		result[5] = m[6];
+
+		result[6] = m[8];
+		result[7] = m[9];
+		result[8] = m[10];
+
+		return result;
+	}
+
 	void Transpose()
 	{
 		float temp;

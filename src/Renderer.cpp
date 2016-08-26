@@ -46,9 +46,13 @@ void Renderer::PreTransformUpdate()
 {
 	Engine* engine = Engine::GetInstance();
 	World* world = engine->GetWorld();
+	Scene* scene = engine->GetScene();
+
+	Mat4x4f cameraTransform = scene->GetLocalTransform(this->activeCamera->GetSceneObjectId());
+	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 	// Update skybox transform
-	world->skybox.UpdateTransform(this->activeCamera->transform.position);
+	world->skybox.UpdateTransform(cameraPosition);
 }
 
 void Renderer::Render(const World* world, Scene* scene)
@@ -56,17 +60,18 @@ void Renderer::Render(const World* world, Scene* scene)
 	Engine* engine = Engine::GetInstance();
 	ResourceManager* res = engine->GetResourceManager();
 
-	RenderObject* o = this->objects;
-	BoundingBox* bb = this->boundingBoxes;
-	unsigned char* bbcs = this->bboxCullingState;
-
 	Camera* cam = this->activeCamera;
+	Mat4x4f cameraTransform = scene->GetLocalTransform(cam->GetSceneObjectId());
 
 	// Update view frustum
 	ViewFrustum frustum;
-	frustum.UpdateFrustum(*cam);
+	frustum.UpdateFrustum(*cam, cameraTransform);
 
 	this->UpdateBoundingBoxes(scene);
+
+	RenderObject* o = this->objects;
+	BoundingBox* bb = this->boundingBoxes;
+	unsigned char* bbcs = this->bboxCullingState;
 
 	// Do frustum culling
 	FrustumCulling::CullAABB(&frustum, objectCount, bb, bbcs);
@@ -89,7 +94,6 @@ void Renderer::Render(const World* world, Scene* scene)
 	Mat4x4f viewMatrix = cam->GetViewMatrix();
 	Mat4x4f projectionMatrix = cam->GetProjectionMatrix();
 	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
-
 
 	for (unsigned index = 0; index < objectCount; ++index)
 	{
@@ -154,7 +158,7 @@ void Renderer::Render(const World* world, Scene* scene)
 				}
 			}
 
-			Mat4x4f modelMatrix = scene->GetWorldTransformMatrix(obj.sceneObjectId);
+			Mat4x4f modelMatrix = scene->GetWorldTransform(obj.sceneObjectId);
 
 			if (shader->uniformMatMVP >= 0)
 			{
@@ -217,7 +221,7 @@ void Renderer::UpdateBoundingBoxes(Scene* scene)
 	{
 		const Mesh& mesh = rm->meshes.Get(objects[i].mesh);
 
-		const Mat4x4f& matrix = scene->GetWorldTransformMatrix(objects[i].sceneObjectId);
+		const Mat4x4f& matrix = scene->GetWorldTransform(objects[i].sceneObjectId);
 		boundingBoxes[i] = mesh.bounds.Transform(matrix);
 	}
 }

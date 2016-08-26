@@ -1,18 +1,25 @@
 #pragma once
 
-#include "Transform.hpp"
 #include "Mat4x4.hpp"
 #include "Vec2.hpp"
 
-struct Camera
+class Camera
 {
+public:
 	enum class Projection
 	{
 		Perspective,
 		Orthographic
 	};
 
-	TransformSource transform;
+private:
+	unsigned int sceneObjectId;
+
+public:
+	Camera();
+	~Camera();
+
+	void InitializeSceneObject();
 
 	// The camera's vertical field of view in radians
 	float perspectiveFieldOfView = 1.0f;
@@ -28,19 +35,17 @@ struct Camera
 	
 	Projection projectionType = Projection::Perspective;
 
+	unsigned int GetSceneObjectId() const { return sceneObjectId; }
+
+	Mat4x4f GetViewMatrix() const;
 	Mat4x4f GetProjectionMatrix() const;
 
-	inline Mat4x4f GetViewProjectionMatrix() const
+	Mat4x4f GetViewProjectionMatrix() const
 	{
 		return this->GetProjectionMatrix() * this->GetViewMatrix();
 	}
 
-	inline Mat4x4f GetViewMatrix() const
-	{
-		return Mat4x4f(transform.rotation.GetTransposed()) * Mat4x4f::Translate(-(transform.position));
-	}
-
-	inline void SetAspectRatio(float width, float height)
+	void SetAspectRatio(float width, float height)
 	{
 		aspectRatio = width / static_cast<float>(height);
 	}
