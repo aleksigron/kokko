@@ -35,7 +35,8 @@ private:
 public:
 	Renderer();
 	~Renderer();
-	
+
+	void PreTransformUpdate();
 	void Render(const World* world, Scene* scene);
 	
 	void AttachTarget(Window* window);

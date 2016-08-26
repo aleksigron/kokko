@@ -1,30 +1,13 @@
 #pragma once
 
-#include <cstdint>
-
 #include "Color.hpp"
-#include "ObjectId.hpp"
+#include "Skybox.hpp"
 
-class ResourceManager;
+struct Mat4x4f;
 
 class World
 {
-private:
-	Color backgroundColor;
-
-	unsigned int skyboxMaterialId;
-	ObjectId skyboxMeshId;
-
 public:
-	World();
-	~World();
-
-	void InitializeSkyboxMesh(ResourceManager* resourceManager);
-	ObjectId GetSkyboxMeshId() const { return skyboxMeshId; }
-
-	void SetSkyboxMaterialId(uint32_t materialId) { skyboxMaterialId = materialId; }
-	uint32_t GetSkyboxMaterialId() const { return skyboxMaterialId; }
-
-	Color GetBackgroundColor() const { return backgroundColor; }
-	void SetBackgroundColor(const Color& color) { backgroundColor = color; }
+	Color backgroundColor;
+	Skybox skybox;
 };

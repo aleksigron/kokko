@@ -40,7 +40,7 @@ void App::Initialize()
 	Engine* engine = Engine::GetInstance();
 
 	World* world = engine->GetWorld();
-	world->SetBackgroundColor(Color(0.1f, 0.1f, 0.1f, 1.0f));
+	world->backgroundColor = Color(0.1f, 0.1f, 0.1f, 1.0f);
 
 	Renderer* renderer = engine->GetRenderer();
 	renderer->SetActiveCamera(&this->mainCamera);
@@ -100,8 +100,7 @@ void App::Initialize()
 	// Skybox
 
 	Material* skyboxMaterial = resourceManager->GetMaterial("res/materials/skybox.material.json");
-	world->SetSkyboxMaterialId(skyboxMaterial->nameHash);
-	world->InitializeSkyboxMesh(resourceManager);
+	world->skybox.Initialize(scene, skyboxMaterial->nameHash);
 
 	this->mainCamera.transform.position = Vec3f(0.0f, 0.3f, 1.5f);
 	this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
@@ -122,10 +121,9 @@ void App::Update()
 	float fps = 1.0f / deltaTime;
 	float ms = deltaTime * 1000.0f;
 	char frameRateText[64];
-	sprintf(frameRateText, "%.2f frames per second, %.2f ms per frame", double(fps), double(ms));
+	sprintf(frameRateText, "%.1f frames per second, %.1f ms per frame", double(fps), double(ms));
 
 	Debug* debug = engine->GetDebug();
-
 	debug->GetLog()->Log(StringRef(frameRateText));
 
 	Color green(0.0f, 1.0f, 0.0f, 1.0f);

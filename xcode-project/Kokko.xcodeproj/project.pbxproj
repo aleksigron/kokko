@@ -9,10 +9,10 @@
 /* Begin PBXBuildFile section */
 		4519497A1CCC0E95009DF07A /* DebugTextRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 451949781CCC0E95009DF07A /* DebugTextRenderer.cpp */; };
 		4519497D1CCC0F14009DF07A /* BitmapFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4519497B1CCC0F14009DF07A /* BitmapFont.cpp */; };
-		4520797B1D1DB82900CDB065 /* World.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 452079781D1DB82900CDB065 /* World.cpp */; };
 		45446ACE1D0625E300B90BB4 /* DebugLog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45446ACC1D0625E300B90BB4 /* DebugLog.cpp */; };
 		454ADD261CAB00740060443D /* FrustumCulling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454ADD241CAB00740060443D /* FrustumCulling.cpp */; };
 		457884CD1D6E7D1A000430F6 /* Engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457884CB1D6E7D1A000430F6 /* Engine.cpp */; };
+		457884D01D707D9A000430F6 /* Skybox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 457884CE1D707D9A000430F6 /* Skybox.cpp */; };
 		4594E7371D0D8DE500E732EC /* DebugLogView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4594E7351D0D8DE500E732EC /* DebugLogView.cpp */; };
 		45A0052D1C933F43002D6134 /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004E71C933F43002D6134 /* App.cpp */; };
 		45A0052E1C933F43002D6134 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004EB1C933F43002D6134 /* Camera.cpp */; };
@@ -67,7 +67,6 @@
 		4519497C1CCC0F14009DF07A /* BitmapFont.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BitmapFont.hpp; path = ../src/BitmapFont.hpp; sourceTree = "<group>"; };
 		4520796A1D1B2A3900CDB065 /* Color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Color.hpp; path = ../src/Color.hpp; sourceTree = "<group>"; };
 		4520796B1D1B2A3900CDB065 /* ColorSrgb.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ColorSrgb.hpp; path = ../src/ColorSrgb.hpp; sourceTree = "<group>"; };
-		452079781D1DB82900CDB065 /* World.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = World.cpp; path = ../src/World.cpp; sourceTree = "<group>"; };
 		452079791D1DB82900CDB065 /* World.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = World.hpp; path = ../src/World.hpp; sourceTree = "<group>"; };
 		454102E61C93473100D2841F /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../res; sourceTree = "<group>"; };
 		454102E71C93476E00D2841F /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = ../include; sourceTree = "<group>"; };
@@ -77,6 +76,8 @@
 		454ADD251CAB00740060443D /* FrustumCulling.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = FrustumCulling.hpp; path = ../src/FrustumCulling.hpp; sourceTree = "<group>"; };
 		457884CB1D6E7D1A000430F6 /* Engine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Engine.cpp; path = ../src/Engine.cpp; sourceTree = "<group>"; };
 		457884CC1D6E7D1A000430F6 /* Engine.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Engine.hpp; path = ../src/Engine.hpp; sourceTree = "<group>"; };
+		457884CE1D707D9A000430F6 /* Skybox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Skybox.cpp; path = ../src/Skybox.cpp; sourceTree = "<group>"; };
+		457884CF1D707D9A000430F6 /* Skybox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Skybox.hpp; path = ../src/Skybox.hpp; sourceTree = "<group>"; };
 		4583750A1CFE242E00D37A1B /* Sort.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Sort.hpp; path = ../src/Sort.hpp; sourceTree = "<group>"; };
 		458C7A3E1D1B0FC200591AC5 /* BufferRef.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BufferRef.hpp; path = ../src/BufferRef.hpp; sourceTree = "<group>"; };
 		4594E7351D0D8DE500E732EC /* DebugLogView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugLogView.cpp; path = ../src/DebugLogView.cpp; sourceTree = "<group>"; };
@@ -281,6 +282,8 @@
 			children = (
 				45A004EB1C933F43002D6134 /* Camera.cpp */,
 				45A004EC1C933F43002D6134 /* Camera.hpp */,
+				454ADD241CAB00740060443D /* FrustumCulling.cpp */,
+				454ADD251CAB00740060443D /* FrustumCulling.hpp */,
 				45A005011C933F43002D6134 /* Material.cpp */,
 				45A005021C933F43002D6134 /* Material.hpp */,
 				45A0050F1C933F43002D6134 /* Renderer.cpp */,
@@ -288,12 +291,12 @@
 				45A005111C933F43002D6134 /* RenderObject.hpp */,
 				45A005161C933F43002D6134 /* Shader.cpp */,
 				45A005171C933F43002D6134 /* Shader.hpp */,
+				457884CE1D707D9A000430F6 /* Skybox.cpp */,
+				457884CF1D707D9A000430F6 /* Skybox.hpp */,
 				45A0051D1C933F43002D6134 /* Texture.cpp */,
 				45A0051E1C933F43002D6134 /* Texture.hpp */,
 				45A005251C933F43002D6134 /* VertexFormat.cpp */,
 				45A005261C933F43002D6134 /* VertexFormat.hpp */,
-				454ADD241CAB00740060443D /* FrustumCulling.cpp */,
-				454ADD251CAB00740060443D /* FrustumCulling.hpp */,
 			);
 			name = Rendering;
 			sourceTree = "<group>";
@@ -347,7 +350,6 @@
 				45A004EE1C933F43002D6134 /* CameraController.hpp */,
 				45A005131C933F43002D6134 /* Scene.cpp */,
 				45A005141C933F43002D6134 /* Scene.hpp */,
-				452079781D1DB82900CDB065 /* World.cpp */,
 				452079791D1DB82900CDB065 /* World.hpp */,
 			);
 			name = Source;
@@ -446,12 +448,12 @@
 				45A005301C933F43002D6134 /* File.cpp in Sources */,
 				4594E7371D0D8DE500E732EC /* DebugLogView.cpp in Sources */,
 				45A0052F1C933F43002D6134 /* CameraController.cpp in Sources */,
-				4520797B1D1DB82900CDB065 /* World.cpp in Sources */,
 				45A005311C933F43002D6134 /* ImageData.cpp in Sources */,
 				45A005401C933F43002D6134 /* Time.cpp in Sources */,
 				45A005371C933F43002D6134 /* Mesh.cpp in Sources */,
 				45A0053F1C933F43002D6134 /* Texture.cpp in Sources */,
 				45A0053B1C933F43002D6134 /* Scene.cpp in Sources */,
+				457884D01D707D9A000430F6 /* Skybox.cpp in Sources */,
 				45A0052D1C933F43002D6134 /* App.cpp in Sources */,
 				45A005391C933F43002D6134 /* PointerInput.cpp in Sources */,
 				457884CD1D6E7D1A000430F6 /* Engine.cpp in Sources */,

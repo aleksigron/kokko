@@ -42,6 +42,15 @@ Renderer::~Renderer()
 	delete[] indexList;
 }
 
+void Renderer::PreTransformUpdate()
+{
+	Engine* engine = Engine::GetInstance();
+	World* world = engine->GetWorld();
+
+	// Update skybox transform
+	world->skybox.UpdateTransform(this->activeCamera->transform.position);
+}
+
 void Renderer::Render(const World* world, Scene* scene)
 {
 	Engine* engine = Engine::GetInstance();
@@ -63,10 +72,12 @@ void Renderer::Render(const World* world, Scene* scene)
 	FrustumCulling::CullAABB(&frustum, objectCount, bb, bbcs);
 
 	// Get the background color for view
-	Color clearCol = world->GetBackgroundColor();
+	Color clearCol = world->backgroundColor;
 	glClearColor(clearCol.r, clearCol.r, clearCol.r, 1.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glEnable(GL_DEPTH_TEST);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
@@ -79,49 +90,6 @@ void Renderer::Render(const World* world, Scene* scene)
 	Mat4x4f projectionMatrix = cam->GetProjectionMatrix();
 	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
 
-	// Draw the skybox first
-	{
-		Mat4x4f cameraRotation = Mat4x4f(cam->transform.rotation.GetTransposed());
-		Mat4x4f skyboxTransform = projectionMatrix * cameraRotation;
-
-		const Mesh& mesh = res->meshes.Get(world->GetSkyboxMeshId());
-		const Material* skyboxMaterial = res->GetMaterial(world->GetSkyboxMaterialId());
-		const Shader* skyboxShader = res->GetShader(skyboxMaterial->shaderId);
-
-		int textureUniformLocation = -1;
-		uint32_t textureId = 0;
-
-		for (unsigned int i = 0, count = skyboxMaterial->uniformCount; i < count; ++i)
-		{
-			const ShaderMaterialUniform& u = skyboxMaterial->uniforms[i];
-
-			if (u.type == ShaderUniformType::TexCube)
-			{
-				unsigned char* d = skyboxMaterial->uniformData + u.dataOffset;
-				textureId = *reinterpret_cast<uint32_t*>(d);
-
-				textureUniformLocation = u.location;
-			}
-		}
-
-		Texture* skyboxTexture = res->GetTexture(textureId);
-
-		glDisable(GL_DEPTH_TEST);
-
-		glUseProgram(skyboxShader->driverId);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(skyboxTexture->targetType, skyboxTexture->driverId);
-		glUniform1i(textureUniformLocation, 0);
-		
-		glUniformMatrix4fv(skyboxShader->uniformMatVP, 1, GL_FALSE, skyboxTransform.ValuePointer());
-
-		glBindVertexArray(mesh.vertexArrayObject);
-
-		glDrawElements(mesh.primitiveMode, mesh.indexCount, mesh.indexElementType, nullptr);
-	}
-
-	glEnable(GL_DEPTH_TEST);
 
 	for (unsigned index = 0; index < objectCount; ++index)
 	{
@@ -200,6 +168,12 @@ void Renderer::Render(const World* world, Scene* scene)
 				glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
 			}
 
+			if (shader->uniformMatVP >= 0)
+			{
+				Mat4x4f vp = projectionMatrix * viewMatrix;
+				glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, vp.ValuePointer());
+			}
+
 			if (shader->uniformMatM >= 0)
 			{
 				glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
@@ -208,6 +182,11 @@ void Renderer::Render(const World* world, Scene* scene)
 			if (shader->uniformMatV >= 0)
 			{
 				glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
+			}
+
+			if (shader->uniformMatP >= 0)
+			{
+				glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, projectionMatrix.ValuePointer());
 			}
 
 			glBindVertexArray(mesh.vertexArrayObject);
