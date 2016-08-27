@@ -73,19 +73,19 @@ void App::Initialize()
 
 	scene->backgroundColor = Color(0.1f, 0.1f, 0.1f, 1.0f);
 
-	SceneObjectId tableSceneObj = scene->AddSceneObject();
+	unsigned int tableSceneObj = scene->AddSceneObject();
 	RenderObject& tableRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
 	tableRenderObj.mesh = tableMeshId;
 	tableRenderObj.materialId = diffuseRed->nameHash;
 	tableRenderObj.sceneObjectId = tableSceneObj;
 
-	SceneObjectId groundSceneObj = scene->AddSceneObject();
+	unsigned int groundSceneObj = scene->AddSceneObject();
 	RenderObject& groundRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
 	groundRenderObj.mesh = groundMeshId;
 	groundRenderObj.materialId = diffuseGray->nameHash;
 	groundRenderObj.sceneObjectId = groundSceneObj;
 
-	SceneObjectId cupSceneObj = scene->AddSceneObject();
+	unsigned int cupSceneObj = scene->AddSceneObject();
 	RenderObject& cupRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
 	cupRenderObj.mesh = cupMeshId;
 	cupRenderObj.materialId = diffuseGray->nameHash;

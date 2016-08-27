@@ -4,15 +4,13 @@
 #include "Color.hpp"
 #include "Skybox.hpp"
 
-using SceneObjectId = unsigned int;
-
 struct SceneObjectBatch
 {
 	static const unsigned int BatchSize = 512;
 
 	unsigned int used;
 
-	SceneObjectId parentIds[BatchSize];
+	unsigned int parentIds[BatchSize];
 	Mat4x4f localTransforms[BatchSize];
 	Mat4x4f worldTransforms[BatchSize];
 };
@@ -32,17 +30,17 @@ public:
 	Color backgroundColor;
 	Skybox skybox;
 
-	SceneObjectId AddSceneObject();
+	unsigned int AddSceneObject();
 
-	void SetParent(SceneObjectId object, SceneObjectId parent);
-	void SetLocalTransform(SceneObjectId object, const Mat4x4f& transform);
+	void SetParent(unsigned int object, unsigned int parent);
+	void SetLocalTransform(unsigned int object, const Mat4x4f& transform);
 
-	Mat4x4f& GetWorldTransform(SceneObjectId object)
+	Mat4x4f& GetWorldTransform(unsigned int object)
 	{
 		return objectBatch.worldTransforms[object];
 	}
 	
-	Mat4x4f& GetLocalTransform(SceneObjectId object)
+	Mat4x4f& GetLocalTransform(unsigned int object)
 	{
 		return objectBatch.localTransforms[object];
 	}

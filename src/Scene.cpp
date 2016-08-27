@@ -14,7 +14,7 @@ Scene::~Scene()
 	
 }
 
-SceneObjectId Scene::AddSceneObject()
+unsigned int Scene::AddSceneObject()
 {
 	unsigned int id;
 
@@ -33,12 +33,12 @@ SceneObjectId Scene::AddSceneObject()
 	return id;
 }
 
-void Scene::SetParent(SceneObjectId object, SceneObjectId parent)
+void Scene::SetParent(unsigned int object, unsigned int parent)
 {
 	objectBatch.parentIds[object] = parent;
 }
 
-void Scene::SetLocalTransform(SceneObjectId object, const Mat4x4f& transform)
+void Scene::SetLocalTransform(unsigned int object, const Mat4x4f& transform)
 {
 	objectBatch.localTransforms[object] = transform;
 }
@@ -47,7 +47,7 @@ void Scene::CalculateWorldTransforms()
 {
 	Mat4x4f* local = objectBatch.localTransforms;
 	Mat4x4f* world = objectBatch.worldTransforms;
-	SceneObjectId* parent = objectBatch.parentIds;
+	unsigned int* parent = objectBatch.parentIds;
 
 	for (unsigned i = 1; i < objectBatch.used; ++i)
 	{
