@@ -17,7 +17,6 @@
 #include "Renderer.hpp"
 
 #include "Scene.hpp"
-#include "World.hpp"
 #include "Material.hpp"
 #include "MeshLoader.hpp"
 #include "ResourceManager.hpp"
@@ -38,9 +37,6 @@ App::~App()
 void App::Initialize()
 {
 	Engine* engine = Engine::GetInstance();
-
-	World* world = engine->GetWorld();
-	world->backgroundColor = Color(0.1f, 0.1f, 0.1f, 1.0f);
 
 	Renderer* renderer = engine->GetRenderer();
 	renderer->SetActiveCamera(&this->mainCamera);
@@ -75,6 +71,8 @@ void App::Initialize()
 
 	Scene* scene = engine->GetScene();
 
+	scene->backgroundColor = Color(0.1f, 0.1f, 0.1f, 1.0f);
+
 	SceneObjectId tableSceneObj = scene->AddSceneObject();
 	RenderObject& tableRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
 	tableRenderObj.mesh = tableMeshId;
@@ -100,7 +98,7 @@ void App::Initialize()
 	// Skybox
 
 	Material* skyboxMaterial = resourceManager->GetMaterial("res/materials/skybox.material.json");
-	world->skybox.Initialize(scene, skyboxMaterial->nameHash);
+	scene->skybox.Initialize(scene, skyboxMaterial->nameHash);
 
 	// Camera
 

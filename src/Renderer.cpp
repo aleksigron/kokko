@@ -14,7 +14,6 @@
 #include "Material.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
-#include "World.hpp"
 #include "Scene.hpp"
 #include "Mesh.hpp"
 
@@ -45,14 +44,13 @@ Renderer::~Renderer()
 void Renderer::PreTransformUpdate()
 {
 	Engine* engine = Engine::GetInstance();
-	World* world = engine->GetWorld();
 	Scene* scene = engine->GetScene();
 
 	Mat4x4f cameraTransform = scene->GetLocalTransform(this->activeCamera->GetSceneObjectId());
 	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 	// Update skybox transform
-	world->skybox.UpdateTransform(cameraPosition);
+	scene->skybox.UpdateTransform(cameraPosition);
 }
 
 void Renderer::Render(const World* world, Scene* scene)
@@ -77,7 +75,7 @@ void Renderer::Render(const World* world, Scene* scene)
 	FrustumCulling::CullAABB(&frustum, objectCount, bb, bbcs);
 
 	// Get the background color for view
-	Color clearCol = world->backgroundColor;
+	Color clearCol = scene->backgroundColor;
 	glClearColor(clearCol.r, clearCol.r, clearCol.r, 1.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

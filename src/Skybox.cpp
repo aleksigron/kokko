@@ -3,7 +3,6 @@
 #include "Mat4x4.hpp"
 
 #include "Engine.hpp"
-#include "World.hpp"
 #include "Scene.hpp"
 #include "Renderer.hpp"
 #include "ResourceManager.hpp"

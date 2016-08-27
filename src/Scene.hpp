@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Mat4x4.hpp"
-#include "Transform.hpp"
+#include "Color.hpp"
+#include "Skybox.hpp"
 
 using SceneObjectId = unsigned int;
 
@@ -27,6 +28,9 @@ private:
 public:
 	Scene();
 	~Scene();
+
+	Color backgroundColor;
+	Skybox skybox;
 
 	SceneObjectId AddSceneObject();
 

@@ -5,7 +5,6 @@
 #include "Window.hpp"
 #include "Time.hpp"
 #include "Scene.hpp"
-#include "World.hpp"
 #include "Renderer.hpp"
 #include "ResourceManager.hpp"
 
@@ -33,7 +32,6 @@ Engine::Engine()
 
 	this->time = new Time;
 	this->scene = new Scene;
-	this->world = new World;
 	this->renderer = new Renderer;
 	this->resourceManager = new ResourceManager;
 }
@@ -42,7 +40,6 @@ Engine::~Engine()
 {
 	delete this->resourceManager;
 	delete this->renderer;
-	delete this->world;
 	delete this->scene;
 	delete this->time;
 
