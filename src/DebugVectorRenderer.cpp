@@ -97,19 +97,19 @@ void DebugVectorRenderer::CreateMeshes()
 
 		for (int i = 0; i < 24; ++i)
 		{
-			float f = Mathf::Constant::Tau / 24 * i;
+			float f = Math::Const::Tau / 24 * i;
 			sphereVertexData[0 + i] = Vertex3f{ Vec3f(std::sin(f), std::cos(f), 0.0f) };
 		}
 
 		for (int i = 0; i < 24; ++i)
 		{
-			float f = Mathf::Constant::Tau / 24 * i;
+			float f = Math::Const::Tau / 24 * i;
 			sphereVertexData[24 + i] = Vertex3f{ Vec3f(0.0f, std::sin(f), std::cos(f)) };
 		}
 
 		for (int i = 0; i < 24; ++i)
 		{
-			float f = Mathf::Constant::Tau / 24 * i;
+			float f = Math::Const::Tau / 24 * i;
 			sphereVertexData[48 + i] = Vertex3f{ Vec3f(std::cos(f), 0.0f, std::sin(f)) };
 		}
 

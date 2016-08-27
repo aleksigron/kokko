@@ -1,8 +1,8 @@
 #pragma
 
-namespace Mathf
+namespace Math
 {
-	namespace Constant
+	namespace Const
 	{
 		constexpr float HalfPi = 1.5707963267948966192313f;
 		constexpr float Pi = 3.1415926535897932384626f;
@@ -20,11 +20,11 @@ namespace Mathf
 	
 	constexpr float DegreesToRadians(float degrees)
 	{
-		return degrees * Constant::DegToRad;
+		return degrees * Const::DegToRad;
 	}
 	
 	constexpr float RadiansToDegrees(float radians)
 	{
-		return radians * Constant::RadToDeg;
+		return radians * Const::RadToDeg;
 	}
 }

@@ -92,7 +92,7 @@ void App::Initialize()
 	cupRenderObj.sceneObjectId = cupSceneObj;
 
 	Mat4x4f cupTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.439f, 0.0f)) *
-	Mat4x4f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), Mathf::DegreesToRadians(135.0f));
+	Mat4x4f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), Math::DegreesToRadians(135.0f));
 	scene->SetLocalTransform(cupSceneObj, cupTransform);
 
 	// Skybox
@@ -102,7 +102,7 @@ void App::Initialize()
 
 	// Camera
 
-	this->mainCamera.perspectiveFieldOfView = Mathf::DegreesToRadians(45.0f);
+	this->mainCamera.perspectiveFieldOfView = Math::DegreesToRadians(45.0f);
 	
 	this->mainCamera.InitializeSceneObject();
 	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.3f, 1.5f));

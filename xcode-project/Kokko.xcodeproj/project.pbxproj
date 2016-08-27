@@ -285,6 +285,8 @@
 				454ADD251CAB00740060443D /* FrustumCulling.hpp */,
 				45A005011C933F43002D6134 /* Material.cpp */,
 				45A005021C933F43002D6134 /* Material.hpp */,
+				45A005061C933F43002D6134 /* Mesh.cpp */,
+				45A005071C933F43002D6134 /* Mesh.hpp */,
 				45A0050F1C933F43002D6134 /* Renderer.cpp */,
 				45A005101C933F43002D6134 /* Renderer.hpp */,
 				45A005111C933F43002D6134 /* RenderObject.hpp */,
@@ -305,8 +307,6 @@
 			children = (
 				45A004F31C933F43002D6134 /* ImageData.cpp */,
 				45A004F41C933F43002D6134 /* ImageData.hpp */,
-				45A005061C933F43002D6134 /* Mesh.cpp */,
-				45A005071C933F43002D6134 /* Mesh.hpp */,
 				45A005081C933F43002D6134 /* MeshLoader.cpp */,
 				45A005091C933F43002D6134 /* MeshLoader.hpp */,
 				45C6E5D21CA335EE004B2F54 /* ResourceManager.cpp */,
@@ -332,23 +332,39 @@
 			name = Engine;
 			sourceTree = "<group>";
 		};
-		45A004E61C933EFE002D6134 /* Source */ = {
+		457884D11D711056000430F6 /* Scene */ = {
 			isa = PBXGroup;
 			children = (
-				451949771CCC0E4B009DF07A /* Debug */,
-				457884CA1D6E7CE2000430F6 /* Engine */,
-				454102EB1C9348B000D2841F /* Math */,
-				454102EC1C9348FD00D2841F /* Rendering */,
-				454102ED1C93491800D2841F /* Resources */,
-				45238CB31D02206800DF2EB3 /* System */,
-				454102EA1C93488700D2841F /* Util */,
+				45A005131C933F43002D6134 /* Scene.cpp */,
+				45A005141C933F43002D6134 /* Scene.hpp */,
+			);
+			name = Scene;
+			sourceTree = "<group>";
+		};
+		457884D21D711094000430F6 /* App */ = {
+			isa = PBXGroup;
+			children = (
 				45A004FD1C933F43002D6134 /* main.cpp */,
 				45A004E71C933F43002D6134 /* App.cpp */,
 				45A004E81C933F43002D6134 /* App.hpp */,
 				45A004ED1C933F43002D6134 /* CameraController.cpp */,
 				45A004EE1C933F43002D6134 /* CameraController.hpp */,
-				45A005131C933F43002D6134 /* Scene.cpp */,
-				45A005141C933F43002D6134 /* Scene.hpp */,
+			);
+			name = App;
+			sourceTree = "<group>";
+		};
+		45A004E61C933EFE002D6134 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				457884D21D711094000430F6 /* App */,
+				451949771CCC0E4B009DF07A /* Debug */,
+				457884CA1D6E7CE2000430F6 /* Engine */,
+				454102EB1C9348B000D2841F /* Math */,
+				454102EC1C9348FD00D2841F /* Rendering */,
+				454102ED1C93491800D2841F /* Resources */,
+				457884D11D711056000430F6 /* Scene */,
+				45238CB31D02206800DF2EB3 /* System */,
+				454102EA1C93488700D2841F /* Util */,
 			);
 			name = Source;
 			sourceTree = "<group>";
