@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstring>
 
+#include <cstdio>
+
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
@@ -21,6 +23,14 @@
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
 #include "FrustumCulling.hpp"
+#include "RenderOrder.hpp"
+
+#include "Sort.hpp"
+
+static bool SortDrawCallsPredicate(const DrawCall& l, const DrawCall& r)
+{
+	return l.orderKey < r.orderKey;
+}
 
 Renderer::Renderer() :
 	indexList(nullptr),
@@ -29,16 +39,36 @@ Renderer::Renderer() :
 	objectCount(0),
 	allocatedCount(0),
 	boundingBoxes(nullptr),
-	bboxCullingState(nullptr)
+	cullingState(nullptr)
 {
+	this->InitializeRenderOrder();
 }
 
 Renderer::~Renderer()
 {
-	delete[] bboxCullingState;
+	delete[] cullingState;
 	delete[] boundingBoxes;
 	delete[] objects;
 	delete[] indexList;
+}
+
+void Renderer::InitializeRenderOrder()
+{
+	RenderOrderConfiguration& conf = renderOrderConfiguration;
+
+	conf.viewportIndex.SetDefinition(4, sizeof(uint64_t) * 8);
+	conf.viewportLayer.SetDefinition(4, conf.viewportIndex.shift);
+	conf.transparencyType.SetDefinition(5, conf.viewportLayer.shift);
+	conf.command.SetDefinition(1, conf.transparencyType.shift);
+
+	conf.transparentDepth.SetDefinition(24, conf.command.shift);
+	conf.transparentMaterialId.SetDefinition(16, conf.transparentDepth.shift);
+
+	conf.opaqueDepth.SetDefinition(8, conf.command.shift);
+	conf.opaqueMaterialId.SetDefinition(16, conf.opaqueDepth.shift);
+
+	conf.commandType.SetDefinition(8, conf.command.shift);
+	conf.commandData.SetDefinition(32, conf.commandType.shift);
 }
 
 void Renderer::PreTransformUpdate()
@@ -53,7 +83,7 @@ void Renderer::PreTransformUpdate()
 	scene->skybox.UpdateTransform(cameraPosition);
 }
 
-void Renderer::Render(const World* world, Scene* scene)
+void Renderer::Render(Scene* scene)
 {
 	Engine* engine = Engine::GetInstance();
 	ResourceManager* res = engine->GetResourceManager();
@@ -67,12 +97,13 @@ void Renderer::Render(const World* world, Scene* scene)
 
 	this->UpdateBoundingBoxes(scene);
 
-	RenderObject* o = this->objects;
-	BoundingBox* bb = this->boundingBoxes;
-	unsigned char* bbcs = this->bboxCullingState;
-
 	// Do frustum culling
-	FrustumCulling::CullAABB(&frustum, objectCount, bb, bbcs);
+	FrustumCulling::CullAABB(&frustum, objectCount, this->boundingBoxes, this->cullingState);
+
+	this->CreateDrawCalls(scene);
+
+	// Sort draw calls based on order key
+	ShellSortPred(drawCalls.GetData(), drawCalls.GetCount(), SortDrawCallsPredicate);
 
 	// Get the background color for view
 	Color clearCol = scene->backgroundColor;
@@ -93,111 +124,112 @@ void Renderer::Render(const World* world, Scene* scene)
 	Mat4x4f projectionMatrix = cam->GetProjectionMatrix();
 	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
 
-	for (unsigned index = 0; index < objectCount; ++index)
+	for (unsigned index = 0, drawCallCount = drawCalls.GetCount(); index < drawCallCount; ++index)
 	{
-		if (bbcs[index] != 0)
+		const DrawCall& drawCall = drawCalls[index];
+
+		RenderObject& obj = this->objects[drawCall.renderObjectIndex];
+
+		Mesh& mesh = res->meshes.Get(obj.meshId);
+		Material& material = res->GetMaterial(obj.materialId);
+		Shader* shader = res->GetShader(material.shaderId);
+
+		glUseProgram(shader->driverId);
+
+		unsigned int usedTextures = 0;
+
+		// Bind each material uniform with a value
+		for (unsigned uIndex = 0; uIndex < material.uniformCount; ++uIndex)
 		{
-			RenderObject& obj = o[index];
+			ShaderMaterialUniform& u = material.uniforms[uIndex];
 
-			Mesh& mesh = res->meshes.Get(obj.mesh);
-			Material* material = res->GetMaterial(obj.materialId);
-			Shader* shader = res->GetShader(material->shaderId);
+			unsigned char* d = material.uniformData + u.dataOffset;
 
-			glUseProgram(shader->driverId);
-
-			unsigned int usedTextures = 0;
-
-			// Bind each material uniform with a value
-			for (unsigned uIndex = 0; uIndex < material->uniformCount; ++uIndex)
+			switch (u.type)
 			{
-				ShaderMaterialUniform& u = material->uniforms[uIndex];
+				case ShaderUniformType::Mat4x4:
+					glUniformMatrix4fv(u.location, 1, GL_FALSE, reinterpret_cast<float*>(d));
+					break;
 
-				unsigned char* d = material->uniformData + u.dataOffset;
+				case ShaderUniformType::Vec4:
+					glUniform4fv(u.location, 1, reinterpret_cast<float*>(d));
+					break;
 
-				switch (u.type)
+				case ShaderUniformType::Vec3:
+					glUniform3fv(u.location, 1, reinterpret_cast<float*>(d));
+					break;
+
+				case ShaderUniformType::Vec2:
+					glUniform2fv(u.location, 1, reinterpret_cast<float*>(d));
+					break;
+
+				case ShaderUniformType::Float:
+					glUniform1f(u.location, *reinterpret_cast<float*>(d));
+					break;
+
+				case ShaderUniformType::Int:
+					glUniform1i(u.location, *reinterpret_cast<int*>(d));
+					break;
+
+				case ShaderUniformType::Tex2D:
+				case ShaderUniformType::TexCube:
 				{
-					case ShaderUniformType::Mat4x4:
-						glUniformMatrix4fv(u.location, 1, GL_FALSE, reinterpret_cast<float*>(d));
-						break;
+					uint32_t textureHash = *reinterpret_cast<uint32_t*>(d);
+					Texture* texture = res->GetTexture(textureHash);
 
-					case ShaderUniformType::Vec4:
-						glUniform4fv(u.location, 1, reinterpret_cast<float*>(d));
-						break;
+					glActiveTexture(GL_TEXTURE0 + usedTextures);
+					glBindTexture(texture->targetType, texture->driverId);
+					glUniform1i(u.location, usedTextures);
 
-					case ShaderUniformType::Vec3:
-						glUniform3fv(u.location, 1, reinterpret_cast<float*>(d));
-						break;
-
-					case ShaderUniformType::Vec2:
-						glUniform2fv(u.location, 1, reinterpret_cast<float*>(d));
-						break;
-
-					case ShaderUniformType::Float:
-						glUniform1f(u.location, *reinterpret_cast<float*>(d));
-						break;
-
-					case ShaderUniformType::Int:
-						glUniform1i(u.location, *reinterpret_cast<int*>(d));
-						break;
-
-					case ShaderUniformType::Tex2D:
-					case ShaderUniformType::TexCube:
-					{
-						uint32_t textureHash = *reinterpret_cast<uint32_t*>(d);
-						Texture* texture = res->GetTexture(textureHash);
-
-						glActiveTexture(GL_TEXTURE0 + usedTextures);
-						glBindTexture(texture->targetType, texture->driverId);
-						glUniform1i(u.location, usedTextures);
-
-						++usedTextures;
-					}
-						break;
+					++usedTextures;
 				}
+					break;
 			}
-
-			Mat4x4f modelMatrix = scene->GetWorldTransform(obj.sceneObjectId);
-
-			if (shader->uniformMatMVP >= 0)
-			{
-				Mat4x4f mvp = viewProjection * modelMatrix;
-				glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
-			}
-
-			if (shader->uniformMatMV >= 0)
-			{
-				Mat4x4f mv = viewMatrix * modelMatrix;
-				glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
-			}
-
-			if (shader->uniformMatVP >= 0)
-			{
-				Mat4x4f vp = projectionMatrix * viewMatrix;
-				glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, vp.ValuePointer());
-			}
-
-			if (shader->uniformMatM >= 0)
-			{
-				glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
-			}
-
-			if (shader->uniformMatV >= 0)
-			{
-				glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
-			}
-
-			if (shader->uniformMatP >= 0)
-			{
-				glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, projectionMatrix.ValuePointer());
-			}
-
-			glBindVertexArray(mesh.vertexArrayObject);
-
-			glDrawElements(mesh.primitiveMode, mesh.indexCount, mesh.indexElementType, nullptr);
 		}
+
+		Mat4x4f modelMatrix = scene->GetWorldTransform(obj.sceneObjectId);
+
+		if (shader->uniformMatMVP >= 0)
+		{
+			Mat4x4f mvp = viewProjection * modelMatrix;
+			glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
+		}
+
+		if (shader->uniformMatMV >= 0)
+		{
+			Mat4x4f mv = viewMatrix * modelMatrix;
+			glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
+		}
+
+		if (shader->uniformMatVP >= 0)
+		{
+			Mat4x4f vp = projectionMatrix * viewMatrix;
+			glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, vp.ValuePointer());
+		}
+
+		if (shader->uniformMatM >= 0)
+		{
+			glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
+		}
+
+		if (shader->uniformMatV >= 0)
+		{
+			glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
+		}
+
+		if (shader->uniformMatP >= 0)
+		{
+			glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, projectionMatrix.ValuePointer());
+		}
+
+		glBindVertexArray(mesh.vertexArrayObject);
+
+		glDrawElements(mesh.primitiveMode, mesh.indexCount, mesh.indexElementType, nullptr);
 	}
 
 	glBindVertexArray(0);
+
+	this->drawCalls.Clear();
 }
 
 void Renderer::AttachTarget(Window* window)
@@ -210,6 +242,79 @@ void Renderer::SetActiveCamera(Camera* camera)
 	this->activeCamera = camera;
 }
 
+void Renderer::CreateDrawCalls(Scene* scene)
+{
+	Engine* engine = Engine::GetInstance();
+	ResourceManager* rm = engine->GetResourceManager();
+
+	Mat4x4f cameraTransform = scene->GetWorldTransform(activeCamera->GetSceneObjectId());
+	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+	Vec3f cameraForward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+	float farPlane = activeCamera->farClipDistance;
+
+	for (unsigned index = 0; index < objectCount; ++index)
+	{
+		// Object is in potentially visible set
+		if (cullingState[index] != 0)
+		{
+			RenderObject& obj = objects[index];
+			Material& material = rm->GetMaterial(obj.materialId);
+			Shader* shader = rm->GetShader(material.shaderId);
+
+			Mat4x4f objTransform = scene->GetWorldTransform(obj.sceneObjectId);
+			Vec3f objPosition = (objTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+
+			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
+
+			if (depth > 1.0f)
+				depth = 1.0f;
+			else if (depth < 0.0f)
+				depth = 0.0f;
+
+			RenderTransparencyType transparency = shader->transparencyType;
+
+			// Add draw call
+
+			uint64_t order = 0;
+
+			{
+				using namespace RenderOrder;
+				const RenderOrderConfiguration& conf = this->renderOrderConfiguration;
+				
+				conf.viewportIndex.AssignValue(order, FullscreenViewport);
+				conf.viewportLayer.AssignValue(order, obj.layer);
+				conf.transparencyType.AssignValue(order, static_cast<uint64_t>(transparency));
+				conf.command.AssignValue(order, DrawCommand);
+
+				switch (transparency)
+				{
+					case RenderTransparencyType::Opaque:
+					case RenderTransparencyType::AlphaTest:
+					{
+						float scaledDepth = ((1 << conf.opaqueDepth.bits) - 1) * depth;
+						uint64_t intDepth = static_cast<uint64_t>(scaledDepth);
+
+						conf.opaqueDepth.AssignValue(order, intDepth);
+						conf.opaqueMaterialId.AssignValue(order, obj.materialId);
+					}
+						break;
+
+					case RenderTransparencyType::TransparentMix:
+					case RenderTransparencyType::TransparentAdd:
+					case RenderTransparencyType::TransparentSub:
+
+						break;
+				}
+			}
+
+			DrawCall drawCall;
+			drawCall.orderKey = order;
+			drawCall.renderObjectIndex = index;
+			drawCalls.PushBack(drawCall);
+		}
+	}
+}
+
 void Renderer::UpdateBoundingBoxes(Scene* scene)
 {
 	Engine* engine = Engine::GetInstance();
@@ -217,7 +322,7 @@ void Renderer::UpdateBoundingBoxes(Scene* scene)
 
 	for (unsigned i = 0; i < objectCount; ++i)
 	{
-		const Mesh& mesh = rm->meshes.Get(objects[i].mesh);
+		const Mesh& mesh = rm->meshes.Get(objects[i].meshId);
 
 		const Mat4x4f& matrix = scene->GetWorldTransform(objects[i].sceneObjectId);
 		boundingBoxes[i] = mesh.bounds.Transform(matrix);
@@ -240,7 +345,7 @@ void Renderer::Reallocate()
 	unsigned int* newIndexList = new unsigned int[newAllocatedCount + 1];
 	RenderObject* newObjects = new RenderObject[newAllocatedCount];
 	boundingBoxes = new BoundingBox[newAllocatedCount];
-	bboxCullingState = new unsigned char[newAllocatedCount];
+	cullingState = new unsigned char[newAllocatedCount];
 
 	// We have old data
 	if (allocatedCount > 0)
@@ -255,7 +360,7 @@ void Renderer::Reallocate()
 
 		// We can delete bounding box data without copying, because it is recreated on every frame
 		delete[] boundingBoxes;
-		delete[] bboxCullingState;
+		delete[] cullingState;
 	}
 
 	this->indexList = newIndexList;

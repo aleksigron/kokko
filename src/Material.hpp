@@ -13,8 +13,6 @@ struct ShaderMaterialUniform : ShaderUniform
 
 struct Material
 {
-	uint32_t nameHash;
-
 	unsigned int shaderId;
 
 	unsigned int uniformCount = 0;

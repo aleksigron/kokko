@@ -1,10 +1,8 @@
 #pragma once
 
-#include <cstddef>
-#include <climits>
-
 #include "RenderObject.hpp"
-#include "Buffer.hpp"
+#include "RenderOrder.hpp"
+#include "Array.hpp"
 
 struct BoundingBox;
 class Camera;
@@ -18,7 +16,6 @@ private:
 	Window* targetWindow;
 	Camera* activeCamera;
 
-
 	unsigned int* indexList;
 	unsigned int freeListFirst;
 
@@ -27,17 +24,25 @@ private:
 	unsigned int allocatedCount;
 
 	BoundingBox* boundingBoxes;
-	unsigned char* bboxCullingState;
+	unsigned char* cullingState;
+
+	Array<DrawCall> drawCalls;
+
+	RenderOrderConfiguration renderOrderConfiguration;
 
 	void Reallocate();
+
+	void InitializeRenderOrder();
+
 	void UpdateBoundingBoxes(Scene* scene);
+	void CreateDrawCalls(Scene* scene);
 	
 public:
 	Renderer();
 	~Renderer();
 
 	void PreTransformUpdate();
-	void Render(const World* world, Scene* scene);
+	void Render(Scene* scene);
 	
 	void AttachTarget(Window* window);
 	void SetActiveCamera(Camera* camera);

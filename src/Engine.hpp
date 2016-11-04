@@ -3,7 +3,6 @@
 class Window;
 class Time;
 class Scene;
-class World;
 class Renderer;
 class ResourceManager;
 
@@ -17,7 +16,6 @@ private:
 	Window* mainWindow;
 	Time* time;
 	Scene* scene;
-	World* world;
 	Renderer* renderer;
 	ResourceManager* resourceManager;
 
@@ -35,7 +33,6 @@ public:
 	Window* GetMainWindow() { return mainWindow; }
 	Time* GetTime() { return time; }
 	Scene* GetScene() { return scene; }
-	World* GetWorld() { return world; }
 	Renderer* GetRenderer() { return renderer; }
 	ResourceManager* GetResourceManager() { return resourceManager; }
 

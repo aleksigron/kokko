@@ -6,7 +6,8 @@
 
 struct RenderObject
 {
-	ObjectId mesh;
-	uint32_t materialId;
+	ObjectId meshId;
+	unsigned int materialId;
 	unsigned int sceneObjectId;
+	unsigned int layer;
 };

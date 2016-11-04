@@ -13,13 +13,12 @@
 
 ResourceManager::ResourceManager() : stackAllocator(32_MB, 256_kB)
 {
-
 }
 
 ResourceManager::~ResourceManager()
 {
-	
 }
+
 Shader* ResourceManager::GetShader(uint32_t hash) const
 {
 	for (unsigned int i = 0; i < shaderCount; ++i)
@@ -81,58 +80,25 @@ bool ResourceManager::LoadShader(Shader& shader, const char* configPath)
 	return shader.LoadFromConfiguration(configuration);
 }
 
-Material* ResourceManager::GetMaterial(uint32_t hash) const
+Material& ResourceManager::GetMaterial(unsigned int id)
 {
-	// Try to find the material using material path hash
-	for (unsigned int i = 0; i < materialCount; ++i)
-	{
-		if (materials[i].nameHash == hash)
-		{
-			return materials + i;
-		}
-	}
-
-	return nullptr;
+	return materials.Get(id);
 }
 
-Material* ResourceManager::GetMaterial(const char* path)
+unsigned int ResourceManager::CreateMaterialFromFile(const char* path)
 {
-	size_t materialNameLen = std::strlen(path);
-	uint32_t materialNameHash = Hash::FNV1a_32(path, materialNameLen);
+	Material* addedMaterial;
+	unsigned int id = materials.Add(&addedMaterial);
 
-	// Try to find the shader using shader path hash
-	Material* result = this->GetMaterial(materialNameHash);
-
-	if (result == nullptr) // Shader not yet loaded
+	if (this->LoadMaterial(*addedMaterial, path) == true)
 	{
-		if (materialCount == materialAllocated)
-		{
-			unsigned int newAllocatedCount = (materialAllocated > 0) ? materialAllocated * 2 : 32;
-			Material* newMaterials = new Material[newAllocatedCount];
-
-			for (unsigned int i = 0; i < materialCount; ++i)
-			{
-				newMaterials[i] = materials[i];
-			}
-
-			delete[] materials; // Deleting a null pointer is a no-op
-			materials = newMaterials;
-			materialAllocated = newAllocatedCount;
-		}
-
-		Material& material = materials[materialCount];
-
-		if (this->LoadMaterial(material, path))
-		{
-			++materialCount;
-
-			material.nameHash = materialNameHash;
-
-			result = &material;
-		}
+		return id;
 	}
-
-	return result;
+	else
+	{
+		materials.Remove(id);
+		return 0;
+	}
 }
 
 bool ResourceManager::LoadMaterial(Material& material, const char* configPath)

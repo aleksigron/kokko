@@ -83,7 +83,7 @@ void Engine::Update()
 
 	this->renderer->PreTransformUpdate();
 	this->scene->CalculateWorldTransforms();
-	this->renderer->Render(world, scene);
+	this->renderer->Render(scene);
 
 	this->debug->Render();
 

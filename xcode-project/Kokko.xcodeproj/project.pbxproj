@@ -61,12 +61,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		450419831D846EB900282A76 /* IndexedContainer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IndexedContainer.hpp; path = ../src/IndexedContainer.hpp; sourceTree = "<group>"; };
 		451949781CCC0E95009DF07A /* DebugTextRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugTextRenderer.cpp; path = ../src/DebugTextRenderer.cpp; sourceTree = "<group>"; };
 		451949791CCC0E95009DF07A /* DebugTextRenderer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DebugTextRenderer.hpp; path = ../src/DebugTextRenderer.hpp; sourceTree = "<group>"; };
 		4519497B1CCC0F14009DF07A /* BitmapFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BitmapFont.cpp; path = ../src/BitmapFont.cpp; sourceTree = "<group>"; };
 		4519497C1CCC0F14009DF07A /* BitmapFont.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BitmapFont.hpp; path = ../src/BitmapFont.hpp; sourceTree = "<group>"; };
 		4520796A1D1B2A3900CDB065 /* Color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Color.hpp; path = ../src/Color.hpp; sourceTree = "<group>"; };
 		4520796B1D1B2A3900CDB065 /* ColorSrgb.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ColorSrgb.hpp; path = ../src/ColorSrgb.hpp; sourceTree = "<group>"; };
+		452B05611DC99B96009BCA26 /* Array.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Array.hpp; path = ../src/Array.hpp; sourceTree = "<group>"; };
 		454102E61C93473100D2841F /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../res; sourceTree = "<group>"; };
 		454102E71C93476E00D2841F /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = ../include; sourceTree = "<group>"; };
 		45446ACC1D0625E300B90BB4 /* DebugLog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugLog.cpp; path = ../src/DebugLog.cpp; sourceTree = "<group>"; };
@@ -77,6 +79,8 @@
 		457884CC1D6E7D1A000430F6 /* Engine.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Engine.hpp; path = ../src/Engine.hpp; sourceTree = "<group>"; };
 		457884CE1D707D9A000430F6 /* Skybox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Skybox.cpp; path = ../src/Skybox.cpp; sourceTree = "<group>"; };
 		457884CF1D707D9A000430F6 /* Skybox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Skybox.hpp; path = ../src/Skybox.hpp; sourceTree = "<group>"; };
+		457884D41D7117C9000430F6 /* RenderOrder.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RenderOrder.hpp; path = ../src/RenderOrder.hpp; sourceTree = "<group>"; };
+		457884D71D738162000430F6 /* BitfieldVariable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BitfieldVariable.hpp; path = ../src/BitfieldVariable.hpp; sourceTree = "<group>"; };
 		4583750A1CFE242E00D37A1B /* Sort.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Sort.hpp; path = ../src/Sort.hpp; sourceTree = "<group>"; };
 		458C7A3E1D1B0FC200591AC5 /* BufferRef.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BufferRef.hpp; path = ../src/BufferRef.hpp; sourceTree = "<group>"; };
 		4594E7351D0D8DE500E732EC /* DebugLogView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugLogView.cpp; path = ../src/DebugLogView.cpp; sourceTree = "<group>"; };
@@ -227,8 +231,10 @@
 		454102EA1C93488700D2841F /* Util */ = {
 			isa = PBXGroup;
 			children = (
+				452B05611DC99B96009BCA26 /* Array.hpp */,
 				45CB910F1CDFD8D500FF12D2 /* AsciiStringUtil.cpp */,
 				45CB91101CDFD8D500FF12D2 /* AsciiStringUtil.hpp */,
+				457884D71D738162000430F6 /* BitfieldVariable.hpp */,
 				45A004EA1C933F43002D6134 /* Buffer.hpp */,
 				458C7A3E1D1B0FC200591AC5 /* BufferRef.hpp */,
 				45A004EF1C933F43002D6134 /* Collection.hpp */,
@@ -236,6 +242,7 @@
 				45A004F11C933F43002D6134 /* File.hpp */,
 				45A004F21C933F43002D6134 /* Hash.hpp */,
 				45A004F51C933F43002D6134 /* ImmutableString.hpp */,
+				450419831D846EB900282A76 /* IndexedContainer.hpp */,
 				45A004FA1C933F43002D6134 /* JsonReader.hpp */,
 				45A005051C933F43002D6134 /* MemoryAmount.hpp */,
 				45A0050A1C933F43002D6134 /* MultiArray.hpp */,
@@ -290,6 +297,7 @@
 				45A0050F1C933F43002D6134 /* Renderer.cpp */,
 				45A005101C933F43002D6134 /* Renderer.hpp */,
 				45A005111C933F43002D6134 /* RenderObject.hpp */,
+				457884D41D7117C9000430F6 /* RenderOrder.hpp */,
 				45A005161C933F43002D6134 /* Shader.cpp */,
 				45A005171C933F43002D6134 /* Shader.hpp */,
 				457884CE1D707D9A000430F6 /* Skybox.cpp */,
@@ -415,7 +423,7 @@
 		45E9783B1B34CE7500E11814 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0700;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = "Aleksi Grön";
 				TargetAttributes = {
 					45E978421B34CE7500E11814 = {
@@ -498,8 +506,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
@@ -551,8 +561,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;

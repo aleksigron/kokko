@@ -48,24 +48,24 @@ void App::Initialize()
 
 	// Meshes from files
 
-	ResourceManager* resourceManager = engine->GetResourceManager();
+	ResourceManager* rm = engine->GetResourceManager();
 
-	ObjectId tableMeshId = resourceManager->meshes.Add();
-	Mesh& tableMesh = resourceManager->meshes.Get(tableMeshId);
+	ObjectId tableMeshId = rm->meshes.Add();
+	Mesh& tableMesh = rm->meshes.Get(tableMeshId);
 	MeshLoader::LoadMesh("res/models/small_table.mesh", tableMesh);
 
-	ObjectId groundMeshId = resourceManager->meshes.Add();
-	Mesh& groundMesh = resourceManager->meshes.Get(groundMeshId);
+	ObjectId groundMeshId = rm->meshes.Add();
+	Mesh& groundMesh = rm->meshes.Get(groundMeshId);
 	MeshLoader::LoadMesh("res/models/ground_plane.mesh", groundMesh);
 
-	ObjectId cupMeshId = resourceManager->meshes.Add();
-	Mesh& cupMesh = resourceManager->meshes.Get(cupMeshId);
+	ObjectId cupMeshId = rm->meshes.Add();
+	Mesh& cupMesh = rm->meshes.Get(cupMeshId);
 	MeshLoader::LoadMesh("res/models/tea_cup.mesh", cupMesh);
 
 	// Materials
 
-	Material* diffuseGray = resourceManager->GetMaterial("res/materials/diffuse_gray.material.json");
-	Material* diffuseRed = resourceManager->GetMaterial("res/materials/diffuse_red.material.json");
+	unsigned int diffuseGray = rm->CreateMaterialFromFile("res/materials/diffuse_gray.material.json");
+	unsigned int diffuseRed = rm->CreateMaterialFromFile("res/materials/diffuse_red.material.json");
 
 	// Objects
 
@@ -75,21 +75,24 @@ void App::Initialize()
 
 	unsigned int tableSceneObj = scene->AddSceneObject();
 	RenderObject& tableRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
-	tableRenderObj.mesh = tableMeshId;
-	tableRenderObj.materialId = diffuseRed->nameHash;
+	tableRenderObj.meshId = tableMeshId;
+	tableRenderObj.materialId = diffuseRed;
 	tableRenderObj.sceneObjectId = tableSceneObj;
+	tableRenderObj.layer = 0;
 
 	unsigned int groundSceneObj = scene->AddSceneObject();
 	RenderObject& groundRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
-	groundRenderObj.mesh = groundMeshId;
-	groundRenderObj.materialId = diffuseGray->nameHash;
+	groundRenderObj.meshId = groundMeshId;
+	groundRenderObj.materialId = diffuseGray;
 	groundRenderObj.sceneObjectId = groundSceneObj;
+	groundRenderObj.layer = 0;
 
 	unsigned int cupSceneObj = scene->AddSceneObject();
 	RenderObject& cupRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
-	cupRenderObj.mesh = cupMeshId;
-	cupRenderObj.materialId = diffuseGray->nameHash;
+	cupRenderObj.meshId = cupMeshId;
+	cupRenderObj.materialId = diffuseGray;
 	cupRenderObj.sceneObjectId = cupSceneObj;
+	cupRenderObj.layer = 0;
 
 	Mat4x4f cupTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.439f, 0.0f)) *
 	Mat4x4f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), Math::DegreesToRadians(135.0f));
@@ -97,8 +100,8 @@ void App::Initialize()
 
 	// Skybox
 
-	Material* skyboxMaterial = resourceManager->GetMaterial("res/materials/skybox.material.json");
-	scene->skybox.Initialize(scene, skyboxMaterial->nameHash);
+	unsigned int skyboxMaterial = rm->CreateMaterialFromFile("res/materials/skybox.material.json");
+	scene->skybox.Initialize(scene, skyboxMaterial);
 
 	// Camera
 

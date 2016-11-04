@@ -7,11 +7,13 @@
 struct StringRef;
 class StackAllocator;
 
-enum class ShaderRenderType
+enum class RenderTransparencyType
 {
 	Opaque,
 	AlphaTest,
-	Transparent
+	TransparentMix,
+	TransparentAdd,
+	TransparentSub
 };
 
 enum class ShaderUniformType
@@ -66,12 +68,14 @@ public:
 	int uniformMatV;
 	int uniformMatP;
 
-	ShaderRenderType renderType;
+	RenderTransparencyType transparencyType;
 
 	static const unsigned MaxMaterialUniforms = 8;
 
 	unsigned int materialUniformCount;
 	ShaderUniform materialUniforms[MaxMaterialUniforms];
+
+	Shader();
 
 	void SetAllocator(StackAllocator* allocator);
 	

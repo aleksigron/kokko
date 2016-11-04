@@ -72,7 +72,7 @@ void Skybox::Initialize(Scene* scene, unsigned int materialId)
 	renderObjectId = renderer->AddRenderObject();
 	RenderObject& renderObject = renderer->GetRenderObject(renderObjectId);
 	renderObject.materialId = materialId;
-	renderObject.mesh = meshId;
+	renderObject.meshId = meshId;
 	renderObject.sceneObjectId = sceneObjectId;
 }
 

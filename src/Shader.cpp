@@ -37,6 +37,22 @@ const unsigned int ShaderUniform::TypeSizes[] = {
 	4 // Int
 };
 
+Shader::Shader() :
+	allocator(nullptr),
+	nameHash(0),
+	driverId(0),
+	uniformMatMVP(-1),
+	uniformMatMV(-1),
+	uniformMatVP(-1),
+	uniformMatM(-1),
+	uniformMatV(-1),
+	uniformMatP(-1),
+	transparencyType(RenderTransparencyType::Opaque),
+	materialUniformCount(0)
+{
+
+}
+
 void Shader::SetAllocator(StackAllocator* allocator)
 {
 	this->allocator = allocator;
@@ -65,9 +81,6 @@ bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 	vsFilePath = config["vertexShaderFile"].GetString();
 	fsFilePath = config["fragmentShaderFile"].GetString();
 
-	// Default render type is opaque
-	this->renderType = ShaderRenderType::Opaque;
-
 	MemberIterator renderTypeItr = config.FindMember("renderType");
 	if (renderTypeItr != config.MemberEnd())
 	{
@@ -82,15 +95,15 @@ bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 			switch (renderTypeHash)
 			{
 				case "opaque"_hash:
-					this->renderType = ShaderRenderType::Opaque;
+					this->transparencyType = RenderTransparencyType::Opaque;
 					break;
 
 				case "alphaTest"_hash:
-					this->renderType = ShaderRenderType::AlphaTest;
+					this->transparencyType = RenderTransparencyType::AlphaTest;
 					break;
 
 				case "transparent"_hash:
-					this->renderType = ShaderRenderType::Transparent;
+					this->transparencyType = RenderTransparencyType::TransparentMix;
 					break;
 			}
 		}
