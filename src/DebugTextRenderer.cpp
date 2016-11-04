@@ -151,13 +151,19 @@ void DebugTextRenderer::Render()
 		glUseProgram(shader->driverId);
 
 		// Bind shadow offset
-		Vec2f texSize = font->GetTextureSize();
-		glUniform1f(shadowOffsetUniform->location, 1.0f / texSize.y);
+		if (shadowOffsetUniform != nullptr)
+		{
+			Vec2f texSize = font->GetTextureSize();
+			glUniform1f(shadowOffsetUniform->location, 1.0f / texSize.y);
+		}
 
 		// Bind texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
-		glUniform1i(textureUniform->location, 0);
+		if (textureUniform != nullptr)
+		{
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
+			glUniform1i(textureUniform->location, 0);
+		}
 
 		// Bind vertex array object
 		glBindVertexArray(mesh.vertexArrayObject);
