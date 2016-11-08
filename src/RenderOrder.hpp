@@ -4,44 +4,29 @@
 
 #include "BitfieldVariable.hpp"
 
-struct DrawCall
-{
-	uint64_t orderKey;
-	unsigned int renderObjectIndex;
-};
-
 namespace RenderOrder
 {
 	enum ViewportIndex
 	{
-		FullscreenViewport = 0
-	};
-
-	enum ViewportLayer
-	{
-		SkyboxLayer = 0,
-		WorldLayer = 1
-	};
-
-	enum TransparencyType
-	{
-		Opaque = 0,
-		AlphaTest = 1,
-		Transparent = 2
+		Viewport_Fullscreen = 0
 	};
 
 	enum Command
 	{
-		ControlCommand = 0,
-		DrawCommand = 1
+		Command_Control = 0,
+		Command_Draw = 1
 	};
 
 	enum ControlCommandType
 	{
-		GlEnable,
-		GlDisable,
-		DepthWriteEnable,
-		DepthWriteDisable
+		Control_GlEnable,
+		Control_GlDisable,
+		Control_BlendingEnable,
+		Control_BlendingDisable,
+		Control_DepthTestEnable,
+		Control_DepthTestDisable,
+		Control_DepthWriteEnable,
+		Control_DepthWriteDisable
 	};
 }
 

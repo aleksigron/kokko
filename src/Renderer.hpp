@@ -1,7 +1,9 @@
 #pragma once
 
-#include "RenderObject.hpp"
+#include "RenderPipeline.hpp"
 #include "RenderOrder.hpp"
+#include "RenderData.hpp"
+
 #include "Array.hpp"
 
 struct BoundingBox;
@@ -28,11 +30,9 @@ private:
 
 	Array<DrawCall> drawCalls;
 
-	RenderOrderConfiguration renderOrderConfiguration;
+	RenderPipeline pipeline;
 
 	void Reallocate();
-
-	void InitializeRenderOrder();
 
 	void UpdateBoundingBoxes(Scene* scene);
 	void CreateDrawCalls(Scene* scene);

@@ -40,6 +40,7 @@
 		45C7F1A61D5392DB0035B70D /* DebugVectorRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45C7F1A41D5392DB0035B70D /* DebugVectorRenderer.cpp */; };
 		45CB91111CDFD8D500FF12D2 /* AsciiStringUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45CB910F1CDFD8D500FF12D2 /* AsciiStringUtil.cpp */; };
 		45D488DB1D0B6DA700ADDA6F /* Debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45D488D91D0B6DA700ADDA6F /* Debug.cpp */; };
+		45E83C041DCD2492001055D5 /* RenderPipeline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45E83C021DCD2492001055D5 /* RenderPipeline.cpp */; };
 		45E978511B34CFA000E11814 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978501B34CFA000E11814 /* CoreVideo.framework */; };
 		45E978531B34CFA600E11814 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978521B34CFA600E11814 /* IOKit.framework */; };
 		45E978551B34CFB700E11814 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45E978541B34CFB700E11814 /* OpenGL.framework */; };
@@ -122,7 +123,6 @@
 		45A0050E1C933F43002D6134 /* PointerInput.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = PointerInput.hpp; path = ../src/PointerInput.hpp; sourceTree = "<group>"; };
 		45A0050F1C933F43002D6134 /* Renderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Renderer.cpp; path = ../src/Renderer.cpp; sourceTree = "<group>"; };
 		45A005101C933F43002D6134 /* Renderer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Renderer.hpp; path = ../src/Renderer.hpp; sourceTree = "<group>"; };
-		45A005111C933F43002D6134 /* RenderObject.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RenderObject.hpp; path = ../src/RenderObject.hpp; sourceTree = "<group>"; };
 		45A005121C933F43002D6134 /* ResourceManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ResourceManager.hpp; path = ../src/ResourceManager.hpp; sourceTree = "<group>"; };
 		45A005131C933F43002D6134 /* Scene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Scene.cpp; path = ../src/Scene.cpp; sourceTree = "<group>"; };
 		45A005141C933F43002D6134 /* Scene.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Scene.hpp; path = ../src/Scene.hpp; sourceTree = "<group>"; };
@@ -150,6 +150,8 @@
 		45A0052B1C933F43002D6134 /* Window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Window.cpp; path = ../src/Window.cpp; sourceTree = "<group>"; };
 		45A0052C1C933F43002D6134 /* Window.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Window.hpp; path = ../src/Window.hpp; sourceTree = "<group>"; };
 		45A0AC021CC8143B001F2564 /* Rectangle.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Rectangle.hpp; path = ../src/Rectangle.hpp; sourceTree = "<group>"; };
+		45A7DEEB1DD15F5E00C2BDF8 /* SceneLayer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = SceneLayer.hpp; path = ../src/SceneLayer.hpp; sourceTree = "<group>"; };
+		45A7DEEC1DD1634E00C2BDF8 /* RenderData.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = RenderData.hpp; path = ../src/RenderData.hpp; sourceTree = "<group>"; };
 		45C6E5D21CA335EE004B2F54 /* ResourceManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ResourceManager.cpp; path = ../src/ResourceManager.cpp; sourceTree = "<group>"; };
 		45C6E5D51CA762B3004B2F54 /* ValueSerialization.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ValueSerialization.hpp; path = ../src/ValueSerialization.hpp; sourceTree = "<group>"; };
 		45C7F1A41D5392DB0035B70D /* DebugVectorRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DebugVectorRenderer.cpp; path = ../src/DebugVectorRenderer.cpp; sourceTree = "<group>"; };
@@ -158,6 +160,8 @@
 		45CB91101CDFD8D500FF12D2 /* AsciiStringUtil.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = AsciiStringUtil.hpp; path = ../src/AsciiStringUtil.hpp; sourceTree = "<group>"; };
 		45D488D91D0B6DA700ADDA6F /* Debug.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Debug.cpp; path = ../src/Debug.cpp; sourceTree = "<group>"; };
 		45D488DA1D0B6DA700ADDA6F /* Debug.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Debug.hpp; path = ../src/Debug.hpp; sourceTree = "<group>"; };
+		45E83C021DCD2492001055D5 /* RenderPipeline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderPipeline.cpp; path = ../src/RenderPipeline.cpp; sourceTree = "<group>"; };
+		45E83C031DCD2492001055D5 /* RenderPipeline.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RenderPipeline.hpp; path = ../src/RenderPipeline.hpp; sourceTree = "<group>"; };
 		45E978431B34CE7500E11814 /* Kokko */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Kokko; sourceTree = BUILT_PRODUCTS_DIR; };
 		45E978501B34CFA000E11814 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		45E978521B34CFA600E11814 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
@@ -294,10 +298,12 @@
 				45A005021C933F43002D6134 /* Material.hpp */,
 				45A005061C933F43002D6134 /* Mesh.cpp */,
 				45A005071C933F43002D6134 /* Mesh.hpp */,
+				45A7DEEC1DD1634E00C2BDF8 /* RenderData.hpp */,
 				45A0050F1C933F43002D6134 /* Renderer.cpp */,
 				45A005101C933F43002D6134 /* Renderer.hpp */,
-				45A005111C933F43002D6134 /* RenderObject.hpp */,
 				457884D41D7117C9000430F6 /* RenderOrder.hpp */,
+				45E83C021DCD2492001055D5 /* RenderPipeline.cpp */,
+				45E83C031DCD2492001055D5 /* RenderPipeline.hpp */,
 				45A005161C933F43002D6134 /* Shader.cpp */,
 				45A005171C933F43002D6134 /* Shader.hpp */,
 				457884CE1D707D9A000430F6 /* Skybox.cpp */,
@@ -345,6 +351,7 @@
 			children = (
 				45A005131C933F43002D6134 /* Scene.cpp */,
 				45A005141C933F43002D6134 /* Scene.hpp */,
+				45A7DEEB1DD15F5E00C2BDF8 /* SceneLayer.hpp */,
 			);
 			name = Scene;
 			sourceTree = "<group>";
@@ -478,6 +485,7 @@
 				457884D01D707D9A000430F6 /* Skybox.cpp in Sources */,
 				45A0052D1C933F43002D6134 /* App.cpp in Sources */,
 				45A005391C933F43002D6134 /* PointerInput.cpp in Sources */,
+				45E83C041DCD2492001055D5 /* RenderPipeline.cpp in Sources */,
 				457884CD1D6E7D1A000430F6 /* Engine.cpp in Sources */,
 				45A005351C933F43002D6134 /* main.cpp in Sources */,
 				45C7F1A61D5392DB0035B70D /* DebugVectorRenderer.cpp in Sources */,

@@ -28,4 +28,11 @@ struct BitfieldVariable
 		T inverseMask = ~(this->mask);
 		bitfield = bitfield & inverseMask;
 	}
+
+	T GetValue(T bitfield) const
+	{
+		T value = bitfield >> this->shift;
+		value = value & this->mask;
+		return value;
+	}
 };

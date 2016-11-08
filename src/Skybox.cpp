@@ -4,6 +4,7 @@
 
 #include "Engine.hpp"
 #include "Scene.hpp"
+#include "SceneLayer.hpp"
 #include "Renderer.hpp"
 #include "ResourceManager.hpp"
 
@@ -74,6 +75,7 @@ void Skybox::Initialize(Scene* scene, unsigned int materialId)
 	renderObject.materialId = materialId;
 	renderObject.meshId = meshId;
 	renderObject.sceneObjectId = sceneObjectId;
+	renderObject.layer = SceneLayer::Skybox;
 }
 
 void Skybox::UpdateTransform(const Vec3f& cameraPosition) const

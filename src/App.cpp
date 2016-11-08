@@ -78,21 +78,21 @@ void App::Initialize()
 	tableRenderObj.meshId = tableMeshId;
 	tableRenderObj.materialId = diffuseRed;
 	tableRenderObj.sceneObjectId = tableSceneObj;
-	tableRenderObj.layer = 0;
+	tableRenderObj.layer = SceneLayer::World;
 
 	unsigned int groundSceneObj = scene->AddSceneObject();
 	RenderObject& groundRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
 	groundRenderObj.meshId = groundMeshId;
 	groundRenderObj.materialId = diffuseGray;
 	groundRenderObj.sceneObjectId = groundSceneObj;
-	groundRenderObj.layer = 0;
+	groundRenderObj.layer = SceneLayer::World;
 
 	unsigned int cupSceneObj = scene->AddSceneObject();
 	RenderObject& cupRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
 	cupRenderObj.meshId = cupMeshId;
 	cupRenderObj.materialId = diffuseGray;
 	cupRenderObj.sceneObjectId = cupSceneObj;
-	cupRenderObj.layer = 0;
+	cupRenderObj.layer = SceneLayer::World;
 
 	Mat4x4f cupTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.439f, 0.0f)) *
 	Mat4x4f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), Math::DegreesToRadians(135.0f));

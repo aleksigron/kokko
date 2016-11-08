@@ -3,18 +3,10 @@
 #include <cstdint>
 
 #include "Buffer.hpp"
+#include "RenderData.hpp"
 
 struct StringRef;
 class StackAllocator;
-
-enum class RenderTransparencyType
-{
-	Opaque,
-	AlphaTest,
-	TransparentMix,
-	TransparentAdd,
-	TransparentSub
-};
 
 enum class ShaderUniformType
 {
@@ -68,7 +60,7 @@ public:
 	int uniformMatV;
 	int uniformMatP;
 
-	RenderTransparencyType transparencyType;
+	TransparencyType transparencyType;
 
 	static const unsigned MaxMaterialUniforms = 8;
 

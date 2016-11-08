@@ -47,7 +47,7 @@ Shader::Shader() :
 	uniformMatM(-1),
 	uniformMatV(-1),
 	uniformMatP(-1),
-	transparencyType(RenderTransparencyType::Opaque),
+	transparencyType(TransparencyType::Opaque),
 	materialUniformCount(0)
 {
 
@@ -95,15 +95,15 @@ bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 			switch (renderTypeHash)
 			{
 				case "opaque"_hash:
-					this->transparencyType = RenderTransparencyType::Opaque;
+					this->transparencyType = TransparencyType::Opaque;
 					break;
 
 				case "alphaTest"_hash:
-					this->transparencyType = RenderTransparencyType::AlphaTest;
+					this->transparencyType = TransparencyType::AlphaTest;
 					break;
 
 				case "transparent"_hash:
-					this->transparencyType = RenderTransparencyType::TransparentMix;
+					this->transparencyType = TransparencyType::TransparentMix;
 					break;
 			}
 		}
