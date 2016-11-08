@@ -27,3 +27,5 @@
 # Xcode files
 *.xcworkspace
 xcuserdata
+
+log.txt
