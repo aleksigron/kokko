@@ -23,7 +23,6 @@
 		45A005351C933F43002D6134 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A004FD1C933F43002D6134 /* main.cpp */; };
 		45A005361C933F43002D6134 /* Material.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A005011C933F43002D6134 /* Material.cpp */; };
 		45A005371C933F43002D6134 /* Mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A005061C933F43002D6134 /* Mesh.cpp */; };
-		45A005381C933F43002D6134 /* MeshLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A005081C933F43002D6134 /* MeshLoader.cpp */; };
 		45A005391C933F43002D6134 /* PointerInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A0050D1C933F43002D6134 /* PointerInput.cpp */; };
 		45A0053A1C933F43002D6134 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A0050F1C933F43002D6134 /* Renderer.cpp */; };
 		45A0053B1C933F43002D6134 /* Scene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45A005131C933F43002D6134 /* Scene.cpp */; };
@@ -114,8 +113,6 @@
 		45A005051C933F43002D6134 /* MemoryAmount.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MemoryAmount.hpp; path = ../src/MemoryAmount.hpp; sourceTree = "<group>"; };
 		45A005061C933F43002D6134 /* Mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Mesh.cpp; path = ../src/Mesh.cpp; sourceTree = "<group>"; };
 		45A005071C933F43002D6134 /* Mesh.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Mesh.hpp; path = ../src/Mesh.hpp; sourceTree = "<group>"; };
-		45A005081C933F43002D6134 /* MeshLoader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MeshLoader.cpp; path = ../src/MeshLoader.cpp; sourceTree = "<group>"; };
-		45A005091C933F43002D6134 /* MeshLoader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MeshLoader.hpp; path = ../src/MeshLoader.hpp; sourceTree = "<group>"; };
 		45A0050A1C933F43002D6134 /* MultiArray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MultiArray.hpp; path = ../src/MultiArray.hpp; sourceTree = "<group>"; };
 		45A0050B1C933F43002D6134 /* ObjectId.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ObjectId.hpp; path = ../src/ObjectId.hpp; sourceTree = "<group>"; };
 		45A0050C1C933F43002D6134 /* Plane.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Plane.hpp; path = ../src/Plane.hpp; sourceTree = "<group>"; };
@@ -321,8 +318,6 @@
 			children = (
 				45A004F31C933F43002D6134 /* ImageData.cpp */,
 				45A004F41C933F43002D6134 /* ImageData.hpp */,
-				45A005081C933F43002D6134 /* MeshLoader.cpp */,
-				45A005091C933F43002D6134 /* MeshLoader.hpp */,
 				45C6E5D21CA335EE004B2F54 /* ResourceManager.cpp */,
 				45A005121C933F43002D6134 /* ResourceManager.hpp */,
 			);
@@ -464,7 +459,6 @@
 				454ADD261CAB00740060443D /* FrustumCulling.cpp in Sources */,
 				45A0053C1C933F43002D6134 /* Shader.cpp in Sources */,
 				4519497D1CCC0F14009DF07A /* BitmapFont.cpp in Sources */,
-				45A005381C933F43002D6134 /* MeshLoader.cpp in Sources */,
 				45446ACE1D0625E300B90BB4 /* DebugLog.cpp in Sources */,
 				45A005341C933F43002D6134 /* KeyboardInput.cpp in Sources */,
 				45F031F21D0356DE00184214 /* StringRef.cpp in Sources */,

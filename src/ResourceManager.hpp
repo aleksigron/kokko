@@ -2,7 +2,6 @@
 
 #include "StackAllocator.hpp"
 #include "IndexedContainer.hpp"
-#include "Collection.hpp"
 
 #include "Mesh.hpp"
 #include "Material.hpp"
@@ -14,6 +13,12 @@ class ResourceManager
 {
 private:
 	StackAllocator stackAllocator;
+
+	// Meshes
+
+	IndexedContainer<Mesh> meshes;
+
+	bool LoadMesh(Mesh& mesh, const char* path);
 
 	// Shaders
 
@@ -41,7 +46,9 @@ public:
 	ResourceManager();
 	~ResourceManager();
 
-	Collection<Mesh, 32> meshes;
+	Mesh& GetMesh(unsigned int id);
+	unsigned int CreateMesh();
+	unsigned int CreateMeshFromFile(const char* path);
 
 	Shader* GetShader(uint32_t hash) const;
 	Shader* GetShader(const char* path);

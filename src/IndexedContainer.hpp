@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <utility>
 
 template <typename ValueType, typename IndexType = unsigned int>
 class IndexedContainer
@@ -109,7 +110,7 @@ public:
 		// Put last object in removed objects place
 		if (indexList[id] < objectCount - 1)
 		{
-			objects[indexList[id]] = objects[objectCount - 1];
+			objects[indexList[id]] = std::move(objects[objectCount - 1]);
 		}
 
 		indexList[id] = freeListFirst;

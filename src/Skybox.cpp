@@ -50,8 +50,8 @@ void Skybox::Initialize(Scene* scene, unsigned int materialId)
 
 	this->renderScene = scene;
 
-	ObjectId meshId = resourceManager->meshes.Add();
-	Mesh& mesh = resourceManager->meshes.Get(meshId);
+	unsigned meshId = resourceManager->CreateMesh();
+	Mesh& mesh = resourceManager->GetMesh(meshId);
 
 	BufferRef<Vertex3f> vertices;
 	vertices.data = vertexData;

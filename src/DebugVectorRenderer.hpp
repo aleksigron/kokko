@@ -29,7 +29,7 @@ private:
 	unsigned int primitiveAllocated;
 
 	bool meshesInitialized;
-	ObjectId meshIds[3];
+	unsigned int meshIds[3];
 
 	Camera* activeCamera;
 

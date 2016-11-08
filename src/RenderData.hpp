@@ -13,7 +13,7 @@ struct DrawCall
 
 struct RenderObject
 {
-	ObjectId meshId;
+	unsigned int meshId;
 	unsigned int materialId;
 	unsigned int sceneObjectId;
 	SceneLayer layer;

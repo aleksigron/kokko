@@ -3,7 +3,6 @@
 #include <cstring>
 
 #include "Shader.hpp"
-#include "Material.hpp"
 #include "Texture.hpp"
 #include "ImageData.hpp"
 
@@ -17,6 +16,39 @@ ResourceManager::ResourceManager() : stackAllocator(32_MB, 256_kB)
 
 ResourceManager::~ResourceManager()
 {
+}
+
+Mesh& ResourceManager::GetMesh(unsigned int id)
+{
+	return meshes.Get(id);
+}
+
+unsigned int ResourceManager::CreateMesh()
+{
+	return meshes.Add();
+}
+
+unsigned int ResourceManager::CreateMeshFromFile(const char* path)
+{
+	Mesh* addedMesh;
+	unsigned int id = meshes.Add(&addedMesh);
+
+	if (this->LoadMesh(*addedMesh, path) == true)
+	{
+		return id;
+	}
+	else
+	{
+		meshes.Remove(id);
+		return 0;
+	}
+}
+
+bool ResourceManager::LoadMesh(Mesh &mesh, const char *path)
+{
+	Buffer<unsigned char> file = File::ReadBinary(path);
+
+	return mesh.LoadFromBuffer(file.GetRef());
 }
 
 Shader* ResourceManager::GetShader(uint32_t hash) const

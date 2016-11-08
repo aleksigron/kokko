@@ -40,9 +40,9 @@ void DebugVectorRenderer::CreateMeshes()
 
 		unsigned short lineIndexData[] = { 0, 1 };
 
-		ObjectId& lineMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Line)];
-		lineMeshId = rm->meshes.Add();
-		Mesh& lineMesh = rm->meshes.Get(lineMeshId);
+		unsigned int& lineMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Line)];
+		lineMeshId = rm->CreateMesh();
+		Mesh& lineMesh = rm->GetMesh(lineMeshId);
 
 		BufferRef<Vertex3f> vertices;
 		vertices.data = lineVertexData;
@@ -74,9 +74,9 @@ void DebugVectorRenderer::CreateMeshes()
 			4, 5, 5, 7, 7, 6, 6, 4
 		};
 
-		ObjectId& cubeMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Cube)];
-		cubeMeshId = rm->meshes.Add();
-		Mesh& cubeMesh = rm->meshes.Get(cubeMeshId);
+		unsigned int& cubeMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Cube)];
+		cubeMeshId = rm->CreateMesh();
+		Mesh& cubeMesh = rm->GetMesh(cubeMeshId);
 
 		BufferRef<Vertex3f> vertices;
 		vertices.data = cubeVertexData;
@@ -130,9 +130,9 @@ void DebugVectorRenderer::CreateMeshes()
 			66, 67, 67, 68, 68, 69, 69, 70, 70, 71, 71, 48
 		};
 
-		ObjectId& sphereMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Sphere)];
-		sphereMeshId = rm->meshes.Add();
-		Mesh& sphereMesh = rm->meshes.Get(sphereMeshId);
+		unsigned int& sphereMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Sphere)];
+		sphereMeshId = rm->CreateMesh();
+		Mesh& sphereMesh = rm->GetMesh(sphereMeshId);
 
 		BufferRef<Vertex3f> vertices;
 		vertices.data = sphereVertexData;
@@ -229,8 +229,8 @@ void DebugVectorRenderer::Render()
 			Primitive* primitive = primitives + i;
 			Mat4x4f mvp = viewProjection * primitive->transform;
 
-			ObjectId meshId = this->meshIds[static_cast<unsigned int>(primitive->type)];
-			const Mesh& mesh = rm->meshes.Get(meshId);
+			unsigned int meshId = this->meshIds[static_cast<unsigned int>(primitive->type)];
+			const Mesh& mesh = rm->GetMesh(meshId);
 
 			// Set color uniform
 			glUniform4fv(colorUniformLocation, 1, primitive->color.ValuePointer());

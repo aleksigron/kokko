@@ -28,7 +28,7 @@ private:
 					   void* indexBuffer, unsigned int indexBufferSize);
 
 public:
-	ObjectId id;
+	//unsigned int id;
 
 	unsigned int vertexArrayObject;
 	unsigned int bufferObjects[2];
@@ -40,7 +40,10 @@ public:
 	BoundingBox bounds;
 
 	Mesh();
+	Mesh(const Mesh& other) = delete;
 	~Mesh();
+
+	Mesh& operator=(Mesh&& other);
 
 	void DeleteBuffers();
 
@@ -54,4 +57,6 @@ public:
 	{
 		this->primitiveMode = primitiveModeValues[static_cast<unsigned int>(mode)];
 	}
+
+	bool LoadFromBuffer(BufferRef<unsigned char> buffer);
 };

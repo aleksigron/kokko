@@ -115,7 +115,7 @@ void Renderer::Render(Scene* scene)
 		{
 			RenderObject& obj = this->objects[drawCall.renderObjectIndex];
 
-			Mesh& mesh = res->meshes.Get(obj.meshId);
+			Mesh& mesh = res->GetMesh(obj.meshId);
 			Material& material = res->GetMaterial(obj.materialId);
 			Shader* shader = res->GetShader(material.shaderId);
 
@@ -284,7 +284,7 @@ void Renderer::UpdateBoundingBoxes(Scene* scene)
 
 	for (unsigned i = 0; i < objectCount; ++i)
 	{
-		const Mesh& mesh = rm->meshes.Get(objects[i].meshId);
+		const Mesh& mesh = rm->GetMesh(objects[i].meshId);
 
 		const Mat4x4f& matrix = scene->GetWorldTransform(objects[i].sceneObjectId);
 		boundingBoxes[i] = mesh.bounds.Transform(matrix);

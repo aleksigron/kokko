@@ -1,5 +1,7 @@
 #include "Mesh.hpp"
 
+#include <cassert>
+
 #define GLFW_INCLUDE_GLCOREARB
 #include "glfw/glfw3.h"
 
@@ -22,6 +24,30 @@ Mesh::Mesh() :
 	indexElementType(0),
 	primitiveMode(GL_TRIANGLES)
 {
+}
+
+Mesh& Mesh::operator=(Mesh&& other)
+{
+	// Delete possible existing buffers
+	this->DeleteBuffers();
+
+	// Set values from other Mesh instance
+	this->vertexArrayObject = other.vertexArrayObject;
+	this->bufferObjects[0] = other.bufferObjects[0];
+	this->bufferObjects[1] = other.bufferObjects[1];
+	this->indexCount = other.indexCount;
+	this->indexElementType = other.indexElementType;
+	this->primitiveMode = other.primitiveMode;
+	this->bounds = other.bounds;
+
+	// Clear values in other Mesh instance
+	other.vertexArrayObject = 0;
+	other.bufferObjects[0] = 0;
+	other.bufferObjects[1] = 0;
+	other.indexCount = 0;
+	other.indexElementType = 0;
+
+	return *this;
 }
 
 Mesh::~Mesh()
@@ -49,8 +75,11 @@ void Mesh::CreateBuffers(void* vertexData, unsigned int vertexDataSize,
 
 void Mesh::DeleteBuffers()
 {
-	glDeleteVertexArrays(1, &vertexArrayObject);
-	glDeleteBuffers(2, bufferObjects);
+	if (vertexArrayObject != 0)
+	{
+		glDeleteVertexArrays(1, &vertexArrayObject);
+		glDeleteBuffers(2, bufferObjects);
+	}
 }
 
 void Mesh::Upload_3f(BufferRef<Vertex3f> vertices, BufferRef<unsigned short> indices)
@@ -164,4 +193,115 @@ void Mesh::Upload_3f3f3f(BufferRef<Vertex3f3f3f> vertices, BufferRef<unsigned sh
 
 	// Unbind vertex array
 	glBindVertexArray(0);
+}
+
+
+bool Mesh::LoadFromBuffer(BufferRef<unsigned char> buffer)
+{
+	using uint = unsigned int;
+	using ushort = unsigned short;
+	using ubyte = unsigned char;
+
+	const uint headerSize = 16;
+	const uint boundsSize = 6 * sizeof(float);
+
+	if (buffer.IsValid() && buffer.count >= headerSize)
+	{
+		ubyte* d = buffer.data;
+		uint* headerData = reinterpret_cast<uint*>(d);
+		uint fileMagic = headerData[0];
+
+		if (fileMagic == 0x91191010)
+		{
+			// Get header data
+
+			uint vertComps = headerData[1];
+			uint vertCount = headerData[2];
+			uint indexCount = headerData[3];
+
+			// Get vertex data components count and size
+
+			uint posCount = (vertComps & 0x01) >> 0;
+			uint posSize = posCount * 3 * sizeof(float);
+
+			uint normCount = (vertComps & 0x02) >> 1;
+			uint normSize = normCount * 3 * sizeof(float);
+
+			uint colCount = (vertComps & 0x04) >> 2;
+			uint colSize = colCount * 3 * sizeof(float);
+
+			uint texCount = (vertComps & 0x08) >> 3;
+			uint texSize = texCount * 2 * sizeof(float);
+
+			uint vertSize = posSize + normSize + colSize + texSize;
+			uint vertexDataSize = vertCount * vertSize;
+
+			uint indexSize = indexCount > (1 << 16) ? 4 : 2;
+			uint indexDataSize = indexCount * indexSize;
+
+			uint expectedSize = headerSize + boundsSize + vertexDataSize + indexDataSize;
+
+			assert(expectedSize == buffer.count);
+
+			// Check that the file size matches the header description
+			if (expectedSize == buffer.count)
+			{
+				float* boundsData = reinterpret_cast<float*>(d + headerSize);
+				ubyte* vertData = d + headerSize + boundsSize;
+				ushort* indexData = reinterpret_cast<ushort*>(d + headerSize + boundsSize + vertexDataSize);
+
+				this->bounds.center.x = boundsData[0];
+				this->bounds.center.y = boundsData[1];
+				this->bounds.center.z = boundsData[2];
+
+				this->bounds.extents.x = boundsData[3];
+				this->bounds.extents.y = boundsData[4];
+				this->bounds.extents.z = boundsData[5];
+
+				this->SetPrimitiveMode(Mesh::PrimitiveMode::Triangles);
+
+				if (normCount == 0 && colCount == 0 && texCount == 1)
+				{
+					BufferRef<unsigned short> indices(indexData, indexCount);
+					BufferRef<Vertex3f2f> vertices;
+					vertices.data = reinterpret_cast<Vertex3f2f*>(vertData);
+					vertices.count = vertCount;
+
+					this->Upload_3f2f(vertices, indices);
+				}
+				else if ((normCount == 1 && colCount == 0 && texCount == 0) ||
+						 (normCount == 0 && colCount == 1 && texCount == 0))
+				{
+					BufferRef<unsigned short> indices(indexData, indexCount);
+					BufferRef<Vertex3f3f> vertices;
+					vertices.data = reinterpret_cast<Vertex3f3f*>(vertData);
+					vertices.count = vertCount;
+
+					this->Upload_3f3f(vertices, indices);
+				}
+				else if (normCount == 1 && colCount == 0 && texCount == 1)
+				{
+					BufferRef<unsigned short> indices(indexData, indexCount);
+					BufferRef<Vertex3f3f2f> vertices;
+					vertices.data = reinterpret_cast<Vertex3f3f2f*>(vertData);
+					vertices.count = vertCount;
+
+					this->Upload_3f3f2f(vertices, indices);
+				}
+				else if (normCount == 1 && colCount == 1 && texCount == 0)
+				{
+					BufferRef<unsigned short> indices(indexData, indexCount);
+					BufferRef<Vertex3f3f3f> vertices;
+					vertices.data = reinterpret_cast<Vertex3f3f3f*>(vertData);
+					vertices.count = vertCount;
+
+					this->Upload_3f3f3f(vertices, indices);
+				}
+				
+				return true;
+			}
+		}
+	}
+	
+	return false;
 }

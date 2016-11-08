@@ -18,7 +18,6 @@
 
 #include "Scene.hpp"
 #include "Material.hpp"
-#include "MeshLoader.hpp"
 #include "ResourceManager.hpp"
 
 #include <cstdio>
@@ -50,17 +49,9 @@ void App::Initialize()
 
 	ResourceManager* rm = engine->GetResourceManager();
 
-	ObjectId tableMeshId = rm->meshes.Add();
-	Mesh& tableMesh = rm->meshes.Get(tableMeshId);
-	MeshLoader::LoadMesh("res/models/small_table.mesh", tableMesh);
-
-	ObjectId groundMeshId = rm->meshes.Add();
-	Mesh& groundMesh = rm->meshes.Get(groundMeshId);
-	MeshLoader::LoadMesh("res/models/ground_plane.mesh", groundMesh);
-
-	ObjectId cupMeshId = rm->meshes.Add();
-	Mesh& cupMesh = rm->meshes.Get(cupMeshId);
-	MeshLoader::LoadMesh("res/models/tea_cup.mesh", cupMesh);
+	unsigned int tableMeshId = rm->CreateMeshFromFile("res/models/small_table.mesh");
+	unsigned int groundMeshId = rm->CreateMeshFromFile("res/models/ground_plane.mesh");
+	unsigned int cupMeshId = rm->CreateMeshFromFile("res/models/tea_cup.mesh");
 
 	// Materials
 
