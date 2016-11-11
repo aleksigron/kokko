@@ -14,7 +14,7 @@ RenderPipeline::~RenderPipeline()
 
 void RenderPipeline::InitializeRenderOrder()
 {
-	RenderOrderConfiguration& conf = orderConfiguration;
+	RenderOrderConfiguration& conf = this->orderConfig;
 
 	conf.viewportIndex.SetDefinition(4, sizeof(uint64_t) * 8);
 	conf.viewportLayer.SetDefinition(4, conf.viewportIndex.shift);
@@ -31,45 +31,52 @@ void RenderPipeline::InitializeRenderOrder()
 	conf.commandData.SetDefinition(32, conf.commandType.shift);
 }
 
-void RenderPipeline::ParseControlCommand(uint64_t orderKey)
+bool RenderPipeline::ParseControlCommand(uint64_t orderKey)
 {
-	using namespace RenderOrder;
-
-	uint64_t commandTypeInt = orderConfiguration.commandType.GetValue(orderKey);
-	ControlCommandType command = static_cast<ControlCommandType>(commandTypeInt);
-
-	switch (command)
+	if (orderConfig.command.GetValue(orderKey) == RenderOrder::Command_Control)
 	{
-		case Control_GlEnable:
-			break;
+		using namespace RenderOrder;
 
-		case Control_GlDisable:
-			break;
+		uint64_t commandTypeInt = orderConfig.commandType.GetValue(orderKey);
+		ControlCommandType command = static_cast<ControlCommandType>(commandTypeInt);
 
-		case Control_BlendingEnable:
-			this->BlendingEnable();
-			break;
+		switch (command)
+		{
+			case Control_GlEnable:
+				break;
 
-		case Control_BlendingDisable:
-			this->BlendingDisable();
-			break;
+			case Control_GlDisable:
+				break;
 
-		case Control_DepthTestEnable:
-			this->DepthTestEnable();
-			break;
+			case Control_BlendingEnable:
+				this->BlendingEnable();
+				break;
 
-		case Control_DepthTestDisable:
-			this->DepthTestDisable();
-			break;
+			case Control_BlendingDisable:
+				this->BlendingDisable();
+				break;
 
-		case Control_DepthWriteEnable:
-			this->DepthWriteEnable();
-			break;
+			case Control_DepthTestEnable:
+				this->DepthTestEnable();
+				break;
 
-		case Control_DepthWriteDisable:
-			this->DepthWriteDisable();
-			break;
+			case Control_DepthTestDisable:
+				this->DepthTestDisable();
+				break;
+
+			case Control_DepthWriteEnable:
+				this->DepthWriteEnable();
+				break;
+
+			case Control_DepthWriteDisable:
+				this->DepthWriteDisable();
+				break;
+		}
+
+		return true;
 	}
+	else
+		return false;
 }
 
 uint64_t RenderPipeline::CreateControlCommand(SceneLayer layer,
@@ -78,11 +85,11 @@ uint64_t RenderPipeline::CreateControlCommand(SceneLayer layer,
 {
 	uint64_t c = 0;
 
-	orderConfiguration.viewportIndex.AssignValue(c, RenderOrder::Viewport_Fullscreen);
-	orderConfiguration.viewportLayer.AssignValue(c, static_cast<uint64_t>(layer));
-	orderConfiguration.transparencyType.AssignValue(c, static_cast<uint64_t>(transparency));
-	orderConfiguration.command.AssignValue(c, RenderOrder::Command_Control);
-	orderConfiguration.commandType.AssignValue(c, command);
+	orderConfig.viewportIndex.AssignValue(c, RenderOrder::Viewport_Fullscreen);
+	orderConfig.viewportLayer.AssignValue(c, static_cast<uint64_t>(layer));
+	orderConfig.transparencyType.AssignValue(c, static_cast<uint64_t>(transparency));
+	orderConfig.command.AssignValue(c, RenderOrder::Command_Control);
+	orderConfig.commandType.AssignValue(c, command);
 
 	return c;
 }
@@ -97,34 +104,38 @@ uint64_t RenderPipeline::CreateDrawCommand(SceneLayer layer, TransparencyType tr
 
 	uint64_t c = 0;
 
-	orderConfiguration.viewportIndex.AssignValue(c, RenderOrder::Viewport_Fullscreen);
-	orderConfiguration.viewportLayer.AssignValue(c, static_cast<uint64_t>(layer));
-	orderConfiguration.transparencyType.AssignValue(c, static_cast<uint64_t>(transparency));
-	orderConfiguration.command.AssignValue(c, RenderOrder::Command_Draw);
+	orderConfig.viewportIndex.AssignValue(c, RenderOrder::Viewport_Fullscreen);
+	orderConfig.viewportLayer.AssignValue(c, static_cast<uint64_t>(layer));
+	orderConfig.transparencyType.AssignValue(c, static_cast<uint64_t>(transparency));
+	orderConfig.command.AssignValue(c, RenderOrder::Command_Draw);
 
 	switch (transparency)
 	{
 		case TransparencyType::Opaque:
 		case TransparencyType::AlphaTest:
 		{
-			float scaledDepth = ((1 << orderConfiguration.opaqueDepth.bits) - 1) * depth;
-			uint64_t intDepth = static_cast<uint64_t>(scaledDepth);
+			uint64_t depthMaxValue = (1 << orderConfig.opaqueDepth.bits) - 1;
+			uint64_t intDepth = static_cast<uint64_t>(depthMaxValue * depth);
 
-			orderConfiguration.opaqueDepth.AssignValue(c, intDepth);
-			orderConfiguration.opaqueMaterialId.AssignValue(c, materialId);
+			orderConfig.opaqueDepth.AssignValue(c, intDepth);
+			orderConfig.opaqueMaterialId.AssignValue(c, materialId);
 		}
 			break;
 
 		case TransparencyType::TransparentMix:
+		{
+			uint64_t depthMaxValue = (1 << orderConfig.transparentDepth.bits) - 1;
+			uint64_t intDepth = static_cast<uint64_t>(depthMaxValue * (1.0f - depth));
+
+			orderConfig.transparentDepth.AssignValue(c, intDepth);
+			orderConfig.transparentMaterialId.AssignValue(c, materialId);
+		}
+			break;
+
 		case TransparencyType::TransparentAdd:
 		case TransparencyType::TransparentSub:
-		{
-			float scaledDepth = ((1 << orderConfiguration.transparentDepth.bits) - 1) * depth;
-			uint64_t intDepth = static_cast<uint64_t>(scaledDepth);
-
-			orderConfiguration.transparentDepth.AssignValue(c, intDepth);
-			orderConfiguration.transparentMaterialId.AssignValue(c, materialId);
-		}
+			orderConfig.transparentDepth.AssignValue(c, 0);
+			orderConfig.transparentMaterialId.AssignValue(c, materialId);
 			break;
 	}
 

@@ -27,7 +27,7 @@
 
 #include "Sort.hpp"
 
-static bool SortDrawCallsPredicate(const DrawCall& l, const DrawCall& r)
+static bool SortCommandsPredicate(const RenderCommand& l, const RenderCommand& r)
 {
 	return l.orderKey < r.orderKey;
 }
@@ -83,7 +83,7 @@ void Renderer::Render(Scene* scene)
 	this->CreateDrawCalls(scene);
 
 	// Sort draw calls based on order key
-	ShellSortPred(drawCalls.GetData(), drawCalls.GetCount(), SortDrawCallsPredicate);
+	ShellSortPred(commands.GetData(), commands.GetCount(), SortCommandsPredicate);
 
 	// Get the background color for view
 	Color clearCol = scene->backgroundColor;
@@ -103,17 +103,14 @@ void Renderer::Render(Scene* scene)
 	Mat4x4f projectionMatrix = cam->GetProjectionMatrix();
 	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
 
-	for (unsigned index = 0, drawCallCount = drawCalls.GetCount(); index < drawCallCount; ++index)
+	for (unsigned index = 0, commandCount = commands.GetCount(); index < commandCount; ++index)
 	{
-		const DrawCall& drawCall = drawCalls[index];
+		const RenderCommand& command = commands[index];
 
-		if (pipeline.IsControlCommand(drawCall.orderKey))
+		// If command is not control command, draw object
+		if (pipeline.ParseControlCommand(command.orderKey) == false)
 		{
-			pipeline.ParseControlCommand(drawCall.orderKey);
-		}
-		else
-		{
-			RenderObject& obj = this->objects[drawCall.renderObjectIndex];
+			RenderObject& obj = this->objects[command.renderObjectIndex];
 
 			Mesh& mesh = res->GetMesh(obj.meshId);
 			Material& material = res->GetMaterial(obj.materialId);
@@ -215,7 +212,7 @@ void Renderer::Render(Scene* scene)
 
 	glBindVertexArray(0);
 
-	this->drawCalls.Clear();
+	this->commands.Clear();
 }
 
 void Renderer::AttachTarget(Window* window)
@@ -238,20 +235,31 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	Vec3f cameraForward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 	float farPlane = activeCamera->farClipDistance;
 
-	{
-		DrawCall c;
-		c.orderKey = pipeline.CreateControlCommand(SceneLayer::Skybox, TransparencyType::Opaque,
-												   RenderOrder::Control_DepthWriteDisable);
-		drawCalls.PushBack(c);
-	}
+	// Disable depth writing before objects in skybox layer
+	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
+		SceneLayer::Skybox, TransparencyType::Opaque, RenderOrder::Control_DepthWriteDisable)));
 
-	{
-		DrawCall c;
-		c.orderKey = pipeline.CreateControlCommand(SceneLayer::World, TransparencyType::Opaque,
-												   RenderOrder::Control_DepthWriteEnable);
-		drawCalls.PushBack(c);
-	}
+	// Disable blending before opaque objects in skybox layer
+	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
+		SceneLayer::Skybox, TransparencyType::Opaque, RenderOrder::Control_BlendingDisable)));
 
+	// Enable blending before transparent objects in skybox layer
+	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
+		SceneLayer::Skybox, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable)));
+
+	// Enable depth writing before objects in world layer
+	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
+		SceneLayer::World, TransparencyType::Opaque, RenderOrder::Control_DepthWriteEnable)));
+
+	// Disable blending before opaque objects in world layer
+	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
+		SceneLayer::World, TransparencyType::Opaque, RenderOrder::Control_BlendingDisable)));
+
+	// Enable blending before transparent objects in world layer
+	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
+		SceneLayer::World, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable)));
+
+	// Create draw commands for render objects in scene
 	for (unsigned index = 0; index < objectCount; ++index)
 	{
 		// Object is in potentially visible set
@@ -266,13 +274,8 @@ void Renderer::CreateDrawCalls(Scene* scene)
 
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
 
-			DrawCall drawCall;
-			drawCall.orderKey = pipeline.CreateDrawCommand(obj.layer,
-														   shader->transparencyType,
-														   obj.materialId,
-														   depth);
-			drawCall.renderObjectIndex = index;
-			drawCalls.PushBack(drawCall);
+			commands.PushBack(RenderCommand(pipeline.CreateDrawCommand(
+				obj.layer, shader->transparencyType, obj.materialId, depth), index));
 		}
 	}
 }

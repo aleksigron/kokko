@@ -81,7 +81,7 @@ bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 	vsFilePath = config["vertexShaderFile"].GetString();
 	fsFilePath = config["fragmentShaderFile"].GetString();
 
-	MemberIterator renderTypeItr = config.FindMember("renderType");
+	MemberIterator renderTypeItr = config.FindMember("transparencyType");
 	if (renderTypeItr != config.MemberEnd())
 	{
 		if (renderTypeItr->value.IsString())
@@ -102,8 +102,16 @@ bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 					this->transparencyType = TransparencyType::AlphaTest;
 					break;
 
-				case "transparent"_hash:
+				case "transparentMix"_hash:
 					this->transparencyType = TransparencyType::TransparentMix;
+					break;
+
+				case "transparentAdd"_hash:
+					this->transparencyType = TransparencyType::TransparentAdd;
+					break;
+
+				case "transparentSub"_hash:
+					this->transparencyType = TransparencyType::TransparentSub;
 					break;
 			}
 		}

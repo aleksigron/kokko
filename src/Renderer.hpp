@@ -28,7 +28,7 @@ private:
 	BoundingBox* boundingBoxes;
 	unsigned char* cullingState;
 
-	Array<DrawCall> drawCalls;
+	Array<RenderCommand> commands;
 
 	RenderPipeline pipeline;
 

@@ -52,11 +52,13 @@ void App::Initialize()
 	unsigned int tableMeshId = rm->CreateMeshFromFile("res/models/small_table.mesh");
 	unsigned int groundMeshId = rm->CreateMeshFromFile("res/models/ground_plane.mesh");
 	unsigned int cupMeshId = rm->CreateMeshFromFile("res/models/tea_cup.mesh");
+	unsigned int sphereMeshId = rm->CreateMeshFromFile("res/models/sphere.mesh");
 
 	// Materials
 
 	unsigned int diffuseGray = rm->CreateMaterialFromFile("res/materials/diffuse_gray.material.json");
 	unsigned int diffuseRed = rm->CreateMaterialFromFile("res/materials/diffuse_red.material.json");
+	unsigned int blend = rm->CreateMaterialFromFile("res/materials/blend.material.json");
 
 	// Objects
 
@@ -85,9 +87,18 @@ void App::Initialize()
 	cupRenderObj.sceneObjectId = cupSceneObj;
 	cupRenderObj.layer = SceneLayer::World;
 
+	unsigned int sphereSceneObj = scene->AddSceneObject();
+	RenderObject& sphereRenderObj = renderer->GetRenderObject(renderer->AddRenderObject());
+	sphereRenderObj.meshId = sphereMeshId;
+	sphereRenderObj.materialId = blend;
+	sphereRenderObj.sceneObjectId = sphereSceneObj;
+	sphereRenderObj.layer = SceneLayer::World;
+
 	Mat4x4f cupTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.439f, 0.0f)) *
 	Mat4x4f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), Math::DegreesToRadians(135.0f));
 	scene->SetLocalTransform(cupSceneObj, cupTransform);
+
+	scene->SetLocalTransform(sphereSceneObj, Mat4x4f::Translate(Vec3f(0.0f, 1.0f, 0.0f)));
 
 	// Skybox
 

@@ -10,7 +10,7 @@ public:
 
 	
 private:
-	RenderOrderConfiguration orderConfiguration;
+	RenderOrderConfiguration orderConfig;
 
 	void InitializeRenderOrder();
 
@@ -18,12 +18,7 @@ public:
 	RenderPipeline();
 	~RenderPipeline();
 
-	bool IsControlCommand(uint64_t orderKey) const
-	{
-		return orderConfiguration.command.GetValue(orderKey) == RenderOrder::Command_Control;
-	}
-
-	void ParseControlCommand(uint64_t orderKey);
+	bool ParseControlCommand(uint64_t orderKey);
 	uint64_t CreateControlCommand(SceneLayer layer, TransparencyType transparency,
 								  RenderOrder::ControlCommandType command);
 
