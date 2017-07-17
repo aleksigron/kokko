@@ -6,9 +6,11 @@
 Time* Time::instance = nullptr;
 
 Time::Time() :
-	currentTime(glfwGetTime()),
-	currentDelta(0.0)
+	frameStart(glfwGetTime()),
+	currentDelta(0.0f)
 {
+	this->currentTime = frameStart;
+
 	Time::instance = this;
 }
 
