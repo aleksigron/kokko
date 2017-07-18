@@ -24,8 +24,15 @@
 *.out
 *.app
 
+# Visual Studio files
+.vs/
+Win32/
+
 # Xcode files
 *.xcworkspace
 xcuserdata
 
-log.txt
+# Ignore build directory
+build/
+
+/log.txt
