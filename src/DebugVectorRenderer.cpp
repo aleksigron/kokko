@@ -3,8 +3,7 @@
 #include <cstring>
 #include <cmath>
 
-#define GLFW_INCLUDE_GLCOREARB
-#include "glfw/glfw3.h"
+#include "IncludeOpenGL.hpp"
 
 #include "Engine.hpp"
 #include "Math.hpp"

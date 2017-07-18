@@ -13,8 +13,7 @@
 #include "ResourceManager.hpp"
 #include "Sort.hpp"
 
-#define GLFW_INCLUDE_GLCOREARB
-#include "glfw/glfw3.h"
+#include "IncludeOpenGL.hpp"
 
 static bool CompareGlyphCodePointAsc(const BitmapGlyph& lhs, const BitmapGlyph& rhs)
 {

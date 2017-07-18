@@ -1,7 +1,6 @@
 #include "Shader.hpp"
 
-#define GLFW_INCLUDE_GLCOREARB
-#include "glfw/glfw3.h"
+#include "IncludeOpenGL.hpp"
 
 #include "rapidjson/document.h"
 

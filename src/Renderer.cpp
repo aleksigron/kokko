@@ -5,8 +5,7 @@
 
 #include <cstdio>
 
-#define GLFW_INCLUDE_GLCOREARB
-#include "glfw/glfw3.h"
+#include "IncludeOpenGL.hpp"
 
 #include "Engine.hpp"
 #include "App.hpp"

@@ -1,7 +1,6 @@
 #include "Window.hpp"
 
-#define GLFW_INCLUDE_GLCOREARB
-#include "glfw/glfw3.h"
+#include "IncludeOpenGL.hpp"
 
 #include "KeyboardInput.hpp"
 #include "PointerInput.hpp"
@@ -42,6 +41,9 @@ bool Window::Initialize(const char* windowTitle)
 
 			glfwSetWindowUserPointer(windowHandle, this);
 			glfwMakeContextCurrent(windowHandle);
+
+			// Tell glad how it can load the OpenGL functions it needs
+			gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
 			glfwSwapInterval(1);
 

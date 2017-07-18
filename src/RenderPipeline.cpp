@@ -1,7 +1,6 @@
 #include "RenderPipeline.hpp"
 
-#define GLFW_INCLUDE_GLCOREARB
-#include "glfw/glfw3.h"
+#include "IncludeOpenGL.hpp"
 
 RenderPipeline::RenderPipeline()
 {

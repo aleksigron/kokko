@@ -12,8 +12,7 @@
 #include "DebugLog.hpp"
 #include "DebugTextRenderer.hpp"
 
-#define GLFW_INCLUDE_NONE
-#include "glfw/glfw3.h"
+#include "IncludeGLFW.hpp"
 
 Engine* Engine::instance = nullptr;
 
