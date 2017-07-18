@@ -5,11 +5,7 @@
 
 struct Mat4x4f
 {
-	struct Uninitialize {} static uninit;
-	
 	float m[16];
-	
-	Mat4x4f(Uninitialize) {}
 
 	Mat4x4f():
 	m { 1, 0, 0, 0,
@@ -74,7 +70,7 @@ struct Mat4x4f
 
 	Mat4x4f GetTransposed() const
 	{
-		Mat4x4f result(Mat4x4f::uninit);
+		Mat4x4f result;
 
 		for (unsigned int i = 0; i < 16; ++i)
 			result[i] = m[(i % 4) * 4 + i / 4];
@@ -97,7 +93,7 @@ struct Mat4x4f
 		const float ca = std::cosf(angle);
 		const float sa = std::sinf(angle);
 
-		Mat4x4f result(uninit);
+		Mat4x4f result;
 
 		result[0] = xx + (1.0f - xx) * ca;
 		result[1] = xy * (1.0f - ca) + axis.z * sa;
@@ -205,7 +201,7 @@ inline Vec4f operator*(const Vec4f& v, const Mat4x4f& m)
 
 inline Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
 {
-	Mat4x4f result(Mat4x4f::uninit);
+	Mat4x4f result;
 	
 	result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3];
 	result[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3];

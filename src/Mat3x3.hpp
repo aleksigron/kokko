@@ -4,11 +4,8 @@
 
 struct Mat3x3f
 {
-	struct Uninitialize {} static uninit;
-
 	float m[9];
 
-	Mat3x3f(Uninitialize) {}
 	Mat3x3f(): m{ 1, 0, 0, 0, 1, 0, 0, 0, 1 } {}
 
 	float& operator[](unsigned int index) { return m[index]; }
@@ -37,7 +34,7 @@ struct Mat3x3f
 
 	Mat3x3f GetTransposed() const
 	{
-		Mat3x3f result(Mat3x3f::uninit);
+		Mat3x3f result;
 
 		for (unsigned int i = 0; i < 9; ++i)
 			result[i] = m[(i % 3) * 3 + i / 3];
@@ -60,7 +57,7 @@ struct Mat3x3f
 		const float ca = std::cosf(angle);
 		const float sa = std::sinf(angle);
 
-		Mat3x3f result(uninit);
+		Mat3x3f result;
 
 		result[0] = xx + (1.0f - xx) * ca;
 		result[1] = xy * (1.0f - ca) + axis.z * sa;
@@ -94,7 +91,7 @@ inline Vec3f operator*(const Vec3f& v, const Mat3x3f& m)
 
 inline Mat3x3f operator*(const Mat3x3f& a, const Mat3x3f& b)
 {
-	Mat3x3f result(Mat3x3f::uninit);
+	Mat3x3f result;
 
 	result[0] = a[0] * b[0] + a[3] * b[1] + a[6] * b[2];
 	result[1] = a[1] * b[0] + a[4] * b[1] + a[7] * b[2];

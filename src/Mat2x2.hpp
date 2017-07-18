@@ -4,11 +4,8 @@
 
 struct Mat2x2f
 {
-	struct Uninitialize {} static uninit;
-
 	float m[4];
 
-	inline Mat2x2f(Uninitialize) {}
 	inline Mat2x2f(): m{ 1, 0, 0, 1 } {}
 
 	inline float& operator[](std::size_t index) { return m[index]; }
@@ -23,7 +20,7 @@ struct Mat2x2f
 
 	inline Mat2x2f GetTransposed() const
 	{
-		Mat2x2f result(uninit);
+		Mat2x2f result;
 
 		result[0] = m[0];
 		result[1] = m[2];
@@ -50,7 +47,7 @@ inline Vec2f operator*(const Vec2f& v, const Mat2x2f& m)
 
 inline Mat2x2f operator*(const Mat2x2f& a, const Mat2x2f& b)
 {
-	Mat2x2f result(Mat2x2f::uninit);
+	Mat2x2f result;
 
 	result[0] = a[0] * b[0] + a[2] * b[1];
 	result[1] = a[1] * b[0] + a[3] * b[1];
