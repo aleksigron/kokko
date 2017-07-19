@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
 project("Kokko Engine")
 
+# Use C++14 standard
+set(CMAKE_CXX_STANDARD 14)
+
+# Don't use language extensions
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 set (EXECUTABLE_NAME kokko)
 
 include_directories(
