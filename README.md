@@ -4,18 +4,18 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 programming in the process. I hope that little by little, this will become a
 good, small game engine that might offer some new ways to solve old problems.
 
-For more information on different areas of the enginge, look in the docs folder.
+For more information on different areas of the engine, look in the docs folder.
 
 ![Screenshot](http://aleksigron.com/s/kokko_2017-07-19_22.11.18.jpg)
 
 ## Prerequisites
-- Cmake for building the project
+- CMake for building the project
 - C++14 compliant compiler
 - Blender for exporting mesh files
 - Glraw for encoding textures
 
 ## Running
-Use Cmake to generate IDE project files or directly build the project.
+Use CMake to generate IDE project files or directly build the project.
 
 ### Creating a Visual Studio solution on Windows
 ```
