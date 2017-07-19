@@ -6,7 +6,7 @@ good, small game engine that might offer some new ways to solve old problems.
 
 For more information on different areas of the enginge, look in the docs folder.
 
-![Screenshot](http://aleksigron.com/s/kokko_2016-06-01_00.20.08.png)
+![Screenshot](http://aleksigron.com/s/kokko_2017-07-19_22.11.18.jpg)
 
 ## Prerequisites
 - Cmake for building the project
