@@ -65,7 +65,9 @@ bool Engine::Initialize()
 
 		Vec2f frameSize = this->mainWindow->GetFrameBufferSize();
 		debugTextRenderer->SetFrameSize(frameSize);
-		debugTextRenderer->SetScaleFactor(2.0f);
+
+		float screenCoordScale = this->mainWindow->GetScreenCoordinateScale();
+		debugTextRenderer->SetScaleFactor(screenCoordScale);
 		debug->UpdateLogViewDrawArea();
 
 		return true;

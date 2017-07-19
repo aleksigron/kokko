@@ -89,6 +89,22 @@ Vec2f Window::GetFrameBufferSize()
 	return Vec2f(width, height);
 }
 
+Vec2f Window::GetWindowSize()
+{
+	int width, height;
+	glfwGetWindowSize(windowHandle, &width, &height);
+
+	return Vec2f(width, height);
+}
+
+float Window::GetScreenCoordinateScale()
+{
+	Vec2f pixels = this->GetFrameBufferSize();
+	Vec2f screen = this->GetWindowSize();
+	
+	return pixels.x / screen.x;
+}
+
 Window* Window::GetWindowObject(GLFWwindow* windowHandle)
 {
 	return static_cast<Window*>(glfwGetWindowUserPointer(windowHandle));
