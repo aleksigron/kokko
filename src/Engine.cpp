@@ -92,4 +92,5 @@ void Engine::Update()
 
 	this->mainWindow->Swap();
 
+	this->debug->CheckOpenGlErrors();
 }

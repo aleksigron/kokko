@@ -33,6 +33,8 @@ public:
 	
 	void Render();
 
+	void CheckOpenGlErrors();
+
 	DebugLog* GetLog() { return log; }
 	DebugLogView* GetLogView() { return logView; }
 	DebugTextRenderer* GetTextRenderer() { return textRenderer; }

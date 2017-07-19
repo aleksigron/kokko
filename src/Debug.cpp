@@ -2,6 +2,8 @@
 
 #include <cstdio>
 
+#include "IncludeOpenGL.hpp"
+
 #include "DebugVectorRenderer.hpp"
 #include "DebugTextRenderer.hpp"
 #include "DebugLogView.hpp"
@@ -79,4 +81,16 @@ void Debug::Render()
 
 	// Draw debug texts
 	textRenderer->Render();
+}
+
+void Debug::CheckOpenGlErrors()
+{
+	GLenum error;
+	while ((error = glGetError()) != GL_NO_ERROR)
+	{
+		char buffer[32];
+		sprintf(buffer, "glGetError() -> %u", error);
+
+		log->Log(StringRef(buffer));
+	}
 }
