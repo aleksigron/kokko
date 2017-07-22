@@ -5,9 +5,6 @@
 #include "Window.hpp"
 
 #include "Debug.hpp"
-#include "DebugLog.hpp"
-#include "DebugLogView.hpp"
-#include "DebugTextRenderer.hpp"
 #include "DebugVectorRenderer.hpp"
 
 #include "Math.hpp"
@@ -121,18 +118,9 @@ void App::Initialize()
 void App::Update()
 {
 	Engine* engine = Engine::GetInstance();
+	Debug* debug = engine->GetDebug();
 
 	this->cameraController.Update();
-
-	Time* time = engine->GetTime();
-	float deltaTime = time->GetDeltaTime();
-	float fps = 1.0f / deltaTime;
-	float ms = deltaTime * 1000.0f;
-	char frameRateText[64];
-	sprintf(frameRateText, "%.1f frames per second, %.1f ms per frame", double(fps), double(ms));
-
-	Debug* debug = engine->GetDebug();
-	debug->GetLog()->Log(StringRef(frameRateText));
 
 	Color green(0.0f, 1.0f, 0.0f, 1.0f);
 	Color yellow(1.0f, 1.0f, 0.0f, 1.0f);

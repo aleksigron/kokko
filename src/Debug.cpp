@@ -4,6 +4,8 @@
 
 #include "IncludeOpenGL.hpp"
 
+#include "Engine.hpp"
+#include "Time.hpp"
 #include "DebugVectorRenderer.hpp"
 #include "DebugTextRenderer.hpp"
 #include "DebugLogView.hpp"
@@ -56,14 +58,19 @@ void Debug::Render()
 		{
 			this->mode = DebugMode::LogView;
 		}
+		else if (keyboardInput->GetKeyDown(Key::N_3))
+		{
+			this->mode = DebugMode::FrameTime;
+		}
 	}
 
 	char modeNoneChar = (mode == DebugMode::None) ? '*' : ' ';
 	char modeLogChar = (mode == DebugMode::LogView) ? '*' : ' ';
+	char modeTimeChar = (mode == DebugMode::FrameTime) ? '*' : ' ';
 
 	// Draw debug mode guide
-	char buffer[32];
-	sprintf(buffer, "Debug mode: [1]None%c [2]Log%c", modeNoneChar, modeLogChar);
+	char buffer[64];
+	sprintf(buffer, "Debug mode: [1]None%c [2]Log%c [3]FrameTime%c", modeNoneChar, modeLogChar, modeTimeChar);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f), true);
 
 	vectorRenderer->Render();
@@ -76,6 +83,10 @@ void Debug::Render()
 
 		case DebugMode::LogView:
 			logView->DrawToTextRenderer();
+			break;
+
+		case DebugMode::FrameTime:
+			this->DrawFrameTimeStats();
 			break;
 	}
 
@@ -93,4 +104,20 @@ void Debug::CheckOpenGlErrors()
 
 		log->Log(StringRef(buffer));
 	}
+}
+
+void Debug::DrawFrameTimeStats()
+{
+	Engine* engine = Engine::GetInstance();
+
+	Time* time = engine->GetTime();
+	float deltaTime = time->GetDeltaTime();
+	float fps = 1.0f / deltaTime;
+	float ms = deltaTime * 1000.0f;
+
+	char frameRateText[32];
+	sprintf(frameRateText, "%.1f fps, %.1f ms", double(fps), double(ms));
+
+	Vec2f position(0.0f, textRenderer->GetFont()->GetLineHeight());
+	textRenderer->AddText(StringRef(frameRateText), position, true);
 }

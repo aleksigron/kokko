@@ -19,9 +19,12 @@ private:
 	enum class DebugMode
 	{
 		None,
-		LogView
+		LogView,
+		FrameTime
 	}
 	mode;
+
+	void DrawFrameTimeStats();
 
 public:
 	Debug();
