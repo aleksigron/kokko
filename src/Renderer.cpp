@@ -26,11 +26,6 @@
 
 #include "Sort.hpp"
 
-static bool SortCommandsPredicate(const RenderCommand& l, const RenderCommand& r)
-{
-	return l.orderKey < r.orderKey;
-}
-
 Renderer::Renderer() :
 	indexList(nullptr),
 	freeListFirst(0),
@@ -82,7 +77,7 @@ void Renderer::Render(Scene* scene)
 	this->CreateDrawCalls(scene);
 
 	// Sort draw calls based on order key
-	ShellSortPred(commands.GetData(), commands.GetCount(), SortCommandsPredicate);
+	ShellSortAsc(commands.GetData(), commands.GetCount());
 
 	// Get the background color for view
 	Color clearCol = scene->backgroundColor;

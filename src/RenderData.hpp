@@ -19,6 +19,11 @@ struct RenderCommand
 		renderObjectIndex(renderObjectIndex)
 	{
 	}
+
+	bool operator<(const RenderCommand& rhs)
+	{
+		return this->orderKey < rhs.orderKey;
+	}
 };
 
 struct RenderObject
