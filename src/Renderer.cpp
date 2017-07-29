@@ -214,11 +214,6 @@ void Renderer::Render(Scene* scene)
 	this->commands.Clear();
 }
 
-void Renderer::AttachTarget(Window* window)
-{
-	this->targetWindow = window;
-}
-
 void Renderer::SetActiveCamera(Camera* camera)
 {
 	this->activeCamera = camera;

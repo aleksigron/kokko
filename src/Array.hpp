@@ -55,15 +55,22 @@ public:
 	ValueType* GetData() { return this->data; }
 	const ValueType* GetData() const { return this->data; }
 
+	// Get a reference to the last item in the array
 	ValueType& GetBack() { return this->data[this->count - 1]; }
+
+	// Get a reference to the last item in the array
 	const ValueType& GetBack() const { return this->data[this->count - 1]; }
 
+	// Get a reference to the specified index in the array
 	ValueType& At(SizeType index) { return this->data[index]; }
+
+	// Get a reference to the specified index in the array
 	const ValueType& At(SizeType index) const { return this->data[index]; }
 
 	ValueType& operator[](SizeType index) { return this->data[index]; }
 	const ValueType& operator[](SizeType index) const { return this->data[index]; }
 
+	// Make sure there's at least the specified amount of space in the array
 	void Reserve(SizeType required)
 	{
 		if (required > this->allocated)
@@ -85,6 +92,7 @@ public:
 		}
 	}
 
+	// Add a new item to the back of the array and return a reference to the item
 	ValueType& PushBack()
 	{
 		this->ReserveInternal(this->count + 1);
@@ -93,6 +101,7 @@ public:
 		return *value;
 	}
 
+	// Add the passed item to the back of the array
 	void PushBack(const ValueType& value)
 	{
 		this->ReserveInternal(this->count + 1);
@@ -100,6 +109,7 @@ public:
 		++(this->count);
 	}
 
+	// Copy the specified items to the back of the array
 	void InsertBack(const ValueType* items, SizeType count)
 	{
 		this->ReserveInternal(this->count + count);
@@ -111,6 +121,7 @@ public:
 		}
 	}
 
+	// Remove the last item in the array
 	void PopBack()
 	{
 		--(this->count);
@@ -118,6 +129,7 @@ public:
 		this->data[this->count].~ValueType();
 	}
 
+	// Remove all items from the array
 	void Clear()
 	{
 		for (SizeType i = 0; i < this->count; ++i)

@@ -5,6 +5,12 @@
 #include <cstddef>
 #include <cstdint>
 
+/**
+* StackAllocator class can be used to create StackAllocation objects that
+* automatically release their memory when they're destructed. This can be used
+* create dynamically allocated blocks of memory that are practically impossible
+* to forget to deallocate.
+*/
 class StackAllocator
 {
 private:

@@ -15,7 +15,6 @@ class Scene;
 class Renderer
 {
 private:
-	Window* targetWindow;
 	Camera* activeCamera;
 
 	unsigned int* indexList;
@@ -41,15 +40,24 @@ public:
 	Renderer();
 	~Renderer();
 
+	// This function is run before calculating the world transforms of scene objects
 	void PreTransformUpdate();
+
+	// Render the specified scene to the active OpenGL context
 	void Render(Scene* scene);
 	
-	void AttachTarget(Window* window);
+	// Set the camera from which to render the scene
 	void SetActiveCamera(Camera* camera);
 
+	// Get a reference to a render object by ID
 	RenderObject& GetRenderObject(unsigned int id) { return objects[indexList[id]]; }
+
+	// Get a reference to a render object by ID
 	const RenderObject& GetRenderObject(unsigned int id) const { return objects[indexList[id]]; }
 	
+	// Create a render object and return the created object's ID
 	unsigned int AddRenderObject();
+
+	// Remove a render object by its ID
 	void RemoveRenderObject(unsigned int id);
 };

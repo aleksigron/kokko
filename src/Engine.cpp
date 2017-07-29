@@ -61,8 +61,6 @@ bool Engine::Initialize()
 		DebugTextRenderer* debugTextRenderer = this->debug->GetTextRenderer();
 		debugTextRenderer->LoadBitmapFont("res/fonts/gohufont-uni-14.bdf");
 
-		this->renderer->AttachTarget(this->mainWindow);
-
 		Vec2f frameSize = this->mainWindow->GetFrameBufferSize();
 		debugTextRenderer->SetFrameSize(frameSize);
 
