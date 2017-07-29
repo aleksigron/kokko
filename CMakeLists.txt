@@ -105,7 +105,6 @@ set (KOKKO_SOURCES
 	src/Texture.hpp
 	src/Time.cpp
 	src/Time.hpp
-	src/Transform.hpp
 	src/ValueSerialization.hpp
 	src/Vec2.hpp
 	src/Vec3.hpp
