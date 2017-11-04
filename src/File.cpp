@@ -1,6 +1,19 @@
 #include "File.hpp"
 
 #include <cstdio>
+#include <cstring>
+
+Buffer<unsigned char> File::ReadBinary(StringRef path)
+{
+	Buffer<char> pathNullTerminated;
+	pathNullTerminated.Allocate(path.len + 1);
+
+	char* pathCstr = pathNullTerminated.Data();
+	std::memcpy(pathCstr, path.str, path.len);
+	pathCstr[path.len] = '\0';
+
+	return ReadBinary(pathCstr);
+}
 
 Buffer<unsigned char> File::ReadBinary(const char* path)
 {
@@ -22,6 +35,18 @@ Buffer<unsigned char> File::ReadBinary(const char* path)
 	}
 
 	return fileContents;
+}
+
+Buffer<char> File::ReadText(StringRef path)
+{
+	Buffer<char> pathNullTerminated;
+	pathNullTerminated.Allocate(path.len + 1);
+	
+	char* pathCstr = pathNullTerminated.Data();
+	std::memcpy(pathCstr, path.str, path.len);
+	pathCstr[path.len] = '\0';
+
+	return ReadText(pathCstr);
 }
 
 Buffer<char> File::ReadText(const char* path)
