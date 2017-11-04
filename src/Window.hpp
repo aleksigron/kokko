@@ -14,6 +14,8 @@ private:
 
 	KeyboardInput* keyboardInput;
 	PointerInput* pointerInput;
+
+	int currentSwapInterval;
 	
 public:
 	Window();
@@ -38,6 +40,13 @@ public:
 	Get screen coordinate scale compared to pixels
 	*/
 	float GetScreenCoordinateScale();
+
+	/*
+	Set the number of screen refresh to wait for until swapping buffers.
+	0: vsync off, 1: vsync every refresh, n: vsync once every n refreshes
+	*/
+	void SetSwapInterval(int swapInterval);
+	int GetSwapInterval() const { return currentSwapInterval; }
 
 	KeyboardInput* GetKeyboardInput() { return keyboardInput; }
 	PointerInput* GetPointerInput() { return pointerInput; }

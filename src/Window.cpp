@@ -8,7 +8,8 @@
 Window::Window() :
 	windowHandle(nullptr),
 	keyboardInput(nullptr),
-	pointerInput(nullptr)
+	pointerInput(nullptr),
+	currentSwapInterval(0)
 {
 }
 
@@ -45,7 +46,7 @@ bool Window::Initialize(const char* windowTitle)
 			// Tell glad how it can load the OpenGL functions it needs
 			gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
-			glfwSwapInterval(1);
+			this->SetSwapInterval(1);
 
 			return true;
 		}
@@ -103,6 +104,12 @@ float Window::GetScreenCoordinateScale()
 	Vec2f screen = this->GetWindowSize();
 	
 	return pixels.x / screen.x;
+}
+
+void Window::SetSwapInterval(int swapInterval)
+{
+	this->currentSwapInterval = swapInterval;
+	glfwSwapInterval(swapInterval);
 }
 
 Window* Window::GetWindowObject(GLFWwindow* windowHandle)
