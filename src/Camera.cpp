@@ -1,9 +1,12 @@
 #include "Camera.hpp"
 
 #include "Engine.hpp"
+#include "SceneManager.hpp"
 #include "Scene.hpp"
 
-Camera::Camera() : sceneObjectId(0)
+Camera::Camera() :
+	sceneId(0),
+	sceneObjectId(0)
 {
 }
 
@@ -11,21 +14,26 @@ Camera::~Camera()
 {
 }
 
-void Camera::InitializeSceneObject()
+void Camera::InitializeSceneObject(unsigned int sceneId)
 {
+	this->sceneId = sceneId;
+
 	if (sceneObjectId == 0)
 	{
-		Engine* engine = Engine::GetInstance();
-		Scene* scene = engine->GetScene();
+		Scene* scene = this->GetContainingScene();
 		this->sceneObjectId = scene->AddSceneObject();
 	}
 }
 
+Scene* Camera::GetContainingScene() const
+{
+	SceneManager* sm = Engine::GetInstance()->GetSceneManager();
+	return sm->GetScene(sceneId);
+}
+
 Mat4x4f Camera::GetViewMatrix() const
 {
-	Engine* engine = Engine::GetInstance();
-	Scene* scene = engine->GetScene();
-
+	Scene* scene = this->GetContainingScene();
 	Mat4x4f m = scene->GetWorldTransform(sceneObjectId);
 	Mat3x3f inverseRotation = m.Get3x3().GetTransposed();
 	Vec3f translation = -(inverseRotation * Vec3f(m[12], m[13], m[14]));

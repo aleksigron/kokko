@@ -1,5 +1,6 @@
 #pragma once
 
+#include "StringRef.hpp"
 #include "StackAllocator.hpp"
 #include "IndexedContainer.hpp"
 
@@ -18,7 +19,7 @@ private:
 
 	IndexedContainer<Mesh> meshes;
 
-	bool LoadMesh(Mesh& mesh, const char* path);
+	bool LoadMesh(Mesh& mesh, StringRef path);
 
 	// Shaders
 
@@ -32,7 +33,7 @@ private:
 
 	IndexedContainer<Material> materials;
 
-	bool LoadMaterial(Material& material, const char* configPath);
+	bool LoadMaterial(Material& material, StringRef path);
 
 	// Textures
 
@@ -48,13 +49,13 @@ public:
 
 	Mesh& GetMesh(unsigned int id);
 	unsigned int CreateMesh();
-	unsigned int CreateMeshFromFile(const char* path);
+	unsigned int CreateMeshFromFile(StringRef path);
 
 	Shader* GetShader(uint32_t hash) const;
 	Shader* GetShader(const char* path);
 
 	Material& GetMaterial(unsigned int id);
-	unsigned int CreateMaterialFromFile(const char* path);
+	unsigned int CreateMaterialFromFile(StringRef path);
 
 	Texture* GetTexture(uint32_t hash) const;
 	Texture* GetTexture(const char* path);

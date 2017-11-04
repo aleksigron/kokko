@@ -3,6 +3,8 @@
 #include "Mat4x4.hpp"
 #include "Vec2.hpp"
 
+class Scene;
+
 class Camera
 {
 public:
@@ -13,13 +15,14 @@ public:
 	};
 
 private:
+	unsigned int sceneId;
 	unsigned int sceneObjectId;
 
 public:
 	Camera();
 	~Camera();
 
-	void InitializeSceneObject();
+	void InitializeSceneObject(unsigned int sceneId);
 
 	// The camera's vertical field of view in radians
 	float perspectiveFieldOfView = 1.0f;
@@ -35,15 +38,11 @@ public:
 	
 	Projection projectionType = Projection::Perspective;
 
+	Scene* GetContainingScene() const;
 	unsigned int GetSceneObjectId() const { return sceneObjectId; }
 
 	Mat4x4f GetViewMatrix() const;
 	Mat4x4f GetProjectionMatrix() const;
-
-	Mat4x4f GetViewProjectionMatrix() const
-	{
-		return this->GetProjectionMatrix() * this->GetViewMatrix();
-	}
 
 	void SetAspectRatio(float width, float height)
 	{

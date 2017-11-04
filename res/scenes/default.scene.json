@@ -1,0 +1,25 @@
+{
+    "skybox-material": "res/materials/skybox.material.json",
+    "background-color": [ 0.1, 0.1, 0.1, 1.0 ],
+	"objects":
+	[
+		{
+            "mesh": "res/models/small_table.mesh",
+            "material": "res/materials/diffuse_red.material.json"
+        },
+		{
+            "mesh": "res/models/ground_plane.mesh",
+            "material": "res/materials/diffuse_gray.material.json"
+        },
+		{
+            "mesh": "res/models/tea_cup.mesh",
+            "material": "res/materials/diffuse_gray.material.json",
+            "position": [ 0.0, 0.439, 0.0 ]
+        },
+		{
+            "mesh": "res/models/sphere.mesh",
+            "material": "res/materials/blend.material.json",
+            "position": [ 0.0, 1.0, 0.0 ]
+        }
+	]
+}

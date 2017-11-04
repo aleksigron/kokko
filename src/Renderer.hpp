@@ -15,8 +15,6 @@ class Scene;
 class Renderer
 {
 private:
-	Camera* activeCamera;
-
 	unsigned int* indexList;
 	unsigned int freeListFirst;
 
@@ -41,13 +39,10 @@ public:
 	~Renderer();
 
 	// This function is run before calculating the world transforms of scene objects
-	void PreTransformUpdate();
+	void PreTransformUpdate(Scene* scene);
 
 	// Render the specified scene to the active OpenGL context
 	void Render(Scene* scene);
-	
-	// Set the camera from which to render the scene
-	void SetActiveCamera(Camera* camera);
 
 	// Get a reference to a render object by ID
 	RenderObject& GetRenderObject(unsigned int id) { return objects[indexList[id]]; }

@@ -4,6 +4,8 @@
 #include "Color.hpp"
 #include "Skybox.hpp"
 
+class Camera;
+
 struct SceneObjectBatch
 {
 	static const unsigned int BatchSize = 512;
@@ -21,11 +23,15 @@ public:
 	static const unsigned int Root = 0;
 
 private:
-	SceneObjectBatch objectBatch;
+	SceneObjectBatch* objectBatch;
+
+	Camera* activeCamera;
 
 public:
 	Scene();
 	~Scene();
+
+	Scene& operator=(Scene&& other);
 
 	Color backgroundColor;
 	Skybox skybox;
@@ -37,13 +43,18 @@ public:
 
 	Mat4x4f& GetWorldTransform(unsigned int object)
 	{
-		return objectBatch.worldTransforms[object];
+		return objectBatch->worldTransforms[object];
 	}
 	
 	Mat4x4f& GetLocalTransform(unsigned int object)
 	{
-		return objectBatch.localTransforms[object];
+		return objectBatch->localTransforms[object];
 	}
 
 	void CalculateWorldTransforms();
+
+	// Set the camera from which to render the scene
+	void SetActiveCamera(Camera* camera);
+
+	Camera* GetActiveCamera() { return activeCamera; }
 };

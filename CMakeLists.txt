@@ -89,6 +89,8 @@ set (KOKKO_SOURCES
 	src/ResourceManager.hpp
 	src/Scene.cpp
 	src/Scene.hpp
+	src/SceneManager.cpp
+	src/SceneManager.hpp
 	src/SceneLayer.hpp
 	src/Shader.cpp
 	src/Shader.hpp

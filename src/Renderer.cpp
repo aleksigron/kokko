@@ -45,12 +45,9 @@ Renderer::~Renderer()
 	delete[] indexList;
 }
 
-void Renderer::PreTransformUpdate()
+void Renderer::PreTransformUpdate(Scene* scene)
 {
-	Engine* engine = Engine::GetInstance();
-	Scene* scene = engine->GetScene();
-
-	Mat4x4f cameraTransform = scene->GetLocalTransform(this->activeCamera->GetSceneObjectId());
+	Mat4x4f cameraTransform = scene->GetLocalTransform(scene->GetActiveCamera()->GetSceneObjectId());
 	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 	// Update skybox transform
@@ -62,7 +59,7 @@ void Renderer::Render(Scene* scene)
 	Engine* engine = Engine::GetInstance();
 	ResourceManager* res = engine->GetResourceManager();
 
-	Camera* cam = this->activeCamera;
+	Camera* cam = scene->GetActiveCamera();
 	Mat4x4f cameraTransform = scene->GetLocalTransform(cam->GetSceneObjectId());
 
 	// Update view frustum
@@ -209,16 +206,12 @@ void Renderer::Render(Scene* scene)
 	this->commands.Clear();
 }
 
-void Renderer::SetActiveCamera(Camera* camera)
-{
-	this->activeCamera = camera;
-}
-
 void Renderer::CreateDrawCalls(Scene* scene)
 {
 	Engine* engine = Engine::GetInstance();
 	ResourceManager* rm = engine->GetResourceManager();
 
+	Camera* activeCamera = scene->GetActiveCamera();
 	Mat4x4f cameraTransform = scene->GetWorldTransform(activeCamera->GetSceneObjectId());
 	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 	Vec3f cameraForward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
@@ -264,7 +257,7 @@ void Renderer::CreateDrawCalls(Scene* scene)
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
 
 			commands.PushBack(RenderCommand(pipeline.CreateDrawCommand(
-				obj.layer, shader->transparencyType, obj.materialId, depth), index));
+				obj.layer, shader->transparencyType, depth, obj.materialId), index));
 		}
 	}
 }

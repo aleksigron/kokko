@@ -4,9 +4,10 @@
 
 #include "Window.hpp"
 #include "Time.hpp"
-#include "Scene.hpp"
 #include "Renderer.hpp"
 #include "ResourceManager.hpp"
+#include "SceneManager.hpp"
+#include "Scene.hpp"
 
 #include "Debug.hpp"
 #include "DebugLog.hpp"
@@ -30,16 +31,16 @@ Engine::Engine()
 	this->debug = new Debug;
 
 	this->time = new Time;
-	this->scene = new Scene;
 	this->renderer = new Renderer;
 	this->resourceManager = new ResourceManager;
+	this->sceneManager = new SceneManager(this->resourceManager);
 }
 
 Engine::~Engine()
 {
+	delete this->sceneManager;
 	delete this->resourceManager;
 	delete this->renderer;
-	delete this->scene;
 	delete this->time;
 
 	delete this->debug;
@@ -80,9 +81,13 @@ void Engine::Update()
 {
 	this->time->Update();
 
-	this->renderer->PreTransformUpdate();
-	this->scene->CalculateWorldTransforms();
-	this->renderer->Render(scene);
+	unsigned int primarySceneId = this->sceneManager->GetPrimarySceneId();
+	Scene* primaryScene = this->sceneManager->GetScene(primarySceneId);
+
+	this->renderer->PreTransformUpdate(primaryScene);
+
+	primaryScene->CalculateWorldTransforms();
+	this->renderer->Render(primaryScene);
 
 	this->debug->Render();
 

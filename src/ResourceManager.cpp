@@ -28,7 +28,7 @@ unsigned int ResourceManager::CreateMesh()
 	return meshes.Add();
 }
 
-unsigned int ResourceManager::CreateMeshFromFile(const char* path)
+unsigned int ResourceManager::CreateMeshFromFile(StringRef path)
 {
 	Mesh* addedMesh;
 	unsigned int id = meshes.Add(&addedMesh);
@@ -44,7 +44,7 @@ unsigned int ResourceManager::CreateMeshFromFile(const char* path)
 	}
 }
 
-bool ResourceManager::LoadMesh(Mesh &mesh, const char *path)
+bool ResourceManager::LoadMesh(Mesh &mesh, StringRef path)
 {
 	Buffer<unsigned char> file = File::ReadBinary(path);
 
@@ -117,7 +117,7 @@ Material& ResourceManager::GetMaterial(unsigned int id)
 	return materials.Get(id);
 }
 
-unsigned int ResourceManager::CreateMaterialFromFile(const char* path)
+unsigned int ResourceManager::CreateMaterialFromFile(StringRef path)
 {
 	Material* addedMaterial;
 	unsigned int id = materials.Add(&addedMaterial);
@@ -133,9 +133,9 @@ unsigned int ResourceManager::CreateMaterialFromFile(const char* path)
 	}
 }
 
-bool ResourceManager::LoadMaterial(Material& material, const char* configPath)
+bool ResourceManager::LoadMaterial(Material& material, StringRef path)
 {
-	Buffer<char> configuration = File::ReadText(configPath);
+	Buffer<char> configuration = File::ReadText(path);
 
 	return material.LoadFromConfiguration(configuration, this);
 }
@@ -159,10 +159,10 @@ Texture* ResourceManager::GetTexture(const char* path)
 	size_t textureNameLen = std::strlen(path);
 	uint32_t textureNameHash = Hash::FNV1a_32(path, textureNameLen);
 
-	// Try to find the shader using shader path hash
+	// Try to find the texture using hash
 	Texture* result = this->GetTexture(textureNameHash);
 
-	if (result == nullptr) // Shader not yet loaded
+	if (result == nullptr) // Texture not yet loaded
 	{
 		Texture* texture = this->CreateTexture();
 

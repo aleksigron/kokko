@@ -22,10 +22,7 @@ private:
 	bool mouseGrabActive = false;
 
 public:
-	void SetControlledCamera(Camera* camera)
-	{
-		controlledCamera = camera;
-	}
+	void SetControlledCamera(Camera* camera);
 	
 	void Update();
 };

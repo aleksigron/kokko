@@ -213,7 +213,7 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 				rowPos.y = static_cast<int>(cellPosition.y) + readBitmapRows;
 
 				int bufferOffset = rowPos.y * static_cast<int>(textureSize.x) + rowPos.x;
-				int glyphRowWidth = currentGlyph->size.x;
+				int glyphRowWidth = static_cast<int>(currentGlyph->size.x);
 
 				unsigned char* rowBuffer = textureBuffer.Data() + bufferOffset;
 

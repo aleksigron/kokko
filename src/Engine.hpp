@@ -2,9 +2,9 @@
 
 class Window;
 class Time;
-class Scene;
 class Renderer;
 class ResourceManager;
+class SceneManager;
 
 class Debug;
 
@@ -15,9 +15,9 @@ private:
 
 	Window* mainWindow;
 	Time* time;
-	Scene* scene;
 	Renderer* renderer;
 	ResourceManager* resourceManager;
+	SceneManager* sceneManager;
 
 	Debug* debug;
 
@@ -32,9 +32,9 @@ public:
 
 	Window* GetMainWindow() { return mainWindow; }
 	Time* GetTime() { return time; }
-	Scene* GetScene() { return scene; }
 	Renderer* GetRenderer() { return renderer; }
 	ResourceManager* GetResourceManager() { return resourceManager; }
+	SceneManager* GetSceneManager() { return sceneManager; }
 
 	Debug* GetDebug() { return debug; }
 };

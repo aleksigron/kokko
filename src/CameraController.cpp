@@ -15,13 +15,16 @@
 
 #include "Camera.hpp"
 
+void CameraController::SetControlledCamera(Camera* camera)
+{
+	controlledCamera = camera;
+}
+
 void CameraController::Update()
 {
-	Engine* engine = Engine::GetInstance();
+	Scene* scene = controlledCamera->GetContainingScene();
 
-	Scene* scene = engine->GetScene();
-
-	Window* mainWindow = engine->GetMainWindow();
+	Window* mainWindow = Engine::GetInstance()->GetMainWindow();
 	PointerInput* pi = mainWindow->GetPointerInput();
 	KeyboardInput* kb = mainWindow->GetKeyboardInput();
 
