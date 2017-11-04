@@ -4,7 +4,8 @@ class DebugVectorRenderer;
 class DebugTextRenderer;
 class DebugLogView;
 class DebugLog;
-class KeyboardInput;
+
+class Window;
 
 class Debug
 {
@@ -14,7 +15,7 @@ private:
 	DebugLogView* logView;
 	DebugLog* log;
 
-	KeyboardInput* keyboardInput;
+	Window* window;
 
 	enum class DebugMode
 	{
@@ -30,7 +31,7 @@ public:
 	Debug();
 	~Debug();
 
-	void SetKeyboardInput(KeyboardInput* keyboardInput) { this->keyboardInput = keyboardInput; }
+	void SetWindow(Window* window) { this->window = window; }
 
 	void UpdateLogViewDrawArea();
 	

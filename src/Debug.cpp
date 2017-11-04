@@ -12,10 +12,11 @@
 #include "DebugLog.hpp"
 #include "BitmapFont.hpp"
 
+#include "Window.hpp"
 #include "KeyboardInput.hpp"
 
 Debug::Debug() :
-	keyboardInput(nullptr),
+	window(nullptr),
 	mode(DebugMode::None)
 {
 	vectorRenderer = new DebugVectorRenderer;
@@ -47,30 +48,42 @@ void Debug::UpdateLogViewDrawArea()
 
 void Debug::Render()
 {
-	if (keyboardInput != nullptr)
+	bool vsync = false;
+
+	if (window != nullptr)
 	{
+		KeyboardInput* keyboard = window->GetKeyboardInput();
+
 		// Update mode
-		if (keyboardInput->GetKeyDown(Key::N_1))
+		if (keyboard->GetKeyDown(Key::N_1))
 		{
 			this->mode = DebugMode::None;
 		}
-		else if (keyboardInput->GetKeyDown(Key::N_2))
+		else if (keyboard->GetKeyDown(Key::N_2))
 		{
 			this->mode = DebugMode::LogView;
 		}
-		else if (keyboardInput->GetKeyDown(Key::N_3))
+		else if (keyboard->GetKeyDown(Key::N_3))
 		{
 			this->mode = DebugMode::FrameTime;
+		}
+
+		vsync = window->GetSwapInterval() != 0;
+		if (keyboard->GetKeyDown(Key::N_0))
+		{
+			vsync = !vsync;
+			window->SetSwapInterval(vsync ? 1 : 0);
 		}
 	}
 
 	char modeNoneChar = (mode == DebugMode::None) ? '*' : ' ';
 	char modeLogChar = (mode == DebugMode::LogView) ? '*' : ' ';
 	char modeTimeChar = (mode == DebugMode::FrameTime) ? '*' : ' ';
+	const char* vsyncStr = vsync ? "On" : "Off";
 
 	// Draw debug mode guide
-	char buffer[64];
-	sprintf(buffer, "Debug mode: [1]None%c [2]Log%c [3]FrameTime%c", modeNoneChar, modeLogChar, modeTimeChar);
+	char buffer[128];
+	sprintf(buffer, "Debug mode: [1]None%c [2]Log%c [3]FrameTime%c | [0]Vsync: %s", modeNoneChar, modeLogChar, modeTimeChar, vsyncStr);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f), true);
 
 	vectorRenderer->Render();

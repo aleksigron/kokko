@@ -54,7 +54,7 @@ bool Engine::Initialize()
 	
 	if (this->mainWindow->Initialize("Kokko"))
 	{
-		this->debug->SetKeyboardInput(this->mainWindow->GetKeyboardInput());
+		this->debug->SetWindow(this->mainWindow);
 
 		DebugLog* debugLog = this->debug->GetLog();
 		debugLog->OpenLogFile("log.txt", false);
