@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Vec2.hpp"
 #include "Vec3.hpp"
 #include "Mat4x4.hpp"
 #include "Color.hpp"
@@ -19,6 +20,7 @@ private:
 
 	struct Primitive
 	{
+		bool screenSpace;
 		PrimitiveType type;
 		Mat4x4f transform;
 		Color color;
@@ -40,6 +42,8 @@ public:
 	~DebugVectorRenderer();
 
 	void SetActiveCamera(Camera* camera) { this->activeCamera = camera; }
+
+	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
 
 	void DrawLine(const Vec3f& start, const Vec3f& end, const Color& color);
 	void DrawCube(const Mat4x4f& transform, const Color& color);

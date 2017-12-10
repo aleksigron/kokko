@@ -7,8 +7,8 @@
 
 #include "Engine.hpp"
 #include "Math.hpp"
-#include "App.hpp"
 #include "Camera.hpp"
+#include "Window.hpp"
 #include "Mesh.hpp"
 #include "Shader.hpp"
 #include "ResourceManager.hpp"
@@ -17,7 +17,7 @@ DebugVectorRenderer::DebugVectorRenderer() :
 	meshesInitialized(false)
 {
 	primitiveCount = 0;
-	primitiveAllocated = 64;
+	primitiveAllocated = 1024;
 	primitives = new Primitive[primitiveAllocated];
 }
 
@@ -148,6 +148,24 @@ void DebugVectorRenderer::CreateMeshes()
 	meshesInitialized = true;
 }
 
+void DebugVectorRenderer::DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color)
+{
+	if (primitiveCount < primitiveAllocated)
+	{
+		Vec3f start3(start.x, start.y, 0.0f);
+		Vec3f end3(end.x, end.y, 0.0f);
+		float len = (end3 - start3).Magnitude();
+
+		Primitive* prim = primitives + primitiveCount;
+		prim->screenSpace = true;
+		prim->type = PrimitiveType::Line;
+		prim->transform = Mat4x4f::LookAt(start3, end3, Vec3f(0.0f, 0.0f, 1.0f)) * Mat4x4f::Scale(len);
+		prim->color = color;
+
+		++primitiveCount;
+	}
+}
+
 void DebugVectorRenderer::DrawLine(const Vec3f& start, const Vec3f& end, const Color& color)
 {
 	if (primitiveCount < primitiveAllocated)
@@ -157,6 +175,7 @@ void DebugVectorRenderer::DrawLine(const Vec3f& start, const Vec3f& end, const C
 		Vec3f up = std::abs(dir.y / len) < 0.9f ? Vec3f(0.0f, 1.0f, 0.0f) : Vec3f(1.0f, 0.0f, 0.0f);
 
 		Primitive* prim = primitives + primitiveCount;
+		prim->screenSpace = false;
 		prim->type = PrimitiveType::Line;
 		prim->transform = Mat4x4f::LookAt(start, end, up) * Mat4x4f::Scale(len);
 		prim->color = color;
@@ -170,6 +189,7 @@ void DebugVectorRenderer::DrawCube(const Mat4x4f& transform, const Color& color)
 	if (primitiveCount < primitiveAllocated)
 	{
 		Primitive* prim = primitives + primitiveCount;
+		prim->screenSpace = false;
 		prim->type = PrimitiveType::Cube;
 		prim->transform = transform;
 		prim->color = color;
@@ -183,6 +203,7 @@ void DebugVectorRenderer::DrawSphere(const Vec3f& position, float radius, const 
 	if (primitiveCount < primitiveAllocated)
 	{
 		Primitive* prim = primitives + primitiveCount;
+		prim->screenSpace = false;
 		prim->type = PrimitiveType::Sphere;
 		prim->transform = Mat4x4f::Translate(position) * Mat4x4f::Scale(radius);
 		prim->color = color;
@@ -202,8 +223,10 @@ void DebugVectorRenderer::Render()
 
 		Engine* engine = Engine::GetInstance();
 		Camera* camera = this->activeCamera;
+		Window* window = engine->GetMainWindow();
 
-		Mat4x4f viewProjection = camera->GetProjectionMatrix() * camera->GetViewMatrix();
+		Mat4x4f viewProj = camera->GetProjectionMatrix() * camera->GetViewMatrix();
+		Mat4x4f screenProj = window->GetScreenSpaceProjectionMatrix();
 
 		ResourceManager* rm = engine->GetResourceManager();
 		Shader* shader = rm->GetShader("res/shaders/debug_vector.shader.json");
@@ -225,14 +248,16 @@ void DebugVectorRenderer::Render()
 
 		for (unsigned int i = 0; i < primitiveCount; ++i)
 		{
-			Primitive* primitive = primitives + i;
-			Mat4x4f mvp = viewProjection * primitive->transform;
+			const Primitive& primitive = primitives[i];
 
-			unsigned int meshId = this->meshIds[static_cast<unsigned int>(primitive->type)];
+			// Multiply transform with P or VP based on whether this is a screen-space primitive
+			Mat4x4f mvp = (primitive.screenSpace ? screenProj : viewProj) * primitive.transform;
+
+			unsigned int meshId = this->meshIds[static_cast<unsigned int>(primitive.type)];
 			const Mesh& mesh = rm->GetMesh(meshId);
 
 			// Set color uniform
-			glUniform4fv(colorUniformLocation, 1, primitive->color.ValuePointer());
+			glUniform4fv(colorUniformLocation, 1, primitive.color.ValuePointer());
 
 			// Bind vertex array object
 			glBindVertexArray(mesh.vertexArrayObject);
