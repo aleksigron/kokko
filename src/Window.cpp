@@ -30,7 +30,7 @@ bool Window::Initialize(const char* windowTitle)
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		
-		windowHandle = glfwCreateWindow(960, 640, windowTitle, NULL, NULL);
+		windowHandle = glfwCreateWindow(1600, 900, windowTitle, NULL, NULL);
 		
 		if (windowHandle != nullptr)
 		{
@@ -104,6 +104,30 @@ float Window::GetScreenCoordinateScale()
 	Vec2f screen = this->GetWindowSize();
 	
 	return pixels.x / screen.x;
+}
+
+Mat4x4f Window::GetScreenSpaceProjectionMatrix()
+{
+	Vec2f frame = this->GetFrameBufferSize();
+
+	const float farClipDistance = 100.0f;
+	const float nearClipDistance = -100.0f;
+
+	const float farMinusNear = farClipDistance - nearClipDistance;
+	const float farPlusNear = farClipDistance + nearClipDistance;
+	const float aspectRatio = frame.x / frame.y;
+
+	Mat4x4f result;
+	result[0] = 2.0f / frame.x;
+	result[5] = -2.0f / frame.y;
+	result[10] = -2.0f / (farMinusNear);
+	//result[12] = -((r + l) / (r - l));
+	result[12] = -1.0f;
+	//result[13] = -((t + b) / (t - b));
+	result[13] = 1.0f;
+	result[14] = -(farPlusNear) / (farMinusNear);
+
+	return result;
 }
 
 void Window::SetSwapInterval(int swapInterval)

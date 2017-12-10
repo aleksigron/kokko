@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vec2.hpp"
+#include "Mat4x4.hpp"
 
 struct GLFWwindow;
 
@@ -40,6 +41,11 @@ public:
 	Get screen coordinate scale compared to pixels
 	*/
 	float GetScreenCoordinateScale();
+
+	/*
+	Get orthographic projection matrix for screen coordinate space
+	*/
+	Mat4x4f GetScreenSpaceProjectionMatrix();
 
 	/*
 	Set the number of screen refresh to wait for until swapping buffers.
