@@ -78,6 +78,7 @@ set (KOKKO_SOURCES
 	src/Plane.hpp
 	src/PointerInput.cpp
 	src/PointerInput.hpp
+	src/Queue.hpp
 	src/Rectangle.hpp
 	src/RenderData.hpp
 	src/Renderer.cpp
