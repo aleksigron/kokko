@@ -46,6 +46,6 @@ public:
 
 	void SetAspectRatio(float width, float height)
 	{
-		aspectRatio = width / static_cast<float>(height);
+		aspectRatio = width / height;
 	}
 };
