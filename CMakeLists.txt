@@ -40,6 +40,8 @@ set (KOKKO_SOURCES
 	src/ColorSrgb.hpp
 	src/Debug.cpp
 	src/Debug.hpp
+	src/DebugGraph.cpp
+	src/DebugGraph.hpp
 	src/DebugLog.cpp
 	src/DebugLog.hpp
 	src/DebugLogView.cpp

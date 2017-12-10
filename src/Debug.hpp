@@ -2,6 +2,7 @@
 
 class DebugVectorRenderer;
 class DebugTextRenderer;
+class DebugGraph;
 class DebugLogView;
 class DebugLog;
 
@@ -12,6 +13,7 @@ class Debug
 private:
 	DebugVectorRenderer* vectorRenderer;
 	DebugTextRenderer* textRenderer;
+	DebugGraph* graph;
 	DebugLogView* logView;
 	DebugLog* log;
 
@@ -31,9 +33,7 @@ public:
 	Debug();
 	~Debug();
 
-	void SetWindow(Window* window) { this->window = window; }
-
-	void UpdateLogViewDrawArea();
+	void SetWindow(Window* window);
 	
 	void Render();
 

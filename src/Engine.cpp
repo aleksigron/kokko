@@ -54,20 +54,13 @@ bool Engine::Initialize()
 	
 	if (this->mainWindow->Initialize("Kokko"))
 	{
-		this->debug->SetWindow(this->mainWindow);
-
 		DebugLog* debugLog = this->debug->GetLog();
 		debugLog->OpenLogFile("log.txt", false);
 
 		DebugTextRenderer* debugTextRenderer = this->debug->GetTextRenderer();
 		debugTextRenderer->LoadBitmapFont("res/fonts/gohufont-uni-14.bdf");
 
-		Vec2f frameSize = this->mainWindow->GetFrameBufferSize();
-		debugTextRenderer->SetFrameSize(frameSize);
-
-		float screenCoordScale = this->mainWindow->GetScreenCoordinateScale();
-		debugTextRenderer->SetScaleFactor(screenCoordScale);
-		debug->UpdateLogViewDrawArea();
+		this->debug->SetWindow(this->mainWindow);
 
 		return true;
 	}

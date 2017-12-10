@@ -6,14 +6,15 @@
 
 #include "Engine.hpp"
 #include "Time.hpp"
+#include "Window.hpp"
+#include "KeyboardInput.hpp"
+#include "BitmapFont.hpp"
+
 #include "DebugVectorRenderer.hpp"
 #include "DebugTextRenderer.hpp"
 #include "DebugLogView.hpp"
 #include "DebugLog.hpp"
-#include "BitmapFont.hpp"
-
-#include "Window.hpp"
-#include "KeyboardInput.hpp"
+#include "DebugGraph.hpp"
 
 Debug::Debug() :
 	window(nullptr),
@@ -21,6 +22,7 @@ Debug::Debug() :
 {
 	vectorRenderer = new DebugVectorRenderer;
 	textRenderer = new DebugTextRenderer;
+	graph = new DebugGraph(vectorRenderer);
 	logView = new DebugLogView(textRenderer);
 	log = new DebugLog(logView);
 }
@@ -29,21 +31,38 @@ Debug::~Debug()
 {
 	delete log;
 	delete logView;
+	delete graph;
 	delete textRenderer;
+	delete vectorRenderer;
 }
 
-void Debug::UpdateLogViewDrawArea()
+void Debug::SetWindow(Window* window)
 {
-	Vec2f size = textRenderer->GetScaledFrameSize();
-	int lineHeight = textRenderer->GetFont()->GetLineHeight();
+	this->window = window;
+
+	Vec2f frameSize = this->window->GetFrameBufferSize();
+	float screenCoordScale = this->window->GetScreenCoordinateScale();
+
+	textRenderer->SetFrameSize(frameSize);
+	textRenderer->SetScaleFactor(screenCoordScale);
+
+	Vec2f trScaledFrameSize = textRenderer->GetScaledFrameSize();
+	int scaledLineHeight = textRenderer->GetFont()->GetLineHeight();
+	float pixelLineHeight = scaledLineHeight * screenCoordScale;
 
 	Rectangle logArea;
 	logArea.position.x = 0.0f;
-	logArea.position.y = lineHeight;
-	logArea.size.x = size.x;
-	logArea.size.y = size.y - lineHeight;
-
+	logArea.position.y = scaledLineHeight;
+	logArea.size.x = trScaledFrameSize.x;
+	logArea.size.y = trScaledFrameSize.y - scaledLineHeight;
 	logView->SetDrawArea(logArea);
+
+	Rectangle graphArea;
+	graphArea.position.x = 0.0f;
+	graphArea.position.y = pixelLineHeight;
+	graphArea.size.x = frameSize.x;
+	graphArea.size.y = frameSize.y - pixelLineHeight;
+	graph->SetDrawArea(graphArea);
 }
 
 void Debug::Render()
@@ -86,7 +105,9 @@ void Debug::Render()
 	sprintf(buffer, "Debug mode: [1]None%c [2]Log%c [3]FrameTime%c | [0]Vsync: %s", modeNoneChar, modeLogChar, modeTimeChar, vsyncStr);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f), true);
 
-	vectorRenderer->Render();
+	// Add frame time to debug graph
+	graph->AddDataPoint(Time::GetDeltaTime());
+	graph->Update();
 
 	// Draw mode content
 	switch (this->mode)
@@ -102,6 +123,8 @@ void Debug::Render()
 			this->DrawFrameTimeStats();
 			break;
 	}
+
+	vectorRenderer->Render();
 
 	// Draw debug texts
 	textRenderer->Render();
@@ -123,8 +146,7 @@ void Debug::DrawFrameTimeStats()
 {
 	Engine* engine = Engine::GetInstance();
 
-	Time* time = engine->GetTime();
-	float deltaTime = time->GetDeltaTime();
+	float deltaTime = Time::GetDeltaTime();
 	float fps = 1.0f / deltaTime;
 	float ms = deltaTime * 1000.0f;
 
@@ -133,4 +155,6 @@ void Debug::DrawFrameTimeStats()
 
 	Vec2f position(0.0f, textRenderer->GetFont()->GetLineHeight());
 	textRenderer->AddText(StringRef(frameRateText), position, true);
+
+	graph->DrawToVectorRenderer();
 }
