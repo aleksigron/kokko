@@ -6,7 +6,7 @@ Time* Time::instance = nullptr;
 
 Time::Time() :
 	frameStart(glfwGetTime()),
-	currentDelta(0.0f)
+	currentDeltaFloat(0.0f)
 {
 	this->currentTime = frameStart;
 
@@ -18,6 +18,7 @@ void Time::Update()
 	double previousTime = this->frameStart;
 	this->frameStart = glfwGetTime();
 	
-	this->currentTime = float(this->frameStart);
-	this->currentDelta = float(this->frameStart - previousTime);
+	this->currentTime = this->frameStart;
+	this->currentDelta = this->frameStart - previousTime;
+	this->currentDeltaFloat = static_cast<float>(this->currentDelta);
 }

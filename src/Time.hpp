@@ -6,14 +6,15 @@ private:
 	static Time* instance;
 	
 	double frameStart;
-	float currentTime;
-	float currentDelta;
+	double currentTime;
+	double currentDelta;
+	float currentDeltaFloat;
 	
 public:
 	Time();
 	
 	void Update();
 	
-	static inline float GetDeltaTime() { return Time::instance->currentDelta; }
-	static inline float GetTime() { return Time::instance->currentTime; }
+	static float GetDeltaTime() { return Time::instance->currentDeltaFloat; }
+	static double GetRunningTime() { return Time::instance->currentTime; }
 };
