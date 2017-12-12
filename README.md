@@ -43,7 +43,10 @@ using a custom format is to better understand the content pipeline. Also, I'm
 not aware of a simple format for meshes that is optimized for runtime load
 speed. Pretty much all simple formats I could find were text-based and that's
 not good for efficiency. I'm hoping to develop the format and export enough to
-release it as a separate repository with proper documentation and examples.
+release it as a separate repository with proper documentation and examples. You
+can install it by copying the *blender_custom_format* folder to your Blender
+installation's *scripts/addons_contrib* folder and enabling it in the add-ons
+menu.
 
 [Glad](https://github.com/Dav1dde/glad) is used to load the OpenGL profile and
 extensions.
