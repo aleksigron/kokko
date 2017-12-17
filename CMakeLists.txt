@@ -59,6 +59,7 @@ set (KOKKO_SOURCES
 	src/Hash.hpp
 	src/ImageData.cpp
 	src/ImageData.hpp
+	src/ImmutableString.cpp
 	src/ImmutableString.hpp
 	src/IncludeOpenGL.hpp
 	src/IncludeGLFW.hpp

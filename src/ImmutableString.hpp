@@ -1,63 +1,25 @@
 #pragma once
 
 #include <cstddef>
-#include <cstring>
 
 class ImmutableString
 {
 private:
 	char* string = nullptr;
-	size_t size = 0;
+	size_t length = 0;
 
 public:
-	ImmutableString(const char* s)
-	{
-		if (s != nullptr)
-		{
-			this->size = std::strlen(s);
+	ImmutableString();
+	ImmutableString(const char* s);
+	ImmutableString(const char* s, size_t len);
+	ImmutableString(const ImmutableString& other);
+	ImmutableString(ImmutableString&& other);
 
-			if (size > 0)
-			{
-				this->string = new char[this->size + 1];
-				std::strcpy(this->string, s);
-			}
-		}
-	}
+	~ImmutableString();
 
-	ImmutableString(const char* s, size_t len)
-	{
-		if (s != nullptr && len > 0)
-		{
-			this->size = len;
-			this->string = new char[this->size + 1];
-			std::memcpy(this->string, s, len);
-			this->string[this->size] = '\0';
-		}
-	}
+	ImmutableString& operator=(const ImmutableString& other);
+	ImmutableString& operator=(ImmutableString&& other);
 
-	ImmutableString(const ImmutableString& other)
-	{
-		if (other.string != nullptr)
-		{
-			this->size = other.size;
-			this->string = new char[this->size + 1];
-			std::strcpy(this->string, other.string);
-		}
-	}
-
-	~ImmutableString()
-	{
-		if (this->string != nullptr)
-			delete[] this->string;
-	}
-
-	inline const char* c_string() const
-	{
-		return this->string;
-	}
-
-	inline size_t length() const
-	{
-		return this->size;
-	}
+	const char* GetCstr() const { return this->string; }
+	size_t GetLength() const { return this->length; }
 };
