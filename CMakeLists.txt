@@ -105,6 +105,8 @@ set (KOKKO_SOURCES
 	src/StackAllocation.hpp
 	src/StackAllocator.cpp
 	src/StackAllocator.hpp
+	src/String.cpp
+	src/String.hpp
 	src/StringRef.cpp
 	src/StringRef.hpp
 	src/Texture.cpp
