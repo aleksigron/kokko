@@ -61,3 +61,23 @@ Buffer<char> File::ReadText(const char* path)
 
 	return fileContents;
 }
+
+bool File::Write(StringRef path, BufferRef<char> content, bool append)
+{
+	return Write(String(path).GetCStr(), content, append);
+}
+
+bool File::Write(const char* path, BufferRef<char> content, bool append)
+{
+	FILE* fileHandle = fopen(path, append ? "ab" : "wb");
+
+	if (fileHandle != nullptr)
+	{
+		size_t written = fwrite(content.data, sizeof(char), content.count, fileHandle);
+		fclose(fileHandle);
+
+		return written == content.count;
+	}
+
+	return false;
+}

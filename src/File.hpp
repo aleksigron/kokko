@@ -10,4 +10,7 @@ namespace File
 
 	Buffer<char> ReadText(StringRef path);
 	Buffer<char> ReadText(const char* path);
+
+	bool Write(StringRef path, BufferRef<char> content, bool append);
+	bool Write(const char* path, BufferRef<char> content, bool append);
 }
