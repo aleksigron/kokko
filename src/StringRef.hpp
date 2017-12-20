@@ -45,10 +45,10 @@ struct StringRef
 	}
 
 	// Return true if this->str is not null
-	bool IsValid() const { return str != nullptr; }
+	bool IsNonNull() const { return str != nullptr; }
 
 	// Clear this object
-	void Invalidate()
+	void Clear()
 	{
 		str = nullptr;
 		len = 0;

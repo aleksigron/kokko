@@ -112,7 +112,7 @@ public:
 									value, callback.userData);
 
 								// Unset key
-								keyStack[currDepth].Invalidate();
+								keyStack[currDepth].Clear();
 							}
 							// Key has not been defined, use this as the key
 							else
@@ -166,7 +166,7 @@ public:
 						callback.closeObject(keyStack[currDepth], callback.userData);
 
 						// Unset key, if it existed anyway
-						keyStack[currDepth].Invalidate();
+						keyStack[currDepth].Clear();
 					}
 				}
 					break;
@@ -196,7 +196,7 @@ public:
 						callback.closeArray(keyStack[currDepth], callback.userData);
 
 						// Unset key, if it existed anyway
-						keyStack[currDepth].Invalidate(); // Unset key
+						keyStack[currDepth].Clear(); // Unset key
 					}
 				}
 					break;

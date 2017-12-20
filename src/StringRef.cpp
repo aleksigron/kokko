@@ -39,7 +39,7 @@ void StringRef::TrimBeginning(unsigned int amount)
 		len = len - amount;
 	}
 	else
-		this->Invalidate();
+		this->Clear();
 }
 
 void StringRef::TrimEnd(unsigned int amount)
@@ -47,5 +47,5 @@ void StringRef::TrimEnd(unsigned int amount)
 	if (amount < len)
 		len = len - amount;
 	else
-		this->Invalidate();
+		this->Clear();
 }

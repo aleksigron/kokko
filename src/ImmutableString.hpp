@@ -2,11 +2,13 @@
 
 #include <cstddef>
 
+#include "StringRef.hpp"
+
 class ImmutableString
 {
 private:
 	char* string = nullptr;
-	size_t length = 0;
+	std::size_t length = 0;
 
 public:
 	ImmutableString();
@@ -22,4 +24,6 @@ public:
 
 	const char* GetCstr() const { return this->string; }
 	size_t GetLength() const { return this->length; }
+
+	StringRef GetRef() const { return StringRef(string, length); }
 };

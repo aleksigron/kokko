@@ -91,7 +91,7 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 	uint spacesInLine[7];
 	StringRef tokens[8];
 
-	while (line.IsValid())
+	while (line.IsNonNull())
 	{
 		// Find spaces in the line
 
@@ -236,7 +236,7 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 		}
 		else
 		{
-			line.Invalidate();
+			line.Clear();
 		}
 	}
 
