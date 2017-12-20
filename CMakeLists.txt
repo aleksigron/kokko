@@ -22,6 +22,8 @@ set (KOKKO_SOURCES
 	src/main.cpp
 	src/App.cpp
 	src/App.hpp
+	src/AppSettings.cpp
+	src/AppSettings.hpp
 	src/Array.hpp
 	src/AsciiStringUtil.cpp
 	src/AsciiStringUtil.hpp
