@@ -31,7 +31,6 @@ public:
 	static Engine* GetInstance() { return instance; }
 
 	Window* GetMainWindow() { return mainWindow; }
-	Time* GetTime() { return time; }
 	Renderer* GetRenderer() { return renderer; }
 	ResourceManager* GetResourceManager() { return resourceManager; }
 	SceneManager* GetSceneManager() { return sceneManager; }

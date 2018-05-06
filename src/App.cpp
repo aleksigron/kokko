@@ -33,6 +33,9 @@ App::~App()
 
 void App::Initialize()
 {
+	settings.SetFilename(StringRef("global.settings"));
+	settings.LoadFromFile();
+
 	Engine* engine = Engine::GetInstance();
 
 	Renderer* renderer = engine->GetRenderer();

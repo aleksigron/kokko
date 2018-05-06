@@ -1,6 +1,7 @@
 #include "AppSettings.hpp"
 
 #include "File.hpp"
+#include "BufferRef.hpp"
 
 AppSettings::AppSettings()
 {
@@ -63,6 +64,36 @@ void AppSettings::LoadFromFile()
 
 void AppSettings::SaveToFile()
 {
+	unsigned int totalLength = 0;
+
+	for (unsigned int i = 0, count = settings.GetCount(); i < count; ++i)
+	{
+		const Setting& s = settings.At(i);
+		totalLength += s.keyLength + s.valueLength + 2;
+	}
+
+	Buffer<char> content;
+	content.Allocate(totalLength);
+
+	char* data = content.Data();
+	for (unsigned int i = 0, count = settings.GetCount(); i < count; ++i)
+	{
+		const Setting& s = settings.At(i);
+
+		std::memcpy(data, s.keyValueString, s.keyLength);
+		data += s.keyLength;
+
+		*data = ' ';
+		data += 1;
+
+		std::memcpy(data, s.keyValueString + s.keyLength, s.valueLength);
+		data += s.valueLength;
+
+		*data = '\n';
+		data += 1;
+	}
+
+	File::Write(settingsFilename.GetRef(), content.GetRef(), false);
 }
 
 void AppSettings::SetString(const char* key, StringRef value)
@@ -72,7 +103,7 @@ void AppSettings::SetString(const char* key, StringRef value)
 
 void AppSettings::SetString(StringRef key, StringRef value)
 {
-	if (key.len > 0 && value.len)
+	if (key.len > 0 && value.len > 0)
 	{
 		Setting* s = this->FindSetting(key);
 

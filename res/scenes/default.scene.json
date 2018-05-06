@@ -4,8 +4,8 @@
 	"objects":
 	[
 		{
-            "mesh": "res/models/small_table.mesh",
-            "material": "res/materials/diffuse_red.material.json"
+            "mesh": "res/models/round_table.mesh",
+            "material": "res/materials/diffuse_white.material.json"
         },
 		{
             "mesh": "res/models/ground_plane.mesh",
@@ -13,8 +13,13 @@
         },
 		{
             "mesh": "res/models/tea_cup.mesh",
+            "material": "res/materials/diffuse_red.material.json",
+            "position": [ 0.1, 0.74, 0.45 ]
+        },
+		{
+            "mesh": "res/models/tea_cup.mesh",
             "material": "res/materials/diffuse_gray.material.json",
-            "position": [ 0.0, 0.439, 0.0 ]
+            "position": [ -0.1, 0.74, 0.45 ]
         },
 		{
             "mesh": "res/models/sphere.mesh",

@@ -21,7 +21,14 @@ private:
 	bool mouseLookEnable = false;
 	bool mouseGrabActive = false;
 
+	float cameraAimSensitivity = -1.0f;
+
+	void VerifySensitityIsLoaded();
+
 public:
+	CameraController();
+	~CameraController();
+
 	void SetControlledCamera(Camera* camera);
 	
 	void Update();

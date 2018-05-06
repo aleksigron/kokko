@@ -1,27 +1,65 @@
 #include "CameraController.hpp"
 
+#include <cstdio>
+#include <cstdlib>
+
+#include "String.hpp"
+
 #include "Mat3x3.hpp"
 #include "Mat4x4.hpp"
 
 #include "Engine.hpp"
-
 #include "Time.hpp"
-
 #include "Window.hpp"
 #include "PointerInput.hpp"
 #include "KeyboardInput.hpp"
 
 #include "Scene.hpp"
 
+#include "App.hpp"
 #include "Camera.hpp"
+
+CameraController::CameraController()
+{
+}
+
+CameraController::~CameraController()
+{
+}
 
 void CameraController::SetControlledCamera(Camera* camera)
 {
 	controlledCamera = camera;
 }
 
+void CameraController::VerifySensitityIsLoaded()
+{
+	if (cameraAimSensitivity < 0.0f)
+	{
+		AppSettings* settings = App::GetInstance()->GetSettings();
+		StringRef sensitivity = settings->GetString("camera_aim_sensitivity");
+		if (sensitivity.IsNonNull() == false)
+		{
+			settings->SetString("camera_aim_sensitivity", StringRef("0.6"));
+			settings->SaveToFile();
+		}
+		else
+		{
+			String s(sensitivity);
+			float fs = std::strtof(s.GetCStr(), nullptr);
+
+			if (fs > 0.0f)
+				this->cameraAimSensitivity = fs;
+			else
+				this->cameraAimSensitivity = 1.0f;
+		}
+	}
+}
+
 void CameraController::Update()
 {
+	this->VerifySensitityIsLoaded();
+
 	Scene* scene = controlledCamera->GetContainingScene();
 
 	Window* mainWindow = Engine::GetInstance()->GetMainWindow();
@@ -35,12 +73,11 @@ void CameraController::Update()
 		pi->SetCursorMode(mouseLookEnable ?
 						  PointerInput::CursorMode::Disabled :
 						  PointerInput::CursorMode::Normal);
-
 	}
 
 	if (mouseLookEnable == true)
 	{
-		Vec2f movement = pi->GetCursorMovement() * 0.003f;
+		Vec2f movement = pi->GetCursorMovement() * 0.003f * this->cameraAimSensitivity;
 
 		cameraYaw += movement.x;
 
