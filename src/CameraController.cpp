@@ -37,21 +37,18 @@ void CameraController::VerifySensitityIsLoaded()
 	if (cameraAimSensitivity < 0.0f)
 	{
 		AppSettings* settings = App::GetInstance()->GetSettings();
-		StringRef sensitivity = settings->GetString("camera_aim_sensitivity");
-		if (sensitivity.IsNonNull() == false)
+
+		double sensitivity = 0.0;
+		if (settings->TryGetDouble("camera_aim_sensitivity", sensitivity))
 		{
-			settings->SetString("camera_aim_sensitivity", StringRef("0.6"));
-			settings->SaveToFile();
+			this->cameraAimSensitivity = sensitivity;
 		}
 		else
 		{
-			String s(sensitivity);
-			float fs = std::strtof(s.GetCStr(), nullptr);
+			this->cameraAimSensitivity = 1.0;
 
-			if (fs > 0.0f)
-				this->cameraAimSensitivity = fs;
-			else
-				this->cameraAimSensitivity = 1.0f;
+			settings->SetDouble("camera_aim_sensitivity", this->cameraAimSensitivity);
+			settings->SaveToFile();
 		}
 	}
 }

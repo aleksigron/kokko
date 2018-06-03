@@ -1,6 +1,10 @@
 #include "AppSettings.hpp"
 
+#include <cstdio>
+#include <cstdlib>
+
 #include "File.hpp"
+#include "String.hpp"
 #include "BufferRef.hpp"
 
 AppSettings::AppSettings()
@@ -96,6 +100,24 @@ void AppSettings::SaveToFile()
 	File::Write(settingsFilename.GetRef(), content.GetRef(), false);
 }
 
+bool AppSettings::TryGetString(StringRef key, StringRef& valueOut)
+{
+	StringRef value = this->GetString(key);
+
+	if (value.IsNonNull())
+	{
+		valueOut = value;
+		return true;
+	}
+	else
+		return false;
+}
+
+bool AppSettings::TryGetString(const char* key, StringRef& valueOut)
+{
+	return this->TryGetString(StringRef(key), valueOut);
+}
+
 void AppSettings::SetString(const char* key, StringRef value)
 {
 	this->SetString(StringRef(key), value);
@@ -121,14 +143,66 @@ void AppSettings::SetString(StringRef key, StringRef value)
 	}
 }
 
-StringRef AppSettings::GetString(const char* key)
+StringRef AppSettings::GetString(StringRef key)
 {
-	Setting* s = this->FindSetting(StringRef(key));
+	Setting* s = this->FindSetting(key);
 
 	if (s != nullptr)
 		return StringRef(s->keyValueString + s->keyLength, s->valueLength);
 	else
 		return StringRef();
+}
+
+bool AppSettings::TryGetDouble(const char* key, double& valueOut)
+{
+	return this->TryGetDouble(StringRef(key), valueOut);
+}
+
+bool AppSettings::TryGetDouble(StringRef key, double& valueOut)
+{
+	StringRef value = this->GetString(key);
+
+	if (value.IsNonNull())
+	{
+		valueOut = std::strtod(value.str, nullptr);
+		return true;
+	}
+	else
+		return false;
+}
+
+StringRef AppSettings::GetString(const char* key)
+{
+	return this->GetString(StringRef(key));
+}
+
+void AppSettings::SetDouble(const char* key, double value)
+{
+	this->SetDouble(StringRef(key), value);
+}
+
+void AppSettings::SetDouble(StringRef key, double value)
+{
+	char buffer[32];
+
+	std::snprintf(buffer, sizeof(buffer), "%f");
+
+	this->SetString(key, StringRef(buffer));
+}
+
+double AppSettings::GetDouble(const char* key)
+{
+	return this->GetDouble(StringRef(key));
+}
+
+double AppSettings::GetDouble(StringRef key)
+{
+	StringRef value = this->GetString(key);
+
+	if (value.IsNonNull())
+		return std::strtod(value.str, nullptr);
+	else
+		return 0.0;
 }
 
 AppSettings::Setting* AppSettings::FindSetting(StringRef key)
@@ -143,5 +217,5 @@ AppSettings::Setting* AppSettings::FindSetting(StringRef key)
 			return &s;
 	}
 
-	return false;
+	return nullptr;
 }
