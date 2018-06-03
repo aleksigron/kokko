@@ -56,3 +56,6 @@ runtime-friendly format. Example command to convert image to compressed texture:
 ```
 glraw-cmd --compressed-format GL_COMPRESSED_RGB_S3TC_DXT1_EXT example.jpg
 ```
+
+[Gohufont](https://github.com/hchargois/gohufont) is used for debug text
+rendering.
