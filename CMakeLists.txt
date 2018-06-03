@@ -42,12 +42,12 @@ set (KOKKO_SOURCES
 	src/ColorSrgb.hpp
 	src/Debug.cpp
 	src/Debug.hpp
+	src/DebugConsole.cpp
+	src/DebugConsole.hpp
 	src/DebugGraph.cpp
 	src/DebugGraph.hpp
 	src/DebugLog.cpp
 	src/DebugLog.hpp
-	src/DebugLogView.cpp
-	src/DebugLogView.hpp
 	src/DebugTextRenderer.cpp
 	src/DebugTextRenderer.hpp
 	src/DebugVectorRenderer.cpp

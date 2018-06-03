@@ -5,7 +5,7 @@
 
 class DebugTextRenderer;
 
-class DebugLogView
+class DebugConsole
 {
 private:
 	struct LogEntry
@@ -30,8 +30,8 @@ private:
 	unsigned int stringDataAllocated;
 
 public:
-	DebugLogView(DebugTextRenderer* textRenderer);
-	~DebugLogView();
+	DebugConsole(DebugTextRenderer* textRenderer);
+	~DebugConsole();
 
 	void SetDrawArea(const Rectangle& area);
 

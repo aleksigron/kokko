@@ -12,7 +12,7 @@
 
 #include "DebugVectorRenderer.hpp"
 #include "DebugTextRenderer.hpp"
-#include "DebugLogView.hpp"
+#include "DebugConsole.hpp"
 #include "DebugLog.hpp"
 #include "DebugGraph.hpp"
 
@@ -23,14 +23,14 @@ Debug::Debug() :
 	vectorRenderer = new DebugVectorRenderer;
 	textRenderer = new DebugTextRenderer;
 	graph = new DebugGraph(vectorRenderer);
-	logView = new DebugLogView(textRenderer);
-	log = new DebugLog(logView);
+	console = new DebugConsole(textRenderer);
+	log = new DebugLog(console);
 }
 
 Debug::~Debug()
 {
 	delete log;
-	delete logView;
+	delete console;
 	delete graph;
 	delete textRenderer;
 	delete vectorRenderer;
@@ -55,7 +55,7 @@ void Debug::SetWindow(Window* window)
 	logArea.position.y = scaledLineHeight;
 	logArea.size.x = trScaledFrameSize.x;
 	logArea.size.y = trScaledFrameSize.y - scaledLineHeight;
-	logView->SetDrawArea(logArea);
+	console->SetDrawArea(logArea);
 
 	Rectangle graphArea;
 	graphArea.position.x = 0.0f;
@@ -80,7 +80,7 @@ void Debug::Render()
 		}
 		else if (keyboard->GetKeyDown(Key::N_2))
 		{
-			this->mode = DebugMode::LogView;
+			this->mode = DebugMode::Console;
 		}
 		else if (keyboard->GetKeyDown(Key::N_3))
 		{
@@ -96,7 +96,7 @@ void Debug::Render()
 	}
 
 	char modeNoneChar = (mode == DebugMode::None) ? '*' : ' ';
-	char modeLogChar = (mode == DebugMode::LogView) ? '*' : ' ';
+	char modeLogChar = (mode == DebugMode::Console) ? '*' : ' ';
 	char modeTimeChar = (mode == DebugMode::FrameTime) ? '*' : ' ';
 	const char* vsyncStr = vsync ? "On" : "Off";
 
@@ -115,8 +115,8 @@ void Debug::Render()
 		case DebugMode::None:
 			break;
 
-		case DebugMode::LogView:
-			logView->DrawToTextRenderer();
+		case DebugMode::Console:
+			console->DrawToTextRenderer();
 			break;
 
 		case DebugMode::FrameTime:

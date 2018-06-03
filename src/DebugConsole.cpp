@@ -1,11 +1,11 @@
-#include "DebugLogView.hpp"
+#include "DebugConsole.hpp"
 
 #include <cstring>
 
 #include "BitmapFont.hpp"
 #include "DebugTextRenderer.hpp"
 
-DebugLogView::DebugLogView(DebugTextRenderer* textRenderer) :
+DebugConsole::DebugConsole(DebugTextRenderer* textRenderer) :
 	textRenderer(textRenderer),
 	entries(nullptr),
 	entryFirst(0),
@@ -18,18 +18,18 @@ DebugLogView::DebugLogView(DebugTextRenderer* textRenderer) :
 {
 }
 
-DebugLogView::~DebugLogView()
+DebugConsole::~DebugConsole()
 {
 	delete[] stringData;
 	delete[] entries;
 }
 
-void DebugLogView::SetDrawArea(const Rectangle& area)
+void DebugConsole::SetDrawArea(const Rectangle& area)
 {
 	this->drawArea = area;
 }
 
-void DebugLogView::AddLogEntry(StringRef text)
+void DebugConsole::AddLogEntry(StringRef text)
 {
 	Vec2f areaSize = this->drawArea.size;
 
@@ -119,7 +119,7 @@ void DebugLogView::AddLogEntry(StringRef text)
 	}
 }
 
-void DebugLogView::DrawToTextRenderer()
+void DebugConsole::DrawToTextRenderer()
 {
 	// Go over each entry
 	// Add them to the DebugTextRenderer

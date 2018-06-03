@@ -2,17 +2,17 @@
 
 #include "StringRef.hpp"
 
-class DebugLogView;
+class DebugConsole;
 
 class DebugLog
 {
 private:
 	void* fileHandle;
 
-	DebugLogView* logView;
+	DebugConsole* console;
 
 public:
-	DebugLog(DebugLogView* logView);
+	DebugLog(DebugConsole* console);
 	~DebugLog();
 
 	bool OpenLogFile(const char* filePath, bool append);

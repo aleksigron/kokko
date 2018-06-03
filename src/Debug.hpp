@@ -3,7 +3,7 @@
 class DebugVectorRenderer;
 class DebugTextRenderer;
 class DebugGraph;
-class DebugLogView;
+class DebugConsole;
 class DebugLog;
 
 class Window;
@@ -14,7 +14,7 @@ private:
 	DebugVectorRenderer* vectorRenderer;
 	DebugTextRenderer* textRenderer;
 	DebugGraph* graph;
-	DebugLogView* logView;
+	DebugConsole* console;
 	DebugLog* log;
 
 	Window* window;
@@ -22,7 +22,7 @@ private:
 	enum class DebugMode
 	{
 		None,
-		LogView,
+		Console,
 		FrameTime
 	}
 	mode;
@@ -40,7 +40,7 @@ public:
 	void CheckOpenGlErrors();
 
 	DebugLog* GetLog() { return log; }
-	DebugLogView* GetLogView() { return logView; }
+	DebugConsole* GetConsole() { return console; }
 	DebugTextRenderer* GetTextRenderer() { return textRenderer; }
 	DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer; }
 };
