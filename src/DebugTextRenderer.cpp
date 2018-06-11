@@ -8,6 +8,7 @@
 #include "File.hpp"
 #include "BitmapFont.hpp"
 #include "VertexFormat.hpp"
+#include "EncodingUtf8.hpp"
 
 #include "Engine.hpp"
 #include "Mesh.hpp"
@@ -213,72 +214,85 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 
 		const char* strItr = rd.string.str;
 		const char* strEnd = strItr + rd.string.len;
-		for (; strItr != strEnd; ++strItr)
+		while (strItr < strEnd)
 		{
-			uint32_t c = *strItr;
-			unsigned short vertexIndex = static_cast<unsigned short>(vertexItr - vertexBegin);
+			unsigned int codepoint;
+			unsigned int bytesDecoded = EncodingUtf8::DecodeCodepoint(strItr, codepoint);
 
-			const BitmapGlyph* foundGlyph = font->GetGlyph(c);
-
-			if (foundGlyph != nullptr)
+			if (bytesDecoded > 0)
 			{
-				BitmapGlyph glyph = *foundGlyph;
+				strItr += bytesDecoded;
 
-				Vec2f quadPos = drawPos;
-				float quadRight = glyph.size.x;
-				float quadDown = -(glyph.size.y + 1.0f);
+				unsigned short vertexIndex = static_cast<unsigned short>(vertexItr - vertexBegin);
 
-				float uvX = glyph.texturePosition.x * invTexSize.x;
-				float uvY = glyph.texturePosition.y * invTexSize.y;
-				float uvRight = glyph.size.x * invTexSize.x;
-				float uvDown = glyph.size.y * invTexSize.y + invTexSize.y;
+				const BitmapGlyph* foundGlyph = font->GetGlyph(codepoint);
 
-				Vertex3f2f& v00 = vertexItr[0];
-				v00.a.x = quadPos.x * scaledInvFrame.x - 1.0f;
-				v00.a.y = quadPos.y * scaledInvFrame.y + 1.0f;
-				v00.a.z = 0.0f;
-				v00.b.x = uvX;
-				v00.b.y = uvY;
-
-				Vertex3f2f& v10 = vertexItr[1];
-				v10.a.x = (quadPos.x + quadRight) * scaledInvFrame.x - 1.0f;
-				v10.a.y = quadPos.y * scaledInvFrame.y + 1.0f;
-				v10.a.z = 0.0f;
-				v10.b.x = uvX + uvRight;
-				v10.b.y = uvY;
-
-				Vertex3f2f& v01 = vertexItr[2];
-				v01.a.x = quadPos.x * scaledInvFrame.x - 1.0f;
-				v01.a.y = (quadPos.y + quadDown) * scaledInvFrame.y + 1.0f;
-				v01.a.z = 0.0f;
-				v01.b.x = uvX;
-				v01.b.y = uvY + uvDown;
-
-				Vertex3f2f& v11 = vertexItr[3];
-				v11.a.x = (quadPos.x + quadRight) * scaledInvFrame.x - 1.0f;
-				v11.a.y = (quadPos.y + quadDown) * scaledInvFrame.y + 1.0f;
-				v11.a.z = 0.0f;
-				v11.b.x = uvX + uvRight;
-				v11.b.y = uvY + uvDown;
-
-				indexItr[0] = vertexIndex + 0;
-				indexItr[1] = vertexIndex + 3;
-				indexItr[2] = vertexIndex + 1;
-				indexItr[3] = vertexIndex + 0;
-				indexItr[4] = vertexIndex + 2;
-				indexItr[5] = vertexIndex + 3;
-
-				drawPos.x += glyph.size.x;
-
-				if (drawPos.x >= scaledFrameSize.x)
+				if (foundGlyph != nullptr)
 				{
-					drawPos.x = rd.area.position.x;
-					drawPos.y = drawPos.y - fontLineHeight;
-				}
-			}
+					BitmapGlyph glyph = *foundGlyph;
 
-			vertexItr += 4;
-			indexItr += 6;
+					Vec2f quadPos = drawPos;
+					float quadRight = glyph.size.x;
+					float quadDown = -(glyph.size.y + 1.0f);
+
+					float uvX = glyph.texturePosition.x * invTexSize.x;
+					float uvY = glyph.texturePosition.y * invTexSize.y;
+					float uvRight = glyph.size.x * invTexSize.x;
+					float uvDown = glyph.size.y * invTexSize.y + invTexSize.y;
+
+					Vertex3f2f& v00 = vertexItr[0];
+					v00.a.x = quadPos.x * scaledInvFrame.x - 1.0f;
+					v00.a.y = quadPos.y * scaledInvFrame.y + 1.0f;
+					v00.a.z = 0.0f;
+					v00.b.x = uvX;
+					v00.b.y = uvY;
+
+					Vertex3f2f& v10 = vertexItr[1];
+					v10.a.x = (quadPos.x + quadRight) * scaledInvFrame.x - 1.0f;
+					v10.a.y = quadPos.y * scaledInvFrame.y + 1.0f;
+					v10.a.z = 0.0f;
+					v10.b.x = uvX + uvRight;
+					v10.b.y = uvY;
+
+					Vertex3f2f& v01 = vertexItr[2];
+					v01.a.x = quadPos.x * scaledInvFrame.x - 1.0f;
+					v01.a.y = (quadPos.y + quadDown) * scaledInvFrame.y + 1.0f;
+					v01.a.z = 0.0f;
+					v01.b.x = uvX;
+					v01.b.y = uvY + uvDown;
+
+					Vertex3f2f& v11 = vertexItr[3];
+					v11.a.x = (quadPos.x + quadRight) * scaledInvFrame.x - 1.0f;
+					v11.a.y = (quadPos.y + quadDown) * scaledInvFrame.y + 1.0f;
+					v11.a.z = 0.0f;
+					v11.b.x = uvX + uvRight;
+					v11.b.y = uvY + uvDown;
+
+					indexItr[0] = vertexIndex + 0;
+					indexItr[1] = vertexIndex + 3;
+					indexItr[2] = vertexIndex + 1;
+					indexItr[3] = vertexIndex + 0;
+					indexItr[4] = vertexIndex + 2;
+					indexItr[5] = vertexIndex + 3;
+
+					drawPos.x += glyph.size.x;
+
+					if (drawPos.x >= scaledFrameSize.x)
+					{
+						drawPos.x = rd.area.position.x;
+						drawPos.y = drawPos.y - fontLineHeight;
+					}
+				}
+
+				// TODO: Do we need to have empty char drawing in an else here?
+
+				vertexItr += 4;
+				indexItr += 6;
+			}
+			else // Not a valid UTF8 character, try next byte
+			{
+				strItr += 1;
+			}
 		}
 	}
 

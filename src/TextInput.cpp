@@ -2,9 +2,10 @@
 
 #include "IncludeGLFW.hpp"
 
-#include "TextInputHandler.hpp"
 #include "Window.hpp"
 #include "StringRef.hpp"
+#include "EncodingUtf8.hpp"
+#include "TextInputHandler.hpp"
 
 TextInput::TextInput() :
 	windowHandle(nullptr),
@@ -51,35 +52,9 @@ void TextInput::TextCallback(unsigned int codepoint)
 	if (this->currentFocusedHandler != nullptr)
 	{
 		char buffer[4];
-		StringRef text;
+		unsigned int bytesEncoded = EncodingUtf8::EncodeCodepoint(codepoint, buffer);
 
-		if (codepoint <= 0x7F)
-		{
-			buffer[0] = codepoint;
-			text = StringRef(buffer, 1);
-		}
-		else if (codepoint <= 0x7FF)
-		{
-			buffer[0] = 0xC0 | codepoint >> 6 & 0x1F;
-			buffer[1] = 0x80 | codepoint & 0x3F;
-			text = StringRef(buffer, 2);
-		}
-		else if (codepoint <= 0xFFFF)
-		{
-			buffer[0] = 0xE0 | codepoint >> 12 & 0xF;
-			buffer[1] = 0x80 | codepoint >> 6 & 0x3F;
-			buffer[2] = 0x80 | codepoint & 0x3F;
-			text = StringRef(buffer, 3);
-		}
-		else
-		{
-			buffer[0] = 0xF0 | codepoint >> 18 & 0x7;
-			buffer[1] = 0x80 | codepoint >> 12 & 0x3F;
-			buffer[2] = 0x80 | codepoint >> 6 & 0x3F;
-			buffer[3] = 0x80 | codepoint & 0x3F;
-			text = StringRef(buffer, 4);
-		}
-
-		this->currentFocusedHandler->OnTextInput(text);
+		if (bytesEncoded > 0)
+			this->currentFocusedHandler->OnTextInput(StringRef(buffer, bytesEncoded));
 	}
 }

@@ -52,6 +52,8 @@ set (KOKKO_SOURCES
 	src/DebugTextRenderer.hpp
 	src/DebugVectorRenderer.cpp
 	src/DebugVectorRenderer.hpp
+	src/EncodingUtf8.cpp
+	src/EncodingUtf8.hpp
 	src/Engine.cpp
 	src/Engine.hpp
 	src/File.cpp
