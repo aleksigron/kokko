@@ -4,11 +4,13 @@
 
 #include "KeyboardInput.hpp"
 #include "PointerInput.hpp"
+#include "TextInput.hpp"
 
 Window::Window() :
 	windowHandle(nullptr),
 	keyboardInput(nullptr),
 	pointerInput(nullptr),
+	textInput(nullptr),
 	currentSwapInterval(0)
 {
 }
@@ -17,6 +19,7 @@ Window::~Window()
 {
 	glfwTerminate();
 
+	delete textInput;
 	delete pointerInput;
 	delete keyboardInput;
 }
@@ -39,6 +42,9 @@ bool Window::Initialize(const char* windowTitle)
 
 			pointerInput = new PointerInput;
 			pointerInput->Initialize(windowHandle);
+
+			textInput = new TextInput;
+			textInput->Initialize(windowHandle);
 
 			glfwSetWindowUserPointer(windowHandle, this);
 			glfwMakeContextCurrent(windowHandle);

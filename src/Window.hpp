@@ -7,6 +7,7 @@ struct GLFWwindow;
 
 class KeyboardInput;
 class PointerInput;
+class TextInput;
 
 class Window
 {
@@ -15,6 +16,7 @@ private:
 
 	KeyboardInput* keyboardInput;
 	PointerInput* pointerInput;
+	TextInput* textInput;
 
 	int currentSwapInterval;
 	
@@ -56,6 +58,7 @@ public:
 
 	KeyboardInput* GetKeyboardInput() { return keyboardInput; }
 	PointerInput* GetPointerInput() { return pointerInput; }
+	TextInput* GetTextInput() { return textInput; }
 	
 	static Window* GetWindowObject(GLFWwindow* windowHandle);
 };

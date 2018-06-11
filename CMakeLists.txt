@@ -111,6 +111,9 @@ set (KOKKO_SOURCES
 	src/String.hpp
 	src/StringRef.cpp
 	src/StringRef.hpp
+	src/TextInputHandler.hpp
+	src/TextInput.cpp
+	src/TextInput.hpp
 	src/Texture.cpp
 	src/Texture.hpp
 	src/Time.cpp
