@@ -12,7 +12,7 @@ private:
 	SizeType length;
 	SizeType allocated;
 
-	SizeType CalculateAllocationSize(SizeType requiredSize) const;
+	static SizeType CalculateAllocationSize(SizeType currentAllocated, SizeType requiredSize);
 
 public:
 	String();

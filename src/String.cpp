@@ -9,7 +9,7 @@ String::String() : string(nullptr), length(0), allocated(0)
 String::String(const String& s)
 {
 	length = s.GetLength();
-	allocated = this->CalculateAllocationSize(length);
+	allocated = CalculateAllocationSize(0, length);
 
 	if (allocated > 0)
 	{
@@ -35,7 +35,7 @@ String::String(String&& s)
 String::String(const char* s)
 {
 	length = std::strlen(s);
-	allocated = this->CalculateAllocationSize(length);
+	allocated = CalculateAllocationSize(0, length);
 
 	if (allocated > 0)
 	{
@@ -50,7 +50,7 @@ String::String(const char* s)
 String::String(StringRef s)
 {
 	length = s.len;
-	allocated = this->CalculateAllocationSize(length);
+	allocated = CalculateAllocationSize(0, length);
 
 	if (allocated > 0)
 	{
@@ -75,7 +75,7 @@ String& String::operator=(const String& s)
 	{
 		delete[] string;
 
-		allocated = this->CalculateAllocationSize(newLength);
+		allocated = CalculateAllocationSize(allocated, newLength);
 		string = new char[allocated + 1];
 	}
 
@@ -114,7 +114,7 @@ void String::Append(StringRef s)
 
 	if (allocated < requiredLength)
 	{
-		SizeType newAllocated = this->CalculateAllocationSize(requiredLength);
+		SizeType newAllocated = CalculateAllocationSize(allocated, requiredLength);
 
 		char* newString = new char[newAllocated + 1];
 		std::memcpy(newString, string, length);
@@ -143,7 +143,7 @@ void String::Append(char c)
 {
 	if (allocated < length + 1)
 	{
-		SizeType newAllocated = this->CalculateAllocationSize(length + 1);
+		SizeType newAllocated = CalculateAllocationSize(this->allocated, length + 1);
 
 		char* newString = new char[newAllocated + 1];
 		std::memcpy(newString, string, length);
@@ -195,14 +195,14 @@ void String::Resize(SizeType size)
 	}
 }
 
-String::SizeType String::CalculateAllocationSize(SizeType requiredSize) const
+String::SizeType String::CalculateAllocationSize(SizeType currentAllocated, SizeType requiredSize)
 {
 	SizeType newAllocated;
 	
-	if (allocated > 1024)
-		newAllocated = static_cast<SizeType>(allocated * 1.5);
-	else if (allocated > 16)
-		newAllocated = allocated * 2;
+	if (currentAllocated > 1024)
+		newAllocated = static_cast<SizeType>(currentAllocated * 1.5);
+	else if (currentAllocated > 16)
+		newAllocated = currentAllocated * 2;
 	else
 		newAllocated = 31;
 
