@@ -64,3 +64,42 @@ unsigned int EncodingUtf8::DecodeCodepoint(const char* input, unsigned int& code
 
 	return bytesDecoded;
 }
+
+unsigned int EncodingUtf8::CountCharacters(StringRef input)
+{
+	unsigned int count = 0;
+
+	const char* itr = input.str;
+	const char* end = itr + input.len;
+	while (itr < end)
+	{
+		char c = *itr;
+
+		if ((c & 0x80) == 0x00)
+		{
+			itr += 1;
+			++count;
+		}
+		else if ((c & 0xe0) == 0xc0)
+		{
+			itr += 2;
+			++count;
+		}
+		else if ((c & 0xf0) == 0xe0)
+		{
+			itr += 3;
+			++count;
+		}
+		else if ((c & 0xf8) == 0xf0)
+		{
+			itr += 4;
+			++count;
+		}
+		else // Not a valid first byte of character
+		{
+			itr += 1;
+		}
+	}
+
+	return count;
+}
