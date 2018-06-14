@@ -1,11 +1,13 @@
 #pragma once
 
+#include "String.hpp"
 #include "StringRef.hpp"
 #include "Rectangle.hpp"
+#include "TextInputHandler.hpp"
 
 class DebugTextRenderer;
 
-class DebugConsole
+class DebugConsole : public TextInputHandler
 {
 private:
 	struct LogEntry
@@ -29,9 +31,15 @@ private:
 	unsigned int stringDataUsed;
 	unsigned int stringDataAllocated;
 
+	String inputValue;
+
 public:
 	DebugConsole(DebugTextRenderer* textRenderer);
 	~DebugConsole();
+
+	virtual void OnTextInput(StringRef text);
+	void RequestFocus();
+	void ReleaseFocus();
 
 	void SetDrawArea(const Rectangle& area);
 

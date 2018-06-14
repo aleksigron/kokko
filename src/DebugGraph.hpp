@@ -30,4 +30,6 @@ public:
 	void DrawToVectorRenderer();
 
 	void AddDataPoint(double data);
+
+	double GetAverageOverLastSeconds(double seconds);
 };

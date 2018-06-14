@@ -18,7 +18,9 @@
 
 Debug::Debug() :
 	window(nullptr),
-	mode(DebugMode::None)
+	mode(DebugMode::None),
+	currentFrameRate(0.0),
+	nextFrameRateUpdate(-1.0)
 {
 	vectorRenderer = new DebugVectorRenderer;
 	textRenderer = new DebugTextRenderer;
@@ -71,38 +73,52 @@ void Debug::Render()
 
 	if (window != nullptr)
 	{
+		DebugMode oldMode = this->mode;
+
 		KeyboardInput* keyboard = window->GetKeyboardInput();
 
 		// Update mode
-		if (keyboard->GetKeyDown(Key::N_1))
+		if (keyboard->GetKeyDown(Key::Escape))
 		{
 			this->mode = DebugMode::None;
 		}
-		else if (keyboard->GetKeyDown(Key::N_2))
+		else if (keyboard->GetKeyDown(Key::F1))
 		{
 			this->mode = DebugMode::Console;
 		}
-		else if (keyboard->GetKeyDown(Key::N_3))
+		else if (keyboard->GetKeyDown(Key::F2))
 		{
 			this->mode = DebugMode::FrameTime;
 		}
 
 		vsync = window->GetSwapInterval() != 0;
-		if (keyboard->GetKeyDown(Key::N_0))
+		if (keyboard->GetKeyDown(Key::F8))
 		{
 			vsync = !vsync;
 			window->SetSwapInterval(vsync ? 1 : 0);
 		}
+
+		if (oldMode != DebugMode::Console && this->mode == DebugMode::Console)
+			console->RequestFocus();
+		else if (oldMode == DebugMode::Console && this->mode != DebugMode::Console)
+			console->ReleaseFocus();
 	}
 
-	char modeNoneChar = (mode == DebugMode::None) ? '*' : ' ';
 	char modeLogChar = (mode == DebugMode::Console) ? '*' : ' ';
 	char modeTimeChar = (mode == DebugMode::FrameTime) ? '*' : ' ';
-	const char* vsyncStr = vsync ? "On" : "Off";
+	char vsyncChar = vsync ? 'Y' : 'N';
+
+	double now = Time::GetRunningTime();
+	if (now > nextFrameRateUpdate)
+	{
+		currentFrameRate = 1.0 / graph->GetAverageOverLastSeconds(0.15);
+		nextFrameRateUpdate = now + 0.15;
+	}
 
 	// Draw debug mode guide
 	char buffer[128];
-	sprintf(buffer, "Debug mode: [1]None%c [2]Log%c [3]FrameTime%c | [0]Vsync: %s", modeNoneChar, modeLogChar, modeTimeChar, vsyncStr);
+	const char* format = "Debug: [F1]Console%c [F2]FrameTime%c [F8]Vsync: %c, %.1f fps";
+	snprintf(buffer, sizeof(buffer), format, modeLogChar, modeTimeChar, vsyncChar, currentFrameRate);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f), true);
 
 	// Add frame time to debug graph
@@ -120,7 +136,7 @@ void Debug::Render()
 			break;
 
 		case DebugMode::FrameTime:
-			this->DrawFrameTimeStats();
+			graph->DrawToVectorRenderer();
 			break;
 	}
 
@@ -140,21 +156,4 @@ void Debug::CheckOpenGlErrors()
 
 		log->Log(StringRef(buffer));
 	}
-}
-
-void Debug::DrawFrameTimeStats()
-{
-	Engine* engine = Engine::GetInstance();
-
-	float deltaTime = Time::GetDeltaTime();
-	float fps = 1.0f / deltaTime;
-	float ms = deltaTime * 1000.0f;
-
-	char frameRateText[32];
-	sprintf(frameRateText, "%.1f fps, %.1f ms", double(fps), double(ms));
-
-	Vec2f position(0.0f, textRenderer->GetFont()->GetLineHeight());
-	textRenderer->AddText(StringRef(frameRateText), position, true);
-
-	graph->DrawToVectorRenderer();
 }

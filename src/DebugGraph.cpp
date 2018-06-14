@@ -44,8 +44,8 @@ void DebugGraph::DrawToVectorRenderer()
 	}
 
 	double diff = max - min;
-	double rangeMin = min/* - diff * 0.1*/;
-	double rangeMax = max/* + diff * 0.1*/;
+	double rangeMin = min - diff * 0.1;
+	double rangeMax = max + diff * 0.1;
 	double rangeSize = rangeMax - rangeMin;
 
 	double timeNow = Time::GetRunningTime();
@@ -61,9 +61,8 @@ void DebugGraph::DrawToVectorRenderer()
 			double y = (dataPoint.data - rangeMin) / rangeSize;
 			double x = (dataPoint.time - cutoff) / this->timeRange;
 
-			Vec2f pos;
-			pos.x = drawArea.position.x + static_cast<float>(x) * drawArea.size.x;
-			pos.y = drawArea.position.y + drawArea.size.y - (static_cast<float>(y) * drawArea.size.y);
+			prev.x = drawArea.position.x + static_cast<float>(x) * drawArea.size.x;
+			prev.y = drawArea.position.y + drawArea.size.y - (static_cast<float>(y) * drawArea.size.y);
 		}
 
 		for (unsigned i = 1, count = data.GetCount(); i < count; ++i)
@@ -88,4 +87,32 @@ void DebugGraph::AddDataPoint(double value)
 	DataPoint& dataPoint = data.Push();
 	dataPoint.data = value;
 	dataPoint.time = Time::GetRunningTime();
+}
+
+double DebugGraph::GetAverageOverLastSeconds(double seconds)
+{
+	if (data.GetCount() > 0)
+	{
+		double lastTime = data.At(data.GetCount() - 1).time - seconds;
+
+		double total = 0.0;
+		int framesAdded = 0;
+
+		for (int i = data.GetCount() - 1; i >= 0; --i)
+		{
+			const DataPoint point = data.At(i);
+
+			if (point.time > lastTime)
+			{
+				total += point.data;
+				++framesAdded;
+			}
+			else
+				break;
+		}
+
+		return total / framesAdded;
+	}
+	else
+		return 0.0;
 }

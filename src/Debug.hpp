@@ -19,6 +19,9 @@ private:
 
 	Window* window;
 
+	double currentFrameRate;
+	double nextFrameRateUpdate;
+
 	enum class DebugMode
 	{
 		None,
@@ -26,8 +29,6 @@ private:
 		FrameTime
 	}
 	mode;
-
-	void DrawFrameTimeStats();
 
 public:
 	Debug();

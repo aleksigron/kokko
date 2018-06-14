@@ -2,6 +2,9 @@
 
 #include <cstring>
 
+#include "Engine.hpp"
+#include "Window.hpp"
+#include "TextInput.hpp"
 #include "BitmapFont.hpp"
 #include "DebugTextRenderer.hpp"
 
@@ -22,6 +25,21 @@ DebugConsole::~DebugConsole()
 {
 	delete[] stringData;
 	delete[] entries;
+}
+
+void DebugConsole::OnTextInput(StringRef text)
+{
+	inputValue.Append(text);
+}
+
+void DebugConsole::RequestFocus()
+{
+	Engine::GetInstance()->GetMainWindow()->GetTextInput()->RequestFocus(this);
+}
+
+void DebugConsole::ReleaseFocus()
+{
+	Engine::GetInstance()->GetMainWindow()->GetTextInput()->ReleaseFocus(this);
 }
 
 void DebugConsole::SetDrawArea(const Rectangle& area)
@@ -121,6 +139,11 @@ void DebugConsole::AddLogEntry(StringRef text)
 
 void DebugConsole::DrawToTextRenderer()
 {
+	// input text
+
+	Vec2f position(0.0f, textRenderer->GetFont()->GetLineHeight());
+	textRenderer->AddText(this->inputValue.GetRef(), position, true);
+
 	// Go over each entry
 	// Add them to the DebugTextRenderer
 
