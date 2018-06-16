@@ -6,6 +6,7 @@
 #include "TextInputHandler.hpp"
 
 class DebugTextRenderer;
+class DebugVectorRenderer;
 
 class DebugConsole : public TextInputHandler
 {
@@ -18,6 +19,7 @@ private:
 	};
 
 	DebugTextRenderer* textRenderer;
+	DebugVectorRenderer* vectorRenderer;
 
 	Rectangle drawArea;
 
@@ -34,7 +36,7 @@ private:
 	String inputValue;
 
 public:
-	DebugConsole(DebugTextRenderer* textRenderer);
+	DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
 	~DebugConsole();
 
 	virtual void OnTextInput(StringRef text);
@@ -45,5 +47,5 @@ public:
 
 	void AddLogEntry(StringRef text);
 
-	void DrawToTextRenderer();
+	void DrawToRenderers();
 };

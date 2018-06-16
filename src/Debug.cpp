@@ -25,7 +25,7 @@ Debug::Debug() :
 	vectorRenderer = new DebugVectorRenderer;
 	textRenderer = new DebugTextRenderer;
 	graph = new DebugGraph(vectorRenderer);
-	console = new DebugConsole(textRenderer);
+	console = new DebugConsole(textRenderer, vectorRenderer);
 	log = new DebugLog(console);
 }
 
@@ -132,7 +132,7 @@ void Debug::Render()
 			break;
 
 		case DebugMode::Console:
-			console->DrawToTextRenderer();
+			console->DrawToRenderers();
 			break;
 
 		case DebugMode::FrameTime:

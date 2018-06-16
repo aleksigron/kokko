@@ -76,8 +76,8 @@ void App::Update()
 	Color white(1.0f, 1.0f, 1.0f, 1.0f);
 
 	DebugVectorRenderer* debugVector = debug->GetVectorRenderer();
-	debugVector->DrawCube(Mat4x4f(), green);
-	debugVector->DrawSphere(Vec3f(), 0.5f, yellow);
+	debugVector->DrawWireCube(Mat4x4f(), green);
+	debugVector->DrawWireSphere(Vec3f(), 0.5f, yellow);
 	debugVector->DrawLine(Vec3f(), Vec3f(0.2f, 0.2f, 0.2f), white);
 	debugVector->DrawLine(Vec3f(), Vec3f(-0.2f, 0.2f, 0.2f), white);
 	debugVector->DrawLine(Vec3f(), Vec3f(0.2f, 0.2f, -0.2f), white);

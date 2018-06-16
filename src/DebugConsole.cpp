@@ -7,9 +7,11 @@
 #include "TextInput.hpp"
 #include "BitmapFont.hpp"
 #include "DebugTextRenderer.hpp"
+#include "DebugVectorRenderer.hpp"
 
-DebugConsole::DebugConsole(DebugTextRenderer* textRenderer) :
+DebugConsole::DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
 	textRenderer(textRenderer),
+	vectorRenderer(vectorRenderer),
 	entries(nullptr),
 	entryFirst(0),
 	entryCount(0),
@@ -137,19 +139,27 @@ void DebugConsole::AddLogEntry(StringRef text)
 	}
 }
 
-void DebugConsole::DrawToTextRenderer()
+void DebugConsole::DrawToRenderers()
 {
-	// input text
+	Color white(1.0f, 1.0f, 1.0f);
 
-	Vec2f position(0.0f, textRenderer->GetFont()->GetLineHeight());
-	textRenderer->AddText(this->inputValue.GetRef(), position, true);
+	int lineHeight = textRenderer->GetFont()->GetLineHeight();
+	Vec2f areaSize = this->drawArea.size;
+	Vec2f areaPos = this->drawArea.position;
+
+	// Input text
+
+	Vec2f inputPos(areaPos.x, areaPos.y + areaSize.y - lineHeight);
+	textRenderer->AddText(this->inputValue.GetRef(), inputPos, true);
+	
+	// Input field separator
+	Rectangle separatorRectangle;
+	separatorRectangle.position = inputPos + Vec2f(0.0f, -1.0f);
+	separatorRectangle.size = Vec2f(areaSize.x, 1);
+	vectorRenderer->DrawRectangleScreen(separatorRectangle, white);
 
 	// Go over each entry
 	// Add them to the DebugTextRenderer
-
-	Vec2f areaSize = this->drawArea.size;
-	Vec2f areaPos = this->drawArea.position;
-	int lineHeight = textRenderer->GetFont()->GetLineHeight();
 	int rowsUsed = 0;
 
 	int first = static_cast<int>(entryFirst);

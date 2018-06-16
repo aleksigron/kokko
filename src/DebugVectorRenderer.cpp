@@ -73,7 +73,7 @@ void DebugVectorRenderer::CreateMeshes()
 			4, 5, 5, 7, 7, 6, 6, 4
 		};
 
-		unsigned int& cubeMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Cube)];
+		unsigned int& cubeMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::WireCube)];
 		cubeMeshId = rm->CreateMesh();
 		Mesh& cubeMesh = rm->GetMesh(cubeMeshId);
 
@@ -129,7 +129,7 @@ void DebugVectorRenderer::CreateMeshes()
 			66, 67, 67, 68, 68, 69, 69, 70, 70, 71, 71, 48
 		};
 
-		unsigned int& sphereMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Sphere)];
+		unsigned int& sphereMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::WireSphere)];
 		sphereMeshId = rm->CreateMesh();
 		Mesh& sphereMesh = rm->GetMesh(sphereMeshId);
 
@@ -143,6 +143,32 @@ void DebugVectorRenderer::CreateMeshes()
 
 		sphereMesh.SetPrimitiveMode(Mesh::PrimitiveMode::Lines);
 		sphereMesh.Upload_3f(vertices, indices);
+	}
+
+	{
+		Vertex3f rectangleVertexData[] = {
+			Vertex3f{ Vec3f(-0.5f, 0.5f, 0.0f) },
+			Vertex3f{ Vec3f(0.5f, 0.5f, 0.0f) },
+			Vertex3f{ Vec3f(0.5f, -0.5f, 0.0f) },
+			Vertex3f{ Vec3f(-0.5f, -0.5f, 0.0f) }
+		};
+
+		unsigned short rectangleIndexData[] = { 0, 1, 2, 3 };
+
+		unsigned int& rectangleMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Rectangle)];
+		rectangleMeshId = rm->CreateMesh();
+		Mesh& rectangleMesh = rm->GetMesh(rectangleMeshId);
+
+		BufferRef<Vertex3f> vertices;
+		vertices.data = rectangleVertexData;
+		vertices.count = sizeof(rectangleVertexData) / sizeof(Vertex3f);
+
+		BufferRef<unsigned short> indices;
+		indices.data = rectangleIndexData;
+		indices.count = sizeof(rectangleIndexData) / sizeof(unsigned short);
+
+		rectangleMesh.SetPrimitiveMode(Mesh::PrimitiveMode::TriangleFan);
+		rectangleMesh.Upload_3f(vertices, indices);
 	}
 
 	meshesInitialized = true;
@@ -184,13 +210,13 @@ void DebugVectorRenderer::DrawLine(const Vec3f& start, const Vec3f& end, const C
 	}
 }
 
-void DebugVectorRenderer::DrawCube(const Mat4x4f& transform, const Color& color)
+void DebugVectorRenderer::DrawWireCube(const Mat4x4f& transform, const Color& color)
 {
 	if (primitiveCount < primitiveAllocated)
 	{
 		Primitive* prim = primitives + primitiveCount;
 		prim->screenSpace = false;
-		prim->type = PrimitiveType::Cube;
+		prim->type = PrimitiveType::WireCube;
 		prim->transform = transform;
 		prim->color = color;
 
@@ -198,14 +224,32 @@ void DebugVectorRenderer::DrawCube(const Mat4x4f& transform, const Color& color)
 	}
 }
 
-void DebugVectorRenderer::DrawSphere(const Vec3f& position, float radius, const Color& color)
+void DebugVectorRenderer::DrawWireSphere(const Vec3f& position, float radius, const Color& color)
 {
 	if (primitiveCount < primitiveAllocated)
 	{
 		Primitive* prim = primitives + primitiveCount;
 		prim->screenSpace = false;
-		prim->type = PrimitiveType::Sphere;
+		prim->type = PrimitiveType::WireSphere;
 		prim->transform = Mat4x4f::Translate(position) * Mat4x4f::Scale(radius);
+		prim->color = color;
+
+		++primitiveCount;
+	}
+}
+
+void DebugVectorRenderer::DrawRectangleScreen(const Rectangle& rectangle, const Color& color)
+{
+	if (primitiveCount < primitiveAllocated)
+	{
+		Vec2f center = rectangle.position + rectangle.size * 0.5f;
+		Vec3f center3(center.x, center.y, 0.0f);
+		Vec3f scale(rectangle.size.x, rectangle.size.y, 1.0f);
+
+		Primitive* prim = primitives + primitiveCount;
+		prim->screenSpace = true;
+		prim->type = PrimitiveType::Rectangle;
+		prim->transform = Mat4x4f::Translate(center3) * Mat4x4f::Scale(scale);
 		prim->color = color;
 
 		++primitiveCount;
