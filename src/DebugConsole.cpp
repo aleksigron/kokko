@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "Engine.hpp"
+#include "Time.hpp"
 #include "Window.hpp"
 #include "TextInput.hpp"
 #include "BitmapFont.hpp"
@@ -19,7 +20,8 @@ DebugConsole::DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer*
 	stringData(nullptr),
 	stringDataFirst(0),
 	stringDataUsed(0),
-	stringDataAllocated(0)
+	stringDataAllocated(0),
+	lastTextInputTime(0)
 {
 }
 
@@ -32,6 +34,7 @@ DebugConsole::~DebugConsole()
 void DebugConsole::OnTextInput(StringRef text)
 {
 	inputValue.Append(text);
+	lastTextInputTime = Time::GetRunningTime();
 }
 
 void DebugConsole::RequestFocus()
@@ -143,7 +146,8 @@ void DebugConsole::DrawToRenderers()
 {
 	Color white(1.0f, 1.0f, 1.0f);
 
-	int lineHeight = textRenderer->GetFont()->GetLineHeight();
+	const BitmapFont* font = textRenderer->GetFont();
+	int lineHeight = font->GetLineHeight();
 	Vec2f areaSize = this->drawArea.size;
 	Vec2f areaPos = this->drawArea.position;
 
@@ -153,10 +157,25 @@ void DebugConsole::DrawToRenderers()
 	textRenderer->AddText(this->inputValue.GetRef(), inputPos, true);
 	
 	// Input field separator
+
 	Rectangle separatorRectangle;
 	separatorRectangle.position = inputPos + Vec2f(0.0f, -1.0f);
 	separatorRectangle.size = Vec2f(areaSize.x, 1);
 	vectorRenderer->DrawRectangleScreen(separatorRectangle, white);
+
+	// Input field caret
+
+	double now = Time::GetRunningTime();
+	bool showCaret = std::fmod(now - lastTextInputTime, 0.9) < 0.45;
+
+	if (showCaret)
+	{
+		Rectangle caretRectangle;
+		caretRectangle.position = Vec2f(inputValue.GetLength() * font->GetGlyphWidth(), inputPos.y);
+		caretRectangle.size = Vec2f(1, lineHeight);
+
+		vectorRenderer->DrawRectangleScreen(caretRectangle, white);
+	}
 
 	// Go over each entry
 	// Add them to the DebugTextRenderer

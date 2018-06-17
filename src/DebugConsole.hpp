@@ -34,6 +34,7 @@ private:
 	unsigned int stringDataAllocated;
 
 	String inputValue;
+	double lastTextInputTime;
 
 public:
 	DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
