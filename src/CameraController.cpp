@@ -11,8 +11,9 @@
 #include "Engine.hpp"
 #include "Time.hpp"
 #include "Window.hpp"
+#include "InputManager.hpp"
 #include "PointerInput.hpp"
-#include "KeyboardInput.hpp"
+#include "KeyboardInputView.hpp"
 
 #include "Scene.hpp"
 
@@ -59,9 +60,9 @@ void CameraController::Update()
 
 	Scene* scene = controlledCamera->GetContainingScene();
 
-	Window* mainWindow = Engine::GetInstance()->GetMainWindow();
-	PointerInput* pi = mainWindow->GetPointerInput();
-	KeyboardInput* kb = mainWindow->GetKeyboardInput();
+	InputManager* inputManagaer = Engine::GetInstance()->GetMainWindow()->GetInputManager();
+	PointerInput* pi = inputManagaer->GetPointerInput();
+	KeyboardInputView* kb = inputManagaer->GetKeyboardInputView();
 
 	if (kb->GetKeyDown(Key::Space) && mouseGrabActive == false)
 	{

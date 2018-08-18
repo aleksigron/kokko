@@ -5,6 +5,7 @@
 #include "Engine.hpp"
 #include "Time.hpp"
 #include "Window.hpp"
+#include "InputManager.hpp"
 #include "TextInput.hpp"
 #include "BitmapFont.hpp"
 #include "DebugTextRenderer.hpp"
@@ -39,12 +40,12 @@ void DebugConsole::OnTextInput(StringRef text)
 
 void DebugConsole::RequestFocus()
 {
-	Engine::GetInstance()->GetMainWindow()->GetTextInput()->RequestFocus(this);
+	Engine::GetInstance()->GetMainWindow()->GetInputManager()->GetTextInput()->RequestFocus(this);
 }
 
 void DebugConsole::ReleaseFocus()
 {
-	Engine::GetInstance()->GetMainWindow()->GetTextInput()->ReleaseFocus(this);
+	Engine::GetInstance()->GetMainWindow()->GetInputManager()->GetTextInput()->ReleaseFocus(this);
 }
 
 void DebugConsole::SetDrawArea(const Rectangle& area)

@@ -2,15 +2,11 @@
 
 #include "IncludeOpenGL.hpp"
 
-#include "KeyboardInput.hpp"
-#include "PointerInput.hpp"
-#include "TextInput.hpp"
+#include "InputManager.hpp"
 
 Window::Window() :
 	windowHandle(nullptr),
-	keyboardInput(nullptr),
-	pointerInput(nullptr),
-	textInput(nullptr),
+	inputManager(nullptr),
 	currentSwapInterval(0)
 {
 }
@@ -19,9 +15,7 @@ Window::~Window()
 {
 	glfwTerminate();
 
-	delete textInput;
-	delete pointerInput;
-	delete keyboardInput;
+	delete inputManager;
 }
 
 bool Window::Initialize(const char* windowTitle)
@@ -37,14 +31,8 @@ bool Window::Initialize(const char* windowTitle)
 		
 		if (windowHandle != nullptr)
 		{
-			keyboardInput = new KeyboardInput;
-			keyboardInput->Initialize(windowHandle);
-
-			pointerInput = new PointerInput;
-			pointerInput->Initialize(windowHandle);
-
-			textInput = new TextInput;
-			textInput->Initialize(windowHandle);
+			inputManager = new InputManager;
+			inputManager->Initialize(windowHandle);
 
 			glfwSetWindowUserPointer(windowHandle, this);
 			glfwMakeContextCurrent(windowHandle);
@@ -71,14 +59,9 @@ bool Window::ShouldClose()
 
 void Window::UpdateInput()
 {
-	if (keyboardInput != nullptr)
+	if (inputManager != nullptr)
 	{
-		keyboardInput->Update();
-	}
-
-	if (pointerInput != nullptr)
-	{
-		pointerInput->Update();
+		inputManager->Update();
 	}
 }
 

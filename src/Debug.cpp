@@ -7,7 +7,8 @@
 #include "Engine.hpp"
 #include "Time.hpp"
 #include "Window.hpp"
-#include "KeyboardInput.hpp"
+#include "InputManager.hpp"
+#include "KeyboardInputView.hpp"
 #include "BitmapFont.hpp"
 
 #include "DebugVectorRenderer.hpp"
@@ -75,7 +76,7 @@ void Debug::Render()
 	{
 		DebugMode oldMode = this->mode;
 
-		KeyboardInput* keyboard = window->GetKeyboardInput();
+		KeyboardInputView* keyboard = window->GetInputManager()->GetKeyboardInputView();
 
 		// Update mode
 		if (keyboard->GetKeyDown(Key::Escape))

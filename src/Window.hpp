@@ -5,18 +5,14 @@
 
 struct GLFWwindow;
 
-class KeyboardInput;
-class PointerInput;
-class TextInput;
+class InputManager;
 
 class Window
 {
 private:
 	GLFWwindow* windowHandle;
-
-	KeyboardInput* keyboardInput;
-	PointerInput* pointerInput;
-	TextInput* textInput;
+	
+	InputManager* inputManager;
 
 	int currentSwapInterval;
 	
@@ -56,9 +52,7 @@ public:
 	void SetSwapInterval(int swapInterval);
 	int GetSwapInterval() const { return currentSwapInterval; }
 
-	KeyboardInput* GetKeyboardInput() { return keyboardInput; }
-	PointerInput* GetPointerInput() { return pointerInput; }
-	TextInput* GetTextInput() { return textInput; }
+	InputManager* GetInputManager() { return inputManager; }
 	
 	static Window* GetWindowObject(GLFWwindow* windowHandle);
 };

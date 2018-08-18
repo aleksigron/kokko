@@ -68,9 +68,13 @@ set (KOKKO_SOURCES
 	src/IncludeOpenGL.hpp
 	src/IncludeGLFW.hpp
 	src/IndexedContainer.hpp
+	src/InputManager.cpp
+	src/InputManager.hpp
 	src/JsonReader.hpp
 	src/KeyboardInput.cpp
 	src/KeyboardInput.hpp
+	src/KeyboardInputView.cpp
+	src/KeyboardInputView.hpp
 	src/Mat2x2.hpp
 	src/Mat3x3.hpp
 	src/Mat4x4.hpp

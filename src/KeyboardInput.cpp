@@ -3,6 +3,7 @@
 #include "IncludeGLFW.hpp"
 
 #include "Window.hpp"
+#include "InputManager.hpp"
 
 KeyboardInput::KeyboardInput() : windowHandle(nullptr), keyStateCount(0)
 {
@@ -59,7 +60,7 @@ void KeyboardInput::Update()
 
 void KeyboardInput::_KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	KeyboardInput* self = Window::GetWindowObject(window)->GetKeyboardInput();
+	KeyboardInput* self = Window::GetWindowObject(window)->GetInputManager()->GetKeyboardInput();
 	self->KeyCallback(key, scancode, action, mods);
 }
 
