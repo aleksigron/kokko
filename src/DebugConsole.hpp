@@ -48,5 +48,5 @@ public:
 
 	void AddLogEntry(StringRef text);
 
-	void DrawToRenderers();
+	void UpdateAndDraw();
 };

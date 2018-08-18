@@ -133,7 +133,7 @@ void Debug::Render()
 			break;
 
 		case DebugMode::Console:
-			console->DrawToRenderers();
+			console->UpdateAndDraw();
 			break;
 
 		case DebugMode::FrameTime:

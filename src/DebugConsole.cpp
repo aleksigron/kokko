@@ -4,9 +4,12 @@
 
 #include "Engine.hpp"
 #include "Time.hpp"
+
 #include "Window.hpp"
 #include "InputManager.hpp"
+#include "KeyboardInputView.hpp"
 #include "TextInput.hpp"
+#include "EncodingUtf8.hpp"
 #include "BitmapFont.hpp"
 #include "DebugTextRenderer.hpp"
 #include "DebugVectorRenderer.hpp"
@@ -82,9 +85,11 @@ void DebugConsole::AddLogEntry(StringRef text)
 		unsigned int newEntryIndex = entryFirst + entryCount;
 		++entryCount;
 
+		unsigned int charCount = EncodingUtf8::CountCharacters(inputValue.GetRef());
+
 		LogEntry& newEntry = entries[newEntryIndex % entryAllocated];
 		newEntry.text = StringRef();
-		newEntry.rows = textRenderer->GetRowCountForTextLength(text.len);
+		newEntry.rows = textRenderer->GetRowCountForTextLength(charCount);
 		newEntry.lengthWithPad = 0;
 
 		int currentRows = 0;
@@ -143,8 +148,28 @@ void DebugConsole::AddLogEntry(StringRef text)
 	}
 }
 
-void DebugConsole::DrawToRenderers()
+void DebugConsole::UpdateAndDraw()
 {
+	/* *** Update *** */
+
+	KeyboardInputView* kiv = Engine::GetInstance()->GetMainWindow()->GetInputManager()->GetKeyboardInputView();
+
+	if (kiv->GetKeyDown(Key::Enter))
+	{
+		this->AddLogEntry(this->inputValue.GetRef());
+		this->inputValue.Clear();
+	}
+
+	if (kiv->GetKeyDown(Key::Backspace))
+	{
+		unsigned currentLength = this->inputValue.GetLength();
+
+		if (currentLength > 0)
+			this->inputValue.Resize(currentLength - 1);
+	}
+
+	/* **** Draw **** */
+
 	Color white(1.0f, 1.0f, 1.0f);
 
 	const BitmapFont* font = textRenderer->GetFont();
@@ -171,8 +196,10 @@ void DebugConsole::DrawToRenderers()
 
 	if (showCaret)
 	{
+		int chars = EncodingUtf8::CountCharacters(inputValue.GetRef());
+
 		Rectangle caretRectangle;
-		caretRectangle.position = Vec2f(inputValue.GetLength() * font->GetGlyphWidth(), inputPos.y);
+		caretRectangle.position = Vec2f(chars * font->GetGlyphWidth(), inputPos.y);
 		caretRectangle.size = Vec2f(1, lineHeight);
 
 		vectorRenderer->DrawRectangleScreen(caretRectangle, white);
@@ -180,7 +207,7 @@ void DebugConsole::DrawToRenderers()
 
 	// Go over each entry
 	// Add them to the DebugTextRenderer
-	int rowsUsed = 0;
+	int rowsUsed = 1; // 1 row for input
 
 	int first = static_cast<int>(entryFirst);
 	for (int index = entryFirst + entryCount - 1; index >= first; --index)
