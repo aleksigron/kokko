@@ -221,7 +221,7 @@ void String::Clear()
 	allocated = 0;
 }
 
-inline String operator+(const String& lhs, const String& rhs)
+String operator+(const String& lhs, const String& rhs)
 {
 	String result;
 	String::SizeType leftLength = lhs.GetLength();
@@ -238,7 +238,7 @@ inline String operator+(const String& lhs, const String& rhs)
 	return result;
 }
 
-inline String operator+(const String& lhs, StringRef rhs)
+String operator+(const String& lhs, StringRef rhs)
 {
 	String result;
 	String::SizeType leftLength = lhs.GetLength();
@@ -254,7 +254,7 @@ inline String operator+(const String& lhs, StringRef rhs)
 	return result;
 }
 
-inline String operator+(StringRef lhs, const String& rhs)
+String operator+(StringRef lhs, const String& rhs)
 {
 	// Call other operator function with reversed arguments
 	return operator+(rhs, lhs);
