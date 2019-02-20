@@ -221,23 +221,6 @@ void String::Clear()
 	allocated = 0;
 }
 
-String operator+(const String& lhs, const String& rhs)
-{
-	String result;
-	String::SizeType leftLength = lhs.GetLength();
-	String::SizeType rightLength = rhs.GetLength();
-	String::SizeType combinedLength = leftLength + rightLength;
-	
-	if (combinedLength > 0)
-	{
-		result.Resize(combinedLength);
-		std::memcpy(result.Begin(), lhs.Begin(), leftLength);
-		std::memcpy(result.Begin() + leftLength, rhs.Begin(), rightLength);
-	}
-
-	return result;
-}
-
 String operator+(const String& lhs, StringRef rhs)
 {
 	String result;
@@ -256,7 +239,22 @@ String operator+(const String& lhs, StringRef rhs)
 
 String operator+(StringRef lhs, const String& rhs)
 {
-	// Call other operator function with reversed arguments
+	// Call with reversed arguments
 	return operator+(rhs, lhs);
 }
 
+String operator+(const String& lhs, const String& rhs)
+{
+	return operator+(lhs, rhs.GetRef());
+}
+
+String operator+(const String& lhs, const char* rhs)
+{
+	return operator+(lhs, StringRef(rhs));
+}
+
+String operator+(const char* lhs, const String& rhs)
+{
+	// Call with reversed arguments
+	return operator+(rhs, StringRef(lhs));
+}

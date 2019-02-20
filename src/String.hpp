@@ -56,6 +56,10 @@ public:
 	void Clear();
 };
 
-String operator+(const String& lhs, const String& rhs);
 String operator+(const String& lhs, StringRef rhs);
 String operator+(StringRef lhs, const String& rhs);
+
+String operator+(const String& lhs, const String& rhs);
+
+String operator+(const String& lhs, const char* rhs);
+String operator+(const char* lhs, const String& rhs);
