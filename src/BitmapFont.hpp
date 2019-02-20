@@ -27,8 +27,13 @@ private:
 
 	Vec2i genericGlyphSize;
 
+	static unsigned int FindPrintable(StringRef string);
+	static unsigned int FindUnprintable(StringRef string);
+	static unsigned int FindSpacesInString(StringRef string, unsigned int* posOut, unsigned int maxPositions);
+	static int ParseInt(StringRef string);
 	static void ParseBitmapRow(StringRef line, unsigned int pixels, unsigned char* bitmapOut);
 	static Vec2f CalculateTextureSize(int glyphCount, Vec2f glyphSize);
+	static bool CompareGlyphCodePointAsc(const BitmapGlyph& lhs, const BitmapGlyph& rhs);
 
 public:
 	BitmapFont();

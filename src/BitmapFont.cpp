@@ -4,7 +4,6 @@
 #include <cstring>
 
 #include "Hash.hpp"
-#include "AsciiStringUtil.hpp"
 
 #include "Engine.hpp"
 #include "App.hpp"
@@ -14,11 +13,6 @@
 #include "Sort.hpp"
 
 #include "IncludeOpenGL.hpp"
-
-static bool CompareGlyphCodePointAsc(const BitmapGlyph& lhs, const BitmapGlyph& rhs)
-{
-	return lhs.codePoint < rhs.codePoint;
-}
 
 BitmapFont::BitmapFont() :
 	textureId(0),
@@ -61,7 +55,6 @@ const BitmapGlyph* BitmapFont::GetGlyph(unsigned int codePoint) const
 bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 {
 	using uint = unsigned int;
-	using namespace AsciiStringUtil;
 
 	StringRef unprocessed;
 	unprocessed.str = content.Data();
@@ -324,4 +317,79 @@ void BitmapFont::ParseBitmapRow(StringRef line, unsigned int pixels, unsigned ch
 			bitmapOut[charIndex * 4 + j] = pixel;
 		}
 	}
+}
+
+unsigned int BitmapFont::FindPrintable(StringRef string)
+{
+	const char* itr = string.str;
+	const char* end = string.str + string.len;
+	for (; itr != end; ++itr)
+	{
+		char c = *itr;
+
+		if (c < 127 && c > 31)
+			return static_cast<unsigned int>(itr - string.str);
+	}
+
+	return string.len;
+}
+
+unsigned int BitmapFont::FindUnprintable(StringRef string)
+{
+	const char* itr = string.str;
+	const char* end = string.str + string.len;
+	for (; itr != end; ++itr)
+	{
+		char c = *itr;
+
+		if (c >= 127 || c <= 31)
+			return static_cast<unsigned int>(itr - string.str);
+	}
+
+	return string.len;
+}
+
+unsigned int BitmapFont::FindSpacesInString(StringRef string, unsigned int* posOut, unsigned int maxPositions)
+{
+	unsigned int foundCount = 0;
+
+	const char* itr = string.str;
+	const char* end = string.str + string.len;
+	for (; itr != end && foundCount < maxPositions; ++itr)
+	{
+		if (*itr == ' ')
+		{
+			posOut[foundCount] = static_cast<unsigned int>(itr - string.str);
+			++foundCount;
+		}
+	}
+
+	return foundCount;
+}
+
+int BitmapFont::ParseInt(StringRef string)
+{
+	int result = 0;
+	int sign = 1;
+
+	const char* itr = string.str;
+	const char* end = string.str + string.len;
+
+	if (*itr == '-')
+	{
+		sign = -1;
+		++itr;
+	}
+
+	for (; itr != end; ++itr)
+	{
+		result = result * 10 + (*itr - '0');
+	}
+
+	return result * sign;
+}
+
+bool BitmapFont::CompareGlyphCodePointAsc(const BitmapGlyph& lhs, const BitmapGlyph& rhs)
+{
+	return lhs.codePoint < rhs.codePoint;
 }

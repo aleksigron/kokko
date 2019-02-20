@@ -25,8 +25,6 @@ set (KOKKO_SOURCES
 	src/AppSettings.cpp
 	src/AppSettings.hpp
 	src/Array.hpp
-	src/AsciiStringUtil.cpp
-	src/AsciiStringUtil.hpp
 	src/BitfieldVariable.hpp
 	src/BitmapFont.cpp
 	src/BitmapFont.hpp
