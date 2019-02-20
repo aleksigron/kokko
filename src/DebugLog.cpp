@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include "String.hpp"
 #include "DebugConsole.hpp"
 
 DebugLog::DebugLog(DebugConsole* console) :
@@ -35,6 +36,16 @@ bool DebugLog::OpenLogFile(const char* filePath, bool append)
 	}
 
 	return false;
+}
+
+void DebugLog::Log(const char* text)
+{
+	this->Log(StringRef(text));
+}
+
+void DebugLog::Log(const String& text)
+{
+	this->Log(text.GetRef());
 }
 
 void DebugLog::Log(StringRef text)

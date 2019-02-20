@@ -2,6 +2,8 @@
 
 #include "StringRef.hpp"
 
+class String;
+
 class DebugConsole;
 
 class DebugLog
@@ -17,6 +19,8 @@ public:
 
 	bool OpenLogFile(const char* filePath, bool append);
 
+	void Log(const char* text);
+	void Log(const String& text);
 	void Log(StringRef text);
 
 	void FlushFileWrites();
