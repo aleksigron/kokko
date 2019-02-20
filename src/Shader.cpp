@@ -59,10 +59,7 @@ void Shader::SetAllocator(StackAllocator* allocator)
 
 bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 {
-	using MemberIterator = rapidjson::Value::ConstMemberIterator;
-
-	const char* vsFilePath = nullptr;
-	const char* fsFilePath = nullptr;
+	using MemberItr = rapidjson::Value::ConstMemberIterator;
 
 	StringRef uniformNames[Shader::MaxMaterialUniforms];
 	ShaderUniformType uniformTypes[Shader::MaxMaterialUniforms];
@@ -74,84 +71,85 @@ bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
 	rapidjson::Document config;
 	config.Parse(data, size);
 
-	assert(config.HasMember("vertexShaderFile"));
-	assert(config.HasMember("fragmentShaderFile"));
-
-	vsFilePath = config["vertexShaderFile"].GetString();
-	fsFilePath = config["fragmentShaderFile"].GetString();
-
-	MemberIterator renderTypeItr = config.FindMember("transparencyType");
-	if (renderTypeItr != config.MemberEnd())
+	MemberItr vsItr = config.FindMember("vertexShaderFile");
+	MemberItr fsItr = config.FindMember("fragmentShaderFile");
+	if (vsItr != config.MemberEnd() && vsItr->value.IsString() &&
+		fsItr != config.MemberEnd() && fsItr->value.IsString())
 	{
-		if (renderTypeItr->value.IsString())
+		StringRef vsPath = StringRef(vsItr->value.GetString(), vsItr->value.GetStringLength());
+		StringRef fsPath = StringRef(fsItr->value.GetString(), fsItr->value.GetStringLength());
+
+		MemberItr renderTypeItr = config.FindMember("transparencyType");
+
+		if (renderTypeItr != config.MemberEnd())
 		{
-			StringRef renderTypeStr;
-			renderTypeStr.str = renderTypeItr->value.GetString();
-			renderTypeStr.len = renderTypeItr->value.GetStringLength();
-
-			uint32_t renderTypeHash = Hash::FNV1a_32(renderTypeStr.str, renderTypeStr.len);
-
-			switch (renderTypeHash)
+			if (renderTypeItr->value.IsString())
 			{
-				case "opaque"_hash:
-					this->transparencyType = TransparencyType::Opaque;
-					break;
+				StringRef renderTypeStr;
+				renderTypeStr.str = renderTypeItr->value.GetString();
+				renderTypeStr.len = renderTypeItr->value.GetStringLength();
 
-				case "alphaTest"_hash:
-					this->transparencyType = TransparencyType::AlphaTest;
-					break;
+				uint32_t renderTypeHash = Hash::FNV1a_32(renderTypeStr.str, renderTypeStr.len);
 
-				case "transparentMix"_hash:
-					this->transparencyType = TransparencyType::TransparentMix;
-					break;
-
-				case "transparentAdd"_hash:
-					this->transparencyType = TransparencyType::TransparentAdd;
-					break;
-
-				case "transparentSub"_hash:
-					this->transparencyType = TransparencyType::TransparentSub;
-					break;
-			}
-		}
-	}
-
-	MemberIterator uniformListItr = config.FindMember("materialUniforms");
-
-	if (uniformListItr != config.MemberEnd())
-	{
-		const rapidjson::Value& list = uniformListItr->value;
-
-		for (unsigned muIndex = 0, muCount = list.Size(); muIndex < muCount; ++muIndex)
-		{
-			const rapidjson::Value& mu = list[muIndex];
-
-			assert(mu.HasMember("name"));
-			assert(mu.HasMember("type"));
-
-			const rapidjson::Value& name = mu["name"];
-			uniformNames[uniformCount].str = name.GetString();
-			uniformNames[uniformCount].len = name.GetStringLength();
-
-			const char* typeStr = mu["type"].GetString();
-			for (unsigned typeIndex = 0; typeIndex < ShaderUniform::TypeCount; ++typeIndex)
-			{
-				// Check what type of uniform this is
-				if (std::strcmp(typeStr, ShaderUniform::TypeNames[typeIndex]) == 0)
+				switch (renderTypeHash)
 				{
-					uniformTypes[uniformCount] = static_cast<ShaderUniformType>(typeIndex);
-					break;
+					case "opaque"_hash:
+						this->transparencyType = TransparencyType::Opaque;
+						break;
+
+					case "alphaTest"_hash:
+						this->transparencyType = TransparencyType::AlphaTest;
+						break;
+
+					case "transparentMix"_hash:
+						this->transparencyType = TransparencyType::TransparentMix;
+						break;
+
+					case "transparentAdd"_hash:
+						this->transparencyType = TransparencyType::TransparentAdd;
+						break;
+
+					case "transparentSub"_hash:
+						this->transparencyType = TransparencyType::TransparentSub;
+						break;
 				}
 			}
-
-			++uniformCount;
 		}
-	}
 
-	if (vsFilePath != nullptr && fsFilePath != nullptr)
-	{
-		Buffer<char> vertexSource = File::ReadText(vsFilePath);
-		Buffer<char> fragmentSource = File::ReadText(fsFilePath);
+		MemberItr uniformListItr = config.FindMember("materialUniforms");
+
+		if (uniformListItr != config.MemberEnd())
+		{
+			const rapidjson::Value& list = uniformListItr->value;
+
+			for (unsigned muIndex = 0, muCount = list.Size(); muIndex < muCount; ++muIndex)
+			{
+				const rapidjson::Value& mu = list[muIndex];
+
+				assert(mu.HasMember("name"));
+				assert(mu.HasMember("type"));
+
+				const rapidjson::Value& name = mu["name"];
+				uniformNames[uniformCount].str = name.GetString();
+				uniformNames[uniformCount].len = name.GetStringLength();
+
+				const char* typeStr = mu["type"].GetString();
+				for (unsigned typeIndex = 0; typeIndex < ShaderUniform::TypeCount; ++typeIndex)
+				{
+					// Check what type of uniform this is
+					if (std::strcmp(typeStr, ShaderUniform::TypeNames[typeIndex]) == 0)
+					{
+						uniformTypes[uniformCount] = static_cast<ShaderUniformType>(typeIndex);
+						break;
+					}
+				}
+
+				++uniformCount;
+			}
+		}
+
+		Buffer<char> vertexSource = File::ReadText(vsPath);
+		Buffer<char> fragmentSource = File::ReadText(fsPath);
 
 		if (this->CompileAndLink(vertexSource, fragmentSource))
 		{

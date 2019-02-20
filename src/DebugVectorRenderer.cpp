@@ -260,20 +260,22 @@ void DebugVectorRenderer::Render()
 {
 	if (primitiveCount > 0)
 	{
-		if (meshesInitialized == false)
-		{
-			this->CreateMeshes();
-		}
-
 		Engine* engine = Engine::GetInstance();
+		ResourceManager* rm = engine->GetResourceManager();
+		Shader* shader = rm->GetShader("res/shaders/debug_vector.shader.json");
+
+		if (shader == nullptr)
+			return;
+
+		if (meshesInitialized == false)
+			this->CreateMeshes();
+
 		Camera* camera = this->activeCamera;
 		Window* window = engine->GetMainWindow();
 
 		Mat4x4f viewProj = camera->GetProjectionMatrix() * camera->GetViewMatrix();
 		Mat4x4f screenProj = window->GetScreenSpaceProjectionMatrix();
 
-		ResourceManager* rm = engine->GetResourceManager();
-		Shader* shader = rm->GetShader("res/shaders/debug_vector.shader.json");
 
 		int colorUniformLocation = -1;
 		for (unsigned int i = 0; i < shader->materialUniformCount; ++i)

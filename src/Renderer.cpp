@@ -50,8 +50,11 @@ void Renderer::PreTransformUpdate(Scene* scene)
 	Mat4x4f cameraTransform = scene->GetLocalTransform(scene->GetActiveCamera()->GetSceneObjectId());
 	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
-	// Update skybox transform
-	scene->skybox.UpdateTransform(cameraPosition);
+	if (scene->skybox.IsInitialized())
+	{
+		// Update skybox transform
+		scene->skybox.UpdateTransform(cameraPosition);
+	}
 }
 
 void Renderer::Render(Scene* scene)

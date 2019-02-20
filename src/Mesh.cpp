@@ -74,7 +74,7 @@ void Mesh::CreateBuffers(void* vertexData, unsigned int vertexDataSize,
 
 void Mesh::DeleteBuffers()
 {
-	if (vertexArrayObject != 0)
+	if (HasVertexArrayObject())
 	{
 		glDeleteVertexArrays(1, &vertexArrayObject);
 		glDeleteBuffers(2, bufferObjects);

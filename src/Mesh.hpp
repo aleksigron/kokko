@@ -45,6 +45,8 @@ public:
 
 	Mesh& operator=(Mesh&& other);
 
+	bool HasVertexArrayObject() const { return vertexArrayObject != 0; }
+
 	void DeleteBuffers();
 
 	void Upload_3f(BufferRef<Vertex3f> vertices, BufferRef<unsigned short> indices);

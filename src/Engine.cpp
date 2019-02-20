@@ -8,6 +8,7 @@
 #include "ResourceManager.hpp"
 #include "SceneManager.hpp"
 #include "Scene.hpp"
+#include "String.hpp"
 
 #include "Debug.hpp"
 #include "DebugLog.hpp"
@@ -54,11 +55,16 @@ bool Engine::Initialize()
 	
 	if (this->mainWindow->Initialize("Kokko"))
 	{
+		const char* const logFilename = "log.txt";
+		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";
+
 		DebugLog* debugLog = this->debug->GetLog();
-		debugLog->OpenLogFile("log.txt", false);
+		debugLog->OpenLogFile(logFilename, false);
 
 		DebugTextRenderer* debugTextRenderer = this->debug->GetTextRenderer();
-		debugTextRenderer->LoadBitmapFont("res/fonts/gohufont-uni-14.bdf");
+		bool fontLoaded = debugTextRenderer->LoadBitmapFont(debugFontFilename);
+		if (fontLoaded == false)
+			debugLog->Log(String("Loading font at ") + debugFontFilename + " failed.");
 
 		this->debug->SetWindow(this->mainWindow);
 

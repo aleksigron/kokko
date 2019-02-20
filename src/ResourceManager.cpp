@@ -109,7 +109,10 @@ bool ResourceManager::LoadShader(Shader& shader, const char* configPath)
 {
 	Buffer<char> configuration = File::ReadText(configPath);
 
-	return shader.LoadFromConfiguration(configuration);
+	if (configuration.IsValid())
+		return shader.LoadFromConfiguration(configuration);
+	else
+		return false;
 }
 
 Material& ResourceManager::GetMaterial(unsigned int id)

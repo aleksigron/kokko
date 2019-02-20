@@ -122,64 +122,70 @@ void DebugTextRenderer::Render()
 		Mesh mesh;
 		this->CreateAndUploadData(mesh);
 
-		Engine* engine = Engine::GetInstance();
-		ResourceManager* rm = engine->GetResourceManager();
-		Shader* shader = rm->GetShader("res/shaders/debug_text.shader.json");
-
-		const ShaderUniform* textureUniform = nullptr;
-		const ShaderUniform* shadowOffsetUniform = nullptr;
-		for (unsigned int i = 0; i < shader->materialUniformCount; ++i)
+		if (mesh.HasVertexArrayObject())
 		{
-			ShaderUniformType type = shader->materialUniforms[i].type;
+			Engine* engine = Engine::GetInstance();
+			ResourceManager* rm = engine->GetResourceManager();
+			Shader* shader = rm->GetShader("res/shaders/debug_text.shader.json");
 
-			if (type == ShaderUniformType::Tex2D)
+			const ShaderUniform* textureUniform = nullptr;
+			const ShaderUniform* shadowOffsetUniform = nullptr;
+			for (unsigned int i = 0; i < shader->materialUniformCount; ++i)
 			{
-				textureUniform = shader->materialUniforms + i;
+				ShaderUniformType type = shader->materialUniforms[i].type;
+
+				if (type == ShaderUniformType::Tex2D)
+				{
+					textureUniform = shader->materialUniforms + i;
+				}
+				else if (type == ShaderUniformType::Float)
+				{
+					shadowOffsetUniform = shader->materialUniforms + i;
+				}
 			}
-			else if (type == ShaderUniformType::Float)
+
+			glDisable(GL_DEPTH_TEST);
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			// Use shader
+			glUseProgram(shader->driverId);
+
+			// Bind shadow offset
+			if (shadowOffsetUniform != nullptr)
 			{
-				shadowOffsetUniform = shader->materialUniforms + i;
+				Vec2f texSize = font->GetTextureSize();
+				glUniform1f(shadowOffsetUniform->location, 1.0f / texSize.y);
 			}
+
+			// Bind texture
+			if (textureUniform != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
+				glUniform1i(textureUniform->location, 0);
+			}
+
+			// Bind vertex array object
+			glBindVertexArray(mesh.vertexArrayObject);
+
+			// Draw
+			glDrawElements(GL_TRIANGLES, mesh.indexCount, mesh.indexElementType, nullptr);
+
+			mesh.DeleteBuffers();
+
+			renderDataCount = 0;
+			stringDataUsed = 0;
 		}
-
-		glDisable(GL_DEPTH_TEST);
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		// Use shader
-		glUseProgram(shader->driverId);
-
-		// Bind shadow offset
-		if (shadowOffsetUniform != nullptr)
-		{
-			Vec2f texSize = font->GetTextureSize();
-			glUniform1f(shadowOffsetUniform->location, 1.0f / texSize.y);
-		}
-
-		// Bind texture
-		if (textureUniform != nullptr)
-		{
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
-			glUniform1i(textureUniform->location, 0);
-		}
-
-		// Bind vertex array object
-		glBindVertexArray(mesh.vertexArrayObject);
-
-		// Draw
-		glDrawElements(GL_TRIANGLES, mesh.indexCount, mesh.indexElementType, nullptr);
-
-		mesh.DeleteBuffers();
-
-		renderDataCount = 0;
-		stringDataUsed = 0;
 	}
 }
 
 void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 {
+	if (font == nullptr)
+		return; // Can't do anything reasonable without a font
+
 	unsigned int charCount = 0;
 	for (unsigned i = 0, count = renderDataCount; i < count; ++i)
 	{

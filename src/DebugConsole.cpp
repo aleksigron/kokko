@@ -58,11 +58,14 @@ void DebugConsole::SetDrawArea(const Rectangle& area)
 
 void DebugConsole::AddLogEntry(StringRef text)
 {
-	Vec2f areaSize = this->drawArea.size;
-
 	const BitmapFont* font = textRenderer->GetFont();
+
+	if (font == nullptr) // Can't do anything reasonable without a font
+		return;
+
 	int lineHeight = font->GetLineHeight();
 
+	Vec2f areaSize = this->drawArea.size;
 	int screenRows = areaSize.y / lineHeight;
 
 	// Check if we have to allocate the buffer

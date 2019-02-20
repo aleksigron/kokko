@@ -49,10 +49,15 @@ void Debug::SetWindow(Window* window)
 	textRenderer->SetFrameSize(frameSize);
 	textRenderer->SetScaleFactor(screenCoordScale);
 
-	Vec2f trScaledFrameSize = textRenderer->GetScaledFrameSize();
-	int scaledLineHeight = textRenderer->GetFont()->GetLineHeight();
+	int scaledLineHeight = 0;
+	const BitmapFont* font = textRenderer->GetFont();
+
+	if (font != nullptr)
+		scaledLineHeight = font->GetLineHeight();
+
 	float pixelLineHeight = scaledLineHeight * screenCoordScale;
 
+	Vec2f trScaledFrameSize = textRenderer->GetScaledFrameSize();
 	Rectangle logArea;
 	logArea.position.x = 0.0f;
 	logArea.position.y = scaledLineHeight;
