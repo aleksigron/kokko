@@ -13,12 +13,18 @@ namespace EncodingUtf8
 	/**
 	 * Decodes a codepoint to codepointOut.
 	 * Returns how many bytes were decoded, 0 if input doesn't point to the first
-	 * byte of a UTF8 character.
+	 * byte of a UTF-8 character.
 	 */
 	unsigned int DecodeCodepoint(const char* input, unsigned int& codepointOut);
 
 	/**
-	 * Counts how many unicode characters are in a UTF-8 encoded byte array.
+	 * Counts how many unicode characters are in a UTF-8 encoded string.
 	 */
 	unsigned int CountCharacters(StringRef input);
+
+	/**
+	 * Returns the byte index for the first byte of the last character in a UTF-8
+	 * encoded string. Returns input.len if no valid characters are present.
+	 */
+	unsigned int FindLastCharacter(StringRef input);
 }

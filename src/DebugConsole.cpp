@@ -168,7 +168,14 @@ void DebugConsole::UpdateAndDraw()
 		unsigned currentLength = this->inputValue.GetLength();
 
 		if (currentLength > 0)
-			this->inputValue.Resize(currentLength - 1);
+		{
+			unsigned int newLen = EncodingUtf8::FindLastCharacter(this->inputValue.GetRef());
+
+			if (newLen < currentLength)
+				this->inputValue.Resize(newLen);
+			else // This should only happen if the inputValue somehow becomes invalid UTF-8 text
+				this->inputValue.Clear();
+		}
 	}
 
 	/* **** Draw **** */

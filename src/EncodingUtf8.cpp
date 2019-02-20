@@ -103,3 +103,21 @@ unsigned int EncodingUtf8::CountCharacters(StringRef input)
 
 	return count;
 }
+
+unsigned int EncodingUtf8::FindLastCharacter(StringRef input)
+{
+	for (const char* itr = input.str + input.len - 1, *end = input.str; itr >= end; --itr)
+	{
+		char c = *itr;
+
+		if ((c & 0x80) == 0x00 || // 1-byte char
+			(c & 0xe0) == 0xc0 || // 2-byte char
+			(c & 0xf0) == 0xe0 || // 3-byte char
+			(c & 0xf8) == 0xf0) // 4-byte char
+		{
+			return itr - input.str;
+		}
+	}
+
+	return input.len;
+}
