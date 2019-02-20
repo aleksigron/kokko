@@ -104,15 +104,12 @@ Mat4x4f Window::GetScreenSpaceProjectionMatrix()
 
 	const float farMinusNear = farClipDistance - nearClipDistance;
 	const float farPlusNear = farClipDistance + nearClipDistance;
-	const float aspectRatio = frame.x / frame.y;
 
 	Mat4x4f result;
 	result[0] = 2.0f / frame.x;
 	result[5] = -2.0f / frame.y;
 	result[10] = -2.0f / (farMinusNear);
-	//result[12] = -((r + l) / (r - l));
 	result[12] = -1.0f;
-	//result[13] = -((t + b) / (t - b));
 	result[13] = 1.0f;
 	result[14] = -(farPlusNear) / (farMinusNear);
 

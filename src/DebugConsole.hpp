@@ -38,7 +38,7 @@ private:
 
 public:
 	DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
-	~DebugConsole();
+	virtual ~DebugConsole();
 
 	virtual void OnTextInput(StringRef text);
 	void RequestFocus();

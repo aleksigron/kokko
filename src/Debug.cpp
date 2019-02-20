@@ -19,9 +19,9 @@
 
 Debug::Debug() :
 	window(nullptr),
-	mode(DebugMode::None),
 	currentFrameRate(0.0),
-	nextFrameRateUpdate(-1.0)
+	nextFrameRateUpdate(-1.0),
+	mode(DebugMode::None)
 {
 	vectorRenderer = new DebugVectorRenderer;
 	textRenderer = new DebugTextRenderer;

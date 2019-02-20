@@ -14,8 +14,7 @@
 #include "Scene.hpp"
 #include "File.hpp"
 
-SceneManager::SceneManager(ResourceManager* resourceManager) :
-	resourceManager(resourceManager),
+SceneManager::SceneManager() :
 	scenes(nullptr),
 	sceneCount(0),
 	sceneAllocated(0),

@@ -9,23 +9,23 @@ unsigned int EncodingUtf8::EncodeCodepoint(unsigned int codepoint, char* utf8Byt
 	}
 	else if (codepoint <= 0x7FF)
 	{
-		utf8BytesOut[0] = 0xc0 | codepoint >> 6 & 0x1f;
-		utf8BytesOut[1] = 0x80 | codepoint & 0x3f;
+		utf8BytesOut[0] = 0xc0 | (codepoint >> 6 & 0x1f);
+		utf8BytesOut[1] = 0x80 | (codepoint & 0x3f);
 		return 2;
 	}
 	else if (codepoint <= 0xFFFF)
 	{
-		utf8BytesOut[0] = 0xf0 | codepoint >> 12 & 0x0f;
-		utf8BytesOut[1] = 0x80 | codepoint >> 6 & 0x3f;
-		utf8BytesOut[2] = 0x80 | codepoint & 0x3F;
+		utf8BytesOut[0] = 0xf0 | (codepoint >> 12 & 0x0f);
+		utf8BytesOut[1] = 0x80 | (codepoint >> 6 & 0x3f);
+		utf8BytesOut[2] = 0x80 | (codepoint & 0x3F);
 		return 3;
 	}
 	else if (codepoint <= 0x10FFFF)
 	{
-		utf8BytesOut[0] = 0xf0 | codepoint >> 18 & 0x07;
-		utf8BytesOut[1] = 0x80 | codepoint >> 12 & 0x3f;
-		utf8BytesOut[2] = 0x80 | codepoint >> 6 & 0x3f;
-		utf8BytesOut[3] = 0x80 | codepoint & 0x3f;
+		utf8BytesOut[0] = 0xf0 | (codepoint >> 18 & 0x07);
+		utf8BytesOut[1] = 0x80 | (codepoint >> 12 & 0x3f);
+		utf8BytesOut[2] = 0x80 | (codepoint >> 6 & 0x3f);
+		utf8BytesOut[3] = 0x80 | (codepoint & 0x3f);
 		return 4;
 	}
 	else

@@ -34,7 +34,7 @@ Engine::Engine()
 	this->time = new Time;
 	this->renderer = new Renderer;
 	this->resourceManager = new ResourceManager;
-	this->sceneManager = new SceneManager(this->resourceManager);
+	this->sceneManager = new SceneManager;
 }
 
 Engine::~Engine()

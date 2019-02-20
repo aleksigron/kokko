@@ -185,7 +185,7 @@ void AppSettings::SetDouble(StringRef key, double value)
 {
 	char buffer[32];
 
-	std::snprintf(buffer, sizeof(buffer), "%f");
+	std::snprintf(buffer, sizeof(buffer), "%f", value);
 
 	this->SetString(key, StringRef(buffer));
 }

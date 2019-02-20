@@ -10,8 +10,6 @@ class Scene;
 class SceneManager
 {
 private:
-	ResourceManager* resourceManager;
-
 	Scene* scenes;
 	unsigned int sceneCount;
 	unsigned int sceneAllocated;
@@ -20,7 +18,7 @@ private:
 	unsigned int primarySceneId;
 	
 public:
-	SceneManager(ResourceManager* resourceManager);
+	SceneManager();
 	~SceneManager();
 
 	void SetInitialAllocation(unsigned int allocationCount);
