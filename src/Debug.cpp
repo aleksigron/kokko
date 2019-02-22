@@ -110,8 +110,8 @@ void Debug::Render()
 			console->ReleaseFocus();
 	}
 
-	char modeLogChar = (mode == DebugMode::Console) ? '*' : ' ';
-	char modeTimeChar = (mode == DebugMode::FrameTime) ? '*' : ' ';
+	char logChar = (mode == DebugMode::Console) ? '*' : ' ';
+	char timeChar = (mode == DebugMode::FrameTime) ? '*' : ' ';
 	char vsyncChar = vsync ? 'Y' : 'N';
 
 	double now = Time::GetRunningTime();
@@ -124,8 +124,8 @@ void Debug::Render()
 	// Draw debug mode guide
 	char buffer[128];
 	const char* format = "Debug: [F1]Console%c [F2]FrameTime%c [F8]Vsync: %c, %.1f fps";
-	snprintf(buffer, sizeof(buffer), format, modeLogChar, modeTimeChar, vsyncChar, currentFrameRate);
-	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f), true);
+	std::snprintf(buffer, sizeof(buffer), format, logChar, timeChar, vsyncChar, currentFrameRate);
+	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f));
 
 	// Add frame time to debug graph
 	graph->AddDataPoint(Time::GetDeltaTime());

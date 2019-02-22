@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Array.hpp"
 #include "StringRef.hpp"
 #include "Rectangle.hpp"
 #include "Vec2.hpp"
@@ -12,19 +13,15 @@ class DebugTextRenderer
 private:
 	struct RenderData
 	{
-		StringRef string;
+		unsigned int stringStart;
+		unsigned int stringLength;
 		Rectangle area;
 	};
 
 	BitmapFont* font;
-
-	char* stringData;
-	unsigned int stringDataUsed;
-	unsigned int stringDataAllocated;
-
-	RenderData* renderData;
-	unsigned int renderDataCount;
-	unsigned int renderDataAllocated;
+	unsigned int stringCharCount;
+	Array<char> stringData;
+	Array<RenderData> renderData;
 
 	Vec2f frameSize;
 	Vec2f scaledFrameSize;
@@ -51,12 +48,12 @@ public:
 	/**
 	 * Add a text to be rendered this frame at a specified position.
 	 */
-	void AddText(StringRef str, Vec2f position, bool copyString);
+	void AddText(StringRef str, Vec2f position);
 
 	/**
 	 * Add a text to be rendered this frame in a specified area.
 	 */
-	void AddText(StringRef str, Rectangle area, bool copyString);
+	void AddText(StringRef str, Rectangle area);
 
 	void Render();
 };

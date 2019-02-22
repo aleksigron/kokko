@@ -190,7 +190,7 @@ void DebugConsole::UpdateAndDraw()
 	// Input text
 
 	Vec2f inputPos(areaPos.x, areaPos.y + areaSize.y - lineHeight);
-	textRenderer->AddText(this->inputValue.GetRef(), inputPos, true);
+	textRenderer->AddText(this->inputValue.GetRef(), inputPos);
 	
 	// Input field separator
 
@@ -232,6 +232,6 @@ void DebugConsole::UpdateAndDraw()
 		area.size.x = areaSize.x;
 		area.size.y = lineHeight * entry.rows;
 
-		textRenderer->AddText(entry.text, area, false);
+		textRenderer->AddText(entry.text, area);
 	}
 }

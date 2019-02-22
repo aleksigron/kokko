@@ -17,29 +17,20 @@
 #include "App.hpp"
 
 DebugTextRenderer::DebugTextRenderer() :
+	font(nullptr),
+	stringCharCount(0),
 	scaleFactor(1.0f)
 {
-	font = nullptr;
-
-	renderDataCount = 0;
-	renderDataAllocated = 64;
-	renderData = new RenderData[renderDataAllocated];
-
-	stringDataUsed = 0;
-	stringDataAllocated = 4096;
-	stringData = new char[stringDataAllocated];
 }
 
 DebugTextRenderer::~DebugTextRenderer()
 {
 	delete font;
-	delete[] renderData;
-	delete[] stringData;
 }
 
 void DebugTextRenderer::SetFrameSize(const Vec2f& size)
 {
-	assert(renderDataCount == 0);
+	assert(renderData.GetCount() == 0);
 
 	frameSize = size;
 	scaledFrameSize = size * (1.0f / scaleFactor);
@@ -47,7 +38,7 @@ void DebugTextRenderer::SetFrameSize(const Vec2f& size)
 
 void DebugTextRenderer::SetScaleFactor(float scale)
 {
-	assert(renderDataCount == 0);
+	assert(renderData.GetCount() == 0);
 
 	scaleFactor = scale;
 	scaledFrameSize = frameSize * (1.0f / scaleFactor);
@@ -75,49 +66,29 @@ bool DebugTextRenderer::LoadBitmapFont(const char* filePath)
 		return false;
 }
 
-void DebugTextRenderer::AddText(StringRef str, Vec2f position, bool copyString)
+void DebugTextRenderer::AddText(StringRef str, Vec2f position)
 {
 	Rectangle area(position, scaledFrameSize - position);
 
-	this->AddText(str, area, copyString);
+	this->AddText(str, area);
 }
 
-void DebugTextRenderer::AddText(StringRef str, Rectangle area, bool copyString)
+void DebugTextRenderer::AddText(StringRef str, Rectangle area)
 {
-	if (renderDataCount < renderDataAllocated)
-	{
-		if (copyString == false || stringDataUsed + str.len <= stringDataAllocated)
-		{
-			RenderData* rd = renderData + renderDataCount;
+	stringCharCount += EncodingUtf8::CountCharacters(str);
 
-			if (copyString == true)
-			{
-				// Copy string data
+	unsigned int stringPosition = stringData.GetCount();
+	stringData.InsertBack(str.str, str.len);
 
-				char* stringLocation = stringData + stringDataUsed;
-				rd->string.str = stringLocation;
-
-				stringDataUsed += str.len;
-				std::memcpy(stringLocation, str.str, str.len);
-			}
-			else
-			{
-				rd->string.str = str.str;
-			}
-
-			rd->string.len = str.len;
-
-			// Set draw area
-			rd->area = area;
-
-			++renderDataCount;
-		}
-	}
+	RenderData& rd = renderData.PushBack();
+	rd.stringStart = stringPosition;
+	rd.stringLength = str.len;
+	rd.area = area;
 }
 
 void DebugTextRenderer::Render()
 {
-	if (renderDataCount > 0)
+	if (renderData.GetCount() > 0)
 	{
 		Mesh mesh;
 		this->CreateAndUploadData(mesh);
@@ -175,8 +146,10 @@ void DebugTextRenderer::Render()
 
 			mesh.DeleteBuffers();
 
-			renderDataCount = 0;
-			stringDataUsed = 0;
+			stringCharCount = 0;
+			stringData.Clear();
+			renderData.Clear();
+
 		}
 	}
 }
@@ -186,20 +159,14 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 	if (font == nullptr)
 		return; // Can't do anything reasonable without a font
 
-	unsigned int charCount = 0;
-	for (unsigned i = 0, count = renderDataCount; i < count; ++i)
-	{
-		charCount += renderData[i].string.len;
-	}
-
 	// Make sure vertex indices fit in unsigned short type
-	assert(charCount * 4 < (1 << 16));
+	assert(stringCharCount * 4 < (1 << 16));
 
 	Buffer<Vertex3f2f> vertexBuffer;
-	vertexBuffer.Allocate(charCount * 4);
+	vertexBuffer.Allocate(stringCharCount * 4);
 
 	Buffer<unsigned short> indexBuffer;
-	indexBuffer.Allocate(charCount * 6);
+	indexBuffer.Allocate(stringCharCount * 6);
 
 	int fontLineHeight = font->GetLineHeight();
 	Vec2f textureSize = font->GetTextureSize();
@@ -211,15 +178,17 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 	Vertex3f2f* vertexItr = vertexBegin;
 	unsigned short* indexItr = indexBuffer.Data();
 
-	RenderData* rdItr = renderData;
-	RenderData* rdEnd = rdItr + renderDataCount;
+	const char* strData = stringData.GetData();
+
+	RenderData* rdItr = renderData.GetData();
+	RenderData* rdEnd = rdItr + renderData.GetCount();
 	for (; rdItr != rdEnd; ++rdItr)
 	{
 		RenderData rd = *rdItr;
 		Vec2f drawPos = Vec2f(rd.area.position.x, -rd.area.position.y);
 
-		const char* strItr = rd.string.str;
-		const char* strEnd = strItr + rd.string.len;
+		const char* strItr = strData + rd.stringStart;
+		const char* strEnd = strItr + rd.stringLength;
 		while (strItr < strEnd)
 		{
 			unsigned int codepoint;
