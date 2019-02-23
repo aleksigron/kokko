@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Queue.hpp"
 #include "String.hpp"
 #include "StringRef.hpp"
 #include "Rectangle.hpp"
@@ -23,10 +24,7 @@ private:
 
 	Rectangle drawArea;
 
-	LogEntry* entries;
-	unsigned int entryFirst;
-	unsigned int entryCount;
-	unsigned int entryAllocated;
+	Queue<LogEntry> entries;
 
 	char* stringData;
 	unsigned int stringDataFirst;

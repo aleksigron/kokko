@@ -17,10 +17,6 @@
 DebugConsole::DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
-	entries(nullptr),
-	entryFirst(0),
-	entryCount(0),
-	entryAllocated(0),
 	stringData(nullptr),
 	stringDataFirst(0),
 	stringDataUsed(0),
@@ -32,7 +28,6 @@ DebugConsole::DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer*
 DebugConsole::~DebugConsole()
 {
 	delete[] stringData;
-	delete[] entries;
 }
 
 void DebugConsole::OnTextInput(StringRef text)
@@ -69,85 +64,73 @@ void DebugConsole::AddLogEntry(StringRef text)
 	int screenRows = areaSize.y / lineHeight;
 
 	// Check if we have to allocate the buffer
-	if (entries == nullptr && stringData == nullptr)
+	if (stringData == nullptr)
 	{
-		entryAllocated = screenRows + 1;
-		entries = new LogEntry[entryAllocated];
-
 		int rowChars = static_cast<int>(areaSize.x) / font->GetGlyphWidth();
 
-		stringDataAllocated = entryAllocated * rowChars;
+		stringDataAllocated = (screenRows + 1) * rowChars;
 		stringData = new char[stringDataAllocated];
 	}
 
-	// Check if we have room for a new entry
-	if (entryCount < entryAllocated)
+	// Add into buffer
+
+	unsigned int charCount = EncodingUtf8::CountCharacters(inputValue.GetRef());
+
+	LogEntry& newEntry = entries.Push();
+	newEntry.text = StringRef();
+	newEntry.rows = textRenderer->GetRowCountForTextLength(charCount);
+	newEntry.lengthWithPad = 0;
+
+	int currentRows = 0;
+
+	for (unsigned int i = 0, count = entries.GetCount(); i < count; ++i)
+		currentRows += entries[i].rows;
+
+	// Check if we can remove entries
+	while (entries.GetCount() > 0)
 	{
-		// Add into buffer
+		LogEntry& oldEntry = entries[0];
 
-		unsigned int newEntryIndex = entryFirst + entryCount;
-		++entryCount;
-
-		unsigned int charCount = EncodingUtf8::CountCharacters(inputValue.GetRef());
-
-		LogEntry& newEntry = entries[newEntryIndex % entryAllocated];
-		newEntry.text = StringRef();
-		newEntry.rows = textRenderer->GetRowCountForTextLength(charCount);
-		newEntry.lengthWithPad = 0;
-
-		int currentRows = 0;
-
-		for (unsigned int i = 0; i < entryCount; ++i)
+		// We have more than screenRows rows
+		if (currentRows - oldEntry.rows >= screenRows)
 		{
-			unsigned int index = i % entryAllocated;
-			currentRows += entries[index].rows;
-		}
+			stringDataUsed -= oldEntry.lengthWithPad;
+			stringDataFirst = (stringDataFirst + oldEntry.lengthWithPad) % stringDataAllocated;
 
-		// Check if we can remove entries
-		while (entryCount > 0)
+			currentRows -= oldEntry.rows;
+			entries.Pop();
+		}
+		else
 		{
-			LogEntry& oldEntry = entries[entryFirst];
-
-			// We have more than screenRows rows
-			if (currentRows > screenRows)
-			{
-				stringDataUsed -= oldEntry.lengthWithPad;
-				stringDataFirst = (stringDataFirst + oldEntry.lengthWithPad) % stringDataAllocated;
-
-				entryFirst = (entryFirst + 1) % entryAllocated;
-				--entryCount;
-
-				currentRows -= oldEntry.rows;
-			}
-			else
-			{
-				break;
-			}
+			break;
 		}
+	}
+
+	unsigned int index = (stringDataFirst + stringDataUsed) % stringDataAllocated;
+
+	// String would overrun end of memory
+	if (index + text.len > stringDataAllocated)
+	{
+		// Pad data to have the string start at the end of memory
+		unsigned int padding = stringDataAllocated - index;
+		stringDataUsed += padding;
+		newEntry.lengthWithPad += padding;
+
+		index = 0;
+	}
+
+	// String can fit in the allocated memory (even with potential padding)
+	if (stringDataUsed + text.len <= stringDataAllocated)
+	{
+		char* stringLocation = stringData + index;
+		newEntry.text.str = stringLocation;
+		newEntry.text.len = text.len;
+		newEntry.lengthWithPad += text.len;
 
 		// Copy string data
 
-		unsigned int index = (stringDataFirst + stringDataUsed) % stringDataAllocated;
-
-		if (index + text.len > stringDataAllocated)
-		{
-			unsigned int padding = stringDataAllocated - index;
-			stringDataUsed += padding;
-			newEntry.lengthWithPad += padding;
-
-			index = 0;
-		}
-
-		if (stringDataUsed + text.len <= stringDataAllocated)
-		{
-			char* stringLocation = stringData + index;
-			newEntry.text.str = stringLocation;
-			newEntry.text.len = text.len;
-			newEntry.lengthWithPad += text.len;
-
-			stringDataUsed += text.len;
-			std::memcpy(stringLocation, text.str, text.len);
-		}
+		stringDataUsed += text.len;
+		std::memcpy(stringLocation, text.str, text.len);
 	}
 }
 
@@ -219,10 +202,9 @@ void DebugConsole::UpdateAndDraw()
 	// Add them to the DebugTextRenderer
 	int rowsUsed = 1; // 1 row for input
 
-	int first = static_cast<int>(entryFirst);
-	for (int index = entryFirst + entryCount - 1; index >= first; --index)
+	for (int i = entries.GetCount() - 1; i >= 0; --i)
 	{
-		LogEntry& entry = entries[index % entryAllocated];
+		LogEntry& entry = entries[i];
 
 		rowsUsed += entry.rows;
 
