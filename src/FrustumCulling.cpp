@@ -9,7 +9,7 @@
 void FrustumCulling::CullAABB(const ViewFrustum* frustum,
 							  unsigned int count,
 							  const BoundingBox* boxes,
-							  unsigned char* state)
+							  CullingState* state)
 {
 	const Plane* frustumPlanes = frustum->planes;
 	Vec3f planeNormalAbs[6];
@@ -24,8 +24,7 @@ void FrustumCulling::CullAABB(const ViewFrustum* frustum,
 	// For each axis aligned bounding box
 	for (unsigned int boxIdx = 0; boxIdx < count; ++boxIdx)
 	{
-		// Inside: 2, intersect: 1, outside: 0
-		unsigned char result = 2;
+		CullingState result = CullingState::Inside;
 
 		// For each plane in view frustum
 		for (unsigned int planeIdx = 0; planeIdx < 6; ++planeIdx)
@@ -36,11 +35,11 @@ void FrustumCulling::CullAABB(const ViewFrustum* frustum,
 
 			if (d + r < planeDistNeg)
 			{
-				result = 0;
+				result = CullingState::Outside;
 				break;
 			}
 			else if (d - r < planeDistNeg)
-				result = 1;
+				result = CullingState::Intersect;
 		}
 
 		state[boxIdx] = result;

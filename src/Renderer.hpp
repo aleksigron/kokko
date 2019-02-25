@@ -3,6 +3,7 @@
 #include "RenderPipeline.hpp"
 #include "RenderOrder.hpp"
 #include "RenderData.hpp"
+#include "FrustumCulling.hpp"
 
 #include "Array.hpp"
 
@@ -23,7 +24,7 @@ private:
 	unsigned int allocatedCount;
 
 	BoundingBox* boundingBoxes;
-	unsigned char* cullingState;
+	FrustumCulling::CullingState* cullingState;
 
 	Array<RenderCommand> commands;
 

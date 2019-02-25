@@ -21,7 +21,6 @@
 #include "Camera.hpp"
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
-#include "FrustumCulling.hpp"
 #include "RenderOrder.hpp"
 
 #include "Sort.hpp"
@@ -248,7 +247,7 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	for (unsigned index = 0; index < objectCount; ++index)
 	{
 		// Object is in potentially visible set
-		if (cullingState[index] != 0)
+		if (cullingState[index] != FrustumCulling::CullingState::Outside)
 		{
 			RenderObject& obj = objects[index];
 			Material& material = rm->GetMaterial(obj.materialId);
@@ -295,7 +294,7 @@ void Renderer::Reallocate()
 	unsigned int* newIndexList = new unsigned int[newAllocatedCount + 1];
 	RenderObject* newObjects = new RenderObject[newAllocatedCount];
 	boundingBoxes = new BoundingBox[newAllocatedCount];
-	cullingState = new unsigned char[newAllocatedCount];
+	cullingState = new FrustumCulling::CullingState[newAllocatedCount];
 
 	// We have old data
 	if (allocatedCount > 0)
