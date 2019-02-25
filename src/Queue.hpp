@@ -20,27 +20,26 @@ private:
 		return (start + queueIndex) % allocated;
 	}
 
-	void Reallocate(SizeType requiredSize)
+	void ReserveInternal(SizeType requiredSize)
 	{
 		if (requiredSize > allocated)
 		{
+			std::size_t vts = sizeof(ValueType);
 			SizeType newAllocated = allocated > 0 ? allocated * 2 : 8;
-			ValueType* newData = static_cast<ValueType*>(operator new[](newAllocated * sizeof(ValueType)));
+			ValueType* newData = static_cast<ValueType*>(operator new[](newAllocated * vts));
 
 			SizeType startToMemEnd = allocated - start;
-			std::size_t vts = sizeof(ValueType);
 
-			if (startToMemEnd < count)
+			if (startToMemEnd < count) // Used data passes over the reserved memory end
 			{
-				// Copy memory from start to end of allocated memory
+				// Copy memory from start of data to end of allocated memory
 				std::memcpy(newData, data + start, startToMemEnd * vts);
 
-				// Copy memory from start of allocated memory
+				// Copy memory from start of allocated memory to end of data
 				std::memcpy(newData + startToMemEnd, data, (count - startToMemEnd) * vts);
 			}
-			else
+			else // Entire used data is contiguous in reserved memory
 			{
-				// Copy entire block of data
 				std::memcpy(newData, data + start, count * vts);
 			}
 
@@ -65,7 +64,7 @@ public:
 		for (SizeType i = 0; i < count; ++i)
 			data[this->GetArrayIndex(i)].~ValueType();
 
-		operator delete(data);
+		operator delete[](data);
 	}
 
 	SizeType GetCount() const { return count; }
@@ -85,7 +84,10 @@ public:
 
 		if (count > 0)
 		{
-			result = data[this->GetArrayIndex(0)];
+			SizeType frontIndex = this->GetArrayIndex(0);
+			result = data[frontIndex]; // Copy return value
+			data[frontIndex].~ValueType(); // Run destructor
+
 			start = this->GetArrayIndex(1);
 			--count;
 		}
@@ -95,18 +97,38 @@ public:
 		return result;
 	}
 
+	void Pop(SizeType popCount)
+	{
+		while (popCount > 0 && count > 0)
+		{
+			data[start].~ValueType(); // Run destructor
+			start = this->GetArrayIndex(1);
+
+			--popCount;
+			--count;
+		}
+	}
+
 	ValueType& Push()
 	{
-		this->Reallocate(count + 1);
+		this->ReserveInternal(count + 1);
 
 		return *(new (data + this->GetArrayIndex(count++)) ValueType());
 	}
 
 	void Push(const ValueType& value)
 	{
-		this->Reallocate(count + 1);
+		this->ReserveInternal(count + 1);
 
-		data[this->GetArrayIndex(count)] = value;
+		data[this->GetArrayIndex(count++)] = value;
 		++count;
+	}
+
+	void Push(const ValueType* values, SizeType valueCount)
+	{
+		this->ReserveInternal(this->count + valueCount);
+
+		for (SizeType i = 0; i < valueCount; ++i)
+			data[this->GetArrayIndex(this->count++)] = values[i];
 	}
 };
