@@ -48,6 +48,12 @@ can install it by copying the *blender_custom_format* folder to your Blender
 installation's *scripts/addons_contrib* folder and enabling it in the add-ons
 menu.
 
+[rapidjson](https://github.com/Tencent/rapidjson) is used to read JSON
+formatted resource files (scenes, shaders, materials, textures).
+
+[GLFW](https://github.com/glfw/glfw) is used to manage OpenGL context, windows
+and read input.
+
 [Glad](https://github.com/Dav1dde/glad) is used to load the OpenGL profile and
 extensions.
 
