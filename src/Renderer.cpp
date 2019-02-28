@@ -79,18 +79,15 @@ void Renderer::Render(Scene* scene)
 	ShellSortAsc(commands.GetData(), commands.GetCount());
 
 	// Get the background color for view
-	Color clearCol = scene->backgroundColor;
-	glClearColor(clearCol.r, clearCol.r, clearCol.r, 1.0f);
+	RenderPipeline::ClearColorAndDepth(scene->backgroundColor);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	RenderPipeline::DepthTestEnable();
+	RenderPipeline::DepthTestFunctionLess();
 
-	pipeline.DepthTestEnable();
-	pipeline.DepthTestFunctionLess();
+	RenderPipeline::CullFaceEnable();
+	RenderPipeline::CullFaceBack();
 
-	pipeline.CullFaceEnable();
-	pipeline.CullFaceBack();
-
-	pipeline.BlendingDisable();
+	RenderPipeline::BlendingDisable();
 
 	Mat4x4f viewMatrix = cam->GetViewMatrix();
 	Mat4x4f projectionMatrix = cam->GetProjectionMatrix();

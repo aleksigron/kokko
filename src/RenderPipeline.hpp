@@ -4,11 +4,10 @@
 #include "RenderData.hpp"
 #include "RenderOrder.hpp"
 
+struct Color;
+
 class RenderPipeline
 {
-public:
-
-	
 private:
 	RenderOrderConfiguration orderConfig;
 
@@ -25,18 +24,20 @@ public:
 	uint64_t CreateDrawCommand(SceneLayer layer, TransparencyType transparency,
 							   float depth, unsigned int materialId);
 
-	void BlendingEnable();
-	void BlendingDisable();
+	static void ClearColorAndDepth(const Color& color);
 
-	void DepthTestEnable();
-	void DepthTestDisable();
-	void DepthTestFunctionLess();
+	static void BlendingEnable();
+	static void BlendingDisable();
 
-	void DepthWriteEnable();
-	void DepthWriteDisable();
+	static void DepthTestEnable();
+	static void DepthTestDisable();
+	static void DepthTestFunctionLess();
 
-	void CullFaceEnable();
-	void CullFaceDisable();
-	void CullFaceFront();
-	void CullFaceBack();
+	static void DepthWriteEnable();
+	static void DepthWriteDisable();
+
+	static void CullFaceEnable();
+	static void CullFaceDisable();
+	static void CullFaceFront();
+	static void CullFaceBack();
 };

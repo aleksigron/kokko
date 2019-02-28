@@ -2,6 +2,8 @@
 
 #include "IncludeOpenGL.hpp"
 
+#include "Color.hpp"
+
 RenderPipeline::RenderPipeline()
 {
 	this->InitializeRenderOrder();
@@ -48,27 +50,27 @@ bool RenderPipeline::ParseControlCommand(uint64_t orderKey)
 				break;
 
 			case Control_BlendingEnable:
-				this->BlendingEnable();
+				RenderPipeline::BlendingEnable();
 				break;
 
 			case Control_BlendingDisable:
-				this->BlendingDisable();
+				RenderPipeline::BlendingDisable();
 				break;
 
 			case Control_DepthTestEnable:
-				this->DepthTestEnable();
+				RenderPipeline::DepthTestEnable();
 				break;
 
 			case Control_DepthTestDisable:
-				this->DepthTestDisable();
+				RenderPipeline::DepthTestDisable();
 				break;
 
 			case Control_DepthWriteEnable:
-				this->DepthWriteEnable();
+				RenderPipeline::DepthWriteEnable();
 				break;
 
 			case Control_DepthWriteDisable:
-				this->DepthWriteDisable();
+				RenderPipeline::DepthWriteDisable();
 				break;
 		}
 
@@ -139,6 +141,13 @@ uint64_t RenderPipeline::CreateDrawCommand(SceneLayer layer, TransparencyType tr
 	}
 
 	return c;
+}
+
+void RenderPipeline::ClearColorAndDepth(const Color& color)
+{
+	glClearColor(color.r, color.g, color.b, 1.0f);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void RenderPipeline::BlendingEnable()
