@@ -26,6 +26,9 @@ private:
 	BoundingBox* boundingBoxes;
 	FrustumCulling::CullingState* cullingState;
 
+	Camera* overrideRenderCamera;
+	Camera* overrideCullingCamera;
+
 	Array<RenderCommand> commands;
 
 	RenderPipeline pipeline;
@@ -34,10 +37,16 @@ private:
 
 	void UpdateBoundingBoxes(Scene* scene);
 	void CreateDrawCalls(Scene* scene);
+
+	Camera* GetRenderCamera(Scene* scene);
+	Camera* GetCullingCamera(Scene* scene);
 	
 public:
 	Renderer();
 	~Renderer();
+
+	void SetRenderCameraOverride(Camera* renderCamera) { overrideRenderCamera = renderCamera; }
+	void SetCullingCameraOverride(Camera* cullingCamera) { overrideCullingCamera = cullingCamera; }
 
 	// This function is run before calculating the world transforms of scene objects
 	void PreTransformUpdate(Scene* scene);

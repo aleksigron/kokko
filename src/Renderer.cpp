@@ -32,7 +32,9 @@ Renderer::Renderer() :
 	objectCount(0),
 	allocatedCount(0),
 	boundingBoxes(nullptr),
-	cullingState(nullptr)
+	cullingState(nullptr),
+	overrideRenderCamera(nullptr),
+	overrideCullingCamera(nullptr)
 {
 }
 
@@ -44,9 +46,20 @@ Renderer::~Renderer()
 	delete[] indexList;
 }
 
+Camera* Renderer::GetRenderCamera(Scene* scene)
+{
+	return overrideRenderCamera != nullptr ? overrideRenderCamera : scene->GetActiveCamera();
+}
+
+Camera* Renderer::GetCullingCamera(Scene* scene)
+{
+	return overrideCullingCamera != nullptr ? overrideCullingCamera : scene->GetActiveCamera();
+}
+
 void Renderer::PreTransformUpdate(Scene* scene)
 {
-	Mat4x4f cameraTransform = scene->GetLocalTransform(scene->GetActiveCamera()->GetSceneObjectId());
+	Camera* camera = this->GetRenderCamera(scene);
+	Mat4x4f cameraTransform = scene->GetLocalTransform(camera->GetSceneObjectId());
 	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 	if (scene->skybox.IsInitialized())
@@ -61,12 +74,12 @@ void Renderer::Render(Scene* scene)
 	Engine* engine = Engine::GetInstance();
 	ResourceManager* res = engine->GetResourceManager();
 
-	Camera* cam = scene->GetActiveCamera();
-	Mat4x4f cameraTransform = scene->GetLocalTransform(cam->GetSceneObjectId());
+	Camera* renderCamera = this->GetRenderCamera(scene);
+	Camera* cullingCamera = this->GetCullingCamera(scene);
+	Mat4x4f cullingCameraTransform = scene->GetWorldTransform(cullingCamera->GetSceneObjectId());
 
-	// Update view frustum
 	ViewFrustum frustum;
-	frustum.UpdateFrustum(*cam, cameraTransform);
+	frustum.UpdateFrustum(*cullingCamera, cullingCameraTransform);
 
 	this->UpdateBoundingBoxes(scene);
 
@@ -89,8 +102,8 @@ void Renderer::Render(Scene* scene)
 
 	RenderPipeline::BlendingDisable();
 
-	Mat4x4f viewMatrix = cam->GetViewMatrix();
-	Mat4x4f projectionMatrix = cam->GetProjectionMatrix();
+	Mat4x4f viewMatrix = renderCamera->GetViewMatrix();
+	Mat4x4f projectionMatrix = renderCamera->GetProjectionMatrix();
 	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
 
 	for (unsigned index = 0, commandCount = commands.GetCount(); index < commandCount; ++index)
