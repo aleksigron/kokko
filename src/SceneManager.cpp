@@ -151,7 +151,7 @@ unsigned int SceneManager::CreateScene()
 	}
 
 	// Call constructor
-	new(&scenes[sceneCount]) Scene();
+	new(&scenes[sceneCount]) Scene(sceneCount + 1);
 
 	return ++sceneCount;
 }

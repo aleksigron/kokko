@@ -1,6 +1,6 @@
 #include "Scene.hpp"
 
-Scene::Scene() : activeCamera(nullptr)
+Scene::Scene(unsigned int sceneId) : id(sceneId), activeCamera(nullptr)
 {
 	this->objectBatch = new SceneObjectBatch;
 
@@ -18,7 +18,10 @@ Scene::~Scene()
 
 Scene& Scene::operator=(Scene&& other)
 {
+	this->id = other.id;
 	this->objectBatch = other.objectBatch;
+
+	other.id = 0;
 	other.objectBatch = nullptr;
 
 	return *this;

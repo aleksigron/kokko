@@ -23,18 +23,22 @@ public:
 	static const unsigned int Root = 0;
 
 private:
+	unsigned int id;
+
 	SceneObjectBatch* objectBatch;
 
 	Camera* activeCamera;
 
 public:
-	Scene();
+	Scene(unsigned int sceneId);
 	~Scene();
 
 	Scene& operator=(Scene&& other);
 
 	Color backgroundColor;
 	Skybox skybox;
+
+	unsigned int GetSceneId() const { return id; }
 
 	unsigned int AddSceneObject();
 
