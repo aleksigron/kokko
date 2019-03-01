@@ -22,7 +22,7 @@
 
 App* App::instance = nullptr;
 
-App::App()
+App::App() : cameraControllerEnable(true)
 {
 	App::instance = this;
 }
@@ -62,5 +62,6 @@ void App::Initialize()
 
 void App::Update()
 {
-	this->cameraController.Update();
+	if (this->cameraControllerEnable)
+		this->cameraController.Update();
 }

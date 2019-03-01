@@ -9,8 +9,10 @@
 #include "DebugVectorRenderer.hpp"
 
 DebugCulling::DebugCulling(DebugVectorRenderer* vectorRenderer) :
-	vectorRenderer(vectorRenderer)
+	vectorRenderer(vectorRenderer),
+	controllerEnable(false)
 {
+	this->controller.SetControlledCamera(&camera);
 }
 
 DebugCulling::~DebugCulling()
@@ -25,12 +27,15 @@ void DebugCulling::EnableOverrideCamera(bool enableDebugCamera)
 
 void DebugCulling::SetControlledCamera(bool enableDebugCamera)
 {
-	Camera* overrideCamera = enableDebugCamera ? &camera : nullptr;
-	App::GetInstance()->SetOverrideControlledCamera(overrideCamera);
+	this->controllerEnable = enableDebugCamera;
+	App::GetInstance()->SetCameraControllerEnable(!enableDebugCamera);
 }
 
 void DebugCulling::UpdateAndDraw(Scene* scene, bool controlDebugCamera)
 {
+	if (controllerEnable)
+		this->controller.Update();
+
 	if (this->camera.GetSceneObjectId() == 0)
 	{
 		Vec2f s = Engine::GetInstance()->GetMainWindow()->GetFrameBufferSize();

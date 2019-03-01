@@ -11,6 +11,8 @@ private:
 	DebugVectorRenderer* vectorRenderer;
 
 	Camera camera;
+	CameraController controller;
+	bool controllerEnable;
 
 public:
 	DebugCulling(DebugVectorRenderer* vectorRenderer);

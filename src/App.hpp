@@ -13,6 +13,7 @@ private:
 
 	Camera mainCamera;
 	CameraController cameraController;
+	bool cameraControllerEnable;
 	
 public:
 	App();
@@ -21,9 +22,9 @@ public:
 	void Initialize();
 	void Update();
 
-	void SetOverrideControlledCamera(Camera* camera)
+	void SetCameraControllerEnable(bool enable)
 	{
-		cameraController.SetControlledCamera(camera != nullptr ? camera : &mainCamera);
+		cameraControllerEnable = enable;
 	}
 
 	AppSettings* GetSettings() { return &settings; }
