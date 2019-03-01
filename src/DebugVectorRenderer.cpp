@@ -256,7 +256,7 @@ void DebugVectorRenderer::DrawRectangleScreen(const Rectangle& rectangle, const 
 	}
 }
 
-void DebugVectorRenderer::Render()
+void DebugVectorRenderer::Render(Camera* camera)
 {
 	if (primitiveCount > 0)
 	{
@@ -270,12 +270,8 @@ void DebugVectorRenderer::Render()
 		if (meshesInitialized == false)
 			this->CreateMeshes();
 
-		Camera* camera = this->activeCamera;
-		Window* window = engine->GetMainWindow();
-
 		Mat4x4f viewProj = camera->GetProjectionMatrix() * camera->GetViewMatrix();
-		Mat4x4f screenProj = window->GetScreenSpaceProjectionMatrix();
-
+		Mat4x4f screenProj = engine->GetMainWindow()->GetScreenSpaceProjectionMatrix();
 
 		int colorUniformLocation = -1;
 		for (unsigned int i = 0; i < shader->materialUniformCount; ++i)

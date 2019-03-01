@@ -88,7 +88,7 @@ void Engine::Update()
 	primaryScene->CalculateWorldTransforms();
 	this->renderer->Render(primaryScene);
 
-	this->debug->Render();
+	this->debug->Render(primaryScene);
 
 	this->mainWindow->UpdateInput();
 

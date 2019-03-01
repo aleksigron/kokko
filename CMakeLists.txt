@@ -42,6 +42,8 @@ set (KOKKO_SOURCES
 	src/Debug.hpp
 	src/DebugConsole.cpp
 	src/DebugConsole.hpp
+	src/DebugCulling.cpp
+	src/DebugCulling.hpp
 	src/DebugGraph.cpp
 	src/DebugGraph.hpp
 	src/DebugLog.cpp

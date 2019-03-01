@@ -7,15 +7,18 @@
 #include "Engine.hpp"
 #include "Time.hpp"
 #include "Window.hpp"
+#include "Scene.hpp"
 #include "InputManager.hpp"
 #include "KeyboardInputView.hpp"
 #include "BitmapFont.hpp"
+#include "Renderer.hpp"
 
 #include "DebugVectorRenderer.hpp"
 #include "DebugTextRenderer.hpp"
+#include "DebugGraph.hpp"
+#include "DebugCulling.hpp"
 #include "DebugConsole.hpp"
 #include "DebugLog.hpp"
-#include "DebugGraph.hpp"
 
 Debug::Debug() :
 	window(nullptr),
@@ -26,6 +29,7 @@ Debug::Debug() :
 	vectorRenderer = new DebugVectorRenderer;
 	textRenderer = new DebugTextRenderer;
 	graph = new DebugGraph(vectorRenderer);
+	culling = new DebugCulling(vectorRenderer);
 	console = new DebugConsole(textRenderer, vectorRenderer);
 	log = new DebugLog(console);
 }
@@ -73,7 +77,7 @@ void Debug::SetWindow(Window* window)
 	graph->SetDrawArea(graphArea);
 }
 
-void Debug::Render()
+void Debug::Render(Scene* scene)
 {
 	bool vsync = false;
 
@@ -96,6 +100,15 @@ void Debug::Render()
 		{
 			this->mode = DebugMode::FrameTime;
 		}
+		else if (keyboard->GetKeyDown(Key::F3))
+		{
+			if (oldMode == DebugMode::CullingPri)
+				this->mode = DebugMode::CullingSec;
+			else
+				this->mode = DebugMode::CullingPri;
+		}
+
+		// Check vsync switching
 
 		vsync = window->GetSwapInterval() != 0;
 		if (keyboard->GetKeyDown(Key::F8))
@@ -104,14 +117,49 @@ void Debug::Render()
 			window->SetSwapInterval(vsync ? 1 : 0);
 		}
 
+		// Check console switching
+
 		if (oldMode != DebugMode::Console && this->mode == DebugMode::Console)
 			console->RequestFocus();
 		else if (oldMode == DebugMode::Console && this->mode != DebugMode::Console)
 			console->ReleaseFocus();
+
+		// Check culling camera controller switching
+
+		if (oldMode != DebugMode::CullingSec && this->mode == DebugMode::CullingSec)
+		{
+			// Disable main camera controller
+			culling->SetControlledCamera(true);
+		}
+		else if (oldMode == DebugMode::CullingSec && this->mode != DebugMode::CullingSec)
+		{
+			// Enable main camera controller
+			culling->SetControlledCamera(false);
+		}
+
+		// Check culling override camera switching
+
+		if ((oldMode != DebugMode::CullingSec && oldMode != DebugMode::CullingPri) &&
+			(this->mode == DebugMode::CullingSec || this->mode == DebugMode::CullingPri))
+		{
+			// Enable debug camera
+			culling->EnableOverrideCamera(true);
+		}
+		else if ((oldMode == DebugMode::CullingSec || oldMode == DebugMode::CullingPri) &&
+			(this->mode != DebugMode::CullingSec && this->mode != DebugMode::CullingPri))
+		{
+			// Disable debug camera
+			culling->EnableOverrideCamera(false);
+		}
+
 	}
 
 	char logChar = (mode == DebugMode::Console) ? '*' : ' ';
 	char timeChar = (mode == DebugMode::FrameTime) ? '*' : ' ';
+
+	bool cullingDebugEnable = mode == DebugMode::CullingPri || mode == DebugMode::CullingSec;
+	char cullChar = cullingDebugEnable ? '*' : ' ';
+
 	char vsyncChar = vsync ? 'Y' : 'N';
 
 	double now = Time::GetRunningTime();
@@ -123,8 +171,8 @@ void Debug::Render()
 
 	// Draw debug mode guide
 	char buffer[128];
-	const char* format = "Debug: [F1]Console%c [F2]FrameTime%c [F8]Vsync: %c, %.1f fps";
-	std::snprintf(buffer, sizeof(buffer), format, logChar, timeChar, vsyncChar, currentFrameRate);
+	const char* format = "Debug: [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F8]Vsync: %c, %.1f fps";
+	std::snprintf(buffer, sizeof(buffer), format, logChar, timeChar, cullChar, vsyncChar, currentFrameRate);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f));
 
 	// Add frame time to debug graph
@@ -144,11 +192,17 @@ void Debug::Render()
 		case DebugMode::FrameTime:
 			graph->DrawToVectorRenderer();
 			break;
+
+		case DebugMode::CullingPri:
+			culling->UpdateAndDraw(scene, false);
+			break;
+
+		case DebugMode::CullingSec:
+			culling->UpdateAndDraw(scene, true);
+			break;
 	}
 
-	vectorRenderer->Render();
-
-	// Draw debug texts
+	vectorRenderer->Render(cullingDebugEnable ? culling->GetCamera() : scene->GetActiveCamera());
 	textRenderer->Render();
 }
 

@@ -22,7 +22,7 @@ public:
 	Camera();
 	~Camera();
 
-	void InitializeSceneObject(unsigned int sceneId);
+	void InitializeSceneObject(Scene* scene);
 
 	// The camera's vertical field of view in radians
 	float perspectiveFieldOfView = 1.0f;
@@ -38,7 +38,7 @@ public:
 	
 	Projection projectionType = Projection::Perspective;
 
-	Scene* GetContainingScene() const;
+	unsigned int GetContainingSceneId() const { return sceneId; }
 	unsigned int GetSceneObjectId() const { return sceneObjectId; }
 
 	Mat4x4f GetViewMatrix() const;

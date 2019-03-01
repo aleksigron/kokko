@@ -14,26 +14,20 @@ Camera::~Camera()
 {
 }
 
-void Camera::InitializeSceneObject(unsigned int sceneId)
+void Camera::InitializeSceneObject(Scene* scene)
 {
-	this->sceneId = sceneId;
+	this->sceneId = scene->GetSceneId();
 
 	if (sceneObjectId == 0)
 	{
-		Scene* scene = this->GetContainingScene();
 		this->sceneObjectId = scene->AddSceneObject();
 	}
 }
 
-Scene* Camera::GetContainingScene() const
-{
-	SceneManager* sm = Engine::GetInstance()->GetSceneManager();
-	return sm->GetScene(sceneId);
-}
-
 Mat4x4f Camera::GetViewMatrix() const
 {
-	Scene* scene = this->GetContainingScene();
+	SceneManager* sm = Engine::GetInstance()->GetSceneManager();
+	Scene* scene = sm->GetScene(sceneId);
 	Mat4x4f m = scene->GetWorldTransform(sceneObjectId);
 	Mat3x3f inverseRotation = m.Get3x3().GetTransposed();
 	Vec3f translation = -(inverseRotation * Vec3f(m[12], m[13], m[14]));

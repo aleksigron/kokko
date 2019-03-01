@@ -15,6 +15,7 @@
 #include "PointerInput.hpp"
 #include "KeyboardInputView.hpp"
 
+#include "SceneManager.hpp"
 #include "Scene.hpp"
 
 #include "App.hpp"
@@ -58,11 +59,12 @@ void CameraController::Update()
 {
 	this->VerifySensitityIsLoaded();
 
-	Scene* scene = controlledCamera->GetContainingScene();
+	SceneManager* sm = Engine::GetInstance()->GetSceneManager();
+	Scene* scene = sm->GetScene(controlledCamera->GetContainingSceneId());
 
-	InputManager* inputManagaer = Engine::GetInstance()->GetMainWindow()->GetInputManager();
-	PointerInput* pi = inputManagaer->GetPointerInput();
-	KeyboardInputView* kb = inputManagaer->GetKeyboardInputView();
+	InputManager* inputManager = Engine::GetInstance()->GetMainWindow()->GetInputManager();
+	PointerInput* pi = inputManager->GetPointerInput();
+	KeyboardInputView* kb = inputManager->GetKeyboardInputView();
 
 	if (kb->GetKeyDown(Key::Space) && mouseGrabActive == false)
 	{

@@ -3,10 +3,12 @@
 class DebugVectorRenderer;
 class DebugTextRenderer;
 class DebugGraph;
+class DebugCulling;
 class DebugConsole;
 class DebugLog;
 
 class Window;
+class Scene;
 
 class Debug
 {
@@ -14,6 +16,7 @@ private:
 	DebugVectorRenderer* vectorRenderer;
 	DebugTextRenderer* textRenderer;
 	DebugGraph* graph;
+	DebugCulling* culling;
 	DebugConsole* console;
 	DebugLog* log;
 
@@ -26,7 +29,9 @@ private:
 	{
 		None,
 		Console,
-		FrameTime
+		FrameTime,
+		CullingPri,
+		CullingSec
 	}
 	mode;
 
@@ -36,7 +41,7 @@ public:
 
 	void SetWindow(Window* window);
 	
-	void Render();
+	void Render(Scene* scene);
 
 	void CheckOpenGlErrors();
 

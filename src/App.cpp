@@ -38,9 +38,6 @@ void App::Initialize()
 
 	Engine* engine = Engine::GetInstance();
 
-	DebugVectorRenderer* debugVectorRenderer = engine->GetDebug()->GetVectorRenderer();
-	debugVectorRenderer->SetActiveCamera(&this->mainCamera);
-
 	this->cameraController.SetControlledCamera(&this->mainCamera);
 
 	SceneManager* sceneManager = engine->GetSceneManager();
@@ -53,7 +50,7 @@ void App::Initialize()
 	scene->SetActiveCamera(&this->mainCamera);
 	sceneManager->SetPrimarySceneId(sceneId);
 
-	this->mainCamera.InitializeSceneObject(sceneId);
+	this->mainCamera.InitializeSceneObject(scene);
 	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.3f, 1.5f));
 	scene->SetLocalTransform(this->mainCamera.GetSceneObjectId(), cameraTransform);
 
@@ -65,20 +62,5 @@ void App::Initialize()
 
 void App::Update()
 {
-	Engine* engine = Engine::GetInstance();
-	Debug* debug = engine->GetDebug();
-
 	this->cameraController.Update();
-
-	Color green(0.0f, 1.0f, 0.0f, 1.0f);
-	Color yellow(1.0f, 1.0f, 0.0f, 1.0f);
-	Color white(1.0f, 1.0f, 1.0f, 1.0f);
-
-	DebugVectorRenderer* debugVector = debug->GetVectorRenderer();
-	debugVector->DrawWireCube(Mat4x4f(), green);
-	debugVector->DrawWireSphere(Vec3f(), 0.5f, yellow);
-	debugVector->DrawLine(Vec3f(), Vec3f(0.2f, 0.2f, 0.2f), white);
-	debugVector->DrawLine(Vec3f(), Vec3f(-0.2f, 0.2f, 0.2f), white);
-	debugVector->DrawLine(Vec3f(), Vec3f(0.2f, 0.2f, -0.2f), white);
-	debugVector->DrawLine(Vec3f(), Vec3f(-0.2f, 0.2f, -0.2f), white);
 }

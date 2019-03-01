@@ -35,15 +35,11 @@ private:
 	bool meshesInitialized;
 	unsigned int meshIds[4];
 
-	Camera* activeCamera;
-
 	void CreateMeshes();
 
 public:
 	DebugVectorRenderer();
 	~DebugVectorRenderer();
-
-	void SetActiveCamera(Camera* camera) { this->activeCamera = camera; }
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
 	void DrawLine(const Vec3f& start, const Vec3f& end, const Color& color);
@@ -54,5 +50,5 @@ public:
 
 	void DrawRectangleScreen(const Rectangle& rectangle, const Color& color);
 
-	void Render();
+	void Render(Camera* camera);
 };
