@@ -56,6 +56,8 @@ set (KOKKO_SOURCES
 	src/EncodingUtf8.hpp
 	src/Engine.cpp
 	src/Engine.hpp
+	src/Entity.hpp
+	src/EntityManager.hpp
 	src/File.cpp
 	src/File.hpp
 	src/FrustumCulling.cpp
