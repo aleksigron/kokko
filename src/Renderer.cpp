@@ -1,8 +1,6 @@
 #include "Renderer.hpp"
 
-#include <cassert>
 #include <cstring>
-
 #include <cstdio>
 
 #include "IncludeOpenGL.hpp"
@@ -303,15 +301,15 @@ void Renderer::Reallocate()
 
 	unsigned int* newIndexList = new unsigned int[newAllocatedCount + 1];
 	RenderObject* newObjects = new RenderObject[newAllocatedCount];
-	boundingBoxes = new BoundingBox[newAllocatedCount];
-	cullingState = new FrustumCulling::CullingState[newAllocatedCount];
+	BoundingBox* newBoundingBoxes = new BoundingBox[newAllocatedCount];
+	FrustumCulling::CullingState* newCullingState = new FrustumCulling::CullingState[newAllocatedCount];
 
 	// We have old data
 	if (allocatedCount > 0)
 	{
 		// Copy old data to new buffers
-		std::memcpy(newIndexList, this->indexList, allocatedCount);
-		std::memcpy(newObjects, this->objects, allocatedCount);
+		std::memcpy(newIndexList, this->indexList, allocatedCount * sizeof(unsigned int));
+		std::memcpy(newObjects, this->objects, allocatedCount * sizeof(RenderObject));
 
 		// Delete old buffers
 		delete[] this->indexList;
@@ -324,6 +322,8 @@ void Renderer::Reallocate()
 
 	this->indexList = newIndexList;
 	this->objects = newObjects;
+	this->boundingBoxes = newBoundingBoxes;
+	this->cullingState = newCullingState;
 
 	allocatedCount = newAllocatedCount;
 }
@@ -358,16 +358,17 @@ unsigned int Renderer::AddRenderObject()
 
 void Renderer::RemoveRenderObject(unsigned int id)
 {
-	assert(id != 0);
-
-	// Put last object in removed objects place
-	if (indexList[id] < objectCount - 1)
+	if (id != 0)
 	{
-		objects[indexList[id]] = objects[objectCount - 1];
+		// Put last object in removed objects place
+		if (indexList[id] < objectCount - 1)
+		{
+			objects[indexList[id]] = objects[objectCount - 1];
+		}
+
+		indexList[id] = freeListFirst;
+		freeListFirst = id;
+
+		--objectCount;
 	}
-
-	indexList[id] = freeListFirst;
-	freeListFirst = id;
-
-	--objectCount;
 }
