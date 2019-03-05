@@ -63,6 +63,7 @@ set (KOKKO_SOURCES
 	src/FrustumCulling.cpp
 	src/FrustumCulling.hpp
 	src/Hash.hpp
+	src/HashMap.hpp
 	src/ImageData.cpp
 	src/ImageData.hpp
 	src/ImmutableString.cpp
