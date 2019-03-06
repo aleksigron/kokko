@@ -194,11 +194,11 @@ void Debug::Render(Scene* scene)
 			break;
 
 		case DebugMode::CullingPri:
-			culling->UpdateAndDraw(scene, false);
+			culling->UpdateAndDraw(scene);
 			break;
 
 		case DebugMode::CullingSec:
-			culling->UpdateAndDraw(scene, true);
+			culling->UpdateAndDraw(scene);
 			break;
 	}
 

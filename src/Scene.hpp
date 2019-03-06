@@ -1,33 +1,49 @@
 #pragma once
 
+#include "HashMap.hpp"
 #include "Mat4x4.hpp"
 #include "Color.hpp"
 #include "Skybox.hpp"
 
+#include "Entity.hpp"
+
 class Camera;
 
-struct SceneObjectBatch
+struct SceneObjectId
 {
-	static const unsigned int BatchSize = 512;
+	unsigned int i;
 
-	unsigned int used;
-
-	unsigned int parentIds[BatchSize];
-	Mat4x4f localTransforms[BatchSize];
-	Mat4x4f worldTransforms[BatchSize];
+	static const SceneObjectId Null;
 };
 
 class Scene
 {
-public:
-	static const unsigned int Root = 0;
-
 private:
-	unsigned int id;
+	struct InstanceData
+	{
+		unsigned int count;
+		unsigned int allocated;
+		void *buffer;
 
-	SceneObjectBatch* objectBatch;
+		Entity* entity;
+		Mat4x4f* local;
+		Mat4x4f* world;
+		SceneObjectId* parent;
+		SceneObjectId* firstChild;
+		SceneObjectId* nextSibling;
+		SceneObjectId* prevSibling;
+	}
+	data;
+
+	HashMap<unsigned int, SceneObjectId> map;
+
+	unsigned int sceneId;
 
 	Camera* activeCamera;
+
+	void Reallocate(unsigned int required);
+
+	static bool IsValidId(SceneObjectId id) { return id.i != 0; }
 
 public:
 	Scene(unsigned int sceneId);
@@ -35,30 +51,32 @@ public:
 
 	Scene& operator=(Scene&& other);
 
+	void Initialize();
+
 	Color backgroundColor;
 	Skybox skybox;
 
-	unsigned int GetSceneId() const { return id; }
+	unsigned int GetSceneId() const { return sceneId; }
 
-	unsigned int AddSceneObject();
-
-	void SetParent(unsigned int object, unsigned int parent);
-	void SetLocalTransform(unsigned int object, const Mat4x4f& transform);
-
-	Mat4x4f& GetWorldTransform(unsigned int object)
+	SceneObjectId Lookup(Entity e)
 	{
-		return objectBatch->worldTransforms[object];
-	}
-	
-	Mat4x4f& GetLocalTransform(unsigned int object)
-	{
-		return objectBatch->localTransforms[object];
+		HashMap<unsigned int, SceneObjectId>::KeyValuePair* pair = map.Lookup(e.id);
+		return pair != nullptr ? pair->value : SceneObjectId::Null;
 	}
 
-	void CalculateWorldTransforms();
+	SceneObjectId AddSceneObject(Entity e);
+	void AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* sceneObjectIds);
 
-	// Set the camera from which to render the scene
-	void SetActiveCamera(Camera* camera);
+	void SetParent(SceneObjectId id, SceneObjectId parent)
+	{
+		data.parent[id.i] = parent;
+	}
 
+	void SetLocalTransform(SceneObjectId id, const Mat4x4f& transform);
+
+	const Mat4x4f& GetWorldTransform(SceneObjectId id) { return data.world[id.i]; }
+	const Mat4x4f& GetLocalTransform(SceneObjectId id) { return data.local[id.i]; }
+
+	void SetActiveCamera(Camera* camera) { activeCamera = camera; }
 	Camera* GetActiveCamera() { return activeCamera; }
 };

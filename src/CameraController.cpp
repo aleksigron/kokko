@@ -60,7 +60,7 @@ void CameraController::Update()
 	this->VerifySensitityIsLoaded();
 
 	SceneManager* sm = Engine::GetInstance()->GetSceneManager();
-	Scene* scene = sm->GetScene(controlledCamera->GetContainingSceneId());
+	Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
 
 	InputManager* inputManager = Engine::GetInstance()->GetMainWindow()->GetInputManager();
 	PointerInput* pi = inputManager->GetPointerInput();
@@ -101,7 +101,9 @@ void CameraController::Update()
 	Vec3f right = rotation.Right();
 	Vec3f forward = rotation.Forward();
 
-	Mat4x4f currentTransform = scene->GetLocalTransform(controlledCamera->GetSceneObjectId());
+	Entity cameraEntity = controlledCamera->GetEntity();
+	SceneObjectId cameraSceneObject = scene->Lookup(cameraEntity);
+	Mat4x4f currentTransform = scene->GetLocalTransform(cameraSceneObject);
 	Vec3f position = (currentTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 	if (mouseLookEnable == false)
@@ -139,5 +141,5 @@ void CameraController::Update()
 	position += cameraVelocity * Time::GetDeltaTime();
 
 	Mat4x4f newTransform = Mat4x4f::Translate(position) * Mat4x4f(rotation);
-	scene->SetLocalTransform(controlledCamera->GetSceneObjectId(), newTransform);
+	scene->SetLocalTransform(cameraSceneObject, newTransform);
 }

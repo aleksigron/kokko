@@ -12,7 +12,7 @@
 #include "Time.hpp"
 
 #include "Renderer.hpp"
-
+#include "EntityManager.hpp"
 #include "Material.hpp"
 #include "ResourceManager.hpp"
 #include "SceneManager.hpp"
@@ -47,12 +47,16 @@ void App::Initialize()
 		sceneId = sceneManager->CreateScene();
 
 	Scene* scene = sceneManager->GetScene(sceneId);
+
+
 	scene->SetActiveCamera(&this->mainCamera);
 	sceneManager->SetPrimarySceneId(sceneId);
 
-	this->mainCamera.InitializeSceneObject(scene);
+	Entity mainCameraEntity = engine->GetEntityManager()->Create();
+	mainCamera.SetEntity(mainCameraEntity);
+	SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);
 	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.3f, 1.5f));
-	scene->SetLocalTransform(this->mainCamera.GetSceneObjectId(), cameraTransform);
+	scene->SetLocalTransform(cameraSceneObject, cameraTransform);
 
 	Window* window = engine->GetMainWindow();
 	Vec2f frameSize = window->GetFrameBufferSize();

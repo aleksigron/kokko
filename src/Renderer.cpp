@@ -56,15 +56,6 @@ Camera* Renderer::GetCullingCamera(Scene* scene)
 
 void Renderer::PreTransformUpdate(Scene* scene)
 {
-	Camera* camera = this->GetRenderCamera(scene);
-	Mat4x4f cameraTransform = scene->GetLocalTransform(camera->GetSceneObjectId());
-	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-
-	if (scene->skybox.IsInitialized())
-	{
-		// Update skybox transform
-		scene->skybox.UpdateTransform(cameraPosition);
-	}
 }
 
 void Renderer::Render(Scene* scene)
@@ -73,8 +64,17 @@ void Renderer::Render(Scene* scene)
 	ResourceManager* res = engine->GetResourceManager();
 
 	Camera* renderCamera = this->GetRenderCamera(scene);
+	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());
+	Mat4x4f renderCameraTransform = scene->GetWorldTransform(renderCameraObject);
+	Vec3f cameraPosition = (renderCameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+
+	if (scene->skybox.IsInitialized()) // Update skybox transform
+		scene->skybox.UpdateTransform(cameraPosition);
+
 	Camera* cullingCamera = this->GetCullingCamera(scene);
-	Mat4x4f cullingCameraTransform = scene->GetWorldTransform(cullingCamera->GetSceneObjectId());
+
+	SceneObjectId cullingCameraObject = scene->Lookup(cullingCamera->GetEntity());
+	Mat4x4f cullingCameraTransform = scene->GetWorldTransform(cullingCameraObject);
 
 	ViewFrustum frustum;
 	frustum.UpdateFrustum(*cullingCamera, cullingCameraTransform);
@@ -100,7 +100,7 @@ void Renderer::Render(Scene* scene)
 
 	RenderPipeline::BlendingDisable();
 
-	Mat4x4f viewMatrix = renderCamera->GetViewMatrix();
+	Mat4x4f viewMatrix = Camera::GetViewMatrix(renderCameraTransform);
 	Mat4x4f projectionMatrix = renderCamera->GetProjectionMatrix();
 	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
 
@@ -170,7 +170,8 @@ void Renderer::Render(Scene* scene)
 				}
 			}
 
-			Mat4x4f modelMatrix = scene->GetWorldTransform(obj.sceneObjectId);
+			SceneObjectId objId = scene->Lookup(obj.entity);
+			Mat4x4f modelMatrix = scene->GetWorldTransform(objId);
 
 			if (shader->uniformMatMVP >= 0)
 			{
@@ -221,11 +222,15 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	Engine* engine = Engine::GetInstance();
 	ResourceManager* rm = engine->GetResourceManager();
 
-	Camera* activeCamera = scene->GetActiveCamera();
-	Mat4x4f cameraTransform = scene->GetWorldTransform(activeCamera->GetSceneObjectId());
+	Camera* renderCamera = this->GetRenderCamera(scene);
+
+	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
+	Mat4x4f cameraTransform = scene->GetWorldTransform(cameraObject);
+
 	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 	Vec3f cameraForward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
-	float farPlane = activeCamera->farClipDistance;
+	
+	float farPlane = renderCamera->farClipDistance;
 
 	// Disable depth writing before objects in skybox layer
 	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
@@ -261,7 +266,8 @@ void Renderer::CreateDrawCalls(Scene* scene)
 			Material& material = rm->GetMaterial(obj.materialId);
 			Shader* shader = rm->GetShader(material.shaderId);
 
-			Mat4x4f objTransform = scene->GetWorldTransform(obj.sceneObjectId);
+			SceneObjectId sceneObject = scene->Lookup(obj.entity);
+			Mat4x4f objTransform = scene->GetWorldTransform(sceneObject);
 			Vec3f objPosition = (objTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
@@ -281,7 +287,8 @@ void Renderer::UpdateBoundingBoxes(Scene* scene)
 	{
 		const Mesh& mesh = rm->GetMesh(objects[i].meshId);
 
-		const Mat4x4f& matrix = scene->GetWorldTransform(objects[i].sceneObjectId);
+		SceneObjectId sceneObject = scene->Lookup(objects[i].entity);
+		const Mat4x4f& matrix = scene->GetWorldTransform(sceneObject);
 		boundingBoxes[i] = mesh.bounds.Transform(matrix);
 	}
 }

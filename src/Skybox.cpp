@@ -5,17 +5,19 @@
 #include "Engine.hpp"
 #include "Scene.hpp"
 #include "SceneLayer.hpp"
+#include "SceneManager.hpp"
 #include "Renderer.hpp"
+#include "EntityManager.hpp"
 #include "ResourceManager.hpp"
 
 #include "Mesh.hpp"
 #include "VertexFormat.hpp"
 
 Skybox::Skybox() :
-	renderScene(nullptr),
-	renderObjectId(0),
-	sceneObjectId(0)
+	renderSceneId(0),
+	renderObjectId(0)
 {
+	entity = Entity{};
 }
 
 Skybox::~Skybox()
@@ -46,9 +48,8 @@ void Skybox::Initialize(Scene* scene, unsigned int materialId)
 
 	Engine* engine = Engine::GetInstance();
 	Renderer* renderer = engine->GetRenderer();
+	EntityManager* entityManager = engine->GetEntityManager();
 	ResourceManager* resourceManager = engine->GetResourceManager();
-
-	this->renderScene = scene;
 
 	unsigned meshId = resourceManager->CreateMesh();
 	Mesh& mesh = resourceManager->GetMesh(meshId);
@@ -66,20 +67,26 @@ void Skybox::Initialize(Scene* scene, unsigned int materialId)
 	mesh.SetPrimitiveMode(Mesh::PrimitiveMode::Triangles);
 	mesh.Upload_3f(vertices, indices);
 
+	this->renderSceneId = scene->GetSceneId();
+	this->entity = entityManager->Create();
+
 	// Add scene object
-	sceneObjectId = scene->AddSceneObject();
+	scene->AddSceneObject(this->entity);
 
 	// Add render object
 	renderObjectId = renderer->AddRenderObject();
 	RenderObject& renderObject = renderer->GetRenderObject(renderObjectId);
 	renderObject.materialId = materialId;
 	renderObject.meshId = meshId;
-	renderObject.sceneObjectId = sceneObjectId;
+	renderObject.entity = this->entity;
 	renderObject.layer = SceneLayer::Skybox;
 }
 
 void Skybox::UpdateTransform(const Vec3f& cameraPosition) const
 {
 	Mat4x4f skyboxTransform = Mat4x4f::Translate(cameraPosition);
-	this->renderScene->SetLocalTransform(this->sceneObjectId, skyboxTransform);
+
+	Scene* scene = Engine::GetInstance()->GetSceneManager()->GetScene(renderSceneId);
+	SceneObjectId sceneObject = scene->Lookup(entity);
+	scene->SetLocalTransform(sceneObject, skyboxTransform);
 }

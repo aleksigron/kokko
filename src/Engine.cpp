@@ -4,6 +4,7 @@
 
 #include "Window.hpp"
 #include "Time.hpp"
+#include "EntityManager.hpp"
 #include "Renderer.hpp"
 #include "ResourceManager.hpp"
 #include "SceneManager.hpp"
@@ -32,6 +33,7 @@ Engine::Engine()
 	this->debug = new Debug;
 
 	this->time = new Time;
+	this->entityManager = new EntityManager;
 	this->renderer = new Renderer;
 	this->resourceManager = new ResourceManager;
 	this->sceneManager = new SceneManager;
@@ -84,8 +86,6 @@ void Engine::Update()
 	Scene* primaryScene = this->sceneManager->GetScene(primarySceneId);
 
 	this->renderer->PreTransformUpdate(primaryScene);
-
-	primaryScene->CalculateWorldTransforms();
 	this->renderer->Render(primaryScene);
 
 	this->debug->Render(primaryScene);

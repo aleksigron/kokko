@@ -2,6 +2,7 @@
 
 class Window;
 class Time;
+class EntityManager;
 class Renderer;
 class ResourceManager;
 class SceneManager;
@@ -15,6 +16,7 @@ private:
 
 	Window* mainWindow;
 	Time* time;
+	EntityManager* entityManager;
 	Renderer* renderer;
 	ResourceManager* resourceManager;
 	SceneManager* sceneManager;
@@ -31,6 +33,7 @@ public:
 	static Engine* GetInstance() { return instance; }
 
 	Window* GetMainWindow() { return mainWindow; }
+	EntityManager* GetEntityManager() { return entityManager; }
 	Renderer* GetRenderer() { return renderer; }
 	ResourceManager* GetResourceManager() { return resourceManager; }
 	SceneManager* GetSceneManager() { return sceneManager; }

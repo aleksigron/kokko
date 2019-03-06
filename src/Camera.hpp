@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Mat4x4.hpp"
-#include "Vec2.hpp"
+#include "Entity.hpp"
 
 class Scene;
 
@@ -15,14 +15,10 @@ public:
 	};
 
 private:
-	unsigned int sceneId;
-	unsigned int sceneObjectId;
+	Entity entity;
 
 public:
 	Camera();
-	~Camera();
-
-	void InitializeSceneObject(Scene* scene);
 
 	// The camera's vertical field of view in radians
 	float perspectiveFieldOfView = 1.0f;
@@ -38,10 +34,10 @@ public:
 	
 	Projection projectionType = Projection::Perspective;
 
-	unsigned int GetContainingSceneId() const { return sceneId; }
-	unsigned int GetSceneObjectId() const { return sceneObjectId; }
+	Entity GetEntity() const { return entity; }
+	void SetEntity(Entity e) { entity = e; }
 
-	Mat4x4f GetViewMatrix() const;
+	static Mat4x4f GetViewMatrix(const Mat4x4f& cameraTransform);
 	Mat4x4f GetProjectionMatrix() const;
 
 	void SetAspectRatio(float width, float height)

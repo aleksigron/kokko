@@ -18,7 +18,7 @@ public:
 	DebugCulling(DebugVectorRenderer* vectorRenderer);
 	~DebugCulling();
 
-	void UpdateAndDraw(Scene* scene, bool controlDebugCamera);
+	void UpdateAndDraw(Scene* scene);
 
 	void EnableOverrideCamera(bool enableDebugCamera);
 	void SetControlledCamera(bool enableDebugCamera);

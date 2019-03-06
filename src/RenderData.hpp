@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "ObjectId.hpp"
+#include "Entity.hpp"
 #include "SceneLayer.hpp"
 
 struct RenderCommand
@@ -30,7 +30,7 @@ struct RenderObject
 {
 	unsigned int meshId;
 	unsigned int materialId;
-	unsigned int sceneObjectId;
+	Entity entity;
 	SceneLayer layer;
 };
 

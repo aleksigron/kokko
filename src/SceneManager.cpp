@@ -10,6 +10,7 @@
 
 #include "Engine.hpp"
 #include "Renderer.hpp"
+#include "EntityManager.hpp"
 #include "ResourceManager.hpp"
 #include "Scene.hpp"
 #include "File.hpp"
@@ -58,6 +59,7 @@ unsigned int SceneManager::LoadSceneFromFile(const char* path)
 
 			Engine* engine = Engine::GetInstance();
 			Renderer* renderer = engine->GetRenderer();
+			EntityManager* entityManager = engine->GetEntityManager();
 			ResourceManager* rm = engine->GetResourceManager();
 
 			rapidjson::Document doc;
@@ -76,8 +78,12 @@ unsigned int SceneManager::LoadSceneFromFile(const char* path)
 					{
 						if (itr->IsObject())
 						{
+							Entity entity = entityManager->Create();
+
+							SceneObjectId sceneObj = scene->AddSceneObject(entity);
+
 							RenderObject& renderObj = renderer->GetRenderObject(renderer->AddRenderObject());
-							renderObj.sceneObjectId = scene->AddSceneObject();
+							renderObj.entity = entity;
 							renderObj.layer = SceneLayer::World;
 
 							MemberItr meshItr = itr->FindMember("mesh");
@@ -98,7 +104,7 @@ unsigned int SceneManager::LoadSceneFromFile(const char* path)
 							if (positionItr != itr->MemberEnd())
 							{
 								Vec3f pos = ValueSerialization::Deserialize_Vec3f(positionItr->value);
-								scene->SetLocalTransform(renderObj.sceneObjectId, Mat4x4f::Translate(pos));
+								scene->SetLocalTransform(sceneObj, Mat4x4f::Translate(pos));
 							}
 						}
 					}

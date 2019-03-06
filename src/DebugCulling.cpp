@@ -2,6 +2,7 @@
 
 #include "App.hpp"
 #include "Engine.hpp"
+#include "EntityManager.hpp"
 #include "Window.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
@@ -31,28 +32,29 @@ void DebugCulling::SetControlledCamera(bool enableDebugCamera)
 	App::GetInstance()->SetCameraControllerEnable(!enableDebugCamera);
 }
 
-void DebugCulling::UpdateAndDraw(Scene* scene, bool controlDebugCamera)
+void DebugCulling::UpdateAndDraw(Scene* scene)
 {
+	if (camera.GetEntity().IsNull()) // Initialize culling debug camera
+	{
+		Vec2f s = Engine::GetInstance()->GetMainWindow()->GetFrameBufferSize();
+		camera.SetAspectRatio(s.x, s.y);
+
+		Entity cameraEntity = Engine::GetInstance()->GetEntityManager()->Create();
+		camera.SetEntity(cameraEntity);
+		SceneObjectId cameraSceneObject = scene->AddSceneObject(cameraEntity);
+		scene->SetLocalTransform(cameraSceneObject, Mat4x4f());
+	}
+
 	if (controllerEnable)
 		this->controller.Update();
 
-	if (this->camera.GetSceneObjectId() == 0)
-	{
-		Vec2f s = Engine::GetInstance()->GetMainWindow()->GetFrameBufferSize();
-		this->camera.SetAspectRatio(s.x, s.y);
-
-		this->camera.InitializeSceneObject(scene);
-		unsigned int cameraSceneObj = this->camera.GetSceneObjectId();
-		scene->SetLocalTransform(cameraSceneObj, Mat4x4f());
-	}
-
-	Camera* camera = scene->GetActiveCamera();
-	unsigned int cameraSceneObject = camera->GetSceneObjectId();
-
-	const Mat4x4f& t = scene->GetWorldTransform(cameraSceneObject);
+	Camera* sceneCamera = scene->GetActiveCamera();
+	Entity sceneCameraEntity = sceneCamera->GetEntity();
+	SceneObjectId sceneCameraSceneObj = scene->Lookup(sceneCameraEntity);
+	const Mat4x4f& t = scene->GetWorldTransform(sceneCameraSceneObj);
 
 	ViewFrustum frustum;
-	frustum.UpdateFrustum(*camera, t);
+	frustum.UpdateFrustum(camera, t);
 
 	Color white(1.0f, 1.0f, 1.0f);
 

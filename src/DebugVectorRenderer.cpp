@@ -11,6 +11,8 @@
 #include "Window.hpp"
 #include "Mesh.hpp"
 #include "Shader.hpp"
+#include "Scene.hpp"
+#include "SceneManager.hpp"
 #include "ResourceManager.hpp"
 
 DebugVectorRenderer::DebugVectorRenderer() :
@@ -270,7 +272,12 @@ void DebugVectorRenderer::Render(Camera* camera)
 		if (meshesInitialized == false)
 			this->CreateMeshes();
 
-		Mat4x4f viewProj = camera->GetProjectionMatrix() * camera->GetViewMatrix();
+		SceneManager* sm = engine->GetSceneManager();
+		Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
+		SceneObjectId cameraSceneObject = scene->Lookup(camera->GetEntity());
+		const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
+
+		Mat4x4f viewProj = camera->GetProjectionMatrix() * Camera::GetViewMatrix(cameraTransform);
 		Mat4x4f screenProj = engine->GetMainWindow()->GetScreenSpaceProjectionMatrix();
 
 		int colorUniformLocation = -1;

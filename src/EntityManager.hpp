@@ -13,9 +13,19 @@ private:
 	Queue<unsigned> freeIndices;
 
 public:
+	EntityManager()
+	{
+		// Reserve index 0 as invalid value
+		generation.PushBack(0);
+	}
+
+	~EntityManager()
+	{
+	}
+
 	Entity Create()
 	{
-		unsigned idx;
+		unsigned int idx;
 		if (freeIndices.GetCount() > MinimumFreeIndices)
 		{
 			idx = freeIndices.Peek();
