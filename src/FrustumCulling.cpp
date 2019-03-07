@@ -43,8 +43,6 @@ void FrustumCulling::CullAABB(const ViewFrustum* frustum,
 				result = CullState::Intersect;
 		}
 
-		const unsigned int packIndex = boxIdx / CullStatePacked16::Count;
-		const unsigned int cellIndex = boxIdx % CullStatePacked16::Count;
-		state[packIndex].Set(cellIndex, result);
+		CullStatePacked16::Set(state, boxIdx, result);
 	}
 }

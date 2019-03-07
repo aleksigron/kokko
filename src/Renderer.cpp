@@ -251,11 +251,8 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	// Create draw commands for render objects in scene
 	for (unsigned i = 0; i < data.count; ++i)
 	{
-		const unsigned int packIndex = CullStatePacked16::PackIndex(i);
-		const unsigned int cellIndex = CullStatePacked16::CellIndex(i);
-
 		// Object is in potentially visible set
-		if (data.cullState[packIndex].IsOutside(cellIndex) == false)
+		if (CullStatePacked16::IsOutside(data.cullState, i) == false)
 		{
 			unsigned int materialId = data.material[i];
 			Material& material = rm->GetMaterial(materialId);
