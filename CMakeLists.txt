@@ -38,6 +38,7 @@ set (KOKKO_SOURCES
 	src/Collection.hpp
 	src/Color.hpp
 	src/ColorSrgb.hpp
+	src/CullState.hpp
 	src/Debug.cpp
 	src/Debug.hpp
 	src/DebugConsole.cpp
