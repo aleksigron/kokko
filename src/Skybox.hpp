@@ -10,7 +10,6 @@ class Skybox
 private:
 	unsigned int renderSceneId;
 
-	unsigned int renderObjectId;
 	Entity entity;
 
 public:

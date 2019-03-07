@@ -1,30 +1,48 @@
 #pragma once
 
+#include "Mat4x4.hpp"
 #include "RenderPipeline.hpp"
 #include "RenderOrder.hpp"
 #include "RenderData.hpp"
 #include "FrustumCulling.hpp"
 
 #include "Array.hpp"
+#include "HashMap.hpp"
 
 struct BoundingBox;
+struct CullStatePacked16;
 class Camera;
 class Window;
 class World;
 class Scene;
 
+struct RenderObjectId
+{
+	static const RenderObjectId Null;
+
+	unsigned int i;
+};
+
 class Renderer
 {
 private:
-	unsigned int* indexList;
-	unsigned int freeListFirst;
+	struct InstanceData
+	{
+		unsigned int count;
+		unsigned int allocated;
+		void *buffer;
 
-	RenderObject* objects;
-	unsigned int objectCount;
-	unsigned int allocatedCount;
+		Entity* entity;
+		unsigned int* mesh;
+		unsigned int* material;
+		SceneLayer* layer;
+		CullStatePacked16* cullState;
+		BoundingBox* bounds;
+		Mat4x4f* transform;
+	}
+	data;
 
-	BoundingBox* boundingBoxes;
-	FrustumCulling::CullingState* cullingState;
+	HashMap<unsigned int, RenderObjectId> map;
 
 	Camera* overrideRenderCamera;
 	Camera* overrideCullingCamera;
@@ -33,8 +51,9 @@ private:
 
 	RenderPipeline pipeline;
 
-	void Reallocate();
+	void Reallocate(unsigned int required);
 
+	void UpdateTransforms(Scene* scene);
 	void UpdateBoundingBoxes(Scene* scene);
 	void CreateDrawCalls(Scene* scene);
 
@@ -48,21 +67,26 @@ public:
 	void SetRenderCameraOverride(Camera* renderCamera) { overrideRenderCamera = renderCamera; }
 	void SetCullingCameraOverride(Camera* cullingCamera) { overrideCullingCamera = cullingCamera; }
 
-	// This function is run before calculating the world transforms of scene objects
-	void PreTransformUpdate(Scene* scene);
-
 	// Render the specified scene to the active OpenGL context
 	void Render(Scene* scene);
 
-	// Get a reference to a render object by ID
-	RenderObject& GetRenderObject(unsigned int id) { return objects[indexList[id]]; }
+	void NotifyUpdatedTransforms(unsigned int count, Entity* entities, Mat4x4f* transforms);
 
-	// Get a reference to a render object by ID
-	const RenderObject& GetRenderObject(unsigned int id) const { return objects[indexList[id]]; }
-	
-	// Create a render object and return the created object's ID
-	unsigned int AddRenderObject();
+	// Render object management
 
-	// Remove a render object by its ID
-	void RemoveRenderObject(unsigned int id);
+	RenderObjectId Lookup(Entity entity);
+
+	RenderObjectId AddRenderObject(Entity entity);
+	void AddRenderObject(unsigned int count, Entity* entities, RenderObjectId* renderObjectIdsOut);
+
+	// Render object property management
+
+	void SetMeshId(RenderObjectId id, unsigned int meshId) { data.mesh[id.i] = meshId; }
+	unsigned int GetMeshId(RenderObjectId id) { return data.mesh[id.i]; }
+
+	void SetMaterialId(RenderObjectId id, unsigned int materialId) { data.material[id.i] = materialId; }
+	unsigned int GetMaterialId(RenderObjectId id) { return data.material[id.i]; }
+
+	void SetSceneLayer(RenderObjectId id, SceneLayer layer) { data.layer[id.i] = layer; }
+	SceneLayer GetSceneLayer(RenderObjectId id) { return data.layer[id.i]; }
 };

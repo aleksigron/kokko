@@ -26,14 +26,6 @@ struct RenderCommand
 	}
 };
 
-struct RenderObject
-{
-	unsigned int meshId;
-	unsigned int materialId;
-	Entity entity;
-	SceneLayer layer;
-};
-
 enum class TransparencyType
 {
 	Opaque,

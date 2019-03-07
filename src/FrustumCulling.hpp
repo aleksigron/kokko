@@ -2,18 +2,12 @@
 
 struct BoundingBox;
 struct ViewFrustum;
+struct CullStatePacked16;
 
 namespace FrustumCulling
 {
-	enum class CullingState : unsigned char
-	{
-		Outside = 0,
-		Intersect = 1,
-		Inside = 2
-	};
-
 	void CullAABB(const ViewFrustum* frustum,
-				  unsigned int boxCount,
-				  const BoundingBox* boxes,
-				  CullingState* state);
+				  unsigned int count,
+				  const BoundingBox* bounds,
+				  CullStatePacked16* state);
 }

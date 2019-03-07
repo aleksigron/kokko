@@ -85,13 +85,11 @@ void Engine::Update()
 	unsigned int primarySceneId = this->sceneManager->GetPrimarySceneId();
 	Scene* primaryScene = this->sceneManager->GetScene(primarySceneId);
 
-	this->renderer->PreTransformUpdate(primaryScene);
 	this->renderer->Render(primaryScene);
 
 	this->debug->Render(primaryScene);
 
 	this->mainWindow->UpdateInput();
-
 	this->mainWindow->Swap();
 
 	this->debug->CheckOpenGlErrors();

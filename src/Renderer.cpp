@@ -19,29 +19,25 @@
 #include "Camera.hpp"
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
+#include "CullState.hpp"
 #include "RenderOrder.hpp"
 
 #include "Sort.hpp"
 
+const RenderObjectId RenderObjectId::Null = RenderObjectId{};
+
 Renderer::Renderer() :
-	indexList(nullptr),
-	freeListFirst(0),
-	objects(nullptr),
-	objectCount(0),
-	allocatedCount(0),
-	boundingBoxes(nullptr),
-	cullingState(nullptr),
 	overrideRenderCamera(nullptr),
 	overrideCullingCamera(nullptr)
 {
+	data = InstanceData{};
+
+	this->Reallocate(512);
 }
 
 Renderer::~Renderer()
 {
-	delete[] cullingState;
-	delete[] boundingBoxes;
-	delete[] objects;
-	delete[] indexList;
+	operator delete[](data.buffer);
 }
 
 Camera* Renderer::GetRenderCamera(Scene* scene)
@@ -52,10 +48,6 @@ Camera* Renderer::GetRenderCamera(Scene* scene)
 Camera* Renderer::GetCullingCamera(Scene* scene)
 {
 	return overrideCullingCamera != nullptr ? overrideCullingCamera : scene->GetActiveCamera();
-}
-
-void Renderer::PreTransformUpdate(Scene* scene)
-{
 }
 
 void Renderer::Render(Scene* scene)
@@ -79,10 +71,11 @@ void Renderer::Render(Scene* scene)
 	ViewFrustum frustum;
 	frustum.UpdateFrustum(*cullingCamera, cullingCameraTransform);
 
+	this->UpdateTransforms(scene);
 	this->UpdateBoundingBoxes(scene);
 
 	// Do frustum culling
-	FrustumCulling::CullAABB(&frustum, objectCount, this->boundingBoxes, this->cullingState);
+	FrustumCulling::CullAABB(&frustum, data.count, data.bounds, data.cullState);
 
 	this->CreateDrawCalls(scene);
 
@@ -111,10 +104,10 @@ void Renderer::Render(Scene* scene)
 		// If command is not control command, draw object
 		if (pipeline.ParseControlCommand(command.orderKey) == false)
 		{
-			RenderObject& obj = this->objects[command.renderObjectIndex];
+			const unsigned int objIdx = command.renderObjectIndex;
 
-			Mesh& mesh = res->GetMesh(obj.meshId);
-			Material& material = res->GetMaterial(obj.materialId);
+			Mesh& mesh = res->GetMesh(data.mesh[objIdx]);
+			Material& material = res->GetMaterial(data.material[objIdx]);
 			Shader* shader = res->GetShader(material.shaderId);
 
 			glUseProgram(shader->driverId);
@@ -170,8 +163,7 @@ void Renderer::Render(Scene* scene)
 				}
 			}
 
-			SceneObjectId objId = scene->Lookup(obj.entity);
-			Mat4x4f modelMatrix = scene->GetWorldTransform(objId);
+			const Mat4x4f& modelMatrix = data.transform[objIdx];
 
 			if (shader->uniformMatMVP >= 0)
 			{
@@ -257,24 +249,34 @@ void Renderer::CreateDrawCalls(Scene* scene)
 		SceneLayer::World, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable)));
 
 	// Create draw commands for render objects in scene
-	for (unsigned index = 0; index < objectCount; ++index)
+	for (unsigned i = 0; i < data.count; ++i)
 	{
+		const unsigned int packIndex = CullStatePacked16::PackIndex(i);
+		const unsigned int cellIndex = CullStatePacked16::CellIndex(i);
+
 		// Object is in potentially visible set
-		if (cullingState[index] != FrustumCulling::CullingState::Outside)
+		if (data.cullState[packIndex].IsOutside(cellIndex) == false)
 		{
-			RenderObject& obj = objects[index];
-			Material& material = rm->GetMaterial(obj.materialId);
+			unsigned int materialId = data.material[i];
+			Material& material = rm->GetMaterial(materialId);
 			Shader* shader = rm->GetShader(material.shaderId);
 
-			SceneObjectId sceneObject = scene->Lookup(obj.entity);
-			Mat4x4f objTransform = scene->GetWorldTransform(sceneObject);
-			Vec3f objPosition = (objTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+			Vec3f objPosition = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
 
 			commands.PushBack(RenderCommand(pipeline.CreateDrawCommand(
-				obj.layer, shader->transparencyType, depth, obj.materialId), index));
+				data.layer[i], shader->transparencyType, depth, materialId), i));
 		}
+	}
+}
+
+void Renderer::UpdateTransforms(Scene* scene)
+{
+	for (unsigned i = 0; i < data.count; ++i)
+	{
+		SceneObjectId sceneObject = scene->Lookup(data.entity[i]);
+		data.transform[i] = scene->GetWorldTransform(sceneObject);
 	}
 }
 
@@ -283,99 +285,80 @@ void Renderer::UpdateBoundingBoxes(Scene* scene)
 	Engine* engine = Engine::GetInstance();
 	ResourceManager* rm = engine->GetResourceManager();
 
-	for (unsigned i = 0; i < objectCount; ++i)
+	for (unsigned i = 0; i < data.count; ++i)
 	{
-		const Mesh& mesh = rm->GetMesh(objects[i].meshId);
+		const Mesh& mesh = rm->GetMesh(data.mesh[i]);
 
-		SceneObjectId sceneObject = scene->Lookup(objects[i].entity);
-		const Mat4x4f& matrix = scene->GetWorldTransform(sceneObject);
-		boundingBoxes[i] = mesh.bounds.Transform(matrix);
+		data.bounds[i] = mesh.bounds.Transform(data.transform[i]);
 	}
 }
 
-void Renderer::Reallocate()
+void Renderer::Reallocate(unsigned int required)
 {
-	unsigned int newAllocatedCount;
+	if (required <= data.allocated)
+		return;
 
-	if (allocatedCount == 0)
+	required = Math::UpperPowerOfTwo(required);
+	unsigned int csRequired = CullStatePacked16::CalculateRequired(required);
+
+	// Reserve same amount in entity map
+	map.Reserve(required);
+
+	InstanceData newData;
+	const unsigned objectBytes = sizeof(Entity) + 2 * sizeof(Mat4x4f) + 4 * sizeof(SceneObjectId);
+	newData.buffer = operator new[](required * objectBytes);
+	newData.count = data.count;
+	newData.allocated = required;
+
+	newData.entity = static_cast<Entity*>(newData.buffer);
+	newData.mesh = reinterpret_cast<unsigned int*>(newData.entity + required);
+	newData.material = newData.mesh + required;
+	newData.layer = reinterpret_cast<SceneLayer*>(newData.material + required);
+	newData.cullState = reinterpret_cast<CullStatePacked16*>(newData.layer + required);
+	newData.bounds = reinterpret_cast<BoundingBox*>(newData.cullState + csRequired);
+	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
+
+	if (data.buffer != nullptr)
 	{
-		newAllocatedCount = 1023;
-	}
-	else
-	{
-		newAllocatedCount = allocatedCount * 2 + 1;
-	}
+		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
+		std::memcpy(newData.mesh, data.mesh, data.count * sizeof(unsigned int));
+		std::memcpy(newData.material, data.material, data.count * sizeof(unsigned int));
+		std::memcpy(newData.layer, data.layer, data.count * sizeof(SceneLayer));
+		// Cull state is recalculated every frame
+		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
+		std::memcpy(newData.transform, data.transform, data.count * sizeof(Mat4x4f));
 
-	unsigned int* newIndexList = new unsigned int[newAllocatedCount + 1];
-	RenderObject* newObjects = new RenderObject[newAllocatedCount];
-	BoundingBox* newBoundingBoxes = new BoundingBox[newAllocatedCount];
-	FrustumCulling::CullingState* newCullingState = new FrustumCulling::CullingState[newAllocatedCount];
-
-	// We have old data
-	if (allocatedCount > 0)
-	{
-		// Copy old data to new buffers
-		std::memcpy(newIndexList, this->indexList, allocatedCount * sizeof(unsigned int));
-		std::memcpy(newObjects, this->objects, allocatedCount * sizeof(RenderObject));
-
-		// Delete old buffers
-		delete[] this->indexList;
-		delete[] this->objects;
-
-		// We can delete bounding box data without copying, because it is recreated on every frame
-		delete[] boundingBoxes;
-		delete[] cullingState;
+		operator delete[](data.buffer);
 	}
 
-	this->indexList = newIndexList;
-	this->objects = newObjects;
-	this->boundingBoxes = newBoundingBoxes;
-	this->cullingState = newCullingState;
-
-	allocatedCount = newAllocatedCount;
+	data = newData;
 }
 
-unsigned int Renderer::AddRenderObject()
+RenderObjectId Renderer::AddRenderObject(Entity entity)
 {
-	unsigned int id;
-
-	if (freeListFirst == 0)
-	{
-		if (objectCount == allocatedCount)
-		{
-			this->Reallocate();
-		}
-
-		// If there are no freelist entries, first <objectCount> indices must be in use
-		id = objectCount + 1;
-		indexList[id] = objectCount;
-
-		++objectCount;
-	}
-	else
-	{
-		id = freeListFirst;
-		indexList[id] = objectCount;
-
-		freeListFirst = indexList[freeListFirst];
-	}
-
+	RenderObjectId id;
+	this->AddRenderObject(1, &entity, &id);
 	return id;
 }
 
-void Renderer::RemoveRenderObject(unsigned int id)
+void Renderer::AddRenderObject(unsigned int count, Entity* entities, RenderObjectId* renderObjectIdsOut)
 {
-	if (id != 0)
+	if (data.count + count > data.allocated)
+		this->Reallocate(data.count + count);
+
+	for (unsigned int i = 0; i < count; ++i)
 	{
-		// Put last object in removed objects place
-		if (indexList[id] < objectCount - 1)
-		{
-			objects[indexList[id]] = objects[objectCount - 1];
-		}
+		unsigned int id = data.count + i;
 
-		indexList[id] = freeListFirst;
-		freeListFirst = id;
+		Entity e = entities[i];
 
-		--objectCount;
+		auto mapPair = map.Insert(e.id);
+		mapPair->value.i = id;
+
+		data.entity[id] = e;
+
+		renderObjectIdsOut[i].i = id;
 	}
+
+	data.count += count;
 }

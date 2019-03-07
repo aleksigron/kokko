@@ -82,22 +82,21 @@ unsigned int SceneManager::LoadSceneFromFile(const char* path)
 
 							SceneObjectId sceneObj = scene->AddSceneObject(entity);
 
-							RenderObject& renderObj = renderer->GetRenderObject(renderer->AddRenderObject());
-							renderObj.entity = entity;
-							renderObj.layer = SceneLayer::World;
+							RenderObjectId renderObject = renderer->AddRenderObject(entity);
+							renderer->SetSceneLayer(renderObject, SceneLayer::World);
 
 							MemberItr meshItr = itr->FindMember("mesh");
 							if (meshItr != itr->MemberEnd() && meshItr->value.IsString())
 							{
 								StringRef path(meshItr->value.GetString(), meshItr->value.GetStringLength());
-								renderObj.meshId = rm->CreateMeshFromFile(path);
+								renderer->SetMeshId(renderObject, rm->CreateMeshFromFile(path));
 							}
 
 							MemberItr materialItr = itr->FindMember("material");
 							if (materialItr != itr->MemberEnd() && materialItr->value.IsString())
 							{
 								StringRef path(materialItr->value.GetString(), materialItr->value.GetStringLength());
-								renderObj.materialId = rm->CreateMaterialFromFile(path);
+								renderer->SetMaterialId(renderObject, rm->CreateMaterialFromFile(path));
 							}
 
 							MemberItr positionItr = itr->FindMember("position");

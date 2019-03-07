@@ -14,8 +14,7 @@
 #include "VertexFormat.hpp"
 
 Skybox::Skybox() :
-	renderSceneId(0),
-	renderObjectId(0)
+	renderSceneId(0)
 {
 	entity = Entity{};
 }
@@ -74,12 +73,10 @@ void Skybox::Initialize(Scene* scene, unsigned int materialId)
 	scene->AddSceneObject(this->entity);
 
 	// Add render object
-	renderObjectId = renderer->AddRenderObject();
-	RenderObject& renderObject = renderer->GetRenderObject(renderObjectId);
-	renderObject.materialId = materialId;
-	renderObject.meshId = meshId;
-	renderObject.entity = this->entity;
-	renderObject.layer = SceneLayer::Skybox;
+	RenderObjectId renderObjectId = renderer->AddRenderObject(this->entity);
+	renderer->SetMeshId(renderObjectId, meshId);
+	renderer->SetMaterialId(renderObjectId, materialId);
+	renderer->SetSceneLayer(renderObjectId, SceneLayer::Skybox);
 }
 
 void Skybox::UpdateTransform(const Vec3f& cameraPosition) const
