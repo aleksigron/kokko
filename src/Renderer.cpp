@@ -31,6 +31,7 @@ Renderer::Renderer() :
 	overrideCullingCamera(nullptr)
 {
 	data = InstanceData{};
+	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
 
 	this->Reallocate(512);
 }
@@ -71,8 +72,8 @@ void Renderer::Render(Scene* scene)
 	ViewFrustum frustum;
 	frustum.UpdateFrustum(*cullingCamera, cullingCameraTransform);
 
-	this->UpdateTransforms(scene);
-	this->UpdateBoundingBoxes(scene);
+	// Retrieve updated transforms
+	scene->NotifyUpdatedTransforms(this);
 
 	// Do frustum culling
 	FrustumCulling::CullAABB(&frustum, data.count, data.bounds, data.cullState);
@@ -268,28 +269,6 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	}
 }
 
-void Renderer::UpdateTransforms(Scene* scene)
-{
-	for (unsigned i = 0; i < data.count; ++i)
-	{
-		SceneObjectId sceneObject = scene->Lookup(data.entity[i]);
-		data.transform[i] = scene->GetWorldTransform(sceneObject);
-	}
-}
-
-void Renderer::UpdateBoundingBoxes(Scene* scene)
-{
-	Engine* engine = Engine::GetInstance();
-	ResourceManager* rm = engine->GetResourceManager();
-
-	for (unsigned i = 0; i < data.count; ++i)
-	{
-		const Mesh& mesh = rm->GetMesh(data.mesh[i]);
-
-		data.bounds[i] = mesh.bounds.Transform(data.transform[i]);
-	}
-}
-
 void Renderer::Reallocate(unsigned int required)
 {
 	if (required <= data.allocated)
@@ -299,7 +278,7 @@ void Renderer::Reallocate(unsigned int required)
 	unsigned int csRequired = CullStatePacked16::CalculateRequired(required);
 
 	// Reserve same amount in entity map
-	map.Reserve(required);
+	entityMap.Reserve(required);
 
 	InstanceData newData;
 	const unsigned objectBytes = sizeof(Entity) + 2 * sizeof(Mat4x4f) + 4 * sizeof(SceneObjectId);
@@ -349,7 +328,7 @@ void Renderer::AddRenderObject(unsigned int count, Entity* entities, RenderObjec
 
 		Entity e = entities[i];
 
-		auto mapPair = map.Insert(e.id);
+		auto mapPair = entityMap.Insert(e.id);
 		mapPair->value.i = id;
 
 		data.entity[id] = e;
@@ -358,4 +337,30 @@ void Renderer::AddRenderObject(unsigned int count, Entity* entities, RenderObjec
 	}
 
 	data.count += count;
+}
+
+void Renderer::NotifyUpdatedTransforms(unsigned int count, Entity* entities, Mat4x4f* transforms)
+{
+	ResourceManager* rm = Engine::GetInstance()->GetResourceManager();
+
+	for (unsigned int entityIdx = 0; entityIdx < count; ++entityIdx)
+	{
+		Entity entity = entities[entityIdx];
+		RenderObjectId obj = this->Lookup(entity);
+
+		if (obj.i != RenderObjectId::Null.i)
+		{
+			unsigned int dataIdx = obj.i;
+			const Mat4x4f& m = transforms[entityIdx];
+
+			// Recalculate bounding box
+			unsigned int meshId = data.mesh[dataIdx];
+			const Mesh& mesh = rm->GetMesh(meshId);
+			BoundingBox trBounds = mesh.bounds.Transform(m);
+			data.bounds[dataIdx] = trBounds;
+
+			// Set world transform
+			data.transform[dataIdx] = m;
+		}
+	}
 }

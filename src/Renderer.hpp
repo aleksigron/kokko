@@ -42,7 +42,7 @@ private:
 	}
 	data;
 
-	HashMap<unsigned int, RenderObjectId> map;
+	HashMap<unsigned int, RenderObjectId> entityMap;
 
 	Camera* overrideRenderCamera;
 	Camera* overrideCullingCamera;
@@ -74,7 +74,11 @@ public:
 
 	// Render object management
 
-	RenderObjectId Lookup(Entity entity);
+	RenderObjectId Lookup(Entity e)
+	{
+		HashMap<unsigned int, RenderObjectId>::KeyValuePair* pair = entityMap.Lookup(e.id);
+		return pair != nullptr ? pair->value : RenderObjectId::Null;
+	}
 
 	RenderObjectId AddRenderObject(Entity entity);
 	void AddRenderObject(unsigned int count, Entity* entities, RenderObjectId* renderObjectIdsOut);

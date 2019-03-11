@@ -1,6 +1,9 @@
 #pragma once
 
 #include "HashMap.hpp"
+#include "Array.hpp"
+#include "SortedArray.hpp"
+
 #include "Mat4x4.hpp"
 #include "Color.hpp"
 #include "Skybox.hpp"
@@ -8,6 +11,7 @@
 #include "Entity.hpp"
 
 class Camera;
+class Renderer;
 
 struct SceneObjectId
 {
@@ -35,7 +39,9 @@ private:
 	}
 	data;
 
-	HashMap<unsigned int, SceneObjectId> map;
+	HashMap<unsigned int, SceneObjectId> entityMap;
+	SortedArray<unsigned int> updatedEntities;
+	Array<Mat4x4f> updatedTransforms;
 
 	unsigned int sceneId;
 
@@ -51,8 +57,6 @@ public:
 
 	Scene& operator=(Scene&& other);
 
-	void Initialize();
-
 	Color backgroundColor;
 	Skybox skybox;
 
@@ -60,7 +64,7 @@ public:
 
 	SceneObjectId Lookup(Entity e)
 	{
-		HashMap<unsigned int, SceneObjectId>::KeyValuePair* pair = map.Lookup(e.id);
+		HashMap<unsigned int, SceneObjectId>::KeyValuePair* pair = entityMap.Lookup(e.id);
 		return pair != nullptr ? pair->value : SceneObjectId::Null;
 	}
 
@@ -76,6 +80,8 @@ public:
 
 	const Mat4x4f& GetWorldTransform(SceneObjectId id) { return data.world[id.i]; }
 	const Mat4x4f& GetLocalTransform(SceneObjectId id) { return data.local[id.i]; }
+
+	void NotifyUpdatedTransforms(Renderer* renderer);
 
 	void SetActiveCamera(Camera* camera) { activeCamera = camera; }
 	Camera* GetActiveCamera() { return activeCamera; }

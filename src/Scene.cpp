@@ -3,12 +3,14 @@
 #include <cassert>
 
 #include "Math.hpp"
+#include "Renderer.hpp"
 
-const SceneObjectId SceneObjectId::Null = SceneObjectId { };
+const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
 Scene::Scene(unsigned int sceneId) : sceneId(sceneId), activeCamera(nullptr)
 {
 	data = InstanceData{};
+	data.count = 1; // Reserve index 0 as SceneObjectId::Null value
 
 	this->Reallocate(512);
 }
@@ -39,7 +41,7 @@ void Scene::Reallocate(unsigned int required)
 	required = Math::UpperPowerOfTwo(required);
 
 	// Reserve same amount in entity map
-	map.Reserve(required);
+	entityMap.Reserve(required);
 
 	InstanceData newData;
 	const unsigned objectBytes = sizeof(Entity) + 2 * sizeof(Mat4x4f) + 4 * sizeof(SceneObjectId);
@@ -67,6 +69,15 @@ void Scene::Reallocate(unsigned int required)
 
 		operator delete[](data.buffer);
 	}
+	else
+	{
+		newData.local[SceneObjectId::Null.i] = Mat4x4f();
+		newData.world[SceneObjectId::Null.i] = Mat4x4f();
+		newData.parent[SceneObjectId::Null.i] = SceneObjectId::Null;
+		newData.firstChild[SceneObjectId::Null.i] = SceneObjectId::Null;
+		newData.nextSibling[SceneObjectId::Null.i] = SceneObjectId::Null;
+		newData.prevSibling[SceneObjectId::Null.i] = SceneObjectId::Null;
+	}
 
 	data = newData;
 }
@@ -89,7 +100,7 @@ void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* 
 
 		Entity e = entities[i];
 
-		auto mapPair = map.Insert(e.id);
+		auto mapPair = entityMap.Insert(e.id);
 		mapPair->value = SceneObjectId { id };
 
 		data.entity[id] = e;
@@ -104,6 +115,8 @@ void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* 
 	}
 
 	data.count += count;
+
+	updatedEntities.InsertUnique(reinterpret_cast<unsigned int*>(entities), count);
 }
 
 void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
@@ -120,6 +133,9 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 	// Set world transform for specified object
 	data.world[id.i] = data.local[id.i] * parentTransform;
 
+	// Set the entity as updated
+	updatedEntities.InsertUnique(data.entity[id.i].id);
+
 	// Set world transforms for all children of the specified object
 
 	SceneObjectId current = data.firstChild[id.i];
@@ -127,8 +143,10 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 
 	while (IsValidId(current))
 	{
-		// Transform subtree
 		data.world[id.i] = data.local[id.i] * parentTransform;
+
+		// Set the entity as updated
+		updatedEntities.InsertUnique(data.entity[id.i].id);
 
 		// Move to child
 		lastValid = current;
@@ -149,4 +167,23 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 			}
 		}
 	}
+}
+
+void Scene::NotifyUpdatedTransforms(Renderer* renderer)
+{
+	unsigned int count = updatedEntities.GetCount();
+	updatedTransforms.Resize(count);
+
+	Entity* entities = reinterpret_cast<Entity*>(updatedEntities.GetData());
+
+	for (unsigned int i = 0; i < count; ++i)
+	{
+		SceneObjectId obj = this->Lookup(entities[i]);
+		updatedTransforms[i] = this->GetWorldTransform(obj);
+	}
+
+	renderer->NotifyUpdatedTransforms(count, entities, updatedTransforms.GetData());
+
+	updatedEntities.Clear();
+	updatedTransforms.Clear();
 }
