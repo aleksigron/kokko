@@ -113,6 +113,7 @@ set (KOKKO_SOURCES
 	src/Skybox.cpp
 	src/Skybox.hpp
 	src/Sort.hpp
+	src/SortedArray.hpp
 	src/StackAllocation.cpp
 	src/StackAllocation.hpp
 	src/StackAllocator.cpp

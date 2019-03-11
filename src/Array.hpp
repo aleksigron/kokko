@@ -14,7 +14,37 @@ private:
 	SizeType count;
 	SizeType allocated;
 
-	void ReserveInternal(SizeType required)
+public:
+	Array() : data(nullptr), count(0), allocated(0)
+	{
+	}
+
+	~Array()
+	{
+		delete[] data;
+	}
+
+	SizeType GetCount() const { return this->count; }
+
+	ValueType* GetData() { return this->data; }
+	const ValueType* GetData() const { return this->data; }
+
+	ValueType& GetFront() { return this->data[0]; }
+	const ValueType& GetFront() const { return this->data[0]; }
+
+	ValueType& GetBack() { return this->data[this->count - 1]; }
+	const ValueType& GetBack() const { return this->data[this->count - 1]; }
+
+	ValueType& At(SizeType index) { return this->data[index]; }
+	const ValueType& At(SizeType index) const { return this->data[index]; }
+
+	ValueType& operator[](SizeType index) { return this->data[index]; }
+	const ValueType& operator[](SizeType index) const { return this->data[index]; }
+
+	/**
+	 * Make sure there's at least the specified amount of space in the array
+	 */
+	void Reserve(SizeType required)
 	{
 		if (required > this->allocated)
 		{
@@ -42,44 +72,12 @@ private:
 		}
 	}
 
-public:
-	Array() : data(nullptr), count(0), allocated(0)
-	{
-	}
-
-	~Array()
-	{
-		delete[] data;
-	}
-
-	SizeType GetCount() const { return this->count; }
-
-	ValueType* GetData() { return this->data; }
-	const ValueType* GetData() const { return this->data; }
-
-	ValueType& GetBack() { return this->data[this->count - 1]; }
-	const ValueType& GetBack() const { return this->data[this->count - 1]; }
-
-	ValueType& At(SizeType index) { return this->data[index]; }
-	const ValueType& At(SizeType index) const { return this->data[index]; }
-
-	ValueType& operator[](SizeType index) { return this->data[index]; }
-	const ValueType& operator[](SizeType index) const { return this->data[index]; }
-
-	/**
-	 * Make sure there's at least the specified amount of space in the array
-	 */
-	void Reserve(SizeType required)
-	{
-		this->ReserveInternal(required);
-	}
-
 	/**
 	 * Add a new item to the back of the array and return a reference to the item
 	 */
 	ValueType& PushBack()
 	{
-		this->ReserveInternal(this->count + 1);
+		this->Reserve(this->count + 1);
 		ValueType* value = new (this->data + this->count) ValueType;
 		++(this->count);
 		return *value;
@@ -91,7 +89,7 @@ public:
 	 */
 	void PushBack(const ValueType& value)
 	{
-		this->ReserveInternal(this->count + 1);
+		this->Reserve(this->count + 1);
 		this->data[this->count] = value;
 		++(this->count);
 	}
@@ -101,7 +99,7 @@ public:
 	 */
 	void InsertBack(const ValueType* items, SizeType count)
 	{
-		this->ReserveInternal(this->count + count);
+		this->Reserve(this->count + count);
 
 		for (SizeType i = 0; i < count; ++i)
 		{
@@ -111,7 +109,15 @@ public:
 	}
 
 	/**
-	 * Insert the specified items in the specified position in the array
+	 * Insert an item in the specified position in the array
+	 */
+	void Insert(SizeType index, const ValueType& item)
+	{
+		this->Insert(index, &item, 1);
+	}
+
+	/**
+	 * Insert items in the specified position in the array
 	 */
 	void Insert(SizeType index, const ValueType* items, SizeType itemCount)
 	{
@@ -119,7 +125,7 @@ public:
 		{
 			const std::size_t vts = sizeof(ValueType);
 			SizeType required = count + itemCount;
-			SizeType itemsAfterInsert = itemCount - index;
+			SizeType itemsAfter = count - index;
 
 			if (required > this->allocated) // Requires reallocation
 			{
@@ -130,33 +136,42 @@ public:
 
 				ValueType* newData = static_cast<ValueType*>(operator new[](newAllocated * vts));
 
-				// Copy data before inserted items
-				std::memcpy(newData, this->data, index * vts);
+				// We have old data
+				if (data != nullptr)
+				{
+					// Copy data before inserted items
+					std::memcpy(newData, data, index * vts);
+
+					// Copy data after inserted items
+					if (itemsAfter > 0)
+						std::memcpy(newData + index + itemCount, data + index, itemsAfter * vts);
+
+					operator delete[](data);
+				}
 
 				// Copy inserted items
 				for (unsigned int i = 0; i < itemCount; ++i)
 					newData[index + i] = items[i];
 
-				// Copy data after inserted items
-				std::memcpy(newData + index + itemCount, this->data + index, itemsAfterInsert * vts);
+				data = newData;
+				allocated = newAllocated;
 			}
 			else // Can use existing allocated memory
 			{
 				// Move existing items
-				if (itemsAfterInsert > 0)
+				if (itemsAfter > 0)
 				{
 					ValueType* dst = this->data + index + itemCount;
 					ValueType* src = this->data + index;
-					std::memmove(dst, src, itemsAfterInsert * vts);
+					std::memmove(dst, src, itemsAfter * vts);
 				}
 
 				// Copy inserted items
 				for (SizeType i = 0; i < itemCount; ++i)
-				{
 					this->data[index + i] = items[i];
-					++count;
-				}
 			}
+
+			count += itemCount;
 		}
 	}
 
@@ -202,6 +217,26 @@ public:
 				std::memmove(dst, src, itemsAfterRemove * sizeof(ValueType));
 			}
 		}
+	}
+
+	/**
+	 * Resize the array to have a specific size
+	 */
+	void Resize(unsigned int size)
+	{
+		if (size > count)
+		{
+			this->Reserve(size);
+
+			ValueType* itr = data + count;
+			ValueType* end = data + size;
+			for (; itr != end; ++itr)
+				new (itr) ValueType;
+		}
+		else if (size < count)
+			this->Remove(size, count - size);
+
+		count = size;
 	}
 
 	/**
