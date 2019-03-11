@@ -153,11 +153,12 @@ public:
 		}
 	}
 
-	void Reserve(unsigned int desiredSize)
+	void Reserve(unsigned int desiredPopulation)
 	{
-		// Desired size is too small to hold values comfortably
-		if (population * 4 > desiredSize * 3)
+		if (desiredPopulation < population)
 			return;
+
+		unsigned int desiredSize = (desiredPopulation * 4 + 2) / 3;
 
 		// Desired size is not a power-of-two
 		if ((desiredSize & (desiredSize - 1)) != 0)

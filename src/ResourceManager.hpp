@@ -19,7 +19,7 @@ private:
 
 	IndexedContainer<Mesh> meshes;
 
-	bool LoadMesh(Mesh& mesh, StringRef path);
+	static bool LoadMesh(Mesh& mesh, StringRef path);
 
 	// Shaders
 

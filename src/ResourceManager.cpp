@@ -33,7 +33,7 @@ unsigned int ResourceManager::CreateMeshFromFile(StringRef path)
 	Mesh* addedMesh;
 	unsigned int id = meshes.Add(&addedMesh);
 
-	if (this->LoadMesh(*addedMesh, path) == true)
+	if (LoadMesh(*addedMesh, path) == true)
 	{
 		return id;
 	}

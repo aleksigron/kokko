@@ -43,19 +43,18 @@ void App::Initialize()
 	SceneManager* sceneManager = engine->GetSceneManager();
 	unsigned int sceneId = sceneManager->LoadSceneFromFile("res/scenes/default.scene.json");
 
-	if (sceneId == 0) // Create an empty scene if one couldn't be loaded from file
+	// Create an empty scene if one couldn't be loaded from file
+	if (sceneId == 0)
 		sceneId = sceneManager->CreateScene();
 
 	Scene* scene = sceneManager->GetScene(sceneId);
-
-
 	scene->SetActiveCamera(&this->mainCamera);
 	sceneManager->SetPrimarySceneId(sceneId);
 
 	Entity mainCameraEntity = engine->GetEntityManager()->Create();
 	mainCamera.SetEntity(mainCameraEntity);
 	SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);
-	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.3f, 1.5f));
+	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.8f, 2.5f));
 	scene->SetLocalTransform(cameraSceneObject, cameraTransform);
 
 	Window* window = engine->GetMainWindow();
