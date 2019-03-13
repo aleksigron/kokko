@@ -68,8 +68,16 @@ public:
 		return pair != nullptr ? pair->value : SceneObjectId::Null;
 	}
 
-	SceneObjectId AddSceneObject(Entity e);
-	void AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* sceneObjectIds);
+	SceneObjectId AddSceneObject(Entity e)
+	{
+		SceneObjectId id;
+		this->AddSceneObject(1, &e, &id);
+		return id;
+	}
+
+	void AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* idsOut);
+
+	void RemoveSceneObject(SceneObjectId id);
 
 	void SetParent(SceneObjectId id, SceneObjectId parent);
 

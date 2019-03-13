@@ -83,14 +83,7 @@ void Scene::Reallocate(unsigned int required)
 	data = newData;
 }
 
-SceneObjectId Scene::AddSceneObject(Entity e)
-{
-	SceneObjectId id;
-	this->AddSceneObject(1, &e, &id);
-	return id;
-}
-
-void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* sceneObjectIdsOut)
+void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* idsOut)
 {
 	if (data.count + count > data.allocated)
 		this->Reallocate(data.count + count);
@@ -112,12 +105,86 @@ void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* 
 		data.nextSibling[id] = SceneObjectId::Null;
 		data.prevSibling[id] = SceneObjectId::Null;
 
-		sceneObjectIdsOut[i].i = id;
+		idsOut[i].i = id;
 	}
 
 	data.count += count;
 
 	updatedEntities.InsertUnique(reinterpret_cast<unsigned int*>(entities), count);
+}
+
+void Scene::RemoveSceneObject(SceneObjectId id)
+{
+	assert(IsValidId(id));
+
+	// Remove references
+	{
+		SceneObjectId parent = data.parent[id.i];
+		SceneObjectId prevSibling = data.prevSibling[id.i];
+		SceneObjectId nextSibling = data.nextSibling[id.i];
+
+		if (IsValidId(prevSibling)) // We're not the first sibling
+		{
+			// nextSibling can be Null, no need to check
+			data.nextSibling[prevSibling.i] = nextSibling;
+		}
+		else if (IsValidId(parent)) // We have a parent that's not the root
+		{
+			// Because we didn't have prevSibling, we know we were the first child
+			// nextSibling can be Null, no need to check
+			data.firstChild[parent.i] = nextSibling;
+		}
+
+		if (IsValidId(nextSibling)) // We have nextSibling, its prevSibling must be updated
+		{
+			// prevSibling can be Null, no need to check
+			data.prevSibling[nextSibling.i] = prevSibling;
+		}
+	}
+
+	// Swap last item in the removed object's place
+
+	if (data.count > 1) // We still have objects other than the root
+	{
+		SceneObjectId swap;
+		swap.i = data.count - 1;
+
+		SceneObjectId parent = data.parent[swap.i];
+		SceneObjectId firstChild = data.firstChild[swap.i];
+		SceneObjectId prevSibling = data.prevSibling[swap.i];
+		SceneObjectId nextSibling = data.nextSibling[swap.i];
+
+		// Update references pointing to the swap object
+
+		// Swap isn't the first sibling
+		if (IsValidId(prevSibling))
+			data.nextSibling[prevSibling.i] = id;
+
+		// Swap has a parent that's not the root
+		// Because we didn't have prevSibling, we know we were the first child
+		else if (IsValidId(parent))
+			data.firstChild[parent.i] = id;
+
+		// Swap has nextSibling, its prevSibling must be updated
+		if (IsValidId(nextSibling))
+			data.prevSibling[nextSibling.i] = id;
+
+		// Swap has children, their parent must be updated
+		for (SceneObjectId child = firstChild; IsValidId(child); child = data.nextSibling[child.i])
+			data.parent[child.i] = id;
+
+		// Update swap objects data to the removed objects place
+
+		data.entity[id.i] = data.entity[swap.i];
+		data.local[id.i] = data.local[swap.i];
+		data.world[id.i] = data.world[swap.i];
+		data.parent[id.i] = parent;
+		data.firstChild[id.i] = firstChild;
+		data.prevSibling[id.i] = prevSibling;
+		data.nextSibling[id.i] = nextSibling;
+
+		--data.count;
+	}
 }
 
 void Scene::SetParent(SceneObjectId id, SceneObjectId parent)
@@ -134,23 +201,22 @@ void Scene::SetParent(SceneObjectId id, SceneObjectId parent)
 			SceneObjectId prevSibling = data.prevSibling[id.i];
 			SceneObjectId nextSibling = data.nextSibling[id.i];
 
-			if (IsValidId(prevSibling)) // We're not the first sibling
-			{
-				// nextSibling can be Null, no need to check
-				data.nextSibling[prevSibling.i] = nextSibling;
-			}
-			else if (IsValidId(oldParent)) // We have a parent that's not the root
-			{
-				// Because we didn't have prevSibling, we know we were the first child
-				// nextSibling can be Null, no need to check
-				data.firstChild[oldParent.i] = nextSibling;
-			}
+			// No need to check for Null reference values as they are valid
 
-			if (IsValidId(nextSibling)) // We have nextSibling, its prevSibling must be updated
-			{
-				// prevSibling can be Null, no need to check
+			if (IsValidId(prevSibling)) // We're not the first sibling
+				data.nextSibling[prevSibling.i] = nextSibling;
+
+			// Object has a parent that's not the root
+			// Because object didn't have prevSibling, it must be the first child
+			else if (IsValidId(oldParent))
+				data.firstChild[oldParent.i] = nextSibling;
+
+			// Object has nextSibling, its prevSibling must be updated
+			if (IsValidId(nextSibling))
 				data.prevSibling[nextSibling.i] = prevSibling;
-			}
+
+			// No need to check for children of object
+			// The SceneObjectId didn't change, so children will still be children
 		}
 
 		// Create references for new position in hierarchy
