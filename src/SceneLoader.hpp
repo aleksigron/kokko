@@ -1,0 +1,33 @@
+#pragma once
+
+#include "rapidjson/document.h"
+
+#include "BufferRef.hpp"
+#include "Scene.hpp"
+
+class Engine;
+class Renderer;
+class EntityManager;
+class ResourceManager;
+
+class SceneLoader
+{
+private:
+	using ValueItr = rapidjson::Value::ConstValueIterator;
+	using MemberItr = rapidjson::Value::ConstMemberIterator;
+
+	Scene* scene;
+	Renderer* renderer;
+	EntityManager* entityManager;
+	ResourceManager* resourceManager;
+
+	void CreateObjects(ValueItr begin, ValueItr end);
+	void CreateChildObjects(ValueItr begin, ValueItr end, SceneObjectId parent);
+	void CreateSceneObject(ValueItr itr, SceneObjectId sceneObject);
+	void CreateRenderObject(ValueItr itr, Entity entity);
+
+public:
+	SceneLoader(Engine* engine, Scene* scene);
+
+	void Load(BufferRef<char> sceneConfig);
+};

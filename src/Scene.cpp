@@ -71,6 +71,7 @@ void Scene::Reallocate(unsigned int required)
 	}
 	else
 	{
+		newData.entity[SceneObjectId::Null.i] = Entity{};
 		newData.local[SceneObjectId::Null.i] = Mat4x4f();
 		newData.world[SceneObjectId::Null.i] = Mat4x4f();
 		newData.parent[SceneObjectId::Null.i] = SceneObjectId::Null;
@@ -119,9 +120,61 @@ void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* 
 	updatedEntities.InsertUnique(reinterpret_cast<unsigned int*>(entities), count);
 }
 
+void Scene::SetParent(SceneObjectId id, SceneObjectId parent)
+{
+	assert(IsValidId(id));
+
+	SceneObjectId oldParent = data.parent[id.i];
+
+	// Check that the new parent is different from old parent
+	if (oldParent.i != parent.i)
+	{
+		// Patch references relating to old position in hierarchy
+		{
+			SceneObjectId prevSibling = data.prevSibling[id.i];
+			SceneObjectId nextSibling = data.nextSibling[id.i];
+
+			if (IsValidId(prevSibling)) // We're not the first sibling
+			{
+				// nextSibling can be Null, no need to check
+				data.nextSibling[prevSibling.i] = nextSibling;
+			}
+			else if (IsValidId(oldParent)) // We have a parent that's not the root
+			{
+				// Because we didn't have prevSibling, we know we were the first child
+				// nextSibling can be Null, no need to check
+				data.firstChild[oldParent.i] = nextSibling;
+			}
+
+			if (IsValidId(nextSibling)) // We have nextSibling, its prevSibling must be updated
+			{
+				// prevSibling can be Null, no need to check
+				data.prevSibling[nextSibling.i] = prevSibling;
+			}
+		}
+
+		// Create references for new position in hierarchy
+
+		if (IsValidId(parent)) // New parent isn't root
+		{
+			SceneObjectId parentsChild = data.firstChild[parent.i];
+
+			// If the new parent has a child, set this object as the prevSibling
+			if (IsValidId(parentsChild))
+				data.prevSibling[parentsChild.i] = id;
+
+			// Set this object as the first child of the new parent
+			data.firstChild[parent.i] = id;
+		}
+
+		// Finally set the new parent
+		data.parent[id.i] = parent;
+	}
+}
+
 void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 {
-	assert(id.i != SceneObjectId::Null.i);
+	assert(IsValidId(id));
 
 	data.local[id.i] = transform;
 

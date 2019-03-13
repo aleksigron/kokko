@@ -71,10 +71,7 @@ public:
 	SceneObjectId AddSceneObject(Entity e);
 	void AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* sceneObjectIds);
 
-	void SetParent(SceneObjectId id, SceneObjectId parent)
-	{
-		data.parent[id.i] = parent;
-	}
+	void SetParent(SceneObjectId id, SceneObjectId parent);
 
 	void SetLocalTransform(SceneObjectId id, const Mat4x4f& transform);
 

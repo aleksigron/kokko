@@ -1,6 +1,7 @@
 #pragma once
 
-class ResourceManager;
+#include "StringRef.hpp"
+
 class Scene;
 
 /**
@@ -26,7 +27,7 @@ public:
 	void SetPrimarySceneId(unsigned int sceneId);
 	unsigned int GetPrimarySceneId() const;
 
-	unsigned int LoadSceneFromFile(const char* path);
+	unsigned int LoadSceneFromFile(StringRef path);
 	unsigned int CreateScene();
 	Scene* GetScene(unsigned int sceneId);
 };

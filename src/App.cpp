@@ -41,7 +41,7 @@ void App::Initialize()
 	this->cameraController.SetControlledCamera(&this->mainCamera);
 
 	SceneManager* sceneManager = engine->GetSceneManager();
-	unsigned int sceneId = sceneManager->LoadSceneFromFile("res/scenes/default.scene.json");
+	unsigned int sceneId = sceneManager->LoadSceneFromFile(StringRef("res/scenes/default.scene.json"));
 
 	// Create an empty scene if one couldn't be loaded from file
 	if (sceneId == 0)

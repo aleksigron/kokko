@@ -3,16 +3,10 @@
 #include <cstring>
 #include <new>
 
-#include "rapidjson/document.h"
-
-#include "ValueSerialization.hpp"
-#include "StringRef.hpp"
-
 #include "Engine.hpp"
-#include "Renderer.hpp"
-#include "EntityManager.hpp"
-#include "ResourceManager.hpp"
 #include "Scene.hpp"
+#include "SceneLoader.hpp"
+#include "StringRef.hpp"
 #include "File.hpp"
 
 SceneManager::SceneManager() :
@@ -43,7 +37,7 @@ unsigned int SceneManager::GetPrimarySceneId() const
 	return this->primarySceneId;
 }
 
-unsigned int SceneManager::LoadSceneFromFile(const char* path)
+unsigned int SceneManager::LoadSceneFromFile(StringRef path)
 {
 	unsigned int sceneId = 0;
 
@@ -57,78 +51,8 @@ unsigned int SceneManager::LoadSceneFromFile(const char* path)
 		{
 			Scene* scene = this->GetScene(sceneId);
 
-			Engine* engine = Engine::GetInstance();
-			Renderer* renderer = engine->GetRenderer();
-			EntityManager* entityManager = engine->GetEntityManager();
-			ResourceManager* rm = engine->GetResourceManager();
-
-			rapidjson::Document doc;
-			doc.Parse(sceneConfig.Data(), sceneConfig.Count());
-
-			if (doc.IsObject())
-			{
-				using MemberItr = rapidjson::Value::ConstMemberIterator;
-
-				MemberItr objectsItr = doc.FindMember("objects");
-				if (objectsItr != doc.MemberEnd() && objectsItr->value.IsArray())
-				{
-					rapidjson::Value::ConstValueIterator itr = objectsItr->value.Begin();
-					rapidjson::Value::ConstValueIterator end = objectsItr->value.End();
-					for (; itr != end; ++itr)
-					{
-						if (itr->IsObject())
-						{
-							Entity entity = entityManager->Create();
-
-							SceneObjectId sceneObj = scene->AddSceneObject(entity);
-
-							RenderObjectId renderObj = renderer->AddRenderObject(entity);
-							renderer->SetSceneLayer(renderObj, SceneLayer::World);
-
-							MemberItr meshItr = itr->FindMember("mesh");
-							if (meshItr != itr->MemberEnd() && meshItr->value.IsString())
-							{
-								StringRef path(meshItr->value.GetString(), meshItr->value.GetStringLength());
-								unsigned int meshId = rm->CreateMeshFromFile(path);
-								if (meshId != 0)
-									renderer->SetMeshId(renderObj, meshId);
-							}
-
-							MemberItr materialItr = itr->FindMember("material");
-							if (materialItr != itr->MemberEnd() && materialItr->value.IsString())
-							{
-								StringRef path(materialItr->value.GetString(), materialItr->value.GetStringLength());
-								unsigned int materialId = rm->CreateMaterialFromFile(path);
-								if (materialId != 0)
-									renderer->SetMaterialId(renderObj, materialId);
-							}
-
-							MemberItr positionItr = itr->FindMember("position");
-							if (positionItr != itr->MemberEnd())
-							{
-								Vec3f pos = ValueSerialization::Deserialize_Vec3f(positionItr->value);
-								scene->SetLocalTransform(sceneObj, Mat4x4f::Translate(pos));
-							}
-						}
-					}
-				}
-
-				MemberItr colorItr = doc.FindMember("background-color");
-				if (colorItr != doc.MemberEnd())
-				{
-					scene->backgroundColor = ValueSerialization::Deserialize_Color(colorItr->value);
-				}
-
-				MemberItr skyboxItr = doc.FindMember("skybox-material");
-				if (skyboxItr != doc.MemberEnd() && skyboxItr->value.IsString())
-				{
-					StringRef materialPath(skyboxItr->value.GetString(), skyboxItr->value.GetStringLength());
-
-					unsigned int materialId = rm->CreateMaterialFromFile(materialPath);
-
-					scene->skybox.Initialize(scene, materialId);
-				}
-			}
+			SceneLoader loader(Engine::GetInstance(), scene);
+			loader.Load(sceneConfig.GetRef());
 		}
 	}
 

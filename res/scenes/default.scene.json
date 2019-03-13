@@ -12,19 +12,25 @@
             "material": "res/materials/diffuse_gray.material.json"
         },
 		{
-            "mesh": "res/models/tea_cup.mesh",
-            "material": "res/materials/diffuse_red.material.json",
-            "position": [ 0.1, 0.74, 0.45 ]
-        },
-		{
-            "mesh": "res/models/tea_cup.mesh",
-            "material": "res/materials/diffuse_gray.material.json",
-            "position": [ -0.1, 0.74, 0.45 ]
-        },
-		{
             "mesh": "res/models/sphere.mesh",
             "material": "res/materials/blend.material.json",
-            "position": [ 0.0, 1.0, 0.0 ]
-        }
+            "position": [ 0, 1, 0 ]
+		},
+		{
+			"position": [ 0, 0.74, 0.45 ],
+			"children":
+			[
+				{
+					"mesh": "res/models/tea_cup.mesh",
+					"material": "res/materials/diffuse_red.material.json",
+					"position": [ 0.1, 0, 0 ]
+				},
+				{
+					"mesh": "res/models/tea_cup.mesh",
+					"material": "res/materials/diffuse_gray.material.json",
+					"position": [ -0.1, 0, 0 ]
+				}
+			]
+		}
 	]
 }
