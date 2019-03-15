@@ -18,39 +18,6 @@ ResourceManager::~ResourceManager()
 {
 }
 
-Mesh& ResourceManager::GetMesh(unsigned int id)
-{
-	return meshes.Get(id);
-}
-
-unsigned int ResourceManager::CreateMesh()
-{
-	return meshes.Add();
-}
-
-unsigned int ResourceManager::CreateMeshFromFile(StringRef path)
-{
-	Mesh* addedMesh;
-	unsigned int id = meshes.Add(&addedMesh);
-
-	if (LoadMesh(*addedMesh, path) == true)
-	{
-		return id;
-	}
-	else
-	{
-		meshes.Remove(id);
-		return 0;
-	}
-}
-
-bool ResourceManager::LoadMesh(Mesh &mesh, StringRef path)
-{
-	Buffer<unsigned char> file = File::ReadBinary(path);
-
-	return mesh.LoadFromBuffer(file.GetRef());
-}
-
 Shader* ResourceManager::GetShader(uint32_t hash) const
 {
 	for (unsigned int i = 0; i < shaderCount; ++i)
@@ -122,10 +89,10 @@ Material& ResourceManager::GetMaterial(unsigned int id)
 
 unsigned int ResourceManager::CreateMaterialFromFile(StringRef path)
 {
-	Material* addedMaterial;
-	unsigned int id = materials.Add(&addedMaterial);
+	unsigned int id = materials.Add();
+	Material& material = materials.Get(id);
 
-	if (this->LoadMaterial(*addedMaterial, path) == true)
+	if (this->LoadMaterial(material, path) == true)
 	{
 		return id;
 	}

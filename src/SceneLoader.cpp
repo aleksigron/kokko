@@ -4,6 +4,7 @@
 
 #include "Engine.hpp"
 #include "Renderer.hpp"
+#include "MeshManager.hpp"
 #include "EntityManager.hpp"
 #include "ResourceManager.hpp"
 #include "ValueSerialization.hpp"
@@ -11,6 +12,7 @@
 SceneLoader::SceneLoader(Engine* engine, Scene* scene):
 	scene(scene),
 	renderer(engine->GetRenderer()),
+	meshManager(engine->GetMeshManager()),
 	entityManager(engine->GetEntityManager()),
 	resourceManager(engine->GetResourceManager())
 {
@@ -110,8 +112,8 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 		renderer->SetSceneLayer(renderObj, SceneLayer::World);
 
 		StringRef meshPath(meshItr->value.GetString(), meshItr->value.GetStringLength());
-		unsigned int meshId = resourceManager->CreateMeshFromFile(meshPath);
-		if (meshId != 0)
+		MeshId meshId = meshManager->GetIdByPath(meshPath);
+		if (meshId.IsValid())
 			renderer->SetMeshId(renderObj, meshId);
 
 		StringRef matPath(materialItr->value.GetString(), materialItr->value.GetStringLength());

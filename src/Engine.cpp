@@ -6,6 +6,7 @@
 #include "Time.hpp"
 #include "EntityManager.hpp"
 #include "Renderer.hpp"
+#include "MeshManager.hpp"
 #include "ResourceManager.hpp"
 #include "SceneManager.hpp"
 #include "Scene.hpp"
@@ -35,6 +36,7 @@ Engine::Engine()
 	this->time = new Time;
 	this->entityManager = new EntityManager;
 	this->renderer = new Renderer;
+	this->meshManager = new MeshManager;
 	this->resourceManager = new ResourceManager;
 	this->sceneManager = new SceneManager;
 }
@@ -43,6 +45,7 @@ Engine::~Engine()
 {
 	delete this->sceneManager;
 	delete this->resourceManager;
+	delete this->meshManager;
 	delete this->renderer;
 	delete this->time;
 

@@ -14,6 +14,7 @@
 #include "Scene.hpp"
 #include "SceneManager.hpp"
 #include "ResourceManager.hpp"
+#include "MeshManager.hpp"
 
 DebugVectorRenderer::DebugVectorRenderer() :
 	meshesInitialized(false)
@@ -31,7 +32,7 @@ DebugVectorRenderer::~DebugVectorRenderer()
 void DebugVectorRenderer::CreateMeshes()
 {
 	Engine* engine = Engine::GetInstance();
-	ResourceManager* rm = engine->GetResourceManager();
+	MeshManager* meshManager = engine->GetMeshManager();
 
 	{
 		Vertex3f lineVertexData[] = {
@@ -41,20 +42,17 @@ void DebugVectorRenderer::CreateMeshes()
 
 		unsigned short lineIndexData[] = { 0, 1 };
 
-		unsigned int& lineMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Line)];
-		lineMeshId = rm->CreateMesh();
-		Mesh& lineMesh = rm->GetMesh(lineMeshId);
+		MeshId& lineMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Line)];
+		lineMeshId = meshManager->CreateMesh();
 
-		BufferRef<Vertex3f> vertices;
-		vertices.data = lineVertexData;
-		vertices.count = sizeof(lineVertexData) / sizeof(Vertex3f);
+		IndexedVertexData<Vertex3f, unsigned short> data;
+		data.primitiveMode = MeshPrimitiveMode::Lines;
+		data.vertData = lineVertexData;
+		data.vertCount = sizeof(lineVertexData) / sizeof(Vertex3f);
+		data.idxData = lineIndexData;
+		data.idxCount = sizeof(lineIndexData) / sizeof(unsigned short);
 
-		BufferRef<unsigned short> indices;
-		indices.data = lineIndexData;
-		indices.count = sizeof(lineIndexData) / sizeof(unsigned short);
-
-		lineMesh.SetPrimitiveMode(Mesh::PrimitiveMode::Lines);
-		lineMesh.Upload_3f(vertices, indices);
+		meshManager->Upload_3f(lineMeshId, data);
 	}
 
 	{
@@ -75,20 +73,17 @@ void DebugVectorRenderer::CreateMeshes()
 			4, 5, 5, 7, 7, 6, 6, 4
 		};
 
-		unsigned int& cubeMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::WireCube)];
-		cubeMeshId = rm->CreateMesh();
-		Mesh& cubeMesh = rm->GetMesh(cubeMeshId);
+		MeshId& cubeMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::WireCube)];
+		cubeMeshId = meshManager->CreateMesh();
 
-		BufferRef<Vertex3f> vertices;
-		vertices.data = cubeVertexData;
-		vertices.count = sizeof(cubeVertexData) / sizeof(Vertex3f);
+		IndexedVertexData<Vertex3f, unsigned short> data;
+		data.primitiveMode = MeshPrimitiveMode::Lines;
+		data.vertData = cubeVertexData;
+		data.vertCount = sizeof(cubeVertexData) / sizeof(Vertex3f);
+		data.idxData = cubeIndexData;
+		data.idxCount = sizeof(cubeIndexData) / sizeof(unsigned short);
 
-		BufferRef<unsigned short> indices;
-		indices.data = cubeIndexData;
-		indices.count = sizeof(cubeIndexData) / sizeof(unsigned short);
-
-		cubeMesh.SetPrimitiveMode(Mesh::PrimitiveMode::Lines);
-		cubeMesh.Upload_3f(vertices, indices);
+		meshManager->Upload_3f(cubeMeshId, data);
 	}
 
 	{
@@ -131,20 +126,17 @@ void DebugVectorRenderer::CreateMeshes()
 			66, 67, 67, 68, 68, 69, 69, 70, 70, 71, 71, 48
 		};
 
-		unsigned int& sphereMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::WireSphere)];
-		sphereMeshId = rm->CreateMesh();
-		Mesh& sphereMesh = rm->GetMesh(sphereMeshId);
+		MeshId& sphereMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::WireSphere)];
+		sphereMeshId = meshManager->CreateMesh();
 
-		BufferRef<Vertex3f> vertices;
-		vertices.data = sphereVertexData;
-		vertices.count = sizeof(sphereVertexData) / sizeof(Vertex3f);
+		IndexedVertexData<Vertex3f, unsigned short> data;
+		data.primitiveMode = MeshPrimitiveMode::Lines;
+		data.vertData = sphereVertexData;
+		data.vertCount = sizeof(sphereVertexData) / sizeof(Vertex3f);
+		data.idxData = sphereIndexData;
+		data.idxCount = sizeof(sphereIndexData) / sizeof(unsigned short);
 
-		BufferRef<unsigned short> indices;
-		indices.data = sphereIndexData;
-		indices.count = sizeof(sphereIndexData) / sizeof(unsigned short);
-
-		sphereMesh.SetPrimitiveMode(Mesh::PrimitiveMode::Lines);
-		sphereMesh.Upload_3f(vertices, indices);
+		meshManager->Upload_3f(sphereMeshId, data);
 	}
 
 	{
@@ -157,20 +149,17 @@ void DebugVectorRenderer::CreateMeshes()
 
 		unsigned short rectangleIndexData[] = { 0, 1, 2, 3 };
 
-		unsigned int& rectangleMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Rectangle)];
-		rectangleMeshId = rm->CreateMesh();
-		Mesh& rectangleMesh = rm->GetMesh(rectangleMeshId);
+		MeshId& rectangleMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Rectangle)];
+		rectangleMeshId = meshManager->CreateMesh();
 
-		BufferRef<Vertex3f> vertices;
-		vertices.data = rectangleVertexData;
-		vertices.count = sizeof(rectangleVertexData) / sizeof(Vertex3f);
+		IndexedVertexData<Vertex3f, unsigned short> data;
+		data.primitiveMode = MeshPrimitiveMode::Lines;
+		data.vertData = rectangleVertexData;
+		data.vertCount = sizeof(rectangleVertexData) / sizeof(Vertex3f);
+		data.idxData = rectangleIndexData;
+		data.idxCount = sizeof(rectangleIndexData) / sizeof(unsigned short);
 
-		BufferRef<unsigned short> indices;
-		indices.data = rectangleIndexData;
-		indices.count = sizeof(rectangleIndexData) / sizeof(unsigned short);
-
-		rectangleMesh.SetPrimitiveMode(Mesh::PrimitiveMode::TriangleFan);
-		rectangleMesh.Upload_3f(vertices, indices);
+		meshManager->Upload_3f(rectangleMeshId, data);
 	}
 
 	meshesInitialized = true;
@@ -263,6 +252,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 	if (primitiveCount > 0)
 	{
 		Engine* engine = Engine::GetInstance();
+		MeshManager* meshManager = engine->GetMeshManager();
 		ResourceManager* rm = engine->GetResourceManager();
 		Shader* shader = rm->GetShader("res/shaders/debug_vector.shader.json");
 
@@ -302,20 +292,21 @@ void DebugVectorRenderer::Render(Camera* camera)
 			// Multiply transform with P or VP based on whether this is a screen-space primitive
 			Mat4x4f mvp = (primitive.screenSpace ? screenProj : viewProj) * primitive.transform;
 
-			unsigned int meshId = this->meshIds[static_cast<unsigned int>(primitive.type)];
-			const Mesh& mesh = rm->GetMesh(meshId);
-
 			// Set color uniform
 			glUniform4fv(colorUniformLocation, 1, primitive.color.ValuePointer());
-
-			// Bind vertex array object
-			glBindVertexArray(mesh.vertexArrayObject);
 
 			// Set transform matrix uniform
 			glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
 
+			// Get mesh data
+			MeshId meshId = this->meshIds[static_cast<unsigned int>(primitive.type)];
+			MeshDrawData* draw = meshManager->GetDrawData(meshId);
+
+			// Bind vertex array object
+			glBindVertexArray(draw->vertexArrayObject);
+
 			// Draw
-			glDrawElements(mesh.primitiveMode, mesh.indexCount, mesh.indexElementType, nullptr);
+			glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
 		}
 
 		// Clear primitive count

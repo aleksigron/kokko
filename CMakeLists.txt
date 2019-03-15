@@ -88,6 +88,10 @@ set (KOKKO_SOURCES
 	src/MemoryAmount.hpp
 	src/Mesh.cpp
 	src/Mesh.hpp
+	src/MeshData.hpp
+	src/MeshLoader.hpp
+	src/MeshManager.cpp
+	src/MeshManager.hpp
 	src/MultiArray.hpp
 	src/ObjectId.hpp
 	src/Plane.hpp

@@ -5,7 +5,7 @@
 #include "RenderOrder.hpp"
 #include "RenderData.hpp"
 #include "FrustumCulling.hpp"
-
+#include "MeshData.hpp"
 #include "Array.hpp"
 #include "HashMap.hpp"
 
@@ -33,7 +33,7 @@ private:
 		void *buffer;
 
 		Entity* entity;
-		unsigned int* mesh;
+		MeshId* mesh;
 		unsigned int* material;
 		SceneLayer* layer;
 		CullStatePacked16* cullState;
@@ -85,8 +85,8 @@ public:
 
 	// Render object property management
 
-	void SetMeshId(RenderObjectId id, unsigned int meshId) { data.mesh[id.i] = meshId; }
-	unsigned int GetMeshId(RenderObjectId id) { return data.mesh[id.i]; }
+	void SetMeshId(RenderObjectId id, MeshId meshId) { data.mesh[id.i] = meshId; }
+	MeshId GetMeshId(RenderObjectId id) { return data.mesh[id.i]; }
 
 	void SetMaterialId(RenderObjectId id, unsigned int materialId) { data.material[id.i] = materialId; }
 	unsigned int GetMaterialId(RenderObjectId id) { return data.material[id.i]; }

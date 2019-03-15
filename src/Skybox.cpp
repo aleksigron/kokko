@@ -7,6 +7,7 @@
 #include "SceneLayer.hpp"
 #include "SceneManager.hpp"
 #include "Renderer.hpp"
+#include "MeshManager.hpp"
 #include "EntityManager.hpp"
 #include "ResourceManager.hpp"
 
@@ -48,23 +49,23 @@ void Skybox::Initialize(Scene* scene, unsigned int materialId)
 	Engine* engine = Engine::GetInstance();
 	Renderer* renderer = engine->GetRenderer();
 	EntityManager* entityManager = engine->GetEntityManager();
-	ResourceManager* resourceManager = engine->GetResourceManager();
+	MeshManager* meshManager = engine->GetMeshManager();
 
-	unsigned meshId = resourceManager->CreateMesh();
-	Mesh& mesh = resourceManager->GetMesh(meshId);
+	MeshId meshId = meshManager->CreateMesh();
 
-	BufferRef<Vertex3f> vertices;
-	vertices.data = vertexData;
-	vertices.count = sizeof(vertexData) / sizeof(Vertex3f);
+	IndexedVertexData<Vertex3f, unsigned short> data;
+	data.primitiveMode = MeshPrimitiveMode::Triangles;
+	data.vertData = vertexData;
+	data.vertCount = sizeof(vertexData) / sizeof(Vertex3f);
+	data.idxData = indexData;
+	data.idxCount = sizeof(indexData) / sizeof(unsigned short);
 
-	BufferRef<unsigned short> indices;
-	indices.data = indexData;
-	indices.count = sizeof(indexData) / sizeof(unsigned short);
+	meshManager->Upload_3f(meshId, data);
 
-	mesh.bounds.center = Vec3f(0.0f, 0.0f, 0.0f);
-	mesh.bounds.extents = Vec3f(0.5f, 0.5f, 0.5f);
-	mesh.SetPrimitiveMode(Mesh::PrimitiveMode::Triangles);
-	mesh.Upload_3f(vertices, indices);
+	BoundingBox bounds;
+	bounds.center = Vec3f(0.0f, 0.0f, 0.0f);
+	bounds.extents = Vec3f(0.5f, 0.5f, 0.5f);
+	meshManager->SetBoundingBox(meshId, bounds);
 
 	this->renderSceneId = scene->GetSceneId();
 	this->entity = entityManager->Create();

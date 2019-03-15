@@ -5,7 +5,7 @@
 #include "Mat4x4.hpp"
 #include "Rectangle.hpp"
 #include "Color.hpp"
-#include "ObjectId.hpp"
+#include "MeshData.hpp"
 
 class Camera;
 
@@ -33,7 +33,7 @@ private:
 	unsigned int primitiveAllocated;
 
 	bool meshesInitialized;
-	unsigned int meshIds[4];
+	MeshId meshIds[4];
 
 	void CreateMeshes();
 

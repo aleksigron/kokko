@@ -10,11 +10,11 @@
 #include "Window.hpp"
 
 #include "ResourceManager.hpp"
+#include "MeshManager.hpp"
 #include "Material.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "Scene.hpp"
-#include "Mesh.hpp"
 
 #include "Camera.hpp"
 #include "ViewFrustum.hpp"
@@ -54,6 +54,7 @@ Camera* Renderer::GetCullingCamera(Scene* scene)
 void Renderer::Render(Scene* scene)
 {
 	Engine* engine = Engine::GetInstance();
+	MeshManager* meshManager = engine->GetMeshManager();
 	ResourceManager* res = engine->GetResourceManager();
 
 	Camera* renderCamera = this->GetRenderCamera(scene);
@@ -107,7 +108,6 @@ void Renderer::Render(Scene* scene)
 		{
 			const unsigned int objIdx = command.renderObjectIndex;
 
-			Mesh& mesh = res->GetMesh(data.mesh[objIdx]);
 			Material& material = res->GetMaterial(data.material[objIdx]);
 			Shader* shader = res->GetShader(material.shaderId);
 
@@ -198,10 +198,11 @@ void Renderer::Render(Scene* scene)
 			{
 				glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, projectionMatrix.ValuePointer());
 			}
+
+			MeshDrawData* draw = meshManager->GetDrawData(data.mesh[objIdx]);
+			glBindVertexArray(draw->vertexArrayObject);
 			
-			glBindVertexArray(mesh.vertexArrayObject);
-			
-			glDrawElements(mesh.primitiveMode, mesh.indexCount, mesh.indexElementType, nullptr);
+			glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
 		}
 	}
 
@@ -287,8 +288,8 @@ void Renderer::Reallocate(unsigned int required)
 	newData.allocated = required;
 
 	newData.entity = static_cast<Entity*>(newData.buffer);
-	newData.mesh = reinterpret_cast<unsigned int*>(newData.entity + required);
-	newData.material = newData.mesh + required;
+	newData.mesh = reinterpret_cast<MeshId*>(newData.entity + required);
+	newData.material = reinterpret_cast<unsigned int*>(newData.mesh + required);
 	newData.layer = reinterpret_cast<SceneLayer*>(newData.material + required);
 	newData.cullState = reinterpret_cast<CullStatePacked16*>(newData.layer + required);
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.cullState + csRequired);
@@ -341,7 +342,7 @@ void Renderer::AddRenderObject(unsigned int count, Entity* entities, RenderObjec
 
 void Renderer::NotifyUpdatedTransforms(unsigned int count, Entity* entities, Mat4x4f* transforms)
 {
-	ResourceManager* rm = Engine::GetInstance()->GetResourceManager();
+	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
 
 	for (unsigned int entityIdx = 0; entityIdx < count; ++entityIdx)
 	{
@@ -351,16 +352,13 @@ void Renderer::NotifyUpdatedTransforms(unsigned int count, Entity* entities, Mat
 		if (obj.i != RenderObjectId::Null.i)
 		{
 			unsigned int dataIdx = obj.i;
-			const Mat4x4f& m = transforms[entityIdx];
 
 			// Recalculate bounding box
-			unsigned int meshId = data.mesh[dataIdx];
-			const Mesh& mesh = rm->GetMesh(meshId);
-			BoundingBox trBounds = mesh.bounds.Transform(m);
-			data.bounds[dataIdx] = trBounds;
+			BoundingBox* bounds = meshManager->GetBoundingBox(data.mesh[dataIdx]);
+			data.bounds[dataIdx] = bounds->Transform(transforms[entityIdx]);
 
 			// Set world transform
-			data.transform[dataIdx] = m;
+			data.transform[dataIdx] = transforms[entityIdx];
 		}
 	}
 }

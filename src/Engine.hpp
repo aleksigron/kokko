@@ -4,6 +4,7 @@ class Window;
 class Time;
 class EntityManager;
 class Renderer;
+class MeshManager;
 class ResourceManager;
 class SceneManager;
 
@@ -18,6 +19,7 @@ private:
 	Time* time;
 	EntityManager* entityManager;
 	Renderer* renderer;
+	MeshManager* meshManager;
 	ResourceManager* resourceManager;
 	SceneManager* sceneManager;
 
@@ -35,6 +37,7 @@ public:
 	Window* GetMainWindow() { return mainWindow; }
 	EntityManager* GetEntityManager() { return entityManager; }
 	Renderer* GetRenderer() { return renderer; }
+	MeshManager* GetMeshManager() { return meshManager; }
 	ResourceManager* GetResourceManager() { return resourceManager; }
 	SceneManager* GetSceneManager() { return sceneManager; }
 
