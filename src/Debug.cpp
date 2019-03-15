@@ -1,5 +1,6 @@
 #include "Debug.hpp"
 
+#include <cassert>
 #include <cstdio>
 
 #include "IncludeOpenGL.hpp"
@@ -208,12 +209,29 @@ void Debug::Render(Scene* scene)
 
 void Debug::CheckOpenGlErrors()
 {
+	unsigned int errorCount = 0;
+
 	GLenum error;
 	while ((error = glGetError()) != GL_NO_ERROR)
 	{
-		char buffer[32];
-		sprintf(buffer, "glGetError() -> %u", error);
+		const char* desc;
 
-		log->Log(StringRef(buffer));
+		switch (error)
+		{
+			case GL_INVALID_ENUM: desc = "GL_INVALID_ENUM"; break;
+			case GL_INVALID_VALUE: desc = "GL_INVALID_VALUE"; break;
+			case GL_INVALID_OPERATION: desc = "GL_INVALID_OPERATION"; break;
+			case GL_OUT_OF_MEMORY: desc = "GL_OUT_OF_MEMORY"; break;
+			default: desc = "<UNKNOWN>";
+		}
+
+		char buffer[128];
+		int w = std::snprintf(buffer, sizeof(buffer), "glGetError(): 0x%04X, %s", error, desc);
+
+		Engine::GetInstance()->GetDebug()->GetLog()->Log(StringRef(buffer, w));
+
+		++errorCount;
 	}
+
+	assert(errorCount == 0);
 }

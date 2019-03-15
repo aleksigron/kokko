@@ -43,7 +43,7 @@ public:
 	
 	void Render(Scene* scene);
 
-	void CheckOpenGlErrors();
+	static void CheckOpenGlErrors();
 
 	DebugLog* GetLog() { return log; }
 	DebugConsole* GetConsole() { return console; }

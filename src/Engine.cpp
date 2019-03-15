@@ -95,5 +95,5 @@ void Engine::Update()
 	this->mainWindow->UpdateInput();
 	this->mainWindow->Swap();
 
-	this->debug->CheckOpenGlErrors();
+	Debug::CheckOpenGlErrors();
 }
