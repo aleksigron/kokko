@@ -3,10 +3,11 @@
 #include "Array.hpp"
 #include "StringRef.hpp"
 #include "Rectangle.hpp"
+#include "VertexFormat.hpp"
 #include "Vec2.hpp"
+#include "MeshData.hpp"
 
 class BitmapFont;
-struct Mesh;
 
 class DebugTextRenderer
 {
@@ -27,7 +28,11 @@ private:
 	Vec2f scaledFrameSize;
 	float scaleFactor;
 
-	void CreateAndUploadData(Mesh& mesh);
+	MeshId meshId;
+	Array<Vertex3f2f> vertexData;
+	Array<unsigned short> indexData;
+
+	void CreateAndUploadData();
 
 public:
 	DebugTextRenderer();

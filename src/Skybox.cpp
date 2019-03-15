@@ -11,7 +11,6 @@
 #include "EntityManager.hpp"
 #include "ResourceManager.hpp"
 
-#include "Mesh.hpp"
 #include "VertexFormat.hpp"
 
 Skybox::Skybox() :

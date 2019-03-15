@@ -11,15 +11,16 @@
 #include "EncodingUtf8.hpp"
 
 #include "Engine.hpp"
-#include "Mesh.hpp"
-#include "Material.hpp"
+#include "MeshManager.hpp"
 #include "ResourceManager.hpp"
+#include "Material.hpp"
 #include "App.hpp"
 
 DebugTextRenderer::DebugTextRenderer() :
 	font(nullptr),
 	stringCharCount(0),
-	scaleFactor(1.0f)
+	scaleFactor(1.0f),
+	meshId(MeshId{})
 {
 }
 
@@ -88,85 +89,81 @@ void DebugTextRenderer::AddText(StringRef str, Rectangle area)
 
 void DebugTextRenderer::Render()
 {
-	if (renderData.GetCount() > 0)
+	if (renderData.GetCount() > 0 && font != nullptr)
 	{
-		Mesh mesh;
-		this->CreateAndUploadData(mesh);
+		Engine* engine = Engine::GetInstance();
+		MeshManager* meshManager = engine->GetMeshManager();
+		ResourceManager* rm = engine->GetResourceManager();
 
-		if (mesh.HasVertexArrayObject())
+		if (meshId.IsValid() == false)
 		{
-			Engine* engine = Engine::GetInstance();
-			ResourceManager* rm = engine->GetResourceManager();
-			Shader* shader = rm->GetShader("res/shaders/debug_text.shader.json");
-
-			const ShaderUniform* textureUniform = nullptr;
-			const ShaderUniform* shadowOffsetUniform = nullptr;
-			for (unsigned int i = 0; i < shader->materialUniformCount; ++i)
-			{
-				ShaderUniformType type = shader->materialUniforms[i].type;
-
-				if (type == ShaderUniformType::Tex2D)
-				{
-					textureUniform = shader->materialUniforms + i;
-				}
-				else if (type == ShaderUniformType::Float)
-				{
-					shadowOffsetUniform = shader->materialUniforms + i;
-				}
-			}
-
-			glDisable(GL_DEPTH_TEST);
-
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-			// Use shader
-			glUseProgram(shader->driverId);
-
-			// Bind shadow offset
-			if (shadowOffsetUniform != nullptr)
-			{
-				Vec2f texSize = font->GetTextureSize();
-				glUniform1f(shadowOffsetUniform->location, 1.0f / texSize.y);
-			}
-
-			// Bind texture
-			if (textureUniform != nullptr)
-			{
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
-				glUniform1i(textureUniform->location, 0);
-			}
-
-			// Bind vertex array object
-			glBindVertexArray(mesh.vertexArrayObject);
-
-			// Draw
-			glDrawElements(GL_TRIANGLES, mesh.indexCount, mesh.indexElementType, nullptr);
-
-			mesh.DeleteBuffers();
-
-			stringCharCount = 0;
-			stringData.Clear();
-			renderData.Clear();
-
+			meshId = meshManager->CreateMesh();
 		}
+
+		CreateAndUploadData();
+
+		Shader* shader = rm->GetShader("res/shaders/debug_text.shader.json");
+
+		const ShaderUniform* textureUniform = nullptr;
+		const ShaderUniform* shadowOffsetUniform = nullptr;
+		for (unsigned int i = 0; i < shader->materialUniformCount; ++i)
+		{
+			ShaderUniformType type = shader->materialUniforms[i].type;
+
+			if (type == ShaderUniformType::Tex2D)
+			{
+				textureUniform = shader->materialUniforms + i;
+			}
+			else if (type == ShaderUniformType::Float)
+			{
+				shadowOffsetUniform = shader->materialUniforms + i;
+			}
+		}
+
+		glDisable(GL_DEPTH_TEST);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// Use shader
+		glUseProgram(shader->driverId);
+
+		// Bind shadow offset
+		if (shadowOffsetUniform != nullptr)
+		{
+			Vec2f texSize = font->GetTextureSize();
+			glUniform1f(shadowOffsetUniform->location, 1.0f / texSize.y);
+		}
+
+		// Bind texture
+		if (textureUniform != nullptr)
+		{
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
+			glUniform1i(textureUniform->location, 0);
+		}
+
+		MeshDrawData* draw = meshManager->GetDrawData(meshId);
+
+		// Bind vertex array object
+		glBindVertexArray(draw->vertexArrayObject);
+
+		// Draw
+		glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
+
+		stringCharCount = 0;
+		stringData.Clear();
+		renderData.Clear();
 	}
 }
 
-void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
+void DebugTextRenderer::CreateAndUploadData()
 {
-	if (font == nullptr)
-		return; // Can't do anything reasonable without a font
-
 	// Make sure vertex indices fit in unsigned short type
 	assert(stringCharCount * 4 < (1 << 16));
 
-	Buffer<Vertex3f2f> vertexBuffer;
-	vertexBuffer.Allocate(stringCharCount * 4);
-
-	Buffer<unsigned short> indexBuffer;
-	indexBuffer.Allocate(stringCharCount * 6);
+	vertexData.Resize(stringCharCount * 4);
+	indexData.Resize(stringCharCount * 6);
 
 	int fontLineHeight = font->GetLineHeight();
 	Vec2f textureSize = font->GetTextureSize();
@@ -174,9 +171,9 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 
 	Vec2f scaledInvFrame = Vec2f(2.0f / scaledFrameSize.x, 2.0f / scaledFrameSize.y);
 
-	Vertex3f2f* vertexBegin = vertexBuffer.Data();
+	Vertex3f2f* vertexBegin = vertexData.GetData();
 	Vertex3f2f* vertexItr = vertexBegin;
-	unsigned short* indexItr = indexBuffer.Data();
+	unsigned short* indexItr = indexData.GetData();
 
 	const char* strData = stringData.GetData();
 
@@ -197,8 +194,6 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 			if (bytesDecoded > 0)
 			{
 				strItr += bytesDecoded;
-
-				unsigned short vertexIndex = static_cast<unsigned short>(vertexItr - vertexBegin);
 
 				const BitmapGlyph* foundGlyph = font->GetGlyph(codepoint);
 
@@ -243,12 +238,14 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 					v11.b.x = uvX + uvRight;
 					v11.b.y = uvY + uvDown;
 
-					indexItr[0] = vertexIndex + 0;
-					indexItr[1] = vertexIndex + 3;
-					indexItr[2] = vertexIndex + 1;
-					indexItr[3] = vertexIndex + 0;
-					indexItr[4] = vertexIndex + 2;
-					indexItr[5] = vertexIndex + 3;
+					unsigned short vertIndex = static_cast<unsigned short>(vertexItr - vertexBegin);
+
+					indexItr[0] = vertIndex + 0;
+					indexItr[1] = vertIndex + 3;
+					indexItr[2] = vertIndex + 1;
+					indexItr[3] = vertIndex + 0;
+					indexItr[4] = vertIndex + 2;
+					indexItr[5] = vertIndex + 3;
 
 					drawPos.x += glyph.size.x;
 
@@ -271,14 +268,12 @@ void DebugTextRenderer::CreateAndUploadData(Mesh& mesh)
 		}
 	}
 
-	BufferRef<Vertex3f2f> vertices;
-	vertices.data = vertexBuffer.Data();
-	vertices.count = vertexBuffer.Count();
+	IndexedVertexData<Vertex3f2f, unsigned short> data;
+	data.primitiveMode = MeshPrimitiveMode::Triangles;
+	data.vertData = vertexData.GetData();
+	data.vertCount = vertexData.GetCount();
+	data.idxData = indexData.GetData();
+	data.idxCount = indexData.GetCount();
 
-	BufferRef<unsigned short> indices;
-	indices.data = indexBuffer.Data();
-	indices.count = indexBuffer.Count();
-
-	mesh.SetPrimitiveMode(Mesh::PrimitiveMode::Triangles);
-	mesh.Upload_3f2f(vertices, indices);
+	Engine::GetInstance()->GetMeshManager()->Upload_3f2f(meshId, data);
 }

@@ -9,7 +9,6 @@
 #include "Math.hpp"
 #include "Camera.hpp"
 #include "Window.hpp"
-#include "Mesh.hpp"
 #include "Shader.hpp"
 #include "Scene.hpp"
 #include "SceneManager.hpp"

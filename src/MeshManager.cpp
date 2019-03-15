@@ -90,9 +90,21 @@ MeshId MeshManager::CreateMesh()
 		freeListFirst = data.freeList[freeListFirst];
 	}
 
+	// Clear buffer data
+	data.bufferData[id.i] = MeshBufferData{};
+
 	++data.count;
 
 	return id;
+}
+
+static void DeleteBuffers(const MeshBufferData& buffers)
+{
+	if (buffers.vertexArrayObject != 0)
+	{
+		glDeleteVertexArrays(1, &buffers.vertexArrayObject);
+		glDeleteBuffers(2, buffers.bufferObjects);
+	}
 }
 
 void MeshManager::RemoveMesh(MeshId id)
@@ -103,6 +115,8 @@ void MeshManager::RemoveMesh(MeshId id)
 		data.freeList[id.i] = freeListFirst;
 		freeListFirst = id.i;
 	}
+
+	DeleteBuffers(data.bufferData[id.i]);
 
 	--data.count;
 }
@@ -162,19 +176,22 @@ static MeshBufferData CreateBuffers(void* vd, unsigned int vs, void* id, unsigne
 
 void MeshManager::Upload_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> vdata)
 {
+	DeleteBuffers(data.bufferData[id.i]);
+
 	using V = Vertex3f;
 
 	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
 	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
 	MeshBufferData bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize);
-	data.bufferData[id.i] = bufferData;
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.indexCount = vdata.idxCount;
 	drawData.indexElementType = GL_UNSIGNED_SHORT;
+
+	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
 	glEnableVertexAttribArray(0);
@@ -186,19 +203,22 @@ void MeshManager::Upload_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned shor
 
 void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned short> vdata)
 {
+	DeleteBuffers(data.bufferData[id.i]);
+
 	using V = Vertex3f2f;
 
 	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
 	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
 	MeshBufferData bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize);
-	data.bufferData[id.i] = bufferData;
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.indexCount = vdata.idxCount;
 	drawData.indexElementType = GL_UNSIGNED_SHORT;
+
+	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
 	glEnableVertexAttribArray(0);
@@ -213,19 +233,22 @@ void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned 
 
 void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned short> vdata)
 {
+	DeleteBuffers(data.bufferData[id.i]);
+
 	using V = Vertex3f3f;
 
 	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
 	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
 	MeshBufferData bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize);
-	data.bufferData[id.i] = bufferData;
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.indexCount = vdata.idxCount;
 	drawData.indexElementType = GL_UNSIGNED_SHORT;
+
+	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
 	glEnableVertexAttribArray(0);
@@ -240,19 +263,22 @@ void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned 
 
 void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsigned short> vdata)
 {
+	DeleteBuffers(data.bufferData[id.i]);
+
 	using V = Vertex3f3f2f;
 
 	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
 	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
 	MeshBufferData bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize);
-	data.bufferData[id.i] = bufferData;
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.indexCount = vdata.idxCount;
 	drawData.indexElementType = GL_UNSIGNED_SHORT;
+
+	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
 	glEnableVertexAttribArray(0);
@@ -270,19 +296,22 @@ void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsig
 
 void MeshManager::Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsigned short> vdata)
 {
+	DeleteBuffers(data.bufferData[id.i]);
+
 	using V = Vertex3f3f3f;
 
 	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
 	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
 	MeshBufferData bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize);
-	data.bufferData[id.i] = bufferData;
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.indexCount = vdata.idxCount;
 	drawData.indexElementType = GL_UNSIGNED_SHORT;
+
+	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
 	glEnableVertexAttribArray(0);

@@ -86,8 +86,6 @@ set (KOKKO_SOURCES
 	src/Material.hpp
 	src/Math.hpp
 	src/MemoryAmount.hpp
-	src/Mesh.cpp
-	src/Mesh.hpp
 	src/MeshData.hpp
 	src/MeshLoader.hpp
 	src/MeshManager.cpp
