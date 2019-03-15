@@ -251,7 +251,7 @@ void Renderer::CreateDrawCalls(Scene* scene)
 		SceneLayer::World, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable)));
 
 	// Create draw commands for render objects in scene
-	for (unsigned i = 0; i < data.count; ++i)
+	for (unsigned i = 1; i < data.count; ++i)
 	{
 		// Object is in potentially visible set
 		if (CullStatePacked16::IsOutside(data.cullState, i) == false)
