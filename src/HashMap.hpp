@@ -38,8 +38,7 @@ public:
 		allocated(0),
 		zeroUsed(false)
 	{
-		zeroPair.key = KeyType{};
-		zeroPair.value = ValueType{};
+		zeroPair = KeyValuePair{};
 	}
 
 	~HashMap()
@@ -56,29 +55,68 @@ public:
 		}
 	}
 
+	void ReserveInternal(unsigned int desiredSize)
+	{
+		KeyValuePair* newData = new KeyValuePair[desiredSize];
+		std::memset(newData, 0, sizeof(KeyValuePair) * desiredSize);
+
+		if (data != nullptr) // Old data exists
+		{
+			KeyValuePair* p = data;
+			KeyValuePair* end = p + allocated;
+			for (; p != end; ++p)
+			{
+				if (p->key) // Pair has value
+				{
+					for (unsigned int i = GetIndex(Hash::FNV1a_32(p->key));; i = GetIndex(i + 1))
+					{
+						if (!data[i].key) // Insert here
+						{
+							data[i] = *p;
+							break;
+						}
+					}
+				}
+			}
+
+			delete[] data;
+		}
+
+		data = newData;
+		allocated = desiredSize;
+	}
+
 	KeyValuePair* Lookup(KeyType key)
 	{
 		if (key)
 		{
-			for (unsigned int i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
+			if (data != nullptr)
 			{
-				KeyValuePair* pair = data + i;
+				for (unsigned int i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
+				{
+					KeyValuePair* pair = data + i;
 
-				if (pair->key == key)
-					return pair;
+					if (pair->key == key)
+						return pair;
 
-				if (!pair->key)
-					return nullptr;
+					if (!pair->key)
+						return nullptr;
+				}
 			}
 		}
-		else
-			return zeroUsed ? &zeroPair : nullptr;
+		else if (zeroUsed)
+			return &zeroPair;
+
+		return nullptr;
 	}
 
 	KeyValuePair* Insert(KeyType key)
 	{
 		if (key)
 		{
+			if (data == nullptr)
+				ReserveInternal(16);
+
 			for (;;)
 			for (unsigned int i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
 			{
@@ -91,9 +129,10 @@ public:
 				{
 					if ((population + 1) * 4 >= allocated * 3)
 					{
-						Reserve(allocated * 2);
+						ReserveInternal(allocated * 2);
 						break; // Back to outer loop, find key again
 					}
+
 					++population;
 					pair->key = key;
 					return pair;
@@ -105,11 +144,13 @@ public:
 			if (zeroUsed == false)
 			{
 				zeroUsed = true;
+				++population;
 
 				// Even though we didn't use a regular slot, let's keep the sizing rules consistent
-				if (++population * 4 >= allocated * 3)
-					Reserve(allocated * 2);
+				if (population * 4 >= allocated * 3)
+					ReserveInternal(allocated * 2);
 			}
+
 			return &zeroPair;
 		}
 	}
@@ -118,7 +159,9 @@ public:
 	{
 		if (pair != &zeroPair)
 		{
-			if (pair >= data && pair < data + allocated && pair->key)
+			if (data != nullptr &&
+				pair >= data && pair < data + allocated &&
+				pair->key)
 			{
 				// Remove this cell by shuffling neighboring cells
 				// so there are no gaps in anyone's probe chain
@@ -164,32 +207,6 @@ public:
 		if ((desiredSize & (desiredSize - 1)) != 0)
 			desiredSize = Math::UpperPowerOfTwo(desiredSize);
 
-		KeyValuePair* newData = new KeyValuePair[desiredSize];
-		std::memset(newData, 0, sizeof(KeyValuePair) * desiredSize);
-
-		if (data != nullptr) // Old data exists
-		{
-			KeyValuePair* p = data;
-			KeyValuePair* end = p + allocated;
-			for (; p != end; ++p)
-			{
-				if (p->key) // Pair has value
-				{
-					for (unsigned int i = GetIndex(Hash::FNV1a_32(p->key));; i = GetIndex(i + 1))
-					{
-						if (!data[i].key) // Insert here
-						{
-							data[i] = *p;
-							break;
-						}
-					}
-				}
-			}
-
-			delete[] data;
-		}
-
-		data = newData;
-		allocated = desiredSize;
+		this->ReserveInternal(desiredSize);
 	}
 };

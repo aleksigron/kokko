@@ -1,5 +1,6 @@
 #pragma once
 
+#include <new>
 #include <cstring>
 #include <utility>
 
@@ -7,64 +8,63 @@ template <typename ValueType, typename IndexType = unsigned int>
 class IndexedContainer
 {
 private:
+	void* buffer;
 	IndexType* indexList;
 	ValueType* objects;
 
-	IndexType objectCount;
-	IndexType allocatedCount;
+	IndexType count;
+	IndexType allocated;
 	IndexType freeListFirst;
-	IndexType initialAllocation;
 
-	void Reallocate()
+	void Reallocate(IndexType required)
 	{
-		unsigned int newAllocatedCount;
+		if (required <= allocated)
+			return;
 
-		if (allocatedCount == 0)
-			newAllocatedCount = initialAllocation;
-		else
-			newAllocatedCount = allocatedCount * 2 + 1;
+		unsigned int newAllocation = allocated == 0 ? 8 : allocated * 2;
 
-		unsigned int* newIndexList = new unsigned int[newAllocatedCount + 1];
-		ValueType* newObjects = new ValueType[newAllocatedCount];
+		if (newAllocation > required)
+			required = newAllocation;
+
+		unsigned int its = sizeof(IndexType);
+		unsigned int vts = sizeof(ValueType);
+
+		void* newBuffer = operator new[](its + required * (its + vts));
+		IndexType* newIndexList = static_cast<IndexType*>(newBuffer);
+		ValueType* newObjects = reinterpret_cast<ValueType*>(newIndexList + required + 1);
 
 		// We have old data
-		if (objectCount > 0)
+		if (this->buffer != nullptr)
 		{
-			// Copy old data to new buffers
-			std::memcpy(newIndexList, this->indexList, allocatedCount);
-			std::memcpy(newObjects, this->objects, objectCount);
+			// Copy old data
+			unsigned int copy = its * (allocated + 1) + vts * count;
+			std::memcpy(newBuffer, this->buffer, copy);
 
 			// Delete old buffers
-			delete[] this->indexList;
-			delete[] this->objects;
+			operator delete[](this->buffer);
 		}
 
+		this->buffer = newBuffer;
 		this->indexList = newIndexList;
 		this->objects = newObjects;
 
-		allocatedCount = newAllocatedCount;
+		allocated = required;
 	}
 
 public:
 	IndexedContainer() :
+		buffer(nullptr),
 		indexList(nullptr),
 		objects(nullptr),
-		objectCount(0),
-		allocatedCount(0),
-		freeListFirst(0),
-		initialAllocation(63)
+		count(0),
+		allocated(0),
+		freeListFirst(0)
 	{
 	}
 
 	~IndexedContainer()
 	{
-		delete[] indexList;
-		delete[] objects;
-	}
-
-	void SetInitialAllocation(IndexType size)
-	{
-		initialAllocation = size;
+		operator delete[](buffer);
 	}
 
 	IndexType Add()
@@ -73,34 +73,26 @@ public:
 
 		if (freeListFirst == 0)
 		{
-			if (objectCount == allocatedCount)
-			{
-				this->Reallocate();
-			}
+			if (count == allocated)
+				this->Reallocate(count + 1);
 
 			// If there are no freelist entries, first <objectCount> indices must be in use
-			id = objectCount + 1;
-			indexList[id] = objectCount;
+			id = count + 1;
+			indexList[id] = count;
 
 		}
 		else // There are freelist entries
 		{
 			id = freeListFirst;
-			indexList[id] = objectCount;
-
 			freeListFirst = indexList[freeListFirst];
+
+			indexList[id] = count;
 		}
 
-		++objectCount;
+		// Initialize in place
+		new (objects + count) ValueType;
 
-		return id;
-	}
-
-	IndexType Add(ValueType** objectPointerOut)
-	{
-		IndexType id = this->Add();
-
-		*objectPointerOut = objects + objectCount - 1;
+		++count;
 
 		return id;
 	}
@@ -108,15 +100,15 @@ public:
 	void Remove(IndexType id)
 	{
 		// Put last object in removed objects place
-		if (indexList[id] < objectCount - 1)
+		if (indexList[id] < count - 1)
 		{
-			objects[indexList[id]] = std::move(objects[objectCount - 1]);
+			objects[indexList[id]] = std::move(objects[count - 1]);
 		}
 
 		indexList[id] = freeListFirst;
 		freeListFirst = id;
 		
-		--objectCount;
+		--count;
 	}
 
 	ValueType& Get(IndexType id) { return objects[indexList[id]]; }
@@ -125,6 +117,6 @@ public:
 	ValueType* Begin() { return objects; }
 	const ValueType* Begin() const { return objects; }
 
-	ValueType* End() { return objects + objectCount; }
-	const ValueType* End() const { return objects + objectCount; }
+	ValueType* End() { return objects + count; }
+	const ValueType* End() const { return objects + count; }
 };
