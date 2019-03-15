@@ -91,7 +91,6 @@ set (KOKKO_SOURCES
 	src/MeshManager.cpp
 	src/MeshManager.hpp
 	src/MultiArray.hpp
-	src/ObjectId.hpp
 	src/Plane.hpp
 	src/PointerInput.cpp
 	src/PointerInput.hpp
