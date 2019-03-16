@@ -1,6 +1,6 @@
 #pragma once
 
-enum class SceneLayer
+enum class SceneLayer : unsigned char
 {
 	Skybox,
 	World

@@ -4,6 +4,7 @@
 #include "Entity.hpp"
 
 class Scene;
+struct Material;
 
 class Skybox
 {
@@ -18,6 +19,6 @@ public:
 
 	bool IsInitialized() const { return renderSceneId != 0; }
 
-	void Initialize(Scene* scene, unsigned int materialId);
+	void Initialize(Scene* scene, const Material& material);
 	void UpdateTransform(const Vec3f& cameraPosition) const;
 };

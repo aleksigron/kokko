@@ -94,6 +94,7 @@ unsigned int ResourceManager::CreateMaterialFromFile(StringRef path)
 
 	if (this->LoadMaterial(material, path) == true)
 	{
+		material.id = id;
 		return id;
 	}
 	else

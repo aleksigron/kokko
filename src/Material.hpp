@@ -13,13 +13,15 @@ struct ShaderMaterialUniform : ShaderUniform
 
 struct Material
 {
-	unsigned int shaderId;
+	unsigned int id = 0;
+	unsigned int shaderId = 0;
 
 	unsigned int uniformCount = 0;
 	ShaderMaterialUniform uniforms[Shader::MaxMaterialUniforms];
 
 	unsigned int usedUniformData = 0;
 	unsigned char* uniformData = nullptr;
+	TransparencyType transparencyType = TransparencyType::Opaque;
 
 	void SetShader(const Shader* shader);
 

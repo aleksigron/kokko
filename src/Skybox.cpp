@@ -23,7 +23,7 @@ Skybox::~Skybox()
 {
 }
 
-void Skybox::Initialize(Scene* scene, unsigned int materialId)
+void Skybox::Initialize(Scene* scene, const Material& material)
 {
 	static Vertex3f vertexData[] = {
 		Vertex3f{ Vec3f(-0.5f, -0.5f, -0.5f) },
@@ -75,8 +75,12 @@ void Skybox::Initialize(Scene* scene, unsigned int materialId)
 	// Add render object
 	RenderObjectId renderObjectId = renderer->AddRenderObject(this->entity);
 	renderer->SetMeshId(renderObjectId, meshId);
-	renderer->SetMaterialId(renderObjectId, materialId);
-	renderer->SetSceneLayer(renderObjectId, SceneLayer::Skybox);
+
+	RenderOrderData order;
+	order.material = material.id;
+	order.transparency = material.transparencyType;
+	order.layer = SceneLayer::Skybox;
+	renderer->SetOrderData(renderObjectId, order);
 }
 
 void Skybox::UpdateTransform(const Vec3f& cameraPosition) const

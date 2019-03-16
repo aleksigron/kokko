@@ -24,8 +24,6 @@
 
 #include "Sort.hpp"
 
-const RenderObjectId RenderObjectId::Null = RenderObjectId{};
-
 Renderer::Renderer() :
 	overrideRenderCamera(nullptr),
 	overrideCullingCamera(nullptr)
@@ -101,14 +99,15 @@ void Renderer::Render(Scene* scene)
 
 	for (unsigned index = 0, commandCount = commands.GetCount(); index < commandCount; ++index)
 	{
-		const RenderCommand& command = commands[index];
+		uint64_t command = commands[index];
 
 		// If command is not control command, draw object
-		if (pipeline.ParseControlCommand(command.orderKey) == false)
+		if (pipeline.ParseControlCommand(command) == false)
 		{
-			const unsigned int objIdx = command.renderObjectIndex;
+			unsigned int objIdx = renderOrder.renderObject.GetValue(command);
+			unsigned int matId = renderOrder.materialId.GetValue(command);
 
-			Material& material = res->GetMaterial(data.material[objIdx]);
+			Material& material = res->GetMaterial(matId);
 			Shader* shader = res->GetShader(material.shaderId);
 
 			glUseProgram(shader->driverId);
@@ -213,9 +212,6 @@ void Renderer::Render(Scene* scene)
 
 void Renderer::CreateDrawCalls(Scene* scene)
 {
-	Engine* engine = Engine::GetInstance();
-	ResourceManager* rm = engine->GetResourceManager();
-
 	Camera* renderCamera = this->GetRenderCamera(scene);
 
 	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
@@ -227,28 +223,28 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	float farPlane = renderCamera->farClipDistance;
 
 	// Disable depth writing before objects in skybox layer
-	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
-		SceneLayer::Skybox, TransparencyType::Opaque, RenderOrder::Control_DepthWriteDisable)));
+	commands.PushBack(pipeline.CreateControlCommand(
+		SceneLayer::Skybox, TransparencyType::Opaque, RenderOrder::Control_DepthWriteDisable));
 
 	// Disable blending before opaque objects in skybox layer
-	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
-		SceneLayer::Skybox, TransparencyType::Opaque, RenderOrder::Control_BlendingDisable)));
+	commands.PushBack(pipeline.CreateControlCommand(
+		SceneLayer::Skybox, TransparencyType::Opaque, RenderOrder::Control_BlendingDisable));
 
 	// Enable blending before transparent objects in skybox layer
-	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
-		SceneLayer::Skybox, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable)));
+	commands.PushBack(pipeline.CreateControlCommand(
+		SceneLayer::Skybox, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable));
 
 	// Enable depth writing before objects in world layer
-	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
-		SceneLayer::World, TransparencyType::Opaque, RenderOrder::Control_DepthWriteEnable)));
+	commands.PushBack(pipeline.CreateControlCommand(
+		SceneLayer::World, TransparencyType::Opaque, RenderOrder::Control_DepthWriteEnable));
 
 	// Disable blending before opaque objects in world layer
-	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
-		SceneLayer::World, TransparencyType::Opaque, RenderOrder::Control_BlendingDisable)));
+	commands.PushBack(pipeline.CreateControlCommand(
+		SceneLayer::World, TransparencyType::Opaque, RenderOrder::Control_BlendingDisable));
 
 	// Enable blending before transparent objects in world layer
-	commands.PushBack(RenderCommand(pipeline.CreateControlCommand(
-		SceneLayer::World, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable)));
+	commands.PushBack(pipeline.CreateControlCommand(
+		SceneLayer::World, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable));
 
 	// Create draw commands for render objects in scene
 	for (unsigned i = 1; i < data.count; ++i)
@@ -256,16 +252,13 @@ void Renderer::CreateDrawCalls(Scene* scene)
 		// Object is in potentially visible set
 		if (CullStatePacked16::IsOutside(data.cullState, i) == false)
 		{
-			unsigned int materialId = data.material[i];
-			Material& material = rm->GetMaterial(materialId);
-			Shader* shader = rm->GetShader(material.shaderId);
+			const RenderOrderData& o = data.order[i];
 
 			Vec3f objPosition = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
 
-			commands.PushBack(RenderCommand(pipeline.CreateDrawCommand(
-				data.layer[i], shader->transparencyType, depth, materialId), i));
+			commands.PushBack(pipeline.CreateDrawCommand(o.layer, o.transparency, depth, o.material, i));
 		}
 	}
 }
@@ -289,9 +282,9 @@ void Renderer::Reallocate(unsigned int required)
 
 	newData.entity = static_cast<Entity*>(newData.buffer);
 	newData.mesh = reinterpret_cast<MeshId*>(newData.entity + required);
-	newData.material = reinterpret_cast<unsigned int*>(newData.mesh + required);
-	newData.layer = reinterpret_cast<SceneLayer*>(newData.material + required);
-	newData.cullState = reinterpret_cast<CullStatePacked16*>(newData.layer + required);
+	newData.command = reinterpret_cast<uint64_t*>(newData.mesh + required);
+	newData.order = reinterpret_cast<RenderOrderData*>(newData.command + required);
+	newData.cullState = reinterpret_cast<CullStatePacked16*>(newData.command + required);
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.cullState + csRequired);
 	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
 
@@ -299,8 +292,8 @@ void Renderer::Reallocate(unsigned int required)
 	{
 		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
 		std::memcpy(newData.mesh, data.mesh, data.count * sizeof(unsigned int));
-		std::memcpy(newData.material, data.material, data.count * sizeof(unsigned int));
-		std::memcpy(newData.layer, data.layer, data.count * sizeof(SceneLayer));
+		std::memcpy(newData.command, data.command, data.count * sizeof(uint64_t));
+		std::memcpy(newData.order, data.order, data.count * sizeof(RenderOrderData));
 		// Cull state is recalculated every frame
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
 		std::memcpy(newData.transform, data.transform, data.count * sizeof(Mat4x4f));
@@ -349,7 +342,7 @@ void Renderer::NotifyUpdatedTransforms(unsigned int count, Entity* entities, Mat
 		Entity entity = entities[entityIdx];
 		RenderObjectId obj = this->Lookup(entity);
 
-		if (obj.i != RenderObjectId::Null.i)
+		if (obj.IsNull() == false)
 		{
 			unsigned int dataIdx = obj.i;
 

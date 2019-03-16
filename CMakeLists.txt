@@ -96,7 +96,6 @@ set (KOKKO_SOURCES
 	src/PointerInput.hpp
 	src/Queue.hpp
 	src/Rectangle.hpp
-	src/RenderData.hpp
 	src/Renderer.cpp
 	src/Renderer.hpp
 	src/RenderOrder.hpp
@@ -132,6 +131,7 @@ set (KOKKO_SOURCES
 	src/Texture.hpp
 	src/Time.cpp
 	src/Time.hpp
+	src/TransparencyType.hpp
 	src/ValueSerialization.cpp
 	src/ValueSerialization.hpp
 	src/Vec2.hpp

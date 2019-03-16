@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Mat4x4.hpp"
+#include "Entity.hpp"
 #include "RenderPipeline.hpp"
 #include "RenderOrder.hpp"
-#include "RenderData.hpp"
 #include "FrustumCulling.hpp"
 #include "MeshData.hpp"
 #include "Array.hpp"
@@ -18,9 +18,16 @@ class Scene;
 
 struct RenderObjectId
 {
-	static const RenderObjectId Null;
-
 	unsigned int i;
+
+	bool IsNull() const { return i == 0; }
+};
+
+struct RenderOrderData
+{
+	unsigned short material;
+	TransparencyType transparency;
+	SceneLayer layer;
 };
 
 class Renderer
@@ -34,8 +41,8 @@ private:
 
 		Entity* entity;
 		MeshId* mesh;
-		unsigned int* material;
-		SceneLayer* layer;
+		uint64_t* command;
+		RenderOrderData* order;
 		CullStatePacked16* cullState;
 		BoundingBox* bounds;
 		Mat4x4f* transform;
@@ -44,10 +51,12 @@ private:
 
 	HashMap<unsigned int, RenderObjectId> entityMap;
 
+	RenderOrderConfiguration renderOrder;
+
 	Camera* overrideRenderCamera;
 	Camera* overrideCullingCamera;
 
-	Array<RenderCommand> commands;
+	Array<uint64_t> commands;
 
 	RenderPipeline pipeline;
 
@@ -77,7 +86,7 @@ public:
 	RenderObjectId Lookup(Entity e)
 	{
 		HashMap<unsigned int, RenderObjectId>::KeyValuePair* pair = entityMap.Lookup(e.id);
-		return pair != nullptr ? pair->value : RenderObjectId::Null;
+		return pair != nullptr ? pair->value : RenderObjectId{};
 	}
 
 	RenderObjectId AddRenderObject(Entity entity);
@@ -88,9 +97,8 @@ public:
 	void SetMeshId(RenderObjectId id, MeshId meshId) { data.mesh[id.i] = meshId; }
 	MeshId GetMeshId(RenderObjectId id) { return data.mesh[id.i]; }
 
-	void SetMaterialId(RenderObjectId id, unsigned int materialId) { data.material[id.i] = materialId; }
-	unsigned int GetMaterialId(RenderObjectId id) { return data.material[id.i]; }
-
-	void SetSceneLayer(RenderObjectId id, SceneLayer layer) { data.layer[id.i] = layer; }
-	SceneLayer GetSceneLayer(RenderObjectId id) { return data.layer[id.i]; }
+	void SetOrderData(RenderObjectId id, const RenderOrderData& order)
+	{
+		data.order[id.i] = order;
+	}
 };

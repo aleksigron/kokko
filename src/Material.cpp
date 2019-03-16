@@ -20,6 +20,7 @@ void Material::SetShader(const Shader* shader)
 	}
 
 	this->shaderId = shader->nameHash;
+	this->transparencyType = shader->transparencyType;
 
 	// Copy uniform information
 	this->uniformCount = shader->materialUniformCount;

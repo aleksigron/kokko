@@ -47,8 +47,9 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 		StringRef materialPath(skyboxItr->value.GetString(), skyboxItr->value.GetStringLength());
 
 		unsigned int materialId = resourceManager->CreateMaterialFromFile(materialPath);
+		Material& material = resourceManager->GetMaterial(materialId);
 
-		scene->skybox.Initialize(scene, materialId);
+		scene->skybox.Initialize(scene, material);
 	}
 }
 
@@ -109,7 +110,6 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 		materialItr != itr->MemberEnd() && materialItr->value.IsString())
 	{
 		RenderObjectId renderObj = renderer->AddRenderObject(entity);
-		renderer->SetSceneLayer(renderObj, SceneLayer::World);
 
 		StringRef meshPath(meshItr->value.GetString(), meshItr->value.GetStringLength());
 		MeshId meshId = meshManager->GetIdByPath(meshPath);
@@ -119,6 +119,15 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 		StringRef matPath(materialItr->value.GetString(), materialItr->value.GetStringLength());
 		unsigned int materialId = resourceManager->CreateMaterialFromFile(matPath);
 		if (materialId != 0)
-			renderer->SetMaterialId(renderObj, materialId);
+		{
+			Material& material = resourceManager->GetMaterial(materialId);
+
+			RenderOrderData data;
+			data.material = materialId;
+			data.transparency = material.transparencyType;
+			data.layer = SceneLayer::World;
+
+			renderer->SetOrderData(renderObj, data);
+		}
 	}
 }

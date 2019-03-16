@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "Buffer.hpp"
-#include "RenderData.hpp"
+#include "TransparencyType.hpp"
 
 struct StringRef;
 class StackAllocator;
