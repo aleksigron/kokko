@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Vec3.hpp"
+
 namespace Math
 {
 	namespace Const
@@ -19,6 +21,11 @@ namespace Math
 	}
 	
 	constexpr float DegreesToRadians(float degrees)
+	{
+		return degrees * Const::DegToRad;
+	}
+
+	inline Vec3f DegreesToRadians(const Vec3f& degrees)
 	{
 		return degrees * Const::DegToRad;
 	}

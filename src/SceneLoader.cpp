@@ -84,12 +84,23 @@ void SceneLoader::CreateChildObjects(ValueItr itr, ValueItr end, SceneObjectId p
 
 void SceneLoader::CreateSceneObject(ValueItr itr, SceneObjectId sceneObject)
 {
+	Mat4x4f transform;
+
+	rapidjson::Value::ConstMemberIterator rotItr = itr->FindMember("rotation");
+	if (rotItr != itr->MemberEnd())
+	{
+		Vec3f rot = ValueSerialization::Deserialize_Vec3f(rotItr->value);
+		transform = Mat4x4f::RotateEuler(Math::DegreesToRadians(rot)) * transform;
+	}
+
 	rapidjson::Value::ConstMemberIterator positionItr = itr->FindMember("position");
 	if (positionItr != itr->MemberEnd())
 	{
 		Vec3f pos = ValueSerialization::Deserialize_Vec3f(positionItr->value);
-		scene->SetLocalTransform(sceneObject, Mat4x4f::Translate(pos));
+		transform = Mat4x4f::Translate(pos) * transform;
 	}
+
+	scene->SetLocalTransform(sceneObject, transform);
 
 	rapidjson::Value::ConstMemberIterator childrenItr = itr->FindMember("children");
 	if (childrenItr != itr->MemberEnd() && childrenItr->value.IsArray())

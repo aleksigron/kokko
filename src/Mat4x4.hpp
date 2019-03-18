@@ -160,6 +160,11 @@ struct Mat4x4f
 		return result;
 	}
 
+	static Mat4x4f RotateEuler(const Vec3f& angles)
+	{
+		return Mat4x4f(Mat3x3f::RotateEuler(angles));
+	}
+
 	static Mat4x4f Scale(const Vec3f& scale)
 	{
 		Mat4x4f result;
