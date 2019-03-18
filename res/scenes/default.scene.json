@@ -4,20 +4,202 @@
 	"objects":
 	[
 		{
-            "mesh": "res/models/round_table.mesh",
-            "material": "res/materials/diffuse_white.material.json"
-        },
-		{
             "mesh": "res/models/ground_plane.mesh",
             "material": "res/materials/diffuse_gray.material.json"
         },
 		{
-            "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/blend.material.json",
-            "position": [ 0, 1, 0 ]
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+            "position": [ -1, 0, 0 ]
 		},
 		{
-			"position": [ 0, 0.74, 0.45 ],
+            "mesh": "res/models/shelf.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+            "position": [ -1, 0.95, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+            "position": [ 0, 0, 0 ]
+		},
+		{
+            "mesh": "res/models/shelf.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+            "position": [ 0, 0.95, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+            "position": [ 1, 0, 0 ]
+		},
+		{
+            "mesh": "res/models/shelf.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+            "position": [ 1, 0.95, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -2, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -1, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 0, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 1, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 2, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet_corner.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 3.1, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 3.1, 0, 1.5 ],
+			"rotation": [ 0, -90, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 3.1, 0, 0.5 ],
+			"rotation": [ 0, -90, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet_corner.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -3.1, 0, 2.6 ],
+			"rotation": [ 0, 90, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -3.1, 0, 1.5 ],
+			"rotation": [ 0, 90, 0 ]
+		},
+		{
+            "mesh": "res/models/cabinet.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -3.1, 0, 0.5 ],
+			"rotation": [ 0, 90, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_straight.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -3.1, 0, 0.5 ],
+			"rotation": [ 0, 90, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_straight.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -3.1, 0, 1.5 ],
+			"rotation": [ 0, 90, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_corner.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -3.1, 0, 2.6 ],
+			"rotation": [ 0, 90, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_straight.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -2, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_straight.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ -1, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_straight.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 0, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_straight.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 1, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_straight.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 2, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_corner.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 3.1, 0, 2.6 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_straight.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 3.1, 0, 1.5 ],
+			"rotation": [ 0, -90, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_straight.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+			"position": [ 3.1, 0, 0.5 ],
+			"rotation": [ 0, -90, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_top_long.mesh",
+            "material": "res/materials/diffuse_gray.material.json",
+			"position": [ 0, 1.2, 2.4 ],
+			"rotation": [ 0, 180, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_top_short.mesh",
+            "material": "res/materials/diffuse_gray.material.json",
+			"position": [ 2.9, 1.2, 1.2 ],
+			"rotation": [ 0, -90, 0 ]
+		},
+		{
+            "mesh": "res/models/bar_top_short.mesh",
+            "material": "res/materials/diffuse_gray.material.json",
+			"position": [ -2.9, 1.2, 1.2 ],
+			"rotation": [ 0, 90, 0 ]
+		},
+
+		{
+            "mesh": "res/models/round_table.mesh",
+            "material": "res/materials/diffuse_white.material.json",
+            "position": [ 0, 0, 5 ]
+        },
+		{
+            "mesh": "res/models/sphere.mesh",
+            "material": "res/materials/blend.material.json",
+            "position": [ 0, 1, 5 ]
+		},
+		{
+			"position": [ 0, 0.74, 5.45 ],
 			"children":
 			[
 				{

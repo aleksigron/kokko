@@ -54,7 +54,7 @@ void App::Initialize()
 	Entity mainCameraEntity = engine->GetEntityManager()->Create();
 	mainCamera.SetEntity(mainCameraEntity);
 	SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);
-	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 0.8f, 2.5f));
+	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 1.6f, 4.0f));
 	scene->SetLocalTransform(cameraSceneObject, cameraTransform);
 
 	Window* window = engine->GetMainWindow();
