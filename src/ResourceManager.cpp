@@ -91,6 +91,7 @@ unsigned int ResourceManager::CreateMaterialFromFile(StringRef path)
 {
 	unsigned int id = materials.Add();
 	Material& material = materials.Get(id);
+	material = Material();
 
 	if (this->LoadMaterial(material, path) == true)
 	{
