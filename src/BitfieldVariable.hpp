@@ -12,7 +12,7 @@ struct BitfieldVariable
 	void SetDefinition(T bits, T unusedBits)
 	{
 		this->bits = bits;
-		this->mask = static_cast<T>((1LL << bits) - 1);
+		this->mask = static_cast<T>((1ULL << bits) - 1);
 		this->shift = unusedBits - bits;
 	}
 

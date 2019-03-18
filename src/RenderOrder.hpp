@@ -39,13 +39,21 @@ struct RenderOrderConfiguration
 		transparencyType.SetDefinition(3, viewportLayer.shift);
 		command.SetDefinition(1, transparencyType.shift);
 
+		// For non-command transparents
+
 		transparentDepth.SetDefinition(22, command.shift);
+
+		// For non-command opaques
 
 		opaqueDepth.SetDefinition(8, command.shift);
 		opaquePadding.SetDefinition(14, opaqueDepth.shift);
 
+		// For all non-commands
+
 		materialId.SetDefinition(12, opaquePadding.shift);
 		renderObject.SetDefinition(20, materialId.shift);
+
+		// For commands
 
 		commandType.SetDefinition(8, command.shift);
 		commandData.SetDefinition(32, commandType.shift);

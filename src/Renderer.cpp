@@ -284,7 +284,7 @@ void Renderer::Reallocate(unsigned int required)
 	newData.mesh = reinterpret_cast<MeshId*>(newData.entity + required);
 	newData.command = reinterpret_cast<uint64_t*>(newData.mesh + required);
 	newData.order = reinterpret_cast<RenderOrderData*>(newData.command + required);
-	newData.cullState = reinterpret_cast<CullStatePacked16*>(newData.command + required);
+	newData.cullState = reinterpret_cast<CullStatePacked16*>(newData.order + required);
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.cullState + csRequired);
 	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
 
