@@ -30,7 +30,7 @@ Debug::Debug() :
 	vectorRenderer = new DebugVectorRenderer;
 	textRenderer = new DebugTextRenderer;
 	graph = new DebugGraph(vectorRenderer);
-	culling = new DebugCulling(vectorRenderer);
+	culling = new DebugCulling(textRenderer, vectorRenderer);
 	console = new DebugConsole(textRenderer, vectorRenderer);
 	log = new DebugLog(console);
 }
@@ -76,6 +76,8 @@ void Debug::SetWindow(Window* window)
 	graphArea.size.x = frameSize.x;
 	graphArea.size.y = frameSize.y - pixelLineHeight;
 	graph->SetDrawArea(graphArea);
+
+	culling->SetGuideTextPosition(Vec2f(0.0f, scaledLineHeight));
 }
 
 void Debug::Render(Scene* scene)
@@ -152,7 +154,6 @@ void Debug::Render(Scene* scene)
 			// Disable debug camera
 			culling->EnableOverrideCamera(false);
 		}
-
 	}
 
 	char logChar = (mode == DebugMode::Console) ? '*' : ' ';
@@ -180,27 +181,15 @@ void Debug::Render(Scene* scene)
 	graph->AddDataPoint(Time::GetDeltaTime());
 	graph->Update();
 
-	// Draw mode content
-	switch (this->mode)
+	if (mode == DebugMode::Console)
+		console->UpdateAndDraw();
+
+	if (mode == DebugMode::FrameTime)
+		graph->DrawToVectorRenderer();
+
+	if (cullingDebugEnable)
 	{
-		case DebugMode::None:
-			break;
-
-		case DebugMode::Console:
-			console->UpdateAndDraw();
-			break;
-
-		case DebugMode::FrameTime:
-			graph->DrawToVectorRenderer();
-			break;
-
-		case DebugMode::CullingPri:
-			culling->UpdateAndDraw(scene);
-			break;
-
-		case DebugMode::CullingSec:
-			culling->UpdateAndDraw(scene);
-			break;
+		culling->UpdateAndDraw(scene);
 	}
 
 	vectorRenderer->Render(cullingDebugEnable ? culling->GetCamera() : scene->GetActiveCamera());

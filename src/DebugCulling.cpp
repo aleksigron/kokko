@@ -7,9 +7,12 @@
 #include "Renderer.hpp"
 #include "Scene.hpp"
 #include "ViewFrustum.hpp"
+
+#include "DebugTextRenderer.hpp"
 #include "DebugVectorRenderer.hpp"
 
-DebugCulling::DebugCulling(DebugVectorRenderer* vectorRenderer) :
+DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer):
+	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
 	controllerEnable(false)
 {
@@ -36,17 +39,40 @@ void DebugCulling::UpdateAndDraw(Scene* scene)
 {
 	if (camera.GetEntity().IsNull()) // Initialize culling debug camera
 	{
-		Vec2f s = Engine::GetInstance()->GetMainWindow()->GetFrameBufferSize();
+		Engine* engine = Engine::GetInstance();
+
+		// Get main camera transform
+
+		SceneObjectId mainCamScId = scene->Lookup(scene->GetActiveCamera()->GetEntity());
+		Mat4x4f mainCamTrans = scene->GetWorldTransform(mainCamScId);
+
+		// Set correct aspect ratio to debug camera
+
+		Vec2f s = engine->GetMainWindow()->GetFrameBufferSize();
 		camera.SetAspectRatio(s.x, s.y);
 
-		Entity cameraEntity = Engine::GetInstance()->GetEntityManager()->Create();
+		// Create entity for debug camera
+
+		Entity cameraEntity = engine->GetEntityManager()->Create();
 		camera.SetEntity(cameraEntity);
+
+		// Create scene object for debug camera
+
 		SceneObjectId cameraSceneObject = scene->AddSceneObject(cameraEntity);
-		scene->SetLocalTransform(cameraSceneObject, Mat4x4f());
+		scene->SetLocalTransform(cameraSceneObject, mainCamTrans);
 	}
 
+	StringRef text;
+
 	if (controllerEnable)
+	{
+		text = StringRef("Controlling culling debug camera");
 		this->controller.Update();
+	}
+	else
+		text = StringRef("Controlling main camera");
+
+	textRenderer->AddText(text, guideTextPosition);
 
 	Camera* sceneCamera = scene->GetActiveCamera();
 	Entity sceneCameraEntity = sceneCamera->GetEntity();
