@@ -1,7 +1,6 @@
 #pragma once
 
 #include "StringRef.hpp"
-#include "StackAllocator.hpp"
 #include "IndexedContainer.hpp"
 #include "Material.hpp"
 
@@ -11,8 +10,6 @@ struct Texture;
 class ResourceManager
 {
 private:
-	StackAllocator stackAllocator;
-
 	// Shaders
 
 	Shader* shaders = nullptr;

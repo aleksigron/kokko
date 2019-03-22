@@ -10,20 +10,12 @@
 
 #include "File.hpp"
 #include "Hash.hpp"
+#include "String.hpp"
 #include "StringRef.hpp"
-#include "StackAllocator.hpp"
 
-const char* const ShaderUniform::TypeNames[] =
-{
-	"tex2d",
-	"texCube",
-	"mat4x4",
-	"vec4",
-	"vec3",
-	"vec2",
-	"float",
-	"int"
-};
+#include "Engine.hpp"
+#include "Debug.hpp"
+#include "DebugLog.hpp"
 
 const unsigned int ShaderUniform::TypeSizes[] = {
 	4, // Texture2D
@@ -37,7 +29,6 @@ const unsigned int ShaderUniform::TypeSizes[] = {
 };
 
 Shader::Shader() :
-	allocator(nullptr),
 	nameHash(0),
 	driverId(0),
 	uniformMatMVP(-1),
@@ -52,121 +43,153 @@ Shader::Shader() :
 
 }
 
-void Shader::SetAllocator(StackAllocator* allocator)
-{
-	this->allocator = allocator;
-}
-
-bool Shader::LoadFromConfiguration(Buffer<char>& configuration)
+bool Shader::LoadFromConfiguration(BufferRef<char> configuration)
 {
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
+	using ValueItr = rapidjson::Value::ConstValueIterator;
 
-	StringRef uniformNames[Shader::MaxMaterialUniforms];
+	const char* uniformNames[Shader::MaxMaterialUniforms];
 	ShaderUniformType uniformTypes[Shader::MaxMaterialUniforms];
 	unsigned int uniformCount = 0;
 
-	char* data = configuration.Data();
-	unsigned long size = configuration.Count();
+	char* data = configuration.data;
+	unsigned long size = configuration.count;
 
 	rapidjson::Document config;
 	config.Parse(data, size);
 
+	MemberItr renderTypeItr = config.FindMember("transparencyType");
+
+	if (renderTypeItr != config.MemberEnd() && renderTypeItr->value.IsString())
+	{
+		StringRef renderTypeStr;
+		renderTypeStr.str = renderTypeItr->value.GetString();
+		renderTypeStr.len = renderTypeItr->value.GetStringLength();
+
+		uint32_t renderTypeHash = Hash::FNV1a_32(renderTypeStr.str, renderTypeStr.len);
+
+		switch (renderTypeHash)
+		{
+			case "opaque"_hash:
+				this->transparencyType = TransparencyType::Opaque;
+				break;
+
+			case "alphaTest"_hash:
+				this->transparencyType = TransparencyType::AlphaTest;
+				break;
+
+			case "transparentMix"_hash:
+				this->transparencyType = TransparencyType::TransparentMix;
+				break;
+
+			case "transparentAdd"_hash:
+				this->transparencyType = TransparencyType::TransparentAdd;
+				break;
+
+			case "transparentSub"_hash:
+				this->transparencyType = TransparencyType::TransparentSub;
+				break;
+		}
+	}
+
+	MemberItr uniformListItr = config.FindMember("materialUniforms");
+
+	if (uniformListItr != config.MemberEnd() && uniformListItr->value.IsArray())
+	{
+		ValueItr uItr = uniformListItr->value.Begin();
+		ValueItr uEnd = uniformListItr->value.End();
+		for (; uItr != uEnd; ++uItr)
+		{
+			MemberItr nameItr = uItr->FindMember("name");
+			MemberItr typeItr = uItr->FindMember("type");
+
+			if (nameItr != uItr->MemberEnd() && nameItr->value.IsString() &&
+				typeItr != uItr->MemberEnd() && typeItr->value.IsString())
+			{
+				uniformNames[uniformCount] = nameItr->value.GetString();
+
+				const char* typeStr = typeItr->value.GetString();
+				unsigned int typeStrLen = typeItr->value.GetStringLength();
+
+				uint32_t typeHash = Hash::FNV1a_32(typeStr, typeStrLen);
+
+				switch (typeHash)
+				{
+					case "tex2d"_hash:
+						uniformTypes[uniformCount] = ShaderUniformType::Tex2D;
+						++uniformCount;
+						break;
+
+					case "texCube"_hash:
+						uniformTypes[uniformCount] = ShaderUniformType::TexCube;
+						++uniformCount;
+						break;
+
+					case "mat4x4"_hash:
+						uniformTypes[uniformCount] = ShaderUniformType::Mat4x4;
+						++uniformCount;
+						break;
+
+					case "vec4"_hash:
+						uniformTypes[uniformCount] = ShaderUniformType::Vec4;
+						++uniformCount;
+						break;
+
+					case "vec3"_hash:
+						uniformTypes[uniformCount] = ShaderUniformType::Vec3;
+						++uniformCount;
+						break;
+
+					case "vec2"_hash:
+						uniformTypes[uniformCount] = ShaderUniformType::Vec2;
+						++uniformCount;
+						break;
+
+					case "float"_hash:
+						uniformTypes[uniformCount] = ShaderUniformType::Float;
+						++uniformCount;
+						break;
+
+					case "int"_hash:
+						uniformTypes[uniformCount] = ShaderUniformType::Int;
+						++uniformCount;
+						break;
+
+					default:
+						break;
+				}
+			}
+		}
+	}
+
 	MemberItr vsItr = config.FindMember("vertexShaderFile");
 	MemberItr fsItr = config.FindMember("fragmentShaderFile");
-	if (vsItr != config.MemberEnd() && vsItr->value.IsString() &&
-		fsItr != config.MemberEnd() && fsItr->value.IsString())
+
+	if (vsItr == config.MemberEnd() || !vsItr->value.IsString() ||
+		fsItr == config.MemberEnd() || !fsItr->value.IsString())
+		return false;
+
+	StringRef vsPath(vsItr->value.GetString(), vsItr->value.GetStringLength());
+	StringRef fsPath(fsItr->value.GetString(), fsItr->value.GetStringLength());
+
+	Buffer<char> vertexSource = File::ReadText(vsPath);
+	Buffer<char> fragmentSource = File::ReadText(fsPath);
+
+	if (this->CompileAndLink(vertexSource.GetRef(), fragmentSource.GetRef()))
 	{
-		StringRef vsPath = StringRef(vsItr->value.GetString(), vsItr->value.GetStringLength());
-		StringRef fsPath = StringRef(fsItr->value.GetString(), fsItr->value.GetStringLength());
+		this->AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
 
-		MemberItr renderTypeItr = config.FindMember("transparencyType");
-
-		if (renderTypeItr != config.MemberEnd())
-		{
-			if (renderTypeItr->value.IsString())
-			{
-				StringRef renderTypeStr;
-				renderTypeStr.str = renderTypeItr->value.GetString();
-				renderTypeStr.len = renderTypeItr->value.GetStringLength();
-
-				uint32_t renderTypeHash = Hash::FNV1a_32(renderTypeStr.str, renderTypeStr.len);
-
-				switch (renderTypeHash)
-				{
-					case "opaque"_hash:
-						this->transparencyType = TransparencyType::Opaque;
-						break;
-
-					case "alphaTest"_hash:
-						this->transparencyType = TransparencyType::AlphaTest;
-						break;
-
-					case "transparentMix"_hash:
-						this->transparencyType = TransparencyType::TransparentMix;
-						break;
-
-					case "transparentAdd"_hash:
-						this->transparencyType = TransparencyType::TransparentAdd;
-						break;
-
-					case "transparentSub"_hash:
-						this->transparencyType = TransparencyType::TransparentSub;
-						break;
-				}
-			}
-		}
-
-		MemberItr uniformListItr = config.FindMember("materialUniforms");
-
-		if (uniformListItr != config.MemberEnd())
-		{
-			const rapidjson::Value& list = uniformListItr->value;
-
-			for (unsigned muIndex = 0, muCount = list.Size(); muIndex < muCount; ++muIndex)
-			{
-				const rapidjson::Value& mu = list[muIndex];
-
-				assert(mu.HasMember("name"));
-				assert(mu.HasMember("type"));
-
-				const rapidjson::Value& name = mu["name"];
-				uniformNames[uniformCount].str = name.GetString();
-				uniformNames[uniformCount].len = name.GetStringLength();
-
-				const char* typeStr = mu["type"].GetString();
-				for (unsigned typeIndex = 0; typeIndex < ShaderUniform::TypeCount; ++typeIndex)
-				{
-					// Check what type of uniform this is
-					if (std::strcmp(typeStr, ShaderUniform::TypeNames[typeIndex]) == 0)
-					{
-						uniformTypes[uniformCount] = static_cast<ShaderUniformType>(typeIndex);
-						break;
-					}
-				}
-
-				++uniformCount;
-			}
-		}
-
-		Buffer<char> vertexSource = File::ReadText(vsPath);
-		Buffer<char> fragmentSource = File::ReadText(fsPath);
-
-		if (this->CompileAndLink(vertexSource, fragmentSource))
-		{
-			this->AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
-
-			return true;
-		}
+		return true;
 	}
 
 	return false;
 }
 
-bool Shader::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSource)
+bool Shader::CompileAndLink(BufferRef<char> vertSource, BufferRef<char> fragSource)
 {
 	GLuint vertexShader = 0;
 
-	if (this->Compile(ShaderType::Vertex, vertexSource, vertexShader) == false)
+	if (this->Compile(ShaderType::Vertex, vertSource, vertexShader) == false)
 	{
 		assert(false);
 		return false;
@@ -174,7 +197,7 @@ bool Shader::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSo
 	
 	GLuint fragmentShader = 0;
 
-	if (this->Compile(ShaderType::Fragment, fragmentSource, fragmentShader) == false)
+	if (this->Compile(ShaderType::Fragment, fragSource, fragmentShader) == false)
 	{
 		// Release already compiled vertex shader
 		glDeleteShader(vertexShader);
@@ -217,16 +240,18 @@ bool Shader::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSo
 
 		// Get info log length
 		GLint infoLogLength = 0;
-		glGetProgramiv(driverId, GL_INFO_LOG_LENGTH, &infoLogLength);
+		glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
 		
 		if (infoLogLength > 0)
 		{
-			StackAllocation infoLog = allocator->Allocate(infoLogLength + 1);
-			char* infoLogBuffer = reinterpret_cast<char*>(infoLog.data);
+			String infoLog;
+			infoLog.Resize(infoLogLength);
 
-			// Print out info log
-			glGetProgramInfoLog(driverId, infoLogLength, NULL, infoLogBuffer);
-			printf("%s\n", infoLogBuffer);
+			// Get info log
+			glGetProgramInfoLog(programId, infoLogLength, nullptr, infoLog.Begin());
+
+			DebugLog* log = Engine::GetInstance()->GetDebug()->GetLog();
+			log->Log(infoLog);
 		}
 
 		assert(false);
@@ -234,27 +259,25 @@ bool Shader::CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSo
 	}
 }
 
-bool Shader::Compile(ShaderType type, Buffer<char>& source, GLuint& shaderIdOut)
+bool Shader::Compile(ShaderType type, BufferRef<char> source, GLuint& shaderIdOut)
 {
 	GLenum shaderType = 0;
 	if (type == ShaderType::Vertex)
-	shaderType = GL_VERTEX_SHADER;
+		shaderType = GL_VERTEX_SHADER;
 	else if (type == ShaderType::Fragment)
-	shaderType = GL_FRAGMENT_SHADER;
+		shaderType = GL_FRAGMENT_SHADER;
 	else
-	return false;
+		return false;
 
 	if (source.IsValid())
 	{
-		const char* data = source.Data();
-		int length = static_cast<int>(source.Count());
+		const char* data = source.data;
+		int length = static_cast<int>(source.count);
 
 		GLuint shaderId = glCreateShader(shaderType);
 
 		// Copy shader source to OpenGL
 		glShaderSource(shaderId, 1, &data, &length);
-
-		source.Deallocate();
 
 		glCompileShader(shaderId);
 
@@ -275,12 +298,14 @@ bool Shader::Compile(ShaderType type, Buffer<char>& source, GLuint& shaderIdOut)
 
 			if (infoLogLength > 0)
 			{
-				StackAllocation infoLog = allocator->Allocate(infoLogLength + 1);
-				char* infoLogBuffer = reinterpret_cast<char*>(infoLog.data);
+				String infoLog;
+				infoLog.Resize(infoLogLength);
 
 				// Print out info log
-				glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLogBuffer);
-				printf("%s\n", infoLogBuffer);
+				glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLog.Begin());
+
+				DebugLog* log = Engine::GetInstance()->GetDebug()->GetLog();
+				log->Log(infoLog);
 			}
 		}
 	}
@@ -290,28 +315,20 @@ bool Shader::Compile(ShaderType type, Buffer<char>& source, GLuint& shaderIdOut)
 
 void Shader::AddMaterialUniforms(unsigned int count,
 								 const ShaderUniformType* types,
-								 const StringRef* names)
+								 const char** names)
 {
 	this->materialUniformCount = count;
 
 	for (unsigned uIndex = 0; uIndex < count; ++uIndex)
 	{
-		const StringRef* name = names + uIndex;
-
-		StackAllocation nameBuffer = this->allocator->Allocate(name->len + 1);
-		char* buffer = reinterpret_cast<char*>(nameBuffer.data);
-
-		// Copy string to a local buffer because it needs to be null terminated
-		std::memcpy(buffer, name->str, name->len);
-		buffer[name->len] = '\0'; // Null-terminate
-
 		ShaderUniform& uniform = this->materialUniforms[uIndex];
 
 		// Get the uniform location from OpenGL
-		uniform.location = glGetUniformLocation(driverId, buffer);
+		uniform.location = glGetUniformLocation(driverId, names[uIndex]);
 
 		// Compute uniform name hash
-		uniform.nameHash = Hash::FNV1a_32(name->str, name->len);
+		unsigned len = std::strlen(names[uIndex]);
+		uniform.nameHash = Hash::FNV1a_32(names[uIndex], len);
 
 		uniform.type = types[uIndex];
 

@@ -2,11 +2,8 @@
 
 #include <cstdint>
 
-#include "Buffer.hpp"
+#include "BufferRef.hpp"
 #include "TransparencyType.hpp"
-
-struct StringRef;
-class StackAllocator;
 
 enum class ShaderUniformType
 {
@@ -27,7 +24,6 @@ struct ShaderUniform
 	ShaderUniformType type;
 
 	static const unsigned int TypeCount = 8;
-	static const char* const TypeNames[TypeCount];
 	static const unsigned int TypeSizes[TypeCount];
 };
 
@@ -40,13 +36,11 @@ private:
 		Fragment
 	};
 
-	bool Compile(ShaderType type, Buffer<char>& source, unsigned& idOut);
-	bool CompileAndLink(Buffer<char>& vertexSource, Buffer<char>& fragmentSource);
+	bool Compile(ShaderType type, BufferRef<char> source, unsigned& idOut);
+	bool CompileAndLink(BufferRef<char> vertSource, BufferRef<char> fragSource);
 	void AddMaterialUniforms(unsigned int count,
 							 const ShaderUniformType* types,
-							 const StringRef* names);
-
-	StackAllocator* allocator;
+							 const char** names);
 
 public:
 	uint32_t nameHash;
@@ -68,8 +62,6 @@ public:
 	ShaderUniform materialUniforms[MaxMaterialUniforms];
 
 	Shader();
-
-	void SetAllocator(StackAllocator* allocator);
 	
-	bool LoadFromConfiguration(Buffer<char>& configuration);
+	bool LoadFromConfiguration(BufferRef<char> configuration);
 };

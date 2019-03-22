@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "Shader.hpp"
+#include "Buffer.hpp"
 
 class ResourceManager;
 

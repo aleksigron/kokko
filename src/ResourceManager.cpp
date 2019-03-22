@@ -10,12 +10,14 @@
 #include "File.hpp"
 #include "Hash.hpp"
 
-ResourceManager::ResourceManager() : stackAllocator(32_MB, 256_kB)
+ResourceManager::ResourceManager()
 {
 }
 
 ResourceManager::~ResourceManager()
 {
+	delete[] shaders;
+	delete[] textures;
 }
 
 Shader* ResourceManager::GetShader(uint32_t hash) const
@@ -57,7 +59,6 @@ Shader* ResourceManager::GetShader(const char* path)
 		}
 
 		Shader& shader = shaders[shaderCount];
-		shader.SetAllocator(&stackAllocator);
 
 		if (this->LoadShader(shader, path))
 		{
