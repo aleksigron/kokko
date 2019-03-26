@@ -10,8 +10,8 @@
 #include "Window.hpp"
 
 #include "ResourceManager.hpp"
+#include "MaterialManager.hpp"
 #include "MeshManager.hpp"
-#include "Material.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "Scene.hpp"
@@ -53,6 +53,7 @@ void Renderer::Render(Scene* scene)
 {
 	Engine* engine = Engine::GetInstance();
 	MeshManager* meshManager = engine->GetMeshManager();
+	MaterialManager* materialManager = engine->GetMaterialManager();
 	ResourceManager* res = engine->GetResourceManager();
 
 	Camera* renderCamera = this->GetRenderCamera(scene);
@@ -105,21 +106,24 @@ void Renderer::Render(Scene* scene)
 		if (pipeline.ParseControlCommand(command) == false)
 		{
 			unsigned int objIdx = renderOrder.renderObject.GetValue(command);
-			unsigned int matId = renderOrder.materialId.GetValue(command);
+			unsigned int mat = renderOrder.materialId.GetValue(command);
+			MaterialId matId = MaterialId{mat};
 
-			Material& material = res->GetMaterial(matId);
-			Shader* shader = res->GetShader(material.shaderId);
+			const MaterialUniformData& mu = materialManager->GetUniformData(matId);
+
+			unsigned int shaderId = materialManager->GetShaderId(matId);
+			Shader* shader = res->GetShader(shaderId);
 
 			glUseProgram(shader->driverId);
 
 			unsigned int usedTextures = 0;
 
 			// Bind each material uniform with a value
-			for (unsigned uIndex = 0; uIndex < material.uniformCount; ++uIndex)
+			for (unsigned uIndex = 0; uIndex < mu.count; ++uIndex)
 			{
-				ShaderMaterialUniform& u = material.uniforms[uIndex];
+				const MaterialUniform& u = mu.uniforms[uIndex];
 
-				unsigned char* d = material.uniformData + u.dataOffset;
+				unsigned char* d = mu.data + u.dataOffset;
 
 				switch (u.type)
 				{
@@ -258,6 +262,11 @@ void Renderer::CreateDrawCalls(Scene* scene)
 
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
 
+			if (o.material.IsNull())
+			{
+				int test = 0;
+			}
+
 			commands.PushBack(pipeline.CreateDrawCommand(o.layer, o.transparency, depth, o.material, i));
 		}
 	}
@@ -275,8 +284,11 @@ void Renderer::Reallocate(unsigned int required)
 	entityMap.Reserve(required);
 
 	InstanceData newData;
-	const unsigned objectBytes = sizeof(Entity) + 2 * sizeof(Mat4x4f) + 4 * sizeof(SceneObjectId);
-	newData.buffer = operator new[](required * objectBytes);
+	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(uint64_t) +
+		sizeof(RenderOrderData) + sizeof(BoundingBox) + sizeof(Mat4x4f)) +
+		csRequired * sizeof(CullStatePacked16);
+
+	newData.buffer = operator new[](bytes);
 	newData.count = data.count;
 	newData.allocated = required;
 

@@ -1,24 +1,14 @@
 #include "App.hpp"
 
-#include "Engine.hpp"
-
-#include "Window.hpp"
-
-#include "Debug.hpp"
-#include "DebugVectorRenderer.hpp"
-
 #include "Math.hpp"
-
 #include "Time.hpp"
 
+#include "Engine.hpp"
+#include "Window.hpp"
 #include "Renderer.hpp"
 #include "EntityManager.hpp"
-#include "Material.hpp"
-#include "ResourceManager.hpp"
 #include "SceneManager.hpp"
 #include "Scene.hpp"
-
-#include <cstdio>
 
 App* App::instance = nullptr;
 

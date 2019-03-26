@@ -7,12 +7,14 @@
 #include "MeshManager.hpp"
 #include "EntityManager.hpp"
 #include "ResourceManager.hpp"
+#include "MaterialManager.hpp"
 #include "ValueSerialization.hpp"
 
 SceneLoader::SceneLoader(Engine* engine, Scene* scene):
 	scene(scene),
 	renderer(engine->GetRenderer()),
 	meshManager(engine->GetMeshManager()),
+	materialManager(engine->GetMaterialManager()),
 	entityManager(engine->GetEntityManager()),
 	resourceManager(engine->GetResourceManager())
 {
@@ -46,10 +48,9 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 	{
 		StringRef materialPath(skyboxItr->value.GetString(), skyboxItr->value.GetStringLength());
 
-		unsigned int materialId = resourceManager->CreateMaterialFromFile(materialPath);
-		Material& material = resourceManager->GetMaterial(materialId);
-
-		scene->skybox.Initialize(scene, material);
+		MaterialId matId = materialManager->GetIdByPath(materialPath);
+		if (matId.IsNull() == false)
+			scene->skybox.Initialize(scene, matId);
 	}
 }
 
@@ -128,14 +129,13 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 			renderer->SetMeshId(renderObj, meshId);
 
 		StringRef matPath(materialItr->value.GetString(), materialItr->value.GetStringLength());
-		unsigned int materialId = resourceManager->CreateMaterialFromFile(matPath);
-		if (materialId != 0)
-		{
-			Material& material = resourceManager->GetMaterial(materialId);
+		MaterialId matId = materialManager->GetIdByPath(matPath);
 
+		if (matId.IsNull() == false)
+		{
 			RenderOrderData data;
-			data.material = materialId;
-			data.transparency = material.transparencyType;
+			data.material = matId;
+			data.transparency = materialManager->GetTransparency(matId);
 			data.layer = SceneLayer::World;
 
 			renderer->SetOrderData(renderObj, data);

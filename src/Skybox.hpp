@@ -2,9 +2,9 @@
 
 #include "Vec3.hpp"
 #include "Entity.hpp"
+#include "MaterialData.hpp"
 
 class Scene;
-struct Material;
 
 class Skybox
 {
@@ -19,6 +19,6 @@ public:
 
 	bool IsInitialized() const { return renderSceneId != 0; }
 
-	void Initialize(Scene* scene, const Material& material);
+	void Initialize(Scene* scene, MaterialId materialId);
 	void UpdateTransform(const Vec3f& cameraPosition) const;
 };

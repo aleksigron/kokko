@@ -82,8 +82,9 @@ set (KOKKO_SOURCES
 	src/Mat2x2.hpp
 	src/Mat3x3.hpp
 	src/Mat4x4.hpp
-	src/Material.cpp
-	src/Material.hpp
+	src/MaterialManager.cpp
+	src/MaterialManager.hpp
+	src/MaterialData.hpp
 	src/Math.hpp
 	src/MemoryAmount.hpp
 	src/MeshData.hpp

@@ -8,6 +8,7 @@
 class Engine;
 class Renderer;
 class MeshManager;
+class MaterialManager;
 class EntityManager;
 class ResourceManager;
 
@@ -20,6 +21,7 @@ private:
 	Scene* scene;
 	Renderer* renderer;
 	MeshManager* meshManager;
+	MaterialManager* materialManager;
 	EntityManager* entityManager;
 	ResourceManager* resourceManager;
 

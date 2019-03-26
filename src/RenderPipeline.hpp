@@ -3,6 +3,7 @@
 #include "SceneLayer.hpp"
 #include "TransparencyType.hpp"
 #include "RenderOrder.hpp"
+#include "MaterialData.hpp"
 
 struct Color;
 
@@ -34,7 +35,7 @@ public:
 		SceneLayer layer,
 		TransparencyType transparency,
 		float depth,
-		unsigned int materialId,
+		MaterialId material,
 		unsigned int renderObjectId)
 	{
 		depth = (depth > 1.0f ? 1.0f : (depth < 0.0f ? 0.0f : depth));
@@ -57,7 +58,7 @@ public:
 			renderOrder.opaqueDepth.AssignValue(c, intDepth);
 		}
 
-		renderOrder.materialId.AssignValue(c, materialId);
+		renderOrder.materialId.AssignValue(c, material.i);
 		renderOrder.renderObject.AssignValue(c, renderObjectId);
 
 		return c;

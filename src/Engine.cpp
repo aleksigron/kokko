@@ -7,6 +7,7 @@
 #include "EntityManager.hpp"
 #include "Renderer.hpp"
 #include "MeshManager.hpp"
+#include "MaterialManager.hpp"
 #include "ResourceManager.hpp"
 #include "SceneManager.hpp"
 #include "Scene.hpp"
@@ -37,6 +38,7 @@ Engine::Engine()
 	this->entityManager = new EntityManager;
 	this->renderer = new Renderer;
 	this->meshManager = new MeshManager;
+	this->materialManager = new MaterialManager;
 	this->resourceManager = new ResourceManager;
 	this->sceneManager = new SceneManager;
 }

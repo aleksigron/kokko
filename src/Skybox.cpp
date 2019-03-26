@@ -8,6 +8,7 @@
 #include "SceneManager.hpp"
 #include "Renderer.hpp"
 #include "MeshManager.hpp"
+#include "MaterialManager.hpp"
 #include "EntityManager.hpp"
 #include "ResourceManager.hpp"
 
@@ -23,7 +24,7 @@ Skybox::~Skybox()
 {
 }
 
-void Skybox::Initialize(Scene* scene, const Material& material)
+void Skybox::Initialize(Scene* scene, MaterialId materialId)
 {
 	static Vertex3f vertexData[] = {
 		Vertex3f{ Vec3f(-0.5f, -0.5f, -0.5f) },
@@ -48,6 +49,7 @@ void Skybox::Initialize(Scene* scene, const Material& material)
 	Engine* engine = Engine::GetInstance();
 	Renderer* renderer = engine->GetRenderer();
 	EntityManager* entityManager = engine->GetEntityManager();
+	MaterialManager* materialManager = engine->GetMaterialManager();
 	MeshManager* meshManager = engine->GetMeshManager();
 
 	MeshId meshId = meshManager->CreateMesh();
@@ -77,8 +79,8 @@ void Skybox::Initialize(Scene* scene, const Material& material)
 	renderer->SetMeshId(renderObjectId, meshId);
 
 	RenderOrderData order;
-	order.material = material.id;
-	order.transparency = material.transparencyType;
+	order.material = materialId;
+	order.transparency = materialManager->GetTransparency(materialId);
 	order.layer = SceneLayer::Skybox;
 	renderer->SetOrderData(renderObjectId, order);
 }

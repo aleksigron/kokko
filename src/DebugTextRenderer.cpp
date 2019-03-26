@@ -10,11 +10,12 @@
 #include "VertexFormat.hpp"
 #include "EncodingUtf8.hpp"
 
+#include "App.hpp"
+
 #include "Engine.hpp"
+#include "Shader.hpp"
 #include "MeshManager.hpp"
 #include "ResourceManager.hpp"
-#include "Material.hpp"
-#include "App.hpp"
 
 DebugTextRenderer::DebugTextRenderer() :
 	font(nullptr),

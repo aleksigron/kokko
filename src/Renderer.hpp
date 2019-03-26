@@ -2,10 +2,14 @@
 
 #include "Mat4x4.hpp"
 #include "Entity.hpp"
+
 #include "RenderPipeline.hpp"
 #include "RenderOrder.hpp"
+
 #include "FrustumCulling.hpp"
 #include "MeshData.hpp"
+#include "MaterialData.hpp"
+
 #include "Array.hpp"
 #include "HashMap.hpp"
 
@@ -25,7 +29,7 @@ struct RenderObjectId
 
 struct RenderOrderData
 {
-	unsigned short material;
+	MaterialId material;
 	TransparencyType transparency;
 	SceneLayer layer;
 };
@@ -99,6 +103,9 @@ public:
 
 	void SetOrderData(RenderObjectId id, const RenderOrderData& order)
 	{
+		if (order.material.IsNull())
+			int i = 0;
+
 		data.order[id.i] = order;
 	}
 };

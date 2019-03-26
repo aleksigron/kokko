@@ -1,8 +1,6 @@
 #pragma once
 
-#include "StringRef.hpp"
-#include "IndexedContainer.hpp"
-#include "Material.hpp"
+#include <cstdint>
 
 struct Shader;
 struct Texture;
@@ -18,12 +16,6 @@ private:
 
 	bool LoadShader(Shader& shader, const char* configPath);
 
-	// Materials
-
-	IndexedContainer<Material> materials;
-
-	bool LoadMaterial(Material& material, StringRef path);
-
 	// Textures
 
 	Texture* textures = nullptr;
@@ -38,9 +30,6 @@ public:
 
 	Shader* GetShader(uint32_t hash) const;
 	Shader* GetShader(const char* path);
-
-	Material& GetMaterial(unsigned int id);
-	unsigned int CreateMaterialFromFile(StringRef path);
 
 	Texture* GetTexture(uint32_t hash) const;
 	Texture* GetTexture(const char* path);

@@ -78,39 +78,9 @@ bool ResourceManager::LoadShader(Shader& shader, const char* configPath)
 	Buffer<char> configuration = File::ReadText(configPath);
 
 	if (configuration.IsValid())
-		return shader.LoadFromConfiguration(configuration);
+		return shader.LoadFromConfiguration(configuration.GetRef());
 	else
 		return false;
-}
-
-Material& ResourceManager::GetMaterial(unsigned int id)
-{
-	return materials.Get(id);
-}
-
-unsigned int ResourceManager::CreateMaterialFromFile(StringRef path)
-{
-	unsigned int id = materials.Add();
-	Material& material = materials.Get(id);
-	material = Material();
-
-	if (this->LoadMaterial(material, path) == true)
-	{
-		material.id = id;
-		return id;
-	}
-	else
-	{
-		materials.Remove(id);
-		return 0;
-	}
-}
-
-bool ResourceManager::LoadMaterial(Material& material, StringRef path)
-{
-	Buffer<char> configuration = File::ReadText(path);
-
-	return material.LoadFromConfiguration(configuration, this);
 }
 
 Texture* ResourceManager::GetTexture(uint32_t hash) const
