@@ -125,7 +125,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 {
 	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
 
-	auto pair = nameHashMap.Lookup(hash);
+	HashMap<uint32_t, MeshId>::KeyValuePair* pair = nameHashMap.Lookup(hash);
 	if (pair != nullptr)
 		return pair->value;
 
@@ -141,6 +141,9 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 
 		if (loader.LoadFromBuffer(file.GetRef()))
 		{
+			pair = nameHashMap.Insert(hash);
+			pair->value = id;
+
 			return id;
 		}
 		else
