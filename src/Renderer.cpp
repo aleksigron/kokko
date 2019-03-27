@@ -19,7 +19,8 @@
 #include "Camera.hpp"
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
-#include "CullState.hpp"
+#include "FrustumCulling.hpp"
+#include "BitPack.hpp"
 #include "RenderOrder.hpp"
 
 #include "Sort.hpp"
@@ -76,7 +77,7 @@ void Renderer::Render(Scene* scene)
 	scene->NotifyUpdatedTransforms(this);
 
 	// Do frustum culling
-	FrustumCulling::CullAABB(&frustum, data.count, data.bounds, data.cullState);
+	FrustumCulling::CullAABB(frustum, data.count, data.bounds, data.visibility);
 
 	this->CreateDrawCalls(scene);
 
@@ -254,18 +255,13 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	for (unsigned i = 1; i < data.count; ++i)
 	{
 		// Object is in potentially visible set
-		if (CullStatePacked16::IsOutside(data.cullState, i) == false)
+		if (BitPack::Get(data.visibility, i))
 		{
 			const RenderOrderData& o = data.order[i];
 
 			Vec3f objPosition = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
-
-			if (o.material.IsNull())
-			{
-				int test = 0;
-			}
 
 			commands.PushBack(pipeline.CreateDrawCommand(o.layer, o.transparency, depth, o.material, i));
 		}
@@ -278,7 +274,7 @@ void Renderer::Reallocate(unsigned int required)
 		return;
 
 	required = Math::UpperPowerOfTwo(required);
-	unsigned int csRequired = CullStatePacked16::CalculateRequired(required);
+	unsigned int visRequired = BitPack::CalculateRequired(required);
 
 	// Reserve same amount in entity map
 	entityMap.Reserve(required);
@@ -286,7 +282,7 @@ void Renderer::Reallocate(unsigned int required)
 	InstanceData newData;
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(uint64_t) +
 		sizeof(RenderOrderData) + sizeof(BoundingBox) + sizeof(Mat4x4f)) +
-		csRequired * sizeof(CullStatePacked16);
+		visRequired * sizeof(BitPack);
 
 	newData.buffer = operator new[](bytes);
 	newData.count = data.count;
@@ -296,8 +292,8 @@ void Renderer::Reallocate(unsigned int required)
 	newData.mesh = reinterpret_cast<MeshId*>(newData.entity + required);
 	newData.command = reinterpret_cast<uint64_t*>(newData.mesh + required);
 	newData.order = reinterpret_cast<RenderOrderData*>(newData.command + required);
-	newData.cullState = reinterpret_cast<CullStatePacked16*>(newData.order + required);
-	newData.bounds = reinterpret_cast<BoundingBox*>(newData.cullState + csRequired);
+	newData.visibility = reinterpret_cast<BitPack*>(newData.order + required);
+	newData.bounds = reinterpret_cast<BoundingBox*>(newData.visibility + visRequired);
 	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
 
 	if (data.buffer != nullptr)

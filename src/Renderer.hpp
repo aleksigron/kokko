@@ -6,7 +6,6 @@
 #include "RenderPipeline.hpp"
 #include "RenderOrder.hpp"
 
-#include "FrustumCulling.hpp"
 #include "MeshData.hpp"
 #include "MaterialData.hpp"
 
@@ -14,7 +13,7 @@
 #include "HashMap.hpp"
 
 struct BoundingBox;
-struct CullStatePacked16;
+struct BitPack;
 class Camera;
 class Window;
 class World;
@@ -47,7 +46,7 @@ private:
 		MeshId* mesh;
 		uint64_t* command;
 		RenderOrderData* order;
-		CullStatePacked16* cullState;
+		BitPack* visibility;
 		BoundingBox* bounds;
 		Mat4x4f* transform;
 	}
@@ -103,9 +102,6 @@ public:
 
 	void SetOrderData(RenderObjectId id, const RenderOrderData& order)
 	{
-		if (order.material.IsNull())
-			int i = 0;
-
 		data.order[id.i] = order;
 	}
 };

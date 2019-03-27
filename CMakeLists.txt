@@ -28,6 +28,7 @@ set (KOKKO_SOURCES
 	src/BitfieldVariable.hpp
 	src/BitmapFont.cpp
 	src/BitmapFont.hpp
+	src/BitPack.hpp
 	src/BoundingBox.hpp
 	src/Buffer.hpp
 	src/BufferRef.hpp
@@ -38,7 +39,6 @@ set (KOKKO_SOURCES
 	src/Collection.hpp
 	src/Color.hpp
 	src/ColorSrgb.hpp
-	src/CullState.hpp
 	src/Debug.cpp
 	src/Debug.hpp
 	src/DebugConsole.cpp

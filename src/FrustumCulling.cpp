@@ -5,14 +5,15 @@
 #include "Vec3.hpp"
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
-#include "CullState.hpp"
+#include "BitPack.hpp"
 
-void FrustumCulling::CullAABB(const ViewFrustum* frustum,
-							  unsigned int count,
-							  const BoundingBox* bounds,
-							  CullStatePacked16* state)
+void FrustumCulling::CullAABB(
+	const ViewFrustum& frustum,
+	unsigned int count,
+	const BoundingBox* bounds,
+	BitPack* visibility)
 {
-	const Plane* planes = frustum->planes;
+	const Plane* planes = frustum.planes;
 	Vec3f planeNormalAbs[6];
 
 	for (int i = 0; i < 6; ++i)
@@ -25,24 +26,21 @@ void FrustumCulling::CullAABB(const ViewFrustum* frustum,
 	// For each axis aligned bounding box
 	for (unsigned int boxIdx = 0; boxIdx < count; ++boxIdx)
 	{
-		CullState result = CullState::Inside;
+		bool inside = true;
 
 		// For each plane in view frustum
 		for (unsigned int planeIdx = 0; planeIdx < 6; ++planeIdx)
 		{
-			const float planeDistNeg = -planes[planeIdx].distance;
 			const float d = Vec3f::Dot(bounds[boxIdx].center, planes[planeIdx].normal);
 			const float r = Vec3f::Dot(bounds[boxIdx].extents, planeNormalAbs[planeIdx]);
 
-			if (d + r < planeDistNeg)
+			if (d + r < -planes[planeIdx].distance)
 			{
-				result = CullState::Outside;
+				inside = false;
 				break;
 			}
-			else if (d - r < planeDistNeg)
-				result = CullState::Intersect;
 		}
 
-		CullStatePacked16::Set(state, boxIdx, result);
+		BitPack::Set(visibility, boxIdx, inside);
 	}
 }
