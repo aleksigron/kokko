@@ -4,54 +4,6 @@
 
 #include "Color.hpp"
 
-bool RenderPipeline::ParseControlCommand(uint64_t orderKey)
-{
-	using namespace RenderOrder;
-
-	if (renderOrder.command.GetValue(orderKey) == Command_Control)
-	{
-		uint64_t commandTypeInt = renderOrder.commandType.GetValue(orderKey);
-		ControlCommandType command = static_cast<ControlCommandType>(commandTypeInt);
-
-		switch (command)
-		{
-			case Control_GlEnable:
-				break;
-
-			case Control_GlDisable:
-				break;
-
-			case Control_BlendingEnable:
-				RenderPipeline::BlendingEnable();
-				break;
-
-			case Control_BlendingDisable:
-				RenderPipeline::BlendingDisable();
-				break;
-
-			case Control_DepthTestEnable:
-				RenderPipeline::DepthTestEnable();
-				break;
-
-			case Control_DepthTestDisable:
-				RenderPipeline::DepthTestDisable();
-				break;
-
-			case Control_DepthWriteEnable:
-				RenderPipeline::DepthWriteEnable();
-				break;
-
-			case Control_DepthWriteDisable:
-				RenderPipeline::DepthWriteDisable();
-				break;
-		}
-
-		return true;
-	}
-	else
-		return false;
-}
-
 void RenderPipeline::ClearColorAndDepth(const Color& color)
 {
 	glClearColor(color.r, color.g, color.b, 1.0f);
@@ -79,9 +31,49 @@ void RenderPipeline::DepthTestDisable()
 	glDisable(GL_DEPTH_TEST);
 }
 
+void RenderPipeline::DepthTestFunction(unsigned int function)
+{
+	glDepthFunc(function);
+}
+
+void RenderPipeline::DepthTestFunctionNever()
+{
+	DepthTestFunction(GL_NEVER);
+}
+
 void RenderPipeline::DepthTestFunctionLess()
 {
-	glDepthFunc(GL_LESS);
+	DepthTestFunction(GL_LESS);
+}
+
+void RenderPipeline::DepthTestFunctionEqual()
+{
+	DepthTestFunction(GL_EQUAL);
+}
+
+void RenderPipeline::DepthTestFunctionLessEqual()
+{
+	DepthTestFunction(GL_LEQUAL);
+}
+
+void RenderPipeline::DepthTestFunctionGreater()
+{
+	DepthTestFunction(GL_GREATER);
+}
+
+void RenderPipeline::DepthTestFunctionNotEqual()
+{
+	DepthTestFunction(GL_NOTEQUAL);
+}
+
+void RenderPipeline::DepthTestFunctionGreaterEqual()
+{
+	DepthTestFunction(GL_GEQUAL);
+}
+
+void RenderPipeline::DepthTestFunctionAlways()
+{
+	DepthTestFunction(GL_ALWAYS);
 }
 
 void RenderPipeline::DepthWriteEnable()

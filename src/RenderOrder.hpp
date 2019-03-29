@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+#include "SceneLayer.hpp"
+#include "MaterialData.hpp"
+#include "TransparencyType.hpp"
 #include "BitfieldVariable.hpp"
 
 namespace RenderOrder
@@ -19,14 +22,20 @@ namespace RenderOrder
 
 	enum ControlCommandType
 	{
-		Control_GlEnable,
-		Control_GlDisable,
 		Control_BlendingEnable,
 		Control_BlendingDisable,
+
 		Control_DepthTestEnable,
 		Control_DepthTestDisable,
+		Control_DepthTestFunction,
+
 		Control_DepthWriteEnable,
-		Control_DepthWriteDisable
+		Control_DepthWriteDisable,
+
+		Control_CullFaceEnable,
+		Control_CullFaceDisable,
+		Control_CullFaceFront,
+		Control_CullFaceBack
 	};
 }
 
@@ -53,13 +62,74 @@ struct RenderOrderConfiguration
 		materialId.SetDefinition(12, opaquePadding.shift);
 		renderObject.SetDefinition(20, materialId.shift);
 
-		// For commands
+		// CONTROL COMMANDS
 
-		commandType.SetDefinition(8, command.shift);
+		// Ordering for commands for same viewport, layer and transparency
+		commandOrder.SetDefinition(4, command.shift);
+
+		// Type of command
+		commandType.SetDefinition(8, commandOrder.shift);
+
+		// Command data or offset to buffer, depending on command type
 		commandData.SetDefinition(32, commandType.shift);
+
+		// Calculate maximum integer depth values in advance
 
 		maxTransparentDepth = (1 << transparentDepth.bits) - 1;
 		maxOpaqueDepth = (1 << opaqueDepth.bits) - 1;
+	}
+
+	uint64_t Control(
+		SceneLayer layer,
+		TransparencyType transparency,
+		RenderOrder::ControlCommandType type,
+		unsigned int order = 0,
+		unsigned int data = 0)
+	{
+		uint64_t c = 0;
+
+		viewportIndex.AssignValue(c, RenderOrder::Viewport_Fullscreen);
+		viewportLayer.AssignValue(c, static_cast<uint64_t>(layer));
+		transparencyType.AssignValue(c, static_cast<uint64_t>(transparency));
+		command.AssignValue(c, RenderOrder::Command_Control);
+		commandOrder.AssignValue(c, order);
+		commandType.AssignValue(c, type);
+		commandData.AssignValue(c, data);
+
+		return c;
+	}
+
+	uint64_t Draw(
+		SceneLayer layer,
+		TransparencyType transparency,
+		float depth,
+		MaterialId material,
+		unsigned int renderObjectId)
+	{
+		depth = (depth > 1.0f ? 1.0f : (depth < 0.0f ? 0.0f : depth));
+
+		uint64_t c = 0;
+
+		viewportIndex.AssignValue(c, RenderOrder::Viewport_Fullscreen);
+		viewportLayer.AssignValue(c, static_cast<uint64_t>(layer));
+		transparencyType.AssignValue(c, static_cast<uint64_t>(transparency));
+		command.AssignValue(c, RenderOrder::Command_Draw);
+
+		if ((0xfe & static_cast<unsigned char>(transparency)) != 0)
+		{
+			uint64_t intDepth(maxTransparentDepth * (1.0f - depth));
+			transparentDepth.AssignValue(c, intDepth);
+		}
+		else
+		{
+			uint64_t intDepth(maxOpaqueDepth * depth);
+			opaqueDepth.AssignValue(c, intDepth);
+		}
+
+		materialId.AssignValue(c, material.i);
+		renderObject.AssignValue(c, renderObjectId);
+
+		return c;
 	}
 
 	BitfieldVariable<uint64_t> viewportIndex;
@@ -71,6 +141,7 @@ struct RenderOrderConfiguration
 	BitfieldVariable<uint64_t> opaquePadding;
 	BitfieldVariable<uint64_t> materialId;
 	BitfieldVariable<uint64_t> renderObject;
+	BitfieldVariable<uint64_t> commandOrder;
 	BitfieldVariable<uint64_t> commandType;
 	BitfieldVariable<uint64_t> commandData;
 

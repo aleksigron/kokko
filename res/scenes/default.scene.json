@@ -196,7 +196,12 @@
 		{
             "mesh": "res/models/sphere.mesh",
             "material": "res/materials/blend.material.json",
-            "position": [ 0, 1, 5 ]
+            "position": [ 0.2, 1, 5 ]
+		},
+		{
+            "mesh": "res/models/sphere.mesh",
+            "material": "res/materials/blend.material.json",
+            "position": [ -0.2, 1, 5 ]
 		},
 		{
 			"position": [ 0, 0.74, 5.45 ],

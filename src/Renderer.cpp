@@ -21,7 +21,7 @@
 #include "BoundingBox.hpp"
 #include "FrustumCulling.hpp"
 #include "BitPack.hpp"
-#include "RenderOrder.hpp"
+#include "RenderPipeline.hpp"
 
 #include "Sort.hpp"
 
@@ -79,21 +79,14 @@ void Renderer::Render(Scene* scene)
 	// Do frustum culling
 	FrustumCulling::CullAABB(frustum, data.count, data.bounds, data.visibility);
 
-	this->CreateDrawCalls(scene);
+	CreateDrawCalls(scene);
 
 	// Sort draw calls based on order key
 	ShellSortAsc(commands.GetData(), commands.GetCount());
 
 	// Get the background color for view
+	RenderPipeline::DepthWriteEnable();
 	RenderPipeline::ClearColorAndDepth(scene->backgroundColor);
-
-	RenderPipeline::DepthTestEnable();
-	RenderPipeline::DepthTestFunctionLess();
-
-	RenderPipeline::CullFaceEnable();
-	RenderPipeline::CullFaceBack();
-
-	RenderPipeline::BlendingDisable();
 
 	Mat4x4f viewMatrix = Camera::GetViewMatrix(renderCameraTransform);
 	Mat4x4f projectionMatrix = renderCamera->GetProjectionMatrix();
@@ -104,7 +97,7 @@ void Renderer::Render(Scene* scene)
 		uint64_t command = commands[index];
 
 		// If command is not control command, draw object
-		if (pipeline.ParseControlCommand(command) == false)
+		if (ParseControlCommand(command) == false)
 		{
 			unsigned int objIdx = renderOrder.renderObject.GetValue(command);
 			unsigned int mat = renderOrder.materialId.GetValue(command);
@@ -215,8 +208,73 @@ void Renderer::Render(Scene* scene)
 	this->commands.Clear();
 }
 
+bool Renderer::ParseControlCommand(uint64_t orderKey)
+{
+	using namespace RenderOrder;
+
+	if (renderOrder.command.GetValue(orderKey) == Command_Draw)
+		return false;
+
+	uint64_t commandTypeInt = renderOrder.commandType.GetValue(orderKey);
+	ControlCommandType command = static_cast<ControlCommandType>(commandTypeInt);
+
+	switch (command)
+	{
+		case Control_BlendingEnable:
+			RenderPipeline::BlendingEnable();
+			break;
+
+		case Control_BlendingDisable:
+			RenderPipeline::BlendingDisable();
+			break;
+
+		case Control_DepthTestEnable:
+			RenderPipeline::DepthTestEnable();
+			break;
+
+		case Control_DepthTestDisable:
+			RenderPipeline::DepthTestDisable();
+			break;
+
+		case Control_DepthTestFunction:
+		{
+			unsigned int fn = renderOrder.commandData.GetValue(orderKey);
+			RenderPipeline::DepthTestFunction(fn);
+		}
+			break;
+
+		case Control_DepthWriteEnable:
+			RenderPipeline::DepthWriteEnable();
+			break;
+
+		case Control_DepthWriteDisable:
+			RenderPipeline::DepthWriteDisable();
+			break;
+
+		case Control_CullFaceEnable:
+			RenderPipeline::CullFaceEnable();
+			break;
+
+		case Control_CullFaceDisable:
+			RenderPipeline::CullFaceDisable();
+			break;
+
+		case Control_CullFaceFront:
+			RenderPipeline::CullFaceFront();
+			break;
+
+		case Control_CullFaceBack:
+			RenderPipeline::CullFaceBack();
+			break;
+	}
+
+	return true;
+}
+
 void Renderer::CreateDrawCalls(Scene* scene)
 {
+	using namespace RenderOrder;
+
 	Camera* renderCamera = this->GetRenderCamera(scene);
 
 	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
@@ -227,29 +285,59 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	
 	float farPlane = renderCamera->farClipDistance;
 
-	// Disable depth writing before objects in skybox layer
-	commands.PushBack(pipeline.CreateControlCommand(
-		SceneLayer::Skybox, TransparencyType::Opaque, RenderOrder::Control_DepthWriteDisable));
+	// Before everything
 
-	// Disable blending before opaque objects in skybox layer
-	commands.PushBack(pipeline.CreateControlCommand(
-		SceneLayer::Skybox, TransparencyType::Opaque, RenderOrder::Control_BlendingDisable));
+	// Set depth test on
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::Skybox, TransparencyType::Opaque, Control_DepthTestEnable, 0));
 
-	// Enable blending before transparent objects in skybox layer
-	commands.PushBack(pipeline.CreateControlCommand(
-		SceneLayer::Skybox, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable));
+	// Set depth test function
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::Skybox, TransparencyType::Opaque, Control_DepthTestFunction, 1, GL_LESS));
 
-	// Enable depth writing before objects in world layer
-	commands.PushBack(pipeline.CreateControlCommand(
-		SceneLayer::World, TransparencyType::Opaque, RenderOrder::Control_DepthWriteEnable));
+	// Set face culling on
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::Skybox, TransparencyType::Opaque, Control_CullFaceEnable, 2));
 
-	// Disable blending before opaque objects in world layer
-	commands.PushBack(pipeline.CreateControlCommand(
-		SceneLayer::World, TransparencyType::Opaque, RenderOrder::Control_BlendingDisable));
+	// Set face culling to cull back faces
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::Skybox, TransparencyType::Opaque, Control_CullFaceBack, 3));
 
-	// Enable blending before transparent objects in world layer
-	commands.PushBack(pipeline.CreateControlCommand(
-		SceneLayer::World, TransparencyType::TransparentMix, RenderOrder::Control_BlendingEnable));
+	// Before opaque objects in skybox layer
+
+	// Disable depth writing
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::Skybox, TransparencyType::Opaque, Control_DepthWriteDisable, 4));
+
+	// Disable blending
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::Skybox, TransparencyType::Opaque, Control_BlendingDisable, 5));
+
+	// Before transparent objects in skybox layer
+
+	// Enable blending
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::Skybox, TransparencyType::TransparentMix, Control_BlendingEnable));
+
+	// Before opaque objects in world layer
+
+	// Enable depth writing
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::World, TransparencyType::Opaque, Control_DepthWriteEnable));
+
+	// Disable blending
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::World, TransparencyType::Opaque, Control_BlendingDisable));
+
+	// Before transparent objects in world layer
+
+	// Disable depth writing
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::World, TransparencyType::TransparentMix, Control_DepthWriteDisable));
+
+	// Enable blending
+	commands.PushBack(renderOrder.Control(
+		SceneLayer::World, TransparencyType::TransparentMix, Control_BlendingEnable));
 
 	// Create draw commands for render objects in scene
 	for (unsigned i = 1; i < data.count; ++i)
@@ -263,7 +351,9 @@ void Renderer::CreateDrawCalls(Scene* scene)
 
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
 
-			commands.PushBack(pipeline.CreateDrawCommand(o.layer, o.transparency, depth, o.material, i));
+			uint64_t c = renderOrder.Draw(o.layer, o.transparency, depth, o.material, i);
+
+			commands.PushBack(c);
 		}
 	}
 }
@@ -290,8 +380,7 @@ void Renderer::Reallocate(unsigned int required)
 
 	newData.entity = static_cast<Entity*>(newData.buffer);
 	newData.mesh = reinterpret_cast<MeshId*>(newData.entity + required);
-	newData.command = reinterpret_cast<uint64_t*>(newData.mesh + required);
-	newData.order = reinterpret_cast<RenderOrderData*>(newData.command + required);
+	newData.order = reinterpret_cast<RenderOrderData*>(newData.mesh + required);
 	newData.visibility = reinterpret_cast<BitPack*>(newData.order + required);
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.visibility + visRequired);
 	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
@@ -300,7 +389,6 @@ void Renderer::Reallocate(unsigned int required)
 	{
 		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
 		std::memcpy(newData.mesh, data.mesh, data.count * sizeof(unsigned int));
-		std::memcpy(newData.command, data.command, data.count * sizeof(uint64_t));
 		std::memcpy(newData.order, data.order, data.count * sizeof(RenderOrderData));
 		// Cull state is recalculated every frame
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));

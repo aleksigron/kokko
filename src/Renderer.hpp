@@ -2,12 +2,10 @@
 
 #include "Mat4x4.hpp"
 #include "Entity.hpp"
-
-#include "RenderPipeline.hpp"
-#include "RenderOrder.hpp"
-
 #include "MeshData.hpp"
 #include "MaterialData.hpp"
+
+#include "RenderOrder.hpp"
 
 #include "Array.hpp"
 #include "HashMap.hpp"
@@ -44,7 +42,6 @@ private:
 
 		Entity* entity;
 		MeshId* mesh;
-		uint64_t* command;
 		RenderOrderData* order;
 		BitPack* visibility;
 		BoundingBox* bounds;
@@ -61,13 +58,13 @@ private:
 
 	Array<uint64_t> commands;
 
-	RenderPipeline pipeline;
-
 	void Reallocate(unsigned int required);
 
 	void UpdateTransforms(Scene* scene);
 	void UpdateBoundingBoxes(Scene* scene);
 	void CreateDrawCalls(Scene* scene);
+
+	bool ParseControlCommand(uint64_t orderKey);
 
 	Camera* GetRenderCamera(Scene* scene);
 	Camera* GetCullingCamera(Scene* scene);
