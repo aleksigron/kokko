@@ -46,7 +46,7 @@ void DebugConsole::ReleaseFocus()
 	Engine::GetInstance()->GetMainWindow()->GetInputManager()->GetTextInput()->ReleaseFocus(this);
 }
 
-void DebugConsole::SetDrawArea(const Rectangle& area)
+void DebugConsole::SetDrawArea(const Rectanglef& area)
 {
 	this->drawArea = area;
 }
@@ -177,7 +177,7 @@ void DebugConsole::UpdateAndDraw()
 	
 	// Input field separator
 
-	Rectangle separatorRectangle;
+	Rectanglef separatorRectangle;
 	separatorRectangle.position = inputPos + Vec2f(0.0f, -1.0f);
 	separatorRectangle.size = Vec2f(areaSize.x, 1);
 	vectorRenderer->DrawRectangleScreen(separatorRectangle, white);
@@ -191,7 +191,7 @@ void DebugConsole::UpdateAndDraw()
 	{
 		int chars = EncodingUtf8::CountCharacters(inputValue.GetRef());
 
-		Rectangle caretRectangle;
+		Rectanglef caretRectangle;
 		caretRectangle.position = Vec2f(chars * font->GetGlyphWidth(), inputPos.y);
 		caretRectangle.size = Vec2f(1, lineHeight);
 
@@ -208,7 +208,7 @@ void DebugConsole::UpdateAndDraw()
 
 		rowsUsed += entry.rows;
 
-		Rectangle area;
+		Rectanglef area;
 		area.position.x = areaPos.x;
 		area.position.y = areaPos.y + areaSize.y - (lineHeight * rowsUsed);
 		area.size.x = areaSize.x;

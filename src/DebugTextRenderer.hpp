@@ -16,7 +16,7 @@ private:
 	{
 		unsigned int stringStart;
 		unsigned int stringLength;
-		Rectangle area;
+		Rectanglef area;
 	};
 
 	BitmapFont* font;
@@ -58,7 +58,7 @@ public:
 	/**
 	 * Add a text to be rendered this frame in a specified area.
 	 */
-	void AddText(StringRef str, Rectangle area);
+	void AddText(StringRef str, const Rectanglef& area);
 
 	void Render();
 };

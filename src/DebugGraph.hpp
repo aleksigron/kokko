@@ -15,7 +15,7 @@ private:
 	};
 
 	DebugVectorRenderer* vectorRenderer;
-	Rectangle drawArea;
+	Rectanglef drawArea;
 	Queue<DataPoint> data;
 
 	double timeRange;
@@ -24,7 +24,7 @@ public:
 	DebugGraph(DebugVectorRenderer* vr);
 	~DebugGraph();
 
-	void SetDrawArea(const Rectangle& area) { drawArea = area; }
+	void SetDrawArea(const Rectanglef& area) { drawArea = area; }
 
 	void Update();
 	void DrawToVectorRenderer();

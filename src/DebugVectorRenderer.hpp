@@ -48,7 +48,7 @@ public:
 
 	void DrawWireSphere(const Vec3f& position, float radius, const Color& color);
 
-	void DrawRectangleScreen(const Rectangle& rectangle, const Color& color);
+	void DrawRectangleScreen(const Rectanglef& rectangle, const Color& color);
 
 	void Render(Camera* camera);
 };

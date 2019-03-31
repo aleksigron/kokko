@@ -63,14 +63,14 @@ void Debug::SetWindow(Window* window)
 	float pixelLineHeight = scaledLineHeight * screenCoordScale;
 
 	Vec2f trScaledFrameSize = textRenderer->GetScaledFrameSize();
-	Rectangle logArea;
+	Rectanglef logArea;
 	logArea.position.x = 0.0f;
 	logArea.position.y = scaledLineHeight;
 	logArea.size.x = trScaledFrameSize.x;
 	logArea.size.y = trScaledFrameSize.y - scaledLineHeight;
 	console->SetDrawArea(logArea);
 
-	Rectangle graphArea;
+	Rectanglef graphArea;
 	graphArea.position.x = 0.0f;
 	graphArea.position.y = pixelLineHeight;
 	graphArea.size.x = frameSize.x;

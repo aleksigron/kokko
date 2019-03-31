@@ -70,12 +70,12 @@ bool DebugTextRenderer::LoadBitmapFont(const char* filePath)
 
 void DebugTextRenderer::AddText(StringRef str, Vec2f position)
 {
-	Rectangle area(position, scaledFrameSize - position);
+	Rectanglef area(position, scaledFrameSize - position);
 
 	this->AddText(str, area);
 }
 
-void DebugTextRenderer::AddText(StringRef str, Rectangle area)
+void DebugTextRenderer::AddText(StringRef str, const Rectanglef& area)
 {
 	stringCharCount += EncodingUtf8::CountCharacters(str);
 

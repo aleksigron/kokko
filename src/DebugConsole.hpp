@@ -22,7 +22,7 @@ private:
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
 
-	Rectangle drawArea;
+	Rectanglef drawArea;
 
 	Queue<LogEntry> entries;
 
@@ -42,7 +42,7 @@ public:
 	void RequestFocus();
 	void ReleaseFocus();
 
-	void SetDrawArea(const Rectangle& area);
+	void SetDrawArea(const Rectanglef& area);
 
 	void AddLogEntry(StringRef text);
 

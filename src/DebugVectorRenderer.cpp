@@ -228,7 +228,7 @@ void DebugVectorRenderer::DrawWireSphere(const Vec3f& position, float radius, co
 	}
 }
 
-void DebugVectorRenderer::DrawRectangleScreen(const Rectangle& rectangle, const Color& color)
+void DebugVectorRenderer::DrawRectangleScreen(const Rectanglef& rectangle, const Color& color)
 {
 	if (primitiveCount < primitiveAllocated)
 	{
