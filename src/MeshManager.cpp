@@ -155,7 +155,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	return MeshId{};
 }
 
-static MeshBufferData CreateBuffers(void* vd, unsigned int vs, void* id, unsigned int is)
+static MeshBufferData CreateBuffers(const void* vd, unsigned int vs, const void* id, unsigned int is)
 {
 	MeshBufferData data;
 

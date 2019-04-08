@@ -39,6 +39,7 @@ Debug::~Debug()
 {
 	delete log;
 	delete console;
+	delete culling;
 	delete graph;
 	delete textRenderer;
 	delete vectorRenderer;

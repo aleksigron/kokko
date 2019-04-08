@@ -36,19 +36,20 @@ Engine::Engine()
 
 	this->time = new Time;
 	this->entityManager = new EntityManager;
-	this->renderer = new Renderer;
 	this->meshManager = new MeshManager;
 	this->materialManager = new MaterialManager;
 	this->resourceManager = new ResourceManager;
+	this->renderer = new Renderer;
 	this->sceneManager = new SceneManager;
 }
 
 Engine::~Engine()
 {
 	delete this->sceneManager;
+	delete this->renderer;
 	delete this->resourceManager;
 	delete this->meshManager;
-	delete this->renderer;
+	delete this->entityManager;
 	delete this->time;
 
 	delete this->debug;

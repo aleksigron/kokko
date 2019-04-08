@@ -106,14 +106,14 @@ void Renderer::Initialize(Window* window)
 	{
 		// Create screen filling quad
 
-		static Vertex3f vertexData[] = {
+		static const Vertex3f vertexData[] = {
 			Vertex3f{ Vec3f(-1.0f, -1.0f, 0.0f) },
 			Vertex3f{ Vec3f(1.0f, -1.0f, 0.0f) },
 			Vertex3f{ Vec3f(-1.0f, 1.0f, 0.0f) },
 			Vertex3f{ Vec3f(1.0f, 1.0f, 0.0f) }
 		};
 
-		static unsigned short indexData[] = { 0, 1, 2, 1, 3, 2 };
+		static const unsigned short indexData[] = { 0, 1, 2, 1, 3, 2 };
 
 		MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
 

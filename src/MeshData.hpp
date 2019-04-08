@@ -16,9 +16,9 @@ struct IndexedVertexData
 {
 	MeshPrimitiveMode primitiveMode;
 
-	VertexType* vertData;
+	const VertexType* vertData;
 	unsigned int vertCount;
-	IndexType* idxData;
+	const IndexType* idxData;
 	unsigned int idxCount;
 };
 
