@@ -2,13 +2,24 @@
 
 #include "IncludeOpenGL.hpp"
 
-#include "Color.hpp"
+#include "RenderCommandData.hpp"
+
+void RenderPipeline::Clear(const RenderCommandData::ClearData* data)
+{
+	glClearColor(data->r, data->g, data->b, data->a);
+	glClear(data->mask);
+}
 
 void RenderPipeline::ClearColorAndDepth(const Color& color)
 {
-	glClearColor(color.r, color.g, color.b, 1.0f);
+	RenderCommandData::ClearData data;
+	data.r = color.r;
+	data.g = color.g;
+	data.b = color.b;
+	data.a = color.a;
+	data.mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	Clear(&data);
 }
 
 void RenderPipeline::BlendingEnable()
@@ -104,4 +115,17 @@ void RenderPipeline::CullFaceFront()
 void RenderPipeline::CullFaceBack()
 {
 	glCullFace(GL_BACK);
+}
+
+void RenderPipeline::BindFramebuffer(const RenderCommandData::BindFramebufferData* data)
+{
+	glBindFramebuffer(data->target, data->framebuffer);
+}
+
+void RenderPipeline::BlitFramebuffer(const RenderCommandData::BlitFramebufferData* data)
+{
+	glBlitFramebuffer(
+		data->srcLeft, data->srcTop, data->srcWidth, data->srcHeight,
+		data->dstLeft, data->dstTop, data->dstWidth, data->dstHeight,
+		data->mask, data->filter);
 }

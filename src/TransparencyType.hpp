@@ -4,7 +4,8 @@ enum class TransparencyType : unsigned char
 {
 	Opaque = 0,
 	AlphaTest = 1,
-	TransparentMix = 2,
-	TransparentAdd = 3,
-	TransparentSub = 4
+	// Deferred lighting pass for opaque geometry
+	TransparentMix = 4,
+	TransparentAdd = 5,
+	TransparentSub = 6
 };

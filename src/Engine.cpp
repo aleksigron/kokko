@@ -73,7 +73,9 @@ bool Engine::Initialize()
 		if (fontLoaded == false)
 			debugLog->Log(String("Loading font at ") + debugFontFilename + " failed.");
 
-		this->debug->SetWindow(this->mainWindow);
+		debug->SetWindow(mainWindow);
+
+		renderer->Initialize(mainWindow);
 
 		return true;
 	}

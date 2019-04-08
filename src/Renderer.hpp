@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Mat4x4.hpp"
+#include "Vec2.hpp"
 #include "Entity.hpp"
 #include "MeshData.hpp"
 #include "MaterialData.hpp"
 
+#include "RenderCommandList.hpp"
 #include "RenderOrder.hpp"
 
 #include "Array.hpp"
@@ -12,6 +13,7 @@
 
 struct BoundingBox;
 struct BitPack;
+struct Mat4x4f;
 class Camera;
 class Window;
 class World;
@@ -34,6 +36,28 @@ struct RenderOrderData
 class Renderer
 {
 private:
+	struct LightingData
+	{
+		MeshId dirMesh;
+		MeshId pointMesh;
+		MeshId spotMesh;
+
+		unsigned int dirShaderHash;
+	}
+	lightingData;
+
+	struct GBufferData
+	{
+		enum { Position = 0, Normal = 1, AlbedoSpec = 2 };
+
+		unsigned int framebuffer;
+		unsigned int depthRenderbuffer;
+		unsigned int textures[3];
+
+		Vec2i framebufferSize;
+	}
+	gbuffer;
+
 	struct InstanceData
 	{
 		unsigned int count;
@@ -56,7 +80,7 @@ private:
 	Camera* overrideRenderCamera;
 	Camera* overrideCullingCamera;
 
-	Array<uint64_t> commands;
+	RenderCommandList commandList;
 
 	void Reallocate(unsigned int required);
 
@@ -72,6 +96,9 @@ private:
 public:
 	Renderer();
 	~Renderer();
+
+	void Initialize(Window* window);
+	void Deinitialize();
 
 	void SetRenderCameraOverride(Camera* renderCamera) { overrideRenderCamera = renderCamera; }
 	void SetCullingCameraOverride(Camera* cullingCamera) { overrideCullingCamera = cullingCamera; }

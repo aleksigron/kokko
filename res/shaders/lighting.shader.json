@@ -1,8 +1,4 @@
 {
 	"vertexShaderFile": "res/shaders/lighting.vertex.glsl",
-	"fragmentShaderFile": "res/shaders/lighting.fragment.glsl",
-	"materialUniforms":
-	[
-		{ "name": "base_color", "type": "vec3" }
-	]
+	"fragmentShaderFile": "res/shaders/lighting.fragment.glsl"
 }

@@ -97,6 +97,10 @@ set (KOKKO_SOURCES
 	src/PointerInput.hpp
 	src/Queue.hpp
 	src/Rectangle.hpp
+	src/RenderCommandData.hpp
+	src/RenderCommandList.cpp
+	src/RenderCommandList.hpp
+	src/RenderCommandType.hpp
 	src/Renderer.cpp
 	src/Renderer.hpp
 	src/RenderOrder.hpp

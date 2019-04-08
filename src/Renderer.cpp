@@ -17,11 +17,15 @@
 #include "Scene.hpp"
 
 #include "Camera.hpp"
+#include "Rectangle.hpp"
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
 #include "FrustumCulling.hpp"
 #include "BitPack.hpp"
+
 #include "RenderPipeline.hpp"
+#include "RenderCommandData.hpp"
+#include "RenderCommandType.hpp"
 
 #include "Sort.hpp"
 
@@ -29,6 +33,8 @@ Renderer::Renderer() :
 	overrideRenderCamera(nullptr),
 	overrideCullingCamera(nullptr)
 {
+	lightingData = LightingData{};
+	gbuffer = GBufferData{};
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
 
@@ -37,7 +43,115 @@ Renderer::Renderer() :
 
 Renderer::~Renderer()
 {
+	this->Deinitialize();
+
 	operator delete[](data.buffer);
+}
+
+void Renderer::Initialize(Window* window)
+{
+	Vec2f sf = window->GetFrameBufferSize();
+	Vec2i s(static_cast<float>(sf.x), static_cast<float>(sf.y));
+	gbuffer.framebufferSize = s;
+
+	// Create and bind framebuffer
+
+	glGenFramebuffers(1, &gbuffer.framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gbuffer.framebuffer);
+
+	glGenTextures(3, gbuffer.textures);
+	unsigned int colAtt[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+
+	// Position buffer
+	unsigned int posTexture = gbuffer.textures[GBufferData::Position];
+	glBindTexture(GL_TEXTURE_2D, posTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, s.x, s.y, 0, GL_RGB, GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[0], GL_TEXTURE_2D, posTexture, 0);
+
+	// Normal buffer
+	unsigned int norTexture = gbuffer.textures[GBufferData::Normal];
+	glBindTexture(GL_TEXTURE_2D, norTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, s.x, s.y, 0, GL_RGB, GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[1], GL_TEXTURE_2D, norTexture, 0);
+
+	// Albedo color + specular buffer
+	unsigned int asTexture = gbuffer.textures[GBufferData::AlbedoSpec];
+	glBindTexture(GL_TEXTURE_2D, asTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, s.x, s.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[2], GL_TEXTURE_2D, asTexture, 0);
+
+	// Which color attachments we'll use for rendering
+	glDrawBuffers(3, colAtt);
+
+	// Create and attach depth buffer
+
+	glGenRenderbuffers(1, &gbuffer.depthRenderbuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, gbuffer.depthRenderbuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, s.x, s.y);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, gbuffer.depthRenderbuffer);
+
+	// Finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	{
+		// Create screen filling quad
+
+		static Vertex3f vertexData[] = {
+			Vertex3f{ Vec3f(-1.0f, -1.0f, 0.0f) },
+			Vertex3f{ Vec3f(1.0f, -1.0f, 0.0f) },
+			Vertex3f{ Vec3f(-1.0f, 1.0f, 0.0f) },
+			Vertex3f{ Vec3f(1.0f, 1.0f, 0.0f) }
+		};
+
+		static unsigned short indexData[] = { 0, 1, 2, 1, 3, 2 };
+
+		MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
+
+		lightingData.dirMesh = meshManager->CreateMesh();
+
+		IndexedVertexData<Vertex3f, unsigned short> data;
+		data.primitiveMode = MeshPrimitiveMode::Triangles;
+		data.vertData = vertexData;
+		data.vertCount = sizeof(vertexData) / sizeof(Vertex3f);
+		data.idxData = indexData;
+		data.idxCount = sizeof(indexData) / sizeof(unsigned short);
+
+		meshManager->Upload_3f(lightingData.dirMesh, data);
+	}
+
+	{
+		ResourceManager* resManager = Engine::GetInstance()->GetResourceManager();
+
+		static const char* const path = "res/shaders/lighting.shader.json";
+
+		Shader* shader = resManager->GetShader(path);
+		lightingData.dirShaderHash = shader->nameHash;
+	}
+}
+
+void Renderer::Deinitialize()
+{
+	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
+
+	if (lightingData.dirMesh.IsValid())
+		meshManager->RemoveMesh(lightingData.dirMesh);
+
+	if (gbuffer.framebuffer != 0)
+	{
+		glDeleteTextures(3, gbuffer.textures);
+		glDeleteRenderbuffers(1, &gbuffer.depthRenderbuffer);
+		glDeleteFramebuffers(1, &gbuffer.framebuffer);
+	}
 }
 
 Camera* Renderer::GetRenderCamera(Scene* scene)
@@ -81,190 +195,248 @@ void Renderer::Render(Scene* scene)
 
 	CreateDrawCalls(scene);
 
-	// Sort draw calls based on order key
-	ShellSortAsc(commands.GetData(), commands.GetCount());
-
-	// Get the background color for view
-	RenderPipeline::DepthWriteEnable();
-	RenderPipeline::ClearColorAndDepth(scene->backgroundColor);
-
 	Mat4x4f viewMatrix = Camera::GetViewMatrix(renderCameraTransform);
-	Mat4x4f projectionMatrix = renderCamera->GetProjectionMatrix();
-	Mat4x4f viewProjection = projectionMatrix * viewMatrix;
+	Mat4x4f projMatrix = renderCamera->GetProjectionMatrix();
+	Mat4x4f viewProjection = projMatrix * viewMatrix;
 
-	for (unsigned index = 0, commandCount = commands.GetCount(); index < commandCount; ++index)
+	uint64_t* itr = commandList.commands.GetData();
+	uint64_t* end = itr + commandList.commands.GetCount();
+	for (; itr != end; ++itr)
 	{
-		uint64_t command = commands[index];
+		uint64_t command = *itr;
 
 		// If command is not control command, draw object
 		if (ParseControlCommand(command) == false)
 		{
-			unsigned int objIdx = renderOrder.renderObject.GetValue(command);
-			unsigned int mat = renderOrder.materialId.GetValue(command);
-			MaterialId matId = MaterialId{mat};
+			RenderPass pass = static_cast<RenderPass>(renderOrder.viewportPass.GetValue(command));
 
-			const MaterialUniformData& mu = materialManager->GetUniformData(matId);
-
-			unsigned int shaderId = materialManager->GetShaderId(matId);
-			Shader* shader = res->GetShader(shaderId);
-
-			glUseProgram(shader->driverId);
-
-			unsigned int usedTextures = 0;
-
-			// Bind each material uniform with a value
-			for (unsigned uIndex = 0; uIndex < mu.count; ++uIndex)
+			if (pass != RenderPass::OpaqueLighting)
 			{
-				const MaterialUniform& u = mu.uniforms[uIndex];
+				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
+				unsigned int mat = renderOrder.materialId.GetValue(command);
+				MaterialId matId = MaterialId{mat};
 
-				unsigned char* d = mu.data + u.dataOffset;
+				const MaterialUniformData& mu = materialManager->GetUniformData(matId);
 
-				switch (u.type)
+				unsigned int shaderId = materialManager->GetShaderId(matId);
+				Shader* shader = res->GetShader(shaderId);
+
+				glUseProgram(shader->driverId);
+
+				unsigned int usedTextures = 0;
+
+				// Bind each material uniform with a value
+				for (unsigned uIndex = 0; uIndex < mu.count; ++uIndex)
 				{
-					case ShaderUniformType::Mat4x4:
-						glUniformMatrix4fv(u.location, 1, GL_FALSE, reinterpret_cast<float*>(d));
-						break;
+					const MaterialUniform& u = mu.uniforms[uIndex];
 
-					case ShaderUniformType::Vec4:
-						glUniform4fv(u.location, 1, reinterpret_cast<float*>(d));
-						break;
+					unsigned char* d = mu.data + u.dataOffset;
 
-					case ShaderUniformType::Vec3:
-						glUniform3fv(u.location, 1, reinterpret_cast<float*>(d));
-						break;
-
-					case ShaderUniformType::Vec2:
-						glUniform2fv(u.location, 1, reinterpret_cast<float*>(d));
-						break;
-
-					case ShaderUniformType::Float:
-						glUniform1f(u.location, *reinterpret_cast<float*>(d));
-						break;
-
-					case ShaderUniformType::Int:
-						glUniform1i(u.location, *reinterpret_cast<int*>(d));
-						break;
-
-					case ShaderUniformType::Tex2D:
-					case ShaderUniformType::TexCube:
+					switch (u.type)
 					{
-						uint32_t textureHash = *reinterpret_cast<uint32_t*>(d);
-						Texture* texture = res->GetTexture(textureHash);
+						case ShaderUniformType::Mat4x4:
+							glUniformMatrix4fv(u.location, 1, GL_FALSE, reinterpret_cast<float*>(d));
+							break;
 
-						glActiveTexture(GL_TEXTURE0 + usedTextures);
-						glBindTexture(texture->targetType, texture->driverId);
-						glUniform1i(u.location, usedTextures);
+						case ShaderUniformType::Vec4:
+							glUniform4fv(u.location, 1, reinterpret_cast<float*>(d));
+							break;
 
-						++usedTextures;
+						case ShaderUniformType::Vec3:
+							glUniform3fv(u.location, 1, reinterpret_cast<float*>(d));
+							break;
+
+						case ShaderUniformType::Vec2:
+							glUniform2fv(u.location, 1, reinterpret_cast<float*>(d));
+							break;
+
+						case ShaderUniformType::Float:
+							glUniform1f(u.location, *reinterpret_cast<float*>(d));
+							break;
+
+						case ShaderUniformType::Int:
+							glUniform1i(u.location, *reinterpret_cast<int*>(d));
+							break;
+
+						case ShaderUniformType::Tex2D:
+						case ShaderUniformType::TexCube:
+						{
+							uint32_t textureHash = *reinterpret_cast<uint32_t*>(d);
+							Texture* texture = res->GetTexture(textureHash);
+
+							glActiveTexture(GL_TEXTURE0 + usedTextures);
+							glBindTexture(texture->targetType, texture->driverId);
+							glUniform1i(u.location, usedTextures);
+
+							++usedTextures;
+						}
+							break;
 					}
-						break;
 				}
+
+				const Mat4x4f& modelMatrix = data.transform[objIdx];
+
+				if (shader->uniformMatMVP >= 0)
+				{
+					Mat4x4f mvp = viewProjection * modelMatrix;
+					glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
+				}
+
+				if (shader->uniformMatMV >= 0)
+				{
+					Mat4x4f mv = viewMatrix * modelMatrix;
+					glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
+				}
+
+				if (shader->uniformMatVP >= 0)
+				{
+					Mat4x4f vp = projMatrix * viewMatrix;
+					glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, vp.ValuePointer());
+				}
+
+				if (shader->uniformMatM >= 0)
+				{
+					glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
+				}
+
+				if (shader->uniformMatV >= 0)
+				{
+					glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
+				}
+
+				if (shader->uniformMatP >= 0)
+				{
+					glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, projMatrix.ValuePointer());
+				}
+
+				MeshDrawData* draw = meshManager->GetDrawData(data.mesh[objIdx]);
+				glBindVertexArray(draw->vertexArrayObject);
+
+				glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
 			}
-
-			const Mat4x4f& modelMatrix = data.transform[objIdx];
-
-			if (shader->uniformMatMVP >= 0)
+			else // Pass is OpaqueLighting
 			{
-				Mat4x4f mvp = viewProjection * modelMatrix;
-				glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
-			}
+				ResourceManager* resManager = Engine::GetInstance()->GetResourceManager();
+				Shader* shader = resManager->GetShader(lightingData.dirShaderHash);
 
-			if (shader->uniformMatMV >= 0)
-			{
-				Mat4x4f mv = viewMatrix * modelMatrix;
-				glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
-			}
+				const unsigned int shaderId = shader->driverId;
 
-			if (shader->uniformMatVP >= 0)
-			{
-				Mat4x4f vp = projectionMatrix * viewMatrix;
-				glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, vp.ValuePointer());
-			}
+				unsigned int posLoc = glGetUniformLocation(shaderId, "g_pos");
+				unsigned int normLoc = glGetUniformLocation(shaderId, "g_norm");
+				unsigned int albSpecLoc = glGetUniformLocation(shaderId, "g_alb_spec");
+				unsigned int invLightDirLoc = glGetUniformLocation(shaderId, "invLightDir");
+				unsigned int lightColLoc = glGetUniformLocation(shaderId, "lightCol");
 
-			if (shader->uniformMatM >= 0)
-			{
-				glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
-			}
+				glUseProgram(shaderId);
 
-			if (shader->uniformMatV >= 0)
-			{
-				glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
-			}
+				glUniform1i(posLoc, 0);
+				glUniform1i(normLoc, 1);
+				glUniform1i(albSpecLoc, 2);
+				glUniform3f(invLightDirLoc, 0.577f, 0.577f, 0.577f); // Set inverse light direction
+				glUniform3f(lightColLoc, 1.0f, 1.0f, 1.0f); // Set light color
 
-			if (shader->uniformMatP >= 0)
-			{
-				glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, projectionMatrix.ValuePointer());
-			}
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::Position]);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::Normal]);
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::AlbedoSpec]);
 
-			MeshDrawData* draw = meshManager->GetDrawData(data.mesh[objIdx]);
-			glBindVertexArray(draw->vertexArrayObject);
-			
-			glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
+				MeshDrawData* draw = meshManager->GetDrawData(lightingData.dirMesh);
+				glBindVertexArray(draw->vertexArrayObject);
+
+				glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
+			}
 		}
 	}
 
 	glBindVertexArray(0);
 
-	this->commands.Clear();
+	commandList.Clear();
 }
 
 bool Renderer::ParseControlCommand(uint64_t orderKey)
 {
-	using namespace RenderOrder;
-
-	if (renderOrder.command.GetValue(orderKey) == Command_Draw)
+	if (renderOrder.command.GetValue(orderKey) == static_cast<uint64_t>(RenderCommandType::Draw))
 		return false;
 
 	uint64_t commandTypeInt = renderOrder.commandType.GetValue(orderKey);
-	ControlCommandType command = static_cast<ControlCommandType>(commandTypeInt);
+	RenderControlType control = static_cast<RenderControlType>(commandTypeInt);
 
-	switch (command)
+	switch (control)
 	{
-		case Control_BlendingEnable:
+		case RenderControlType::BlendingEnable:
 			RenderPipeline::BlendingEnable();
 			break;
 
-		case Control_BlendingDisable:
+		case RenderControlType::BlendingDisable:
 			RenderPipeline::BlendingDisable();
 			break;
 
-		case Control_DepthTestEnable:
+		case RenderControlType::DepthTestEnable:
 			RenderPipeline::DepthTestEnable();
 			break;
 
-		case Control_DepthTestDisable:
+		case RenderControlType::DepthTestDisable:
 			RenderPipeline::DepthTestDisable();
 			break;
 
-		case Control_DepthTestFunction:
+		case RenderControlType::DepthTestFunction:
 		{
 			unsigned int fn = renderOrder.commandData.GetValue(orderKey);
 			RenderPipeline::DepthTestFunction(fn);
 		}
 			break;
 
-		case Control_DepthWriteEnable:
+		case RenderControlType::DepthWriteEnable:
 			RenderPipeline::DepthWriteEnable();
 			break;
 
-		case Control_DepthWriteDisable:
+		case RenderControlType::DepthWriteDisable:
 			RenderPipeline::DepthWriteDisable();
 			break;
 
-		case Control_CullFaceEnable:
+		case RenderControlType::CullFaceEnable:
 			RenderPipeline::CullFaceEnable();
 			break;
 
-		case Control_CullFaceDisable:
+		case RenderControlType::CullFaceDisable:
 			RenderPipeline::CullFaceDisable();
 			break;
 
-		case Control_CullFaceFront:
+		case RenderControlType::CullFaceFront:
 			RenderPipeline::CullFaceFront();
 			break;
 
-		case Control_CullFaceBack:
+		case RenderControlType::CullFaceBack:
 			RenderPipeline::CullFaceBack();
+			break;
+
+		case RenderControlType::Clear:
+		{
+			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint8_t* data = commandList.commandData.GetData() + offset;
+			auto* clear = reinterpret_cast<RenderCommandData::ClearData*>(data);
+			RenderPipeline::Clear(clear);
+		}
+			break;
+
+		case RenderControlType::BindFramebuffer:
+		{
+			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint8_t* data = commandList.commandData.GetData() + offset;
+			auto* bind = reinterpret_cast<RenderCommandData::BindFramebufferData*>(data);
+			RenderPipeline::BindFramebuffer(bind);
+		}
+			break;
+			
+		case RenderControlType::BlitFramebuffer:
+		{
+			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint8_t* data = commandList.commandData.GetData() + offset;
+			auto* blit = reinterpret_cast<RenderCommandData::BlitFramebufferData*>(data);
+			RenderPipeline::BlitFramebuffer(blit);
+		}
 			break;
 	}
 
@@ -273,7 +445,9 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 void Renderer::CreateDrawCalls(Scene* scene)
 {
-	using namespace RenderOrder;
+	using ctrl = RenderControlType;
+
+	Vec2i s = gbuffer.framebufferSize;
 
 	Camera* renderCamera = this->GetRenderCamera(scene);
 
@@ -285,59 +459,155 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	
 	float farPlane = renderCamera->farClipDistance;
 
+	RenderCommandSlot s_o_slot(SceneLayer::Skybox, RenderPass::OpaqueGeometry);
+	RenderCommandSlot s_t_slot(SceneLayer::Skybox, RenderPass::Transparent);
+	RenderCommandSlot w_o_slot(SceneLayer::World, RenderPass::OpaqueGeometry);
+	RenderCommandSlot w_l_slot(SceneLayer::World, RenderPass::OpaqueLighting);
+	RenderCommandSlot w_t_slot(SceneLayer::World, RenderPass::Transparent);
+
 	// Before everything
 
+	// Enable depth writing
+	commandList.AddControl(s_o_slot, 0, ctrl::DepthWriteEnable);
+
 	// Set depth test on
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::Skybox, TransparencyType::Opaque, Control_DepthTestEnable, 0));
+	commandList.AddControl(s_o_slot, 1, ctrl::DepthTestEnable);
 
 	// Set depth test function
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::Skybox, TransparencyType::Opaque, Control_DepthTestFunction, 1, GL_LESS));
+	commandList.AddControl(s_o_slot, 2, ctrl::DepthTestFunction, GL_LESS);
 
 	// Set face culling on
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::Skybox, TransparencyType::Opaque, Control_CullFaceEnable, 2));
+	commandList.AddControl(s_o_slot, 3, ctrl::CullFaceEnable);
 
 	// Set face culling to cull back faces
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::Skybox, TransparencyType::Opaque, Control_CullFaceBack, 3));
+	commandList.AddControl(s_o_slot, 4, ctrl::CullFaceBack);
 
 	// Before opaque objects in skybox layer
 
+	{
+		// Bind default framebuffer
+		RenderCommandData::BindFramebufferData data;
+		data.target = GL_FRAMEBUFFER;
+		data.framebuffer = 0;
+
+		commandList.AddControl(s_o_slot, 5, ctrl::BindFramebuffer, sizeof(data), &data);
+	}
+
 	// Disable depth writing
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::Skybox, TransparencyType::Opaque, Control_DepthWriteDisable, 4));
+	commandList.AddControl(s_o_slot, 6, ctrl::DepthWriteDisable);
 
 	// Disable blending
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::Skybox, TransparencyType::Opaque, Control_BlendingDisable, 5));
+	commandList.AddControl(s_o_slot, 7, ctrl::BlendingDisable);
 
 	// Before transparent objects in skybox layer
 
 	// Enable blending
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::Skybox, TransparencyType::TransparentMix, Control_BlendingEnable));
+	commandList.AddControl(s_t_slot, 0, ctrl::BlendingEnable);
 
-	// Before opaque objects in world layer
+	// PASS: OPAQUE GEOMETRY
 
 	// Enable depth writing
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::World, TransparencyType::Opaque, Control_DepthWriteEnable));
+	commandList.AddControl(w_o_slot, 0, ctrl::DepthWriteEnable);
 
 	// Disable blending
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::World, TransparencyType::Opaque, Control_BlendingDisable));
+	commandList.AddControl(w_o_slot, 1, ctrl::BlendingDisable);
+
+	{
+		// Bind geometry framebuffer
+		RenderCommandData::BindFramebufferData data;
+		data.target = GL_FRAMEBUFFER;
+		data.framebuffer = gbuffer.framebuffer;
+
+		commandList.AddControl(w_o_slot, 2, ctrl::BindFramebuffer, sizeof(data), &data);
+	}
+
+	{
+		// Clear currently bound GL_FRAMEBUFFER
+		RenderCommandData::ClearData data;
+		data.r = 0.0f;
+		data.g = 0.0f;
+		data.b = 0.0f;
+		data.a = 1.0f;
+		data.mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+
+		commandList.AddControl(w_o_slot, 3, ctrl::Clear, sizeof(data), &data);
+	}
+
+	// PASS: OPAQUE LIGHTING
+
+	{
+		// Bind default framebuffer
+		RenderCommandData::BindFramebufferData data;
+		data.target = GL_FRAMEBUFFER;
+		data.framebuffer = 0;
+
+		commandList.AddControl(w_l_slot, 0, ctrl::BindFramebuffer, sizeof(data), &data);
+	}
+
+	{
+		// Clear currently bound framebuffer
+		RenderCommandData::ClearData data;
+		data.r = 0.0f;
+		data.g = 0.0f;
+		data.b = 0.0f;
+		data.a = 1.0f;
+		data.mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+
+		commandList.AddControl(w_l_slot, 1, ctrl::Clear, sizeof(data), &data);
+	}
+
+	// Do lighting
+	commandList.AddDraw(w_l_slot, 0.0f, MaterialId{}, 0);
+
+	// PASS: TRANSPARENT
+
+	// Copy depth buffer
+
+	{
+		// Bind geometry framebuffer for reading
+		RenderCommandData::BindFramebufferData data;
+		data.target = GL_READ_FRAMEBUFFER;
+		data.framebuffer = gbuffer.framebuffer;
+
+		commandList.AddControl(w_t_slot, 0, ctrl::BindFramebuffer, sizeof(data), &data);
+	}
+
+	{
+		// Bind default framebuffer for writing
+		RenderCommandData::BindFramebufferData data;
+		data.target = GL_DRAW_FRAMEBUFFER;
+		data.framebuffer = 0;
+
+		commandList.AddControl(w_t_slot, 1, ctrl::BindFramebuffer, sizeof(data), &data);
+	}
+
+	{
+		// Blit framebuffer depth from GL_READ_FRAMEBUFFER to GL_DRAW_FRAMEBUFFER
+		RenderCommandData::BlitFramebufferData data;
+
+		data.srcLeft = 0;
+		data.srcTop = 0;
+		data.srcWidth = s.x;
+		data.srcHeight = s.y;
+
+		data.dstLeft = 0;
+		data.dstTop = 0;
+		data.dstWidth = s.x;
+		data.dstHeight = s.y;
+
+		data.mask = GL_DEPTH_BUFFER_BIT;
+		data.filter = GL_NEAREST;
+
+		commandList.AddControl(w_t_slot, 2, ctrl::BlitFramebuffer, sizeof(data), &data);
+	}
 
 	// Before transparent objects in world layer
 
 	// Disable depth writing
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::World, TransparencyType::TransparentMix, Control_DepthWriteDisable));
+	commandList.AddControl(w_t_slot, 3, ctrl::DepthWriteDisable);
 
 	// Enable blending
-	commands.PushBack(renderOrder.Control(
-		SceneLayer::World, TransparencyType::TransparentMix, Control_BlendingEnable));
+	commandList.AddControl(w_t_slot, 4, ctrl::BlendingEnable);
 
 	// Create draw commands for render objects in scene
 	for (unsigned i = 1; i < data.count; ++i)
@@ -351,11 +621,12 @@ void Renderer::CreateDrawCalls(Scene* scene)
 
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
 
-			uint64_t c = renderOrder.Draw(o.layer, o.transparency, depth, o.material, i);
-
-			commands.PushBack(c);
+			RenderCommandSlot slot(o.layer, o.transparency);
+			commandList.AddDraw(slot, depth, o.material, i);
 		}
 	}
+
+	commandList.Sort();
 }
 
 void Renderer::Reallocate(unsigned int required)
