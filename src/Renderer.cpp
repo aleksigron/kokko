@@ -59,16 +59,8 @@ void Renderer::Initialize(Window* window)
 	glGenFramebuffers(1, &gbuffer.framebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, gbuffer.framebuffer);
 
-	glGenTextures(3, gbuffer.textures);
-	unsigned int colAtt[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-
-	// Position buffer
-	unsigned int posTexture = gbuffer.textures[GBufferData::Position];
-	glBindTexture(GL_TEXTURE_2D, posTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, s.x, s.y, 0, GL_RGB, GL_FLOAT, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[0], GL_TEXTURE_2D, posTexture, 0);
+	glGenTextures(2, gbuffer.textures);
+	unsigned int colAtt[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 
 	// Normal buffer
 	unsigned int norTexture = gbuffer.textures[GBufferData::Normal];
@@ -76,7 +68,7 @@ void Renderer::Initialize(Window* window)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, s.x, s.y, 0, GL_RGB, GL_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[1], GL_TEXTURE_2D, norTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[0], GL_TEXTURE_2D, norTexture, 0);
 
 	// Albedo color + specular buffer
 	unsigned int asTexture = gbuffer.textures[GBufferData::AlbedoSpec];
@@ -84,10 +76,10 @@ void Renderer::Initialize(Window* window)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, s.x, s.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[2], GL_TEXTURE_2D, asTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[1], GL_TEXTURE_2D, asTexture, 0);
 
 	// Which color attachments we'll use for rendering
-	glDrawBuffers(3, colAtt);
+	glDrawBuffers(2, colAtt);
 
 	// Create and attach depth buffer
 
@@ -321,7 +313,6 @@ void Renderer::Render(Scene* scene)
 
 				const unsigned int shaderId = shader->driverId;
 
-				unsigned int posLoc = glGetUniformLocation(shaderId, "g_pos");
 				unsigned int normLoc = glGetUniformLocation(shaderId, "g_norm");
 				unsigned int albSpecLoc = glGetUniformLocation(shaderId, "g_alb_spec");
 				unsigned int invLightDirLoc = glGetUniformLocation(shaderId, "invLightDir");
@@ -329,17 +320,19 @@ void Renderer::Render(Scene* scene)
 
 				glUseProgram(shaderId);
 
-				glUniform1i(posLoc, 0);
-				glUniform1i(normLoc, 1);
-				glUniform1i(albSpecLoc, 2);
-				glUniform3f(invLightDirLoc, 0.577f, 0.577f, 0.577f); // Set inverse light direction
+				glUniform1i(normLoc, 0);
+				glUniform1i(albSpecLoc, 1);
+
+				Vec3f wInvLightDir = Vec3f(0.5f, 1.5f, 0.8f).GetNormalized();
+				Vec3f lightDir = (viewMatrix * Vec4f(wInvLightDir, 0.0f)).xyz();
+
+				// Set view-space inverse light direction
+				glUniform3f(invLightDirLoc, lightDir.x, lightDir.y, lightDir.z);
 				glUniform3f(lightColLoc, 1.0f, 1.0f, 1.0f); // Set light color
 
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::Position]);
-				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::Normal]);
-				glActiveTexture(GL_TEXTURE2);
+				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::AlbedoSpec]);
 
 				MeshDrawData* draw = meshManager->GetDrawData(lightingData.dirMesh);
