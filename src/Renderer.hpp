@@ -48,11 +48,10 @@ private:
 
 	struct GBufferData
 	{
-		enum { Normal = 0, AlbedoSpec = 1 };
+		enum { Normal = 0, AlbedoSpec = 1, Depth = 2 };
 
 		unsigned int framebuffer;
-		unsigned int depthRenderbuffer;
-		unsigned int textures[2];
+		unsigned int textures[3];
 
 		Vec2i framebufferSize;
 	}

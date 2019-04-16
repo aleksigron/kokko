@@ -11,4 +11,4 @@ void main()
 {
     g_norm = normalize(fs_v_norm);
     g_alb_spec = vec4(base_color, 0.5);
-}  
+}

@@ -59,7 +59,7 @@ void Renderer::Initialize(Window* window)
 	glGenFramebuffers(1, &gbuffer.framebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, gbuffer.framebuffer);
 
-	glGenTextures(2, gbuffer.textures);
+	glGenTextures(3, gbuffer.textures);
 	unsigned int colAtt[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 
 	// Normal buffer
@@ -82,11 +82,14 @@ void Renderer::Initialize(Window* window)
 	glDrawBuffers(2, colAtt);
 
 	// Create and attach depth buffer
+	unsigned int depthTexture = gbuffer.textures[GBufferData::Depth];
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s.x, s.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 
-	glGenRenderbuffers(1, &gbuffer.depthRenderbuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, gbuffer.depthRenderbuffer);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, s.x, s.y);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, gbuffer.depthRenderbuffer);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Finally check if framebuffer is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -140,8 +143,7 @@ void Renderer::Deinitialize()
 
 	if (gbuffer.framebuffer != 0)
 	{
-		glDeleteTextures(3, gbuffer.textures);
-		glDeleteRenderbuffers(1, &gbuffer.depthRenderbuffer);
+		glDeleteTextures(sizeof(gbuffer.textures) / sizeof(unsigned int), gbuffer.textures);
 		glDeleteFramebuffers(1, &gbuffer.framebuffer);
 	}
 }
@@ -311,29 +313,46 @@ void Renderer::Render(Scene* scene)
 				ResourceManager* resManager = Engine::GetInstance()->GetResourceManager();
 				Shader* shader = resManager->GetShader(lightingData.dirShaderHash);
 
+				Vec2f halfNearPlane;
+				halfNearPlane.y = std::tan(renderCamera->perspectiveFieldOfView * 0.5f);
+				halfNearPlane.x = halfNearPlane.y * renderCamera->aspectRatio;
+
 				const unsigned int shaderId = shader->driverId;
 
-				unsigned int normLoc = glGetUniformLocation(shaderId, "g_norm");
-				unsigned int albSpecLoc = glGetUniformLocation(shaderId, "g_alb_spec");
-				unsigned int invLightDirLoc = glGetUniformLocation(shaderId, "invLightDir");
-				unsigned int lightColLoc = glGetUniformLocation(shaderId, "lightCol");
+				int normLoc = glGetUniformLocation(shaderId, "g_norm");
+				int albSpecLoc = glGetUniformLocation(shaderId, "g_alb_spec");
+				int depthLoc = glGetUniformLocation(shaderId, "g_depth");
+
+				int halfNearPlaneLoc = glGetUniformLocation(shaderId, "half_near_plane");
+				int persMatLoc = glGetUniformLocation(shaderId, "pers_mat");
+
+				int invLightDirLoc = glGetUniformLocation(shaderId, "light.inverse_dir");
+				int lightColLoc = glGetUniformLocation(shaderId, "light.color");
 
 				glUseProgram(shaderId);
 
 				glUniform1i(normLoc, 0);
 				glUniform1i(albSpecLoc, 1);
+				glUniform1i(depthLoc, 2);
 
 				Vec3f wInvLightDir = Vec3f(0.5f, 1.5f, 0.8f).GetNormalized();
-				Vec3f lightDir = (viewMatrix * Vec4f(wInvLightDir, 0.0f)).xyz();
+				Vec3f viewDir = (viewMatrix * Vec4f(wInvLightDir, 0.0f)).xyz();
 
-				// Set view-space inverse light direction
-				glUniform3f(invLightDirLoc, lightDir.x, lightDir.y, lightDir.z);
-				glUniform3f(lightColLoc, 1.0f, 1.0f, 1.0f); // Set light color
+				// Set light properties
+				glUniform3f(invLightDirLoc, viewDir.x, viewDir.y, viewDir.z);
+				glUniform3f(lightColLoc, 1.0f, 1.0f, 1.0f);
+
+				glUniform2f(halfNearPlaneLoc, halfNearPlane.x, halfNearPlane.y);
+
+				// Set the perspective matrix
+				glUniformMatrix4fv(persMatLoc, 1, GL_FALSE, projMatrix.ValuePointer());
 
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::Normal]);
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::AlbedoSpec]);
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::Depth]);
 
 				MeshDrawData* draw = meshManager->GetDrawData(lightingData.dirMesh);
 				glBindVertexArray(draw->vertexArrayObject);
@@ -562,46 +581,6 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	commandList.AddDraw(w_l_slot, 0.0f, MaterialId{}, 0);
 
 	// PASS: TRANSPARENT
-
-	// Copy depth buffer
-
-	{
-		// Bind geometry framebuffer for reading
-		RenderCommandData::BindFramebufferData data;
-		data.target = GL_READ_FRAMEBUFFER;
-		data.framebuffer = gbuffer.framebuffer;
-
-		commandList.AddControl(w_t_slot, 0, ctrl::BindFramebuffer, sizeof(data), &data);
-	}
-
-	{
-		// Bind default framebuffer for writing
-		RenderCommandData::BindFramebufferData data;
-		data.target = GL_DRAW_FRAMEBUFFER;
-		data.framebuffer = 0;
-
-		commandList.AddControl(w_t_slot, 1, ctrl::BindFramebuffer, sizeof(data), &data);
-	}
-
-	{
-		// Blit framebuffer depth from GL_READ_FRAMEBUFFER to GL_DRAW_FRAMEBUFFER
-		RenderCommandData::BlitFramebufferData data;
-
-		data.srcLeft = 0;
-		data.srcTop = 0;
-		data.srcWidth = s.x;
-		data.srcHeight = s.y;
-
-		data.dstLeft = 0;
-		data.dstTop = 0;
-		data.dstWidth = s.x;
-		data.dstHeight = s.y;
-
-		data.mask = GL_DEPTH_BUFFER_BIT;
-		data.filter = GL_NEAREST;
-
-		commandList.AddControl(w_t_slot, 2, ctrl::BlitFramebuffer, sizeof(data), &data);
-	}
 
 	// Before transparent objects in world layer
 
