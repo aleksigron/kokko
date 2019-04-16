@@ -6,6 +6,7 @@
 namespace RenderCommandData
 {
 	struct ClearData;
+	struct DepthRangeData;
 	struct BindFramebufferData;
 	struct BlitFramebufferData;
 }
@@ -17,6 +18,8 @@ namespace RenderPipeline
 
 	void BlendingEnable();
 	void BlendingDisable();
+
+	void DepthRange(const RenderCommandData::DepthRangeData* data);
 
 	void DepthTestEnable();
 	void DepthTestDisable();

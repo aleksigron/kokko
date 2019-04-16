@@ -11,6 +11,12 @@ namespace RenderCommandData
 		unsigned int mask;
 	};
 
+	struct DepthRangeData
+	{
+		float near;
+		float far;
+	};
+
 	struct BindFramebufferData
 	{
 		unsigned int target;

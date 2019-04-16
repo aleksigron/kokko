@@ -32,6 +32,11 @@ void RenderPipeline::BlendingDisable()
 	glDisable(GL_BLEND);
 }
 
+void RenderPipeline::DepthRange(const RenderCommandData::DepthRangeData* data)
+{
+	glDepthRange(data->near, data->far);
+}
+
 void RenderPipeline::DepthTestEnable()
 {
 	glEnable(GL_DEPTH_TEST);

@@ -366,6 +366,15 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 			RenderPipeline::BlendingDisable();
 			break;
 
+		case RenderControlType::DepthRange:
+		{
+			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint8_t* data = commandList.commandData.GetData() + offset;
+			auto* depthRange = reinterpret_cast<RenderCommandData::DepthRangeData*>(data);
+			RenderPipeline::DepthRange(depthRange);
+		}
+			break;
+
 		case RenderControlType::DepthTestEnable:
 			RenderPipeline::DepthTestEnable();
 			break;

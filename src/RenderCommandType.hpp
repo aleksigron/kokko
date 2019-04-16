@@ -18,6 +18,8 @@ enum class RenderControlType
 	BlendingEnable,
 	BlendingDisable,
 
+	DepthRange, // Data: near, far
+
 	DepthTestEnable,
 	DepthTestDisable,
 	DepthTestFunction, // Data: function enum
