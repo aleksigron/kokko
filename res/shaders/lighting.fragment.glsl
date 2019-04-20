@@ -35,14 +35,16 @@ void main()
 	// Diffuse lighting
 
     vec3 alb = albSpec.rgb;
-	vec3 diffuse = max(dot(norm, light.inverse_dir), 0.0) * alb * light.color;
+	float normDotLightDir = max(dot(norm, light.inverse_dir), 0.0);
+	vec3 diffuse = normDotLightDir * alb * light.color;
 
 	// Specular lighting
 
-	vec3 vert_to_eye = normalize(-pos);
-	vec3 refl = normalize(reflect(light.inverse_dir, norm));
+	vec3 eyeDir = normalize(-pos);
+	vec3 refl = reflect(light.inverse_dir, norm);
+	float eyeDirDotRefl = max(dot(eyeDir, refl), 0.0);
 	float spec_power = 40;
-	float spec_factor = pow(dot(vert_to_eye, refl), spec_power);
+	float spec_factor = pow(eyeDirDotRefl, spec_power);
 	float spec_int = albSpec.a;
 
 	vec3 spec = light.color * spec_int * spec_factor;
