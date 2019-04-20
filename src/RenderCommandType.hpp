@@ -4,6 +4,7 @@ enum class RenderPass
 {
 	OpaqueGeometry = 0, // Opaque + AlphaTest
 	OpaqueLighting = 2,
+	Skybox = 3,
 	Transparent = 4 // TransparentMix + TransparentAdd + TransparentSub
 };
 
@@ -32,7 +33,9 @@ enum class RenderControlType
 	CullFaceFront,
 	CullFaceBack,
 
-	Clear, // Data: r, g, b, a, mask
+	Clear, // Data: mask
+	ClearColor, // Data: r, g, b, a
+	ClearDepth, // Data: depth
 
 	// Data: target, framebuffer ID
 	BindFramebuffer,

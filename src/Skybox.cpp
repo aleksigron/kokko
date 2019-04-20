@@ -81,7 +81,6 @@ void Skybox::Initialize(Scene* scene, MaterialId materialId)
 	RenderOrderData order;
 	order.material = materialId;
 	order.transparency = materialManager->GetTransparency(materialId);
-	order.layer = SceneLayer::Skybox;
 	renderer->SetOrderData(renderObjectId, order);
 }
 

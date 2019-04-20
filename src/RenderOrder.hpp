@@ -9,8 +9,7 @@ struct RenderOrderConfiguration
 	RenderOrderConfiguration()
 	{
 		viewportIndex.SetDefinition(3, sizeof(uint64_t) * 8);
-		viewportLayer.SetDefinition(3, viewportIndex.shift);
-		viewportPass.SetDefinition(3, viewportLayer.shift);
+		viewportPass.SetDefinition(3, viewportIndex.shift);
 		command.SetDefinition(1, viewportPass.shift);
 
 		// DRAW COMMANDS
@@ -47,7 +46,6 @@ struct RenderOrderConfiguration
 	}
 
 	BitfieldVariable<uint64_t> viewportIndex;
-	BitfieldVariable<uint64_t> viewportLayer;
 	BitfieldVariable<uint64_t> viewportPass;
 	BitfieldVariable<uint64_t> command;
 	BitfieldVariable<uint64_t> transparentDepth;

@@ -78,6 +78,10 @@ bool Shader::LoadFromConfiguration(BufferRef<char> configuration)
 				this->transparencyType = TransparencyType::AlphaTest;
 				break;
 
+			case "skybox"_hash:
+				this->transparencyType = TransparencyType::Skybox;
+				break;
+
 			case "transparentMix"_hash:
 				this->transparencyType = TransparencyType::TransparentMix;
 				break;

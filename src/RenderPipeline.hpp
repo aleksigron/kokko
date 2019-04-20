@@ -5,7 +5,7 @@
 
 namespace RenderCommandData
 {
-	struct ClearData;
+	struct ClearColorData;
 	struct DepthRangeData;
 	struct BindFramebufferData;
 	struct BlitFramebufferData;
@@ -13,8 +13,9 @@ namespace RenderCommandData
 
 namespace RenderPipeline
 {
-	void Clear(const RenderCommandData::ClearData* data);
-	void ClearColorAndDepth(const Color& color);
+	void Clear(unsigned int mask);
+	void ClearColor(const RenderCommandData::ClearColorData* data);
+	void ClearDepth(float depth);
 
 	void BlendingEnable();
 	void BlendingDisable();

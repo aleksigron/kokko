@@ -435,10 +435,25 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::Clear:
 		{
+			unsigned int mask = renderOrder.commandData.GetValue(orderKey);
+			RenderPipeline::Clear(mask);
+		}
+			break;
+
+		case RenderControlType::ClearColor:
+		{
 			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
-			auto* clear = reinterpret_cast<RenderCommandData::ClearData*>(data);
-			RenderPipeline::Clear(clear);
+			auto* color = reinterpret_cast<RenderCommandData::ClearColorData*>(data);
+			RenderPipeline::ClearColor(color);
+		}
+			break;
+
+		case RenderControlType::ClearDepth:
+		{
+			unsigned int intDepth = renderOrder.commandData.GetValue(orderKey);
+			float depth = *reinterpret_cast<float*>(&intDepth);
+			RenderPipeline::ClearDepth(depth);
 		}
 			break;
 
@@ -468,8 +483,6 @@ void Renderer::CreateDrawCalls(Scene* scene)
 {
 	using ctrl = RenderControlType;
 
-	Vec2i s = gbuffer.framebufferSize;
-
 	Camera* renderCamera = this->GetRenderCamera(scene);
 
 	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
@@ -480,58 +493,53 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	
 	float farPlane = renderCamera->farClipDistance;
 
-	RenderCommandSlot s_o_slot(SceneLayer::Skybox, RenderPass::OpaqueGeometry);
-	RenderCommandSlot s_t_slot(SceneLayer::Skybox, RenderPass::Transparent);
-	RenderCommandSlot w_o_slot(SceneLayer::World, RenderPass::OpaqueGeometry);
-	RenderCommandSlot w_l_slot(SceneLayer::World, RenderPass::OpaqueLighting);
-	RenderCommandSlot w_t_slot(SceneLayer::World, RenderPass::Transparent);
+	unsigned int colorAndDepthMask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+
+	RenderPass g_pass = RenderPass::OpaqueGeometry;
+	RenderPass l_pass = RenderPass::OpaqueLighting;
+	RenderPass s_pass = RenderPass::Skybox;
+	RenderPass t_pass = RenderPass::Transparent;
 
 	// Before everything
 
-	// Enable depth writing
-	commandList.AddControl(s_o_slot, 0, ctrl::DepthWriteEnable);
-
 	// Set depth test on
-	commandList.AddControl(s_o_slot, 1, ctrl::DepthTestEnable);
+	commandList.AddControl(g_pass, 0, ctrl::DepthTestEnable);
 
 	// Set depth test function
-	commandList.AddControl(s_o_slot, 2, ctrl::DepthTestFunction, GL_LESS);
+	commandList.AddControl(g_pass, 1, ctrl::DepthTestFunction, GL_LESS);
+
+	// Enable depth writing
+	commandList.AddControl(g_pass, 2, ctrl::DepthWriteEnable);
 
 	// Set face culling on
-	commandList.AddControl(s_o_slot, 3, ctrl::CullFaceEnable);
+	commandList.AddControl(g_pass, 3, ctrl::CullFaceEnable);
 
 	// Set face culling to cull back faces
-	commandList.AddControl(s_o_slot, 4, ctrl::CullFaceBack);
-
-	// Before opaque objects in skybox layer
+	commandList.AddControl(g_pass, 4, ctrl::CullFaceBack);
 
 	{
-		// Bind default framebuffer
-		RenderCommandData::BindFramebufferData data;
-		data.target = GL_FRAMEBUFFER;
-		data.framebuffer = 0;
+		// Set clear color
+		RenderCommandData::ClearColorData data;
+		data.r = 0.0f;
+		data.g = 0.0f;
+		data.b = 0.0f;
+		data.a = 0.0f;
 
-		commandList.AddControl(s_o_slot, 5, ctrl::BindFramebuffer, sizeof(data), &data);
+		commandList.AddControl(g_pass, 5, ctrl::ClearColor, sizeof(data), &data);
 	}
 
-	// Disable depth writing
-	commandList.AddControl(s_o_slot, 6, ctrl::DepthWriteDisable);
+	{
+		// Set clear depth
+		float depth = 1.0f;
+		unsigned int* intDepthPtr = reinterpret_cast<unsigned int*>(&depth);
 
-	// Disable blending
-	commandList.AddControl(s_o_slot, 7, ctrl::BlendingDisable);
-
-	// Before transparent objects in skybox layer
-
-	// Enable blending
-	commandList.AddControl(s_t_slot, 0, ctrl::BlendingEnable);
+		commandList.AddControl(g_pass, 6, ctrl::ClearDepth, *intDepthPtr);
+	}
 
 	// PASS: OPAQUE GEOMETRY
 
-	// Enable depth writing
-	commandList.AddControl(w_o_slot, 0, ctrl::DepthWriteEnable);
-
 	// Disable blending
-	commandList.AddControl(w_o_slot, 1, ctrl::BlendingDisable);
+	commandList.AddControl(g_pass, 7, ctrl::BlendingDisable);
 
 	{
 		// Bind geometry framebuffer
@@ -539,20 +547,11 @@ void Renderer::CreateDrawCalls(Scene* scene)
 		data.target = GL_FRAMEBUFFER;
 		data.framebuffer = gbuffer.framebuffer;
 
-		commandList.AddControl(w_o_slot, 2, ctrl::BindFramebuffer, sizeof(data), &data);
+		commandList.AddControl(g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
 	}
 
-	{
-		// Clear currently bound GL_FRAMEBUFFER
-		RenderCommandData::ClearData data;
-		data.r = 0.0f;
-		data.g = 0.0f;
-		data.b = 0.0f;
-		data.a = 1.0f;
-		data.mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
-
-		commandList.AddControl(w_o_slot, 3, ctrl::Clear, sizeof(data), &data);
-	}
+	// Clear currently bound GL_FRAMEBUFFER
+	commandList.AddControl(g_pass, 9, ctrl::Clear, colorAndDepthMask);
 
 	// PASS: OPAQUE LIGHTING
 
@@ -562,33 +561,32 @@ void Renderer::CreateDrawCalls(Scene* scene)
 		data.target = GL_FRAMEBUFFER;
 		data.framebuffer = 0;
 
-		commandList.AddControl(w_l_slot, 0, ctrl::BindFramebuffer, sizeof(data), &data);
+		commandList.AddControl(l_pass, 0, ctrl::BindFramebuffer, sizeof(data), &data);
 	}
 
-	{
-		// Clear currently bound framebuffer
-		RenderCommandData::ClearData data;
-		data.r = 0.0f;
-		data.g = 0.0f;
-		data.b = 0.0f;
-		data.a = 1.0f;
-		data.mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+	// Clear currently bound GL_FRAMEBUFFER
+	commandList.AddControl(l_pass, 1, ctrl::Clear, colorAndDepthMask);
 
-		commandList.AddControl(w_l_slot, 1, ctrl::Clear, sizeof(data), &data);
-	}
+	commandList.AddControl(l_pass, 2, ctrl::DepthTestFunction, GL_ALWAYS);
 
 	// Do lighting
-	commandList.AddDraw(w_l_slot, 0.0f, MaterialId{}, 0);
+	commandList.AddDraw(l_pass, 0.0f, MaterialId{}, 0);
+
+	// PASS: SKYBOX
+
+	commandList.AddControl(s_pass, 0, ctrl::DepthTestFunction, GL_EQUAL);
+
+	// Disable depth writing
+	commandList.AddControl(s_pass, 1, ctrl::DepthWriteDisable);
 
 	// PASS: TRANSPARENT
 
-	// Before transparent objects in world layer
+	// Before transparent objects
 
-	// Disable depth writing
-	commandList.AddControl(w_t_slot, 3, ctrl::DepthWriteDisable);
+	commandList.AddControl(t_pass, 0, ctrl::DepthTestFunction, GL_LESS);
 
 	// Enable blending
-	commandList.AddControl(w_t_slot, 4, ctrl::BlendingEnable);
+	commandList.AddControl(t_pass, 1, ctrl::BlendingEnable);
 
 	// Create draw commands for render objects in scene
 	for (unsigned i = 1; i < data.count; ++i)
@@ -602,8 +600,8 @@ void Renderer::CreateDrawCalls(Scene* scene)
 
 			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
 
-			RenderCommandSlot slot(o.layer, o.transparency);
-			commandList.AddDraw(slot, depth, o.material, i);
+			RenderPass pass = static_cast<RenderPass>(o.transparency);
+			commandList.AddDraw(pass, depth, o.material, i);
 		}
 	}
 

@@ -2,13 +2,12 @@
 
 namespace RenderCommandData
 {
-	struct ClearData
+	struct ClearColorData
 	{
 		float r;
 		float g;
 		float b;
 		float a;
-		unsigned int mask;
 	};
 
 	struct DepthRangeData

@@ -3,7 +3,7 @@
 #include "Sort.hpp"
 
 void RenderCommandList::AddControl(
-	RenderCommandSlot slot,
+	RenderPass pass,
 	unsigned int order,
 	RenderControlType type,
 	unsigned int data)
@@ -11,8 +11,7 @@ void RenderCommandList::AddControl(
 	uint64_t c = 0;
 
 	renderOrder.viewportIndex.AssignValue(c, 0);
-	renderOrder.viewportLayer.AssignValue(c, static_cast<uint64_t>(slot.layer));
-	renderOrder.viewportPass.AssignValue(c, slot.pass);
+	renderOrder.viewportPass.AssignValue(c, static_cast<uint64_t>(pass));
 	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Control));
 	renderOrder.commandOrder.AssignValue(c, order);
 	renderOrder.commandType.AssignValue(c, static_cast<uint64_t>(type));
@@ -22,7 +21,7 @@ void RenderCommandList::AddControl(
 }
 
 void RenderCommandList::AddControl(
-	RenderCommandSlot slot,
+	RenderPass pass,
 	unsigned int order,
 	RenderControlType type,
 	unsigned int byteCount,
@@ -31,8 +30,7 @@ void RenderCommandList::AddControl(
 	uint64_t c = 0;
 
 	renderOrder.viewportIndex.AssignValue(c, 0);
-	renderOrder.viewportLayer.AssignValue(c, static_cast<uint64_t>(slot.layer));
-	renderOrder.viewportPass.AssignValue(c, slot.pass);
+	renderOrder.viewportPass.AssignValue(c, static_cast<uint64_t>(pass));
 	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Control));
 	renderOrder.commandOrder.AssignValue(c, order);
 	renderOrder.commandType.AssignValue(c, static_cast<uint64_t>(type));
@@ -48,21 +46,22 @@ void RenderCommandList::AddControl(
 }
 
 void RenderCommandList::AddDraw(
-	RenderCommandSlot slot,
+	RenderPass pass,
 	float depth,
 	MaterialId material,
 	unsigned int renderObjectId)
 {
 	depth = (depth > 1.0f ? 1.0f : (depth < 0.0f ? 0.0f : depth));
 
+	uint64_t intpass = static_cast<uint64_t>(pass);
+
 	uint64_t c = 0;
 
 	renderOrder.viewportIndex.AssignValue(c, 0);
-	renderOrder.viewportLayer.AssignValue(c, static_cast<uint64_t>(slot.layer));
-	renderOrder.viewportPass.AssignValue(c, slot.pass);
+	renderOrder.viewportPass.AssignValue(c, intpass);
 	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Draw));
 
-	if ((0xfc & slot.pass) != 0) // Is greater than 0x03; must be transparent
+	if ((0xfc & intpass) != 0) // Is greater than 0x03; must be transparent
 	{
 		uint64_t intDepth(renderOrder.maxTransparentDepth * (1.0f - depth));
 		renderOrder.transparentDepth.AssignValue(c, intDepth);

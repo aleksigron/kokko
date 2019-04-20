@@ -56,4 +56,5 @@ void main()
 
     //color = vec3(pos * 0.1 + vec3(0.5));
 	//color = vec3(norm * 0.5 + vec3(0.5));
-}  
+	//color = vec3(window_z);
+}

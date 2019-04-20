@@ -30,7 +30,6 @@ struct RenderOrderData
 {
 	MaterialId material;
 	TransparencyType transparency;
-	SceneLayer layer;
 };
 
 class Renderer

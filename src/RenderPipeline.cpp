@@ -4,22 +4,19 @@
 
 #include "RenderCommandData.hpp"
 
-void RenderPipeline::Clear(const RenderCommandData::ClearData* data)
+void RenderPipeline::Clear(unsigned int mask)
 {
-	glClearColor(data->r, data->g, data->b, data->a);
-	glClear(data->mask);
+	glClear(mask);
 }
 
-void RenderPipeline::ClearColorAndDepth(const Color& color)
+void RenderPipeline::ClearColor(const RenderCommandData::ClearColorData* data)
 {
-	RenderCommandData::ClearData data;
-	data.r = color.r;
-	data.g = color.g;
-	data.b = color.b;
-	data.a = color.a;
-	data.mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+	glClearColor(data->r, data->g, data->b, data->a);
+}
 
-	Clear(&data);
+void RenderPipeline::ClearDepth(float depth)
+{
+	glClearDepth(depth);
 }
 
 void RenderPipeline::BlendingEnable()

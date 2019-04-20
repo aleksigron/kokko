@@ -136,7 +136,6 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 			RenderOrderData data;
 			data.material = matId;
 			data.transparency = materialManager->GetTransparency(matId);
-			data.layer = SceneLayer::World;
 
 			renderer->SetOrderData(renderObj, data);
 		}
