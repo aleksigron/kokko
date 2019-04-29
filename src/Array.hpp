@@ -46,9 +46,9 @@ public:
 	 */
 	void Reserve(SizeType required)
 	{
-		if (required > this->allocated)
+		if (required > allocated)
 		{
-			SizeType newAllocated = this->allocated > 1 ? this->allocated * 2 : 4;
+			SizeType newAllocated = allocated > 1 ? allocated * 2 : 4;
 
 			if (required > newAllocated)
 				newAllocated = required;
@@ -57,18 +57,20 @@ public:
 
 			ValueType* newData = static_cast<ValueType*>(operator new[](newAllocated * vts));
 
-			// There is old data
-			if (this->count > 0)
+			if (data != nullptr)
 			{
-				// Copy old data to new buffer
-				std::memcpy(newData, this->data, this->count * vts);
+				if (count > 0) // There is old data
+				{
+					// Copy old data to new buffer
+					std::memcpy(newData, data, count * vts);
+				}
 
 				// Delete old buffer
-				operator delete[](this->data);
+				operator delete[](data);
 			}
 
-			this->data = newData;
-			this->allocated = newAllocated;
+			data = newData;
+			allocated = newAllocated;
 		}
 	}
 
@@ -82,7 +84,6 @@ public:
 		++(this->count);
 		return *value;
 	}
-
 
 	/**
 	 * Add an item to the back of the array
@@ -232,11 +233,13 @@ public:
 			ValueType* end = data + size;
 			for (; itr != end; ++itr)
 				new (itr) ValueType;
+
+			count = size;
 		}
 		else if (size < count)
+		{
 			this->Remove(size, count - size);
-
-		count = size;
+		}
 	}
 
 	/**

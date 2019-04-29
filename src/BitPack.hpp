@@ -4,10 +4,9 @@ struct BitPack
 {
 	using DataType = unsigned int;
 
-	constexpr static unsigned int Bits = 1;
-	constexpr static unsigned int BitsPerPack = sizeof(DataType) / Bits;
+	constexpr static unsigned int BitsPerPack = sizeof(DataType) * 8;
 
-	constexpr static unsigned int ValueMask = (1 << Bits) - 1;
+	constexpr static unsigned int ValueMask = 0x1;
 	constexpr static unsigned int CellIndexMask = BitsPerPack - 1;
 	constexpr static unsigned int PackIndexMask = ~ CellIndexMask;
 
@@ -16,7 +15,7 @@ struct BitPack
 
 	/**
 	 * Calculate the required number of BitPack instances to hold <valueCount>
-	 * CullState instances.
+	 * bits.
 	 */
 	constexpr static unsigned int CalculateRequired(unsigned int valueCount)
 	{
@@ -32,7 +31,7 @@ struct BitPack
 	}
 	
 	/**
-	 * Set a single value in an array of BitPack
+	 * Get a single value from an array of BitPack
 	 */
 	static bool Get(BitPack* packs, unsigned int index)
 	{
@@ -46,8 +45,8 @@ struct BitPack
 	 */
 	void Set(unsigned int index, bool v)
 	{
-		data &= ~(ValueMask << index);
-		data |= static_cast<DataType>(v) << index;
+		data = data & (~(ValueMask << index)); // Set bit to 0
+		data = data | ((v ? 1 : 0) << index); // Or bit with new value
 	}
 
 	/**
@@ -58,7 +57,7 @@ struct BitPack
 		data = 0;
 
 		for (unsigned int i = 0; i < BitsPerPack; ++i)
-			data |= static_cast<DataType>(states[i]) << i;
+			data |= (states[i] ? 1 : 0) << i;
 	}
 
 	/**
