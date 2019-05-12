@@ -266,7 +266,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 		SceneObjectId cameraSceneObject = scene->Lookup(camera->GetEntity());
 		const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
 
-		Mat4x4f viewProj = camera->GetProjectionMatrix() * Camera::GetViewMatrix(cameraTransform);
+		Mat4x4f viewProj = camera->parameters.GetProjectionMatrix() * Camera::GetViewMatrix(cameraTransform);
 		Mat4x4f screenProj = engine->GetMainWindow()->GetScreenSpaceProjectionMatrix();
 
 		int colorUniformLocation = -1;

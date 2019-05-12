@@ -2,46 +2,31 @@
 
 #include "Mat4x4.hpp"
 #include "Entity.hpp"
+#include "ViewFrustum.hpp"
 
 class Scene;
 
 class Camera
 {
-public:
-	enum class Projection
-	{
-		Perspective,
-		Orthographic
-	};
-
 private:
 	Entity entity;
 
 public:
-	Camera();
+	ProjectionParameters parameters;
 
-	// The camera's vertical field of view in radians
-	float perspectiveFieldOfView = 1.0f;
-
-	// The height of the camera's orthogonal viewport
-	float orthogonalHeight = 1.0f;
-
-	// The ratio of the viewport's width to its height (x / y)
-	float aspectRatio = 1.0f;
-
-	float nearClipDistance = 0.1f;
-	float farClipDistance = 100.0f;
-	
-	Projection projectionType = Projection::Perspective;
-
-	Entity GetEntity() const { return entity; }
 	void SetEntity(Entity e) { entity = e; }
+	Entity GetEntity() const { return entity; }
 
-	static Mat4x4f GetViewMatrix(const Mat4x4f& cameraTransform);
-	Mat4x4f GetProjectionMatrix() const;
-
-	void SetAspectRatio(float width, float height)
+	static Mat4x4f GetViewMatrix(const Mat4x4f& m)
 	{
-		aspectRatio = width / height;
+		Mat3x3f inverseRotation = m.Get3x3().GetTransposed();
+		Vec3f translation = -(inverseRotation * Vec3f(m[12], m[13], m[14]));
+
+		Mat4x4f v(inverseRotation);
+		v[12] = translation.x;
+		v[13] = translation.y;
+		v[14] = translation.z;
+
+		return v;
 	}
 };

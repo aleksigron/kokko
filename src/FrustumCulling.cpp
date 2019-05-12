@@ -8,7 +8,7 @@
 #include "BitPack.hpp"
 
 void FrustumCulling::CullAABB(
-	const ViewFrustum& frustum,
+	const FrustumPlanes& frustum,
 	unsigned int count,
 	const BoundingBox* bounds,
 	BitPack* visibility)

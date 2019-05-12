@@ -5,6 +5,8 @@
 
 #include "IncludeOpenGL.hpp"
 
+#include "Debug.hpp"
+
 #include "Engine.hpp"
 #include "App.hpp"
 #include "Window.hpp"
@@ -31,10 +33,12 @@
 
 Renderer::Renderer() :
 	overrideRenderCamera(nullptr),
-	overrideCullingCamera(nullptr)
+	overrideCullingCamera(nullptr),
+	lightViewportIndex(0),
+	fullscreenViewportIndex(0)
 {
 	lightingData = LightingData{};
-	gbuffer = GBufferData{};
+	gbuffer = RendererFramebuffer{};
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
 
@@ -50,53 +54,94 @@ Renderer::~Renderer()
 
 void Renderer::Initialize(Window* window)
 {
-	Vec2f sf = window->GetFrameBufferSize();
-	Vec2i s(static_cast<float>(sf.x), static_cast<float>(sf.y));
-	gbuffer.framebufferSize = s;
-
-	// Create and bind framebuffer
-
-	glGenFramebuffers(1, &gbuffer.framebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, gbuffer.framebuffer);
-
-	glGenTextures(3, gbuffer.textures);
-	unsigned int colAtt[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-
-	// Normal buffer
-	unsigned int norTexture = gbuffer.textures[GBufferData::Normal];
-	glBindTexture(GL_TEXTURE_2D, norTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, s.x, s.y, 0, GL_RGB, GL_FLOAT, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[0], GL_TEXTURE_2D, norTexture, 0);
-
-	// Albedo color + specular buffer
-	unsigned int asTexture = gbuffer.textures[GBufferData::AlbedoSpec];
-	glBindTexture(GL_TEXTURE_2D, asTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, s.x, s.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[1], GL_TEXTURE_2D, asTexture, 0);
-
-	// Which color attachments we'll use for rendering
-	glDrawBuffers(2, colAtt);
-
-	// Create and attach depth buffer
-	unsigned int depthTexture = gbuffer.textures[GBufferData::Depth];
-	glBindTexture(GL_TEXTURE_2D, depthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s.x, s.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// Finally check if framebuffer is complete
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
+		// Create geometry framebuffer and textures
+
+		Vec2f sf = window->GetFrameBufferSize();
+		Vec2i s(static_cast<float>(sf.x), static_cast<float>(sf.y));
+		gbuffer.resolution = s;
+
+		// Create and bind framebuffer
+
+		glGenFramebuffers(1, &gbuffer.framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, gbuffer.framebuffer);
+
+		gbuffer.textureCount = 3;
+		glGenTextures(gbuffer.textureCount, gbuffer.textures);
+		unsigned int colAtt[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+
+		// Normal buffer
+		unsigned int norTexture = gbuffer.textures[NormalTextureIdx];
+		glBindTexture(GL_TEXTURE_2D, norTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, s.x, s.y, 0, GL_RGB, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[0], GL_TEXTURE_2D, norTexture, 0);
+
+		// Albedo color + specular buffer
+		unsigned int asTexture = gbuffer.textures[AlbedoSpecTextureIdx];
+		glBindTexture(GL_TEXTURE_2D, asTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, s.x, s.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[1], GL_TEXTURE_2D, asTexture, 0);
+
+		// Which color attachments we'll use for rendering
+		glDrawBuffers(2, colAtt);
+
+		// Create and attach depth buffer
+		unsigned int depthTexture = gbuffer.textures[DepthTextureIdx];
+		glBindTexture(GL_TEXTURE_2D, depthTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s.x, s.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		// Finally check if framebuffer is complete
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	{
+		Vec2i s(1024, 1024);
+		shadowBuffer.resolution = s;
+
+		// Create and bind framebuffer
+
+		glGenFramebuffers(1, &shadowBuffer.framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer.framebuffer);
+
+		// We aren't rendering to any color attachments
+		glDrawBuffer(GL_NONE);
+
+		// Create texture
+		shadowBuffer.textureCount = 1;
+		glGenTextures(shadowBuffer.textureCount, &shadowBuffer.textures[0]);
+
+		// Create and attach depth buffer
+		unsigned int depthTexture = shadowBuffer.textures[0];
+		glBindTexture(GL_TEXTURE_2D, depthTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s.x, s.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		// Finally check if framebuffer is complete
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 
 	{
 		// Create screen filling quad
@@ -122,6 +167,16 @@ void Renderer::Initialize(Window* window)
 		data.idxCount = sizeof(indexData) / sizeof(unsigned short);
 
 		meshManager->Upload_3f(lightingData.dirMesh, data);
+
+		Vec3f inverseDir(0.282166332f, 0.846498966f, 0.451466143f);
+
+		lightingData.lightPos = inverseDir * 10.0f;
+		lightingData.lightDir = -inverseDir;
+		lightingData.lightCol = Vec3f(1.0f, 1.0f, 1.0f);
+
+		MaterialManager* materialManager = Engine::GetInstance()->GetMaterialManager();
+		const char* const matPath = "res/materials/depth.material.json";
+		lightingData.shadowMaterial = materialManager->GetIdByPath(StringRef(matPath));
 	}
 
 	{
@@ -141,9 +196,15 @@ void Renderer::Deinitialize()
 	if (lightingData.dirMesh.IsValid())
 		meshManager->RemoveMesh(lightingData.dirMesh);
 
+	if (shadowBuffer.framebuffer != 0)
+	{
+		glDeleteTextures(shadowBuffer.textureCount, shadowBuffer.textures);
+		glDeleteFramebuffers(1, &shadowBuffer.framebuffer);
+	}
+
 	if (gbuffer.framebuffer != 0)
 	{
-		glDeleteTextures(sizeof(gbuffer.textures) / sizeof(unsigned int), gbuffer.textures);
+		glDeleteTextures(gbuffer.textureCount, gbuffer.textures);
 		glDeleteFramebuffers(1, &gbuffer.framebuffer);
 	}
 }
@@ -173,25 +234,10 @@ void Renderer::Render(Scene* scene)
 	if (scene->skybox.IsInitialized()) // Update skybox transform
 		scene->skybox.UpdateTransform(cameraPosition);
 
-	Camera* cullingCamera = this->GetCullingCamera(scene);
-
-	SceneObjectId cullingCameraObject = scene->Lookup(cullingCamera->GetEntity());
-	Mat4x4f cullingCameraTransform = scene->GetWorldTransform(cullingCameraObject);
-
-	ViewFrustum frustum;
-	frustum.UpdateFrustum(*cullingCamera, cullingCameraTransform);
-
 	// Retrieve updated transforms
 	scene->NotifyUpdatedTransforms(this);
 
-	// Do frustum culling
-	FrustumCulling::CullAABB(frustum, data.count, data.bounds, data.visibility);
-
 	CreateDrawCalls(scene);
-
-	Mat4x4f viewMatrix = Camera::GetViewMatrix(renderCameraTransform);
-	Mat4x4f projMatrix = renderCamera->GetProjectionMatrix();
-	Mat4x4f viewProjection = projMatrix * viewMatrix;
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -206,6 +252,7 @@ void Renderer::Render(Scene* scene)
 
 			if (pass != RenderPass::OpaqueLighting)
 			{
+				unsigned int vpIdx = renderOrder.viewportIndex.GetValue(command);
 				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
 				unsigned int mat = renderOrder.materialId.GetValue(command);
 				MaterialId matId = MaterialId{mat};
@@ -268,42 +315,44 @@ void Renderer::Render(Scene* scene)
 					}
 				}
 
-				const Mat4x4f& modelMatrix = data.transform[objIdx];
+				const RendererViewportTransform& vptr = viewportTransforms[vpIdx];
+				const Mat4x4f& model = data.transform[objIdx];
 
 				if (shader->uniformMatMVP >= 0)
 				{
-					Mat4x4f mvp = viewProjection * modelMatrix;
+					Mat4x4f mvp = vptr.viewProjection * model;
 					glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
 				}
 
 				if (shader->uniformMatMV >= 0)
 				{
-					Mat4x4f mv = viewMatrix * modelMatrix;
+					Mat4x4f mv = vptr.view * model;
 					glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
 				}
 
 				if (shader->uniformMatVP >= 0)
 				{
-					Mat4x4f vp = projMatrix * viewMatrix;
-					glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, vp.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, vptr.viewProjection.ValuePointer());
 				}
 
 				if (shader->uniformMatM >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, modelMatrix.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, model.ValuePointer());
 				}
 
 				if (shader->uniformMatV >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, viewMatrix.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, vptr.view.ValuePointer());
 				}
 
 				if (shader->uniformMatP >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, projMatrix.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, vptr.projection.ValuePointer());
 				}
 
-				MeshDrawData* draw = meshManager->GetDrawData(data.mesh[objIdx]);
+				MeshId mesh = data.mesh[objIdx];
+				MeshDrawData* draw = meshManager->GetDrawData(mesh);
+				
 				glBindVertexArray(draw->vertexArrayObject);
 
 				glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
@@ -313,15 +362,21 @@ void Renderer::Render(Scene* scene)
 				ResourceManager* resManager = Engine::GetInstance()->GetResourceManager();
 				Shader* shader = resManager->GetShader(lightingData.dirShaderHash);
 
+				const RendererViewportTransform& lvptr = viewportTransforms[lightViewportIndex];
+				const RendererViewportTransform& fsvptr = viewportTransforms[fullscreenViewportIndex];
+
 				Vec2f halfNearPlane;
-				halfNearPlane.y = std::tan(renderCamera->perspectiveFieldOfView * 0.5f);
-				halfNearPlane.x = halfNearPlane.y * renderCamera->aspectRatio;
+				halfNearPlane.y = std::tan(renderCamera->parameters.height * 0.5f);
+				halfNearPlane.x = halfNearPlane.y * renderCamera->parameters.aspect;
 
 				const unsigned int shaderId = shader->driverId;
 
 				int normLoc = glGetUniformLocation(shaderId, "g_norm");
 				int albSpecLoc = glGetUniformLocation(shaderId, "g_alb_spec");
 				int depthLoc = glGetUniformLocation(shaderId, "g_depth");
+				
+				int shadowMatLoc = glGetUniformLocation(shaderId, "shadow_mat");
+				int shadowDepthLoc = glGetUniformLocation(shaderId, "shadow_depth");
 
 				int halfNearPlaneLoc = glGetUniformLocation(shaderId, "half_near_plane");
 				int persMatLoc = glGetUniformLocation(shaderId, "pers_mat");
@@ -335,24 +390,45 @@ void Renderer::Render(Scene* scene)
 				glUniform1i(albSpecLoc, 1);
 				glUniform1i(depthLoc, 2);
 
-				Vec3f wInvLightDir = Vec3f(0.5f, 1.5f, 0.8f).GetNormalized();
-				Vec3f viewDir = (viewMatrix * Vec4f(wInvLightDir, 0.0f)).xyz();
+				glUniform1i(shadowDepthLoc, 3);
+
+				Vec3f wInvLightDir = -lightingData.lightDir;
+				Vec3f viewDir = (fsvptr.view * Vec4f(wInvLightDir, 0.0f)).xyz();
 
 				// Set light properties
 				glUniform3f(invLightDirLoc, viewDir.x, viewDir.y, viewDir.z);
-				glUniform3f(lightColLoc, 1.0f, 1.0f, 1.0f);
+
+				Vec3f col = lightingData.lightCol;
+				glUniform3f(lightColLoc, col.x, col.y, col.z);
 
 				glUniform2f(halfNearPlaneLoc, halfNearPlane.x, halfNearPlane.y);
 
 				// Set the perspective matrix
-				glUniformMatrix4fv(persMatLoc, 1, GL_FALSE, projMatrix.ValuePointer());
+				glUniformMatrix4fv(persMatLoc, 1, GL_FALSE, fsvptr.projection.ValuePointer());
+
+				Mat4x4f bias;
+				bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
+				bias[4] = 0.0; bias[5] = 0.5; bias[6] = 0.0; bias[7] = 0.0;
+				bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
+				bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
+
+				Mat4x4f viewToLight = lvptr.viewProjection * renderCameraTransform;
+				Mat4x4f shadowMat = bias * viewToLight;
+				glUniformMatrix4fv(shadowMatLoc, 1, GL_FALSE, shadowMat.ValuePointer());
+
+				// Bind textures
 
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::Normal]);
+				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[NormalTextureIdx]);
 				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::AlbedoSpec]);
+				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[AlbedoSpecTextureIdx]);
 				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[GBufferData::Depth]);
+				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[DepthTextureIdx]);
+
+				glActiveTexture(GL_TEXTURE3);
+				glBindTexture(GL_TEXTURE_2D, shadowBuffer.textures[0]);
+
+				// Draw fullscreen quad
 
 				MeshDrawData* draw = meshManager->GetDrawData(lightingData.dirMesh);
 				glBindVertexArray(draw->vertexArrayObject);
@@ -383,6 +459,15 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::BlendingDisable:
 			RenderPipeline::BlendingDisable();
+			break;
+
+		case RenderControlType::Viewport:
+		{
+			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint8_t* data = commandList.commandData.GetData() + offset;
+			auto* viewport = reinterpret_cast<RenderCommandData::ViewportData*>(data);
+			RenderPipeline::Viewport(viewport);
+		}
 			break;
 
 		case RenderControlType::DepthRange:
@@ -479,19 +564,20 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 	return true;
 }
 
+float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeForward, const ProjectionParameters& params)
+{
+	return (Vec3f::Dot(objPos - eyePos, eyeForward) - params.near) / (params.far - params.near);
+}
+
 void Renderer::CreateDrawCalls(Scene* scene)
 {
 	using ctrl = RenderControlType;
 
-	Camera* renderCamera = this->GetRenderCamera(scene);
-
-	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
-	Mat4x4f cameraTransform = scene->GetWorldTransform(cameraObject);
-
-	Vec3f cameraPosition = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-	Vec3f cameraForward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+	unsigned int viewportCount = 2; // 1 fullscreen viewport + 1 shadow casting light
+	unsigned int lvp = 0;
+	unsigned int fsvp = 1;
 	
-	float farPlane = renderCamera->farClipDistance;
+	fullscreenViewportIndex = fsvp;
 
 	unsigned int colorAndDepthMask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
 
@@ -500,22 +586,60 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	RenderPass s_pass = RenderPass::Skybox;
 	RenderPass t_pass = RenderPass::Transparent;
 
-	// Before everything
+	// Before light shadow viewport
 
 	// Set depth test on
-	commandList.AddControl(g_pass, 0, ctrl::DepthTestEnable);
+	commandList.AddControl(lvp, g_pass, 0, ctrl::DepthTestEnable);
 
 	// Set depth test function
-	commandList.AddControl(g_pass, 1, ctrl::DepthTestFunction, GL_LESS);
+	commandList.AddControl(lvp, g_pass, 1, ctrl::DepthTestFunction, GL_LESS);
 
 	// Enable depth writing
-	commandList.AddControl(g_pass, 2, ctrl::DepthWriteEnable);
+	commandList.AddControl(lvp, g_pass, 2, ctrl::DepthWriteEnable);
 
 	// Set face culling on
-	commandList.AddControl(g_pass, 3, ctrl::CullFaceEnable);
+	commandList.AddControl(lvp, g_pass, 3, ctrl::CullFaceEnable);
 
 	// Set face culling to cull back faces
-	commandList.AddControl(g_pass, 4, ctrl::CullFaceBack);
+	commandList.AddControl(lvp, g_pass, 4, ctrl::CullFaceBack);
+
+	{
+		// Set clear depth
+		float depth = 1.0f;
+		unsigned int* intDepthPtr = reinterpret_cast<unsigned int*>(&depth);
+
+		commandList.AddControl(lvp, g_pass, 5, ctrl::ClearDepth, *intDepthPtr);
+	}
+
+	// Disable blending
+	commandList.AddControl(lvp, g_pass, 6, ctrl::BlendingDisable);
+
+	{
+		// Set viewport size
+		RenderCommandData::ViewportData data;
+		data.x = 0;
+		data.y = 0;
+		data.w = shadowBuffer.resolution.x;
+		data.h = shadowBuffer.resolution.y;
+
+		commandList.AddControl(lvp, g_pass, 7, ctrl::Viewport, sizeof(data), &data);
+	}
+
+	{
+		// Bind geometry framebuffer
+		RenderCommandData::BindFramebufferData data;
+		data.target = GL_FRAMEBUFFER;
+		data.framebuffer = shadowBuffer.framebuffer;
+
+		commandList.AddControl(lvp, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
+	}
+
+	// Clear currently bound GL_FRAMEBUFFER
+	commandList.AddControl(lvp, g_pass, 9, ctrl::Clear, GL_DEPTH_BUFFER_BIT);
+
+	// Before fullscreen viewport
+
+	// PASS: OPAQUE GEOMETRY
 
 	{
 		// Set clear color
@@ -525,21 +649,19 @@ void Renderer::CreateDrawCalls(Scene* scene)
 		data.b = 0.0f;
 		data.a = 0.0f;
 
-		commandList.AddControl(g_pass, 5, ctrl::ClearColor, sizeof(data), &data);
+		commandList.AddControl(fsvp, g_pass, 0, ctrl::ClearColor, sizeof(data), &data);
 	}
 
 	{
-		// Set clear depth
-		float depth = 1.0f;
-		unsigned int* intDepthPtr = reinterpret_cast<unsigned int*>(&depth);
+		// Set viewport size
+		RenderCommandData::ViewportData data;
+		data.x = 0;
+		data.y = 0;
+		data.w = gbuffer.resolution.x;
+		data.h = gbuffer.resolution.y;
 
-		commandList.AddControl(g_pass, 6, ctrl::ClearDepth, *intDepthPtr);
+		commandList.AddControl(fsvp, g_pass, 1, ctrl::Viewport, sizeof(data), &data);
 	}
-
-	// PASS: OPAQUE GEOMETRY
-
-	// Disable blending
-	commandList.AddControl(g_pass, 7, ctrl::BlendingDisable);
 
 	{
 		// Bind geometry framebuffer
@@ -547,11 +669,11 @@ void Renderer::CreateDrawCalls(Scene* scene)
 		data.target = GL_FRAMEBUFFER;
 		data.framebuffer = gbuffer.framebuffer;
 
-		commandList.AddControl(g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
+		commandList.AddControl(fsvp, g_pass, 2, ctrl::BindFramebuffer, sizeof(data), &data);
 	}
 
 	// Clear currently bound GL_FRAMEBUFFER
-	commandList.AddControl(g_pass, 9, ctrl::Clear, colorAndDepthMask);
+	commandList.AddControl(fsvp, g_pass, 3, ctrl::Clear, colorAndDepthMask);
 
 	// PASS: OPAQUE LIGHTING
 
@@ -561,47 +683,103 @@ void Renderer::CreateDrawCalls(Scene* scene)
 		data.target = GL_FRAMEBUFFER;
 		data.framebuffer = 0;
 
-		commandList.AddControl(l_pass, 0, ctrl::BindFramebuffer, sizeof(data), &data);
+		commandList.AddControl(fsvp, l_pass, 0, ctrl::BindFramebuffer, sizeof(data), &data);
 	}
 
 	// Clear currently bound GL_FRAMEBUFFER
-	commandList.AddControl(l_pass, 1, ctrl::Clear, colorAndDepthMask);
+	commandList.AddControl(fsvp, l_pass, 1, ctrl::Clear, colorAndDepthMask);
 
-	commandList.AddControl(l_pass, 2, ctrl::DepthTestFunction, GL_ALWAYS);
+	commandList.AddControl(fsvp, l_pass, 2, ctrl::DepthTestFunction, GL_ALWAYS);
 
 	// Do lighting
-	commandList.AddDraw(l_pass, 0.0f, MaterialId{}, 0);
+	commandList.AddDraw(fsvp, l_pass, 0.0f, MaterialId{}, 0);
 
 	// PASS: SKYBOX
 
-	commandList.AddControl(s_pass, 0, ctrl::DepthTestFunction, GL_EQUAL);
+	commandList.AddControl(fsvp, s_pass, 0, ctrl::DepthTestFunction, GL_EQUAL);
 
 	// Disable depth writing
-	commandList.AddControl(s_pass, 1, ctrl::DepthWriteDisable);
+	commandList.AddControl(fsvp, s_pass, 1, ctrl::DepthWriteDisable);
 
 	// PASS: TRANSPARENT
 
 	// Before transparent objects
 
-	commandList.AddControl(t_pass, 0, ctrl::DepthTestFunction, GL_LESS);
+	commandList.AddControl(fsvp, t_pass, 0, ctrl::DepthTestFunction, GL_LESS);
 
 	// Enable blending
-	commandList.AddControl(t_pass, 1, ctrl::BlendingEnable);
+	commandList.AddControl(fsvp, t_pass, 1, ctrl::BlendingEnable);
 
 	// Create draw commands for render objects in scene
-	for (unsigned i = 1; i < data.count; ++i)
+
+	Camera* renderCamera = this->GetRenderCamera(scene);
+	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
+	Mat4x4f cameraTransform = scene->GetWorldTransform(cameraObject);
+
+	Camera* cullingCamera = this->GetCullingCamera(scene);
+	SceneObjectId cullingCameraObject = scene->Lookup(cullingCamera->GetEntity());
+	Mat4x4f cullingCameraTransform = scene->GetWorldTransform(cullingCameraObject);
+
+	Vec3f cameraPos = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+	Vec3f cameraForward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+
+	ProjectionParameters lightParameters;
+	lightParameters.aspect = 1.0f;
+	lightParameters.height = 24.0f;
+	lightParameters.near = 0.0f;
+	lightParameters.far = 20.0f;
+	lightParameters.projection = ProjectionType::Orthographic;
+
+	Vec3f lightPos = lightingData.lightPos;
+	Vec3f lightDir = lightingData.lightDir;
+	Vec3f lightTarget = lightPos + lightDir;
+	Vec3f up(0.0f, 1.0f, 0.0f);
+	Mat4x4f lightTransform = Mat4x4f::LookAt(lightPos, lightTarget, up);
+	MaterialId shadowMaterial = lightingData.shadowMaterial;
+
+	RendererViewportTransform& lvptr = viewportTransforms[lvp];
+	lvptr.view = Camera::GetViewMatrix(lightTransform);
+	lvptr.projection = lightParameters.GetProjectionMatrix();
+	lvptr.viewProjection = lvptr.projection * lvptr.view;
+
+	RendererViewportTransform& fsvptr = viewportTransforms[fsvp];
+	fsvptr.view = Camera::GetViewMatrix(cameraTransform);
+	fsvptr.projection = renderCamera->parameters.GetProjectionMatrix();
+	fsvptr.viewProjection = fsvptr.projection * fsvptr.view;
+
+	FrustumPlanes frustum[MaxViewportCount];
+	frustum[lvp].Update(lightParameters, lightTransform);
+	frustum[fsvp].Update(cullingCamera->parameters, cullingCameraTransform);
+
+	unsigned int visRequired = BitPack::CalculateRequired(data.count);
+	objectVisibility.Resize(visRequired * viewportCount);
+
+	BitPack* vis[MaxViewportCount];
+	vis[lvp] = objectVisibility.GetData();
+	vis[fsvp] = vis[lvp] + visRequired;
+
+	FrustumCulling::CullAABB(frustum[lvp], data.count, data.bounds, vis[lvp]);
+	FrustumCulling::CullAABB(frustum[fsvp], data.count, data.bounds, vis[fsvp]);
+
+	for (unsigned int i = 1; i < data.count; ++i)
 	{
-		// Object is in potentially visible set
-		if (BitPack::Get(data.visibility, i))
+		Vec3f objPos = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+
+		if (BitPack::Get(vis[lvp], i))
+		{
+			float depth = CalculateDepth(objPos, lightPos, lightDir, lightParameters);
+			commandList.AddDraw(lvp, RenderPass::OpaqueGeometry, depth, shadowMaterial, i);
+		}
+
+		// Object is in potentially visible set for the particular viewport
+		if (BitPack::Get(vis[fsvp], i))
 		{
 			const RenderOrderData& o = data.order[i];
 
-			Vec3f objPosition = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-
-			float depth = Vec3f::Dot(objPosition - cameraPosition, cameraForward) / farPlane;
+			float depth = CalculateDepth(objPos, cameraPos, cameraForward, renderCamera->parameters);
 
 			RenderPass pass = static_cast<RenderPass>(o.transparency);
-			commandList.AddDraw(pass, depth, o.material, i);
+			commandList.AddDraw(fsvp, pass, depth, o.material, i);
 		}
 	}
 
@@ -614,15 +792,13 @@ void Renderer::Reallocate(unsigned int required)
 		return;
 
 	required = Math::UpperPowerOfTwo(required);
-	unsigned int visRequired = BitPack::CalculateRequired(required);
 
 	// Reserve same amount in entity map
 	entityMap.Reserve(required);
 
 	InstanceData newData;
-	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(uint64_t) +
-		sizeof(RenderOrderData) + sizeof(BoundingBox) + sizeof(Mat4x4f)) +
-		visRequired * sizeof(BitPack);
+	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(RenderOrderData) +
+		sizeof(BoundingBox) + sizeof(Mat4x4f));
 
 	newData.buffer = operator new[](bytes);
 	newData.count = data.count;
@@ -631,16 +807,14 @@ void Renderer::Reallocate(unsigned int required)
 	newData.entity = static_cast<Entity*>(newData.buffer);
 	newData.mesh = reinterpret_cast<MeshId*>(newData.entity + required);
 	newData.order = reinterpret_cast<RenderOrderData*>(newData.mesh + required);
-	newData.visibility = reinterpret_cast<BitPack*>(newData.order + required);
-	newData.bounds = reinterpret_cast<BoundingBox*>(newData.visibility + visRequired);
+	newData.bounds = reinterpret_cast<BoundingBox*>(newData.order + required);
 	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
 
 	if (data.buffer != nullptr)
 	{
 		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
-		std::memcpy(newData.mesh, data.mesh, data.count * sizeof(unsigned int));
+		std::memcpy(newData.mesh, data.mesh, data.count * sizeof(MeshId));
 		std::memcpy(newData.order, data.order, data.count * sizeof(RenderOrderData));
-		// Cull state is recalculated every frame
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
 		std::memcpy(newData.transform, data.transform, data.count * sizeof(Mat4x4f));
 

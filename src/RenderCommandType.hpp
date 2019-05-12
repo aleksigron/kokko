@@ -19,6 +19,7 @@ enum class RenderControlType
 	BlendingEnable,
 	BlendingDisable,
 
+	Viewport, // Data: x, y, w, h
 	DepthRange, // Data: near, far
 
 	DepthTestEnable,

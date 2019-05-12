@@ -49,7 +49,7 @@ void DebugCulling::UpdateAndDraw(Scene* scene)
 		// Set correct aspect ratio to debug camera
 
 		Vec2f s = engine->GetMainWindow()->GetFrameBufferSize();
-		camera.SetAspectRatio(s.x, s.y);
+		camera.parameters.SetAspectRatio(s.x, s.y);
 
 		// Create entity for debug camera
 
@@ -79,8 +79,8 @@ void DebugCulling::UpdateAndDraw(Scene* scene)
 	SceneObjectId sceneCameraSceneObj = scene->Lookup(sceneCameraEntity);
 	const Mat4x4f& t = scene->GetWorldTransform(sceneCameraSceneObj);
 
-	ViewFrustum frustum;
-	frustum.UpdateFrustum(camera, t);
+	FrustumPoints frustum;
+	frustum.Update(camera.parameters, t);
 
 	Color white(1.0f, 1.0f, 1.0f);
 

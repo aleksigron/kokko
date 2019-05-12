@@ -10,6 +10,14 @@ namespace RenderCommandData
 		float a;
 	};
 
+	struct ViewportData
+	{
+		int x;
+		int y;
+		int w;
+		int h;
+	};
+
 	struct DepthRangeData
 	{
 		float near;

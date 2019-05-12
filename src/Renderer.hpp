@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Mat4x4.hpp"
+#include "Vec3.hpp"
 #include "Vec2.hpp"
 #include "Entity.hpp"
 #include "MeshData.hpp"
@@ -13,7 +15,6 @@
 
 struct BoundingBox;
 struct BitPack;
-struct Mat4x4f;
 class Camera;
 class Window;
 class World;
@@ -32,9 +33,32 @@ struct RenderOrderData
 	TransparencyType transparency;
 };
 
+struct RendererFramebuffer
+{
+	static const unsigned int MaxTextureCount = 4;
+
+	unsigned int framebuffer;
+	unsigned int textures[MaxTextureCount];
+	unsigned int textureCount;
+	Vec2i resolution;
+};
+
+struct RendererViewportTransform
+{
+	Mat4x4f view;
+	Mat4x4f projection;
+	Mat4x4f viewProjection;
+};
+
 class Renderer
 {
 private:
+	static const unsigned int MaxViewportCount = 8;
+
+	static const unsigned int NormalTextureIdx = 0;
+	static const unsigned int AlbedoSpecTextureIdx = 1;
+	static const unsigned int DepthTextureIdx = 2;
+
 	struct LightingData
 	{
 		MeshId dirMesh;
@@ -42,19 +66,16 @@ private:
 		MeshId spotMesh;
 
 		unsigned int dirShaderHash;
+
+		Vec3f lightPos;
+		Vec3f lightDir;
+		Vec3f lightCol;
+		MaterialId shadowMaterial;
 	}
 	lightingData;
 
-	struct GBufferData
-	{
-		enum { Normal = 0, AlbedoSpec = 1, Depth = 2 };
-
-		unsigned int framebuffer;
-		unsigned int textures[3];
-
-		Vec2i framebufferSize;
-	}
-	gbuffer;
+	RendererFramebuffer gbuffer;
+	RendererFramebuffer shadowBuffer;
 
 	struct InstanceData
 	{
@@ -65,7 +86,6 @@ private:
 		Entity* entity;
 		MeshId* mesh;
 		RenderOrderData* order;
-		BitPack* visibility;
 		BoundingBox* bounds;
 		Mat4x4f* transform;
 	}
@@ -79,6 +99,11 @@ private:
 	Camera* overrideCullingCamera;
 
 	RenderCommandList commandList;
+	Array<BitPack> objectVisibility;
+
+	RendererViewportTransform viewportTransforms[MaxViewportCount];
+	unsigned int lightViewportIndex;
+	unsigned int fullscreenViewportIndex;
 
 	void Reallocate(unsigned int required);
 

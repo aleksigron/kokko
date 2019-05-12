@@ -32,7 +32,6 @@ set (KOKKO_SOURCES
 	src/BoundingBox.hpp
 	src/Buffer.hpp
 	src/BufferRef.hpp
-	src/Camera.cpp
 	src/Camera.hpp
 	src/CameraController.cpp
 	src/CameraController.hpp
@@ -95,6 +94,7 @@ set (KOKKO_SOURCES
 	src/Plane.hpp
 	src/PointerInput.cpp
 	src/PointerInput.hpp
+	src/Projection.hpp
 	src/Queue.hpp
 	src/Rectangle.hpp
 	src/RenderCommandData.hpp
@@ -144,7 +144,6 @@ set (KOKKO_SOURCES
 	src/Vec4.hpp
 	src/VertexFormat.cpp
 	src/VertexFormat.hpp
-	src/ViewFrustum.cpp
 	src/ViewFrustum.hpp
 	src/VirtualMemory.cpp
 	src/VirtualMemory.hpp

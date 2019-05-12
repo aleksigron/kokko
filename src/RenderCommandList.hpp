@@ -15,12 +15,14 @@ struct RenderCommandList
 	Array<uint8_t> commandData;
 
 	void AddControl(
+		unsigned int viewport,
 		RenderPass pass,
 		unsigned int controlOrder,
 		RenderControlType type,
 		unsigned int data = 0);
 
 	void AddControl(
+		unsigned int viewport,
 		RenderPass pass,
 		unsigned int controlOrder,
 		RenderControlType type,
@@ -28,6 +30,7 @@ struct RenderCommandList
 		void* data);
 
 	void AddDraw(
+		unsigned int viewport,
 		RenderPass pass,
 		float depth,
 		MaterialId material,

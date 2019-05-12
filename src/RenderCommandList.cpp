@@ -3,6 +3,7 @@
 #include "Sort.hpp"
 
 void RenderCommandList::AddControl(
+	unsigned int viewport,
 	RenderPass pass,
 	unsigned int order,
 	RenderControlType type,
@@ -10,7 +11,7 @@ void RenderCommandList::AddControl(
 {
 	uint64_t c = 0;
 
-	renderOrder.viewportIndex.AssignValue(c, 0);
+	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, static_cast<uint64_t>(pass));
 	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Control));
 	renderOrder.commandOrder.AssignValue(c, order);
@@ -21,6 +22,7 @@ void RenderCommandList::AddControl(
 }
 
 void RenderCommandList::AddControl(
+	unsigned int viewport,
 	RenderPass pass,
 	unsigned int order,
 	RenderControlType type,
@@ -29,7 +31,7 @@ void RenderCommandList::AddControl(
 {
 	uint64_t c = 0;
 
-	renderOrder.viewportIndex.AssignValue(c, 0);
+	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, static_cast<uint64_t>(pass));
 	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Control));
 	renderOrder.commandOrder.AssignValue(c, order);
@@ -46,6 +48,7 @@ void RenderCommandList::AddControl(
 }
 
 void RenderCommandList::AddDraw(
+	unsigned int viewport,
 	RenderPass pass,
 	float depth,
 	MaterialId material,
@@ -57,7 +60,7 @@ void RenderCommandList::AddDraw(
 
 	uint64_t c = 0;
 
-	renderOrder.viewportIndex.AssignValue(c, 0);
+	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, intpass);
 	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Draw));
 

@@ -34,6 +34,11 @@ void RenderPipeline::DepthRange(const RenderCommandData::DepthRangeData* data)
 	glDepthRange(data->near, data->far);
 }
 
+void RenderPipeline::Viewport(const RenderCommandData::ViewportData* data)
+{
+	glViewport(data->x, data->y, data->w, data->h);
+}
+
 void RenderPipeline::DepthTestEnable()
 {
 	glEnable(GL_DEPTH_TEST);
@@ -47,46 +52,6 @@ void RenderPipeline::DepthTestDisable()
 void RenderPipeline::DepthTestFunction(unsigned int function)
 {
 	glDepthFunc(function);
-}
-
-void RenderPipeline::DepthTestFunctionNever()
-{
-	DepthTestFunction(GL_NEVER);
-}
-
-void RenderPipeline::DepthTestFunctionLess()
-{
-	DepthTestFunction(GL_LESS);
-}
-
-void RenderPipeline::DepthTestFunctionEqual()
-{
-	DepthTestFunction(GL_EQUAL);
-}
-
-void RenderPipeline::DepthTestFunctionLessEqual()
-{
-	DepthTestFunction(GL_LEQUAL);
-}
-
-void RenderPipeline::DepthTestFunctionGreater()
-{
-	DepthTestFunction(GL_GREATER);
-}
-
-void RenderPipeline::DepthTestFunctionNotEqual()
-{
-	DepthTestFunction(GL_NOTEQUAL);
-}
-
-void RenderPipeline::DepthTestFunctionGreaterEqual()
-{
-	DepthTestFunction(GL_GEQUAL);
-}
-
-void RenderPipeline::DepthTestFunctionAlways()
-{
-	DepthTestFunction(GL_ALWAYS);
 }
 
 void RenderPipeline::DepthWriteEnable()
