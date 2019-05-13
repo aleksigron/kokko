@@ -56,7 +56,7 @@ void main()
 
 	vec3 spec = light.color * spec_int * spec_factor;
 	
-	const float shadow_bias = 0.002;
+	float shadow_bias = clamp(0.002 * tan(acos(normDotLightDir)), 0, 0.005);
 	float shadow = max(0.0, sign(shadow_z - shadow_coord.z + shadow_bias));
 
 	// Output
