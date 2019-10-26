@@ -4,13 +4,13 @@ struct BitPack
 {
 	using DataType = unsigned int;
 
-	constexpr static unsigned int BitsPerPack = sizeof(DataType) * 8;
-
+	constexpr static unsigned int BitsPerPack = 32;
 	constexpr static unsigned int ValueMask = 0x1;
 	constexpr static unsigned int CellIndexMask = BitsPerPack - 1;
 	constexpr static unsigned int PackIndexMask = ~ CellIndexMask;
+	constexpr static unsigned int PackIndexShift = 5;
 
-	constexpr static unsigned int PackIndex(unsigned int index) { return index & PackIndexMask; }
+	constexpr static unsigned int PackIndex(unsigned int index) { return (index & PackIndexMask) >> PackIndexShift; }
 	constexpr static unsigned int CellIndex(unsigned int index) { return index & CellIndexMask; }
 
 	/**
