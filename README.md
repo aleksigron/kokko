@@ -4,7 +4,7 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 programming in the process. I hope that little by little, this will become a
 good, small game engine that might offer some new ways to solve old problems.
 
-![Screenshot](http://aleksigron.com/s/kokko_2019-04-10_20.15.02.jpg)
+![Screenshot](https://aleksigron.com/s/kokko_2019-10-26_18.11.05.jpg)
 
 ## Prerequisites
 - CMake for building the project
