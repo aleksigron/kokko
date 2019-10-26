@@ -107,8 +107,6 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	void UpdateTransforms(Scene* scene);
-	void UpdateBoundingBoxes(Scene* scene);
 	void CreateDrawCalls(Scene* scene);
 
 	bool ParseControlCommand(uint64_t orderKey);

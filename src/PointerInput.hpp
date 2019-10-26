@@ -29,6 +29,9 @@ private:
 	enum ButtonState : unsigned char { Up, UpFirst, Down, DownFirst };
 
 public:
+	PointerInput();
+	~PointerInput();
+
 	void Initialize(GLFWwindow* windowHandle);
 	void Update();
 

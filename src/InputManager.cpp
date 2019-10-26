@@ -5,7 +5,11 @@
 #include "TextInput.hpp"
 #include "PointerInput.hpp"
 
-InputManager::InputManager()
+InputManager::InputManager():
+	keyboardInput(nullptr),
+	keyboardInputView(nullptr),
+	textInput(nullptr),
+	pointerInput(nullptr)
 {
 }
 

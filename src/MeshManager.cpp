@@ -98,12 +98,16 @@ MeshId MeshManager::CreateMesh()
 	return id;
 }
 
-static void DeleteBuffers(const MeshBufferData& buffers)
+void DeleteBuffers(MeshBufferData& buffers)
 {
 	if (buffers.vertexArrayObject != 0)
 	{
 		glDeleteVertexArrays(1, &buffers.vertexArrayObject);
 		glDeleteBuffers(2, buffers.bufferObjects);
+
+		buffers.vertexArrayObject = 0;
+		buffers.bufferObjects[0] = 0;
+		buffers.bufferObjects[1] = 0;
 	}
 }
 
@@ -155,7 +159,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	return MeshId{};
 }
 
-static MeshBufferData CreateBuffers(const void* vd, unsigned int vs, const void* id, unsigned int is)
+MeshBufferData CreateBuffers(const void* vd, unsigned int vs, const void* id, unsigned int is)
 {
 	MeshBufferData data;
 

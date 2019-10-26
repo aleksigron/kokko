@@ -23,9 +23,9 @@ bool ImageData::LoadGlraw(BufferRef<unsigned char> fileContent)
 	// File is probably a glraw file
 	if (*reinterpret_cast<uint16_t*>(d) == 0xC6F5)
 	{
-		const uint64_t preHeaderSize = sizeof(uint16_t) + sizeof(uint64_t);
+		const size_t preHeaderSize = sizeof(uint16_t) + sizeof(uint64_t);
 		const uint64_t dataOffset = *reinterpret_cast<uint64_t*>(d + sizeof(uint16_t));
-		const uint64_t headerSize = preHeaderSize + dataOffset;
+		const size_t headerSize = preHeaderSize + static_cast<size_t>(dataOffset);
 		unsigned char* const imageData = d + dataOffset;
 
 		unsigned char* it = d + preHeaderSize;

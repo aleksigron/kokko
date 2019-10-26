@@ -55,11 +55,11 @@ void Debug::SetWindow(Window* window)
 	textRenderer->SetFrameSize(frameSize);
 	textRenderer->SetScaleFactor(screenCoordScale);
 
-	int scaledLineHeight = 0;
+	float scaledLineHeight = 0;
 	const BitmapFont* font = textRenderer->GetFont();
 
 	if (font != nullptr)
-		scaledLineHeight = font->GetLineHeight();
+		scaledLineHeight = static_cast<float>(font->GetLineHeight());
 
 	float pixelLineHeight = scaledLineHeight * screenCoordScale;
 

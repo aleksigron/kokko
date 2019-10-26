@@ -43,11 +43,11 @@ void CameraController::VerifySensitityIsLoaded()
 		double sensitivity = 0.0;
 		if (settings->TryGetDouble("camera_aim_sensitivity", sensitivity))
 		{
-			this->cameraAimSensitivity = sensitivity;
+			this->cameraAimSensitivity = static_cast<float>(sensitivity);
 		}
 		else
 		{
-			this->cameraAimSensitivity = 1.0;
+			this->cameraAimSensitivity = 1.0f;
 
 			settings->SetDouble("camera_aim_sensitivity", this->cameraAimSensitivity);
 			settings->SaveToFile();

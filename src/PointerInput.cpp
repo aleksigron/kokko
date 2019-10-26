@@ -9,6 +9,14 @@ const int PointerInput::cursorModeValues[] =
 	GLFW_CURSOR_DISABLED
 };
 
+PointerInput::PointerInput(): windowHandle(nullptr)
+{
+}
+
+PointerInput::~PointerInput()
+{
+}
+
 void PointerInput::Initialize(GLFWwindow* windowHandle)
 {
 	this->windowHandle = windowHandle;

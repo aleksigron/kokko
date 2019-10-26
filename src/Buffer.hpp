@@ -30,8 +30,7 @@ public:
 
 	~Buffer()
 	{
-		// Deleting a nullptr is a no-op
-		delete[] this->data;
+		delete[] data;
 	}
 
 	Buffer& operator=(const Buffer& other)
@@ -42,13 +41,13 @@ public:
 			{
 				this->Allocate(other.count);
 
-				for (SizeType i = 0; i < this->count; ++i)
+				for (SizeType i = 0; i < count; ++i)
 					data[i] = other.data[i];
 			}
 			else
 			{
-				this->data = nullptr;
-				this->count = 0;
+				data = nullptr;
+				count = 0;
 			}
 		}
 
@@ -57,11 +56,10 @@ public:
 
 	Buffer& operator=(Buffer&& other)
 	{
-		// Deleting a nullptr is a no-op
-		delete[] this->data;
+		delete[] data;
 
-		this->data = other.data;
-		this->count = other.count;
+		data = other.data;
+		count = other.count;
 
 		other.data = nullptr;
 		other.count = 0;
@@ -69,36 +67,35 @@ public:
 		return *this;
 	}
 	
-	void Allocate(SizeType count)
+	void Allocate(SizeType required)
 	{
-		// Deleting a nullptr is a no-op
-		delete[] this->data;
+		delete[] data;
 
-		this->count = count;
+		count = required;
 
-		if (count > 0)
-			this->data = new T[count];
+		if (required > 0)
+			data = new T[required];
 		else
-			this->data = nullptr;
+			data = nullptr;
 	}
 	
 	void Deallocate()
 	{
-		// Deleting a nullptr is a no-op
-		delete[] this->data;
+		delete[] data;
 		
-		this->data = nullptr;
-		this->count = 0;
+		data = nullptr;
+		count = 0;
 	}
 
 	bool IsValid() { return this->data != nullptr; }
+
+	SizeType Count() const { return count; }
+
+	T* Data() { return data; }
+	const T* Data() const { return data; }
 	
-	T* Data() { return this->data; }
-	const T* Data() const { return this->data; }
-	SizeType Count() const { return this->count; }
-	
-	T& operator[](SizeType index) { return this->data[index]; }
-	const T& operator[](SizeType index) const { return this->data[index]; }
+	T& operator[](SizeType index) { return data[index]; }
+	const T& operator[](SizeType index) const { return data[index]; }
 
 	BufferRef<T> GetRef() { return BufferRef<T>(data, count); }
 	BufferRef<const T> GetRef() const { return BufferRef<const T>(data, count); }

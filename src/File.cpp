@@ -41,22 +41,26 @@ Buffer<char> File::ReadText(const char* path)
 {
 	Buffer<char> fileContents;
 
-	FILE* fileHandle = fopen(path, "rb");
+	FILE* fileHandle = std::fopen(path, "rb");
 
 	if (fileHandle != nullptr)
 	{
 		// Find the size of the file
-		fseek(fileHandle, 0L, SEEK_END);
-		unsigned long fileLength = ftell(fileHandle);
-		rewind(fileHandle);
+		std::fseek(fileHandle, 0L, SEEK_END);
+		unsigned long fileLength = std::ftell(fileHandle);
+		std::rewind(fileHandle);
 
 		// Get the file contents
 		fileContents.Allocate(fileLength + 1);
-		fread(fileContents.Data(), 1, fileLength, fileHandle);
-		fclose(fileHandle);
 
-		// Null-terminate so it can be used in places expecting a c-string
-		fileContents[fileLength] = '\0';
+		if (fileContents.IsValid())
+		{
+			std::fread(fileContents.Data(), 1, fileLength, fileHandle);
+			std::fclose(fileHandle);
+
+			// Null-terminate so it can be used as a c-string
+			fileContents[fileLength] = '\0';
+		}
 	}
 
 	return fileContents;

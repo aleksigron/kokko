@@ -177,23 +177,31 @@ void MaterialManager::SetShader(MaterialId id, const Shader* shader)
 
 void SetUniformI(MaterialUniformData& mu, unsigned int uniformIndex, int value)
 {
-	unsigned char* uData = mu.data + mu.uniforms[uniformIndex].dataOffset;
-	int* uniform = reinterpret_cast<int*>(uData);
-	*uniform = value;
+	if (mu.data != nullptr && mu.count > uniformIndex)
+	{
+		unsigned char* uData = mu.data + mu.uniforms[uniformIndex].dataOffset;
+		int* uniform = reinterpret_cast<int*>(uData);
+		*uniform = value;
+	}
 }
 
 void SetUniformF(MaterialUniformData& mu, unsigned int uniformIndex, float value)
 {
-	unsigned char* uData = mu.data + mu.uniforms[uniformIndex].dataOffset;
-	float* uniform = reinterpret_cast<float*>(uData);
-	*uniform = value;
+	if (mu.data != nullptr && mu.count > uniformIndex)
+	{
+		unsigned char* uData = mu.data + mu.uniforms[uniformIndex].dataOffset;
+		float* uniform = reinterpret_cast<float*>(uData);
+		*uniform = value;
+	}
 }
 
 void SetUniformFv(MaterialUniformData& mu, unsigned int uniformIndex, const float* values, unsigned int count)
 {
-	unsigned char* uData = mu.data + mu.uniforms[uniformIndex].dataOffset;
-	float* uniform = reinterpret_cast<float*>(uData);
-	std::memcpy(uniform, values, sizeof(float) * count);
+	if (mu.data != nullptr && mu.count > uniformIndex)
+	{
+		unsigned char* uData = mu.data + mu.uniforms[uniformIndex].dataOffset;
+		std::memcpy(uData, values, sizeof(float) * count);
+	}
 }
 
 void SetUniformTex2D(MaterialUniformData& mu, unsigned int uidx, unsigned int value)
@@ -318,7 +326,6 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 
 				switch (type)
 				{
-
 					case ShaderUniformType::Mat4x4:
 						SetUniformMat4x4(mu, varIndex, Deserialize_Mat4x4f(varVal));
 						break;
