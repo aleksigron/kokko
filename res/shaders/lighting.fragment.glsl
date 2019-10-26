@@ -16,7 +16,7 @@ uniform sampler2D g_alb_spec;
 uniform sampler2D g_depth;
 
 uniform mat4x4 shadow_mat;
-uniform sampler2D shadow_depth;
+uniform sampler2DShadow shadow_depth;
 
 uniform mat4x4 pers_mat;
 uniform DirectionalLight light;
@@ -37,12 +37,13 @@ void main()
 
 	// Get shadow depth
 	vec4 shadow_coord = shadow_mat * vec4(view_pos, 1.0);
-	float shadow_z = texture(shadow_depth, shadow_coord.xy).r;
+	float normDotLightDir = max(dot(norm, light.inverse_dir), 0.0);
+	float shadow_bias = clamp(0.0015 * tan(acos(normDotLightDir)), 0, 0.004);
+	float shadow = texture(shadow_depth, vec3(shadow_coord.xy, shadow_coord.z - shadow_bias));
 
 	// Diffuse lighting
 
     vec3 alb = albSpec.rgb;
-	float normDotLightDir = max(dot(norm, light.inverse_dir), 0.0);
 	vec3 diffuse = normDotLightDir * alb * light.color;
 
 	// Specular lighting
@@ -56,8 +57,6 @@ void main()
 
 	vec3 spec = light.color * spec_int * spec_factor;
 	
-	float shadow_bias = clamp(0.002 * tan(acos(normDotLightDir)), 0, 0.005);
-	float shadow = max(0.0, sign(shadow_z - shadow_coord.z + shadow_bias));
 
 	// Output
 	
