@@ -21,6 +21,15 @@ uniform sampler2DShadow shadow_depth;
 uniform mat4x4 pers_mat;
 uniform DirectionalLight light;
 
+const int shadow_sample_count = 4;
+const float shadow_dist_factor = 0.001;
+vec2 poisson_disk[shadow_sample_count] = vec2[](
+  vec2( -0.94201624, -0.39906216 ),
+  vec2( 0.94558609, -0.76890725 ),
+  vec2( -0.094184101, -0.92938870 ),
+  vec2( 0.34495938, 0.29387760 )
+);
+
 void main()
 {
 	// Read input buffers
@@ -38,8 +47,14 @@ void main()
 	// Get shadow depth
 	vec4 shadow_coord = shadow_mat * vec4(view_pos, 1.0);
 	float normDotLightDir = max(dot(norm, light.inverse_dir), 0.0);
-	float shadow_bias = clamp(0.0015 * tan(acos(normDotLightDir)), 0, 0.004);
-	float shadow = texture(shadow_depth, vec3(shadow_coord.xy, shadow_coord.z - shadow_bias));
+	float compare_depth = shadow_coord.z - clamp(0.0025 * tan(acos(normDotLightDir)), 0, 0.008);
+	float shadow = 0.0;
+
+	for (int i = 0; i < shadow_sample_count; i++) {
+		shadow += texture(shadow_depth, vec3(shadow_coord.xy + poisson_disk[i] * shadow_dist_factor, compare_depth));
+	}
+
+	shadow /= shadow_sample_count;
 
 	// Diffuse lighting
 
