@@ -60,8 +60,6 @@ set (KOKKO_SOURCES
 	src/EntityManager.hpp
 	src/File.cpp
 	src/File.hpp
-	src/FrustumCulling.cpp
-	src/FrustumCulling.hpp
 	src/Hash.hpp
 	src/HashMap.hpp
 	src/ImageData.cpp
@@ -73,6 +71,8 @@ set (KOKKO_SOURCES
 	src/IndexedContainer.hpp
 	src/InputManager.cpp
 	src/InputManager.hpp
+	src/Intersect3D.cpp
+	src/Intersect3D.hpp
 	src/JsonReader.hpp
 	src/KeyboardInput.cpp
 	src/KeyboardInput.hpp

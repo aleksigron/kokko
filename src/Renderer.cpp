@@ -22,7 +22,7 @@
 #include "Rectangle.hpp"
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
-#include "FrustumCulling.hpp"
+#include "Intersect3D.hpp"
 #include "BitPack.hpp"
 
 #include "RenderPipeline.hpp"
@@ -760,8 +760,8 @@ void Renderer::CreateDrawCalls(Scene* scene)
 	vis[lvp] = objectVisibility.GetData();
 	vis[fsvp] = vis[lvp] + visRequired;
 
-	FrustumCulling::CullAABB(frustum[lvp], data.count, data.bounds, vis[lvp]);
-	FrustumCulling::CullAABB(frustum[fsvp], data.count, data.bounds, vis[fsvp]);
+	Intersect::FrustumAABB(frustum[lvp], data.count, data.bounds, vis[lvp]);
+	Intersect::FrustumAABB(frustum[fsvp], data.count, data.bounds, vis[fsvp]);
 
 	for (unsigned int i = 1; i < data.count; ++i)
 	{
