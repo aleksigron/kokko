@@ -11,7 +11,7 @@
 #include "Entity.hpp"
 
 class Camera;
-class Renderer;
+class ITransformUpdateReceiver;
 
 struct SceneObjectId
 {
@@ -86,7 +86,7 @@ public:
 	const Mat4x4f& GetWorldTransform(SceneObjectId id) { return data.world[id.i]; }
 	const Mat4x4f& GetLocalTransform(SceneObjectId id) { return data.local[id.i]; }
 
-	void NotifyUpdatedTransforms(Renderer* renderer);
+	void NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers);
 
 	void SetActiveCamera(Camera* camera) { activeCamera = camera; }
 	Camera* GetActiveCamera() { return activeCamera; }

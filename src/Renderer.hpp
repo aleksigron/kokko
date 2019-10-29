@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ITransformUpdateReceiver.hpp"
+
 #include "Mat4x4.hpp"
 #include "Vec3.hpp"
 #include "Vec2.hpp"
@@ -50,7 +52,7 @@ struct RendererViewportTransform
 	Mat4x4f viewProjection;
 };
 
-class Renderer
+class Renderer : public ITransformUpdateReceiver
 {
 private:
 	static const unsigned int MaxViewportCount = 8;
@@ -107,7 +109,7 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	void CreateDrawCalls(Scene* scene);
+	void PopulateCommandList(Scene* scene);
 
 	bool ParseControlCommand(uint64_t orderKey);
 
@@ -127,7 +129,7 @@ public:
 	// Render the specified scene to the active OpenGL context
 	void Render(Scene* scene);
 
-	void NotifyUpdatedTransforms(unsigned int count, Entity* entities, Mat4x4f* transforms);
+	virtual void NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms);
 
 	// Render object management
 
@@ -138,7 +140,7 @@ public:
 	}
 
 	RenderObjectId AddRenderObject(Entity entity);
-	void AddRenderObject(unsigned int count, Entity* entities, RenderObjectId* renderObjectIdsOut);
+	void AddRenderObject(unsigned int count, const Entity* entities, RenderObjectId* renderObjectIdsOut);
 
 	// Render object property management
 

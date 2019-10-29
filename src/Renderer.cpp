@@ -236,10 +236,7 @@ void Renderer::Render(Scene* scene)
 	if (scene->skybox.IsInitialized()) // Update skybox transform
 		scene->skybox.UpdateTransform(cameraPosition);
 
-	// Retrieve updated transforms
-	scene->NotifyUpdatedTransforms(this);
-
-	CreateDrawCalls(scene);
+	PopulateCommandList(scene);
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -571,7 +568,7 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 	return (Vec3f::Dot(objPos - eyePos, eyeForward) - params.near) / (params.far - params.near);
 }
 
-void Renderer::CreateDrawCalls(Scene* scene)
+void Renderer::PopulateCommandList(Scene* scene)
 {
 	using ctrl = RenderControlType;
 
@@ -833,7 +830,7 @@ RenderObjectId Renderer::AddRenderObject(Entity entity)
 	return id;
 }
 
-void Renderer::AddRenderObject(unsigned int count, Entity* entities, RenderObjectId* renderObjectIdsOut)
+void Renderer::AddRenderObject(unsigned int count, const Entity* entities, RenderObjectId* renderObjectIdsOut)
 {
 	if (data.count + count > data.allocated)
 		this->Reallocate(data.count + count);
@@ -855,7 +852,7 @@ void Renderer::AddRenderObject(unsigned int count, Entity* entities, RenderObjec
 	data.count += count;
 }
 
-void Renderer::NotifyUpdatedTransforms(unsigned int count, Entity* entities, Mat4x4f* transforms)
+void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms)
 {
 	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
 

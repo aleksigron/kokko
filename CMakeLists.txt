@@ -73,6 +73,7 @@ set (KOKKO_SOURCES
 	src/InputManager.hpp
 	src/Intersect3D.cpp
 	src/Intersect3D.hpp
+	src/ITransformUpdateReceiver.hpp
 	src/JsonReader.hpp
 	src/KeyboardInput.cpp
 	src/KeyboardInput.hpp

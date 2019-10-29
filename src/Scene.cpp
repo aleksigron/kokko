@@ -3,7 +3,7 @@
 #include <cassert>
 
 #include "Math.hpp"
-#include "Renderer.hpp"
+#include "ITransformUpdateReceiver.hpp"
 
 const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
@@ -288,20 +288,23 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 	}
 }
 
-void Scene::NotifyUpdatedTransforms(Renderer* renderer)
+void Scene::NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers)
 {
-	unsigned int count = updatedEntities.GetCount();
-	updatedTransforms.Resize(count);
+	unsigned int updateCount = updatedEntities.GetCount();
+	updatedTransforms.Resize(updateCount);
 
 	Entity* entities = reinterpret_cast<Entity*>(updatedEntities.GetData());
 
-	for (unsigned int i = 0; i < count; ++i)
+	for (unsigned int i = 0; i < updateCount; ++i)
 	{
 		SceneObjectId obj = this->Lookup(entities[i]);
 		updatedTransforms[i] = this->GetWorldTransform(obj);
 	}
 
-	renderer->NotifyUpdatedTransforms(count, entities, updatedTransforms.GetData());
+	for (unsigned int i = 0; i < receiverCount; ++i)
+	{
+		updateReceivers[i]->NotifyUpdatedTransforms(updateCount, entities, updatedTransforms.GetData());
+	}
 
 	updatedEntities.Clear();
 	updatedTransforms.Clear();

@@ -93,6 +93,11 @@ void Engine::Update()
 	unsigned int primarySceneId = this->sceneManager->GetPrimarySceneId();
 	Scene* primaryScene = this->sceneManager->GetScene(primarySceneId);
 
+	// Propagate transform updates from Scene to other systems that require it
+	ITransformUpdateReceiver* transformUpdateReceivers[] = { this->renderer };
+	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
+	primaryScene->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
+
 	this->renderer->Render(primaryScene);
 
 	this->debug->Render(primaryScene);
