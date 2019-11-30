@@ -130,6 +130,25 @@ struct Mat3x3f
 
 		return result;
 	}
+
+	static Mat3x3f FromAxes(const Vec3f& x, const Vec3f& y, const Vec3f& z)
+	{
+		Mat3x3f result;
+
+		result[0] = x.x;
+		result[1] = x.y;
+		result[2] = x.z;
+
+		result[3] = y.x;
+		result[4] = y.y;
+		result[5] = y.z;
+
+		result[6] = z.x;
+		result[7] = z.y;
+		result[8] = z.z;
+
+		return result;
+	}
 };
 
 inline Vec3f operator*(const Mat3x3f& m, const Vec3f& v)

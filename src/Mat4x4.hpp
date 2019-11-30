@@ -78,6 +78,22 @@ struct Mat4x4f
 		return result;
 	}
 
+	/*
+	Get the inverse of a non-scaled transform
+	*/
+	Mat4x4f GetInverse()
+	{
+		Mat3x3f inverseRotation = Get3x3().GetTransposed();
+		Vec3f translation = -(inverseRotation * Vec3f(m[12], m[13], m[14]));
+
+		Mat4x4f inverse(inverseRotation);
+		inverse[12] = translation.x;
+		inverse[13] = translation.y;
+		inverse[14] = translation.z;
+
+		return inverse;
+	}
+
 	static Mat4x4f RotateAroundAxis(Vec3f axis, float angle)
 	{
 		axis.Normalize();

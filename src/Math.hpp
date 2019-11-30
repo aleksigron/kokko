@@ -1,5 +1,8 @@
 #pragma once
 
+#include <algorithm>
+#include <limits>
+
 #include "Vec3.hpp"
 
 namespace Math
@@ -33,6 +36,23 @@ namespace Math
 	constexpr float RadiansToDegrees(float radians)
 	{
 		return radians * Const::RadToDeg;
+	}
+
+	inline float Lerp(float a, float b, float t)
+	{
+		// Based on https://github.com/emsr/cxx_linear/blob/master/lerp.h
+
+		if (std::isnan(a) || std::isnan(b) || std::isnan(t))
+			return std::numeric_limits<float>::quiet_NaN();
+		else if ((a <= 0.0f && b >= 0.0f) || (a >= 0.0f && b <= 0.0f))
+			return t * b + (1.0f - t) * a;
+		else if (t == 1.0f)
+			return b;
+		else
+		{
+			const float x = a + t * (b - a);
+			return (t > 1.0f) == (b > a) ? std::max(b, x) : std::min(b, x);
+		}
 	}
 
 	constexpr unsigned int UpperPowerOfTwo(unsigned int v)
