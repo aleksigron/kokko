@@ -6,6 +6,7 @@
 #include "Rectangle.hpp"
 #include "Color.hpp"
 #include "MeshData.hpp"
+#include "Projection.hpp"
 
 class Camera;
 
@@ -49,6 +50,8 @@ public:
 	void DrawWireSphere(const Vec3f& position, float radius, const Color& color);
 
 	void DrawRectangleScreen(const Rectanglef& rectangle, const Color& color);
+
+	void DrawWireFrustum(const Mat4x4f& transform, const ProjectionParameters& projection, const Color& color);
 
 	void Render(Camera* camera);
 };

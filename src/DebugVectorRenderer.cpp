@@ -246,6 +246,27 @@ void DebugVectorRenderer::DrawRectangleScreen(const Rectanglef& rectangle, const
 	}
 }
 
+void DebugVectorRenderer::DrawWireFrustum(const Mat4x4f& transform, const ProjectionParameters& projection, const Color& color)
+{
+	FrustumPoints frustum;
+	frustum.Update(projection, transform);
+
+	this->DrawLine(frustum.points[0], frustum.points[1], color);
+	this->DrawLine(frustum.points[0], frustum.points[2], color);
+	this->DrawLine(frustum.points[1], frustum.points[3], color);
+	this->DrawLine(frustum.points[2], frustum.points[3], color);
+
+	this->DrawLine(frustum.points[0], frustum.points[4], color);
+	this->DrawLine(frustum.points[1], frustum.points[5], color);
+	this->DrawLine(frustum.points[2], frustum.points[6], color);
+	this->DrawLine(frustum.points[3], frustum.points[7], color);
+
+	this->DrawLine(frustum.points[4], frustum.points[5], color);
+	this->DrawLine(frustum.points[4], frustum.points[6], color);
+	this->DrawLine(frustum.points[5], frustum.points[7], color);
+	this->DrawLine(frustum.points[6], frustum.points[7], color);
+}
+
 void DebugVectorRenderer::Render(Camera* camera)
 {
 	if (primitiveCount > 0)

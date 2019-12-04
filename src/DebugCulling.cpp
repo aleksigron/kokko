@@ -79,23 +79,7 @@ void DebugCulling::UpdateAndDraw(Scene* scene)
 	SceneObjectId sceneCameraSceneObj = scene->Lookup(sceneCameraEntity);
 	const Mat4x4f& t = scene->GetWorldTransform(sceneCameraSceneObj);
 
-	FrustumPoints frustum;
-	frustum.Update(camera.parameters, t);
-
 	Color white(1.0f, 1.0f, 1.0f);
 
-	vectorRenderer->DrawLine(frustum.points[0], frustum.points[1], white);
-	vectorRenderer->DrawLine(frustum.points[0], frustum.points[2], white);
-	vectorRenderer->DrawLine(frustum.points[1], frustum.points[3], white);
-	vectorRenderer->DrawLine(frustum.points[2], frustum.points[3], white);
-
-	vectorRenderer->DrawLine(frustum.points[0], frustum.points[4], white);
-	vectorRenderer->DrawLine(frustum.points[1], frustum.points[5], white);
-	vectorRenderer->DrawLine(frustum.points[2], frustum.points[6], white);
-	vectorRenderer->DrawLine(frustum.points[3], frustum.points[7], white);
-
-	vectorRenderer->DrawLine(frustum.points[4], frustum.points[5], white);
-	vectorRenderer->DrawLine(frustum.points[4], frustum.points[6], white);
-	vectorRenderer->DrawLine(frustum.points[5], frustum.points[7], white);
-	vectorRenderer->DrawLine(frustum.points[6], frustum.points[7], white);
+	vectorRenderer->DrawWireFrustum(t, camera.parameters, white);
 }
