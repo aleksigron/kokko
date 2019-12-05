@@ -8,6 +8,7 @@ class MeshManager;
 class MaterialManager;
 class ResourceManager;
 class SceneManager;
+class LightManager;
 
 class Debug;
 
@@ -19,6 +20,7 @@ private:
 	Window* mainWindow;
 	Time* time;
 	EntityManager* entityManager;
+	LightManager* lightManager;
 	Renderer* renderer;
 	MeshManager* meshManager;
 	MaterialManager* materialManager;
@@ -38,6 +40,7 @@ public:
 
 	Window* GetMainWindow() { return mainWindow; }
 	EntityManager* GetEntityManager() { return entityManager; }
+	LightManager* GetLightManager() { return lightManager; }
 	Renderer* GetRenderer() { return renderer; }
 	MaterialManager* GetMaterialManager() { return materialManager; }
 	MeshManager* GetMeshManager() { return meshManager; }

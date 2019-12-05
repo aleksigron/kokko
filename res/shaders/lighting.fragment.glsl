@@ -15,8 +15,17 @@ uniform sampler2D g_norm;
 uniform sampler2D g_alb_spec;
 uniform sampler2D g_depth;
 
-uniform mat4x4 shadow_mat;
-uniform sampler2DShadow shadow_depth;
+const int max_cascade_count = 4;
+
+struct ShadowParameters
+{
+	int cascade_count;
+	float splits[max_cascade_count + 1];
+	mat4x4 matrices[max_cascade_count];
+	sampler2DShadow samplers[max_cascade_count];
+};
+
+uniform ShadowParameters shadow_params;
 
 uniform mat4x4 pers_mat;
 uniform DirectionalLight light;
@@ -44,14 +53,21 @@ void main()
 	float view_z = pers_mat[3][2] / ((pers_mat[2][3] * ndc_z) - pers_mat[2][2]);
 	vec3 view_pos = eye_dir * -view_z;
 
+	// Select correct shadow cascade
+	int cascade_index = shadow_params.cascade_count - 1;
+	for (int i = shadow_params.cascade_count - 1; i >= 0; --i)
+		if (-view_z < shadow_params.splits[i + 1])
+			cascade_index = i;
+
 	// Get shadow depth
-	vec4 shadow_coord = shadow_mat * vec4(view_pos, 1.0);
+	vec4 shadow_coord = shadow_params.matrices[cascade_index] * vec4(view_pos, 1.0);
 	float normDotLightDir = max(dot(norm, light.inverse_dir), 0.0);
 	float compare_depth = shadow_coord.z - clamp(0.0025 * tan(acos(normDotLightDir)), 0, 0.008);
 	float shadow = 0.0;
 
 	for (int i = 0; i < shadow_sample_count; i++) {
-		shadow += texture(shadow_depth, vec3(shadow_coord.xy + poisson_disk[i] * shadow_dist_factor, compare_depth));
+		vec3 coord = vec3(shadow_coord.xy + poisson_disk[i] * shadow_dist_factor, compare_depth);
+		shadow += texture(shadow_params.samplers[cascade_index], coord);
 	}
 
 	shadow /= shadow_sample_count;
@@ -92,4 +108,5 @@ void main()
 
 	//color = vec3(norm * 0.5 + vec3(0.5));
 	//color = vec3(window_z);
+	//color = vec3(view_z * -0.02);
 }

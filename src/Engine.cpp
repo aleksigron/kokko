@@ -5,6 +5,7 @@
 #include "Window.hpp"
 #include "Time.hpp"
 #include "EntityManager.hpp"
+#include "LightManager.hpp"
 #include "Renderer.hpp"
 #include "MeshManager.hpp"
 #include "MaterialManager.hpp"
@@ -39,7 +40,8 @@ Engine::Engine()
 	this->meshManager = new MeshManager;
 	this->materialManager = new MaterialManager;
 	this->resourceManager = new ResourceManager;
-	this->renderer = new Renderer;
+	this->lightManager = new LightManager;
+	this->renderer = new Renderer(this->lightManager);
 	this->sceneManager = new SceneManager;
 }
 
@@ -94,7 +96,7 @@ void Engine::Update()
 	Scene* primaryScene = this->sceneManager->GetScene(primarySceneId);
 
 	// Propagate transform updates from Scene to other systems that require it
-	ITransformUpdateReceiver* transformUpdateReceivers[] = { this->renderer };
+	ITransformUpdateReceiver* transformUpdateReceivers[] = { this->lightManager, this->renderer };
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	primaryScene->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 

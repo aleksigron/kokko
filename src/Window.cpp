@@ -27,7 +27,7 @@ bool Window::Initialize(const char* windowTitle)
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		
-		windowHandle = glfwCreateWindow(1600, 900, windowTitle, NULL, NULL);
+		windowHandle = glfwCreateWindow(1920, 1080, windowTitle, NULL, NULL);
 		
 		if (windowHandle != nullptr)
 		{

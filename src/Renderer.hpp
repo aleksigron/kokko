@@ -6,6 +6,7 @@
 #include "Vec3.hpp"
 #include "Vec2.hpp"
 #include "Entity.hpp"
+#include "ViewFrustum.hpp"
 #include "MeshData.hpp"
 #include "MaterialData.hpp"
 
@@ -21,6 +22,7 @@ class Camera;
 class Window;
 class World;
 class Scene;
+class LightManager;
 
 struct RenderObjectId
 {
@@ -35,6 +37,23 @@ struct RenderOrderData
 	TransparencyType transparency;
 };
 
+struct RendererViewport
+{
+	Vec3f position;
+	Vec3f forward;
+
+	float farMinusNear;
+	float minusNear;
+
+	Mat4x4f view;
+	Mat4x4f projection;
+	Mat4x4f viewProjection;
+
+	FrustumPlanes frustum;
+
+	unsigned int framebufferIndex;
+};
+
 struct RendererFramebuffer
 {
 	static const unsigned int MaxTextureCount = 4;
@@ -43,13 +62,7 @@ struct RendererFramebuffer
 	unsigned int textures[MaxTextureCount];
 	unsigned int textureCount;
 	Vec2i resolution;
-};
-
-struct RendererViewportTransform
-{
-	Mat4x4f view;
-	Mat4x4f projection;
-	Mat4x4f viewProjection;
+	bool used;
 };
 
 class Renderer : public ITransformUpdateReceiver
@@ -69,15 +82,17 @@ private:
 
 		unsigned int dirShaderHash;
 
-		Vec3f lightPos;
-		Vec3f lightDir;
-		Vec3f lightCol;
 		MaterialId shadowMaterial;
 	}
 	lightingData;
 
-	RendererFramebuffer gbuffer;
-	RendererFramebuffer shadowBuffer;
+	RendererFramebuffer* framebufferData;
+	unsigned int framebufferCount;
+	static const unsigned int FramebufferIndexGBuffer = 0;
+
+	RendererViewport* viewportData;
+	unsigned int viewportCount;
+	unsigned int viewportIndexFullscreen;
 
 	struct InstanceData
 	{
@@ -97,17 +112,18 @@ private:
 
 	RenderOrderConfiguration renderOrder;
 
+	LightManager* lightManager;
+
 	Camera* overrideRenderCamera;
 	Camera* overrideCullingCamera;
 
 	RenderCommandList commandList;
 	Array<BitPack> objectVisibility;
 
-	RendererViewportTransform viewportTransforms[MaxViewportCount];
-	unsigned int lightViewportIndex;
-	unsigned int fullscreenViewportIndex;
+	unsigned int GetDepthFramebufferOfSize(const Vec2i& size);
+	void ClearFramebufferUsageFlags();
 
-	void Reallocate(unsigned int required);
+	void ReallocateRenderObjects(unsigned int required);
 
 	void PopulateCommandList(Scene* scene);
 
@@ -117,7 +133,7 @@ private:
 	Camera* GetCullingCamera(Scene* scene);
 	
 public:
-	Renderer();
+	Renderer(LightManager* lightManager);
 	~Renderer();
 
 	void Initialize(Window* window);

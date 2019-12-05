@@ -35,6 +35,8 @@ set (KOKKO_SOURCES
 	src/Camera.hpp
 	src/CameraController.cpp
 	src/CameraController.hpp
+	src/CascadedShadowMap.cpp
+	src/CascadedShadowMap.hpp
 	src/Collection.hpp
 	src/Color.hpp
 	src/ColorSrgb.hpp
@@ -79,6 +81,9 @@ set (KOKKO_SOURCES
 	src/KeyboardInput.hpp
 	src/KeyboardInputView.cpp
 	src/KeyboardInputView.hpp
+	src/Light.hpp
+	src/LightManager.cpp
+	src/LightManager.hpp
 	src/Mat2x2.hpp
 	src/Mat3x3.hpp
 	src/Mat4x4.hpp

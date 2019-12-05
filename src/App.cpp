@@ -8,6 +8,7 @@
 #include "Renderer.hpp"
 #include "EntityManager.hpp"
 #include "SceneManager.hpp"
+#include "LightManager.hpp"
 #include "Scene.hpp"
 
 App* App::instance = nullptr;
@@ -27,6 +28,8 @@ void App::Initialize()
 	settings.LoadFromFile();
 
 	Engine* engine = Engine::GetInstance();
+	EntityManager* entityManager = engine->GetEntityManager();
+	LightManager* lightManager = engine->GetLightManager();
 
 	this->cameraController.SetControlledCamera(&this->mainCamera);
 
@@ -41,11 +44,23 @@ void App::Initialize()
 	scene->SetActiveCamera(&this->mainCamera);
 	sceneManager->SetPrimarySceneId(sceneId);
 
-	Entity mainCameraEntity = engine->GetEntityManager()->Create();
+	// Create camera entity and components
+	Entity mainCameraEntity = entityManager->Create();
 	mainCamera.SetEntity(mainCameraEntity);
 	SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);
 	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 1.6f, 4.0f));
 	scene->SetLocalTransform(cameraSceneObject, cameraTransform);
+
+	// Create light entity and components
+	Entity lightEntity = entityManager->Create();
+	LightId lightId = lightManager->AddLight(lightEntity);
+	lightManager->SetLightType(lightId, LightType::Directional);
+	lightManager->SetColor(lightId, Vec3f(1.0f, 1.0f, 1.0f));
+	lightManager->SetFarDistance(lightId, 100.0f);
+	lightManager->SetShadowCasting(lightId, true);
+	SceneObjectId lightSceneObject = scene->AddSceneObject(lightEntity);
+	Mat4x4f lightTransform = Mat4x4f::LookAt(Vec3f(), Vec3f(-0.4f, -1.0f, -0.6f), Vec3f(0.0f, 1.0f, 0.0f));
+	scene->SetLocalTransform(lightSceneObject, lightTransform);
 
 	Window* window = engine->GetMainWindow();
 	Vec2f frameSize = window->GetFrameBufferSize();

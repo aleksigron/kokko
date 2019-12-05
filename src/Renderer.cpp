@@ -6,13 +6,14 @@
 #include "IncludeOpenGL.hpp"
 
 #include "Debug.hpp"
+#include "DebugVectorRenderer.hpp"
 
 #include "Engine.hpp"
-#include "App.hpp"
 #include "Window.hpp"
 
 #include "ResourceManager.hpp"
 #include "MaterialManager.hpp"
+#include "LightManager.hpp"
 #include "MeshManager.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
@@ -20,10 +21,10 @@
 
 #include "Camera.hpp"
 #include "Rectangle.hpp"
-#include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
 #include "Intersect3D.hpp"
 #include "BitPack.hpp"
+#include "CascadedShadowMap.hpp"
 
 #include "RenderPipeline.hpp"
 #include "RenderCommandData.hpp"
@@ -31,18 +32,22 @@
 
 #include "Sort.hpp"
 
-Renderer::Renderer() :
+Renderer::Renderer(LightManager* lightManager) :
+	framebufferData(nullptr),
+	framebufferCount(0),
+	viewportData(nullptr),
+	viewportCount(0),
+	viewportIndexFullscreen(0),
+	lightManager(lightManager),
 	overrideRenderCamera(nullptr),
-	overrideCullingCamera(nullptr),
-	lightViewportIndex(0),
-	fullscreenViewportIndex(0)
+	overrideCullingCamera(nullptr)
 {
 	lightingData = LightingData{};
-	gbuffer = RendererFramebuffer{};
+
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
 
-	this->Reallocate(512);
+	this->ReallocateRenderObjects(512);
 }
 
 Renderer::~Renderer()
@@ -55,10 +60,24 @@ Renderer::~Renderer()
 void Renderer::Initialize(Window* window)
 {
 	{
+		// Allocate framebuffer data storage
+		framebufferData = new RendererFramebuffer[MaxViewportCount];
+	}
+
+	{
+		// Allocate viewport data storage
+		viewportData = new RendererViewport[MaxViewportCount];
+	}
+
+	{
 		// Create geometry framebuffer and textures
 
 		Vec2f sf = window->GetFrameBufferSize();
 		Vec2i s(static_cast<float>(sf.x), static_cast<float>(sf.y));
+
+		framebufferCount += 1;
+
+		RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
 		gbuffer.resolution = s;
 
 		// Create and bind framebuffer
@@ -108,44 +127,6 @@ void Renderer::Initialize(Window* window)
 	}
 
 	{
-		Vec2i s(1024, 1024);
-		shadowBuffer.resolution = s;
-
-		// Create and bind framebuffer
-
-		glGenFramebuffers(1, &shadowBuffer.framebuffer);
-		glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer.framebuffer);
-
-		// We aren't rendering to any color attachments
-		glDrawBuffer(GL_NONE);
-
-		// Create texture
-		shadowBuffer.textureCount = 1;
-		glGenTextures(shadowBuffer.textureCount, &shadowBuffer.textures[0]);
-
-		// Create and attach depth buffer
-		unsigned int depthTexture = shadowBuffer.textures[0];
-		glBindTexture(GL_TEXTURE_2D, depthTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s.x, s.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		// Finally check if framebuffer is complete
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-		}
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-
-	{
 		// Create screen filling quad
 
 		static const Vertex3f vertexData[] = {
@@ -170,12 +151,6 @@ void Renderer::Initialize(Window* window)
 
 		meshManager->Upload_3f(lightingData.dirMesh, data);
 
-		Vec3f inverseDir(0.282166332f, 0.846498966f, 0.451466143f);
-
-		lightingData.lightPos = inverseDir * 10.0f;
-		lightingData.lightDir = -inverseDir;
-		lightingData.lightCol = Vec3f(1.0f, 1.0f, 1.0f);
-
 		MaterialManager* materialManager = Engine::GetInstance()->GetMaterialManager();
 		const char* const matPath = "res/materials/depth.material.json";
 		lightingData.shadowMaterial = materialManager->GetIdByPath(StringRef(matPath));
@@ -198,17 +173,19 @@ void Renderer::Deinitialize()
 	if (lightingData.dirMesh.IsValid())
 		meshManager->RemoveMesh(lightingData.dirMesh);
 
-	if (shadowBuffer.framebuffer != 0)
+	for (unsigned int i = 0; i < framebufferCount; ++i)
 	{
-		glDeleteTextures(shadowBuffer.textureCount, shadowBuffer.textures);
-		glDeleteFramebuffers(1, &shadowBuffer.framebuffer);
+		const RendererFramebuffer& fb = framebufferData[i];
+
+		if (framebufferData[i].framebuffer != 0)
+		{
+			glDeleteTextures(framebufferData[i].textureCount, framebufferData[i].textures);
+			glDeleteFramebuffers(1, &framebufferData[i].framebuffer);
+		}
 	}
 
-	if (gbuffer.framebuffer != 0)
-	{
-		glDeleteTextures(gbuffer.textureCount, gbuffer.textures);
-		glDeleteFramebuffers(1, &gbuffer.framebuffer);
-	}
+	delete[] viewportData;
+	delete[] framebufferData;
 }
 
 Camera* Renderer::GetRenderCamera(Scene* scene)
@@ -314,24 +291,26 @@ void Renderer::Render(Scene* scene)
 					}
 				}
 
-				const RendererViewportTransform& vptr = viewportTransforms[vpIdx];
+				const Mat4x4f& view = viewportData[vpIdx].view;
+				const Mat4x4f& projection = viewportData[vpIdx].projection;
+				const Mat4x4f& viewProjection = viewportData[vpIdx].viewProjection;
 				const Mat4x4f& model = data.transform[objIdx];
 
 				if (shader->uniformMatMVP >= 0)
 				{
-					Mat4x4f mvp = vptr.viewProjection * model;
+					Mat4x4f mvp = viewProjection * model;
 					glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
 				}
 
 				if (shader->uniformMatMV >= 0)
 				{
-					Mat4x4f mv = vptr.view * model;
+					Mat4x4f mv = view * model;
 					glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
 				}
 
 				if (shader->uniformMatVP >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, vptr.viewProjection.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, viewProjection.ValuePointer());
 				}
 
 				if (shader->uniformMatM >= 0)
@@ -341,12 +320,12 @@ void Renderer::Render(Scene* scene)
 
 				if (shader->uniformMatV >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, vptr.view.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, view.ValuePointer());
 				}
 
 				if (shader->uniformMatP >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, vptr.projection.ValuePointer());
+					glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, projection.ValuePointer());
 				}
 
 				MeshId mesh = data.mesh[objIdx];
@@ -361,8 +340,7 @@ void Renderer::Render(Scene* scene)
 				ResourceManager* resManager = Engine::GetInstance()->GetResourceManager();
 				Shader* shader = resManager->GetShader(lightingData.dirShaderHash);
 
-				const RendererViewportTransform& lvptr = viewportTransforms[lightViewportIndex];
-				const RendererViewportTransform& fsvptr = viewportTransforms[fullscreenViewportIndex];
+				const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
 
 				Vec2f halfNearPlane;
 				halfNearPlane.y = std::tan(renderCamera->parameters.height * 0.5f);
@@ -373,9 +351,6 @@ void Renderer::Render(Scene* scene)
 				int normLoc = glGetUniformLocation(shaderId, "g_norm");
 				int albSpecLoc = glGetUniformLocation(shaderId, "g_alb_spec");
 				int depthLoc = glGetUniformLocation(shaderId, "g_depth");
-				
-				int shadowMatLoc = glGetUniformLocation(shaderId, "shadow_mat");
-				int shadowDepthLoc = glGetUniformLocation(shaderId, "shadow_depth");
 
 				int halfNearPlaneLoc = glGetUniformLocation(shaderId, "half_near_plane");
 				int persMatLoc = glGetUniformLocation(shaderId, "pers_mat");
@@ -383,27 +358,19 @@ void Renderer::Render(Scene* scene)
 				int invLightDirLoc = glGetUniformLocation(shaderId, "light.inverse_dir");
 				int lightColLoc = glGetUniformLocation(shaderId, "light.color");
 
+				int cascadeCountLoc = glGetUniformLocation(shaderId, "shadow_params.cascade_count");
+				int nearDepthLoc = glGetUniformLocation(shaderId, "shadow_params.splits[0]");
+
 				glUseProgram(shaderId);
 
 				glUniform1i(normLoc, 0);
 				glUniform1i(albSpecLoc, 1);
 				glUniform1i(depthLoc, 2);
 
-				glUniform1i(shadowDepthLoc, 3);
-
-				Vec3f wInvLightDir = -lightingData.lightDir;
-				Vec3f viewDir = (fsvptr.view * Vec4f(wInvLightDir, 0.0f)).xyz();
-
-				// Set light properties
-				glUniform3f(invLightDirLoc, viewDir.x, viewDir.y, viewDir.z);
-
-				Vec3f col = lightingData.lightCol;
-				glUniform3f(lightColLoc, col.x, col.y, col.z);
-
 				glUniform2f(halfNearPlaneLoc, halfNearPlane.x, halfNearPlane.y);
 
 				// Set the perspective matrix
-				glUniformMatrix4fv(persMatLoc, 1, GL_FALSE, fsvptr.projection.ValuePointer());
+				glUniformMatrix4fv(persMatLoc, 1, GL_FALSE, fsvp.projection.ValuePointer());
 
 				Mat4x4f bias;
 				bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
@@ -411,11 +378,12 @@ void Renderer::Render(Scene* scene)
 				bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
 				bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
 
-				Mat4x4f viewToLight = lvptr.viewProjection * renderCameraTransform;
-				Mat4x4f shadowMat = bias * viewToLight;
-				glUniformMatrix4fv(shadowMatLoc, 1, GL_FALSE, shadowMat.ValuePointer());
+				float cascadeSplitDepths[CascadedShadowMap::CascadeCount];
+				CascadedShadowMap::CalculateSplitDepths(renderCamera->parameters, cascadeSplitDepths);
 
 				// Bind textures
+
+				const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
 
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[NormalTextureIdx]);
@@ -424,8 +392,52 @@ void Renderer::Render(Scene* scene)
 				glActiveTexture(GL_TEXTURE2);
 				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[DepthTextureIdx]);
 
-				glActiveTexture(GL_TEXTURE3);
-				glBindTexture(GL_TEXTURE_2D, shadowBuffer.textures[0]);
+				unsigned int usedSamplerSlots = 3;
+
+				glUniform1f(nearDepthLoc, renderCamera->parameters.near);
+				glUniform1i(cascadeCountLoc, CascadedShadowMap::CascadeCount);
+
+				char uniformNameBuf[32];
+
+				// Need for each shadow casting light / shadow cascade
+				for (unsigned int vpIdx = 0; vpIdx < viewportCount; ++vpIdx)
+				{
+					// Format uniform names and find locations
+
+					std::sprintf(uniformNameBuf, "shadow_params.matrices[%d]", vpIdx);
+					int shadowMatrixLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+
+					std::sprintf(uniformNameBuf, "shadow_params.samplers[%d]", vpIdx);
+					int shadowSamplerLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+
+					// shadow_params.splits[0] is the near depth
+					std::sprintf(uniformNameBuf, "shadow_params.splits[%d]", vpIdx + 1);
+					int cascadeSplitLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+
+					const RendererViewport& vp = viewportData[vpIdx];
+					Vec3f wInvLightDir = -vp.forward;
+					Vec3f viewDir = (fsvp.view * Vec4f(wInvLightDir, 0.0f)).xyz();
+
+					// Set light properties
+					glUniform3f(invLightDirLoc, viewDir.x, viewDir.y, viewDir.z);
+
+					// TODO: Get light color
+					glUniform3f(lightColLoc, 1.0f, 1.0f, 1.0f);
+
+					Mat4x4f viewToLight = vp.viewProjection * renderCameraTransform;
+					Mat4x4f shadowMat = bias * viewToLight;
+
+					glUniformMatrix4fv(shadowMatrixLoc, 1, GL_FALSE, shadowMat.ValuePointer());
+
+					const RendererFramebuffer& fb = framebufferData[vp.framebufferIndex];
+
+					glActiveTexture(GL_TEXTURE0 + usedSamplerSlots + vpIdx);
+					glBindTexture(GL_TEXTURE_2D, fb.textures[0]);
+
+					glUniform1i(shadowSamplerLoc, usedSamplerSlots + vpIdx);
+
+					glUniform1f(cascadeSplitLoc, cascadeSplitDepths[vpIdx]);
+				}
 
 				// Draw fullscreen quad
 
@@ -440,6 +452,7 @@ void Renderer::Render(Scene* scene)
 	glBindVertexArray(0);
 
 	commandList.Clear();
+	ClearFramebufferUsageFlags();
 }
 
 bool Renderer::ParseControlCommand(uint64_t orderKey)
@@ -563,20 +576,101 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 	return true;
 }
 
-float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeForward, const ProjectionParameters& params)
+float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeForward, float farMinusNear, float minusNear)
 {
-	return (Vec3f::Dot(objPos - eyePos, eyeForward) - params.near) / (params.far - params.near);
+	return (Vec3f::Dot(objPos - eyePos, eyeForward) - minusNear) / farMinusNear;
 }
 
 void Renderer::PopulateCommandList(Scene* scene)
 {
-	using ctrl = RenderControlType;
+	// Get camera transforms
 
-	unsigned int viewportCount = 2; // 1 fullscreen viewport + 1 shadow casting light
-	unsigned int lvp = 0;
-	unsigned int fsvp = 1;
-	
-	fullscreenViewportIndex = fsvp;
+	Camera* renderCamera = this->GetRenderCamera(scene);
+	const ProjectionParameters& projectionParams = renderCamera->parameters;
+	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
+	Mat4x4f cameraTransform = scene->GetWorldTransform(cameraObject);
+
+	Camera* cullingCamera = this->GetCullingCamera(scene);
+	SceneObjectId cullingCameraObject = scene->Lookup(cullingCamera->GetEntity());
+	Mat4x4f cullingCameraTransform = scene->GetWorldTransform(cullingCameraObject);
+
+	Vec3f cameraPos = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+	Vec3f cameraForward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+
+	int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
+	Vec2i shadowSize(shadowSide, shadowSide);
+	Mat4x4f cascadeViewTransforms[CascadedShadowMap::CascadeCount];
+	ProjectionParameters lightProjections[CascadedShadowMap::CascadeCount];
+
+	DebugVectorRenderer* vector = Engine::GetInstance()->GetDebug()->GetVectorRenderer();
+	Color white(1.0f, 1.0f, 1.0f, 1.0f);
+	Color cascadeColors[] = {
+		Color(1.0f, 0.3f, 0.3f, 1.0f),
+		Color(1.0f, 1.0f, 0.3f, 1.0f),
+		Color(0.3f, 1.0f, 0.3f, 1.0f),
+		Color(0.3f, 1.0f, 1.0f, 1.0f)
+	};
+
+	// Reset the used viewport count
+	viewportCount = 0;
+
+	// Update directional light viewports
+	LightId directionalLights = lightManager->GetDirectionalLights();
+	// directionalLights somehow gets its data corrupted when returning to this function TODO CONTINUE HERE XXXXXXXXXXXXXXXXXXXXXXX
+	for (unsigned int i = 0, count = 1; i < count; ++i)
+	{
+		LightId id = directionalLights;
+		if (lightManager->GetShadowCasting(id) &&
+			viewportCount + CascadedShadowMap::CascadeCount + 1 <= MaxViewportCount)
+		{
+			Mat3x3f orientation = lightManager->GetOrientation(id);
+			Vec3f lightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
+			CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransform, projectionParams, cascadeViewTransforms, lightProjections);
+
+			vector->DrawLine(Vec3f(), lightDir, white);
+
+			for (unsigned int cascade = 0; cascade < CascadedShadowMap::CascadeCount; ++cascade)
+			{
+				vector->DrawWireFrustum(cascadeViewTransforms[cascade].GetInverse(), lightProjections[cascade], cascadeColors[cascade]);
+
+				unsigned int vpIdx = viewportCount;
+				viewportCount += 1;
+
+				RendererViewport& vp = viewportData[vpIdx];
+				vp.position = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+				vp.forward = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+				vp.farMinusNear = lightProjections[cascade].far - lightProjections[cascade].near;
+				vp.minusNear = -lightProjections[cascade].near;
+				vp.view = cascadeViewTransforms[cascade].GetInverse();
+				vp.projection = lightProjections[cascade].GetProjectionMatrix();
+				vp.viewProjection = vp.projection * vp.view;
+				vp.frustum.Update(lightProjections[cascade], cascadeViewTransforms[cascade]);
+				vp.framebufferIndex = GetDepthFramebufferOfSize(shadowSize);
+			}
+		}
+	}
+
+	unsigned int numShadowViewports = viewportCount;
+
+	{
+		// Add the fullscreen viewport
+		unsigned int vpIdx = viewportCount;
+		viewportCount += 1;
+
+		RendererViewport& vp = viewportData[vpIdx];
+		vp.position = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+		vp.forward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+		vp.farMinusNear = renderCamera->parameters.far - renderCamera->parameters.near;
+		vp.minusNear = -renderCamera->parameters.near;
+		vp.view = Camera::GetViewMatrix(cameraTransform);
+		vp.projection = projectionParams.GetProjectionMatrix();
+		vp.viewProjection = vp.projection * vp.view;
+		vp.frustum.Update(cullingCamera->parameters, cullingCameraTransform);
+		vp.framebufferIndex = FramebufferIndexGBuffer;
+
+		this->viewportIndexFullscreen = vpIdx;
+	}
+
 
 	unsigned int colorAndDepthMask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
 
@@ -585,60 +679,71 @@ void Renderer::PopulateCommandList(Scene* scene)
 	RenderPass s_pass = RenderPass::Skybox;
 	RenderPass t_pass = RenderPass::Transparent;
 
+	using ctrl = RenderControlType;
+
 	// Before light shadow viewport
 
 	// Set depth test on
-	commandList.AddControl(lvp, g_pass, 0, ctrl::DepthTestEnable);
+	commandList.AddControl(0, g_pass, 0, ctrl::DepthTestEnable);
 
 	// Set depth test function
-	commandList.AddControl(lvp, g_pass, 1, ctrl::DepthTestFunction, GL_LESS);
+	commandList.AddControl(0, g_pass, 1, ctrl::DepthTestFunction, GL_LESS);
 
 	// Enable depth writing
-	commandList.AddControl(lvp, g_pass, 2, ctrl::DepthWriteEnable);
+	commandList.AddControl(0, g_pass, 2, ctrl::DepthWriteEnable);
 
 	// Set face culling on
-	commandList.AddControl(lvp, g_pass, 3, ctrl::CullFaceEnable);
+	commandList.AddControl(0, g_pass, 3, ctrl::CullFaceEnable);
 
 	// Set face culling to cull back faces
-	commandList.AddControl(lvp, g_pass, 4, ctrl::CullFaceBack);
+	commandList.AddControl(0, g_pass, 4, ctrl::CullFaceBack);
 
 	{
 		// Set clear depth
 		float depth = 1.0f;
 		unsigned int* intDepthPtr = reinterpret_cast<unsigned int*>(&depth);
 
-		commandList.AddControl(lvp, g_pass, 5, ctrl::ClearDepth, *intDepthPtr);
+		commandList.AddControl(0, g_pass, 5, ctrl::ClearDepth, *intDepthPtr);
 	}
 
 	// Disable blending
-	commandList.AddControl(lvp, g_pass, 6, ctrl::BlendingDisable);
+	commandList.AddControl(0, g_pass, 6, ctrl::BlendingDisable);
 
+	// For each shadow viewport
+	for (unsigned int vpIdx = 0; vpIdx < numShadowViewports; ++vpIdx)
 	{
-		// Set viewport size
-		RenderCommandData::ViewportData data;
-		data.x = 0;
-		data.y = 0;
-		data.w = shadowBuffer.resolution.x;
-		data.h = shadowBuffer.resolution.y;
+		const RendererFramebuffer& framebuffer = framebufferData[viewportData[vpIdx].framebufferIndex];
 
-		commandList.AddControl(lvp, g_pass, 7, ctrl::Viewport, sizeof(data), &data);
+		{
+			// Set viewport size
+			RenderCommandData::ViewportData data;
+			data.x = 0;
+			data.y = 0;
+			data.w = framebuffer.resolution.x;
+			data.h = framebuffer.resolution.y;
+
+			commandList.AddControl(vpIdx, g_pass, 7, ctrl::Viewport, sizeof(data), &data);
+		}
+
+		{
+			// Bind geometry framebuffer
+			RenderCommandData::BindFramebufferData data;
+			data.target = GL_FRAMEBUFFER;
+			data.framebuffer = framebuffer.framebuffer;
+
+			commandList.AddControl(vpIdx, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
+		}
+
+		// Clear currently bound GL_FRAMEBUFFER
+		commandList.AddControl(vpIdx, g_pass, 9, ctrl::Clear, GL_DEPTH_BUFFER_BIT);
 	}
-
-	{
-		// Bind geometry framebuffer
-		RenderCommandData::BindFramebufferData data;
-		data.target = GL_FRAMEBUFFER;
-		data.framebuffer = shadowBuffer.framebuffer;
-
-		commandList.AddControl(lvp, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
-	}
-
-	// Clear currently bound GL_FRAMEBUFFER
-	commandList.AddControl(lvp, g_pass, 9, ctrl::Clear, GL_DEPTH_BUFFER_BIT);
 
 	// Before fullscreen viewport
 
 	// PASS: OPAQUE GEOMETRY
+
+	unsigned int fsvp = viewportIndexFullscreen;
+	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
 
 	{
 		// Set clear color
@@ -711,71 +816,47 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 	// Create draw commands for render objects in scene
 
-	Camera* renderCamera = this->GetRenderCamera(scene);
-	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
-	Mat4x4f cameraTransform = scene->GetWorldTransform(cameraObject);
-
-	Camera* cullingCamera = this->GetCullingCamera(scene);
-	SceneObjectId cullingCameraObject = scene->Lookup(cullingCamera->GetEntity());
-	Mat4x4f cullingCameraTransform = scene->GetWorldTransform(cullingCameraObject);
-
-	Vec3f cameraPos = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-	Vec3f cameraForward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
-
-	ProjectionParameters lightParameters;
-	lightParameters.aspect = 1.0f;
-	lightParameters.height = 24.0f;
-	lightParameters.near = 0.0f;
-	lightParameters.far = 20.0f;
-	lightParameters.projection = ProjectionType::Orthographic;
-
-	Vec3f lightPos = lightingData.lightPos;
-	Vec3f lightDir = lightingData.lightDir;
-	Vec3f lightTarget = lightPos + lightDir;
-	Vec3f up(0.0f, 1.0f, 0.0f);
-	Mat4x4f lightTransform = Mat4x4f::LookAt(lightPos, lightTarget, up);
 	MaterialId shadowMaterial = lightingData.shadowMaterial;
 
-	RendererViewportTransform& lvptr = viewportTransforms[lvp];
-	lvptr.view = Camera::GetViewMatrix(lightTransform);
-	lvptr.projection = lightParameters.GetProjectionMatrix();
-	lvptr.viewProjection = lvptr.projection * lvptr.view;
-
-	RendererViewportTransform& fsvptr = viewportTransforms[fsvp];
-	fsvptr.view = Camera::GetViewMatrix(cameraTransform);
-	fsvptr.projection = renderCamera->parameters.GetProjectionMatrix();
-	fsvptr.viewProjection = fsvptr.projection * fsvptr.view;
-
 	FrustumPlanes frustum[MaxViewportCount];
-	frustum[lvp].Update(lightParameters, lightTransform);
 	frustum[fsvp].Update(cullingCamera->parameters, cullingCameraTransform);
 
 	unsigned int visRequired = BitPack::CalculateRequired(data.count);
 	objectVisibility.Resize(visRequired * viewportCount);
 
 	BitPack* vis[MaxViewportCount];
-	vis[lvp] = objectVisibility.GetData();
-	vis[fsvp] = vis[lvp] + visRequired;
 
-	Intersect::FrustumAABB(frustum[lvp], data.count, data.bounds, vis[lvp]);
-	Intersect::FrustumAABB(frustum[fsvp], data.count, data.bounds, vis[fsvp]);
+	for (unsigned int vpIdx = 0, count = viewportCount; vpIdx < count; ++vpIdx)
+	{
+		vis[vpIdx] = objectVisibility.GetData() + visRequired * vpIdx;
+		Intersect::FrustumAABB(viewportData[vpIdx].frustum, data.count, data.bounds, vis[vpIdx]);
+	}
 
 	for (unsigned int i = 1; i < data.count; ++i)
 	{
 		Vec3f objPos = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
-		if (BitPack::Get(vis[lvp], i))
+		// Test visibility in shadow viewports
+		for (unsigned int vpIdx = 0, count = numShadowViewports; vpIdx < count; ++vpIdx)
 		{
-			float depth = CalculateDepth(objPos, lightPos, lightDir, lightParameters);
-			commandList.AddDraw(lvp, RenderPass::OpaqueGeometry, depth, shadowMaterial, i);
-		}
+			if (BitPack::Get(vis[vpIdx], i))
+			{
+				const RendererViewport& vp = viewportData[vpIdx];
 
-		// Object is in potentially visible set for the particular viewport
+				float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
+
+				commandList.AddDraw(vpIdx, RenderPass::OpaqueGeometry, depth, shadowMaterial, i);
+			}
+		}
+		
+
+		// Test visibility in fullscreen viewport
 		if (BitPack::Get(vis[fsvp], i))
 		{
 			const RenderOrderData& o = data.order[i];
+			const RendererViewport& vp = viewportData[fsvp];
 
-			float depth = CalculateDepth(objPos, cameraPos, cameraForward, renderCamera->parameters);
+			float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
 			RenderPass pass = static_cast<RenderPass>(o.transparency);
 			commandList.AddDraw(fsvp, pass, depth, o.material, i);
@@ -785,7 +866,77 @@ void Renderer::PopulateCommandList(Scene* scene)
 	commandList.Sort();
 }
 
-void Renderer::Reallocate(unsigned int required)
+unsigned int Renderer::GetDepthFramebufferOfSize(const Vec2i& size)
+{
+	// Try to find existing unused framebuffer that matches the requested size
+	// Skip index 0 as it is the G-Buffer
+	for (unsigned int i = 1; i < framebufferCount; ++i)
+	{
+		RendererFramebuffer& fb = framebufferData[i];
+		if (fb.used == false && fb.resolution.x == size.x && fb.resolution.y == size.y)
+		{
+			fb.used = true;
+			return i;
+		}
+	}
+
+	// If no existing framebuffer was found, create a new one if space permits
+	if (framebufferCount < MaxViewportCount)
+	{
+		unsigned int fbIdx = framebufferCount;
+		framebufferCount += 1;
+
+		RendererFramebuffer& framebuffer = framebufferData[fbIdx];
+
+		framebuffer.resolution = size;
+		framebuffer.used = true;
+
+		// Create and bind framebuffer
+
+		glGenFramebuffers(1, &framebuffer.framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.framebuffer);
+
+		// We aren't rendering to any color attachments
+		glDrawBuffer(GL_NONE);
+
+		// Create texture
+		framebuffer.textureCount = 1;
+		glGenTextures(framebuffer.textureCount, &framebuffer.textures[0]);
+
+		// Create and attach depth buffer
+		unsigned int depthTexture = framebuffer.textures[0];
+		glBindTexture(GL_TEXTURE_2D, depthTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, size.x, size.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
+		// Clear texture bind
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		// Clear framebuffer bind
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		return fbIdx;
+	}
+
+	return 0;
+}
+
+void Renderer::ClearFramebufferUsageFlags()
+{
+	// Skip index 0 as it is the G-Buffer
+	for (unsigned int i = 1; i < framebufferCount; ++i)
+	{
+		framebufferData[i].used = false;
+	}
+}
+
+void Renderer::ReallocateRenderObjects(unsigned int required)
 {
 	if (required <= data.allocated)
 		return;
@@ -833,7 +984,7 @@ RenderObjectId Renderer::AddRenderObject(Entity entity)
 void Renderer::AddRenderObject(unsigned int count, const Entity* entities, RenderObjectId* renderObjectIdsOut)
 {
 	if (data.count + count > data.allocated)
-		this->Reallocate(data.count + count);
+		this->ReallocateRenderObjects(data.count + count);
 
 	for (unsigned int i = 0; i < count; ++i)
 	{
