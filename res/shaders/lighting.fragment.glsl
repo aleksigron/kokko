@@ -2,7 +2,7 @@
 
 struct DirectionalLight
 {
-	vec3 inverse_dir;
+	vec3 direction;
 	vec3 color;
 };
 
@@ -54,15 +54,15 @@ void main()
 	vec3 view_pos = eye_dir * -view_z;
 
 	// Select correct shadow cascade
-	int cascade_index = shadow_params.cascade_count - 1;
-	for (int i = shadow_params.cascade_count - 1; i >= 0; --i)
-		if (-view_z < shadow_params.splits[i + 1])
+	int cascade_index = 0;
+	for (int i = 0; i < shadow_params.cascade_count; ++i)
+		if (shadow_params.splits[i] <= -view_z && shadow_params.splits[i + 1] > -view_z)
 			cascade_index = i;
 
 	// Get shadow depth
 	vec4 shadow_coord = shadow_params.matrices[cascade_index] * vec4(view_pos, 1.0);
-	float normDotLightDir = max(dot(norm, light.inverse_dir), 0.0);
-	float compare_depth = shadow_coord.z - clamp(0.0025 * tan(acos(normDotLightDir)), 0, 0.008);
+	float normDotLightDir = max(dot(norm, -light.direction), 0.0);
+	float compare_depth = shadow_coord.z - clamp(0.002 * tan(acos(normDotLightDir)), 0, 0.005);
 	float shadow = 0.0;
 
 	for (int i = 0; i < shadow_sample_count; i++) {
@@ -80,14 +80,13 @@ void main()
 	// Specular lighting
 
 	vec3 eyeDir = normalize(-view_pos);
-	vec3 refl = reflect(light.inverse_dir, norm);
+	vec3 refl = reflect(light.direction, norm);
 	float eyeDirDotRefl = max(dot(eyeDir, refl), 0.0);
 	float spec_power = 40;
 	float spec_factor = pow(eyeDirDotRefl, spec_power);
 	float spec_int = albSpec.a;
 
 	vec3 spec = light.color * spec_int * spec_factor;
-	
 
 	// Output
 	

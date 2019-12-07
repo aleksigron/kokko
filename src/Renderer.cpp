@@ -355,7 +355,7 @@ void Renderer::Render(Scene* scene)
 				int halfNearPlaneLoc = glGetUniformLocation(shaderId, "half_near_plane");
 				int persMatLoc = glGetUniformLocation(shaderId, "pers_mat");
 
-				int invLightDirLoc = glGetUniformLocation(shaderId, "light.inverse_dir");
+				int lightDirLoc = glGetUniformLocation(shaderId, "light.direction");
 				int lightColLoc = glGetUniformLocation(shaderId, "light.color");
 
 				int cascadeCountLoc = glGetUniformLocation(shaderId, "shadow_params.cascade_count");
@@ -372,6 +372,15 @@ void Renderer::Render(Scene* scene)
 				// Set the perspective matrix
 				glUniformMatrix4fv(persMatLoc, 1, GL_FALSE, fsvp.projection.ValuePointer());
 
+				Vec3f wLightDir = primaryDirectionalLightDirection;
+				Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
+
+				// Set light properties
+				glUniform3f(lightDirLoc, vLightDir.x, vLightDir.y, vLightDir.z);
+
+				// TODO: Get light color
+				glUniform3f(lightColLoc, 1.0f, 1.0f, 1.0f);
+
 				Mat4x4f bias;
 				bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
 				bias[4] = 0.0; bias[5] = 0.5; bias[6] = 0.0; bias[7] = 0.0;
@@ -380,7 +389,7 @@ void Renderer::Render(Scene* scene)
 
 				float cascadeSplitDepths[CascadedShadowMap::CascadeCount];
 				CascadedShadowMap::CalculateSplitDepths(renderCamera->parameters, cascadeSplitDepths);
-
+				 
 				// Bind textures
 
 				const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
@@ -415,14 +424,6 @@ void Renderer::Render(Scene* scene)
 					int cascadeSplitLoc = glGetUniformLocation(shaderId, uniformNameBuf);
 
 					const RendererViewport& vp = viewportData[vpIdx];
-					Vec3f wInvLightDir = -vp.forward;
-					Vec3f viewDir = (fsvp.view * Vec4f(wInvLightDir, 0.0f)).xyz();
-
-					// Set light properties
-					glUniform3f(invLightDirLoc, viewDir.x, viewDir.y, viewDir.z);
-
-					// TODO: Get light color
-					glUniform3f(lightColLoc, 1.0f, 1.0f, 1.0f);
 
 					Mat4x4f viewToLight = vp.viewProjection * renderCameraTransform;
 					Mat4x4f shadowMat = bias * viewToLight;
@@ -602,15 +603,6 @@ void Renderer::PopulateCommandList(Scene* scene)
 	Mat4x4f cascadeViewTransforms[CascadedShadowMap::CascadeCount];
 	ProjectionParameters lightProjections[CascadedShadowMap::CascadeCount];
 
-	DebugVectorRenderer* vector = Engine::GetInstance()->GetDebug()->GetVectorRenderer();
-	Color white(1.0f, 1.0f, 1.0f, 1.0f);
-	Color cascadeColors[] = {
-		Color(1.0f, 0.3f, 0.3f, 1.0f),
-		Color(1.0f, 1.0f, 0.3f, 1.0f),
-		Color(0.3f, 1.0f, 0.3f, 1.0f),
-		Color(0.3f, 1.0f, 1.0f, 1.0f)
-	};
-
 	// Reset the used viewport count
 	viewportCount = 0;
 
@@ -625,14 +617,13 @@ void Renderer::PopulateCommandList(Scene* scene)
 		{
 			Mat3x3f orientation = lightManager->GetOrientation(id);
 			Vec3f lightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
-			CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransform, projectionParams, cascadeViewTransforms, lightProjections);
 
-			vector->DrawLine(Vec3f(), lightDir, white);
+			primaryDirectionalLightDirection = lightDir;
+
+			CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransform, projectionParams, cascadeViewTransforms, lightProjections);
 
 			for (unsigned int cascade = 0; cascade < CascadedShadowMap::CascadeCount; ++cascade)
 			{
-				vector->DrawWireFrustum(cascadeViewTransforms[cascade].GetInverse(), lightProjections[cascade], cascadeColors[cascade]);
-
 				unsigned int vpIdx = viewportCount;
 				viewportCount += 1;
 

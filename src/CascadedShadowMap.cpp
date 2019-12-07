@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 
+#include "Vec2.hpp"
 #include "Math.hpp"
 #include "ViewFrustum.hpp"
 #include "BoundingBox.hpp"
@@ -21,67 +22,74 @@ void CalculateCascadeFrusta(
 	Mat4x4f* transformsOut,
 	ProjectionParameters* projectionsOut)
 {
-	// Calculate split depths
-
 	float splits[CascadeCount];
 	CalculateSplitDepths(projection, splits);
 
-	// Calculate frusta for camera perspective
-
-	ProjectionParameters cascadeCameraFrusta[CascadeCount];
-	FrustumPoints frustumPointsWs[CascadeCount];
-
-	for (unsigned int i = 0; i < CascadeCount; ++i)
-	{
-		cascadeCameraFrusta[i].projection = projection.projection;
-		cascadeCameraFrusta[i].aspect = projection.aspect;
-		cascadeCameraFrusta[i].height = projection.height;
-		cascadeCameraFrusta[i].near = i > 0 ? splits[i - 1] : projection.near;
-		cascadeCameraFrusta[i].far = splits[i];
-		frustumPointsWs[i].Update(cascadeCameraFrusta[i], cameraTransform);
-	}
-
-	// Calculate frusta for light perspective
-
-	Vec3f upDir(0.0f, 1.0f, 0.0f);
-
-	if (std::fabsf(Vec3f::Dot(lightDirection, upDir)) > 0.99f)
-		upDir = Vec3f(0.0f, 0.0f, 1.0f);
-
-	Vec3f axisZ = -lightDirection;
-
-	Vec3f axisX = Vec3f::Cross(axisZ, upDir);
-	axisX.Normalize();
-
-	Vec3f axisY = Vec3f::Cross(axisX, axisZ);
-
-	Mat3x3f orientation = Mat3x3f::FromAxes(axisX, axisY, axisZ);
-	Mat4x4f rotatedView = Mat4x4f(orientation).GetInverse();
+	Vec2f halfFovTan;
+	halfFovTan.y = std::tan(projection.height * 0.5f);
+	halfFovTan.x = halfFovTan.y * projection.aspect;
+	float crossHalfFovTan = halfFovTan.Magnitude();
 
 	for (unsigned int cascIdx = 0; cascIdx < CascadeCount; ++cascIdx)
 	{
-		Vec3f frustumCenter;
-		for (unsigned int i = 0; i < 8; ++i)
-			frustumCenter += frustumPointsWs[cascIdx].points[i];
-		
-		frustumCenter = frustumCenter * 0.125f;
+		// Calculate frusta for camera perspective
+		ProjectionParameters cascadeCameraFrustum;
+		cascadeCameraFrustum.projection = projection.projection;
+		cascadeCameraFrustum.aspect = projection.aspect;
+		cascadeCameraFrustum.height = projection.height;
+		cascadeCameraFrustum.near = cascIdx > 0 ? splits[cascIdx - 1] : projection.near;
+		cascadeCameraFrustum.far = splits[cascIdx];
 
-		float radius = 0.0f;
-		for (unsigned int i = 0; i < 8; ++i)
+		// Average of near and far depths
+		float cascadeHalfDepth = (cascadeCameraFrustum.far + cascadeCameraFrustum.near) * 0.5f;
+
+		FrustumPoints fp;
+		fp.Update(cascadeCameraFrustum, cameraTransform);
+
+		// Calculate frusta for light perspective
+		// Calculate enclosing sphere
+
+		Vec3f farPlaneCenter = (cameraTransform * Vec4f(0.0f, 0.0f, -splits[cascIdx], 1.0f)).xyz();
+
+		Vec3f sphereCenter;
+		float radius;
+
+		// Near plane points are closer than far plane points
+		if ((fp.points[0] - farPlaneCenter).SqrMagnitude() < (fp.points[4] - farPlaneCenter).SqrMagnitude())
 		{
-			float distance = (frustumPointsWs[cascIdx].points[i] - frustumCenter).Magnitude();
-			radius = std::max(radius, distance);
+			// Optimal sphere center is at far plane center
+			sphereCenter = farPlaneCenter;
+			radius = (fp.points[4] - farPlaneCenter).Magnitude();
+		}
+		else // Near plane points are farther than far plane points
+		{
+			// Need to calculate optimal position for sphere center
+			// Consider as a 2D corner to corner cross-section of frustum
+
+			// Distance from center axis to frustum corner line at halfway depth
+			float midHalfWidth = cascadeHalfDepth * crossHalfFovTan;
+
+			// Sphere center offset from frustum center line halfway point
+			float offsetFromFrustumCenter = midHalfWidth * crossHalfFovTan;
+
+			// Sphere center depth from camera
+			float sphereDepth = cascadeHalfDepth + offsetFromFrustumCenter;
+
+			sphereCenter = (cameraTransform * Vec4f(0.0f, 0.0f, -sphereDepth, 1.0f)).xyz();
+			radius = (sphereCenter - fp.points[0]).Magnitude();
 		}
 
-		Vec3f at = frustumCenter - lightDirection * radius;
-		transformsOut[cascIdx] = Mat4x4f::LookAt(at, frustumCenter, Vec3f(0.0f, 1.0f, 0.0f));
+		Vec3f from = sphereCenter - lightDirection * radius;
+		transformsOut[cascIdx] = Mat4x4f::LookAt(from, sphereCenter, Vec3f(0.0f, 1.0f, 0.0f));
+
+		float diameter = radius * 2.0f;
 		
 		ProjectionParameters& cascadeProjection = projectionsOut[cascIdx];
 		cascadeProjection.projection = ProjectionType::Orthographic;
 		cascadeProjection.aspect = 1.0f;
-		cascadeProjection.height = radius;
+		cascadeProjection.height = diameter;
 		cascadeProjection.near = 0.0f;
-		cascadeProjection.far = radius * 2.0f;
+		cascadeProjection.far = diameter;
 	}
 }
 
@@ -93,7 +101,7 @@ void CalculateSplitDepths(const ProjectionParameters& projection, float* depthsO
 void CalculateSplitDepths(float near, float far, float* depthsOut)
 {
 	const float maxShadowDistance = 100.0f;
-	const float shadowSplitLogFactor = 0.9f;
+	const float shadowSplitLogFactor = 0.8f;
 
 	far = std::min(maxShadowDistance, far);
 

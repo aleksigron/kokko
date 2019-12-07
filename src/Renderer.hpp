@@ -113,6 +113,7 @@ private:
 	RenderOrderConfiguration renderOrder;
 
 	LightManager* lightManager;
+	Vec3f primaryDirectionalLightDirection;
 
 	Camera* overrideRenderCamera;
 	Camera* overrideCullingCamera;
