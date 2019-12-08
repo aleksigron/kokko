@@ -25,6 +25,15 @@ void CalculateCascadeFrusta(
 	float splits[CascadeCount];
 	CalculateSplitDepths(projection, splits);
 
+	Vec3f up(0.0f, 1.0f, 0.0f);
+
+	if (std::abs(Vec3f::Dot(lightDirection, up)) > 0.99f)
+		up = Vec3f(0.0f, 0.0f, -1.0f);
+
+	Mat4x4f placeholderLightTransform = Mat4x4f::LookAt(Vec3f(0.0f, 0.0f, 0.0f), lightDirection, up);
+	Vec3f lightDirX = (placeholderLightTransform * Vec4f(1.0f, 0.0f, 0.0f, 0.0f)).xyz();
+	Vec3f lightDirY = (placeholderLightTransform * Vec4f(0.0f, 1.0f, 0.0f, 0.0f)).xyz();
+
 	Vec2f halfFovTan;
 	halfFovTan.y = std::tan(projection.height * 0.5f);
 	halfFovTan.x = halfFovTan.y * projection.aspect;
@@ -40,9 +49,6 @@ void CalculateCascadeFrusta(
 		cascadeCameraFrustum.near = cascIdx > 0 ? splits[cascIdx - 1] : projection.near;
 		cascadeCameraFrustum.far = splits[cascIdx];
 
-		// Average of near and far depths
-		float cascadeHalfDepth = (cascadeCameraFrustum.far + cascadeCameraFrustum.near) * 0.5f;
-
 		FrustumPoints fp;
 		fp.Update(cascadeCameraFrustum, cameraTransform);
 
@@ -50,6 +56,9 @@ void CalculateCascadeFrusta(
 		// Calculate enclosing sphere
 
 		Vec3f farPlaneCenter = (cameraTransform * Vec4f(0.0f, 0.0f, -splits[cascIdx], 1.0f)).xyz();
+
+		float resolution = static_cast<float>(GetShadowCascadeResolution());
+		float roundingMarginFactor = resolution / (resolution - 1.0f);
 
 		Vec3f sphereCenter;
 		float radius;
@@ -59,12 +68,15 @@ void CalculateCascadeFrusta(
 		{
 			// Optimal sphere center is at far plane center
 			sphereCenter = farPlaneCenter;
-			radius = (fp.points[4] - farPlaneCenter).Magnitude();
+			radius = (fp.points[4] - farPlaneCenter).Magnitude() * roundingMarginFactor;
 		}
 		else // Near plane points are farther than far plane points
 		{
 			// Need to calculate optimal position for sphere center
 			// Consider as a 2D corner to corner cross-section of frustum
+
+			// Average of near and far depths
+			float cascadeHalfDepth = (cascadeCameraFrustum.far + cascadeCameraFrustum.near) * 0.5f;
 
 			// Distance from center axis to frustum corner line at halfway depth
 			float midHalfWidth = cascadeHalfDepth * crossHalfFovTan;
@@ -76,20 +88,35 @@ void CalculateCascadeFrusta(
 			float sphereDepth = cascadeHalfDepth + offsetFromFrustumCenter;
 
 			sphereCenter = (cameraTransform * Vec4f(0.0f, 0.0f, -sphereDepth, 1.0f)).xyz();
-			radius = (sphereCenter - fp.points[0]).Magnitude();
+			radius = (sphereCenter - fp.points[0]).Magnitude() * roundingMarginFactor;
 		}
 
 		Vec3f from = sphereCenter - lightDirection * radius;
-		transformsOut[cascIdx] = Mat4x4f::LookAt(from, sphereCenter, Vec3f(0.0f, 1.0f, 0.0f));
+
+		Mat4x4f lightModelTransform = Mat4x4f::LookAt(from, sphereCenter, up);
+		Mat4x4f lightViewTransform = lightModelTransform.GetInverse();
 
 		float diameter = radius * 2.0f;
-		
-		ProjectionParameters& cascadeProjection = projectionsOut[cascIdx];
-		cascadeProjection.projection = ProjectionType::Orthographic;
-		cascadeProjection.aspect = 1.0f;
-		cascadeProjection.height = diameter;
-		cascadeProjection.near = 0.0f;
-		cascadeProjection.far = diameter;
+
+		ProjectionParameters cascProj;
+		cascProj.projection = ProjectionType::Orthographic;
+		cascProj.aspect = 1.0f;
+		cascProj.height = diameter;
+		cascProj.near = 0.0f;
+		cascProj.far = diameter;
+
+		// Calculate rounding in shadow map space to remove edge shimmer
+
+		Mat4x4f shadowMatrix = cascProj.GetProjectionMatrix() * lightViewTransform;
+		Vec4f originShadowSpace = shadowMatrix * Vec4f(0.0f, 0.0f, 0.0f, 1.0f) * resolution * 0.5f;
+		Vec4f roundedOrigin(std::round(originShadowSpace.x), std::round(originShadowSpace.y), 0.0f, 0.0f);
+		Vec4f offsetShadowSpace = (roundedOrigin - originShadowSpace) * (2.0f / resolution);
+		Vec3f offsetWs = (lightDirX * offsetShadowSpace.x + lightDirY * offsetShadowSpace.y) * radius;
+
+		// Because we don't return projection as a matrix, we have to add the offset to the view transform
+
+		transformsOut[cascIdx] = Mat4x4f::LookAt(from - offsetWs, sphereCenter - offsetWs, up);
+		projectionsOut[cascIdx] = cascProj;
 	}
 }
 
