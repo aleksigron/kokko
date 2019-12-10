@@ -387,7 +387,7 @@ void Renderer::Render(Scene* scene)
 				bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
 				bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
 
-				float cascadeSplitDepths[CascadedShadowMap::CascadeCount];
+				float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
 				CascadedShadowMap::CalculateSplitDepths(renderCamera->parameters, cascadeSplitDepths);
 				 
 				// Bind textures
@@ -404,7 +404,9 @@ void Renderer::Render(Scene* scene)
 				unsigned int usedSamplerSlots = 3;
 
 				glUniform1f(nearDepthLoc, renderCamera->parameters.near);
-				glUniform1i(cascadeCountLoc, CascadedShadowMap::CascadeCount);
+
+				unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
+				glUniform1i(cascadeCountLoc, shadowCascadeCount);
 
 				char uniformNameBuf[32];
 
@@ -600,8 +602,10 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 	int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
 	Vec2i shadowSize(shadowSide, shadowSide);
-	Mat4x4f cascadeViewTransforms[CascadedShadowMap::CascadeCount];
-	ProjectionParameters lightProjections[CascadedShadowMap::CascadeCount];
+	Mat4x4f cascadeViewTransforms[CascadedShadowMap::MaxCascadeCount];
+	ProjectionParameters lightProjections[CascadedShadowMap::MaxCascadeCount];
+
+	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 
 	// Reset the used viewport count
 	viewportCount = 0;
@@ -613,7 +617,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 	{
 		LightId id = directionalLights;
 		if (lightManager->GetShadowCasting(id) &&
-			viewportCount + CascadedShadowMap::CascadeCount + 1 <= MaxViewportCount)
+			viewportCount + shadowCascadeCount + 1 <= MaxViewportCount)
 		{
 			Mat3x3f orientation = lightManager->GetOrientation(id);
 			Vec3f lightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
@@ -622,7 +626,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 			CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransform, projectionParams, cascadeViewTransforms, lightProjections);
 
-			for (unsigned int cascade = 0; cascade < CascadedShadowMap::CascadeCount; ++cascade)
+			for (unsigned int cascade = 0; cascade < shadowCascadeCount; ++cascade)
 			{
 				unsigned int vpIdx = viewportCount;
 				viewportCount += 1;

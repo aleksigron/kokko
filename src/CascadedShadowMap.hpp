@@ -6,8 +6,9 @@
 
 namespace CascadedShadowMap
 {
-	constexpr unsigned int CascadeCount = 4;
+	constexpr unsigned int MaxCascadeCount = 4;
 
+	unsigned int GetCascadeCount();
 	int GetShadowCascadeResolution();
 
 	void CalculateCascadeFrusta(

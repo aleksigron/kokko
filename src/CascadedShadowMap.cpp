@@ -15,6 +15,11 @@ int GetShadowCascadeResolution()
 	return 1024;
 }
 
+unsigned int GetCascadeCount()
+{
+	return 4;
+}
+
 void CalculateCascadeFrusta(
 	const Vec3f& lightDirection,
 	const Mat4x4f& cameraTransform,
@@ -22,7 +27,7 @@ void CalculateCascadeFrusta(
 	Mat4x4f* transformsOut,
 	ProjectionParameters* projectionsOut)
 {
-	float splits[CascadeCount];
+	float splits[MaxCascadeCount];
 	CalculateSplitDepths(projection, splits);
 
 	Vec3f up(0.0f, 1.0f, 0.0f);
@@ -39,7 +44,7 @@ void CalculateCascadeFrusta(
 	halfFovTan.x = halfFovTan.y * projection.aspect;
 	float crossHalfFovTan = halfFovTan.Magnitude();
 
-	for (unsigned int cascIdx = 0; cascIdx < CascadeCount; ++cascIdx)
+	for (unsigned int cascIdx = 0, count = GetCascadeCount(); cascIdx < count; ++cascIdx)
 	{
 		// Calculate frusta for camera perspective
 		ProjectionParameters cascadeCameraFrustum;
@@ -133,16 +138,18 @@ void CalculateSplitDepths(float near, float far, float* depthsOut)
 	far = std::min(maxShadowDistance, far);
 
 	float i_f = 1.0f;
-	float fCascadeCount = static_cast<float>(CascadeCount);
+	unsigned int cascadeCountInt = GetCascadeCount();
+	float cascadeCountFloat = static_cast<float>(cascadeCountInt);
 
-	for (unsigned int i = 0; i < CascadeCount - 1; i++, i_f += 1.0f)
+
+	for (unsigned int i = 0; i < cascadeCountInt - 1; i++, i_f += 1.0f)
 	{
 		depthsOut[i] = Math::Lerp(
-			near + (i_f / fCascadeCount) * (far - near),
-			near * std::powf(far / near, i_f / fCascadeCount),
+			near + (i_f / cascadeCountFloat) * (far - near),
+			near * std::powf(far / near, i_f / cascadeCountFloat),
 			shadowSplitLogFactor);
 	}
-	depthsOut[CascadeCount - 1] = far;
+	depthsOut[cascadeCountInt - 1] = far;
 }
 
 } // namespace CascadedShadowMap 
