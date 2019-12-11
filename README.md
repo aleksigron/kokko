@@ -11,8 +11,6 @@ good, small game engine that might offer some new ways to solve old problems.
 - C++14 compliant compiler
 - Blender for exporting mesh files
 - Glraw for encoding textures
-
-## Running
 Use CMake to generate IDE project files or directly build the project.
 
 ### Creating a Visual Studio solution on Windows
@@ -35,7 +33,29 @@ In Xcode, choose _Product_ > _Scheme_ > _Edit Scheme_. Select the _Run_ scheme
 and go to the _Options_ tab. Enable _Custom working directory_ and set the it
 to the repository root.
 
-## Other tools
+## Features
+
+### Graphics
+- OpenGL 3.3
+- Deferred renderer
+- Separated command list build, ordering, dispatch
+- Cascaded shadow maps
+
+### Resources
+- Resource configuration files are JSON for human-readability
+  - Scenes
+  - Materials
+  - Shaders
+  - Texture metadata
+- Mesh files are using a custom format
+
+### Debugging
+- Logging
+- Vector rendering
+- Frametime visualization
+- Culling visualization
+
+### Mesh format
 I'm using a proprietary model export script for Blender. The motivation behind
 using a custom format is to better understand the content pipeline. Also, I'm
 not aware of a simple format for meshes that is optimized for runtime load
@@ -46,6 +66,7 @@ can install it by copying the *blender_custom_format* folder to your Blender
 installation's *scripts/addons_contrib* folder and enabling it in the add-ons
 menu.
 
+## Other tools
 [rapidjson](https://github.com/Tencent/rapidjson) is used to read JSON
 formatted resource files (scenes, shaders, materials, textures).
 
