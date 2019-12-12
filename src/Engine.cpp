@@ -63,7 +63,9 @@ bool Engine::Initialize()
 {
 	glfwSetErrorCallback(OnGlfwError);
 	
-	if (this->mainWindow->Initialize("Kokko"))
+	Vec2i windowSize(1600, 900);
+
+	if (this->mainWindow->Initialize(windowSize.x, windowSize.y, "Kokko"))
 	{
 		const char* const logFilename = "log.txt";
 		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";

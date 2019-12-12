@@ -20,7 +20,7 @@ public:
 	Window();
 	~Window();
 	
-	bool Initialize(const char* windowTitle);
+	bool Initialize(int width, int height, const char* windowTitle);
 	bool ShouldClose();
 	void UpdateInput();
 	void Swap();

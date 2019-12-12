@@ -18,7 +18,7 @@ Window::~Window()
 	delete inputManager;
 }
 
-bool Window::Initialize(const char* windowTitle)
+bool Window::Initialize(int width, int height, const char* windowTitle)
 {
 	if (glfwInit() == GL_TRUE)
 	{
@@ -27,7 +27,7 @@ bool Window::Initialize(const char* windowTitle)
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		
-		windowHandle = glfwCreateWindow(1920, 1080, windowTitle, NULL, NULL);
+		windowHandle = glfwCreateWindow(width, height, windowTitle, NULL, NULL);
 		
 		if (windowHandle != nullptr)
 		{
