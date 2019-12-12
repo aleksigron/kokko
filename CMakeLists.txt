@@ -17,8 +17,11 @@ include_directories(
 	deps/glad/include
 )
 
-set (KOKKO_SOURCES
+set (DEPS_SOURCES
 	deps/glad/src/glad.c
+)
+
+set (KOKKO_SOURCES
 	src/main.cpp
 	src/App.cpp
 	src/App.hpp
@@ -91,7 +94,6 @@ set (KOKKO_SOURCES
 	src/MaterialManager.hpp
 	src/MaterialData.hpp
 	src/Math.hpp
-	src/MemoryAmount.hpp
 	src/MeshData.hpp
 	src/MeshLoader.hpp
 	src/MeshManager.cpp
@@ -127,10 +129,6 @@ set (KOKKO_SOURCES
 	src/Skybox.hpp
 	src/Sort.hpp
 	src/SortedArray.hpp
-	src/StackAllocation.cpp
-	src/StackAllocation.hpp
-	src/StackAllocator.cpp
-	src/StackAllocator.hpp
 	src/String.cpp
 	src/String.hpp
 	src/StringRef.cpp
@@ -151,13 +149,21 @@ set (KOKKO_SOURCES
 	src/VertexFormat.cpp
 	src/VertexFormat.hpp
 	src/ViewFrustum.hpp
-	src/VirtualMemory.cpp
-	src/VirtualMemory.hpp
 	src/Window.cpp
 	src/Window.hpp
+	src/Memory/Memory.hpp
+	src/Memory/StackAllocation.cpp
+	src/Memory/StackAllocation.hpp
+	src/Memory/StackAllocator.cpp
+	src/Memory/StackAllocator.hpp
+	src/Memory/VirtualMemory.cpp
+	src/Memory/VirtualMemory.hpp
 )
 
-add_executable(${EXECUTABLE_NAME} ${KOKKO_SOURCES})
+source_group(Dependencies FILES ${DEPS_SOURCES})
+source_group(TREE ../src FILES ${KOKKO_SOURCES})
+
+add_executable(${EXECUTABLE_NAME} ${DEPS_SOURCES} ${KOKKO_SOURCES})
 
 # Build GLFW with the project
 
