@@ -151,7 +151,11 @@ set (KOKKO_SOURCES
 	src/ViewFrustum.hpp
 	src/Window.cpp
 	src/Window.hpp
+	src/Memory/Memory.cpp
 	src/Memory/Memory.hpp
+	src/Memory/Allocator.hpp
+	src/Memory/DefaultAllocator.cpp
+	src/Memory/DefaultAllocator.hpp
 	src/Memory/StackAllocation.cpp
 	src/Memory/StackAllocation.hpp
 	src/Memory/StackAllocator.cpp

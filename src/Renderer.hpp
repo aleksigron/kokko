@@ -16,6 +16,8 @@
 #include "Array.hpp"
 #include "HashMap.hpp"
 
+class Allocator;
+
 struct BoundingBox;
 struct BitPack;
 class Camera;
@@ -73,6 +75,8 @@ private:
 	static const unsigned int NormalTextureIdx = 0;
 	static const unsigned int AlbedoSpecTextureIdx = 1;
 	static const unsigned int DepthTextureIdx = 2;
+
+	Allocator* allocator;
 
 	struct LightingData
 	{
@@ -134,7 +138,7 @@ private:
 	Camera* GetCullingCamera(Scene* scene);
 	
 public:
-	Renderer(LightManager* lightManager);
+	Renderer(Allocator* allocator, LightManager* lightManager);
 	~Renderer();
 
 	void Initialize(Window* window);

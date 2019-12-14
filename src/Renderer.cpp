@@ -10,6 +10,7 @@
 
 #include "Engine.hpp"
 #include "Window.hpp"
+#include "Memory/Allocator.hpp"
 
 #include "ResourceManager.hpp"
 #include "MaterialManager.hpp"
@@ -32,7 +33,8 @@
 
 #include "Sort.hpp"
 
-Renderer::Renderer(LightManager* lightManager) :
+Renderer::Renderer(Allocator* allocator, LightManager* lightManager) :
+	allocator(allocator),
 	framebufferData(nullptr),
 	framebufferCount(0),
 	viewportData(nullptr),
@@ -54,19 +56,21 @@ Renderer::~Renderer()
 {
 	this->Deinitialize();
 
-	operator delete[](data.buffer);
+	this->allocator->Deallocate(data.buffer);
 }
 
 void Renderer::Initialize(Window* window)
 {
 	{
 		// Allocate framebuffer data storage
-		framebufferData = new RendererFramebuffer[MaxViewportCount];
+		void* buf = this->allocator->Allocate(sizeof(RendererFramebuffer) * MaxViewportCount);
+		framebufferData = static_cast<RendererFramebuffer*>(buf);
 	}
 
 	{
 		// Allocate viewport data storage
-		viewportData = new RendererViewport[MaxViewportCount];
+		void* buf = this->allocator->Allocate(sizeof(RendererViewport) * MaxViewportCount);
+		viewportData = static_cast<RendererViewport*>(buf);
 	}
 
 	{
@@ -184,8 +188,8 @@ void Renderer::Deinitialize()
 		}
 	}
 
-	delete[] viewportData;
-	delete[] framebufferData;
+	this->allocator->Deallocate(viewportData);
+	this->allocator->Deallocate(framebufferData);
 }
 
 Camera* Renderer::GetRenderCamera(Scene* scene)
@@ -945,7 +949,7 @@ void Renderer::ReallocateRenderObjects(unsigned int required)
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(RenderOrderData) +
 		sizeof(BoundingBox) + sizeof(Mat4x4f));
 
-	newData.buffer = operator new[](bytes);
+	newData.buffer = this->allocator->Allocate(bytes);
 	newData.count = data.count;
 	newData.allocated = required;
 
@@ -963,7 +967,7 @@ void Renderer::ReallocateRenderObjects(unsigned int required)
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
 		std::memcpy(newData.transform, data.transform, data.count * sizeof(Mat4x4f));
 
-		operator delete[](data.buffer);
+		this->allocator->Deallocate(data.buffer);
 	}
 
 	data = newData;

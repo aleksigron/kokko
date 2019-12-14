@@ -6,7 +6,6 @@
 #include "Texture.hpp"
 #include "ImageData.hpp"
 
-#include "MemoryAmount.hpp"
 #include "File.hpp"
 #include "Hash.hpp"
 

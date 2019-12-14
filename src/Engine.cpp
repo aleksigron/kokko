@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include "Memory/Memory.hpp"
 #include "Window.hpp"
 #include "Time.hpp"
 #include "EntityManager.hpp"
@@ -31,32 +32,37 @@ Engine::Engine()
 {
 	Engine::instance = this;
 
-	this->mainWindow = new Window;
+	Memory::InitializeMemorySystem();
+	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
 
-	this->debug = new Debug;
-
-	this->time = new Time;
-	this->entityManager = new EntityManager;
-	this->meshManager = new MeshManager;
-	this->materialManager = new MaterialManager;
-	this->resourceManager = new ResourceManager;
-	this->lightManager = new LightManager;
-	this->renderer = new Renderer(this->lightManager);
-	this->sceneManager = new SceneManager;
+	this->mainWindow = defaultAllocator->MakeNew<Window>();
+	this->debug = defaultAllocator->MakeNew<Debug>();
+	this->time = defaultAllocator->MakeNew<Time>();
+	this->entityManager = defaultAllocator->MakeNew<EntityManager>();
+	this->meshManager = defaultAllocator->MakeNew<MeshManager>();
+	this->materialManager = defaultAllocator->MakeNew<MaterialManager>();
+	this->resourceManager = defaultAllocator->MakeNew<ResourceManager>();
+	this->lightManager = defaultAllocator->MakeNew<LightManager>();
+	this->renderer = defaultAllocator->MakeNew<Renderer>(defaultAllocator, this->lightManager);
+	this->sceneManager = defaultAllocator->MakeNew<SceneManager>();
 }
 
 Engine::~Engine()
 {
-	delete this->sceneManager;
-	delete this->renderer;
-	delete this->resourceManager;
-	delete this->meshManager;
-	delete this->entityManager;
-	delete this->time;
+	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
 
-	delete this->debug;
+	defaultAllocator->MakeDelete(this->sceneManager);
+	defaultAllocator->MakeDelete(this->renderer);
+	defaultAllocator->MakeDelete(this->lightManager);
+	defaultAllocator->MakeDelete(this->resourceManager);
+	defaultAllocator->MakeDelete(this->materialManager);
+	defaultAllocator->MakeDelete(this->meshManager);
+	defaultAllocator->MakeDelete(this->entityManager);
+	defaultAllocator->MakeDelete(this->time);
+	defaultAllocator->MakeDelete(this->debug);
+	defaultAllocator->MakeDelete(this->mainWindow);
 
-	delete this->mainWindow;
+	Memory::DeinitializeMemorySystem();
 }
 
 bool Engine::Initialize()
