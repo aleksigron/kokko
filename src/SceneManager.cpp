@@ -3,28 +3,25 @@
 #include <cstring>
 #include <new>
 
+#include "Memory/Allocator.hpp"
 #include "Engine.hpp"
 #include "Scene.hpp"
 #include "SceneLoader.hpp"
 #include "StringRef.hpp"
 #include "File.hpp"
 
-SceneManager::SceneManager() :
+SceneManager::SceneManager(Allocator* allocator) :
+	allocator(allocator),
 	scenes(nullptr),
 	sceneCount(0),
 	sceneAllocated(0),
-	initialAllocation(4),
 	primarySceneId(0)
 {
 }
 
 SceneManager::~SceneManager()
 {
-}
-
-void SceneManager::SetInitialAllocation(unsigned int allocationCount)
-{
-	this->initialAllocation = allocationCount;
+	allocator->Deallocate(scenes);
 }
 
 void SceneManager::SetPrimarySceneId(unsigned int sceneId)
@@ -67,9 +64,9 @@ unsigned int SceneManager::CreateScene()
 		if (sceneAllocated > 0)
 			newAllocatedCount = sceneAllocated * 2;
 		else
-			newAllocatedCount = initialAllocation;
+			newAllocatedCount = 4;
 
-		void* buffer = operator new[](newAllocatedCount * sizeof(Scene));
+		void* buffer = allocator->Allocate(newAllocatedCount * sizeof(Scene));
 		Scene* newScenes = static_cast<Scene*>(buffer);
 
 		for (unsigned int i = 0; i < sceneCount; ++i)
@@ -78,13 +75,13 @@ unsigned int SceneManager::CreateScene()
 			this->scenes[i].~Scene();
 		}
 
-		operator delete[](this->scenes); // Deleting a null pointer is a no-op
+		allocator->Deallocate(this->scenes);
 		this->scenes = newScenes;
 		sceneAllocated = newAllocatedCount;
 	}
 
 	// Call constructor
-	new(&scenes[sceneCount]) Scene(sceneCount + 1);
+	new(&scenes[sceneCount]) Scene(allocator, sceneCount + 1);
 
 	return ++sceneCount;
 }

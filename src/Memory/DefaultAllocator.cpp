@@ -4,10 +4,18 @@
 
 void* DefaultAllocator::Allocate(std::size_t size)
 {
-	return std::malloc(size);
+	void* ptr = std::malloc(size + PreambleSize);
+	*static_cast<std::size_t*>(ptr) = size; // Save allocated size to preamble
+
+	return static_cast<char*>(ptr) + PreambleSize;
 }
 
 void DefaultAllocator::Deallocate(void* ptr)
 {
-	std::free(ptr);
+	std::free(static_cast<char*>(ptr) - PreambleSize);
+}
+
+std::size_t DefaultAllocator::GetAllocatedSize(void* ptr)
+{
+	return *reinterpret_cast<std::size_t*>(static_cast<char*>(ptr) - PreambleSize);
 }

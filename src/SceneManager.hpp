@@ -2,6 +2,7 @@
 
 #include "StringRef.hpp"
 
+class Allocator;
 class Scene;
 
 /**
@@ -11,18 +12,17 @@ class Scene;
 class SceneManager
 {
 private:
+	Allocator* allocator;
+
 	Scene* scenes;
 	unsigned int sceneCount;
 	unsigned int sceneAllocated;
-	unsigned int initialAllocation;
 
 	unsigned int primarySceneId;
 	
 public:
-	SceneManager();
+	SceneManager(Allocator* allocator);
 	~SceneManager();
-
-	void SetInitialAllocation(unsigned int allocationCount);
 
 	void SetPrimarySceneId(unsigned int sceneId);
 	unsigned int GetPrimarySceneId() const;

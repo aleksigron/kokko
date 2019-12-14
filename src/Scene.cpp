@@ -2,12 +2,16 @@
 
 #include <cassert>
 
+#include "Memory/Allocator.hpp"
 #include "Math.hpp"
 #include "ITransformUpdateReceiver.hpp"
 
 const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
-Scene::Scene(unsigned int sceneId) : sceneId(sceneId), activeCamera(nullptr)
+Scene::Scene(Allocator* allocator, unsigned int sceneId):
+	allocator(allocator),
+	sceneId(sceneId),
+	activeCamera(nullptr)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as SceneObjectId::Null value
@@ -17,7 +21,7 @@ Scene::Scene(unsigned int sceneId) : sceneId(sceneId), activeCamera(nullptr)
 
 Scene::~Scene()
 {
-	operator delete[](data.buffer);
+	allocator->Deallocate(data.buffer);
 }
 
 Scene& Scene::operator=(Scene&& other)
@@ -45,7 +49,7 @@ void Scene::Reallocate(unsigned int required)
 
 	InstanceData newData;
 	const unsigned objectBytes = sizeof(Entity) + 2 * sizeof(Mat4x4f) + 4 * sizeof(SceneObjectId);
-	newData.buffer = operator new[](required * objectBytes);
+	newData.buffer = allocator->Allocate(required * objectBytes);
 	newData.count = data.count;
 	newData.allocated = required;
 
@@ -67,7 +71,7 @@ void Scene::Reallocate(unsigned int required)
 		std::memcpy(newData.nextSibling, data.nextSibling, data.count * sizeof(SceneObjectId));
 		std::memcpy(newData.prevSibling, data.prevSibling, data.count * sizeof(SceneObjectId));
 
-		operator delete[](data.buffer);
+		allocator->Deallocate(data.buffer);
 	}
 	else
 	{

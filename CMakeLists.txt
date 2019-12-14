@@ -156,6 +156,8 @@ set (KOKKO_SOURCES
 	src/Memory/Allocator.hpp
 	src/Memory/DefaultAllocator.cpp
 	src/Memory/DefaultAllocator.hpp
+	src/Memory/ProxyAllocator.cpp
+	src/Memory/ProxyAllocator.hpp
 	src/Memory/StackAllocation.cpp
 	src/Memory/StackAllocation.hpp
 	src/Memory/StackAllocator.cpp

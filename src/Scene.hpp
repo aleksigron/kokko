@@ -11,6 +11,7 @@
 #include "Entity.hpp"
 
 class Camera;
+class Allocator;
 class ITransformUpdateReceiver;
 
 struct SceneObjectId
@@ -23,6 +24,8 @@ struct SceneObjectId
 class Scene
 {
 private:
+	Allocator* allocator;
+
 	struct InstanceData
 	{
 		unsigned int count;
@@ -52,7 +55,7 @@ private:
 	static bool IsValidId(SceneObjectId id) { return id.i != 0; }
 
 public:
-	Scene(unsigned int sceneId);
+	Scene(Allocator* allocator, unsigned int sceneId);
 	~Scene();
 
 	Scene& operator=(Scene&& other);

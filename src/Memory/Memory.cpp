@@ -15,7 +15,8 @@ void InitializeMemorySystem()
 
 void DeinitializeMemorySystem()
 {
-
+	defaultAllocator->~Allocator();
+	defaultAllocator = nullptr;
 }
 
 Allocator* GetDefaultAllocator()

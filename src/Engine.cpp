@@ -3,6 +3,8 @@
 #include <cstdio>
 
 #include "Memory/Memory.hpp"
+#include "Memory/ProxyAllocator.hpp"
+
 #include "Window.hpp"
 #include "Time.hpp"
 #include "EntityManager.hpp"
@@ -43,8 +45,12 @@ Engine::Engine()
 	this->materialManager = defaultAllocator->MakeNew<MaterialManager>();
 	this->resourceManager = defaultAllocator->MakeNew<ResourceManager>();
 	this->lightManager = defaultAllocator->MakeNew<LightManager>();
-	this->renderer = defaultAllocator->MakeNew<Renderer>(defaultAllocator, this->lightManager);
-	this->sceneManager = defaultAllocator->MakeNew<SceneManager>();
+
+	ProxyAllocator* rendererAllocator = defaultAllocator->MakeNew<ProxyAllocator>("Renderer", defaultAllocator);
+	this->renderer = defaultAllocator->MakeNew<Renderer>(rendererAllocator, this->lightManager);
+
+	ProxyAllocator* sceneAllocator = defaultAllocator->MakeNew<ProxyAllocator>("SceneManager", defaultAllocator);
+	this->sceneManager = defaultAllocator->MakeNew<SceneManager>(sceneAllocator);
 }
 
 Engine::~Engine()
