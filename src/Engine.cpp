@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include "Memory/AllocatorManager.hpp"
 #include "Memory/Memory.hpp"
 #include "Memory/ProxyAllocator.hpp"
 
@@ -37,6 +38,8 @@ Engine::Engine()
 	Memory::InitializeMemorySystem();
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
 
+	this->allocatorManager = defaultAllocator->MakeNew<AllocatorManager>(defaultAllocator);
+
 	this->mainWindow = defaultAllocator->MakeNew<Window>();
 	this->debug = defaultAllocator->MakeNew<Debug>();
 	this->time = defaultAllocator->MakeNew<Time>();
@@ -46,10 +49,10 @@ Engine::Engine()
 	this->resourceManager = defaultAllocator->MakeNew<ResourceManager>();
 	this->lightManager = defaultAllocator->MakeNew<LightManager>();
 
-	ProxyAllocator* rendererAllocator = defaultAllocator->MakeNew<ProxyAllocator>("Renderer", defaultAllocator);
-	this->renderer = defaultAllocator->MakeNew<Renderer>(rendererAllocator, this->lightManager);
+	Allocator* rendererAlloc = allocatorManager->CreateAllocatorScope("Renderer", defaultAllocator);
+	this->renderer = defaultAllocator->MakeNew<Renderer>(rendererAlloc, this->lightManager);
 
-	ProxyAllocator* sceneAllocator = defaultAllocator->MakeNew<ProxyAllocator>("SceneManager", defaultAllocator);
+	Allocator* sceneAllocator = allocatorManager->CreateAllocatorScope("SceneManager", defaultAllocator);
 	this->sceneManager = defaultAllocator->MakeNew<SceneManager>(sceneAllocator);
 }
 

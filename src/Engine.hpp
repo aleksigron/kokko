@@ -1,5 +1,6 @@
 #pragma once
 
+class AllocatorManager;
 class Window;
 class Time;
 class EntityManager;
@@ -16,6 +17,8 @@ class Engine
 {
 private:
 	static Engine* instance;
+
+	AllocatorManager* allocatorManager;
 
 	Window* mainWindow;
 	Time* time;
