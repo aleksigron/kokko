@@ -18,9 +18,9 @@
 #include "Scene.hpp"
 #include "String.hpp"
 
-#include "Debug.hpp"
-#include "DebugLog.hpp"
-#include "DebugTextRenderer.hpp"
+#include "Debug/Debug.hpp"
+#include "Debug/DebugLog.hpp"
+#include "Debug/DebugTextRenderer.hpp"
 
 #include "IncludeGLFW.hpp"
 

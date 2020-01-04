@@ -1,4 +1,4 @@
-#include "DebugConsole.hpp"
+#include "Debug/DebugConsole.hpp"
 
 #include <cstring>
 
@@ -11,8 +11,8 @@
 #include "TextInput.hpp"
 #include "EncodingUtf8.hpp"
 #include "BitmapFont.hpp"
-#include "DebugTextRenderer.hpp"
-#include "DebugVectorRenderer.hpp"
+#include "Debug/DebugTextRenderer.hpp"
+#include "Debug/DebugVectorRenderer.hpp"
 
 DebugConsole::DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
 	textRenderer(textRenderer),

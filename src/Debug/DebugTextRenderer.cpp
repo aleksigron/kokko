@@ -1,4 +1,4 @@
-#include "DebugTextRenderer.hpp"
+#include "Debug/DebugTextRenderer.hpp"
 
 #include <cstring>
 #include <cassert>

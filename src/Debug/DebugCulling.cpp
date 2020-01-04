@@ -1,4 +1,4 @@
-#include "DebugCulling.hpp"
+#include "Debug/DebugCulling.hpp"
 
 #include "App.hpp"
 #include "Engine.hpp"
@@ -8,8 +8,8 @@
 #include "Scene.hpp"
 #include "ViewFrustum.hpp"
 
-#include "DebugTextRenderer.hpp"
-#include "DebugVectorRenderer.hpp"
+#include "Debug/DebugTextRenderer.hpp"
+#include "Debug/DebugVectorRenderer.hpp"
 
 DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer):
 	textRenderer(textRenderer),

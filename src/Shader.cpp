@@ -14,8 +14,8 @@
 #include "StringRef.hpp"
 
 #include "Engine.hpp"
-#include "Debug.hpp"
-#include "DebugLog.hpp"
+#include "Debug/Debug.hpp"
+#include "Debug/DebugLog.hpp"
 
 const unsigned int ShaderUniform::TypeSizes[] = {
 	4, // Texture2D

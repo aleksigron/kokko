@@ -1,4 +1,4 @@
-#include "Debug.hpp"
+#include "Debug/Debug.hpp"
 
 #include <cassert>
 #include <cstdio>
@@ -14,12 +14,12 @@
 #include "BitmapFont.hpp"
 #include "Renderer.hpp"
 
-#include "DebugVectorRenderer.hpp"
-#include "DebugTextRenderer.hpp"
-#include "DebugGraph.hpp"
-#include "DebugCulling.hpp"
-#include "DebugConsole.hpp"
-#include "DebugLog.hpp"
+#include "Debug/DebugVectorRenderer.hpp"
+#include "Debug/DebugTextRenderer.hpp"
+#include "Debug/DebugGraph.hpp"
+#include "Debug/DebugCulling.hpp"
+#include "Debug/DebugConsole.hpp"
+#include "Debug/DebugLog.hpp"
 
 Debug::Debug() :
 	window(nullptr),

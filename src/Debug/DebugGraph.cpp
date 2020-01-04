@@ -1,14 +1,14 @@
-#include "DebugGraph.hpp"
+#include "Debug/DebugGraph.hpp"
 
 #include <limits>
 #include <cstdio>
 
 #include "Engine.hpp"
-#include "Debug.hpp"
-#include "DebugLog.hpp"
+#include "Debug/Debug.hpp"
+#include "Debug/DebugLog.hpp"
 
 #include "Time.hpp"
-#include "DebugVectorRenderer.hpp"
+#include "Debug/DebugVectorRenderer.hpp"
 
 DebugGraph::DebugGraph(DebugVectorRenderer* vr) :
 	vectorRenderer(vr),

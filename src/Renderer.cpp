@@ -5,8 +5,8 @@
 
 #include "IncludeOpenGL.hpp"
 
-#include "Debug.hpp"
-#include "DebugVectorRenderer.hpp"
+#include "Debug/Debug.hpp"
+#include "Debug/DebugVectorRenderer.hpp"
 
 #include "Engine.hpp"
 #include "Window.hpp"

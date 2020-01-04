@@ -1,4 +1,4 @@
-#include "DebugVectorRenderer.hpp"
+#include "Debug/DebugVectorRenderer.hpp"
 
 #include <cstring>
 #include <cmath>

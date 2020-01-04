@@ -43,20 +43,6 @@ set (KOKKO_SOURCES
 	src/Collection.hpp
 	src/Color.hpp
 	src/ColorSrgb.hpp
-	src/Debug.cpp
-	src/Debug.hpp
-	src/DebugConsole.cpp
-	src/DebugConsole.hpp
-	src/DebugCulling.cpp
-	src/DebugCulling.hpp
-	src/DebugGraph.cpp
-	src/DebugGraph.hpp
-	src/DebugLog.cpp
-	src/DebugLog.hpp
-	src/DebugTextRenderer.cpp
-	src/DebugTextRenderer.hpp
-	src/DebugVectorRenderer.cpp
-	src/DebugVectorRenderer.hpp
 	src/EncodingUtf8.cpp
 	src/EncodingUtf8.hpp
 	src/Engine.cpp
@@ -151,6 +137,20 @@ set (KOKKO_SOURCES
 	src/ViewFrustum.hpp
 	src/Window.cpp
 	src/Window.hpp
+	src/Debug/Debug.cpp
+	src/Debug/Debug.hpp
+	src/Debug/DebugConsole.cpp
+	src/Debug/DebugConsole.hpp
+	src/Debug/DebugCulling.cpp
+	src/Debug/DebugCulling.hpp
+	src/Debug/DebugGraph.cpp
+	src/Debug/DebugGraph.hpp
+	src/Debug/DebugLog.cpp
+	src/Debug/DebugLog.hpp
+	src/Debug/DebugTextRenderer.cpp
+	src/Debug/DebugTextRenderer.hpp
+	src/Debug/DebugVectorRenderer.cpp
+	src/Debug/DebugVectorRenderer.hpp
 	src/Memory/Memory.cpp
 	src/Memory/Memory.hpp
 	src/Memory/Allocator.hpp

@@ -1,9 +1,9 @@
-#include "DebugLog.hpp"
+#include "Debug/DebugLog.hpp"
 
 #include <cstdio>
 
 #include "String.hpp"
-#include "DebugConsole.hpp"
+#include "Debug/DebugConsole.hpp"
 
 DebugLog::DebugLog(DebugConsole* console) :
 	fileHandle(nullptr),
