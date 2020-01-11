@@ -6,6 +6,7 @@ class DebugGraph;
 class DebugCulling;
 class DebugConsole;
 class DebugLog;
+class DebugMemoryStats;
 
 class Window;
 class Scene;
@@ -19,6 +20,7 @@ private:
 	DebugCulling* culling;
 	DebugConsole* console;
 	DebugLog* log;
+	DebugMemoryStats* memoryStats;
 
 	Window* window;
 
@@ -31,7 +33,8 @@ private:
 		Console,
 		FrameTime,
 		CullingPri,
-		CullingSec
+		CullingSec,
+		MemoryStats
 	}
 	mode;
 

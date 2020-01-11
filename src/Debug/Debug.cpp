@@ -20,6 +20,7 @@
 #include "Debug/DebugCulling.hpp"
 #include "Debug/DebugConsole.hpp"
 #include "Debug/DebugLog.hpp"
+#include "Debug/DebugMemoryStats.hpp"
 
 Debug::Debug() :
 	window(nullptr),
@@ -33,10 +34,14 @@ Debug::Debug() :
 	culling = new DebugCulling(textRenderer, vectorRenderer);
 	console = new DebugConsole(textRenderer, vectorRenderer);
 	log = new DebugLog(console);
+
+	AllocatorManager* allocManager = Engine::GetInstance()->GetAllocatorManager();
+	memoryStats = new DebugMemoryStats(allocManager, textRenderer);
 }
 
 Debug::~Debug()
 {
+	delete memoryStats;
 	delete log;
 	delete console;
 	delete culling;
@@ -64,12 +69,15 @@ void Debug::SetWindow(Window* window)
 	float pixelLineHeight = scaledLineHeight * screenCoordScale;
 
 	Vec2f trScaledFrameSize = textRenderer->GetScaledFrameSize();
-	Rectanglef logArea;
-	logArea.position.x = 0.0f;
-	logArea.position.y = scaledLineHeight;
-	logArea.size.x = trScaledFrameSize.x;
-	logArea.size.y = trScaledFrameSize.y - scaledLineHeight;
-	console->SetDrawArea(logArea);
+
+	Rectanglef textArea;
+	textArea.position.x = 0.0f;
+	textArea.position.y = scaledLineHeight;
+	textArea.size.x = trScaledFrameSize.x;
+	textArea.size.y = trScaledFrameSize.y - scaledLineHeight;
+
+	console->SetDrawArea(textArea);
+	memoryStats->SetDrawArea(textArea);
 
 	Rectanglef graphArea;
 	graphArea.position.x = 0.0f;
@@ -110,6 +118,10 @@ void Debug::Render(Scene* scene)
 				this->mode = DebugMode::CullingSec;
 			else
 				this->mode = DebugMode::CullingPri;
+		}
+		else if (keyboard->GetKeyDown(Key::F4))
+		{
+			this->mode = DebugMode::MemoryStats;
 		}
 
 		// Check vsync switching
@@ -163,6 +175,8 @@ void Debug::Render(Scene* scene)
 	bool cullingDebugEnable = mode == DebugMode::CullingPri || mode == DebugMode::CullingSec;
 	char cullChar = cullingDebugEnable ? '*' : ' ';
 
+	char memChar = (mode == DebugMode::MemoryStats) ? '*' : ' ';
+
 	char vsyncChar = vsync ? 'Y' : 'N';
 
 	double now = Time::GetRunningTime();
@@ -174,8 +188,8 @@ void Debug::Render(Scene* scene)
 
 	// Draw debug mode guide
 	char buffer[128];
-	const char* format = "Debug: [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F8]Vsync: %c, %.1f fps";
-	std::snprintf(buffer, sizeof(buffer), format, logChar, timeChar, cullChar, vsyncChar, currentFrameRate);
+	const char* format = "Debug: [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F8]Vsync: %c, %.1f fps";
+	std::snprintf(buffer, sizeof(buffer), format, logChar, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f));
 
 	// Add frame time to debug graph
@@ -192,6 +206,9 @@ void Debug::Render(Scene* scene)
 	{
 		culling->UpdateAndDraw(scene);
 	}
+
+	if (mode == DebugMode::MemoryStats)
+		memoryStats->UpdateAndDraw();
 
 	vectorRenderer->Render(cullingDebugEnable ? culling->GetCamera() : scene->GetActiveCamera());
 	textRenderer->Render();

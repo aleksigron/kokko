@@ -41,6 +41,8 @@ public:
 
 	static Engine* GetInstance() { return instance; }
 
+	AllocatorManager* GetAllocatorManager() { return allocatorManager; }
+
 	Window* GetMainWindow() { return mainWindow; }
 	EntityManager* GetEntityManager() { return entityManager; }
 	LightManager* GetLightManager() { return lightManager; }

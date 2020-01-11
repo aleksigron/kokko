@@ -147,6 +147,8 @@ set (KOKKO_SOURCES
 	src/Debug/DebugGraph.hpp
 	src/Debug/DebugLog.cpp
 	src/Debug/DebugLog.hpp
+	src/Debug/DebugMemoryStats.cpp
+	src/Debug/DebugMemoryStats.hpp
 	src/Debug/DebugTextRenderer.cpp
 	src/Debug/DebugTextRenderer.hpp
 	src/Debug/DebugVectorRenderer.cpp
