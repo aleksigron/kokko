@@ -21,6 +21,9 @@ SceneManager::SceneManager(Allocator* allocator) :
 
 SceneManager::~SceneManager()
 {
+	for (unsigned int i = 0; i < sceneCount; ++i)
+		scenes[i].~Scene();
+
 	allocator->Deallocate(scenes);
 }
 

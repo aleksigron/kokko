@@ -71,6 +71,8 @@ Engine::~Engine()
 	defaultAllocator->MakeDelete(this->debug);
 	defaultAllocator->MakeDelete(this->mainWindow);
 
+	defaultAllocator->MakeDelete(this->allocatorManager);
+
 	Memory::DeinitializeMemorySystem();
 }
 

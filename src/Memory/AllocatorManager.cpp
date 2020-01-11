@@ -14,7 +14,10 @@ AllocatorManager::AllocatorManager(Allocator* allocator) :
 
 AllocatorManager::~AllocatorManager()
 {
-	
+	// Delete any not deallocated allocators
+	for (unsigned int i = 0; i < scopeCount; ++i) {
+		this->alloc->MakeDelete(scopes[i]);
+	}
 }
 
 Allocator* AllocatorManager::CreateAllocatorScope(const char* name, Allocator* baseAllocator)
