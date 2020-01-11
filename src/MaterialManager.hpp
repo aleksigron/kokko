@@ -8,6 +8,8 @@
 #include "MaterialData.hpp"
 #include "TransparencyType.hpp"
 
+class Allocator;
+
 struct MaterialUniformData
 {
 	unsigned int count;
@@ -19,6 +21,8 @@ struct MaterialUniformData
 class MaterialManager
 {
 private:
+	Allocator* allocator;
+
 	struct InstanceData
 	{
 		unsigned int count;
@@ -42,7 +46,7 @@ private:
 	void SetShader(MaterialId id, const Shader* shader);
 
 public:
-	MaterialManager();
+	MaterialManager(Allocator* allocator);
 	~MaterialManager();
 
 	MaterialId CreateMaterial();

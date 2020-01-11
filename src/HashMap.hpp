@@ -4,6 +4,7 @@
 
 #include "Hash.hpp"
 #include "Math.hpp"
+#include "Memory/Allocator.hpp"
 
 // Based on https://github.com/preshing/CompareIntegerMaps
 
@@ -18,6 +19,7 @@ public:
 	};
 
 private:
+	Allocator* allocator;
 	KeyValuePair* data;
 	unsigned int population;
 	unsigned int allocated;
@@ -32,7 +34,8 @@ private:
 	}
 
 public:
-	HashMap() :
+	HashMap(Allocator* allocator) :
+		allocator(allocator),
 		data(nullptr),
 		population(0),
 		allocated(0),
@@ -51,7 +54,7 @@ public:
 				if (itr->key)
 					itr->value.~ValueType();
 
-			delete[] data;
+			allocator->Deallocate(data);
 		}
 	}
 

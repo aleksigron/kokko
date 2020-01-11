@@ -11,7 +11,7 @@
 #include "StringRef.hpp"
 
 struct BoundingBox;
-
+class Allocator;
 
 struct MeshDrawData
 {
@@ -32,6 +32,8 @@ struct MeshBufferData
 class MeshManager
 {
 private:
+	Allocator* allocator;
+
 	struct InstanceData
 	{
 		unsigned int count;
@@ -51,7 +53,7 @@ private:
 	void Reallocate(unsigned int required);
 
 public:
-	MeshManager();
+	MeshManager(Allocator* allocator);
 	~MeshManager();
 
 	MeshId CreateMesh();

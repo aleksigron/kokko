@@ -4,15 +4,17 @@
 
 #include "rapidjson/document.h"
 
+#include "Memory/Allocator.hpp"
 #include "Hash.hpp"
 #include "File.hpp"
 #include "ValueSerialization.hpp"
-
 #include "Engine.hpp"
 #include "ResourceManager.hpp"
 #include "Texture.hpp"
 
-MaterialManager::MaterialManager()
+MaterialManager::MaterialManager(Allocator* allocator) :
+	allocator(allocator),
+	nameHashMap(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as Null instance
@@ -24,6 +26,11 @@ MaterialManager::MaterialManager()
 
 MaterialManager::~MaterialManager()
 {
+	for (unsigned int i = 1; i < data.count; ++i)
+		if (data.uniform[i].data != nullptr)
+			allocator->Deallocate(data.uniform[i].data);
+
+	allocator->Deallocate(data.buffer);
 }
 
 void MaterialManager::Reallocate(unsigned int required)
@@ -36,7 +43,7 @@ void MaterialManager::Reallocate(unsigned int required)
 	unsigned int objectBytes = 2 * sizeof(unsigned int) + sizeof(MaterialUniformData) + sizeof(TransparencyType);
 
 	InstanceData newData;
-	newData.buffer = operator new[](required * objectBytes);
+	newData.buffer = allocator->Allocate(required * objectBytes);
 	newData.count = data.count;
 	newData.allocated = required;
 
@@ -52,7 +59,7 @@ void MaterialManager::Reallocate(unsigned int required)
 		std::memcpy(newData.uniform, data.uniform, data.count * sizeof(MaterialUniformData));
 		std::memcpy(newData.transparency, data.transparency, data.count * sizeof(TransparencyType));
 
-		operator delete[](data.buffer);
+		allocator->Deallocate(data.buffer);
 	}
 
 	data = newData;
@@ -87,6 +94,12 @@ MaterialId MaterialManager::CreateMaterial()
 
 void MaterialManager::RemoveMaterial(MaterialId id)
 {
+	if (data.uniform[id.i].data != nullptr)
+	{
+		allocator->Deallocate(data.uniform[id.i].data);
+		data.uniform[id.i].data = nullptr;
+	}
+
 	// Material isn't the last one
 	if (id.i < data.count - 1)
 	{
@@ -136,7 +149,7 @@ void MaterialManager::SetShader(MaterialId id, const Shader* shader)
 
 	if (data.uniform[idx].data != nullptr) // Release old uniform data
 	{
-		delete[] data.uniform[idx].data;
+		allocator->Deallocate(data.uniform[idx].data);
 		data.uniform[idx].data = nullptr;
 	}
 
@@ -167,7 +180,7 @@ void MaterialManager::SetShader(MaterialId id, const Shader* shader)
 
 	if (usedData > 0)
 	{
-		data.uniform[idx].data = new unsigned char[usedData];
+		data.uniform[idx].data = static_cast<unsigned char*>(allocator->Allocate(usedData));
 
 		// TODO: Set default values for uniforms
 	}

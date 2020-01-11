@@ -40,6 +40,7 @@ Renderer::Renderer(Allocator* allocator, LightManager* lightManager) :
 	viewportData(nullptr),
 	viewportCount(0),
 	viewportIndexFullscreen(0),
+	entityMap(allocator),
 	lightManager(lightManager),
 	overrideRenderCamera(nullptr),
 	overrideCullingCamera(nullptr)

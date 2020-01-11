@@ -22,7 +22,22 @@ static unsigned int PrimitiveModeValue(MeshPrimitiveMode mode)
 	}
 }
 
-MeshManager::MeshManager()
+void DeleteBuffers(MeshBufferData& buffers)
+{
+	if (buffers.vertexArrayObject != 0)
+	{
+		glDeleteVertexArrays(1, &buffers.vertexArrayObject);
+		glDeleteBuffers(2, buffers.bufferObjects);
+
+		buffers.vertexArrayObject = 0;
+		buffers.bufferObjects[0] = 0;
+		buffers.bufferObjects[1] = 0;
+	}
+}
+
+MeshManager::MeshManager(Allocator* allocator) :
+	allocator(allocator),
+	nameHashMap(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as Null instance
@@ -34,9 +49,14 @@ MeshManager::MeshManager()
 
 MeshManager::~MeshManager()
 {
-	// TODO: Release resources
+	for (unsigned int i = 1; i < data.count; ++i)
+	{
+		// DeleteBuffers will not double-delete,
+		// so it's safe to call for every element
+		DeleteBuffers(data.bufferData[i]);
+	}
 
-	operator delete[](data.buffer);
+	allocator->Deallocate(data.buffer);
 }
 
 void MeshManager::Reallocate(unsigned int required)
@@ -50,7 +70,7 @@ void MeshManager::Reallocate(unsigned int required)
 		sizeof(MeshBufferData) + sizeof(BoundingBox);
 
 	InstanceData newData;
-	newData.buffer = operator new[](required * objectBytes);
+	newData.buffer = allocator->Allocate(required * objectBytes);
 	newData.count = data.count;
 	newData.allocated = required;
 
@@ -66,7 +86,7 @@ void MeshManager::Reallocate(unsigned int required)
 		std::memcpy(newData.bufferData, data.bufferData, data.count * sizeof(MeshBufferData));
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
 
-		operator delete[](data.buffer);
+		allocator->Deallocate(data.buffer);
 	}
 
 	data = newData;
@@ -96,19 +116,6 @@ MeshId MeshManager::CreateMesh()
 	++data.count;
 
 	return id;
-}
-
-void DeleteBuffers(MeshBufferData& buffers)
-{
-	if (buffers.vertexArrayObject != 0)
-	{
-		glDeleteVertexArrays(1, &buffers.vertexArrayObject);
-		glDeleteBuffers(2, buffers.bufferObjects);
-
-		buffers.vertexArrayObject = 0;
-		buffers.bufferObjects[0] = 0;
-		buffers.bufferObjects[1] = 0;
-	}
 }
 
 void MeshManager::RemoveMesh(MeshId id)

@@ -10,6 +10,7 @@ const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
 Scene::Scene(Allocator* allocator, unsigned int sceneId):
 	allocator(allocator),
+	entityMap(allocator),
 	sceneId(sceneId),
 	activeCamera(nullptr)
 {

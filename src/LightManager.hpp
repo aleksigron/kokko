@@ -10,6 +10,8 @@
 #include "Array.hpp"
 #include "ViewFrustum.hpp"
 
+class Allocator;
+
 struct LightId
 {
 	unsigned int i;
@@ -20,6 +22,8 @@ struct LightId
 class LightManager : public ITransformUpdateReceiver
 {
 private:
+	Allocator* allocator;
+
 	HashMap<unsigned int, LightId> entityMap;
 
 	struct InstanceData
@@ -41,7 +45,7 @@ private:
 	void Reallocate(unsigned int required);
 
 public:
-	LightManager();
+	LightManager(Allocator* allocator);
 	~LightManager();
 
 	virtual void NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms);

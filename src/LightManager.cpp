@@ -1,10 +1,14 @@
 #include "LightManager.hpp"
 
+#include "Memory/Allocator.hpp"
+
 #include "Math.hpp"
 #include "BitPack.hpp"
 #include "Intersect3D.hpp"
 
-LightManager::LightManager()
+LightManager::LightManager(Allocator* allocator) :
+	allocator(allocator),
+	entityMap(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as LightId::Null value
@@ -14,7 +18,7 @@ LightManager::LightManager()
 
 LightManager::~LightManager()
 {
-	operator delete[](data.buffer);
+	allocator->Deallocate(data.buffer);
 }
 
 void LightManager::Reallocate(unsigned int required)
@@ -31,7 +35,7 @@ void LightManager::Reallocate(unsigned int required)
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(LightType) + sizeof(Vec3f) * 2 +
 		sizeof(Mat3x3f) + sizeof(float) + sizeof(bool));
 
-	newData.buffer = operator new[](bytes);
+	newData.buffer = allocator->Allocate(bytes);
 	newData.count = data.count;
 	newData.allocated = required;
 
@@ -53,7 +57,7 @@ void LightManager::Reallocate(unsigned int required)
 		std::memcpy(newData.far, data.far, data.count * sizeof(float));
 		std::memcpy(newData.shadowCasting, data.shadowCasting, data.count * sizeof(bool));
 
-		operator delete[](data.buffer);
+		allocator->Deallocate(data.buffer);
 	}
 
 	data = newData;
