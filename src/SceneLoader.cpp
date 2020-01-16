@@ -3,7 +3,7 @@
 #include "rapidjson/document.h"
 
 #include "Engine.hpp"
-#include "Renderer.hpp"
+#include "Rendering/Renderer.hpp"
 #include "MeshManager.hpp"
 #include "EntityManager.hpp"
 #include "ResourceManager.hpp"

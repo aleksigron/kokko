@@ -6,13 +6,13 @@
 #include "Scene.hpp"
 #include "SceneLayer.hpp"
 #include "SceneManager.hpp"
-#include "Renderer.hpp"
+#include "Rendering/Renderer.hpp"
 #include "MeshManager.hpp"
 #include "MaterialManager.hpp"
 #include "EntityManager.hpp"
 #include "ResourceManager.hpp"
 
-#include "VertexFormat.hpp"
+#include "Rendering/VertexFormat.hpp"
 
 Skybox::Skybox() :
 	renderSceneId(0)

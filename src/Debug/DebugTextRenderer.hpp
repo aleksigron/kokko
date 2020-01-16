@@ -3,7 +3,7 @@
 #include "Array.hpp"
 #include "StringRef.hpp"
 #include "Math/Rectangle.hpp"
-#include "VertexFormat.hpp"
+#include "Rendering/VertexFormat.hpp"
 #include "Math/Vec2.hpp"
 #include "MeshData.hpp"
 

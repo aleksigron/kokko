@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Shader.hpp"
+#include "Rendering/Shader.hpp"
 
 struct MaterialUniform : ShaderUniform
 {

@@ -1,4 +1,4 @@
-#include "VertexFormat.hpp"
+#include "Rendering/VertexFormat.hpp"
 
 #include "IncludeOpenGL.hpp"
 

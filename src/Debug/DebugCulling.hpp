@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Math/Vec2.hpp"
-#include "Camera.hpp"
+#include "Rendering/Camera.hpp"
 #include "CameraController.hpp"
 
 class DebugTextRenderer;

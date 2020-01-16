@@ -5,10 +5,10 @@
 
 #include "Engine.hpp"
 #include "Window.hpp"
-#include "Renderer.hpp"
+#include "Rendering/Renderer.hpp"
 #include "EntityManager.hpp"
 #include "SceneManager.hpp"
-#include "LightManager.hpp"
+#include "Rendering/LightManager.hpp"
 #include "Scene.hpp"
 
 App* App::instance = nullptr;

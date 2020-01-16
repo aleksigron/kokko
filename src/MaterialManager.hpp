@@ -6,7 +6,7 @@
 #include "StringRef.hpp"
 
 #include "MaterialData.hpp"
-#include "TransparencyType.hpp"
+#include "Rendering/TransparencyType.hpp"
 
 class Allocator;
 

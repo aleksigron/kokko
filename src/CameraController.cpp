@@ -19,7 +19,7 @@
 #include "Scene.hpp"
 
 #include "App.hpp"
-#include "Camera.hpp"
+#include "Rendering/Camera.hpp"
 
 CameraController::CameraController()
 {

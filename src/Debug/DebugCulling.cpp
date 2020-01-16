@@ -4,7 +4,7 @@
 #include "Engine.hpp"
 #include "EntityManager.hpp"
 #include "Window.hpp"
-#include "Renderer.hpp"
+#include "Rendering/Renderer.hpp"
 #include "Scene.hpp"
 #include "Math/Frustum.hpp"
 

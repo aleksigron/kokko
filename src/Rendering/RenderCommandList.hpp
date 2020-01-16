@@ -2,8 +2,8 @@
 
 #include "MaterialData.hpp"
 
-#include "RenderOrder.hpp"
-#include "RenderCommandType.hpp"
+#include "Rendering/RenderOrder.hpp"
+#include "Rendering/RenderCommandType.hpp"
 
 #include "Array.hpp"
 

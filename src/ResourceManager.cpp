@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include "Shader.hpp"
+#include "Rendering/Shader.hpp"
 #include "Texture.hpp"
 #include "ImageData.hpp"
 

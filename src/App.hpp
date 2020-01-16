@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AppSettings.hpp"
-#include "Camera.hpp"
+#include "Rendering/Camera.hpp"
 #include "CameraController.hpp"
 
 class App

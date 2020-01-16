@@ -2,7 +2,7 @@
 
 #include "ITransformUpdateReceiver.hpp"
 
-#include "Light.hpp"
+#include "Rendering/Light.hpp"
 #include "Entity.hpp"
 #include "Math/Mat3x3.hpp"
 #include "Math/Vec3.hpp"

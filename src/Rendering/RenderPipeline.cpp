@@ -2,7 +2,7 @@
 
 #include "IncludeOpenGL.hpp"
 
-#include "RenderCommandData.hpp"
+#include "Rendering/RenderCommandData.hpp"
 
 void RenderPipeline::Clear(unsigned int mask)
 {

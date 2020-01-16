@@ -12,7 +12,7 @@
 #include "InputManager.hpp"
 #include "KeyboardInputView.hpp"
 #include "BitmapFont.hpp"
-#include "Renderer.hpp"
+#include "Rendering/Renderer.hpp"
 
 #include "Debug/DebugVectorRenderer.hpp"
 #include "Debug/DebugTextRenderer.hpp"

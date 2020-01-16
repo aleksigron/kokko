@@ -1,4 +1,4 @@
-#include "LightManager.hpp"
+#include "Rendering/LightManager.hpp"
 
 #include "Memory/Allocator.hpp"
 

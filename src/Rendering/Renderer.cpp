@@ -1,4 +1,4 @@
-#include "Renderer.hpp"
+#include "Rendering/Renderer.hpp"
 
 #include <cstring>
 #include <cstdio>
@@ -14,22 +14,22 @@
 
 #include "ResourceManager.hpp"
 #include "MaterialManager.hpp"
-#include "LightManager.hpp"
+#include "Rendering/LightManager.hpp"
 #include "MeshManager.hpp"
-#include "Shader.hpp"
+#include "Rendering/Shader.hpp"
 #include "Texture.hpp"
 #include "Scene.hpp"
 
-#include "Camera.hpp"
+#include "Rendering/Camera.hpp"
 #include "Math/Rectangle.hpp"
 #include "Math/BoundingBox.hpp"
 #include "Intersect3D.hpp"
 #include "BitPack.hpp"
-#include "CascadedShadowMap.hpp"
+#include "Rendering/CascadedShadowMap.hpp"
 
 #include "RenderPipeline.hpp"
-#include "RenderCommandData.hpp"
-#include "RenderCommandType.hpp"
+#include "Rendering/RenderCommandData.hpp"
+#include "Rendering/RenderCommandType.hpp"
 
 #include "Sort.hpp"
 

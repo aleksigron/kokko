@@ -6,7 +6,7 @@
 
 #include "HashMap.hpp"
 #include "Math/BoundingBox.hpp"
-#include "VertexFormat.hpp"
+#include "Rendering/VertexFormat.hpp"
 #include "BufferRef.hpp"
 #include "StringRef.hpp"
 

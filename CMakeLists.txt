@@ -34,11 +34,8 @@ set (KOKKO_SOURCES
 	src/BitPack.hpp
 	src/Buffer.hpp
 	src/BufferRef.hpp
-	src/Camera.hpp
 	src/CameraController.cpp
 	src/CameraController.hpp
-	src/CascadedShadowMap.cpp
-	src/CascadedShadowMap.hpp
 	src/Collection.hpp
 	src/Color.hpp
 	src/ColorSrgb.hpp
@@ -69,9 +66,6 @@ set (KOKKO_SOURCES
 	src/KeyboardInput.hpp
 	src/KeyboardInputView.cpp
 	src/KeyboardInputView.hpp
-	src/Light.hpp
-	src/LightManager.cpp
-	src/LightManager.hpp
 	src/MaterialManager.cpp
 	src/MaterialManager.hpp
 	src/MaterialData.hpp
@@ -83,15 +77,6 @@ set (KOKKO_SOURCES
 	src/PointerInput.cpp
 	src/PointerInput.hpp
 	src/Queue.hpp
-	src/RenderCommandData.hpp
-	src/RenderCommandList.cpp
-	src/RenderCommandList.hpp
-	src/RenderCommandType.hpp
-	src/Renderer.cpp
-	src/Renderer.hpp
-	src/RenderOrder.hpp
-	src/RenderPipeline.cpp
-	src/RenderPipeline.hpp
 	src/ResourceManager.cpp
 	src/ResourceManager.hpp
 	src/Scene.cpp
@@ -101,8 +86,6 @@ set (KOKKO_SOURCES
 	src/SceneLoader.hpp
 	src/SceneManager.cpp
 	src/SceneManager.hpp
-	src/Shader.cpp
-	src/Shader.hpp
 	src/Skybox.cpp
 	src/Skybox.hpp
 	src/Sort.hpp
@@ -118,11 +101,8 @@ set (KOKKO_SOURCES
 	src/Texture.hpp
 	src/Time.cpp
 	src/Time.hpp
-	src/TransparencyType.hpp
 	src/ValueSerialization.cpp
 	src/ValueSerialization.hpp
-	src/VertexFormat.cpp
-	src/VertexFormat.hpp
 	src/Window.cpp
 	src/Window.hpp
 	src/Debug/Debug.cpp
@@ -168,6 +148,26 @@ set (KOKKO_SOURCES
 	src/Memory/StackAllocator.hpp
 	src/Memory/VirtualMemory.cpp
 	src/Memory/VirtualMemory.hpp
+	src/Rendering/Camera.hpp
+	src/Rendering/CascadedShadowMap.cpp
+	src/Rendering/CascadedShadowMap.hpp
+	src/Rendering/Light.hpp
+	src/Rendering/LightManager.cpp
+	src/Rendering/LightManager.hpp
+	src/Rendering/RenderCommandData.hpp
+	src/Rendering/RenderCommandList.cpp
+	src/Rendering/RenderCommandList.hpp
+	src/Rendering/RenderCommandType.hpp
+	src/Rendering/Renderer.cpp
+	src/Rendering/Renderer.hpp
+	src/Rendering/RenderOrder.hpp
+	src/Rendering/RenderPipeline.cpp
+	src/Rendering/RenderPipeline.hpp
+	src/Rendering/Shader.cpp
+	src/Rendering/Shader.hpp
+	src/Rendering/TransparencyType.hpp
+	src/Rendering/VertexFormat.cpp
+	src/Rendering/VertexFormat.hpp
 )
 
 source_group(Dependencies FILES ${DEPS_SOURCES})

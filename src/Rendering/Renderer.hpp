@@ -10,8 +10,8 @@
 #include "MeshData.hpp"
 #include "MaterialData.hpp"
 
-#include "RenderCommandList.hpp"
-#include "RenderOrder.hpp"
+#include "Rendering/RenderCommandList.hpp"
+#include "Rendering/RenderOrder.hpp"
 
 #include "Array.hpp"
 #include "HashMap.hpp"

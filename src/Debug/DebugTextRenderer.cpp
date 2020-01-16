@@ -7,13 +7,13 @@
 
 #include "File.hpp"
 #include "BitmapFont.hpp"
-#include "VertexFormat.hpp"
+#include "Rendering/VertexFormat.hpp"
 #include "EncodingUtf8.hpp"
 
 #include "App.hpp"
 
 #include "Engine.hpp"
-#include "Shader.hpp"
+#include "Rendering/Shader.hpp"
 #include "MeshManager.hpp"
 #include "ResourceManager.hpp"
 

@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "BufferRef.hpp"
-#include "TransparencyType.hpp"
+#include "Rendering/TransparencyType.hpp"
 
 enum class ShaderUniformType
 {
