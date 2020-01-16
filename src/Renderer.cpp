@@ -21,8 +21,8 @@
 #include "Scene.hpp"
 
 #include "Camera.hpp"
-#include "Rectangle.hpp"
-#include "BoundingBox.hpp"
+#include "Math/Rectangle.hpp"
+#include "Math/BoundingBox.hpp"
 #include "Intersect3D.hpp"
 #include "BitPack.hpp"
 #include "CascadedShadowMap.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vec3.hpp"
+#include "Math/Vec3.hpp"
 
 struct Mat3x3f
 {

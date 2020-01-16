@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vec2.hpp"
-#include "Mat4x4.hpp"
+#include "Math/Vec2.hpp"
+#include "Math/Mat4x4.hpp"
 
 struct GLFWwindow;
 

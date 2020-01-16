@@ -1,6 +1,6 @@
 #include "App.hpp"
 
-#include "Math.hpp"
+#include "Math/Math.hpp"
 #include "Time.hpp"
 
 #include "Engine.hpp"

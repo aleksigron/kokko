@@ -3,7 +3,7 @@
 #include <cstring>
 
 #include "Hash.hpp"
-#include "Math.hpp"
+#include "Math/Math.hpp"
 #include "Memory/Allocator.hpp"
 
 // Based on https://github.com/preshing/CompareIntegerMaps

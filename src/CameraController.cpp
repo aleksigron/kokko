@@ -5,8 +5,8 @@
 
 #include "String.hpp"
 
-#include "Mat3x3.hpp"
-#include "Mat4x4.hpp"
+#include "Math/Mat3x3.hpp"
+#include "Math/Mat4x4.hpp"
 
 #include "Engine.hpp"
 #include "Time.hpp"

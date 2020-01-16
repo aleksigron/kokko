@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rectangle.hpp"
+#include "Math/Rectangle.hpp"
 
 class AllocatorManager;
 class DebugTextRenderer;

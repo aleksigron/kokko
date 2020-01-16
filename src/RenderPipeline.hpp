@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Color.hpp"
-#include "Rectangle.hpp"
+#include "Math/Rectangle.hpp"
 
 namespace RenderCommandData
 {

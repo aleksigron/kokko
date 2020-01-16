@@ -3,10 +3,10 @@
 #include <cmath>
 #include <algorithm>
 
-#include "Vec2.hpp"
-#include "Math.hpp"
-#include "ViewFrustum.hpp"
-#include "BoundingBox.hpp"
+#include "Math/Vec2.hpp"
+#include "Math/Math.hpp"
+#include "Math/Frustum.hpp"
+#include "Math/BoundingBox.hpp"
 
 namespace CascadedShadowMap
 {

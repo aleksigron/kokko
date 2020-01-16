@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vec2.hpp"
+#include "Math/Vec2.hpp"
 #include "BufferRef.hpp"
 
 struct ImageData

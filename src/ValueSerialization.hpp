@@ -2,13 +2,13 @@
 
 #include "rapidjson/document.h"
 
-#include "Vec2.hpp"
-#include "Vec3.hpp"
-#include "Vec4.hpp"
+#include "Math/Vec2.hpp"
+#include "Math/Vec3.hpp"
+#include "Math/Vec4.hpp"
 
-#include "Mat2x2.hpp"
-#include "Mat3x3.hpp"
-#include "Mat4x4.hpp"
+#include "Math/Mat2x2.hpp"
+#include "Math/Mat3x3.hpp"
+#include "Math/Mat4x4.hpp"
 
 #include "Color.hpp"
 

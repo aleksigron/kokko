@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vec4.hpp"
-#include "Mat3x3.hpp"
+#include "Math/Vec4.hpp"
+#include "Math/Mat3x3.hpp"
 
 struct Mat4x4f
 {

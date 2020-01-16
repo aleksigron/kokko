@@ -6,7 +6,7 @@
 #include "Window.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
-#include "ViewFrustum.hpp"
+#include "Math/Frustum.hpp"
 
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"

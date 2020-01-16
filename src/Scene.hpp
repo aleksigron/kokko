@@ -4,7 +4,7 @@
 #include "Array.hpp"
 #include "SortedArray.hpp"
 
-#include "Mat4x4.hpp"
+#include "Math/Mat4x4.hpp"
 #include "Color.hpp"
 #include "Skybox.hpp"
 

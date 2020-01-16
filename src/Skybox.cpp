@@ -1,6 +1,6 @@
 #include "Skybox.hpp"
 
-#include "Mat4x4.hpp"
+#include "Math/Mat4x4.hpp"
 
 #include "Engine.hpp"
 #include "Scene.hpp"

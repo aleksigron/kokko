@@ -2,9 +2,9 @@
 
 #include "Array.hpp"
 #include "StringRef.hpp"
-#include "Rectangle.hpp"
+#include "Math/Rectangle.hpp"
 #include "VertexFormat.hpp"
-#include "Vec2.hpp"
+#include "Math/Vec2.hpp"
 #include "MeshData.hpp"
 
 class BitmapFont;

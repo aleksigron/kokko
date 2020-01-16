@@ -32,7 +32,6 @@ set (KOKKO_SOURCES
 	src/BitmapFont.cpp
 	src/BitmapFont.hpp
 	src/BitPack.hpp
-	src/BoundingBox.hpp
 	src/Buffer.hpp
 	src/BufferRef.hpp
 	src/Camera.hpp
@@ -73,24 +72,17 @@ set (KOKKO_SOURCES
 	src/Light.hpp
 	src/LightManager.cpp
 	src/LightManager.hpp
-	src/Mat2x2.hpp
-	src/Mat3x3.hpp
-	src/Mat4x4.hpp
 	src/MaterialManager.cpp
 	src/MaterialManager.hpp
 	src/MaterialData.hpp
-	src/Math.hpp
 	src/MeshData.hpp
 	src/MeshLoader.hpp
 	src/MeshManager.cpp
 	src/MeshManager.hpp
 	src/MultiArray.hpp
-	src/Plane.hpp
 	src/PointerInput.cpp
 	src/PointerInput.hpp
-	src/Projection.hpp
 	src/Queue.hpp
-	src/Rectangle.hpp
 	src/RenderCommandData.hpp
 	src/RenderCommandList.cpp
 	src/RenderCommandList.hpp
@@ -129,12 +121,8 @@ set (KOKKO_SOURCES
 	src/TransparencyType.hpp
 	src/ValueSerialization.cpp
 	src/ValueSerialization.hpp
-	src/Vec2.hpp
-	src/Vec3.hpp
-	src/Vec4.hpp
 	src/VertexFormat.cpp
 	src/VertexFormat.hpp
-	src/ViewFrustum.hpp
 	src/Window.cpp
 	src/Window.hpp
 	src/Debug/Debug.cpp
@@ -153,6 +141,18 @@ set (KOKKO_SOURCES
 	src/Debug/DebugTextRenderer.hpp
 	src/Debug/DebugVectorRenderer.cpp
 	src/Debug/DebugVectorRenderer.hpp
+	src/Math/BoundingBox.hpp
+	src/Math/Frustum.hpp
+	src/Math/Mat2x2.hpp
+	src/Math/Mat3x3.hpp
+	src/Math/Mat4x4.hpp
+	src/Math/Math.hpp
+	src/Math/Plane.hpp
+	src/Math/Projection.hpp
+	src/Math/Rectangle.hpp
+	src/Math/Vec2.hpp
+	src/Math/Vec3.hpp
+	src/Math/Vec4.hpp
 	src/Memory/Memory.cpp
 	src/Memory/Memory.hpp
 	src/Memory/Allocator.hpp

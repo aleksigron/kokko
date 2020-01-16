@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vec2.hpp"
+#include "Math/Vec2.hpp"
 
 template<typename T>
 struct Rectangle

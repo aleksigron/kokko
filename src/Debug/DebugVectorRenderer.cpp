@@ -6,7 +6,7 @@
 #include "IncludeOpenGL.hpp"
 
 #include "Engine.hpp"
-#include "Math.hpp"
+#include "Math/Math.hpp"
 #include "Camera.hpp"
 #include "Window.hpp"
 #include "Shader.hpp"

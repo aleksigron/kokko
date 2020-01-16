@@ -3,7 +3,7 @@
 #include "Queue.hpp"
 #include "String.hpp"
 #include "StringRef.hpp"
-#include "Rectangle.hpp"
+#include "Math/Rectangle.hpp"
 #include "TextInputHandler.hpp"
 
 class DebugTextRenderer;

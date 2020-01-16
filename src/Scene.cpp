@@ -3,7 +3,7 @@
 #include <cassert>
 
 #include "Memory/Allocator.hpp"
-#include "Math.hpp"
+#include "Math/Math.hpp"
 #include "ITransformUpdateReceiver.hpp"
 
 const SceneObjectId SceneObjectId::Null = SceneObjectId{};

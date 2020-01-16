@@ -2,11 +2,11 @@
 
 #include "ITransformUpdateReceiver.hpp"
 
-#include "Mat4x4.hpp"
-#include "Vec3.hpp"
-#include "Vec2.hpp"
+#include "Math/Mat4x4.hpp"
+#include "Math/Vec3.hpp"
+#include "Math/Vec2.hpp"
 #include "Entity.hpp"
-#include "ViewFrustum.hpp"
+#include "Math/Frustum.hpp"
 #include "MeshData.hpp"
 #include "MaterialData.hpp"
 

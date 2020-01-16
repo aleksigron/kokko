@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-#include "ViewFrustum.hpp"
-#include "BoundingBox.hpp"
+#include "Math/Frustum.hpp"
+#include "Math/BoundingBox.hpp"
 #include "BitPack.hpp"
 
 void Intersect::FrustumAABB(

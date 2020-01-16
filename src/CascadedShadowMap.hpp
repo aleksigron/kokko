@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Vec3.hpp"
-#include "Mat4x4.hpp"
-#include "Projection.hpp"
+#include "Math/Vec3.hpp"
+#include "Math/Mat4x4.hpp"
+#include "Math/Projection.hpp"
 
 namespace CascadedShadowMap
 {

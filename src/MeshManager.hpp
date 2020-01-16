@@ -5,7 +5,7 @@
 #include "MeshData.hpp"
 
 #include "HashMap.hpp"
-#include "BoundingBox.hpp"
+#include "Math/BoundingBox.hpp"
 #include "VertexFormat.hpp"
 #include "BufferRef.hpp"
 #include "StringRef.hpp"

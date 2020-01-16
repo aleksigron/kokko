@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Vec2.hpp"
-#include "Vec3.hpp"
-#include "Mat4x4.hpp"
-#include "Rectangle.hpp"
+#include "Math/Vec2.hpp"
+#include "Math/Vec3.hpp"
+#include "Math/Mat4x4.hpp"
+#include "Math/Rectangle.hpp"
 #include "Color.hpp"
 #include "MeshData.hpp"
-#include "Projection.hpp"
+#include "Math/Projection.hpp"
 
 class Camera;
 

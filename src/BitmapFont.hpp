@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Rectangle.hpp"
-#include "Vec2.hpp"
+#include "Math/Rectangle.hpp"
+#include "Math/Vec2.hpp"
 
 #include "StringRef.hpp"
 #include "Buffer.hpp"

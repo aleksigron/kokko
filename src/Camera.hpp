@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Mat4x4.hpp"
+#include "Math/Mat4x4.hpp"
 #include "Entity.hpp"
-#include "ViewFrustum.hpp"
+#include "Math/Frustum.hpp"
 
 class Scene;
 

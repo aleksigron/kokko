@@ -2,7 +2,7 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "Math.hpp"
+#include "Math/Math.hpp"
 #include "BitPack.hpp"
 #include "Intersect3D.hpp"
 

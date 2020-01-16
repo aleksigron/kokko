@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Vec2.hpp"
-#include "Vec3.hpp"
-#include "Vec4.hpp"
+#include "Math/Vec2.hpp"
+#include "Math/Vec3.hpp"
+#include "Math/Vec4.hpp"
 
 struct Vertex3f
 {

@@ -4,11 +4,11 @@
 
 #include "Light.hpp"
 #include "Entity.hpp"
-#include "Mat3x3.hpp"
-#include "Vec3.hpp"
+#include "Math/Mat3x3.hpp"
+#include "Math/Vec3.hpp"
 #include "HashMap.hpp"
 #include "Array.hpp"
-#include "ViewFrustum.hpp"
+#include "Math/Frustum.hpp"
 
 class Allocator;
 
