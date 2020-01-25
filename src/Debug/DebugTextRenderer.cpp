@@ -10,7 +10,7 @@
 #include "Rendering/VertexFormat.hpp"
 #include "EncodingUtf8.hpp"
 
-#include "App.hpp"
+#include "Application/App.hpp"
 
 #include "Engine.hpp"
 #include "Rendering/Shader.hpp"

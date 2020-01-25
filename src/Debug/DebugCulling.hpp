@@ -2,7 +2,7 @@
 
 #include "Math/Vec2.hpp"
 #include "Rendering/Camera.hpp"
-#include "CameraController.hpp"
+#include "Application/CameraController.hpp"
 
 class DebugTextRenderer;
 class DebugVectorRenderer;

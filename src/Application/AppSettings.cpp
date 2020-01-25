@@ -1,4 +1,4 @@
-#include "AppSettings.hpp"
+#include "Application/AppSettings.hpp"
 
 #include <cstdio>
 #include <cstdlib>

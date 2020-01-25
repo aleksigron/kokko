@@ -22,15 +22,8 @@ set (DEPS_SOURCES
 )
 
 set (KOKKO_SOURCES
-	src/main.cpp
-	src/App.cpp
-	src/App.hpp
-	src/AppSettings.cpp
-	src/AppSettings.hpp
 	src/BitfieldVariable.hpp
 	src/BitPack.hpp
-	src/CameraController.cpp
-	src/CameraController.hpp
 	src/Color.hpp
 	src/ColorSrgb.hpp
 	src/EncodingUtf8.cpp
@@ -47,6 +40,13 @@ set (KOKKO_SOURCES
 	src/JsonReader.hpp
 	src/ValueSerialization.cpp
 	src/ValueSerialization.hpp
+	src/Application/main.cpp
+	src/Application/App.cpp
+	src/Application/App.hpp
+	src/Application/AppSettings.cpp
+	src/Application/AppSettings.hpp
+	src/Application/CameraController.cpp
+	src/Application/CameraController.hpp
 	src/Core/Array.hpp
 	src/Core/Buffer.hpp
 	src/Core/BufferRef.hpp

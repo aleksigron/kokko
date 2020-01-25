@@ -1,4 +1,4 @@
-#include "CameraController.hpp"
+#include "Application/CameraController.hpp"
 
 #include <cstdio>
 #include <cstdlib>
