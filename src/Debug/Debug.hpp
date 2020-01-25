@@ -1,5 +1,7 @@
 #pragma once
 
+class Allocator;
+
 class DebugVectorRenderer;
 class DebugTextRenderer;
 class DebugGraph;
@@ -14,6 +16,8 @@ class Scene;
 class Debug
 {
 private:
+	Allocator* allocator;
+
 	DebugVectorRenderer* vectorRenderer;
 	DebugTextRenderer* textRenderer;
 	DebugGraph* graph;
@@ -39,7 +43,7 @@ private:
 	mode;
 
 public:
-	Debug();
+	Debug(Allocator* allocator);
 	~Debug();
 
 	void SetWindow(Window* window);

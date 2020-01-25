@@ -4,10 +4,14 @@
 #include "Application/CameraController.hpp"
 #include "Rendering/Camera.hpp"
 
+class Allocator;
+
 class App
 {
 private:
 	static App* instance;
+
+	Allocator* allocator;
 
 	AppSettings settings;
 
@@ -16,7 +20,7 @@ private:
 	bool cameraControllerEnable;
 	
 public:
-	App();
+	App(Allocator* allocator);
 	~App();
 	
 	void Initialize();

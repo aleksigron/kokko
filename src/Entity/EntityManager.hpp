@@ -1,19 +1,23 @@
 #pragma once
 
-#include "Entity/Entity.hpp"
 #include "Core/Array.hpp"
 #include "Core/Queue.hpp"
+#include "Entity/Entity.hpp"
+#include "Memory/Allocator.hpp"
 
 class EntityManager
 {
 private:
 	static const unsigned int MinimumFreeIndices = 1024;
 
+	Allocator* allocator;
 	Array<unsigned char> generation;
 	Queue<unsigned> freeIndices;
 
 public:
-	EntityManager()
+	EntityManager(Allocator* allocator) :
+		allocator(allocator),
+		generation(allocator)
 	{
 		// Reserve index 0 as invalid value
 		generation.PushBack(0);

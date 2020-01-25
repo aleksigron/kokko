@@ -120,13 +120,13 @@ LightId LightManager::GetDirectionalLights()
 
 Array<LightId> LightManager::GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& frustum)
 {
-	Array<LightId> result;
+	Array<LightId> result(allocator);
 
 	unsigned int lights = data.count - 1;
 
 	if (lights > 0)
 	{
-		Array<BitPack> intersectResult;
+		Array<BitPack> intersectResult(allocator);
 		intersectResult.Resize(BitPack::CalculateRequired(lights));
 		BitPack* intersected = intersectResult.GetData();
 		Vec3f* positions = data.position + 1;

@@ -43,7 +43,9 @@ Renderer::Renderer(Allocator* allocator, LightManager* lightManager) :
 	entityMap(allocator),
 	lightManager(lightManager),
 	overrideRenderCamera(nullptr),
-	overrideCullingCamera(nullptr)
+	overrideCullingCamera(nullptr),
+	commandList(allocator),
+	objectVisibility(allocator)
 {
 	lightingData = LightingData{};
 

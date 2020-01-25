@@ -11,6 +11,11 @@ private:
 public:
 	using SizeType = typename Array<ValueType>::SizeType;
 
+	SortedArray(Allocator* allocator) :
+		a(allocator)
+	{
+	}
+
 	SizeType GetCount() const { return a.GetCount(); }
 
 	ValueType* GetData() { return a.GetData(); }

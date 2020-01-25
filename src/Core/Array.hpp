@@ -3,6 +3,8 @@
 #include <cstring>
 #include <new>
 
+#include "Memory/Allocator.hpp"
+
 template <typename ValueType>
 class Array
 {
@@ -10,18 +12,23 @@ public:
 	using SizeType = unsigned int;
 
 private:
+	Allocator* allocator;
 	ValueType* data;
 	SizeType count;
 	SizeType allocated;
 
 public:
-	Array() : data(nullptr), count(0), allocated(0)
+	Array(Allocator* allocator) :
+		allocator(allocator),
+		data(nullptr),
+		count(0),
+		allocated(0)
 	{
 	}
 
 	~Array()
 	{
-		delete[] data;
+		allocator->Deallocate(this->data);
 	}
 
 	SizeType GetCount() const { return this->count; }
@@ -53,20 +60,19 @@ public:
 			if (required > newAllocated)
 				newAllocated = required;
 
-			const std::size_t vts = sizeof(ValueType);
-
-			ValueType* newData = static_cast<ValueType*>(operator new[](newAllocated * vts));
+			std::size_t newSize = newAllocated * sizeof(ValueType);
+			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize));
 
 			if (data != nullptr)
 			{
 				if (count > 0) // There is old data
 				{
 					// Copy old data to new buffer
-					std::memcpy(newData, data, count * vts);
+					std::memcpy(newData, data, count * sizeof(ValueType));
 				}
 
 				// Delete old buffer
-				operator delete[](data);
+				allocator->Deallocate(data);
 			}
 
 			data = newData;
@@ -135,7 +141,8 @@ public:
 				if (required > newAllocated)
 					newAllocated = required;
 
-				ValueType* newData = static_cast<ValueType*>(operator new[](newAllocated * vts));
+				std::size_t newSize = newAllocated * vts;
+				ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize));
 
 				// We have old data
 				if (data != nullptr)
@@ -147,7 +154,7 @@ public:
 					if (itemsAfter > 0)
 						std::memcpy(newData + index + itemCount, data + index, itemsAfter * vts);
 
-					operator delete[](data);
+					allocator->Deallocate(data);
 				}
 
 				// Copy inserted items
@@ -260,7 +267,7 @@ public:
 	{
 		this->Clear();
 
-		delete[] data;
+		allocator->Deallocate(data);
 		data = nullptr;
 		allocated = 0;
 	}

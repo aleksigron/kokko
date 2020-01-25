@@ -7,8 +7,16 @@
 
 #include "Core/Array.hpp"
 
+class Allocator;
+
 struct RenderCommandList
 {
+	RenderCommandList(Allocator* allocator) :
+		commands(allocator),
+		commandData(allocator)
+	{
+	}
+
 	RenderOrderConfiguration renderOrder;
 
 	Array<uint64_t> commands;

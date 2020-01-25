@@ -1,5 +1,7 @@
+#include "Application/App.hpp"
 #include "Engine/Engine.hpp"
-#include "App.hpp"
+#include "Memory/Memory.hpp"
+#include "Memory/AllocatorManager.hpp"
 #include "System/Window.hpp"
 
 int main(void)
@@ -8,7 +10,11 @@ int main(void)
 
 	if (engine.Initialize())
 	{
-		App app;
+		AllocatorManager* am = engine.GetAllocatorManager();
+		Allocator* defaultAlloc = Memory::GetDefaultAllocator();
+		Allocator* appAllocator = am->CreateAllocatorScope("Application", defaultAlloc);
+
+		App app(appAllocator);
 
 		app.Initialize();
 

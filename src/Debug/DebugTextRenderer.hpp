@@ -7,6 +7,7 @@
 #include "Math/Vec2.hpp"
 #include "Resources/MeshData.hpp"
 
+class Allocator;
 class BitmapFont;
 
 class DebugTextRenderer
@@ -18,6 +19,8 @@ private:
 		unsigned int stringLength;
 		Rectanglef area;
 	};
+
+	Allocator* allocator;
 
 	BitmapFont* font;
 	unsigned int stringCharCount;
@@ -35,7 +38,7 @@ private:
 	void CreateAndUploadData();
 
 public:
-	DebugTextRenderer();
+	DebugTextRenderer(Allocator* allocator);
 	~DebugTextRenderer();
 
 	bool LoadBitmapFont(const char* filePath);

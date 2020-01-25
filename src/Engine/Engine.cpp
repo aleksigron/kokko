@@ -8,7 +8,7 @@
 
 #include "System/Window.hpp"
 #include "System/Time.hpp"
-#include "EntityManager.hpp"
+#include "Entity/EntityManager.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Resources/MeshManager.hpp"
@@ -41,9 +41,14 @@ Engine::Engine()
 	this->allocatorManager = defaultAllocator->MakeNew<AllocatorManager>(defaultAllocator);
 
 	this->mainWindow = defaultAllocator->MakeNew<Window>();
-	this->debug = defaultAllocator->MakeNew<Debug>();
+
+	Allocator* debugAlloc = allocatorManager->CreateAllocatorScope("Debug", defaultAllocator);
+	this->debug = defaultAllocator->MakeNew<Debug>(debugAlloc);
+
 	this->time = defaultAllocator->MakeNew<Time>();
-	this->entityManager = defaultAllocator->MakeNew<EntityManager>();
+
+	Allocator* entityManagerAlloc = allocatorManager->CreateAllocatorScope("EntityManager", defaultAllocator);
+	this->entityManager = defaultAllocator->MakeNew<EntityManager>(entityManagerAlloc);
 
 	Allocator* meshManagerAlloc = allocatorManager->CreateAllocatorScope("MeshManager", defaultAllocator);
 	this->meshManager = defaultAllocator->MakeNew<MeshManager>(meshManagerAlloc);

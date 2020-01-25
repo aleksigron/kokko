@@ -17,17 +17,22 @@
 #include "Resources/MeshManager.hpp"
 #include "Resources/ResourceManager.hpp"
 
-DebugTextRenderer::DebugTextRenderer() :
+DebugTextRenderer::DebugTextRenderer(Allocator* allocator) :
+	allocator(allocator),
 	font(nullptr),
 	stringCharCount(0),
+	stringData(allocator),
+	renderData(allocator),
 	scaleFactor(1.0f),
-	meshId(MeshId{})
+	meshId(MeshId{}),
+	vertexData(allocator),
+	indexData(allocator)
 {
 }
 
 DebugTextRenderer::~DebugTextRenderer()
 {
-	delete font;
+	allocator->MakeDelete(font);
 }
 
 void DebugTextRenderer::SetFrameSize(const Vec2f& size)
@@ -61,7 +66,7 @@ bool DebugTextRenderer::LoadBitmapFont(const char* filePath)
 
 	if (content.IsValid())
 	{
-		font = new BitmapFont;
+		font = allocator->MakeNew<BitmapFont>();
 		return font->LoadFromBDF(content);
 	}
 	else

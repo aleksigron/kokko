@@ -22,32 +22,33 @@
 #include "Debug/DebugLog.hpp"
 #include "Debug/DebugMemoryStats.hpp"
 
-Debug::Debug() :
+Debug::Debug(Allocator* allocator) :
+	allocator(allocator),
 	window(nullptr),
 	currentFrameRate(0.0),
 	nextFrameRateUpdate(-1.0),
 	mode(DebugMode::None)
 {
-	vectorRenderer = new DebugVectorRenderer;
-	textRenderer = new DebugTextRenderer;
-	graph = new DebugGraph(vectorRenderer);
-	culling = new DebugCulling(textRenderer, vectorRenderer);
-	console = new DebugConsole(textRenderer, vectorRenderer);
-	log = new DebugLog(console);
+	vectorRenderer = allocator->MakeNew<DebugVectorRenderer>();
+	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator);
+	graph = allocator->MakeNew<DebugGraph>(vectorRenderer);
+	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
+	console = allocator->MakeNew<DebugConsole>(textRenderer, vectorRenderer);
+	log = allocator->MakeNew<DebugLog>(console);
 
 	AllocatorManager* allocManager = Engine::GetInstance()->GetAllocatorManager();
-	memoryStats = new DebugMemoryStats(allocManager, textRenderer);
+	memoryStats = allocator->MakeNew<DebugMemoryStats>(allocManager, textRenderer);
 }
 
 Debug::~Debug()
 {
-	delete memoryStats;
-	delete log;
-	delete console;
-	delete culling;
-	delete graph;
-	delete textRenderer;
-	delete vectorRenderer;
+	allocator->MakeDelete(memoryStats);
+	allocator->MakeDelete(log);
+	allocator->MakeDelete(console);
+	allocator->MakeDelete(culling);
+	allocator->MakeDelete(graph);
+	allocator->MakeDelete(textRenderer);
+	allocator->MakeDelete(vectorRenderer);
 }
 
 void Debug::SetWindow(Window* window)

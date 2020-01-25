@@ -7,7 +7,9 @@
 #include "Core/String.hpp"
 #include "Core/BufferRef.hpp"
 
-AppSettings::AppSettings()
+AppSettings::AppSettings(Allocator* allocator) :
+	allocator(allocator),
+	settings(allocator)
 {
 }
 
@@ -130,13 +132,15 @@ void AppSettings::SetString(StringRef key, StringRef value)
 		Setting* s = this->FindSetting(key);
 
 		if (s != nullptr)
-			delete[] s->keyValueString;
+			allocator->Deallocate(s->keyValueString);
 		else
 			s = &(settings.PushBack());
 
 		s->keyLength = key.len;
 		s->valueLength = value.len;
-		s->keyValueString = new char[s->keyLength + s->valueLength];
+
+		unsigned int totalSize = s->keyLength + s->valueLength;
+		s->keyValueString = static_cast<char*>(allocator->Allocate(totalSize));
 
 		std::memcpy(s->keyValueString, key.str, s->keyLength);
 		std::memcpy(s->keyValueString + s->keyLength, value.str, s->valueLength);

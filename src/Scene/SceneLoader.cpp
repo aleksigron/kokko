@@ -5,7 +5,7 @@
 #include "Engine/Engine.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Resources/MeshManager.hpp"
-#include "EntityManager.hpp"
+#include "Entity/EntityManager.hpp"
 #include "Resources/ResourceManager.hpp"
 #include "Resources/MaterialManager.hpp"
 #include "Resources/ValueSerialization.hpp"

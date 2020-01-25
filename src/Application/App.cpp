@@ -13,7 +13,10 @@
 
 App* App::instance = nullptr;
 
-App::App() : cameraControllerEnable(true)
+App::App(Allocator* allocator) :
+	allocator(allocator),
+	settings(allocator),
+	cameraControllerEnable(true)
 {
 	App::instance = this;
 }

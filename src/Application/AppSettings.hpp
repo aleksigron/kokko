@@ -6,6 +6,8 @@
 #include "Core/ImmutableString.hpp"
 #include "Core/StringRef.hpp"
 
+class Allocator;
+
 class AppSettings
 {
 private:
@@ -16,6 +18,8 @@ private:
 		unsigned int valueLength;
 	};
 
+	Allocator* allocator;
+
 	ImmutableString settingsFilename;
 
 	Array<Setting> settings;
@@ -23,7 +27,7 @@ private:
 	Setting* FindSetting(StringRef key);
 
 public:
-	AppSettings();
+	AppSettings(Allocator* allocator);
 	~AppSettings();
 
 	void SetFilename(StringRef path);
