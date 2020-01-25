@@ -63,6 +63,7 @@ set (KOKKO_SOURCES
 	src/Debug/DebugMemoryStats.hpp
 	src/Debug/DebugTextRenderer.cpp
 	src/Debug/DebugTextRenderer.hpp
+	src/Debug/DebugUtil.hpp
 	src/Debug/DebugVectorRenderer.cpp
 	src/Debug/DebugVectorRenderer.hpp
 	src/Engine/Engine.cpp
