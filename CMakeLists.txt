@@ -22,24 +22,11 @@ set (DEPS_SOURCES
 )
 
 set (KOKKO_SOURCES
-	src/BitfieldVariable.hpp
-	src/BitPack.hpp
-	src/Color.hpp
-	src/ColorSrgb.hpp
-	src/EncodingUtf8.cpp
-	src/EncodingUtf8.hpp
 	src/Engine.cpp
 	src/Engine.hpp
 	src/Entity.hpp
 	src/EntityManager.hpp
-	src/IncludeOpenGL.hpp
-	src/IncludeGLFW.hpp
-	src/Intersect3D.cpp
-	src/Intersect3D.hpp
 	src/ITransformUpdateReceiver.hpp
-	src/JsonReader.hpp
-	src/ValueSerialization.cpp
-	src/ValueSerialization.hpp
 	src/Application/main.cpp
 	src/Application/App.cpp
 	src/Application/App.hpp
@@ -48,8 +35,14 @@ set (KOKKO_SOURCES
 	src/Application/CameraController.cpp
 	src/Application/CameraController.hpp
 	src/Core/Array.hpp
+	src/Core/BitfieldVariable.hpp
+	src/Core/BitPack.hpp
 	src/Core/Buffer.hpp
 	src/Core/BufferRef.hpp
+	src/Core/Color.hpp
+	src/Core/ColorSrgb.hpp
+	src/Core/EncodingUtf8.cpp
+	src/Core/EncodingUtf8.hpp
 	src/Core/Hash.hpp
 	src/Core/HashMap.hpp
 	src/Core/ImmutableString.cpp
@@ -79,6 +72,8 @@ set (KOKKO_SOURCES
 	src/Debug/DebugVectorRenderer.hpp
 	src/Math/BoundingBox.hpp
 	src/Math/Frustum.hpp
+	src/Math/Intersect3D.cpp
+	src/Math/Intersect3D.hpp
 	src/Math/Mat2x2.hpp
 	src/Math/Mat3x3.hpp
 	src/Math/Mat4x4.hpp
@@ -148,8 +143,12 @@ set (KOKKO_SOURCES
 	src/Resources/Skybox.hpp
 	src/Resources/Texture.cpp
 	src/Resources/Texture.hpp
+	src/Resources/ValueSerialization.cpp
+	src/Resources/ValueSerialization.hpp
 	src/System/File.cpp
 	src/System/File.hpp
+	src/System/IncludeOpenGL.hpp
+	src/System/IncludeGLFW.hpp
 	src/System/InputManager.cpp
 	src/System/InputManager.hpp
 	src/System/KeyboardInput.cpp
@@ -182,8 +181,5 @@ add_subdirectory(deps/glfw)
 
 find_package(OpenGL REQUIRED)
 
-# message(${OPENGL_INCLUDE_DIR})
-
-# target_include_directories(${EXECUTABLE_NAME} ${OPENGL_INCLUDE_DIR})
 target_link_libraries(${EXECUTABLE_NAME} glfw)
 target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_gl_LIBRARY})

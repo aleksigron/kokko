@@ -4,7 +4,7 @@
 
 #include "Math/Frustum.hpp"
 #include "Math/BoundingBox.hpp"
-#include "BitPack.hpp"
+#include "Core/BitPack.hpp"
 
 void Intersect::FrustumAABB(
 	const FrustumPlanes& frustum,

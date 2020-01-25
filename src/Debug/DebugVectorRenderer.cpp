@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cmath>
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 #include "Engine.hpp"
 #include "Math/Math.hpp"

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "BitfieldVariable.hpp"
+#include "Core/BitfieldVariable.hpp"
 
 struct RenderOrderConfiguration
 {

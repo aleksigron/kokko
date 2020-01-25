@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Color.hpp"
+#include "Core/Color.hpp"
 #include "Math/Rectangle.hpp"
 
 namespace RenderCommandData

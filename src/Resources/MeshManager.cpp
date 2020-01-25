@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 #include "Core/Hash.hpp"
 #include "System/File.hpp"

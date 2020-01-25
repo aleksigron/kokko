@@ -1,6 +1,6 @@
 #include "Debug/DebugMemoryStats.hpp"
 
-#include "Color.hpp"
+#include "Core/Color.hpp"
 #include "Resources/BitmapFont.hpp"
 
 #include "Memory/AllocatorManager.hpp"

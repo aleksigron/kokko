@@ -1,6 +1,6 @@
 #include "Rendering/Shader.hpp"
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 #include "rapidjson/document.h"
 

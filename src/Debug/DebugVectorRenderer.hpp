@@ -4,7 +4,7 @@
 #include "Math/Vec3.hpp"
 #include "Math/Mat4x4.hpp"
 #include "Math/Rectangle.hpp"
-#include "Color.hpp"
+#include "Core/Color.hpp"
 #include "Resources/MeshData.hpp"
 #include "Math/Projection.hpp"
 

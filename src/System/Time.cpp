@@ -1,6 +1,6 @@
 #include "System/Time.hpp"
 
-#include "IncludeGLFW.hpp"
+#include "System/IncludeGLFW.hpp"
 
 Time* Time::instance = nullptr;
 

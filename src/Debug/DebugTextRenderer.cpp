@@ -3,12 +3,12 @@
 #include <cstring>
 #include <cassert>
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 #include "System/File.hpp"
 #include "Resources/BitmapFont.hpp"
 #include "Rendering/VertexFormat.hpp"
-#include "EncodingUtf8.hpp"
+#include "Core/EncodingUtf8.hpp"
 
 #include "Application/App.hpp"
 

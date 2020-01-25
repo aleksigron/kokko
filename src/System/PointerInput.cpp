@@ -1,6 +1,6 @@
 #include "System/PointerInput.hpp"
 
-#include "IncludeGLFW.hpp"
+#include "System/IncludeGLFW.hpp"
 
 const int PointerInput::cursorModeValues[] =
 {

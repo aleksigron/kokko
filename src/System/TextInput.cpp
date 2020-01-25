@@ -1,13 +1,13 @@
 #include "System/TextInput.hpp"
 
-#include "IncludeGLFW.hpp"
+#include "System/IncludeGLFW.hpp"
 
 #include "System/Window.hpp"
 #include "System/InputManager.hpp"
 #include "System/TextInputHandler.hpp"
 
 #include "Core/StringRef.hpp"
-#include "EncodingUtf8.hpp"
+#include "Core/EncodingUtf8.hpp"
 
 TextInput::TextInput() :
 	windowHandle(nullptr),

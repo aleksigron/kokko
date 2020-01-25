@@ -3,8 +3,8 @@
 #include "Memory/Allocator.hpp"
 
 #include "Math/Math.hpp"
-#include "BitPack.hpp"
-#include "Intersect3D.hpp"
+#include "Core/BitPack.hpp"
+#include "Math/Intersect3D.hpp"
 
 LightManager::LightManager(Allocator* allocator) :
 	allocator(allocator),

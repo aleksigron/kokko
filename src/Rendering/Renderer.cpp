@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cstdio>
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 #include "Debug/Debug.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
@@ -23,8 +23,8 @@
 #include "Rendering/Camera.hpp"
 #include "Math/Rectangle.hpp"
 #include "Math/BoundingBox.hpp"
-#include "Intersect3D.hpp"
-#include "BitPack.hpp"
+#include "Math/Intersect3D.hpp"
+#include "Core/BitPack.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
 
 #include "RenderPipeline.hpp"

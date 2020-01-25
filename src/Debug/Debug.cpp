@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cstdio>
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 #include "Engine.hpp"
 #include "System/Time.hpp"

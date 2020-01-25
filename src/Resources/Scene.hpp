@@ -5,7 +5,7 @@
 #include "Core/SortedArray.hpp"
 
 #include "Math/Mat4x4.hpp"
-#include "Color.hpp"
+#include "Core/Color.hpp"
 #include "Resources/Skybox.hpp"
 
 #include "Entity.hpp"

@@ -10,7 +10,7 @@
 #include "Math/Mat3x3.hpp"
 #include "Math/Mat4x4.hpp"
 
-#include "Color.hpp"
+#include "Core/Color.hpp"
 
 namespace ValueSerialization
 {

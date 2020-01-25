@@ -1,6 +1,6 @@
 #include "Rendering/VertexFormat.hpp"
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 // Generic: 3 float
 

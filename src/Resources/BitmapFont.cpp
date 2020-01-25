@@ -12,7 +12,7 @@
 #include "Resources/ResourceManager.hpp"
 #include "Core/Sort.hpp"
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 BitmapFont::BitmapFont() :
 	textureId(0),

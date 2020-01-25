@@ -1,6 +1,6 @@
 #include "System/Window.hpp"
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 #include "System/InputManager.hpp"
 

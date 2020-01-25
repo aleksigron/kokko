@@ -1,6 +1,6 @@
 #include "RenderPipeline.hpp"
 
-#include "IncludeOpenGL.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 #include "Rendering/RenderCommandData.hpp"
 
