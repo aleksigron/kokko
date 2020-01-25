@@ -41,9 +41,9 @@ unsigned int SceneManager::LoadSceneFromFile(StringRef path)
 {
 	unsigned int sceneId = 0;
 
-	Buffer<char> sceneConfig = File::ReadText(path);
+	Buffer<char> sceneConfig(allocator);
 
-	if (sceneConfig.IsValid())
+	if (File::ReadText(path, sceneConfig))
 	{
 		sceneId = this->CreateScene();
 

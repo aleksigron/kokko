@@ -5,6 +5,8 @@
 #include "Math/Vec2.hpp"
 #include "Core/BufferRef.hpp"
 
+class Allocator;
+
 struct ImageData;
 
 enum class TextureFilterMode
@@ -43,7 +45,7 @@ struct Texture
 	unsigned int driverId;
 	Vec2f textureSize;
 
-	bool LoadFromConfiguration(BufferRef<char> configuration);
+	bool LoadFromConfiguration(BufferRef<char> configuration, Allocator* allocator);
 
 	void Upload_2D(const ImageData& image);
 	void Upload_2D(const ImageData& image, const TextureOptions& options);

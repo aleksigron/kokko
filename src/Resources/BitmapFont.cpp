@@ -14,7 +14,8 @@
 
 #include "System/IncludeOpenGL.hpp"
 
-BitmapFont::BitmapFont() :
+BitmapFont::BitmapFont(Allocator* allocator) :
+	allocator(allocator),
 	textureId(0),
 	glyphSkipList(nullptr),
 	glyphs(nullptr),
@@ -24,7 +25,8 @@ BitmapFont::BitmapFont() :
 
 BitmapFont::~BitmapFont()
 {
-	delete[] glyphs;
+	allocator->Deallocate(glyphs);
+	allocator->Deallocate(glyphSkipList);
 }
 
 const BitmapGlyph* BitmapFont::GetGlyph(unsigned int codePoint) const
@@ -78,7 +80,7 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 	Vec2f glyphSize(0.0f, 0.0f);
 	Vec2f glyphSafeSize(0.0f, 0.0f);
 
-	Buffer<unsigned char> textureBuffer;
+	Buffer<unsigned char> textureBuffer(allocator);
 	Vec2i glyphsOnAxes(0, 0);
 
 	uint spacesInLine[7];
@@ -144,9 +146,13 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 					{
 						uint skipStep = glyphSkipListStep;
 						uint skipListLength = glyphCount + ((skipStep - 1)) / skipStep;
-						this->glyphSkipList = new uint[skipListLength];
 
-						this->glyphs = new BitmapGlyph[glyphCount];
+						size_t skipListSize = skipListLength * sizeof(uint);
+						this->glyphSkipList = static_cast<uint*>(allocator->Allocate(skipListSize));
+
+						size_t glyphsSize = glyphCount * sizeof(BitmapGlyph);
+						this->glyphs = static_cast<BitmapGlyph*>(allocator->Allocate(glyphsSize));
+
 						this->glyphCount = glyphCount;
 
 						textureSize = CalculateTextureSize(glyphCount, glyphSafeSize);

@@ -143,9 +143,9 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	Buffer<unsigned char> file = File::ReadBinary(path);
+	Buffer<unsigned char> file(allocator);
 
-	if (file.IsValid())
+	if (File::ReadBinary(path, file))
 	{
 		MeshId id = CreateMesh();
 		MeshLoader loader(this, id);

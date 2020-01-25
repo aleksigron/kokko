@@ -56,7 +56,8 @@ Engine::Engine()
 	Allocator* materialManagerAlloc = allocatorManager->CreateAllocatorScope("MaterialManager", defaultAllocator);
 	this->materialManager = defaultAllocator->MakeNew<MaterialManager>(materialManagerAlloc);
 
-	this->resourceManager = defaultAllocator->MakeNew<ResourceManager>();
+	Allocator* resourceManagerAlloc = allocatorManager->CreateAllocatorScope("ResourceManager", defaultAllocator);
+	this->resourceManager = defaultAllocator->MakeNew<ResourceManager>(resourceManagerAlloc);
 
 	Allocator* lightManagerAlloc = allocatorManager->CreateAllocatorScope("LightManager", defaultAllocator);
 	this->lightManager = defaultAllocator->MakeNew<LightManager>(lightManagerAlloc);

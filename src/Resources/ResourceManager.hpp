@@ -2,12 +2,16 @@
 
 #include <cstdint>
 
+class Allocator;
+
 struct Shader;
 struct Texture;
 
 class ResourceManager
 {
 private:
+	Allocator* allocator;
+
 	// Shaders
 
 	Shader* shaders = nullptr;
@@ -25,7 +29,7 @@ private:
 	bool LoadTexture(Texture* texture, const char* texturePath);
 
 public:
-	ResourceManager();
+	ResourceManager(Allocator* allocator);
 	~ResourceManager();
 
 	Shader* GetShader(uint32_t hash) const;

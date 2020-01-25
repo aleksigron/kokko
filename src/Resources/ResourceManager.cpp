@@ -9,14 +9,15 @@
 #include "System/File.hpp"
 #include "Core/Hash.hpp"
 
-ResourceManager::ResourceManager()
+ResourceManager::ResourceManager(Allocator* allocator) :
+	allocator(allocator)
 {
 }
 
 ResourceManager::~ResourceManager()
 {
-	delete[] shaders;
-	delete[] textures;
+	allocator->Deallocate(textures);
+	allocator->Deallocate(shaders);
 }
 
 Shader* ResourceManager::GetShader(uint32_t hash) const
@@ -45,14 +46,15 @@ Shader* ResourceManager::GetShader(const char* path)
 		if (shaderCount == shaderAllocated)
 		{
 			unsigned int newAllocatedCount = (shaderAllocated > 0) ? shaderAllocated * 2 : 32;
-			Shader* newShaders = new Shader[newAllocatedCount];
+			unsigned int newAllocatedSize = newAllocatedCount * sizeof(Shader);
+			Shader* newShaders = static_cast<Shader*>(allocator->Allocate(newAllocatedSize));
 
 			for (unsigned int i = 0; i < shaderCount; ++i)
 			{
 				newShaders[i] = shaders[i];
 			}
 
-			delete[] shaders;
+			allocator->Deallocate(shaders);
 			shaders = newShaders;
 			shaderAllocated = newAllocatedCount;
 		}
@@ -74,10 +76,10 @@ Shader* ResourceManager::GetShader(const char* path)
 
 bool ResourceManager::LoadShader(Shader& shader, const char* configPath)
 {
-	Buffer<char> configuration = File::ReadText(configPath);
+	Buffer<char> configuration(allocator);
 
-	if (configuration.IsValid())
-		return shader.LoadFromConfiguration(configuration.GetRef());
+	if (File::ReadText(configPath, configuration))
+		return shader.LoadFromConfiguration(configuration.GetRef(), allocator);
 	else
 		return false;
 }
@@ -130,14 +132,15 @@ Texture* ResourceManager::CreateTexture()
 	if (textureCount == textureAllocated)
 	{
 		unsigned int newAllocatedCount = (textureAllocated > 0) ? textureAllocated * 2 : 32;
-		Texture* newTextures = new Texture[newAllocatedCount];
+		unsigned int newAllocatedSize = newAllocatedCount * sizeof(Texture);
+		Texture* newTextures = static_cast<Texture*>(allocator->Allocate(newAllocatedSize));
 
 		for (unsigned int i = 0; i < textureCount; ++i)
 		{
 			newTextures[i] = textures[i];
 		}
 
-		delete[] textures; // Deleting a null pointer is a no-op
+		allocator->Deallocate(textures); // Deleting a null pointer is a no-op
 		textures = newTextures;
 		textureAllocated = newAllocatedCount;
 	}
@@ -150,11 +153,11 @@ Texture* ResourceManager::CreateTexture()
 
 bool ResourceManager::LoadTexture(Texture* texture, const char* path)
 {
-	Buffer<char> textureConfig = File::ReadText(path);
+	Buffer<char> textureConfig(allocator);
 
-	if (textureConfig.IsValid())
+	if (File::ReadText(path, textureConfig))
 	{
-		return texture->LoadFromConfiguration(textureConfig.GetRef());
+		return texture->LoadFromConfiguration(textureConfig.GetRef(), allocator);
 	}
 
 	return false;

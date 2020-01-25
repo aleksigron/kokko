@@ -28,9 +28,9 @@ void AppSettings::LoadFromFile()
 {
 	if (settingsFilename.GetLength() > 0)
 	{
-		Buffer<char> content = File::ReadText(settingsFilename.GetRef());
+		Buffer<char> content(allocator);
 
-		if (content.IsValid())
+		if (File::ReadText(settingsFilename.GetRef(), content))
 		{
 			bool keyRead = false;
 			size_t keyStart = 0;
@@ -78,7 +78,7 @@ void AppSettings::SaveToFile()
 		totalLength += s.keyLength + s.valueLength + 2;
 	}
 
-	Buffer<char> content;
+	Buffer<char> content(allocator);
 	content.Allocate(totalLength);
 
 	char* data = content.Data();

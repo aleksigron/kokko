@@ -5,11 +5,11 @@
 
 namespace File
 {
-	Buffer<unsigned char> ReadBinary(StringRef path);
-	Buffer<unsigned char> ReadBinary(const char* path);
+	bool ReadBinary(StringRef path, Buffer<unsigned char>& output);
+	bool ReadBinary(const char* path, Buffer<unsigned char>& output);
 
-	Buffer<char> ReadText(StringRef path);
-	Buffer<char> ReadText(const char* path);
+	bool ReadText(StringRef path, Buffer<char>& output);
+	bool ReadText(const char* path, Buffer<char>& output);
 
 	bool Write(StringRef path, BufferRef<char> content, bool append);
 	bool Write(const char* path, BufferRef<char> content, bool append);

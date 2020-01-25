@@ -41,7 +41,7 @@ static unsigned int GetTargetType(TextureType type)
 	return values[static_cast<unsigned long>(type)];
 }
 
-bool Texture::LoadFromConfiguration(BufferRef<char> configuration)
+bool Texture::LoadFromConfiguration(BufferRef<char> configuration, Allocator* allocator)
 {
 	rapidjson::Document config;
 	config.ParseInsitu(configuration.data);
@@ -79,9 +79,9 @@ bool Texture::LoadFromConfiguration(BufferRef<char> configuration)
 		assert(textureValue.IsString());
 
 		const char* texturePath = textureValue.GetString();
-		Buffer<unsigned char> textureContent = File::ReadBinary(texturePath);
+		Buffer<unsigned char> textureContent(allocator);
 
-		if (textureContent.IsValid())
+		if (File::ReadBinary(texturePath, textureContent))
 		{
 			ImageData image;
 			if (image.LoadGlraw(textureContent.GetRef()))
@@ -98,7 +98,16 @@ bool Texture::LoadFromConfiguration(BufferRef<char> configuration)
 		assert(textureValue.Size() == 6);
 
 		bool allTextureLoadsSucceeded = true;
-		Buffer<unsigned char> fileContents[6];
+		Buffer<unsigned char> fileContents[6] = 
+		{
+			Buffer<unsigned char>(allocator),
+			Buffer<unsigned char>(allocator),
+			Buffer<unsigned char>(allocator),
+			Buffer<unsigned char>(allocator),
+			Buffer<unsigned char>(allocator),
+			Buffer<unsigned char>(allocator)
+		};
+
 		ImageData cubeFaceImages[6];
 
 		for (unsigned int i = 0, count = textureValue.Size(); i < count; ++i)
@@ -106,9 +115,8 @@ bool Texture::LoadFromConfiguration(BufferRef<char> configuration)
 			assert(textureValue[i].IsString());
 
 			const char* texturePath = textureValue[i].GetString();
-			fileContents[i] = File::ReadBinary(texturePath);
 
-			if (fileContents[i].IsValid())
+			if (File::ReadBinary(texturePath, fileContents[i]))
 			{
 				ImageData& image = cubeFaceImages[i];
 

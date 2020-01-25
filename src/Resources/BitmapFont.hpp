@@ -6,6 +6,8 @@
 #include "Core/StringRef.hpp"
 #include "Core/Buffer.hpp"
 
+class Allocator;
+
 struct BitmapGlyph
 {
 	unsigned int codePoint;
@@ -16,6 +18,8 @@ struct BitmapGlyph
 class BitmapFont
 {
 private:
+	Allocator* allocator;
+
 	unsigned int textureId;
 	Vec2f textureSize;
 
@@ -36,7 +40,7 @@ private:
 	static bool CompareGlyphCodePointAsc(const BitmapGlyph& lhs, const BitmapGlyph& rhs);
 
 public:
-	BitmapFont();
+	BitmapFont(Allocator* allocator);
 	~BitmapFont();
 
 	const BitmapGlyph* GetGlyph(unsigned int codePoint) const;

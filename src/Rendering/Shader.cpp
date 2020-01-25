@@ -43,7 +43,7 @@ Shader::Shader() :
 
 }
 
-bool Shader::LoadFromConfiguration(BufferRef<char> configuration)
+bool Shader::LoadFromConfiguration(BufferRef<char> configuration, Allocator* allocator)
 {
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 	using ValueItr = rapidjson::Value::ConstValueIterator;
@@ -57,6 +57,9 @@ bool Shader::LoadFromConfiguration(BufferRef<char> configuration)
 
 	rapidjson::Document config;
 	config.Parse(data, size);
+
+	// Set default value
+	this->transparencyType = TransparencyType::Opaque;
 
 	MemberItr renderTypeItr = config.FindMember("transparencyType");
 
@@ -176,10 +179,12 @@ bool Shader::LoadFromConfiguration(BufferRef<char> configuration)
 	StringRef vsPath(vsItr->value.GetString(), vsItr->value.GetStringLength());
 	StringRef fsPath(fsItr->value.GetString(), fsItr->value.GetStringLength());
 
-	Buffer<char> vertexSource = File::ReadText(vsPath);
-	Buffer<char> fragmentSource = File::ReadText(fsPath);
+	Buffer<char> vertexSource(allocator);
+	Buffer<char> fragmentSource(allocator);
 
-	if (this->CompileAndLink(vertexSource.GetRef(), fragmentSource.GetRef()))
+	if (File::ReadText(vsPath, vertexSource) &&
+		File::ReadText(fsPath, fragmentSource) &&
+		this->CompileAndLink(vertexSource.GetRef(), fragmentSource.GetRef()))
 	{
 		this->AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
 

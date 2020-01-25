@@ -5,42 +5,40 @@
 
 #include "Core/String.hpp"
 
-Buffer<unsigned char> File::ReadBinary(StringRef path)
+bool File::ReadBinary(StringRef path, Buffer<unsigned char>& output)
 {
-	return ReadBinary(String(path).GetCStr());
+	return ReadBinary(String(path).GetCStr(), output);
 }
 
-Buffer<unsigned char> File::ReadBinary(const char* path)
+bool File::ReadBinary(const char* path, Buffer<unsigned char>& output)
 {
-	Buffer<unsigned char> fileContents;
-
 	FILE* fileHandle = fopen(path, "rb");
 
 	if (fileHandle != nullptr)
 	{
 		// Find the size of the file
-		fseek(fileHandle, 0L, SEEK_END);
+		std::fseek(fileHandle, 0L, SEEK_END);
 		unsigned long fileLength = ftell(fileHandle);
-		rewind(fileHandle);
+		std::rewind(fileHandle);
 
 		// Get the file contents
-		fileContents.Allocate(fileLength);
-		fread(fileContents.Data(), 1, fileLength, fileHandle);
-		fclose(fileHandle);
+		output.Allocate(fileLength);
+		std::fread(output.Data(), 1, fileLength, fileHandle);
+		std::fclose(fileHandle);
+
+		return true;
 	}
 
-	return fileContents;
+	return false;
 }
 
-Buffer<char> File::ReadText(StringRef path)
+bool File::ReadText(StringRef path, Buffer<char>& output)
 {
-	return ReadText(String(path).GetCStr());
+	return ReadText(String(path).GetCStr(), output);
 }
 
-Buffer<char> File::ReadText(const char* path)
+bool File::ReadText(const char* path, Buffer<char>& output)
 {
-	Buffer<char> fileContents;
-
 	FILE* fileHandle = std::fopen(path, "rb");
 
 	if (fileHandle != nullptr)
@@ -51,19 +49,18 @@ Buffer<char> File::ReadText(const char* path)
 		std::rewind(fileHandle);
 
 		// Get the file contents
-		fileContents.Allocate(fileLength + 1);
+		output.Allocate(fileLength + 1);
 
-		if (fileContents.IsValid())
-		{
-			std::fread(fileContents.Data(), 1, fileLength, fileHandle);
-			std::fclose(fileHandle);
+		std::fread(output.Data(), 1, fileLength, fileHandle);
+		std::fclose(fileHandle);
 
-			// Null-terminate so it can be used as a c-string
-			fileContents[fileLength] = '\0';
-		}
+		// Null-terminate so it can be used as a c-string
+		output[fileLength] = '\0';
+
+		return true;
 	}
 
-	return fileContents;
+	return false;
 }
 
 bool File::Write(StringRef path, BufferRef<char> content, bool append)

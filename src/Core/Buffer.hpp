@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/BufferRef.hpp"
+#include "Memory/Allocator.hpp"
 
 template <typename T>
 class Buffer
@@ -9,20 +10,30 @@ public:
 	using SizeType = unsigned long;
 
 private:
+	Allocator* allocator;
 	T* data;
 	SizeType count;
 	
 public:
-	Buffer(): data(nullptr), count(0)
+	Buffer(Allocator* allocator) :
+		allocator(allocator),
+		data(nullptr),
+		count(0)
 	{
 	}
 
-	Buffer(const Buffer& other): data(nullptr), count(0)
+	Buffer(const Buffer& other) :
+		allocator(nullptr),
+		data(nullptr),
+		count(0)
 	{
 		this->operator=(other);
 	}
 
-	Buffer(Buffer&& other): data(other.data), count(other.count)
+	Buffer(Buffer&& other) :
+		allocator(other.allocator),
+		data(other.data),
+		count(other.count)
 	{
 		other.data = nullptr;
 		other.count = 0;
@@ -30,13 +41,15 @@ public:
 
 	~Buffer()
 	{
-		delete[] data;
+		allocator->Deallocate(data);
 	}
 
 	Buffer& operator=(const Buffer& other)
 	{
 		if (this != &other)
 		{
+			allocator = other.allocator;
+
 			if (other.data != nullptr && other.count > 0)
 			{
 				this->Allocate(other.count);
@@ -56,7 +69,7 @@ public:
 
 	Buffer& operator=(Buffer&& other)
 	{
-		delete[] data;
+		allocator->Deallocate(data);
 
 		data = other.data;
 		count = other.count;
@@ -69,19 +82,22 @@ public:
 	
 	void Allocate(SizeType required)
 	{
-		delete[] data;
+		allocator->Deallocate(data);
 
 		count = required;
 
 		if (required > 0)
-			data = new T[required];
+		{
+			SizeType newSize = required * sizeof(T);
+			data = static_cast<T*>(allocator->Allocate(newSize));
+		}
 		else
 			data = nullptr;
 	}
 	
 	void Deallocate()
 	{
-		delete[] data;
+		allocator->Deallocate(data);
 		
 		data = nullptr;
 		count = 0;

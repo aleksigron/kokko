@@ -121,9 +121,9 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	Buffer<char> file = File::ReadText(path);
+	Buffer<char> file(allocator);
 
-	if (file.IsValid())
+	if (File::ReadText(path, file))
 	{
 		MaterialId id = CreateMaterial();
 

@@ -62,11 +62,11 @@ int DebugTextRenderer::GetRowCountForTextLength(unsigned int characterCount) con
 
 bool DebugTextRenderer::LoadBitmapFont(const char* filePath)
 {
-	Buffer<char> content = File::ReadText(filePath);
+	Buffer<char> content(allocator);
 
-	if (content.IsValid())
+	if (File::ReadText(filePath, content))
 	{
-		font = allocator->MakeNew<BitmapFont>();
+		font = allocator->MakeNew<BitmapFont>(allocator);
 		return font->LoadFromBDF(content);
 	}
 	else

@@ -5,6 +5,8 @@
 #include "Core/BufferRef.hpp"
 #include "Rendering/TransparencyType.hpp"
 
+class Allocator;
+
 enum class ShaderUniformType
 {
 	Tex2D,
@@ -63,5 +65,5 @@ public:
 
 	Shader();
 	
-	bool LoadFromConfiguration(BufferRef<char> configuration);
+	bool LoadFromConfiguration(BufferRef<char> configuration, Allocator* allocator);
 };
