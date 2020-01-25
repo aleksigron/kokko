@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include "Hash.hpp"
+#include "Core/Hash.hpp"
 #include "Math/Math.hpp"
 #include "Memory/Allocator.hpp"
 

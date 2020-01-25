@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-#include "String.hpp"
+#include "Core/String.hpp"
 #include "Debug/DebugConsole.hpp"
 
 DebugLog::DebugLog(DebugConsole* console) :

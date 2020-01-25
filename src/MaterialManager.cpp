@@ -5,7 +5,7 @@
 #include "rapidjson/document.h"
 
 #include "Memory/Allocator.hpp"
-#include "Hash.hpp"
+#include "Core/Hash.hpp"
 #include "File.hpp"
 #include "ValueSerialization.hpp"
 #include "Engine.hpp"

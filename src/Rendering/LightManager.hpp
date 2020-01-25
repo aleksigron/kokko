@@ -6,8 +6,8 @@
 #include "Entity.hpp"
 #include "Math/Mat3x3.hpp"
 #include "Math/Vec3.hpp"
-#include "HashMap.hpp"
-#include "Array.hpp"
+#include "Core/HashMap.hpp"
+#include "Core/Array.hpp"
 #include "Math/Frustum.hpp"
 
 class Allocator;

@@ -2,7 +2,7 @@
 
 #include "rapidjson/document.h"
 
-#include "BufferRef.hpp"
+#include "Core/BufferRef.hpp"
 #include "Scene.hpp"
 
 class Engine;

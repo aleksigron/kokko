@@ -6,7 +6,7 @@
 #include "InputManager.hpp"
 #include "TextInputHandler.hpp"
 
-#include "StringRef.hpp"
+#include "Core/StringRef.hpp"
 #include "EncodingUtf8.hpp"
 
 TextInput::TextInput() :

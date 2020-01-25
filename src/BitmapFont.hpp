@@ -3,8 +3,8 @@
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
 
-#include "StringRef.hpp"
-#include "Buffer.hpp"
+#include "Core/StringRef.hpp"
+#include "Core/Buffer.hpp"
 
 struct BitmapGlyph
 {

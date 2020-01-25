@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include "HashMap.hpp"
-#include "StringRef.hpp"
+#include "Core/HashMap.hpp"
+#include "Core/StringRef.hpp"
 
 #include "MaterialData.hpp"
 #include "Rendering/TransparencyType.hpp"

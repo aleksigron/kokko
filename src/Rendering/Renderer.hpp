@@ -13,8 +13,8 @@
 #include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RenderOrder.hpp"
 
-#include "Array.hpp"
-#include "HashMap.hpp"
+#include "Core/Array.hpp"
+#include "Core/HashMap.hpp"
 
 class Allocator;
 

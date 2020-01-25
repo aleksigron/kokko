@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BufferRef.hpp"
+#include "Core/BufferRef.hpp"
 
 template <typename T>
 class Buffer

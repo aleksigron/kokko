@@ -7,7 +7,7 @@
 #include "ImageData.hpp"
 
 #include "File.hpp"
-#include "Hash.hpp"
+#include "Core/Hash.hpp"
 
 ResourceManager::ResourceManager()
 {

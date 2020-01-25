@@ -1,8 +1,8 @@
 #pragma once
 
-#include "HashMap.hpp"
-#include "Array.hpp"
-#include "SortedArray.hpp"
+#include "Core/HashMap.hpp"
+#include "Core/Array.hpp"
+#include "Core/SortedArray.hpp"
 
 #include "Math/Mat4x4.hpp"
 #include "Color.hpp"

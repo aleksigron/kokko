@@ -5,8 +5,8 @@
 #include "rapidjson/document.h"
 
 #include "File.hpp"
-#include "Hash.hpp"
-#include "StringRef.hpp"
+#include "Core/Hash.hpp"
+#include "Core/StringRef.hpp"
 #include "ImageData.hpp"
 
 static int GetFilterModeValue(TextureFilterMode mode)

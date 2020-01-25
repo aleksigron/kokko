@@ -31,7 +31,7 @@
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
 
-#include "Sort.hpp"
+#include "Core/Sort.hpp"
 
 Renderer::Renderer(Allocator* allocator, LightManager* lightManager) :
 	allocator(allocator),

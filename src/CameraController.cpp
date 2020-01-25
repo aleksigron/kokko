@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "String.hpp"
+#include "Core/String.hpp"
 
 #include "Math/Mat3x3.hpp"
 #include "Math/Mat4x4.hpp"

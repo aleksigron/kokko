@@ -5,7 +5,7 @@
 #include "Rendering/RenderOrder.hpp"
 #include "Rendering/RenderCommandType.hpp"
 
-#include "Array.hpp"
+#include "Core/Array.hpp"
 
 struct RenderCommandList
 {

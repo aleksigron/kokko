@@ -1,6 +1,6 @@
 #include "Rendering/RenderCommandList.hpp"
 
-#include "Sort.hpp"
+#include "Core/Sort.hpp"
 
 void RenderCommandList::AddControl(
 	unsigned int viewport,

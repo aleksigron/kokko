@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Array.hpp"
-#include "StringRef.hpp"
+#include "Core/Array.hpp"
+#include "Core/StringRef.hpp"
 #include "Math/Rectangle.hpp"
 #include "Rendering/VertexFormat.hpp"
 #include "Math/Vec2.hpp"

@@ -16,7 +16,7 @@
 #include "ResourceManager.hpp"
 #include "SceneManager.hpp"
 #include "Scene.hpp"
-#include "String.hpp"
+#include "Core/String.hpp"
 
 #include "Debug/Debug.hpp"
 #include "Debug/DebugLog.hpp"

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Queue.hpp"
-#include "String.hpp"
-#include "StringRef.hpp"
+#include "Core/Queue.hpp"
+#include "Core/String.hpp"
+#include "Core/StringRef.hpp"
 #include "Math/Rectangle.hpp"
 #include "TextInputHandler.hpp"
 

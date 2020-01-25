@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Buffer.hpp"
-#include "StringRef.hpp"
+#include "Core/Buffer.hpp"
+#include "Core/StringRef.hpp"
 
 namespace File
 {

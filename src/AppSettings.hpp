@@ -2,9 +2,9 @@
 
 #include <cstring>
 
-#include "Array.hpp"
-#include "ImmutableString.hpp"
-#include "StringRef.hpp"
+#include "Core/Array.hpp"
+#include "Core/ImmutableString.hpp"
+#include "Core/StringRef.hpp"
 
 class AppSettings
 {

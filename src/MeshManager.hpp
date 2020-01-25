@@ -4,11 +4,11 @@
 
 #include "MeshData.hpp"
 
-#include "HashMap.hpp"
+#include "Core/HashMap.hpp"
 #include "Math/BoundingBox.hpp"
 #include "Rendering/VertexFormat.hpp"
-#include "BufferRef.hpp"
-#include "StringRef.hpp"
+#include "Core/BufferRef.hpp"
+#include "Core/StringRef.hpp"
 
 struct BoundingBox;
 class Allocator;

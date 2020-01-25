@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Entity.hpp"
-#include "Array.hpp"
-#include "Queue.hpp"
+#include "Core/Array.hpp"
+#include "Core/Queue.hpp"
 
 class EntityManager
 {

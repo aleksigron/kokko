@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "String.hpp"
+#include "Core/String.hpp"
 
 Buffer<unsigned char> File::ReadBinary(StringRef path)
 {

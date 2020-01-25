@@ -4,8 +4,8 @@
 #include <cstdlib>
 
 #include "File.hpp"
-#include "String.hpp"
-#include "BufferRef.hpp"
+#include "Core/String.hpp"
+#include "Core/BufferRef.hpp"
 
 AppSettings::AppSettings()
 {

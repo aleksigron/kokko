@@ -9,9 +9,9 @@
 #include <cassert>
 
 #include "File.hpp"
-#include "Hash.hpp"
-#include "String.hpp"
-#include "StringRef.hpp"
+#include "Core/Hash.hpp"
+#include "Core/String.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Engine.hpp"
 #include "Debug/Debug.hpp"

@@ -4,7 +4,7 @@
 
 #include "IncludeOpenGL.hpp"
 
-#include "Hash.hpp"
+#include "Core/Hash.hpp"
 #include "File.hpp"
 #include "MeshLoader.hpp"
 

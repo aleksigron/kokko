@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Array.hpp"
+#include "Core/Array.hpp"
 
 template <typename ValueType>
 class SortedArray

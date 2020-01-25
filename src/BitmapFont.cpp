@@ -3,14 +3,14 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "Hash.hpp"
+#include "Core/Hash.hpp"
 
 #include "Engine.hpp"
 #include "App.hpp"
 #include "Texture.hpp"
 #include "ImageData.hpp"
 #include "ResourceManager.hpp"
-#include "Sort.hpp"
+#include "Core/Sort.hpp"
 
 #include "IncludeOpenGL.hpp"
 

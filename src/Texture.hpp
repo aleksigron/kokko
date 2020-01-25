@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "Math/Vec2.hpp"
-#include "BufferRef.hpp"
+#include "Core/BufferRef.hpp"
 
 struct ImageData;
 

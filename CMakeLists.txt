@@ -27,16 +27,12 @@ set (KOKKO_SOURCES
 	src/App.hpp
 	src/AppSettings.cpp
 	src/AppSettings.hpp
-	src/Array.hpp
 	src/BitfieldVariable.hpp
 	src/BitmapFont.cpp
 	src/BitmapFont.hpp
 	src/BitPack.hpp
-	src/Buffer.hpp
-	src/BufferRef.hpp
 	src/CameraController.cpp
 	src/CameraController.hpp
-	src/Collection.hpp
 	src/Color.hpp
 	src/ColorSrgb.hpp
 	src/EncodingUtf8.cpp
@@ -47,15 +43,10 @@ set (KOKKO_SOURCES
 	src/EntityManager.hpp
 	src/File.cpp
 	src/File.hpp
-	src/Hash.hpp
-	src/HashMap.hpp
 	src/ImageData.cpp
 	src/ImageData.hpp
-	src/ImmutableString.cpp
-	src/ImmutableString.hpp
 	src/IncludeOpenGL.hpp
 	src/IncludeGLFW.hpp
-	src/IndexedContainer.hpp
 	src/InputManager.cpp
 	src/InputManager.hpp
 	src/Intersect3D.cpp
@@ -73,10 +64,8 @@ set (KOKKO_SOURCES
 	src/MeshLoader.hpp
 	src/MeshManager.cpp
 	src/MeshManager.hpp
-	src/MultiArray.hpp
 	src/PointerInput.cpp
 	src/PointerInput.hpp
-	src/Queue.hpp
 	src/ResourceManager.cpp
 	src/ResourceManager.hpp
 	src/Scene.cpp
@@ -88,12 +77,6 @@ set (KOKKO_SOURCES
 	src/SceneManager.hpp
 	src/Skybox.cpp
 	src/Skybox.hpp
-	src/Sort.hpp
-	src/SortedArray.hpp
-	src/String.cpp
-	src/String.hpp
-	src/StringRef.cpp
-	src/StringRef.hpp
 	src/TextInputHandler.hpp
 	src/TextInput.cpp
 	src/TextInput.hpp
@@ -105,6 +88,23 @@ set (KOKKO_SOURCES
 	src/ValueSerialization.hpp
 	src/Window.cpp
 	src/Window.hpp
+	src/Core/Array.hpp
+	src/Core/Buffer.hpp
+	src/Core/BufferRef.hpp
+	src/Core/Collection.hpp
+	src/Core/Hash.hpp
+	src/Core/HashMap.hpp
+	src/Core/ImmutableString.cpp
+	src/Core/ImmutableString.hpp
+	src/Core/IndexedContainer.hpp
+	src/Core/MultiArray.hpp
+	src/Core/Queue.hpp
+	src/Core/Sort.hpp
+	src/Core/SortedArray.hpp
+	src/Core/String.cpp
+	src/Core/String.hpp
+	src/Core/StringRef.cpp
+	src/Core/StringRef.hpp
 	src/Debug/Debug.cpp
 	src/Debug/Debug.hpp
 	src/Debug/DebugConsole.cpp

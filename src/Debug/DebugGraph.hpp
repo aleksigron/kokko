@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Queue.hpp"
+#include "Core/Queue.hpp"
 #include "Math/Rectangle.hpp"
 
 class DebugVectorRenderer;
