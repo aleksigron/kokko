@@ -1,11 +1,11 @@
 #include "Debug/DebugCulling.hpp"
 
 #include "Application/App.hpp"
-#include "Engine.hpp"
-#include "EntityManager.hpp"
+#include "Engine/Engine.hpp"
+#include "Entity/EntityManager.hpp"
 #include "System/Window.hpp"
 #include "Rendering/Renderer.hpp"
-#include "Resources/Scene.hpp"
+#include "Scene/Scene.hpp"
 #include "Math/Frustum.hpp"
 
 #include "Debug/DebugTextRenderer.hpp"

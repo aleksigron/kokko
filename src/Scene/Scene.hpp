@@ -8,7 +8,7 @@
 #include "Core/Color.hpp"
 #include "Resources/Skybox.hpp"
 
-#include "Entity.hpp"
+#include "Entity/Entity.hpp"
 
 class Camera;
 class Allocator;

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ITransformUpdateReceiver.hpp"
+#include "Scene/ITransformUpdateReceiver.hpp"
 
 #include "Math/Mat4x4.hpp"
 #include "Math/Vec3.hpp"
 #include "Math/Vec2.hpp"
-#include "Entity.hpp"
+#include "Entity/Entity.hpp"
 #include "Math/Frustum.hpp"
 #include "Resources/MeshData.hpp"
 #include "Resources/MaterialData.hpp"

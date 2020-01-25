@@ -5,10 +5,10 @@
 
 #include "System/IncludeOpenGL.hpp"
 
-#include "Engine.hpp"
+#include "Engine/Engine.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
-#include "Resources/Scene.hpp"
+#include "Scene/Scene.hpp"
 #include "System/InputManager.hpp"
 #include "System/KeyboardInputView.hpp"
 #include "Resources/BitmapFont.hpp"

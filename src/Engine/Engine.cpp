@@ -8,14 +8,14 @@
 
 #include "System/Window.hpp"
 #include "System/Time.hpp"
-#include "Entity/EntityManager.hpp"
+#include "EntityManager.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/MaterialManager.hpp"
 #include "Resources/ResourceManager.hpp"
-#include "Resources/SceneManager.hpp"
-#include "Resources/Scene.hpp"
+#include "Scene/SceneManager.hpp"
+#include "Scene/Scene.hpp"
 #include "Core/String.hpp"
 
 #include "Debug/Debug.hpp"

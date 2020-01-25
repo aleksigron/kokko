@@ -7,8 +7,8 @@
 #include "Memory/Allocator.hpp"
 #include "Core/Hash.hpp"
 #include "System/File.hpp"
-#include "ValueSerialization.hpp"
-#include "Engine.hpp"
+#include "Resources/ValueSerialization.hpp"
+#include "Engine/Engine.hpp"
 #include "Resources/ResourceManager.hpp"
 #include "Resources/Texture.hpp"
 

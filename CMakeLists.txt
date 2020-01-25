@@ -22,11 +22,6 @@ set (DEPS_SOURCES
 )
 
 set (KOKKO_SOURCES
-	src/Engine.cpp
-	src/Engine.hpp
-	src/Entity.hpp
-	src/EntityManager.hpp
-	src/ITransformUpdateReceiver.hpp
 	src/Application/main.cpp
 	src/Application/App.cpp
 	src/Application/App.hpp
@@ -70,6 +65,10 @@ set (KOKKO_SOURCES
 	src/Debug/DebugTextRenderer.hpp
 	src/Debug/DebugVectorRenderer.cpp
 	src/Debug/DebugVectorRenderer.hpp
+	src/Engine/Engine.cpp
+	src/Engine/Engine.hpp
+	src/Entity/Entity.hpp
+	src/Entity/EntityManager.hpp
 	src/Math/BoundingBox.hpp
 	src/Math/Frustum.hpp
 	src/Math/Intersect3D.cpp
@@ -132,19 +131,20 @@ set (KOKKO_SOURCES
 	src/Resources/MeshManager.hpp
 	src/Resources/ResourceManager.cpp
 	src/Resources/ResourceManager.hpp
-	src/Resources/Scene.cpp
-	src/Resources/Scene.hpp
-	src/Resources/SceneLayer.hpp
-	src/Resources/SceneLoader.cpp
-	src/Resources/SceneLoader.hpp
-	src/Resources/SceneManager.cpp
-	src/Resources/SceneManager.hpp
 	src/Resources/Skybox.cpp
 	src/Resources/Skybox.hpp
 	src/Resources/Texture.cpp
 	src/Resources/Texture.hpp
 	src/Resources/ValueSerialization.cpp
 	src/Resources/ValueSerialization.hpp
+	src/Scene/ITransformUpdateReceiver.hpp
+	src/Scene/Scene.cpp
+	src/Scene/Scene.hpp
+	src/Scene/SceneLayer.hpp
+	src/Scene/SceneLoader.cpp
+	src/Scene/SceneLoader.hpp
+	src/Scene/SceneManager.cpp
+	src/Scene/SceneManager.hpp
 	src/System/File.cpp
 	src/System/File.hpp
 	src/System/IncludeOpenGL.hpp

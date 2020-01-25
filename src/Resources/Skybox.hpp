@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Math/Vec3.hpp"
-#include "Entity.hpp"
+#include "Entity/Entity.hpp"
 #include "Resources/MaterialData.hpp"
 
 class Scene;

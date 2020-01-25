@@ -5,13 +5,13 @@
 
 #include "System/IncludeOpenGL.hpp"
 
-#include "Engine.hpp"
+#include "Engine/Engine.hpp"
 #include "Math/Math.hpp"
 #include "Rendering/Camera.hpp"
 #include "System/Window.hpp"
 #include "Rendering/Shader.hpp"
-#include "Resources/Scene.hpp"
-#include "Resources/SceneManager.hpp"
+#include "Scene/Scene.hpp"
+#include "Scene/SceneManager.hpp"
 #include "Resources/ResourceManager.hpp"
 #include "Resources/MeshManager.hpp"
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Math/Mat4x4.hpp"
-#include "Entity.hpp"
+#include "Entity/Entity.hpp"
 #include "Math/Frustum.hpp"
 
 class Scene;

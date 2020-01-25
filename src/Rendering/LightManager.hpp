@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ITransformUpdateReceiver.hpp"
+#include "Scene/ITransformUpdateReceiver.hpp"
 
 #include "Rendering/Light.hpp"
-#include "Entity.hpp"
+#include "Entity/Entity.hpp"
 #include "Math/Mat3x3.hpp"
 #include "Math/Vec3.hpp"
 #include "Core/HashMap.hpp"

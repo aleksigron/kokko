@@ -8,7 +8,7 @@
 #include "Debug/Debug.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
-#include "Engine.hpp"
+#include "Engine/Engine.hpp"
 #include "System/Window.hpp"
 #include "Memory/Allocator.hpp"
 
@@ -18,7 +18,7 @@
 #include "Resources/MeshManager.hpp"
 #include "Rendering/Shader.hpp"
 #include "Resources/Texture.hpp"
-#include "Resources/Scene.hpp"
+#include "Scene/Scene.hpp"
 
 #include "Rendering/Camera.hpp"
 #include "Math/Rectangle.hpp"

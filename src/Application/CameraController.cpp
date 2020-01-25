@@ -8,15 +8,15 @@
 #include "Math/Mat3x3.hpp"
 #include "Math/Mat4x4.hpp"
 
-#include "Engine.hpp"
+#include "Engine/Engine.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 #include "System/InputManager.hpp"
 #include "System/PointerInput.hpp"
 #include "System/KeyboardInputView.hpp"
 
-#include "Resources/SceneManager.hpp"
-#include "Resources/Scene.hpp"
+#include "Scene/SceneManager.hpp"
+#include "Scene/Scene.hpp"
 
 #include "App.hpp"
 #include "Rendering/Camera.hpp"

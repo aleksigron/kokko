@@ -1,14 +1,14 @@
-#include "Resources/SceneLoader.hpp"
+#include "Scene/SceneLoader.hpp"
 
 #include "rapidjson/document.h"
 
-#include "Engine.hpp"
+#include "Engine/Engine.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Resources/MeshManager.hpp"
 #include "EntityManager.hpp"
 #include "Resources/ResourceManager.hpp"
 #include "Resources/MaterialManager.hpp"
-#include "ValueSerialization.hpp"
+#include "Resources/ValueSerialization.hpp"
 
 SceneLoader::SceneLoader(Engine* engine, Scene* scene):
 	scene(scene),

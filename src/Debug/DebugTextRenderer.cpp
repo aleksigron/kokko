@@ -12,7 +12,7 @@
 
 #include "Application/App.hpp"
 
-#include "Engine.hpp"
+#include "Engine/Engine.hpp"
 #include "Rendering/Shader.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/ResourceManager.hpp"

@@ -1,4 +1,4 @@
-#include "Resources/Scene.hpp"
+#include "Scene/Scene.hpp"
 
 #include <cassert>
 

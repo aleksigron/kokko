@@ -3,13 +3,13 @@
 #include "Math/Math.hpp"
 #include "System/Time.hpp"
 
-#include "Engine.hpp"
+#include "Engine/Engine.hpp"
 #include "System/Window.hpp"
 #include "Rendering/Renderer.hpp"
-#include "EntityManager.hpp"
-#include "Resources/SceneManager.hpp"
+#include "Entity/EntityManager.hpp"
+#include "Scene/SceneManager.hpp"
 #include "Rendering/LightManager.hpp"
-#include "Resources/Scene.hpp"
+#include "Scene/Scene.hpp"
 
 App* App::instance = nullptr;
 

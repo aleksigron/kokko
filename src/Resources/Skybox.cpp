@@ -2,14 +2,14 @@
 
 #include "Math/Mat4x4.hpp"
 
-#include "Engine.hpp"
-#include "Resources/Scene.hpp"
-#include "Resources/SceneLayer.hpp"
-#include "Resources/SceneManager.hpp"
+#include "Engine/Engine.hpp"
+#include "Scene/Scene.hpp"
+#include "Scene/SceneLayer.hpp"
+#include "Scene/SceneManager.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/MaterialManager.hpp"
-#include "EntityManager.hpp"
+#include "Entity/EntityManager.hpp"
 #include "Resources/ResourceManager.hpp"
 
 #include "Rendering/VertexFormat.hpp"
