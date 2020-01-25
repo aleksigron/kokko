@@ -9,7 +9,7 @@
 #include "Debug/DebugVectorRenderer.hpp"
 
 #include "Engine.hpp"
-#include "Window.hpp"
+#include "System/Window.hpp"
 #include "Memory/Allocator.hpp"
 
 #include "ResourceManager.hpp"

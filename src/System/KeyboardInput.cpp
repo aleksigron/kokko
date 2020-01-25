@@ -1,9 +1,9 @@
-#include "KeyboardInput.hpp"
+#include "System/KeyboardInput.hpp"
 
 #include "IncludeGLFW.hpp"
 
-#include "Window.hpp"
-#include "InputManager.hpp"
+#include "System/Window.hpp"
+#include "System/InputManager.hpp"
 
 KeyboardInput::KeyboardInput() : windowHandle(nullptr), keyStateCount(0)
 {

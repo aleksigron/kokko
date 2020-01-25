@@ -6,8 +6,8 @@
 #include "Memory/Memory.hpp"
 #include "Memory/ProxyAllocator.hpp"
 
-#include "Window.hpp"
-#include "Time.hpp"
+#include "System/Window.hpp"
+#include "System/Time.hpp"
 #include "EntityManager.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"

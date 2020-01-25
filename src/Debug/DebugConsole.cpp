@@ -3,12 +3,12 @@
 #include <cstring>
 
 #include "Engine.hpp"
-#include "Time.hpp"
+#include "System/Time.hpp"
 
-#include "Window.hpp"
-#include "InputManager.hpp"
-#include "KeyboardInputView.hpp"
-#include "TextInput.hpp"
+#include "System/Window.hpp"
+#include "System/InputManager.hpp"
+#include "System/KeyboardInputView.hpp"
+#include "System/TextInput.hpp"
 #include "EncodingUtf8.hpp"
 #include "BitmapFont.hpp"
 #include "Debug/DebugTextRenderer.hpp"

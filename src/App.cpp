@@ -1,10 +1,10 @@
 #include "App.hpp"
 
 #include "Math/Math.hpp"
-#include "Time.hpp"
+#include "System/Time.hpp"
 
 #include "Engine.hpp"
-#include "Window.hpp"
+#include "System/Window.hpp"
 #include "Rendering/Renderer.hpp"
 #include "EntityManager.hpp"
 #include "SceneManager.hpp"

@@ -9,11 +9,11 @@
 #include "Math/Mat4x4.hpp"
 
 #include "Engine.hpp"
-#include "Time.hpp"
-#include "Window.hpp"
-#include "InputManager.hpp"
-#include "PointerInput.hpp"
-#include "KeyboardInputView.hpp"
+#include "System/Time.hpp"
+#include "System/Window.hpp"
+#include "System/InputManager.hpp"
+#include "System/PointerInput.hpp"
+#include "System/KeyboardInputView.hpp"
 
 #include "SceneManager.hpp"
 #include "Scene.hpp"

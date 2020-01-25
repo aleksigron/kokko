@@ -8,7 +8,7 @@
 #include "Scene.hpp"
 #include "SceneLoader.hpp"
 #include "Core/StringRef.hpp"
-#include "File.hpp"
+#include "System/File.hpp"
 
 SceneManager::SceneManager(Allocator* allocator) :
 	allocator(allocator),

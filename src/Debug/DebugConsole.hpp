@@ -4,7 +4,7 @@
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
 #include "Math/Rectangle.hpp"
-#include "TextInputHandler.hpp"
+#include "System/TextInputHandler.hpp"
 
 class DebugTextRenderer;
 class DebugVectorRenderer;

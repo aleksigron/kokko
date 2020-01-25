@@ -1,4 +1,4 @@
-#include "PointerInput.hpp"
+#include "System/PointerInput.hpp"
 
 #include "IncludeGLFW.hpp"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "KeyboardInput.hpp"
+#include "System/KeyboardInput.hpp"
 
 class KeyboardInput;
 

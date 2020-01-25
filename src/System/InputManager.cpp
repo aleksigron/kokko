@@ -1,9 +1,9 @@
-#include "InputManager.hpp"
+#include "System/InputManager.hpp"
 
-#include "KeyboardInput.hpp"
-#include "KeyboardInputView.hpp"
-#include "TextInput.hpp"
-#include "PointerInput.hpp"
+#include "System/KeyboardInput.hpp"
+#include "System/KeyboardInputView.hpp"
+#include "System/TextInput.hpp"
+#include "System/PointerInput.hpp"
 
 InputManager::InputManager():
 	keyboardInput(nullptr),

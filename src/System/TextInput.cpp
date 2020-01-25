@@ -1,10 +1,10 @@
-#include "TextInput.hpp"
+#include "System/TextInput.hpp"
 
 #include "IncludeGLFW.hpp"
 
-#include "Window.hpp"
-#include "InputManager.hpp"
-#include "TextInputHandler.hpp"
+#include "System/Window.hpp"
+#include "System/InputManager.hpp"
+#include "System/TextInputHandler.hpp"
 
 #include "Core/StringRef.hpp"
 #include "EncodingUtf8.hpp"

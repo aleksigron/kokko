@@ -1,8 +1,8 @@
-#include "Window.hpp"
+#include "System/Window.hpp"
 
 #include "IncludeOpenGL.hpp"
 
-#include "InputManager.hpp"
+#include "System/InputManager.hpp"
 
 Window::Window() :
 	windowHandle(nullptr),

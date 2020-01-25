@@ -41,22 +41,14 @@ set (KOKKO_SOURCES
 	src/Engine.hpp
 	src/Entity.hpp
 	src/EntityManager.hpp
-	src/File.cpp
-	src/File.hpp
 	src/ImageData.cpp
 	src/ImageData.hpp
 	src/IncludeOpenGL.hpp
 	src/IncludeGLFW.hpp
-	src/InputManager.cpp
-	src/InputManager.hpp
 	src/Intersect3D.cpp
 	src/Intersect3D.hpp
 	src/ITransformUpdateReceiver.hpp
 	src/JsonReader.hpp
-	src/KeyboardInput.cpp
-	src/KeyboardInput.hpp
-	src/KeyboardInputView.cpp
-	src/KeyboardInputView.hpp
 	src/MaterialManager.cpp
 	src/MaterialManager.hpp
 	src/MaterialData.hpp
@@ -64,8 +56,6 @@ set (KOKKO_SOURCES
 	src/MeshLoader.hpp
 	src/MeshManager.cpp
 	src/MeshManager.hpp
-	src/PointerInput.cpp
-	src/PointerInput.hpp
 	src/ResourceManager.cpp
 	src/ResourceManager.hpp
 	src/Scene.cpp
@@ -77,17 +67,10 @@ set (KOKKO_SOURCES
 	src/SceneManager.hpp
 	src/Skybox.cpp
 	src/Skybox.hpp
-	src/TextInputHandler.hpp
-	src/TextInput.cpp
-	src/TextInput.hpp
 	src/Texture.cpp
 	src/Texture.hpp
-	src/Time.cpp
-	src/Time.hpp
 	src/ValueSerialization.cpp
 	src/ValueSerialization.hpp
-	src/Window.cpp
-	src/Window.hpp
 	src/Core/Array.hpp
 	src/Core/Buffer.hpp
 	src/Core/BufferRef.hpp
@@ -165,6 +148,23 @@ set (KOKKO_SOURCES
 	src/Rendering/TransparencyType.hpp
 	src/Rendering/VertexFormat.cpp
 	src/Rendering/VertexFormat.hpp
+	src/System/File.cpp
+	src/System/File.hpp
+	src/System/InputManager.cpp
+	src/System/InputManager.hpp
+	src/System/KeyboardInput.cpp
+	src/System/KeyboardInput.hpp
+	src/System/KeyboardInputView.cpp
+	src/System/KeyboardInputView.hpp
+	src/System/PointerInput.cpp
+	src/System/PointerInput.hpp
+	src/System/TextInputHandler.hpp
+	src/System/TextInput.cpp
+	src/System/TextInput.hpp
+	src/System/Time.cpp
+	src/System/Time.hpp
+	src/System/Window.cpp
+	src/System/Window.hpp
 )
 
 source_group(Dependencies FILES ${DEPS_SOURCES})

@@ -6,11 +6,11 @@
 #include "IncludeOpenGL.hpp"
 
 #include "Engine.hpp"
-#include "Time.hpp"
-#include "Window.hpp"
+#include "System/Time.hpp"
+#include "System/Window.hpp"
 #include "Scene.hpp"
-#include "InputManager.hpp"
-#include "KeyboardInputView.hpp"
+#include "System/InputManager.hpp"
+#include "System/KeyboardInputView.hpp"
 #include "BitmapFont.hpp"
 #include "Rendering/Renderer.hpp"
 

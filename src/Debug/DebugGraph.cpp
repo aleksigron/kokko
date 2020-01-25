@@ -7,7 +7,7 @@
 #include "Debug/Debug.hpp"
 #include "Debug/DebugLog.hpp"
 
-#include "Time.hpp"
+#include "System/Time.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
 DebugGraph::DebugGraph(DebugVectorRenderer* vr) :

@@ -1,4 +1,4 @@
-#include "KeyboardInputView.hpp"
+#include "System/KeyboardInputView.hpp"
 
 KeyboardInputView::KeyboardInputView() :
 	keyboardInput(nullptr),

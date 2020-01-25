@@ -8,7 +8,7 @@
 #include "Engine.hpp"
 #include "Math/Math.hpp"
 #include "Rendering/Camera.hpp"
-#include "Window.hpp"
+#include "System/Window.hpp"
 #include "Rendering/Shader.hpp"
 #include "Scene.hpp"
 #include "SceneManager.hpp"
