@@ -91,13 +91,10 @@ set (KOKKO_SOURCES
 	src/Core/Array.hpp
 	src/Core/Buffer.hpp
 	src/Core/BufferRef.hpp
-	src/Core/Collection.hpp
 	src/Core/Hash.hpp
 	src/Core/HashMap.hpp
 	src/Core/ImmutableString.cpp
 	src/Core/ImmutableString.hpp
-	src/Core/IndexedContainer.hpp
-	src/Core/MultiArray.hpp
 	src/Core/Queue.hpp
 	src/Core/Sort.hpp
 	src/Core/SortedArray.hpp
