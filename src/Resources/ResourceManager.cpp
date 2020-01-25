@@ -1,10 +1,10 @@
-#include "ResourceManager.hpp"
+#include "Resources/ResourceManager.hpp"
 
 #include <cstring>
 
 #include "Rendering/Shader.hpp"
-#include "Texture.hpp"
-#include "ImageData.hpp"
+#include "Resources/Texture.hpp"
+#include "Resources/ImageData.hpp"
 
 #include "System/File.hpp"
 #include "Core/Hash.hpp"

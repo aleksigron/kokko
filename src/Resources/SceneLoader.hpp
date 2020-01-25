@@ -3,7 +3,7 @@
 #include "rapidjson/document.h"
 
 #include "Core/BufferRef.hpp"
-#include "Scene.hpp"
+#include "Resources/Scene.hpp"
 
 class Engine;
 class Renderer;

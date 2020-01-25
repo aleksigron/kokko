@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MaterialData.hpp"
+#include "Resources/MaterialData.hpp"
 
 #include "Rendering/RenderOrder.hpp"
 #include "Rendering/RenderCommandType.hpp"

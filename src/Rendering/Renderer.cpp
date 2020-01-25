@@ -12,13 +12,13 @@
 #include "System/Window.hpp"
 #include "Memory/Allocator.hpp"
 
-#include "ResourceManager.hpp"
-#include "MaterialManager.hpp"
+#include "Resources/ResourceManager.hpp"
+#include "Resources/MaterialManager.hpp"
 #include "Rendering/LightManager.hpp"
-#include "MeshManager.hpp"
+#include "Resources/MeshManager.hpp"
 #include "Rendering/Shader.hpp"
-#include "Texture.hpp"
-#include "Scene.hpp"
+#include "Resources/Texture.hpp"
+#include "Resources/Scene.hpp"
 
 #include "Rendering/Camera.hpp"
 #include "Math/Rectangle.hpp"

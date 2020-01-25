@@ -28,8 +28,6 @@ set (KOKKO_SOURCES
 	src/AppSettings.cpp
 	src/AppSettings.hpp
 	src/BitfieldVariable.hpp
-	src/BitmapFont.cpp
-	src/BitmapFont.hpp
 	src/BitPack.hpp
 	src/CameraController.cpp
 	src/CameraController.hpp
@@ -41,34 +39,12 @@ set (KOKKO_SOURCES
 	src/Engine.hpp
 	src/Entity.hpp
 	src/EntityManager.hpp
-	src/ImageData.cpp
-	src/ImageData.hpp
 	src/IncludeOpenGL.hpp
 	src/IncludeGLFW.hpp
 	src/Intersect3D.cpp
 	src/Intersect3D.hpp
 	src/ITransformUpdateReceiver.hpp
 	src/JsonReader.hpp
-	src/MaterialManager.cpp
-	src/MaterialManager.hpp
-	src/MaterialData.hpp
-	src/MeshData.hpp
-	src/MeshLoader.hpp
-	src/MeshManager.cpp
-	src/MeshManager.hpp
-	src/ResourceManager.cpp
-	src/ResourceManager.hpp
-	src/Scene.cpp
-	src/Scene.hpp
-	src/SceneLayer.hpp
-	src/SceneLoader.cpp
-	src/SceneLoader.hpp
-	src/SceneManager.cpp
-	src/SceneManager.hpp
-	src/Skybox.cpp
-	src/Skybox.hpp
-	src/Texture.cpp
-	src/Texture.hpp
 	src/ValueSerialization.cpp
 	src/ValueSerialization.hpp
 	src/Core/Array.hpp
@@ -148,6 +124,30 @@ set (KOKKO_SOURCES
 	src/Rendering/TransparencyType.hpp
 	src/Rendering/VertexFormat.cpp
 	src/Rendering/VertexFormat.hpp
+	src/Resources/BitmapFont.cpp
+	src/Resources/BitmapFont.hpp
+	src/Resources/ImageData.cpp
+	src/Resources/ImageData.hpp
+	src/Resources/MaterialManager.cpp
+	src/Resources/MaterialManager.hpp
+	src/Resources/MaterialData.hpp
+	src/Resources/MeshData.hpp
+	src/Resources/MeshLoader.hpp
+	src/Resources/MeshManager.cpp
+	src/Resources/MeshManager.hpp
+	src/Resources/ResourceManager.cpp
+	src/Resources/ResourceManager.hpp
+	src/Resources/Scene.cpp
+	src/Resources/Scene.hpp
+	src/Resources/SceneLayer.hpp
+	src/Resources/SceneLoader.cpp
+	src/Resources/SceneLoader.hpp
+	src/Resources/SceneManager.cpp
+	src/Resources/SceneManager.hpp
+	src/Resources/Skybox.cpp
+	src/Resources/Skybox.hpp
+	src/Resources/Texture.cpp
+	src/Resources/Texture.hpp
 	src/System/File.cpp
 	src/System/File.hpp
 	src/System/InputManager.cpp

@@ -7,8 +7,8 @@
 #include "Math/Vec2.hpp"
 #include "Entity.hpp"
 #include "Math/Frustum.hpp"
-#include "MeshData.hpp"
-#include "MaterialData.hpp"
+#include "Resources/MeshData.hpp"
+#include "Resources/MaterialData.hpp"
 
 #include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RenderOrder.hpp"

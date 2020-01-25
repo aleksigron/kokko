@@ -10,7 +10,7 @@
 #include "System/KeyboardInputView.hpp"
 #include "System/TextInput.hpp"
 #include "EncodingUtf8.hpp"
-#include "BitmapFont.hpp"
+#include "Resources/BitmapFont.hpp"
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 

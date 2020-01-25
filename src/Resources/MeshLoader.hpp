@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MeshManager.hpp"
+#include "Resources/MeshManager.hpp"
 
 class MeshLoader
 {

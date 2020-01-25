@@ -1,4 +1,4 @@
-#include "Texture.hpp"
+#include "Resources/Texture.hpp"
 
 #include "IncludeOpenGL.hpp"
 
@@ -7,7 +7,7 @@
 #include "System/File.hpp"
 #include "Core/Hash.hpp"
 #include "Core/StringRef.hpp"
-#include "ImageData.hpp"
+#include "Resources/ImageData.hpp"
 
 static int GetFilterModeValue(TextureFilterMode mode)
 {

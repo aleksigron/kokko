@@ -1,7 +1,7 @@
 #include "Debug/DebugMemoryStats.hpp"
 
 #include "Color.hpp"
-#include "BitmapFont.hpp"
+#include "Resources/BitmapFont.hpp"
 
 #include "Memory/AllocatorManager.hpp"
 

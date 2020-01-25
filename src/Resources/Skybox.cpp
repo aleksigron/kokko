@@ -1,16 +1,16 @@
-#include "Skybox.hpp"
+#include "Resources/Skybox.hpp"
 
 #include "Math/Mat4x4.hpp"
 
 #include "Engine.hpp"
-#include "Scene.hpp"
-#include "SceneLayer.hpp"
-#include "SceneManager.hpp"
+#include "Resources/Scene.hpp"
+#include "Resources/SceneLayer.hpp"
+#include "Resources/SceneManager.hpp"
 #include "Rendering/Renderer.hpp"
-#include "MeshManager.hpp"
-#include "MaterialManager.hpp"
+#include "Resources/MeshManager.hpp"
+#include "Resources/MaterialManager.hpp"
 #include "EntityManager.hpp"
-#include "ResourceManager.hpp"
+#include "Resources/ResourceManager.hpp"
 
 #include "Rendering/VertexFormat.hpp"
 

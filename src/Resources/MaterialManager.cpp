@@ -1,4 +1,4 @@
-#include "MaterialManager.hpp"
+#include "Resources/MaterialManager.hpp"
 
 #include <cassert>
 
@@ -9,8 +9,8 @@
 #include "System/File.hpp"
 #include "ValueSerialization.hpp"
 #include "Engine.hpp"
-#include "ResourceManager.hpp"
-#include "Texture.hpp"
+#include "Resources/ResourceManager.hpp"
+#include "Resources/Texture.hpp"
 
 MaterialManager::MaterialManager(Allocator* allocator) :
 	allocator(allocator),

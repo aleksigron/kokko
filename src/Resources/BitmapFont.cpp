@@ -1,4 +1,4 @@
-#include "BitmapFont.hpp"
+#include "Resources/BitmapFont.hpp"
 
 #include <cstdlib>
 #include <cstring>
@@ -7,9 +7,9 @@
 
 #include "Engine.hpp"
 #include "App.hpp"
-#include "Texture.hpp"
-#include "ImageData.hpp"
-#include "ResourceManager.hpp"
+#include "Resources/Texture.hpp"
+#include "Resources/ImageData.hpp"
+#include "Resources/ResourceManager.hpp"
 #include "Core/Sort.hpp"
 
 #include "IncludeOpenGL.hpp"

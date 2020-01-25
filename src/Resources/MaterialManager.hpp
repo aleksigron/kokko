@@ -5,7 +5,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/StringRef.hpp"
 
-#include "MaterialData.hpp"
+#include "Resources/MaterialData.hpp"
 #include "Rendering/TransparencyType.hpp"
 
 class Allocator;

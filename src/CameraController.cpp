@@ -15,8 +15,8 @@
 #include "System/PointerInput.hpp"
 #include "System/KeyboardInputView.hpp"
 
-#include "SceneManager.hpp"
-#include "Scene.hpp"
+#include "Resources/SceneManager.hpp"
+#include "Resources/Scene.hpp"
 
 #include "App.hpp"
 #include "Rendering/Camera.hpp"

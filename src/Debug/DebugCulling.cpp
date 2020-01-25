@@ -5,7 +5,7 @@
 #include "EntityManager.hpp"
 #include "System/Window.hpp"
 #include "Rendering/Renderer.hpp"
-#include "Scene.hpp"
+#include "Resources/Scene.hpp"
 #include "Math/Frustum.hpp"
 
 #include "Debug/DebugTextRenderer.hpp"

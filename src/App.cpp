@@ -7,9 +7,9 @@
 #include "System/Window.hpp"
 #include "Rendering/Renderer.hpp"
 #include "EntityManager.hpp"
-#include "SceneManager.hpp"
+#include "Resources/SceneManager.hpp"
 #include "Rendering/LightManager.hpp"
-#include "Scene.hpp"
+#include "Resources/Scene.hpp"
 
 App* App::instance = nullptr;
 

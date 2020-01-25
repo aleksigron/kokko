@@ -1,4 +1,4 @@
-#include "MeshManager.hpp"
+#include "Resources/MeshManager.hpp"
 
 #include <cassert>
 
@@ -6,7 +6,7 @@
 
 #include "Core/Hash.hpp"
 #include "System/File.hpp"
-#include "MeshLoader.hpp"
+#include "Resources/MeshLoader.hpp"
 
 static unsigned int PrimitiveModeValue(MeshPrimitiveMode mode)
 {

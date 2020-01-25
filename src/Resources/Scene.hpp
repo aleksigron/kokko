@@ -6,7 +6,7 @@
 
 #include "Math/Mat4x4.hpp"
 #include "Color.hpp"
-#include "Skybox.hpp"
+#include "Resources/Skybox.hpp"
 
 #include "Entity.hpp"
 

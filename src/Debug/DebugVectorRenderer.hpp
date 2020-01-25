@@ -5,7 +5,7 @@
 #include "Math/Mat4x4.hpp"
 #include "Math/Rectangle.hpp"
 #include "Color.hpp"
-#include "MeshData.hpp"
+#include "Resources/MeshData.hpp"
 #include "Math/Projection.hpp"
 
 class Camera;

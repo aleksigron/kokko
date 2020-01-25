@@ -6,7 +6,7 @@
 #include "IncludeOpenGL.hpp"
 
 #include "System/File.hpp"
-#include "BitmapFont.hpp"
+#include "Resources/BitmapFont.hpp"
 #include "Rendering/VertexFormat.hpp"
 #include "EncodingUtf8.hpp"
 
@@ -14,8 +14,8 @@
 
 #include "Engine.hpp"
 #include "Rendering/Shader.hpp"
-#include "MeshManager.hpp"
-#include "ResourceManager.hpp"
+#include "Resources/MeshManager.hpp"
+#include "Resources/ResourceManager.hpp"
 
 DebugTextRenderer::DebugTextRenderer() :
 	font(nullptr),

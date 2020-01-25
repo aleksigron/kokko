@@ -2,7 +2,7 @@
 
 #include "Math/Vec3.hpp"
 #include "Entity.hpp"
-#include "MaterialData.hpp"
+#include "Resources/MaterialData.hpp"
 
 class Scene;
 

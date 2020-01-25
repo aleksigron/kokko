@@ -10,10 +10,10 @@
 #include "Rendering/Camera.hpp"
 #include "System/Window.hpp"
 #include "Rendering/Shader.hpp"
-#include "Scene.hpp"
-#include "SceneManager.hpp"
-#include "ResourceManager.hpp"
-#include "MeshManager.hpp"
+#include "Resources/Scene.hpp"
+#include "Resources/SceneManager.hpp"
+#include "Resources/ResourceManager.hpp"
+#include "Resources/MeshManager.hpp"
 
 DebugVectorRenderer::DebugVectorRenderer() :
 	meshesInitialized(false)

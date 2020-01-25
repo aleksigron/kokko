@@ -5,7 +5,7 @@
 #include "Math/Rectangle.hpp"
 #include "Rendering/VertexFormat.hpp"
 #include "Math/Vec2.hpp"
-#include "MeshData.hpp"
+#include "Resources/MeshData.hpp"
 
 class BitmapFont;
 

@@ -8,10 +8,10 @@
 #include "Engine.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
-#include "Scene.hpp"
+#include "Resources/Scene.hpp"
 #include "System/InputManager.hpp"
 #include "System/KeyboardInputView.hpp"
-#include "BitmapFont.hpp"
+#include "Resources/BitmapFont.hpp"
 #include "Rendering/Renderer.hpp"
 
 #include "Debug/DebugVectorRenderer.hpp"

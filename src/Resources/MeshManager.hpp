@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "MeshData.hpp"
+#include "Resources/MeshData.hpp"
 
 #include "Core/HashMap.hpp"
 #include "Math/BoundingBox.hpp"

@@ -1,12 +1,12 @@
-#include "SceneManager.hpp"
+#include "Resources/SceneManager.hpp"
 
 #include <cstring>
 #include <new>
 
 #include "Memory/Allocator.hpp"
 #include "Engine.hpp"
-#include "Scene.hpp"
-#include "SceneLoader.hpp"
+#include "Resources/Scene.hpp"
+#include "Resources/SceneLoader.hpp"
 #include "Core/StringRef.hpp"
 #include "System/File.hpp"
 
