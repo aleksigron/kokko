@@ -58,10 +58,11 @@ public:
 		}
 	}
 
-	void ReserveInternal(unsigned int desiredSize)
+	void ReserveInternal(unsigned int desiredCount)
 	{
-		KeyValuePair* newData = new KeyValuePair[desiredSize];
-		std::memset(newData, 0, sizeof(KeyValuePair) * desiredSize);
+		std::size_t newSize = desiredCount * sizeof(KeyValuePair);
+		KeyValuePair* newData = static_cast<KeyValuePair*>(allocator->Allocate(newSize));
+		std::memset(newData, 0, newSize);
 
 		if (data != nullptr) // Old data exists
 		{
@@ -82,11 +83,11 @@ public:
 				}
 			}
 
-			delete[] data;
+			allocator->Deallocate(data);
 		}
 
 		data = newData;
-		allocated = desiredSize;
+		allocated = desiredCount;
 	}
 
 	KeyValuePair* Lookup(KeyType key)

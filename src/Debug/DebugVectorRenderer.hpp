@@ -9,6 +9,7 @@
 #include "Math/Projection.hpp"
 
 class Camera;
+class Allocator;
 
 class DebugVectorRenderer
 {
@@ -29,6 +30,8 @@ private:
 		Color color;
 	};
 
+	Allocator* allocator;
+
 	Primitive* primitives;
 	unsigned int primitiveCount;
 	unsigned int primitiveAllocated;
@@ -39,7 +42,7 @@ private:
 	void CreateMeshes();
 
 public:
-	DebugVectorRenderer();
+	DebugVectorRenderer(Allocator* allocator);
 	~DebugVectorRenderer();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);

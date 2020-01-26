@@ -15,17 +15,20 @@
 #include "Resources/ResourceManager.hpp"
 #include "Resources/MeshManager.hpp"
 
-DebugVectorRenderer::DebugVectorRenderer() :
+DebugVectorRenderer::DebugVectorRenderer(Allocator* allocator) :
+	allocator(allocator),
 	meshesInitialized(false)
 {
 	primitiveCount = 0;
 	primitiveAllocated = 1024;
-	primitives = new Primitive[primitiveAllocated];
+
+	std::size_t primitivesSize = sizeof(Primitive) * primitiveAllocated;
+	primitives = static_cast<Primitive*>(allocator->Allocate(primitivesSize));
 }
 
 DebugVectorRenderer::~DebugVectorRenderer()
 {
-	delete[] primitives;
+	allocator->Deallocate(primitives);
 }
 
 void DebugVectorRenderer::CreateMeshes()

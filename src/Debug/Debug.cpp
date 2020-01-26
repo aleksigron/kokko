@@ -29,7 +29,7 @@ Debug::Debug(Allocator* allocator) :
 	nextFrameRateUpdate(-1.0),
 	mode(DebugMode::None)
 {
-	vectorRenderer = allocator->MakeNew<DebugVectorRenderer>();
+	vectorRenderer = allocator->MakeNew<DebugVectorRenderer>(allocator);
 	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator);
 	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
 	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
