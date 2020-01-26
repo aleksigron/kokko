@@ -21,6 +21,7 @@ DebugConsole::DebugConsole(
 	allocator(allocator),
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
+	entries(allocator),
 	stringData(nullptr),
 	stringDataFirst(0),
 	stringDataUsed(0),

@@ -17,7 +17,8 @@ private:
 public:
 	EntityManager(Allocator* allocator) :
 		allocator(allocator),
-		generation(allocator)
+		generation(allocator),
+		freeIndices(allocator)
 	{
 		// Reserve index 0 as invalid value
 		generation.PushBack(0);

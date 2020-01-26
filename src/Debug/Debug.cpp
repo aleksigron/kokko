@@ -31,7 +31,7 @@ Debug::Debug(Allocator* allocator) :
 {
 	vectorRenderer = allocator->MakeNew<DebugVectorRenderer>();
 	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator);
-	graph = allocator->MakeNew<DebugGraph>(vectorRenderer);
+	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
 	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
 	console = allocator->MakeNew<DebugConsole>(allocator, textRenderer, vectorRenderer);
 	log = allocator->MakeNew<DebugLog>(console);

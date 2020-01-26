@@ -10,8 +10,9 @@
 #include "System/Time.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
-DebugGraph::DebugGraph(DebugVectorRenderer* vr) :
+DebugGraph::DebugGraph(Allocator* allocator, DebugVectorRenderer* vr) :
 	vectorRenderer(vr),
+	data(allocator),
 	timeRange(5.0)
 {
 }

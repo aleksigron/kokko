@@ -3,6 +3,8 @@
 #include <cstring>
 #include <new>
 
+#include "Memory/Allocator.hpp"
+
 template <typename ValueType>
 class Queue
 {
@@ -10,6 +12,7 @@ public:
 	using SizeType = unsigned int;
 
 private:
+	Allocator* allocator;
 	ValueType* data;
 	SizeType start;
 	SizeType count;
@@ -26,7 +29,8 @@ private:
 		{
 			std::size_t vts = sizeof(ValueType);
 			SizeType newAllocated = allocated > 0 ? allocated * 2 : 8;
-			ValueType* newData = static_cast<ValueType*>(operator new[](newAllocated * vts));
+			std::size_t newSize = newAllocated * vts;
+			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize));
 
 			SizeType startToMemEnd = allocated - start;
 
@@ -43,7 +47,7 @@ private:
 				std::memcpy(newData, data + start, count * vts);
 			}
 
-			operator delete[](data);
+			allocator->Deallocate(data);
 			data = newData;
 			start = 0;
 			allocated = newAllocated;
@@ -51,7 +55,8 @@ private:
 	}
 
 public:
-	Queue() :
+	Queue(Allocator* allocator) :
+		allocator(allocator),
 		data(nullptr),
 		start(0),
 		count(0),
@@ -64,7 +69,7 @@ public:
 		for (SizeType i = 0; i < count; ++i)
 			data[this->GetArrayIndex(i)].~ValueType();
 
-		operator delete[](data);
+		allocator->Deallocate(data);
 	}
 
 	SizeType GetCount() const { return count; }

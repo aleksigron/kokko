@@ -5,6 +5,8 @@
 
 class DebugVectorRenderer;
 
+class Allocator;
+
 class DebugGraph
 {
 private:
@@ -21,7 +23,7 @@ private:
 	double timeRange;
 
 public:
-	DebugGraph(DebugVectorRenderer* vr);
+	DebugGraph(Allocator* allocator, DebugVectorRenderer* vr);
 	~DebugGraph();
 
 	void SetDrawArea(const Rectanglef& area) { drawArea = area; }
