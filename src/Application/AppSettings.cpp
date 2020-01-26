@@ -9,6 +9,7 @@
 
 AppSettings::AppSettings(Allocator* allocator) :
 	allocator(allocator),
+	settingsFilename(allocator),
 	settings(allocator)
 {
 }
@@ -21,7 +22,7 @@ void AppSettings::SetFilename(StringRef path)
 {
 	settings.Clear();
 
-	settingsFilename = ImmutableString(path.str, path.len);
+	settingsFilename = String(allocator, path);
 }
 
 void AppSettings::LoadFromFile()
@@ -30,7 +31,7 @@ void AppSettings::LoadFromFile()
 	{
 		Buffer<char> content(allocator);
 
-		if (File::ReadText(settingsFilename.GetCstr(), content))
+		if (File::ReadText(settingsFilename.GetCStr(), content))
 		{
 			bool keyRead = false;
 			size_t keyStart = 0;
@@ -99,7 +100,7 @@ void AppSettings::SaveToFile()
 		data += 1;
 	}
 
-	File::Write(settingsFilename.GetCstr(), content.GetRef(), false);
+	File::Write(settingsFilename.GetCStr(), content.GetRef(), false);
 }
 
 bool AppSettings::TryGetString(StringRef key, StringRef& valueOut)

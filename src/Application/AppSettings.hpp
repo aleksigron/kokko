@@ -3,7 +3,7 @@
 #include <cstring>
 
 #include "Core/Array.hpp"
-#include "Core/ImmutableString.hpp"
+#include "Core/String.hpp"
 #include "Core/StringRef.hpp"
 
 class Allocator;
@@ -20,7 +20,7 @@ private:
 
 	Allocator* allocator;
 
-	ImmutableString settingsFilename;
+	String settingsFilename;
 
 	Array<Setting> settings;
 
