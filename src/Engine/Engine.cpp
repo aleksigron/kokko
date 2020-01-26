@@ -106,7 +106,11 @@ bool Engine::Initialize()
 		DebugTextRenderer* debugTextRenderer = this->debug->GetTextRenderer();
 		bool fontLoaded = debugTextRenderer->LoadBitmapFont(debugFontFilename);
 		if (fontLoaded == false)
-			debugLog->Log(String("Loading font at ") + debugFontFilename + " failed.");
+		{
+			Allocator* defaultAllocator = Memory::GetDefaultAllocator();
+			String logText = String(defaultAllocator, "Loading font at ") + debugFontFilename + " failed.";
+			debugLog->Log(logText);
+		}
 
 		debug->SetWindow(mainWindow);
 

@@ -38,11 +38,21 @@ private:
 		Fragment
 	};
 
-	bool Compile(ShaderType type, BufferRef<char> source, unsigned& idOut);
-	bool CompileAndLink(BufferRef<char> vertSource, BufferRef<char> fragSource);
-	void AddMaterialUniforms(unsigned int count,
-							 const ShaderUniformType* types,
-							 const char** names);
+	bool Compile(
+		Allocator* allocator,
+		ShaderType type,
+		BufferRef<char> source,
+		unsigned int& shaderIdOut);
+
+	bool CompileAndLink(
+		Allocator* allocator,
+		BufferRef<char> vertSource,
+		BufferRef<char> fragSource);
+
+	void AddMaterialUniforms(
+		unsigned int count,
+		const ShaderUniformType* types,
+		const char** names);
 
 public:
 	uint32_t nameHash;

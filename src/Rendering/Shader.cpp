@@ -176,15 +176,15 @@ bool Shader::LoadFromConfiguration(BufferRef<char> configuration, Allocator* all
 		fsItr == config.MemberEnd() || !fsItr->value.IsString())
 		return false;
 
-	StringRef vsPath(vsItr->value.GetString(), vsItr->value.GetStringLength());
-	StringRef fsPath(fsItr->value.GetString(), fsItr->value.GetStringLength());
+	const char* vsPath = vsItr->value.GetString();
+	const char* fsPath = fsItr->value.GetString();
 
 	Buffer<char> vertexSource(allocator);
 	Buffer<char> fragmentSource(allocator);
 
 	if (File::ReadText(vsPath, vertexSource) &&
 		File::ReadText(fsPath, fragmentSource) &&
-		this->CompileAndLink(vertexSource.GetRef(), fragmentSource.GetRef()))
+		this->CompileAndLink(allocator, vertexSource.GetRef(), fragmentSource.GetRef()))
 	{
 		this->AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
 
@@ -194,11 +194,11 @@ bool Shader::LoadFromConfiguration(BufferRef<char> configuration, Allocator* all
 	return false;
 }
 
-bool Shader::CompileAndLink(BufferRef<char> vertSource, BufferRef<char> fragSource)
+bool Shader::CompileAndLink(Allocator* allocator, BufferRef<char> vertSource, BufferRef<char> fragSource)
 {
 	GLuint vertexShader = 0;
 
-	if (this->Compile(ShaderType::Vertex, vertSource, vertexShader) == false)
+	if (this->Compile(allocator, ShaderType::Vertex, vertSource, vertexShader) == false)
 	{
 		assert(false);
 		return false;
@@ -206,7 +206,7 @@ bool Shader::CompileAndLink(BufferRef<char> vertSource, BufferRef<char> fragSour
 	
 	GLuint fragmentShader = 0;
 
-	if (this->Compile(ShaderType::Fragment, fragSource, fragmentShader) == false)
+	if (this->Compile(allocator, ShaderType::Fragment, fragSource, fragmentShader) == false)
 	{
 		// Release already compiled vertex shader
 		glDeleteShader(vertexShader);
@@ -253,7 +253,7 @@ bool Shader::CompileAndLink(BufferRef<char> vertSource, BufferRef<char> fragSour
 		
 		if (infoLogLength > 0)
 		{
-			String infoLog;
+			String infoLog(allocator);
 			infoLog.Resize(infoLogLength);
 
 			// Get info log
@@ -268,7 +268,11 @@ bool Shader::CompileAndLink(BufferRef<char> vertSource, BufferRef<char> fragSour
 	}
 }
 
-bool Shader::Compile(ShaderType type, BufferRef<char> source, GLuint& shaderIdOut)
+bool Shader::Compile(
+	Allocator* allocator,
+	ShaderType type,
+	BufferRef<char> source,
+	unsigned int& shaderIdOut)
 {
 	GLenum shaderType = 0;
 	if (type == ShaderType::Vertex)
@@ -307,7 +311,7 @@ bool Shader::Compile(ShaderType type, BufferRef<char> source, GLuint& shaderIdOu
 
 			if (infoLogLength > 0)
 			{
-				String infoLog;
+				String infoLog(allocator);
 				infoLog.Resize(infoLogLength);
 
 				// Print out info log
@@ -322,9 +326,10 @@ bool Shader::Compile(ShaderType type, BufferRef<char> source, GLuint& shaderIdOu
 	return false;
 }
 
-void Shader::AddMaterialUniforms(unsigned int count,
-								 const ShaderUniformType* types,
-								 const char** names)
+void Shader::AddMaterialUniforms(
+	unsigned int count,
+	const ShaderUniformType* types,
+	const char** names)
 {
 	this->materialUniformCount = count;
 

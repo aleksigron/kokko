@@ -3,13 +3,6 @@
 #include <cstdio>
 #include <cstring>
 
-#include "Core/String.hpp"
-
-bool File::ReadBinary(StringRef path, Buffer<unsigned char>& output)
-{
-	return ReadBinary(String(path).GetCStr(), output);
-}
-
 bool File::ReadBinary(const char* path, Buffer<unsigned char>& output)
 {
 	FILE* fileHandle = fopen(path, "rb");
@@ -30,11 +23,6 @@ bool File::ReadBinary(const char* path, Buffer<unsigned char>& output)
 	}
 
 	return false;
-}
-
-bool File::ReadText(StringRef path, Buffer<char>& output)
-{
-	return ReadText(String(path).GetCStr(), output);
 }
 
 bool File::ReadText(const char* path, Buffer<char>& output)
@@ -61,11 +49,6 @@ bool File::ReadText(const char* path, Buffer<char>& output)
 	}
 
 	return false;
-}
-
-bool File::Write(StringRef path, BufferRef<char> content, bool append)
-{
-	return Write(String(path).GetCStr(), content, append);
 }
 
 bool File::Write(const char* path, BufferRef<char> content, bool append)

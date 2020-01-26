@@ -7,6 +7,7 @@
 #include "Engine/Engine.hpp"
 #include "Scene/Scene.hpp"
 #include "Scene/SceneLoader.hpp"
+#include "Core/String.hpp"
 #include "Core/StringRef.hpp"
 #include "System/File.hpp"
 
@@ -42,8 +43,9 @@ unsigned int SceneManager::LoadSceneFromFile(StringRef path)
 	unsigned int sceneId = 0;
 
 	Buffer<char> sceneConfig(allocator);
+	String pathStr(allocator, path);
 
-	if (File::ReadText(path, sceneConfig))
+	if (File::ReadText(pathStr.GetCStr(), sceneConfig))
 	{
 		sceneId = this->CreateScene();
 

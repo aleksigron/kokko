@@ -30,7 +30,7 @@ void AppSettings::LoadFromFile()
 	{
 		Buffer<char> content(allocator);
 
-		if (File::ReadText(settingsFilename.GetRef(), content))
+		if (File::ReadText(settingsFilename.GetCstr(), content))
 		{
 			bool keyRead = false;
 			size_t keyStart = 0;
@@ -99,7 +99,7 @@ void AppSettings::SaveToFile()
 		data += 1;
 	}
 
-	File::Write(settingsFilename.GetRef(), content.GetRef(), false);
+	File::Write(settingsFilename.GetCstr(), content.GetRef(), false);
 }
 
 bool AppSettings::TryGetString(StringRef key, StringRef& valueOut)

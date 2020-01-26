@@ -5,6 +5,7 @@
 #include "System/IncludeOpenGL.hpp"
 
 #include "Core/Hash.hpp"
+#include "Core/String.hpp"
 #include "System/File.hpp"
 #include "Resources/MeshLoader.hpp"
 
@@ -144,8 +145,9 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 		this->Reallocate(data.count + 1);
 
 	Buffer<unsigned char> file(allocator);
+	String pathStr(allocator, path);
 
-	if (File::ReadBinary(path, file))
+	if (File::ReadBinary(pathStr.GetCStr(), file))
 	{
 		MeshId id = CreateMesh();
 		MeshLoader loader(this, id);

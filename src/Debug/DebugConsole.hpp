@@ -6,6 +6,8 @@
 #include "Math/Rectangle.hpp"
 #include "System/TextInputHandler.hpp"
 
+class Allocator;
+
 class DebugTextRenderer;
 class DebugVectorRenderer;
 
@@ -18,6 +20,8 @@ private:
 		unsigned lengthWithPad;
 		int rows;
 	};
+
+	Allocator* allocator;
 
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
@@ -35,7 +39,10 @@ private:
 	double lastTextInputTime;
 
 public:
-	DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
+	DebugConsole(
+		Allocator* allocator,
+		DebugTextRenderer* textRenderer,
+		DebugVectorRenderer* vectorRenderer);
 	virtual ~DebugConsole();
 
 	virtual void OnTextInput(StringRef text);

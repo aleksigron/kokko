@@ -2,12 +2,16 @@
 
 #include "Core/StringRef.hpp"
 
+class Allocator;
+
 class String
 {
 public:
 	using SizeType = unsigned int;
 
 private:
+	Allocator* allocator;
+
 	char* string;
 	SizeType length;
 	SizeType allocated;
@@ -15,11 +19,11 @@ private:
 	static SizeType CalculateAllocationSize(SizeType currentAllocated, SizeType requiredSize);
 
 public:
-	String();
+	String(Allocator* allocator);
 	String(const String& s);
 	String(String&& s);
-	explicit String(const char* s);
-	explicit String(StringRef s);
+	String(Allocator* allocator, const char* s);
+	String(Allocator* allocator, StringRef s);
 
 	~String();
 
@@ -54,6 +58,9 @@ public:
 	void Resize(SizeType size);
 
 	void Clear();
+
+	// To gain access to allocator
+	friend String operator+(const String& lhs, StringRef rhs);
 };
 
 String operator+(const String& lhs, StringRef rhs);

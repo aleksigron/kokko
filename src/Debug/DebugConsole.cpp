@@ -14,20 +14,25 @@
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
-DebugConsole::DebugConsole(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
+DebugConsole::DebugConsole(
+	Allocator* allocator,
+	DebugTextRenderer* textRenderer,
+	DebugVectorRenderer* vectorRenderer) :
+	allocator(allocator),
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
 	stringData(nullptr),
 	stringDataFirst(0),
 	stringDataUsed(0),
 	stringDataAllocated(0),
+	inputValue(allocator),
 	lastTextInputTime(0)
 {
 }
 
 DebugConsole::~DebugConsole()
 {
-	delete[] stringData;
+	allocator->Deallocate(stringData);
 }
 
 void DebugConsole::OnTextInput(StringRef text)
@@ -69,7 +74,7 @@ void DebugConsole::AddLogEntry(StringRef text)
 		int rowChars = static_cast<int>(areaSize.x) / font->GetGlyphWidth();
 
 		stringDataAllocated = (screenRows + 1) * rowChars;
-		stringData = new char[stringDataAllocated];
+		stringData = static_cast<char*>(allocator->Allocate(stringDataAllocated));
 	}
 
 	// Add into buffer

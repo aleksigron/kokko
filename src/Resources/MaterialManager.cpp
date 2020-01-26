@@ -5,6 +5,7 @@
 #include "rapidjson/document.h"
 
 #include "Memory/Allocator.hpp"
+#include "Core/String.hpp"
 #include "Core/Hash.hpp"
 #include "System/File.hpp"
 #include "Resources/ValueSerialization.hpp"
@@ -122,8 +123,9 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 		this->Reallocate(data.count + 1);
 
 	Buffer<char> file(allocator);
+	String pathStr(allocator, path);
 
-	if (File::ReadText(path, file))
+	if (File::ReadText(pathStr.GetCStr(), file))
 	{
 		MaterialId id = CreateMaterial();
 

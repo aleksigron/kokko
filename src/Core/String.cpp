@@ -2,20 +2,27 @@
 
 #include <cstring>
 
-String::String() : string(nullptr), length(0), allocated(0)
+#include "Memory/Allocator.hpp"
+
+String::String(Allocator* allocator) :
+	allocator(allocator),
+	string(nullptr),
+	length(0),
+	allocated(0)
 {
 }
 
 String::String(const String& s)
 {
+	allocator = s.allocator;
+
 	length = s.GetLength();
 	allocated = CalculateAllocationSize(0, length);
 
 	if (allocated > 0)
 	{
-		string = new char[allocated + 1];
-		std::memcpy(string, s.Begin(), length);
-		string[length] = '\0';
+		string = static_cast<char*>(allocator->Allocate(allocated + 1));
+		std::strcpy(string, s.GetCStr());
 	}
 	else
 		string = nullptr;
@@ -23,6 +30,7 @@ String::String(const String& s)
 
 String::String(String&& s)
 {
+	allocator = s.allocator;
 	string = s.string;
 	length = s.length;
 	allocated = s.allocated;
@@ -32,29 +40,30 @@ String::String(String&& s)
 	s.allocated = 0;
 }
 
-String::String(const char* s)
+String::String(Allocator* allocator, const char* s) :
+	allocator(allocator)
 {
 	length = std::strlen(s);
 	allocated = CalculateAllocationSize(0, length);
 
 	if (allocated > 0)
 	{
-		string = new char[allocated + 1];
-		std::memcpy(string, s, length);
-		string[length] = '\0';
+		string = static_cast<char*>(allocator->Allocate(allocated + 1));
+		std::strcpy(string, s);
 	}
 	else
 		string = nullptr;
 }
 
-String::String(StringRef s)
+String::String(Allocator* allocator, StringRef s) :
+	allocator(allocator)
 {
 	length = s.len;
 	allocated = CalculateAllocationSize(0, length);
 
 	if (allocated > 0)
 	{
-		string = new char[allocated + 1];
+		string = static_cast<char*>(allocator->Allocate(allocated + 1));
 		std::memcpy(string, s.str, length);
 		string[length] = '\0';
 	}
@@ -64,7 +73,7 @@ String::String(StringRef s)
 
 String::~String()
 {
-	delete[] string;
+	allocator->Deallocate(string);
 }
 
 String& String::operator=(const String& s)
@@ -73,14 +82,13 @@ String& String::operator=(const String& s)
 
 	if (newLength > allocated)
 	{
-		delete[] string;
+		allocator->Deallocate(string);
 
 		allocated = CalculateAllocationSize(allocated, newLength);
-		string = new char[allocated + 1];
+		string = static_cast<char*>(allocator->Allocate(allocated + 1));
 	}
 
-	std::memcpy(string, s.Begin(), newLength);
-	string[newLength] = '\0';
+	std::strcpy(string, s.GetCStr());
 	length = newLength;
 
 	return *this;
@@ -88,8 +96,9 @@ String& String::operator=(const String& s)
 
 String& String::operator=(String&& s)
 {
-	delete[] string;
+	allocator->Deallocate(string);
 
+	allocator = s.allocator;
 	string = s.string;
 	length = s.length;
 	allocated = s.allocated;
@@ -116,9 +125,9 @@ void String::Append(StringRef s)
 	{
 		SizeType newAllocated = CalculateAllocationSize(allocated, requiredLength);
 
-		char* newString = new char[newAllocated + 1];
+		char* newString = static_cast<char*>(allocator->Allocate(newAllocated + 1));
 		std::memcpy(newString, string, length);
-		delete[] string;
+		allocator->Deallocate(string);
 
 		string = newString;
 		allocated = newAllocated;
@@ -145,9 +154,9 @@ void String::Append(char c)
 	{
 		SizeType newAllocated = CalculateAllocationSize(this->allocated, length + 1);
 
-		char* newString = new char[newAllocated + 1];
+		char* newString = static_cast<char*>(allocator->Allocate(newAllocated + 1));
 		std::memcpy(newString, string, length);
-		delete[] string;
+		allocator->Deallocate(string);
 
 		string = newString;
 		allocated = newAllocated;
@@ -162,11 +171,15 @@ void String::Reserve(SizeType reserveLength)
 {
 	if (reserveLength > allocated)
 	{
-		char* newString = new char[reserveLength + 1];
-		std::memcpy(newString, string, length);
-		newString[length] = '\0';
+		char* newString = static_cast<char*>(allocator->Allocate(reserveLength + 1));
 
-		delete[] string;
+		if (string != nullptr)
+		{
+			std::strcpy(newString, string);
+
+			allocator->Deallocate(string);
+		}
+
 		string = newString;
 		allocated = reserveLength;
 	}
@@ -178,9 +191,9 @@ void String::Resize(SizeType size)
 	{
 		if (size > allocated)
 		{
-			char* newString = new char[size + 1];
+			char* newString = static_cast<char*>(allocator->Allocate(size + 1));
 			std::memcpy(newString, string, length);
-			delete[] string;
+			allocator->Deallocate(string);
 			string = newString;
 		}
 
@@ -223,7 +236,7 @@ void String::Clear()
 
 String operator+(const String& lhs, StringRef rhs)
 {
-	String result;
+	String result(lhs.allocator);
 	String::SizeType leftLength = lhs.GetLength();
 	String::SizeType combinedLength = leftLength + rhs.len;
 
