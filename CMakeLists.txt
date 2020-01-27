@@ -111,8 +111,9 @@ set (KOKKO_SOURCES
 	src/Rendering/Renderer.cpp
 	src/Rendering/Renderer.hpp
 	src/Rendering/RenderOrder.hpp
-	src/Rendering/RenderPipeline.cpp
-	src/Rendering/RenderPipeline.hpp
+	src/Rendering/RenderDevice.hpp
+	src/Rendering/RenderDeviceOpenGL.cpp
+	src/Rendering/RenderDeviceOpenGL.hpp
 	src/Rendering/Shader.cpp
 	src/Rendering/Shader.hpp
 	src/Rendering/TransparencyType.hpp

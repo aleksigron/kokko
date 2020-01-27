@@ -22,9 +22,10 @@ struct BoundingBox;
 struct BitPack;
 class Camera;
 class Window;
-class World;
 class Scene;
 class LightManager;
+
+class RenderDevice;
 
 struct RenderObjectId
 {
@@ -78,6 +79,16 @@ private:
 
 	Allocator* allocator;
 
+	RenderDevice* device;
+
+	RendererFramebuffer* framebufferData;
+	unsigned int framebufferCount;
+	static const unsigned int FramebufferIndexGBuffer = 0;
+
+	RendererViewport* viewportData;
+	unsigned int viewportCount;
+	unsigned int viewportIndexFullscreen;
+
 	struct LightingData
 	{
 		MeshId dirMesh;
@@ -89,14 +100,6 @@ private:
 		MaterialId shadowMaterial;
 	}
 	lightingData;
-
-	RendererFramebuffer* framebufferData;
-	unsigned int framebufferCount;
-	static const unsigned int FramebufferIndexGBuffer = 0;
-
-	RendererViewport* viewportData;
-	unsigned int viewportCount;
-	unsigned int viewportIndexFullscreen;
 
 	struct InstanceData
 	{

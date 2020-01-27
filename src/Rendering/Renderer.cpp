@@ -27,7 +27,7 @@
 #include "Core/BitPack.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
 
-#include "RenderPipeline.hpp"
+#include "Rendering/RenderDeviceOpenGL.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
 
@@ -35,6 +35,7 @@
 
 Renderer::Renderer(Allocator* allocator, LightManager* lightManager) :
 	allocator(allocator),
+	device(nullptr),
 	framebufferData(nullptr),
 	framebufferCount(0),
 	viewportData(nullptr),
@@ -47,6 +48,8 @@ Renderer::Renderer(Allocator* allocator, LightManager* lightManager) :
 	commandList(allocator),
 	objectVisibility(allocator)
 {
+	device = allocator->MakeNew<RenderDeviceOpenGL>();
+
 	lightingData = LightingData{};
 
 	data = InstanceData{};
@@ -59,7 +62,9 @@ Renderer::~Renderer()
 {
 	this->Deinitialize();
 
-	this->allocator->Deallocate(data.buffer);
+	allocator->Deallocate(data.buffer);
+
+	allocator->MakeDelete(device);
 }
 
 void Renderer::Initialize(Window* window)
@@ -476,11 +481,11 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 	switch (control)
 	{
 		case RenderControlType::BlendingEnable:
-			RenderPipeline::BlendingEnable();
+			device->BlendingEnable();
 			break;
 
 		case RenderControlType::BlendingDisable:
-			RenderPipeline::BlendingDisable();
+			device->BlendingDisable();
 			break;
 
 		case RenderControlType::Viewport:
@@ -488,7 +493,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* viewport = reinterpret_cast<RenderCommandData::ViewportData*>(data);
-			RenderPipeline::Viewport(viewport);
+			device->Viewport(viewport);
 		}
 			break;
 
@@ -497,53 +502,53 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* depthRange = reinterpret_cast<RenderCommandData::DepthRangeData*>(data);
-			RenderPipeline::DepthRange(depthRange);
+			device->DepthRange(depthRange);
 		}
 			break;
 
 		case RenderControlType::DepthTestEnable:
-			RenderPipeline::DepthTestEnable();
+			device->DepthTestEnable();
 			break;
 
 		case RenderControlType::DepthTestDisable:
-			RenderPipeline::DepthTestDisable();
+			device->DepthTestDisable();
 			break;
 
 		case RenderControlType::DepthTestFunction:
 		{
 			unsigned int fn = renderOrder.commandData.GetValue(orderKey);
-			RenderPipeline::DepthTestFunction(fn);
+			device->DepthTestFunction(fn);
 		}
 			break;
 
 		case RenderControlType::DepthWriteEnable:
-			RenderPipeline::DepthWriteEnable();
+			device->DepthWriteEnable();
 			break;
 
 		case RenderControlType::DepthWriteDisable:
-			RenderPipeline::DepthWriteDisable();
+			device->DepthWriteDisable();
 			break;
 
 		case RenderControlType::CullFaceEnable:
-			RenderPipeline::CullFaceEnable();
+			device->CullFaceEnable();
 			break;
 
 		case RenderControlType::CullFaceDisable:
-			RenderPipeline::CullFaceDisable();
+			device->CullFaceDisable();
 			break;
 
 		case RenderControlType::CullFaceFront:
-			RenderPipeline::CullFaceFront();
+			device->CullFaceFront();
 			break;
 
 		case RenderControlType::CullFaceBack:
-			RenderPipeline::CullFaceBack();
+			device->CullFaceBack();
 			break;
 
 		case RenderControlType::Clear:
 		{
 			unsigned int mask = renderOrder.commandData.GetValue(orderKey);
-			RenderPipeline::Clear(mask);
+			device->Clear(mask);
 		}
 			break;
 
@@ -552,7 +557,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* color = reinterpret_cast<RenderCommandData::ClearColorData*>(data);
-			RenderPipeline::ClearColor(color);
+			device->ClearColor(color);
 		}
 			break;
 
@@ -560,7 +565,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 		{
 			unsigned int intDepth = renderOrder.commandData.GetValue(orderKey);
 			float depth = *reinterpret_cast<float*>(&intDepth);
-			RenderPipeline::ClearDepth(depth);
+			device->ClearDepth(depth);
 		}
 			break;
 
@@ -569,7 +574,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* bind = reinterpret_cast<RenderCommandData::BindFramebufferData*>(data);
-			RenderPipeline::BindFramebuffer(bind);
+			device->BindFramebuffer(bind);
 		}
 			break;
 			
@@ -578,7 +583,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* blit = reinterpret_cast<RenderCommandData::BlitFramebufferData*>(data);
-			RenderPipeline::BlitFramebuffer(blit);
+			device->BlitFramebuffer(blit);
 		}
 			break;
 	}
@@ -618,11 +623,13 @@ void Renderer::PopulateCommandList(Scene* scene)
 	viewportCount = 0;
 
 	// Update directional light viewports
-	LightId directionalLights = lightManager->GetDirectionalLights();
-	// directionalLights somehow gets its data corrupted when returning to this function TODO CONTINUE HERE XXXXXXXXXXXXXXXXXXXXXXX
-	for (unsigned int i = 0, count = 1; i < count; ++i)
+	Array<LightId> directionalLights(allocator);
+	lightManager->GetDirectionalLights(directionalLights);
+	
+	for (unsigned int i = 0, count = directionalLights.GetCount(); i < count; ++i)
 	{
-		LightId id = directionalLights;
+		LightId id = directionalLights[i];
+
 		if (lightManager->GetShadowCasting(id) &&
 			viewportCount + shadowCascadeCount + 1 <= MaxViewportCount)
 		{
@@ -792,10 +799,20 @@ void Renderer::PopulateCommandList(Scene* scene)
 		commandList.AddControl(fsvp, l_pass, 0, ctrl::BindFramebuffer, sizeof(data), &data);
 	}
 
-	// Clear currently bound GL_FRAMEBUFFER
 	commandList.AddControl(fsvp, l_pass, 1, ctrl::Clear, colorAndDepthMask);
+	commandList.AddControl(fsvp, l_pass, 2, ctrl::BlendingEnable);
 
-	commandList.AddControl(fsvp, l_pass, 2, ctrl::DepthTestFunction, GL_ALWAYS);
+	{
+		// Set additive blending
+		RenderCommandData::BlendingFunctionData data;
+		data.srcFactor = GL_ONE;
+		data.dstFactor = GL_ONE;
+
+		commandList.AddControl(fsvp, l_pass, 3, ctrl::BlendingFunction, sizeof(data), &data);
+	}
+
+	// Set depth test to pass always
+	commandList.AddControl(fsvp, l_pass, 4, ctrl::DepthTestFunction, GL_ALWAYS);
 
 	// Do lighting
 	commandList.AddDraw(fsvp, l_pass, 0.0f, MaterialId{}, 0);
@@ -803,18 +820,24 @@ void Renderer::PopulateCommandList(Scene* scene)
 	// PASS: SKYBOX
 
 	commandList.AddControl(fsvp, s_pass, 0, ctrl::DepthTestFunction, GL_EQUAL);
-
-	// Disable depth writing
-	commandList.AddControl(fsvp, s_pass, 1, ctrl::DepthWriteDisable);
+	commandList.AddControl(fsvp, s_pass, 1, ctrl::BlendingDisable);
+	commandList.AddControl(fsvp, s_pass, 2, ctrl::DepthWriteDisable);
 
 	// PASS: TRANSPARENT
 
 	// Before transparent objects
 
 	commandList.AddControl(fsvp, t_pass, 0, ctrl::DepthTestFunction, GL_LESS);
-
-	// Enable blending
 	commandList.AddControl(fsvp, t_pass, 1, ctrl::BlendingEnable);
+
+	{
+		// Set mix blending
+		RenderCommandData::BlendingFunctionData data;
+		data.srcFactor = GL_SRC_ALPHA;
+		data.dstFactor = GL_ONE_MINUS_SRC_ALPHA;
+
+		commandList.AddControl(fsvp, t_pass, 2, ctrl::BlendingFunction, sizeof(data), &data);
+	}
 
 	// Create draw commands for render objects in scene
 
