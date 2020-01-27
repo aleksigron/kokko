@@ -53,7 +53,7 @@ public:
 	LightId Lookup(Entity e)
 	{
 		HashMap<unsigned int, LightId>::KeyValuePair* pair = entityMap.Lookup(e.id);
-		return pair != nullptr ? pair->value : LightId{};
+		return pair != nullptr ? pair->second : LightId{};
 	}
 
 	LightId AddLight(Entity entity);

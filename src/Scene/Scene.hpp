@@ -68,7 +68,7 @@ public:
 	SceneObjectId Lookup(Entity e)
 	{
 		HashMap<unsigned int, SceneObjectId>::KeyValuePair* pair = entityMap.Lookup(e.id);
-		return pair != nullptr ? pair->value : SceneObjectId::Null;
+		return pair != nullptr ? pair->second : SceneObjectId::Null;
 	}
 
 	SceneObjectId AddSceneObject(Entity e)

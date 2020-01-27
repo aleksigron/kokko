@@ -995,7 +995,7 @@ void Renderer::AddRenderObject(unsigned int count, const Entity* entities, Rende
 		Entity e = entities[i];
 
 		auto mapPair = entityMap.Insert(e.id);
-		mapPair->value.i = id;
+		mapPair->second.i = id;
 
 		data.entity[id] = e;
 

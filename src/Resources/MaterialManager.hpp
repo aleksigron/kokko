@@ -56,7 +56,7 @@ public:
 	MaterialId GetIdByPathHash(uint32_t pathHash)
 	{
 		auto pair = nameHashMap.Lookup(pathHash);
-		return pair != nullptr ? pair->value : MaterialId{};
+		return pair != nullptr ? pair->second : MaterialId{};
 	}
 
 	unsigned int GetShaderId(MaterialId id) const

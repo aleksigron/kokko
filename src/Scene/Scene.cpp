@@ -102,7 +102,7 @@ void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* 
 		Entity e = entities[i];
 
 		auto mapPair = entityMap.Insert(e.id);
-		mapPair->value = SceneObjectId { id };
+		mapPair->second = SceneObjectId { id };
 
 		data.entity[id] = e;
 		data.local[id] = Mat4x4f();

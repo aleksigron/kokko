@@ -40,6 +40,7 @@ set (KOKKO_SOURCES
 	src/Core/EncodingUtf8.hpp
 	src/Core/Hash.hpp
 	src/Core/HashMap.hpp
+	src/Core/Pair.hpp
 	src/Core/Queue.hpp
 	src/Core/Sort.hpp
 	src/Core/SortedArray.hpp

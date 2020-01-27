@@ -63,7 +63,7 @@ public:
 	MeshId GetIdByPathHash(uint32_t pathHash)
 	{
 		auto pair = nameHashMap.Lookup(pathHash);
-		return pair != nullptr ? pair->value : MeshId{};
+		return pair != nullptr ? pair->second : MeshId{};
 	}
 
 	BoundingBox* GetBoundingBox(MeshId id) { return data.bounds + id.i; }

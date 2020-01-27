@@ -117,7 +117,7 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 
 	HashMap<uint32_t, MaterialId>::KeyValuePair* pair = nameHashMap.Lookup(hash);
 	if (pair != nullptr)
-		return pair->value;
+		return pair->second;
 
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
@@ -132,7 +132,7 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 		if (LoadFromConfiguration(id, file.Data()))
 		{
 			pair = nameHashMap.Insert(hash);
-			pair->value = id;
+			pair->second = id;
 
 			return id;
 		}

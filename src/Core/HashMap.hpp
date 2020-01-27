@@ -2,6 +2,7 @@
 
 #include <cstring>
 
+#include "Core/Pair.hpp"
 #include "Core/Hash.hpp"
 #include "Math/Math.hpp"
 #include "Memory/Allocator.hpp"
@@ -12,11 +13,7 @@ template <typename KeyType, typename ValueType>
 class HashMap
 {
 public:
-	struct KeyValuePair
-	{
-		KeyType key;
-		ValueType value;
-	};
+	using KeyValuePair = Pair<KeyType, ValueType>;
 
 private:
 	Allocator* allocator;
@@ -51,8 +48,8 @@ public:
 			KeyValuePair* itr = data;
 			KeyValuePair* end = data + allocated;
 			for (; itr != end; ++itr)
-				if (itr->key)
-					itr->value.~ValueType();
+				if (itr->first)
+					itr->second.~ValueType();
 
 			allocator->Deallocate(data);
 		}
@@ -70,11 +67,11 @@ public:
 			KeyValuePair* end = p + allocated;
 			for (; p != end; ++p)
 			{
-				if (p->key) // Pair has value
+				if (p->first) // Pair has value
 				{
-					for (unsigned int i = GetIndex(Hash::FNV1a_32(p->key));; i = GetIndex(i + 1))
+					for (unsigned int i = GetIndex(Hash::FNV1a_32(p->first));; i = GetIndex(i + 1))
 					{
-						if (!data[i].key) // Insert here
+						if (!data[i].first) // Insert here
 						{
 							data[i] = *p;
 							break;
@@ -100,10 +97,10 @@ public:
 				{
 					KeyValuePair* pair = data + i;
 
-					if (pair->key == key)
+					if (pair->first == key)
 						return pair;
 
-					if (!pair->key)
+					if (!pair->first)
 						return nullptr;
 				}
 			}
@@ -126,19 +123,19 @@ public:
 			{
 				KeyValuePair* pair = data + i;
 
-				if (pair->key == key) // Found
+				if (pair->first == key) // Found
 					return pair;
 
-				if (pair->key == 0) // Insert here
+				if (pair->first == 0) // Insert here
 				{
 					if ((population + 1) * 4 >= allocated * 3)
 					{
 						ReserveInternal(allocated * 2);
-						break; // Back to outer loop, find key again
+						break; // Back to outer loop, find first again
 					}
 
 					++population;
-					pair->key = key;
+					pair->first = key;
 					return pair;
 				}
 			}
@@ -165,7 +162,7 @@ public:
 		{
 			if (data != nullptr &&
 				pair >= data && pair < data + allocated &&
-				pair->key)
+				pair->first)
 			{
 				// Remove this cell by shuffling neighboring cells
 				// so there are no gaps in anyone's probe chain
@@ -173,16 +170,16 @@ public:
 				{
 					KeyValuePair* neighbor = data + i;
 
-					if (!neighbor->key)
+					if (!neighbor->first)
 					{
 						// There's nobody to swap with. Go ahead and clear this cell, then return
-						pair->key = KeyType{};
-						pair->value = ValueType{};
+						pair->first = KeyType{};
+						pair->second = ValueType{};
 						population--;
 						return;
 					}
 
-					KeyValuePair* ideal = GetIndex(Hash::FNV1a_32(neighbor->key));
+					KeyValuePair* ideal = GetIndex(Hash::FNV1a_32(neighbor->first));
 					if (GetOffset(ideal, pair) < GetOffset(ideal, neighbor))
 					{
 						// Swap with neighbor, then make neighbor the new cell to remove.
@@ -195,7 +192,7 @@ public:
 		else if (zeroUsed) // Ignore if not in use
 		{
 			zeroUsed = false;
-			pair->value = 0;
+			pair->second = ValueType{};
 			population--;
 		}
 	}

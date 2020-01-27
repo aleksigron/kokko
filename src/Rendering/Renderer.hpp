@@ -157,7 +157,7 @@ public:
 	RenderObjectId Lookup(Entity e)
 	{
 		HashMap<unsigned int, RenderObjectId>::KeyValuePair* pair = entityMap.Lookup(e.id);
-		return pair != nullptr ? pair->value : RenderObjectId{};
+		return pair != nullptr ? pair->second : RenderObjectId{};
 	}
 
 	RenderObjectId AddRenderObject(Entity entity);
