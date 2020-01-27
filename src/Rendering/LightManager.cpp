@@ -109,13 +109,13 @@ void LightManager::AddLight(unsigned int count, const Entity* entities, LightId*
 	data.count += count;
 }
 
-LightId LightManager::GetDirectionalLights()
+void LightManager::GetDirectionalLights(Array<LightId>& output)
 {
+	output.Clear();
+
 	for (unsigned int i = 1; i < data.count; ++i)
 		if (data.type[i] == LightType::Directional)
-			return LightId{ i };
-
-	return LightId{ 0 };
+			output.PushBack(LightId{ i });
 }
 
 Array<LightId> LightManager::GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& frustum)

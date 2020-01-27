@@ -45,4 +45,10 @@ namespace RenderCommandData
 		unsigned int mask;
 		unsigned int filter;
 	};
+
+	struct BlendFunctionData
+	{
+		unsigned int srcFactor;
+		unsigned int dstFactor;
+	};
 }

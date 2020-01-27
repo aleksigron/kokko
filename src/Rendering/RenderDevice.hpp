@@ -6,6 +6,7 @@
 namespace RenderCommandData
 {
 	struct ClearColorData;
+	struct BlendFunctionData;
 	struct DepthRangeData;
 	struct ViewportData;
 	struct BindFramebufferData;
@@ -21,6 +22,7 @@ public:
 
 	virtual void BlendingEnable() = 0;
 	virtual void BlendingDisable() = 0;
+	virtual void BlendFunction(const RenderCommandData::BlendFunctionData* data) = 0;
 
 	virtual void DepthRange(const RenderCommandData::DepthRangeData* data) = 0;
 	virtual void Viewport(const RenderCommandData::ViewportData* data) = 0;

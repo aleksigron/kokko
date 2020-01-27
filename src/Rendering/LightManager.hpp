@@ -1,14 +1,17 @@
 #pragma once
 
-#include "Scene/ITransformUpdateReceiver.hpp"
+#include "Core/Array.hpp"
+#include "Core/HashMap.hpp"
 
-#include "Rendering/Light.hpp"
 #include "Entity/Entity.hpp"
+
+#include "Math/Frustum.hpp"
 #include "Math/Mat3x3.hpp"
 #include "Math/Vec3.hpp"
-#include "Core/HashMap.hpp"
-#include "Core/Array.hpp"
-#include "Math/Frustum.hpp"
+
+#include "Rendering/Light.hpp"
+
+#include "Scene/ITransformUpdateReceiver.hpp"
 
 class Allocator;
 
@@ -75,6 +78,6 @@ public:
 	bool GetShadowCasting(LightId id) const { return data.shadowCasting[id.i]; }
 	void SetShadowCasting(LightId id, bool shadowCasting) { data.shadowCasting[id.i] = shadowCasting; }
 
-	LightId GetDirectionalLights();
+	void GetDirectionalLights(Array<LightId>& output);
 	Array<LightId> GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& frustum);
 };

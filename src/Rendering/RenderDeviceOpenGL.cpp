@@ -29,6 +29,11 @@ void RenderDeviceOpenGL::BlendingDisable()
 	glDisable(GL_BLEND);
 }
 
+void RenderDeviceOpenGL::BlendFunction(const RenderCommandData::BlendFunctionData* data)
+{
+	glBlendFunc(data->srcFactor, data->dstFactor);
+}
+
 void RenderDeviceOpenGL::DepthRange(const RenderCommandData::DepthRangeData* data)
 {
 	glDepthRange(data->near, data->far);

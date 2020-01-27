@@ -488,6 +488,16 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 			device->BlendingDisable();
 			break;
 
+		case RenderControlType::BlendFunction:
+		{
+			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint8_t* data = commandList.commandData.GetData() + offset;
+			auto* blendFn = reinterpret_cast<RenderCommandData::BlendFunctionData*>(data);
+			device->BlendFunction(blendFn);
+
+		}
+			break;
+
 		case RenderControlType::Viewport:
 		{
 			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
@@ -804,11 +814,11 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 	{
 		// Set additive blending
-		RenderCommandData::BlendingFunctionData data;
+		RenderCommandData::BlendFunctionData data;
 		data.srcFactor = GL_ONE;
 		data.dstFactor = GL_ONE;
 
-		commandList.AddControl(fsvp, l_pass, 3, ctrl::BlendingFunction, sizeof(data), &data);
+		commandList.AddControl(fsvp, l_pass, 3, ctrl::BlendFunction, sizeof(data), &data);
 	}
 
 	// Set depth test to pass always
@@ -832,11 +842,11 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 	{
 		// Set mix blending
-		RenderCommandData::BlendingFunctionData data;
+		RenderCommandData::BlendFunctionData data;
 		data.srcFactor = GL_SRC_ALPHA;
 		data.dstFactor = GL_ONE_MINUS_SRC_ALPHA;
 
-		commandList.AddControl(fsvp, t_pass, 2, ctrl::BlendingFunction, sizeof(data), &data);
+		commandList.AddControl(fsvp, t_pass, 2, ctrl::BlendFunction, sizeof(data), &data);
 	}
 
 	// Create draw commands for render objects in scene

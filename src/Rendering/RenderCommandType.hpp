@@ -18,6 +18,9 @@ enum class RenderControlType
 {
 	BlendingEnable,
 	BlendingDisable,
+	
+	// Data: srcFactor, dstFactor
+	BlendFunction,
 
 	Viewport, // Data: x, y, w, h
 	DepthRange, // Data: near, far
