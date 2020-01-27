@@ -1,11 +1,14 @@
 #include "System/InputManager.hpp"
 
+#include "Memory/Allocator.hpp"
+
 #include "System/KeyboardInput.hpp"
 #include "System/KeyboardInputView.hpp"
 #include "System/TextInput.hpp"
 #include "System/PointerInput.hpp"
 
-InputManager::InputManager():
+InputManager::InputManager(Allocator* allocator):
+	allocator(allocator),
 	keyboardInput(nullptr),
 	keyboardInputView(nullptr),
 	textInput(nullptr),
@@ -15,20 +18,24 @@ InputManager::InputManager():
 
 InputManager::~InputManager()
 {
+	allocator->MakeDelete(pointerInput);
+	allocator->MakeDelete(textInput);
+	allocator->MakeDelete(keyboardInputView);
+	allocator->MakeDelete(keyboardInput);
 }
 
 void InputManager::Initialize(GLFWwindow* windowHandle)
 {
-	keyboardInput = new KeyboardInput;
+	keyboardInput = allocator->MakeNew<KeyboardInput>();
 	keyboardInput->Initialize(windowHandle);
 
-	keyboardInputView = new KeyboardInputView;
+	keyboardInputView = allocator->MakeNew<KeyboardInputView>();
 	keyboardInputView->Initialize(keyboardInput);
 
-	textInput = new TextInput;
+	textInput = allocator->MakeNew<TextInput>();
 	textInput->Initialize(windowHandle, this);
 
-	pointerInput = new PointerInput;
+	pointerInput = allocator->MakeNew<PointerInput>();
 	pointerInput->Initialize(windowHandle);
 }
 

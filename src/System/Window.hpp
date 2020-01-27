@@ -5,11 +5,13 @@
 
 struct GLFWwindow;
 
+class Allocator;
 class InputManager;
 
 class Window
 {
 private:
+	Allocator* allocator;
 	GLFWwindow* windowHandle;
 	
 	InputManager* inputManager;
@@ -17,7 +19,7 @@ private:
 	int currentSwapInterval;
 	
 public:
-	Window();
+	Window(Allocator* allocator);
 	~Window();
 	
 	bool Initialize(int width, int height, const char* windowTitle);

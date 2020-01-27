@@ -1,10 +1,12 @@
 #include "System/Window.hpp"
 
-#include "System/IncludeOpenGL.hpp"
+#include "Memory/Allocator.hpp"
 
+#include "System/IncludeOpenGL.hpp"
 #include "System/InputManager.hpp"
 
-Window::Window() :
+Window::Window(Allocator* allocator) :
+	allocator(allocator),
 	windowHandle(nullptr),
 	inputManager(nullptr),
 	currentSwapInterval(0)
@@ -15,7 +17,7 @@ Window::~Window()
 {
 	glfwTerminate();
 
-	delete inputManager;
+	allocator->MakeDelete(inputManager);
 }
 
 bool Window::Initialize(int width, int height, const char* windowTitle)
@@ -31,7 +33,7 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 		
 		if (windowHandle != nullptr)
 		{
-			inputManager = new InputManager;
+			inputManager = allocator->MakeNew<InputManager>(allocator);
 			inputManager->Initialize(windowHandle);
 
 			glfwSetWindowUserPointer(windowHandle, this);
@@ -49,7 +51,6 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 	}
 	
 	return false;
-
 }
 
 bool Window::ShouldClose()

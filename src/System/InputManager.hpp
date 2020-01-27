@@ -7,9 +7,13 @@ class KeyboardInputView;
 class TextInput;
 class PointerInput;
 
+class Allocator;
+
 class InputManager
 {
 private:
+	Allocator* allocator;
+
 	KeyboardInput* keyboardInput;
 	KeyboardInputView* keyboardInputView;
 
@@ -18,7 +22,7 @@ private:
 	PointerInput* pointerInput;
 
 public:
-	InputManager();
+	InputManager(Allocator* allocator);
 	~InputManager();
 
 	void Initialize(GLFWwindow* windowHandle);

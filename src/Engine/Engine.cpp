@@ -40,7 +40,8 @@ Engine::Engine()
 
 	this->allocatorManager = defaultAllocator->MakeNew<AllocatorManager>(defaultAllocator);
 
-	this->mainWindow = defaultAllocator->MakeNew<Window>();
+	Allocator* windowAlloc = allocatorManager->CreateAllocatorScope("Window", defaultAllocator);
+	this->mainWindow = defaultAllocator->MakeNew<Window>(windowAlloc);
 
 	Allocator* debugAlloc = allocatorManager->CreateAllocatorScope("Debug", defaultAllocator);
 	this->debug = defaultAllocator->MakeNew<Debug>(debugAlloc);
