@@ -16,6 +16,10 @@ AppSettings::AppSettings(Allocator* allocator) :
 
 AppSettings::~AppSettings()
 {
+	for (unsigned int i = 0, count = settings.GetCount(); i < count; ++i)
+	{
+		allocator->Deallocate(settings[i].keyValueString);
+	}
 }
 
 void AppSettings::SetFilename(StringRef path)
