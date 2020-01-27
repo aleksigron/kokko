@@ -826,6 +826,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 	unsigned int visRequired = BitPack::CalculateRequired(data.count);
 	objectVisibility.Resize(visRequired * viewportCount);
 
+	const unsigned int compareTrIdx = static_cast<unsigned int>(TransparencyType::AlphaTest);
+
 	BitPack* vis[MaxViewportCount];
 
 	for (unsigned int vpIdx = 0, count = viewportCount; vpIdx < count; ++vpIdx)
@@ -841,7 +843,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 		// Test visibility in shadow viewports
 		for (unsigned int vpIdx = 0, count = numShadowViewports; vpIdx < count; ++vpIdx)
 		{
-			if (BitPack::Get(vis[vpIdx], i))
+			if (BitPack::Get(vis[vpIdx], i) &&
+				static_cast<unsigned int>(data.order[i].transparency) <= compareTrIdx)
 			{
 				const RendererViewport& vp = viewportData[vpIdx];
 
@@ -850,7 +853,6 @@ void Renderer::PopulateCommandList(Scene* scene)
 				commandList.AddDraw(vpIdx, RenderPass::OpaqueGeometry, depth, shadowMaterial, i);
 			}
 		}
-		
 
 		// Test visibility in fullscreen viewport
 		if (BitPack::Get(vis[fsvp], i))

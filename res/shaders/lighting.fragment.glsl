@@ -62,7 +62,7 @@ void main()
 	// Get shadow depth
 	vec4 shadow_coord = shadow_params.matrices[cascade_index] * vec4(view_pos, 1.0);
 	float normDotLightDir = max(dot(norm, -light.direction), 0.0);
-	float compare_depth = shadow_coord.z - clamp(0.002 * tan(acos(normDotLightDir)), 0, 0.005);
+	float compare_depth = shadow_coord.z - clamp(0.001875 * tan(acos(normDotLightDir)), 0, 0.005);
 	float shadow = 0.0;
 
 	for (int i = 0; i < shadow_sample_count; i++) {
