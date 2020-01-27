@@ -30,7 +30,16 @@ public:
 	String& operator=(const String& s);
 	String& operator=(String&& s);
 
-	const char* GetCStr() const { return string; }
+	const char* GetCStr() const
+	{
+		if (string != nullptr)
+			return string;
+		else
+		{
+			// Return pointer to null character even when no memory is allocated
+			return reinterpret_cast<const char*>(&length);
+		}
+	}
 
 	char* Begin() { return string; }
 	const char* Begin() const { return string; }

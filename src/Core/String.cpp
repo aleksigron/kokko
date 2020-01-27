@@ -227,11 +227,12 @@ String::SizeType String::CalculateAllocationSize(SizeType currentAllocated, Size
 
 void String::Clear()
 {
-	delete[] string;
-
-	string = nullptr;
 	length = 0;
-	allocated = 0;
+
+	if (string != nullptr)
+	{
+		string[length] = '\0';
+	}
 }
 
 String operator+(const String& lhs, StringRef rhs)
