@@ -71,9 +71,9 @@ public:
 				{
 					for (unsigned int i = GetIndex(Hash::FNV1a_32(p->first));; i = GetIndex(i + 1))
 					{
-						if (!data[i].first) // Insert here
+						if (!newData[i].first) // Insert here
 						{
-							data[i] = *p;
+							newData[i] = *p;
 							break;
 						}
 					}

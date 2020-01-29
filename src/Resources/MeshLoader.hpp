@@ -80,7 +80,20 @@ public:
 
 					meshManager->SetBoundingBox(meshId, bounds);
 
-					if (normCount == 0 && colCount == 0 && texCount == 1)
+					if (normCount == 0 && colCount == 0 && texCount == 0)
+					{
+						IndexedVertexData<Vertex3f, unsigned short> data;
+						data.primitiveMode = MeshPrimitiveMode::Triangles;
+						data.idxData = indexData;
+						data.idxCount = indexCount;
+						data.vertData = reinterpret_cast<Vertex3f*>(vertData);
+						data.vertCount = vertCount;
+
+						meshManager->Upload_3f(meshId, data);
+
+						return true;
+					}
+					else if (normCount == 0 && colCount == 0 && texCount == 1)
 					{
 						IndexedVertexData<Vertex3f2f, unsigned short> data;
 						data.primitiveMode = MeshPrimitiveMode::Triangles;
@@ -90,6 +103,8 @@ public:
 						data.vertCount = vertCount;
 
 						meshManager->Upload_3f2f(meshId, data);
+
+						return true;
 					}
 					else if ((normCount == 1 && colCount == 0 && texCount == 0) ||
 							 (normCount == 0 && colCount == 1 && texCount == 0))
@@ -102,6 +117,8 @@ public:
 						data.vertCount = vertCount;
 
 						meshManager->Upload_3f3f(meshId, data);
+
+						return true;
 					}
 					else if (normCount == 1 && colCount == 0 && texCount == 1)
 					{
@@ -113,6 +130,8 @@ public:
 						data.vertCount = vertCount;
 
 						meshManager->Upload_3f3f2f(meshId, data);
+
+						return true;
 					}
 					else if (normCount == 1 && colCount == 1 && texCount == 0)
 					{
@@ -124,9 +143,9 @@ public:
 						data.vertCount = vertCount;
 
 						meshManager->Upload_3f3f3f(meshId, data);
-					}
 
-					return true;
+						return true;
+					}
 				}
 			}
 		}
