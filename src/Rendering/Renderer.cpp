@@ -138,6 +138,11 @@ void Renderer::Initialize(Window* window)
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
+	Engine* engine = Engine::GetInstance();
+	MaterialManager* materialManager = engine->GetMaterialManager();
+	MeshManager* meshManager = engine->GetMeshManager();
+	ResourceManager* resManager = engine->GetResourceManager();
+
 	{
 		// Create screen filling quad
 
@@ -150,7 +155,6 @@ void Renderer::Initialize(Window* window)
 
 		static const unsigned short indexData[] = { 0, 1, 2, 1, 3, 2 };
 
-		MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
 
 		lightingData.dirMesh = meshManager->CreateMesh();
 
@@ -162,15 +166,14 @@ void Renderer::Initialize(Window* window)
 		data.idxCount = sizeof(indexData) / sizeof(unsigned short);
 
 		meshManager->Upload_3f(lightingData.dirMesh, data);
-
-		MaterialManager* materialManager = Engine::GetInstance()->GetMaterialManager();
+	}
+	
+	{
 		const char* const matPath = "res/materials/depth.material.json";
 		lightingData.shadowMaterial = materialManager->GetIdByPath(StringRef(matPath));
 	}
 
 	{
-		ResourceManager* resManager = Engine::GetInstance()->GetResourceManager();
-
 		static const char* const path = "res/shaders/lighting.shader.json";
 
 		Shader* shader = resManager->GetShader(path);
@@ -349,10 +352,17 @@ void Renderer::Render(Scene* scene)
 			}
 			else // Pass is OpaqueLighting
 			{
-				ResourceManager* resManager = Engine::GetInstance()->GetResourceManager();
-				Shader* shader = resManager->GetShader(lightingData.dirShaderHash);
+				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
+				Shader* shader = res->GetShader(lightingData.dirShaderHash);
 
 				const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
+
+				// Update directional light viewports
+				Array<LightId> directionalLights(allocator);
+				lightManager->GetDirectionalLights(directionalLights);
+
+				Array<LightId> nonDirLights(allocator);
+				lightManager->GetNonDirectionalLightsWithinFrustum(fsvp.frustum, nonDirLights);
 
 				Vec2f halfNearPlane;
 				halfNearPlane.y = std::tan(renderCamera->parameters.height * 0.5f);
@@ -366,9 +376,6 @@ void Renderer::Render(Scene* scene)
 
 				int halfNearPlaneLoc = glGetUniformLocation(shaderId, "half_near_plane");
 				int persMatLoc = glGetUniformLocation(shaderId, "pers_mat");
-
-				int lightDirLoc = glGetUniformLocation(shaderId, "light.direction");
-				int lightColLoc = glGetUniformLocation(shaderId, "light.color");
 
 				int cascadeCountLoc = glGetUniformLocation(shaderId, "shadow_params.cascade_count");
 				int nearDepthLoc = glGetUniformLocation(shaderId, "shadow_params.splits[0]");
@@ -384,24 +391,44 @@ void Renderer::Render(Scene* scene)
 				// Set the perspective matrix
 				glUniformMatrix4fv(persMatLoc, 1, GL_FALSE, fsvp.projection.ValuePointer());
 
-				Vec3f wLightDir = primaryDirectionalLightDirection;
-				Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
+				// Directional light
+				if (directionalLights.GetCount() > 0)
+				{
+					int lightDirLoc = glGetUniformLocation(shaderId, "dir_light.direction");
+					int lightColLoc = glGetUniformLocation(shaderId, "dir_light.color");
 
-				// Set light properties
-				glUniform3f(lightDirLoc, vLightDir.x, vLightDir.y, vLightDir.z);
+					LightId dirLightId = directionalLights[0];
 
-				// TODO: Get light color
-				glUniform3f(lightColLoc, 1.0f, 1.0f, 1.0f);
+					Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
+					Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
+					Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
+					glUniform3f(lightDirLoc, vLightDir.x, vLightDir.y, vLightDir.z);
 
-				Mat4x4f bias;
-				bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
-				bias[4] = 0.0; bias[5] = 0.5; bias[6] = 0.0; bias[7] = 0.0;
-				bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
-				bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
+					Vec3f lightCol = lightManager->GetColor(dirLightId);
+					glUniform3f(lightColLoc, lightCol.x, lightCol.y, lightCol.z);
+				}
 
-				float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
-				CascadedShadowMap::CalculateSplitDepths(renderCamera->parameters, cascadeSplitDepths);
-				 
+				char uniformNameBuf[32];
+
+				// Light other visible lights
+				for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
+				{
+					std::sprintf(uniformNameBuf, "point_light[%u].position", lightIdx);
+					int lightPosLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+
+					std::sprintf(uniformNameBuf, "point_light[%u].color", lightIdx);
+					int lightColLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+
+					LightId pointLightId = nonDirLights[lightIdx];
+
+					Vec3f wLightPos = lightManager->GetPosition(pointLightId);
+					Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
+					glUniform3f(lightPosLoc, vLightPos.x, vLightPos.y, vLightPos.z);
+
+					Vec3f lightCol = lightManager->GetColor(pointLightId);
+					glUniform3f(lightColLoc, lightCol.x, lightCol.y, lightCol.z);
+				}
+
 				// Bind textures
 
 				const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
@@ -420,24 +447,31 @@ void Renderer::Render(Scene* scene)
 				unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 				glUniform1i(cascadeCountLoc, shadowCascadeCount);
 
-				char uniformNameBuf[32];
-
 				// Need for each shadow casting light / shadow cascade
 				for (unsigned int vpIdx = 0; vpIdx < viewportCount; ++vpIdx)
 				{
 					// Format uniform names and find locations
 
-					std::sprintf(uniformNameBuf, "shadow_params.matrices[%d]", vpIdx);
+					std::sprintf(uniformNameBuf, "shadow_params.matrices[%u]", vpIdx);
 					int shadowMatrixLoc = glGetUniformLocation(shaderId, uniformNameBuf);
 
-					std::sprintf(uniformNameBuf, "shadow_params.samplers[%d]", vpIdx);
+					std::sprintf(uniformNameBuf, "shadow_params.samplers[%u]", vpIdx);
 					int shadowSamplerLoc = glGetUniformLocation(shaderId, uniformNameBuf);
 
 					// shadow_params.splits[0] is the near depth
-					std::sprintf(uniformNameBuf, "shadow_params.splits[%d]", vpIdx + 1);
+					std::sprintf(uniformNameBuf, "shadow_params.splits[%u]", vpIdx + 1);
 					int cascadeSplitLoc = glGetUniformLocation(shaderId, uniformNameBuf);
 
 					const RendererViewport& vp = viewportData[vpIdx];
+
+					Mat4x4f bias;
+					bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
+					bias[4] = 0.0; bias[5] = 0.5; bias[6] = 0.0; bias[7] = 0.0;
+					bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
+					bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
+
+					float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
+					CascadedShadowMap::CalculateSplitDepths(renderCamera->parameters, cascadeSplitDepths);
 
 					Mat4x4f viewToLight = vp.viewProjection * renderCameraTransform;
 					Mat4x4f shadowMat = bias * viewToLight;
@@ -463,8 +497,6 @@ void Renderer::Render(Scene* scene)
 			}
 		}
 	}
-
-	glBindVertexArray(0);
 
 	commandList.Clear();
 	ClearFramebufferUsageFlags();
@@ -646,8 +678,6 @@ void Renderer::PopulateCommandList(Scene* scene)
 			Mat3x3f orientation = lightManager->GetOrientation(id);
 			Vec3f lightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 
-			primaryDirectionalLightDirection = lightDir;
-
 			CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransform, projectionParams, cascadeViewTransforms, lightProjections);
 
 			for (unsigned int cascade = 0; cascade < shadowCascadeCount; ++cascade)
@@ -690,6 +720,10 @@ void Renderer::PopulateCommandList(Scene* scene)
 		this->viewportIndexFullscreen = vpIdx;
 	}
 
+	const FrustumPlanes& fullscreenFrustum = viewportData[viewportIndexFullscreen].frustum;
+
+	Array<LightId> nonDirLights(allocator);
+	lightManager->GetNonDirectionalLightsWithinFrustum(fullscreenFrustum, nonDirLights);
 
 	unsigned int colorAndDepthMask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
 
@@ -810,28 +844,17 @@ void Renderer::PopulateCommandList(Scene* scene)
 	}
 
 	commandList.AddControl(fsvp, l_pass, 1, ctrl::Clear, colorAndDepthMask);
-	commandList.AddControl(fsvp, l_pass, 2, ctrl::BlendingEnable);
 
-	{
-		// Set additive blending
-		RenderCommandData::BlendFunctionData data;
-		data.srcFactor = GL_ONE;
-		data.dstFactor = GL_ONE;
+	// Set depth test to always pass
+	commandList.AddControl(fsvp, l_pass, 2, ctrl::DepthTestFunction, GL_ALWAYS);
 
-		commandList.AddControl(fsvp, l_pass, 3, ctrl::BlendFunction, sizeof(data), &data);
-	}
-
-	// Set depth test to pass always
-	commandList.AddControl(fsvp, l_pass, 4, ctrl::DepthTestFunction, GL_ALWAYS);
-
-	// Do lighting
+	// Draw lighting pass
 	commandList.AddDraw(fsvp, l_pass, 0.0f, MaterialId{}, 0);
 
 	// PASS: SKYBOX
 
 	commandList.AddControl(fsvp, s_pass, 0, ctrl::DepthTestFunction, GL_EQUAL);
-	commandList.AddControl(fsvp, s_pass, 1, ctrl::BlendingDisable);
-	commandList.AddControl(fsvp, s_pass, 2, ctrl::DepthWriteDisable);
+	commandList.AddControl(fsvp, s_pass, 1, ctrl::DepthWriteDisable);
 
 	// PASS: TRANSPARENT
 

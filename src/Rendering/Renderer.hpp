@@ -92,8 +92,6 @@ private:
 	struct LightingData
 	{
 		MeshId dirMesh;
-		MeshId pointMesh;
-		MeshId spotMesh;
 
 		unsigned int dirShaderHash;
 
@@ -120,7 +118,6 @@ private:
 	RenderOrderConfiguration renderOrder;
 
 	LightManager* lightManager;
-	Vec3f primaryDirectionalLightDirection;
 
 	Camera* overrideRenderCamera;
 	Camera* overrideCullingCamera;

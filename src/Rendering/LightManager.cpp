@@ -118,9 +118,9 @@ void LightManager::GetDirectionalLights(Array<LightId>& output)
 			output.PushBack(LightId{ i });
 }
 
-Array<LightId> LightManager::GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& frustum)
+void LightManager::GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& frustum, Array<LightId>& output)
 {
-	Array<LightId> result(allocator);
+	output.Clear();
 
 	unsigned int lights = data.count - 1;
 
@@ -136,8 +136,6 @@ Array<LightId> LightManager::GetNonDirectionalLightsWithinFrustum(const FrustumP
 
 		for (unsigned int i = 1; i < data.count; ++i)
 			if (data.type[i] != LightType::Directional && BitPack::Get(intersected, i - 1))
-				result.PushBack(LightId{ i });
+				output.PushBack(LightId{ i });
 	}
-
-	return result;
 }

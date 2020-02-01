@@ -79,5 +79,5 @@ public:
 	void SetShadowCasting(LightId id, bool shadowCasting) { data.shadowCasting[id.i] = shadowCasting; }
 
 	void GetDirectionalLights(Array<LightId>& output);
-	Array<LightId> GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& frustum);
+	void GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& frustum, Array<LightId>& output);
 };
