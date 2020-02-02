@@ -1,13 +1,17 @@
 #include "Resources/Texture.hpp"
 
-#include "System/IncludeOpenGL.hpp"
-
 #include "rapidjson/document.h"
 
-#include "System/File.hpp"
 #include "Core/Hash.hpp"
 #include "Core/StringRef.hpp"
+
+#include "Rendering/RenderDevice.hpp"
+
 #include "Resources/ImageData.hpp"
+
+#include "System/File.hpp"
+#include "System/IncludeOpenGL.hpp"
+
 
 static int GetFilterModeValue(TextureFilterMode mode)
 {
@@ -41,7 +45,10 @@ static unsigned int GetTargetType(TextureType type)
 	return values[static_cast<unsigned long>(type)];
 }
 
-bool Texture::LoadFromConfiguration(BufferRef<char> configuration, Allocator* allocator)
+bool Texture::LoadFromConfiguration(
+	BufferRef<char> configuration,
+	Allocator* allocator,
+	RenderDevice* renderDevice)
 {
 	rapidjson::Document config;
 	config.ParseInsitu(configuration.data);
@@ -86,7 +93,7 @@ bool Texture::LoadFromConfiguration(BufferRef<char> configuration, Allocator* al
 			ImageData image;
 			if (image.LoadGlraw(textureContent.GetRef()))
 			{
-				this->Upload_2D(image);
+				this->Upload_2D(renderDevice, image);
 
 				return true;
 			}
@@ -133,7 +140,7 @@ bool Texture::LoadFromConfiguration(BufferRef<char> configuration, Allocator* al
 
 		if (allTextureLoadsSucceeded)
 		{
-			this->Upload_Cube(cubeFaceImages);
+			this->Upload_Cube(renderDevice, cubeFaceImages);
 
 			return true;
 		}
@@ -142,60 +149,61 @@ bool Texture::LoadFromConfiguration(BufferRef<char> configuration, Allocator* al
 	return false;
 }
 
-void Texture::Upload_2D(const ImageData& image)
+void Texture::Upload_2D(RenderDevice* renderDevice, const ImageData& image)
 {
-	this->Upload_2D(image, TextureOptions());
+	this->Upload_2D(renderDevice, image, TextureOptions());
 }
 
-void Texture::Upload_2D(const ImageData& image, const TextureOptions& options)
+void Texture::Upload_2D(RenderDevice* renderDevice, const ImageData& image, const TextureOptions& options)
 {
 	textureSize.x = static_cast<float>(image.imageSize.x);
 	textureSize.y = static_cast<float>(image.imageSize.y);
 
 	targetType = GL_TEXTURE_2D;
 
-	glGenTextures(1, &driverId);
-	glBindTexture(targetType, driverId);
+	renderDevice->CreateTextures(1, &driverId);
+	renderDevice->BindTexture(targetType, driverId);
 
 	if (image.compressed)
 	{
-		// Upload compressed texture data
-		glCompressedTexImage2D(targetType, 0, image.pixelFormat,
-							   image.imageSize.x, image.imageSize.y, 0,
-							   image.compressedSize, image.imageData);
+		RenderCommandData::SetTextureImageCompressed2D textureImage{
+			targetType, 0, image.pixelFormat, image.imageSize.x,
+			image.imageSize.y, image.compressedSize, image.imageData
+		};
+
+		renderDevice->SetTextureImageCompressed2D(&textureImage);
 	}
 	else
 	{
-		// Upload uncompressed texture data
-		glTexImage2D(targetType, 0, image.pixelFormat,
-					 image.imageSize.x, image.imageSize.y, 0,
-					 image.pixelFormat, image.componentDataType, image.imageData);
+		RenderCommandData::SetTextureImage2D textureImage{
+			targetType, 0, image.pixelFormat, image.imageSize.x, image.imageSize.y,
+			image.pixelFormat, image.componentDataType, image.imageData
+		};
+
+		renderDevice->SetTextureImage2D(&textureImage);
 	}
 
 	int filterMode = GetFilterModeValue(options.filter);
 
 	// Set filter
-	glTexParameteri(targetType, GL_TEXTURE_MIN_FILTER, filterMode);
-	glTexParameteri(targetType, GL_TEXTURE_MAG_FILTER, filterMode);
+	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MIN_FILTER, filterMode);
+	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MAG_FILTER, filterMode);
 
 	int wrapMode = GetWrapModeValue(options.wrap);
 
-	glTexParameteri(targetType, GL_TEXTURE_WRAP_S, wrapMode);
-	glTexParameteri(targetType, GL_TEXTURE_WRAP_T, wrapMode);
-
-	// Unbind texture
-	glBindTexture(GL_TEXTURE_2D, 0);
+	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_S, wrapMode);
+	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_T, wrapMode);
 }
 
-void Texture::Upload_Cube(const ImageData* images)
+void Texture::Upload_Cube(RenderDevice* renderDevice, const ImageData* images)
 {
 	TextureOptions options;
 	options.wrap = TextureWrapMode::ClampToEdge;
 
-	this->Upload_Cube(images, options);
+	this->Upload_Cube(renderDevice, images, options);
 }
 
-void Texture::Upload_Cube(const ImageData* images, const TextureOptions& options)
+void Texture::Upload_Cube(RenderDevice* renderDevice, const ImageData* images, const TextureOptions& options)
 {
 	static const unsigned int cubemapFaceValues[] = {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -216,8 +224,8 @@ void Texture::Upload_Cube(const ImageData* images, const TextureOptions& options
 
 	targetType = GL_TEXTURE_CUBE_MAP;
 
-	glGenTextures(1, &driverId);
-	glBindTexture(targetType, driverId);
+	renderDevice->CreateTextures(1, &driverId);
+	renderDevice->BindTexture(targetType, driverId);
 
 	for (unsigned int i = 0; i < 6; ++i)
 	{
@@ -226,26 +234,30 @@ void Texture::Upload_Cube(const ImageData* images, const TextureOptions& options
 
 		if (image.compressed)
 		{
-			// Upload compressed texture data
-			glCompressedTexImage2D(targetFace, 0, image.pixelFormat,
-								   image.imageSize.x, image.imageSize.y, 0,
-								   image.compressedSize, image.imageData);
+			RenderCommandData::SetTextureImageCompressed2D textureImage{
+				targetFace, 0, image.pixelFormat, image.imageSize.x,
+				image.imageSize.y, image.compressedSize, image.imageData
+			};
+
+			renderDevice->SetTextureImageCompressed2D(&textureImage);
 		}
 		else
 		{
-			// Upload uncompressed texture data
-			glTexImage2D(targetFace, 0, image.pixelFormat,
-						 image.imageSize.x, image.imageSize.y, 0,
-						 image.pixelFormat, image.componentDataType, image.imageData);
+			RenderCommandData::SetTextureImage2D textureImage{
+				targetFace, 0, image.pixelFormat, image.imageSize.x, image.imageSize.y,
+				image.pixelFormat, image.componentDataType, image.imageData
+			};
+
+			renderDevice->SetTextureImage2D(&textureImage);
 		}
 
 		// Set filter mode
-		glTexParameteri(targetType, GL_TEXTURE_MIN_FILTER, filterMode);
-		glTexParameteri(targetType, GL_TEXTURE_MAG_FILTER, filterMode);
+		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MIN_FILTER, filterMode);
+		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MAG_FILTER, filterMode);
 
 		// Set wrap mode
-		glTexParameteri(targetType, GL_TEXTURE_WRAP_S, wrapMode);
-		glTexParameteri(targetType, GL_TEXTURE_WRAP_T, wrapMode);
+		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_S, wrapMode);
+		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_T, wrapMode);
 	}
 }
 

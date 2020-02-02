@@ -151,6 +151,12 @@ void RenderDeviceOpenGL::SetTextureImage2D(const RenderCommandData::SetTextureIm
 		data->width, data->height, 0, data->format, data->type, data->data);
 }
 
+void RenderDeviceOpenGL::SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data)
+{
+	glCompressedTexImage2D(data->target, data->mipLevel, data->internalFormat,
+		data->width, data->height, 0, data->dataSize, data->data);
+}
+
 void RenderDeviceOpenGL::SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value)
 {
 	glTexParameteri(target, parameter, value);
@@ -323,4 +329,3 @@ void RenderDeviceOpenGL::SetBufferData(unsigned int target, unsigned int size, c
 {
 	glBufferData(target, size, data, usage);
 }
-

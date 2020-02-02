@@ -41,6 +41,7 @@ public:
 	virtual void DestroyTextures(unsigned int count, unsigned int* textures) = 0;
 	virtual void BindTexture(unsigned int target, unsigned int texture) = 0;
 	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) = 0;
+	virtual void SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data) = 0;
 	virtual void SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value) = 0;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) = 0;
 

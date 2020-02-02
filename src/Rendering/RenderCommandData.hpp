@@ -59,6 +59,17 @@ namespace RenderCommandData
 		const void* data;
 	};
 
+	struct SetTextureImageCompressed2D
+	{
+		unsigned int target;
+		int mipLevel;
+		unsigned int internalFormat;
+		int width;
+		int height;
+		unsigned int dataSize;
+		const void* data;
+	};
+
 	struct SetVertexAttributePointer
 	{
 		unsigned int attributeIndex;

@@ -41,6 +41,7 @@ public:
 	virtual void DestroyTextures(unsigned int count, unsigned int* textures) override;
 	virtual void BindTexture(unsigned int target, unsigned int texture) override;
 	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) override;
+	virtual void SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data) override;
 	virtual void SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value) override;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) override;
 
@@ -78,5 +79,4 @@ public:
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) override;
 	virtual void BindBuffer(unsigned int target, unsigned int buffer) override;
 	virtual void SetBufferData(unsigned int target, unsigned int size, const void* data, unsigned int usage) override;
-
 };

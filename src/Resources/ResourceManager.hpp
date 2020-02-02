@@ -33,6 +33,8 @@ public:
 	ResourceManager(Allocator* allocator, RenderDevice* renderDevice);
 	~ResourceManager();
 
+	RenderDevice* GetRenderDevice();
+
 	Shader* GetShader(uint32_t hash) const;
 	Shader* GetShader(const char* path);
 

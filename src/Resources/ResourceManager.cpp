@@ -21,6 +21,11 @@ ResourceManager::~ResourceManager()
 	allocator->Deallocate(shaders);
 }
 
+RenderDevice* ResourceManager::GetRenderDevice()
+{
+	return renderDevice;
+}
+
 Shader* ResourceManager::GetShader(uint32_t hash) const
 {
 	for (unsigned int i = 0; i < shaderCount; ++i)
@@ -158,7 +163,7 @@ bool ResourceManager::LoadTexture(Texture* texture, const char* path)
 
 	if (File::ReadText(path, textureConfig))
 	{
-		return texture->LoadFromConfiguration(textureConfig.GetRef(), allocator);
+		return texture->LoadFromConfiguration(textureConfig.GetRef(), allocator, renderDevice);
 	}
 
 	return false;

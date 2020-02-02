@@ -6,7 +6,7 @@
 #include "Core/BufferRef.hpp"
 
 class Allocator;
-
+class RenderDevice;
 struct ImageData;
 
 enum class TextureFilterMode
@@ -45,11 +45,14 @@ struct Texture
 	unsigned int driverId;
 	Vec2f textureSize;
 
-	bool LoadFromConfiguration(BufferRef<char> configuration, Allocator* allocator);
+	bool LoadFromConfiguration(
+		BufferRef<char> configuration,
+		Allocator* allocator,
+		RenderDevice* renderDevice);
 
-	void Upload_2D(const ImageData& image);
-	void Upload_2D(const ImageData& image, const TextureOptions& options);
+	void Upload_2D(RenderDevice* renderDevice, const ImageData& image);
+	void Upload_2D(RenderDevice* renderDevice, const ImageData& image, const TextureOptions& options);
 
-	void Upload_Cube(const ImageData* images);
-	void Upload_Cube(const ImageData* images, const TextureOptions& options);
+	void Upload_Cube(RenderDevice* renderDevice, const ImageData* images);
+	void Upload_Cube(RenderDevice* renderDevice, const ImageData* images, const TextureOptions& options);
 };
