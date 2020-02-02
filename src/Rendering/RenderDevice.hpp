@@ -67,6 +67,15 @@ public:
 	virtual void SetUniformFloat(int uniform, float value) = 0;
 	virtual void SetUniformInt(int uniform, int value) = 0;
 
+	virtual void CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut) = 0;
+	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) = 0;
 	virtual void BindVertexArray(unsigned int vertexArray) = 0;
 	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) = 0;
+	virtual void EnableVertexAttribute(unsigned int index) = 0;
+	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) = 0;
+
+	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) = 0;
+	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) = 0;
+	virtual void BindBuffer(unsigned int target, unsigned int buffer) = 0;
+	virtual void SetBufferData(unsigned int target, unsigned int size, const void* data, unsigned int usage) = 0;
 };

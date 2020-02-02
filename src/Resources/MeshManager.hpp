@@ -5,13 +5,15 @@
 #include "Resources/MeshData.hpp"
 
 #include "Core/HashMap.hpp"
-#include "Math/BoundingBox.hpp"
-#include "Rendering/VertexFormat.hpp"
 #include "Core/BufferRef.hpp"
 #include "Core/StringRef.hpp"
 
+#include "Math/BoundingBox.hpp"
+#include "Rendering/VertexFormat.hpp"
+
 struct BoundingBox;
 class Allocator;
+class RenderDevice;
 
 struct MeshDrawData
 {
@@ -34,6 +36,8 @@ class MeshManager
 private:
 	Allocator* allocator;
 
+	RenderDevice* renderDevice;
+
 	struct InstanceData
 	{
 		unsigned int count;
@@ -52,8 +56,11 @@ private:
 
 	void Reallocate(unsigned int required);
 
+	MeshBufferData CreateBuffers(const void* vd, unsigned int vs, const void* id, unsigned int is) const;
+	void DeleteBuffers(MeshBufferData& buffers) const;
+
 public:
-	MeshManager(Allocator* allocator);
+	MeshManager(Allocator* allocator, RenderDevice* renderDevice);
 	~MeshManager();
 
 	MeshId CreateMesh();

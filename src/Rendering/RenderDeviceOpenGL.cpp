@@ -273,6 +273,16 @@ void RenderDeviceOpenGL::SetUniformInt(int uniform, int value)
 
 // VERTEX ARRAY
 
+void RenderDeviceOpenGL::CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut)
+{
+	glGenVertexArrays(count, vertexArraysOut);
+}
+
+void RenderDeviceOpenGL::DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays)
+{
+	glDeleteVertexArrays(count, vertexArrays);
+}
+
 void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArray)
 {
 	glBindVertexArray(vertexArray);
@@ -281,5 +291,36 @@ void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArray)
 void RenderDeviceOpenGL::DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType)
 {
 	glDrawElements(primitiveMode, indexCount, indexType, nullptr);
+}
+
+void RenderDeviceOpenGL::EnableVertexAttribute(unsigned int index)
+{
+	glEnableVertexAttribArray(index);
+}
+
+void RenderDeviceOpenGL::SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data)
+{
+	glVertexAttribPointer(data->attributeIndex, data->elementCount, data->elementType,
+		GL_FALSE, data->stride, reinterpret_cast<void*>(data->offset));
+}
+
+void RenderDeviceOpenGL::CreateBuffers(unsigned int count, unsigned int* buffersOut)
+{
+	glGenBuffers(count, buffersOut);
+}
+
+void RenderDeviceOpenGL::DestroyBuffers(unsigned int count, unsigned int* buffers)
+{
+	glDeleteBuffers(count, buffers);
+}
+
+void RenderDeviceOpenGL::BindBuffer(unsigned int target, unsigned int buffer)
+{
+	glBindBuffer(target, buffer);
+}
+
+void RenderDeviceOpenGL::SetBufferData(unsigned int target, unsigned int size, const void* data, unsigned int usage)
+{
+	glBufferData(target, size, data, usage);
 }
 

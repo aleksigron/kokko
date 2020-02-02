@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
 #include "Math/Vec4.hpp"
@@ -12,7 +14,7 @@ struct Vertex3f
 
 	static const int aElemCount;
 	static const unsigned aElemType;
-	static const void* aOffset;
+	static const std::size_t aOffset;
 };
 
 struct Vertex4f
@@ -23,7 +25,7 @@ struct Vertex4f
 
 	static const int aElemCount;
 	static const unsigned aElemType;
-	static const void* aOffset;
+	static const std::size_t aOffset;
 };
 
 struct Vertex3f2f
@@ -35,11 +37,11 @@ struct Vertex3f2f
 
 	static const int aElemCount;
 	static const unsigned aElemType;
-	static const void* aOffset;
+	static const std::size_t aOffset;
 
 	static const int bElemCount;
 	static const unsigned bElemType;
-	static const void* bOffset;
+	static const std::size_t bOffset;
 };
 
 struct Vertex3f3f
@@ -51,11 +53,11 @@ struct Vertex3f3f
 
 	static const int aElemCount;
 	static const unsigned aElemType;
-	static const void* aOffset;
+	static const std::size_t aOffset;
 
 	static const int bElemCount;
 	static const unsigned bElemType;
-	static const void* bOffset;
+	static const std::size_t bOffset;
 };
 
 struct Vertex3f3f2f
@@ -68,15 +70,15 @@ struct Vertex3f3f2f
 
 	static const int aElemCount;
 	static const unsigned aElemType;
-	static const void* aOffset;
+	static const std::size_t aOffset;
 
 	static const int bElemCount;
 	static const unsigned bElemType;
-	static const void* bOffset;
+	static const std::size_t bOffset;
 
 	static const int cElemCount;
 	static const unsigned cElemType;
-	static const void* cOffset;
+	static const std::size_t cOffset;
 };
 
 struct Vertex3f3f3f
@@ -89,13 +91,13 @@ struct Vertex3f3f3f
 
 	static const int aElemCount;
 	static const unsigned aElemType;
-	static const void* aOffset;
+	static const std::size_t aOffset;
 
 	static const int bElemCount;
 	static const unsigned bElemType;
-	static const void* bOffset;
+	static const std::size_t bOffset;
 
 	static const int cElemCount;
 	static const unsigned cElemType;
-	static const void* cOffset;
+	static const std::size_t cOffset;
 };

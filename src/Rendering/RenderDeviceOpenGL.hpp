@@ -67,8 +67,16 @@ public:
 	virtual void SetUniformFloat(int uniform, float value) override;
 	virtual void SetUniformInt(int uniform, int value) override;
 
+	virtual void CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut) override;
+	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) override;
 	virtual void BindVertexArray(unsigned int vertexArray) override;
 	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) override;
+	virtual void EnableVertexAttribute(unsigned int index) override;
+	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) override;
 
-	// Inherited via RenderDevice
+	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) override;
+	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) override;
+	virtual void BindBuffer(unsigned int target, unsigned int buffer) override;
+	virtual void SetBufferData(unsigned int target, unsigned int size, const void* data, unsigned int usage) override;
+
 };

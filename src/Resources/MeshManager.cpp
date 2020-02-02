@@ -2,12 +2,15 @@
 
 #include <cassert>
 
-#include "System/IncludeOpenGL.hpp"
-
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
-#include "System/File.hpp"
+
+#include "Rendering/RenderDevice.hpp"
+
 #include "Resources/MeshLoader.hpp"
+
+#include "System/File.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 static unsigned int PrimitiveModeValue(MeshPrimitiveMode mode)
 {
@@ -23,21 +26,9 @@ static unsigned int PrimitiveModeValue(MeshPrimitiveMode mode)
 	}
 }
 
-void DeleteBuffers(MeshBufferData& buffers)
-{
-	if (buffers.vertexArrayObject != 0)
-	{
-		glDeleteVertexArrays(1, &buffers.vertexArrayObject);
-		glDeleteBuffers(2, buffers.bufferObjects);
-
-		buffers.vertexArrayObject = 0;
-		buffers.bufferObjects[0] = 0;
-		buffers.bufferObjects[1] = 0;
-	}
-}
-
-MeshManager::MeshManager(Allocator* allocator) :
+MeshManager::MeshManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
+	renderDevice(renderDevice),
 	nameHashMap(allocator)
 {
 	data = InstanceData{};
@@ -168,26 +159,39 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	return MeshId{};
 }
 
-MeshBufferData CreateBuffers(const void* vd, unsigned int vs, const void* id, unsigned int is)
+MeshBufferData MeshManager::CreateBuffers(const void* vd, unsigned int vs, const void* id, unsigned int is) const
 {
 	MeshBufferData data;
 
 	// Create vertex array object
-	glGenVertexArrays(1, &data.vertexArrayObject);
-	glBindVertexArray(data.vertexArrayObject);
+	renderDevice->CreateVertexArrays(1, &data.vertexArrayObject);
+	renderDevice->BindVertexArray(data.vertexArrayObject);
 
 	// Create buffer objects
-	glGenBuffers(2, data.bufferObjects);
+	renderDevice->CreateBuffers(2, data.bufferObjects);
 
 	// Bind and upload index buffer
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.bufferObjects[MeshBufferData::IndexBuffer]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, is, id, GL_STATIC_DRAW);
+	renderDevice->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.bufferObjects[MeshBufferData::IndexBuffer]);
+	renderDevice->SetBufferData(GL_ELEMENT_ARRAY_BUFFER, is, id, GL_STATIC_DRAW);
 
 	// Bind and upload vertex buffer
-	glBindBuffer(GL_ARRAY_BUFFER, data.bufferObjects[MeshBufferData::VertexBuffer]);
-	glBufferData(GL_ARRAY_BUFFER, vs, vd, GL_STATIC_DRAW);
+	renderDevice->BindBuffer(GL_ARRAY_BUFFER, data.bufferObjects[MeshBufferData::VertexBuffer]);
+	renderDevice->SetBufferData(GL_ARRAY_BUFFER, vs, vd, GL_STATIC_DRAW);
 
 	return data;
+}
+
+void MeshManager::DeleteBuffers(MeshBufferData& buffers) const
+{
+	if (buffers.vertexArrayObject != 0)
+	{
+		renderDevice->DestroyVertexArrays(1, &buffers.vertexArrayObject);
+		renderDevice->DestroyBuffers(2, buffers.bufferObjects);
+
+		buffers.vertexArrayObject = 0;
+		buffers.bufferObjects[0] = 0;
+		buffers.bufferObjects[1] = 0;
+	}
 }
 
 void MeshManager::Upload_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> vdata)
@@ -210,11 +214,15 @@ void MeshManager::Upload_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned shor
 	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
+	renderDevice->EnableVertexAttribute(0);
+
+	RenderCommandData::SetVertexAttributePointer a{
+		0, V::aElemCount, V::aElemType, V::size, V::aOffset
+	};
+	renderDevice->SetVertexAttributePointer(&a);
 
 	// Unbind vertex array
-	glBindVertexArray(0);
+	renderDevice->BindVertexArray(0);
 }
 
 void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned short> vdata)
@@ -237,14 +245,20 @@ void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned 
 	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
+	renderDevice->EnableVertexAttribute(0);
+	RenderCommandData::SetVertexAttributePointer a{
+		0, V::aElemCount, V::aElemType, V::size, V::aOffset
+	};
+	renderDevice->SetVertexAttributePointer(&a);
 
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::bElemCount, V::bElemType, GL_FALSE, V::size, V::bOffset);
+	renderDevice->EnableVertexAttribute(1);
+	RenderCommandData::SetVertexAttributePointer b{
+		1, V::bElemCount, V::bElemType, V::size, V::bOffset
+	};
+	renderDevice->SetVertexAttributePointer(&b);
 
 	// Unbind vertex array
-	glBindVertexArray(0);
+	renderDevice->BindVertexArray(0);
 }
 
 void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned short> vdata)
@@ -267,14 +281,20 @@ void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned 
 	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
+	renderDevice->EnableVertexAttribute(0);
+	RenderCommandData::SetVertexAttributePointer a{
+		0, V::aElemCount, V::aElemType, V::size, V::aOffset
+	};
+	renderDevice->SetVertexAttributePointer(&a);
 
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::bElemCount, V::bElemType, GL_FALSE, V::size, V::bOffset);
+	renderDevice->EnableVertexAttribute(1);
+	RenderCommandData::SetVertexAttributePointer b{
+		1, V::bElemCount, V::bElemType, V::size, V::bOffset
+	};
+	renderDevice->SetVertexAttributePointer(&b);
 
 	// Unbind vertex array
-	glBindVertexArray(0);
+	renderDevice->BindVertexArray(0);
 }
 
 void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsigned short> vdata)
@@ -297,17 +317,26 @@ void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsig
 	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
+	renderDevice->EnableVertexAttribute(0);
+	RenderCommandData::SetVertexAttributePointer a{
+		0, V::aElemCount, V::aElemType, V::size, V::aOffset
+	};
+	renderDevice->SetVertexAttributePointer(&a);
 
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::bElemCount, V::bElemType, GL_FALSE, V::size, V::bOffset);
+	renderDevice->EnableVertexAttribute(1);
+	RenderCommandData::SetVertexAttributePointer b{
+		1, V::bElemCount, V::bElemType, V::size, V::bOffset
+	};
+	renderDevice->SetVertexAttributePointer(&b);
 
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, V::cElemCount, V::cElemType, GL_FALSE, V::size, V::cOffset);
+	renderDevice->EnableVertexAttribute(2);
+	RenderCommandData::SetVertexAttributePointer c{
+		2, V::cElemCount, V::cElemType, V::size, V::cOffset
+	};
+	renderDevice->SetVertexAttributePointer(&c);
 
 	// Unbind vertex array
-	glBindVertexArray(0);
+	renderDevice->BindVertexArray(0);
 }
 
 void MeshManager::Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsigned short> vdata)
@@ -330,15 +359,24 @@ void MeshManager::Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsig
 	data.bufferData[id.i] = bufferData;
 	data.drawData[id.i] = drawData;
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, V::aElemCount, V::aElemType, GL_FALSE, V::size, V::aOffset);
+	renderDevice->EnableVertexAttribute(0);
+	RenderCommandData::SetVertexAttributePointer a{
+		0, V::aElemCount, V::aElemType, V::size, V::aOffset
+	};
+	renderDevice->SetVertexAttributePointer(&a);
 
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, V::bElemCount, V::bElemType, GL_FALSE, V::size, V::bOffset);
+	renderDevice->EnableVertexAttribute(1);
+	RenderCommandData::SetVertexAttributePointer b{
+		1, V::bElemCount, V::bElemType, V::size, V::bOffset
+	};
+	renderDevice->SetVertexAttributePointer(&b);
 
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, V::cElemCount, V::cElemType, GL_FALSE, V::size, V::cOffset);
+	renderDevice->EnableVertexAttribute(2);
+	RenderCommandData::SetVertexAttributePointer c{
+		2, V::cElemCount, V::cElemType, V::size, V::cOffset
+	};
+	renderDevice->SetVertexAttributePointer(&c);
 
 	// Unbind vertex array
-	glBindVertexArray(0);
+	renderDevice->BindVertexArray(0);
 }

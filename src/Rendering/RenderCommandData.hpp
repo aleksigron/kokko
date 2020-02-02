@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace RenderCommandData
 {
 	struct ClearColorData
@@ -55,5 +57,14 @@ namespace RenderCommandData
 		unsigned int format;
 		unsigned int type;
 		const void* data;
+	};
+
+	struct SetVertexAttributePointer
+	{
+		unsigned int attributeIndex;
+		int elementCount;
+		unsigned int elementType;
+		int stride;
+		std::uintptr_t offset;
 	};
 }

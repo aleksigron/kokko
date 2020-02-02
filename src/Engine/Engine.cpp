@@ -53,7 +53,7 @@ Engine::Engine()
 	this->entityManager = defaultAllocator->MakeNew<EntityManager>(entityManagerAlloc);
 
 	Allocator* meshManagerAlloc = allocatorManager->CreateAllocatorScope("MeshManager", defaultAllocator);
-	this->meshManager = defaultAllocator->MakeNew<MeshManager>(meshManagerAlloc);
+	this->meshManager = defaultAllocator->MakeNew<MeshManager>(meshManagerAlloc, renderDevice);
 
 	Allocator* materialManagerAlloc = allocatorManager->CreateAllocatorScope("MaterialManager", defaultAllocator);
 	this->materialManager = defaultAllocator->MakeNew<MaterialManager>(materialManagerAlloc);
