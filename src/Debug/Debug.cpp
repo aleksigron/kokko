@@ -22,15 +22,15 @@
 #include "Debug/DebugLog.hpp"
 #include "Debug/DebugMemoryStats.hpp"
 
-Debug::Debug(Allocator* allocator) :
+Debug::Debug(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
 	window(nullptr),
 	currentFrameRate(0.0),
 	nextFrameRateUpdate(-1.0),
 	mode(DebugMode::None)
 {
-	vectorRenderer = allocator->MakeNew<DebugVectorRenderer>(allocator);
-	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator);
+	vectorRenderer = allocator->MakeNew<DebugVectorRenderer>(allocator, renderDevice);
+	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator, renderDevice);
 	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
 	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
 	console = allocator->MakeNew<DebugConsole>(allocator, textRenderer, vectorRenderer);

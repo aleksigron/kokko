@@ -29,7 +29,12 @@ void RenderDeviceOpenGL::BlendingDisable()
 
 void RenderDeviceOpenGL::BlendFunction(const RenderCommandData::BlendFunctionData* data)
 {
-	glBlendFunc(data->srcFactor, data->dstFactor);
+	BlendFunction(data->srcFactor, data->dstFactor);
+}
+
+void RenderDeviceOpenGL::BlendFunction(unsigned int srcFactor, unsigned int dstFactor)
+{
+	glBlendFunc(srcFactor, dstFactor);
 }
 
 void RenderDeviceOpenGL::DepthRange(const RenderCommandData::DepthRangeData* data)

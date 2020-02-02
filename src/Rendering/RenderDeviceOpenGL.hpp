@@ -12,6 +12,7 @@ public:
 	virtual void BlendingEnable() override;
 	virtual void BlendingDisable() override;
 	virtual void BlendFunction(const RenderCommandData::BlendFunctionData* data) override;
+	virtual void BlendFunction(unsigned int srcFactor, unsigned int dstFactor) override;
 
 	virtual void DepthRange(const RenderCommandData::DepthRangeData* data) override;
 	virtual void Viewport(const RenderCommandData::ViewportData* data) override;

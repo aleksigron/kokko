@@ -3,20 +3,25 @@
 #include <cstring>
 #include <cmath>
 
-#include "System/IncludeOpenGL.hpp"
-
 #include "Engine/Engine.hpp"
+
 #include "Math/Math.hpp"
+
 #include "Rendering/Camera.hpp"
-#include "System/Window.hpp"
+#include "Rendering/RenderDevice.hpp"
 #include "Rendering/Shader.hpp"
-#include "Scene/Scene.hpp"
-#include "Scene/SceneManager.hpp"
+
 #include "Resources/ResourceManager.hpp"
 #include "Resources/MeshManager.hpp"
 
-DebugVectorRenderer::DebugVectorRenderer(Allocator* allocator) :
+#include "Scene/Scene.hpp"
+#include "Scene/SceneManager.hpp"
+
+#include "System/Window.hpp"
+
+DebugVectorRenderer::DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
+	renderDevice(renderDevice),
 	meshesInitialized(false)
 {
 	primitiveCount = 0;
@@ -302,11 +307,11 @@ void DebugVectorRenderer::Render(Camera* camera)
 			}
 		}
 
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
+		renderDevice->DepthTestDisable();
+		renderDevice->BlendingDisable();
 
 		// Use shader
-		glUseProgram(shader->driverId);
+		renderDevice->UseShaderProgram(shader->driverId);
 
 		for (unsigned int i = 0; i < primitiveCount; ++i)
 		{
@@ -316,20 +321,17 @@ void DebugVectorRenderer::Render(Camera* camera)
 			Mat4x4f mvp = (primitive.screenSpace ? screenProj : viewProj) * primitive.transform;
 
 			// Set color uniform
-			glUniform4fv(colorUniformLocation, 1, primitive.color.ValuePointer());
+			renderDevice->SetUniformVec4f(colorUniformLocation, 1, primitive.color.ValuePointer());
 
 			// Set transform matrix uniform
-			glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
-
-			// Get mesh data
-			MeshId meshId = this->meshIds[static_cast<unsigned int>(primitive.type)];
-			MeshDrawData* draw = meshManager->GetDrawData(meshId);
-
-			// Bind vertex array object
-			glBindVertexArray(draw->vertexArrayObject);
+			renderDevice->SetUniformMat4x4f(shader->uniformMatMVP, 1, mvp.ValuePointer());
 
 			// Draw
-			glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
+
+			MeshId meshId = this->meshIds[static_cast<unsigned int>(primitive.type)];
+			MeshDrawData* draw = meshManager->GetDrawData(meshId);
+			renderDevice->BindVertexArray(draw->vertexArrayObject);
+			renderDevice->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
 		}
 
 		// Clear primitive count

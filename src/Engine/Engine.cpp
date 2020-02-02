@@ -2,27 +2,32 @@
 
 #include <cstdio>
 
-#include "Memory/AllocatorManager.hpp"
-#include "Memory/Memory.hpp"
-#include "Memory/ProxyAllocator.hpp"
-
-#include "System/Window.hpp"
-#include "System/Time.hpp"
-#include "Entity/EntityManager.hpp"
-#include "Rendering/LightManager.hpp"
-#include "Rendering/Renderer.hpp"
-#include "Resources/MeshManager.hpp"
-#include "Resources/MaterialManager.hpp"
-#include "Resources/ResourceManager.hpp"
-#include "Scene/SceneManager.hpp"
-#include "Scene/Scene.hpp"
 #include "Core/String.hpp"
 
 #include "Debug/Debug.hpp"
 #include "Debug/DebugLog.hpp"
 #include "Debug/DebugTextRenderer.hpp"
 
+#include "Entity/EntityManager.hpp"
+
+#include "Memory/AllocatorManager.hpp"
+#include "Memory/Memory.hpp"
+#include "Memory/ProxyAllocator.hpp"
+
+#include "Rendering/LightManager.hpp"
+#include "Rendering/RenderDeviceOpenGL.hpp"
+#include "Rendering/Renderer.hpp"
+
+#include "Resources/MeshManager.hpp"
+#include "Resources/MaterialManager.hpp"
+#include "Resources/ResourceManager.hpp"
+
+#include "Scene/SceneManager.hpp"
+#include "Scene/Scene.hpp"
+
 #include "System/IncludeGLFW.hpp"
+#include "System/Time.hpp"
+#include "System/Window.hpp"
 
 Engine* Engine::instance = nullptr;
 
@@ -43,8 +48,10 @@ Engine::Engine()
 	Allocator* windowAlloc = allocatorManager->CreateAllocatorScope("Window", defaultAllocator);
 	this->mainWindow = defaultAllocator->MakeNew<Window>(windowAlloc);
 
+	this->renderDevice = defaultAllocator->MakeNew<RenderDeviceOpenGL>();
+
 	Allocator* debugAlloc = allocatorManager->CreateAllocatorScope("Debug", defaultAllocator);
-	this->debug = defaultAllocator->MakeNew<Debug>(debugAlloc);
+	this->debug = defaultAllocator->MakeNew<Debug>(debugAlloc, renderDevice);
 
 	this->time = defaultAllocator->MakeNew<Time>();
 
@@ -64,7 +71,7 @@ Engine::Engine()
 	this->lightManager = defaultAllocator->MakeNew<LightManager>(lightManagerAlloc);
 
 	Allocator* rendererAlloc = allocatorManager->CreateAllocatorScope("Renderer", defaultAllocator);
-	this->renderer = defaultAllocator->MakeNew<Renderer>(rendererAlloc, this->lightManager);
+	this->renderer = defaultAllocator->MakeNew<Renderer>(rendererAlloc, renderDevice, lightManager);
 
 	Allocator* sceneManagerAlloc = allocatorManager->CreateAllocatorScope("SceneManager", defaultAllocator);
 	this->sceneManager = defaultAllocator->MakeNew<SceneManager>(sceneManagerAlloc);
@@ -83,6 +90,7 @@ Engine::~Engine()
 	defaultAllocator->MakeDelete(this->entityManager);
 	defaultAllocator->MakeDelete(this->time);
 	defaultAllocator->MakeDelete(this->debug);
+	defaultAllocator->MakeDelete(this->renderDevice);
 	defaultAllocator->MakeDelete(this->mainWindow);
 
 	defaultAllocator->MakeDelete(this->allocatorManager);

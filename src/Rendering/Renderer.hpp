@@ -138,7 +138,7 @@ private:
 	Camera* GetCullingCamera(Scene* scene);
 	
 public:
-	Renderer(Allocator* allocator, LightManager* lightManager);
+	Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManager* lightManager);
 	~Renderer();
 
 	void Initialize(Window* window);

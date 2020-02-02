@@ -3,6 +3,7 @@
 class AllocatorManager;
 class Window;
 class Time;
+class RenderDevice;
 class EntityManager;
 class Renderer;
 class MeshManager;
@@ -22,6 +23,7 @@ private:
 
 	Window* mainWindow;
 	Time* time;
+	RenderDevice* renderDevice;
 	EntityManager* entityManager;
 	LightManager* lightManager;
 	Renderer* renderer;

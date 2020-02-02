@@ -8,8 +8,9 @@
 #include "Resources/MeshData.hpp"
 #include "Math/Projection.hpp"
 
-class Camera;
 class Allocator;
+class Camera;
+class RenderDevice;
 
 class DebugVectorRenderer
 {
@@ -32,6 +33,8 @@ private:
 
 	Allocator* allocator;
 
+	RenderDevice* renderDevice;
+
 	Primitive* primitives;
 	unsigned int primitiveCount;
 	unsigned int primitiveAllocated;
@@ -42,7 +45,7 @@ private:
 	void CreateMeshes();
 
 public:
-	DebugVectorRenderer(Allocator* allocator);
+	DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice);
 	~DebugVectorRenderer();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);

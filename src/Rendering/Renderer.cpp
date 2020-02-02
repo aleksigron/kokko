@@ -27,15 +27,15 @@
 #include "Core/BitPack.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
 
-#include "Rendering/RenderDeviceOpenGL.hpp"
+#include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
 
 #include "Core/Sort.hpp"
 
-Renderer::Renderer(Allocator* allocator, LightManager* lightManager) :
+Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManager* lightManager) :
 	allocator(allocator),
-	device(nullptr),
+	device(renderDevice),
 	framebufferData(nullptr),
 	framebufferCount(0),
 	viewportData(nullptr),
@@ -48,8 +48,6 @@ Renderer::Renderer(Allocator* allocator, LightManager* lightManager) :
 	commandList(allocator),
 	objectVisibility(allocator)
 {
-	device = allocator->MakeNew<RenderDeviceOpenGL>();
-
 	lightingData = LightingData{};
 
 	data = InstanceData{};
@@ -63,8 +61,6 @@ Renderer::~Renderer()
 	this->Deinitialize();
 
 	allocator->Deallocate(data.buffer);
-
-	allocator->MakeDelete(device);
 }
 
 void Renderer::Initialize(Window* window)

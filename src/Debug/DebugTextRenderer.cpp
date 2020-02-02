@@ -3,22 +3,26 @@
 #include <cstring>
 #include <cassert>
 
-#include "System/IncludeOpenGL.hpp"
-
-#include "System/File.hpp"
-#include "Resources/BitmapFont.hpp"
-#include "Rendering/VertexFormat.hpp"
-#include "Core/EncodingUtf8.hpp"
-
 #include "Application/App.hpp"
 
+#include "Core/EncodingUtf8.hpp"
+
 #include "Engine/Engine.hpp"
+
+#include "Rendering/RenderDevice.hpp"
 #include "Rendering/Shader.hpp"
+#include "Rendering/VertexFormat.hpp"
+
+#include "Resources/BitmapFont.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/ResourceManager.hpp"
 
-DebugTextRenderer::DebugTextRenderer(Allocator* allocator) :
+#include "System/IncludeOpenGL.hpp"
+#include "System/File.hpp"
+
+DebugTextRenderer::DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
+	renderDevice(renderDevice),
 	font(nullptr),
 	stringCharCount(0),
 	stringData(allocator),
@@ -126,36 +130,36 @@ void DebugTextRenderer::Render()
 			}
 		}
 
-		glDisable(GL_DEPTH_TEST);
+		renderDevice->DepthTestDisable();
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		renderDevice->BlendingEnable();
+		renderDevice->BlendFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// Use shader
-		glUseProgram(shader->driverId);
+		renderDevice->UseShaderProgram(shader->driverId);
 
 		// Bind shadow offset
 		if (shadowOffsetUniform != nullptr)
 		{
 			Vec2f texSize = font->GetTextureSize();
-			glUniform1f(shadowOffsetUniform->location, 1.0f / texSize.y);
+			renderDevice->SetUniformFloat(shadowOffsetUniform->location, 1.0f / texSize.y);
 		}
 
 		// Bind texture
 		if (textureUniform != nullptr)
 		{
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
-			glUniform1i(textureUniform->location, 0);
+			renderDevice->SetActiveTextureUnit(0);
+			renderDevice->BindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
+			renderDevice->SetUniformInt(textureUniform->location, 0);
 		}
 
-		MeshDrawData* draw = meshManager->GetDrawData(meshId);
-
-		// Bind vertex array object
-		glBindVertexArray(draw->vertexArrayObject);
-
 		// Draw
-		glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
+
+		MeshDrawData* draw = meshManager->GetDrawData(meshId);
+		renderDevice->BindVertexArray(draw->vertexArrayObject);
+		renderDevice->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
+
+		// Clear data
 
 		stringCharCount = 0;
 		stringData.Clear();

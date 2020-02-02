@@ -9,6 +9,7 @@
 
 class Allocator;
 class BitmapFont;
+class RenderDevice;
 
 class DebugTextRenderer
 {
@@ -21,6 +22,8 @@ private:
 	};
 
 	Allocator* allocator;
+
+	RenderDevice* renderDevice;
 
 	BitmapFont* font;
 	unsigned int stringCharCount;
@@ -38,7 +41,7 @@ private:
 	void CreateAndUploadData();
 
 public:
-	DebugTextRenderer(Allocator* allocator);
+	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice);
 	~DebugTextRenderer();
 
 	bool LoadBitmapFont(const char* filePath);
