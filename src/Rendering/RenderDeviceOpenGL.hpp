@@ -44,7 +44,21 @@ public:
 	virtual void SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value) override;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) override;
 
+	virtual unsigned int CreateShaderProgram() override;
+	virtual void DestroyShaderProgram(unsigned int shaderProgram) override;
+	virtual void AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage) override;
+	virtual void LinkShaderProgram(unsigned int shaderProgram) override;
 	virtual void UseShaderProgram(unsigned int shaderProgram) override;
+	virtual int GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter) override;
+	virtual void GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut) override;
+
+	virtual unsigned int CreateShaderStage(unsigned int shaderType) override;
+	virtual void DestroyShaderStage(unsigned int shaderStage) override;
+	virtual void SetShaderStageSource(unsigned int shaderStage, const char* source, int length) override;
+	virtual void CompileShaderStage(unsigned int shaderStage) override;
+	virtual int GetShaderStageParameterInt(unsigned int shaderStage, unsigned int parameter) override;
+	virtual void GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut) override;
+
 	virtual int GetUniformLocation(unsigned int shaderProgram, const char* uniformName) override;
 	virtual void SetUniformMat4x4f(int uniform, unsigned int count, const float* values) override;
 	virtual void SetUniformVec4f(int uniform, unsigned int count, const float* values) override;
@@ -55,4 +69,6 @@ public:
 
 	virtual void BindVertexArray(unsigned int vertexArray) override;
 	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) override;
+
+	// Inherited via RenderDevice
 };

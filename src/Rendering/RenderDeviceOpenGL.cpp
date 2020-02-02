@@ -47,6 +47,8 @@ void RenderDeviceOpenGL::Viewport(const RenderCommandData::ViewportData* data)
 	glViewport(data->x, data->y, data->w, data->h);
 }
 
+// DEPTH TEST / WRITE
+
 void RenderDeviceOpenGL::DepthTestEnable()
 {
 	glEnable(GL_DEPTH_TEST);
@@ -72,6 +74,8 @@ void RenderDeviceOpenGL::DepthWriteDisable()
 	glDepthMask(GL_FALSE);
 }
 
+// CULL FACE
+
 void RenderDeviceOpenGL::CullFaceEnable()
 {
 	glEnable(GL_CULL_FACE);
@@ -91,6 +95,8 @@ void RenderDeviceOpenGL::CullFaceBack()
 {
 	glCullFace(GL_BACK);
 }
+
+// FRAMEBUFFER
 
 void RenderDeviceOpenGL::CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut)
 {
@@ -121,6 +127,8 @@ void RenderDeviceOpenGL::SetFramebufferDrawBuffers(unsigned int count, unsigned 
 {
 	glDrawBuffers(count, buffers);
 }
+
+// TEXTURE
 
 void RenderDeviceOpenGL::CreateTextures(unsigned int count, unsigned int* texturesOut)
 {
@@ -153,10 +161,80 @@ void RenderDeviceOpenGL::SetActiveTextureUnit(unsigned int textureUnit)
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
 }
 
+// SHADER PROGRAM
+
+unsigned int RenderDeviceOpenGL::CreateShaderProgram()
+{
+	return glCreateProgram();
+}
+
+void RenderDeviceOpenGL::DestroyShaderProgram(unsigned int shaderProgram)
+{
+	glDeleteProgram(shaderProgram);
+}
+
+void RenderDeviceOpenGL::AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage)
+{
+	glAttachShader(shaderProgram, shaderStage);
+}
+
+void RenderDeviceOpenGL::LinkShaderProgram(unsigned int shaderProgram)
+{
+	glLinkProgram(shaderProgram);
+}
+
 void RenderDeviceOpenGL::UseShaderProgram(unsigned int shaderProgram)
 {
 	glUseProgram(shaderProgram);
 }
+
+int RenderDeviceOpenGL::GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter)
+{
+	int value = 0;
+	glGetProgramiv(shaderProgram, parameter, &value);
+	return value;
+}
+
+void RenderDeviceOpenGL::GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut)
+{
+	glGetProgramInfoLog(shaderProgram, maxLength, nullptr, logOut);
+}
+
+// SHADER STAGE
+
+unsigned int RenderDeviceOpenGL::CreateShaderStage(unsigned int shaderType)
+{
+	return glCreateShader(shaderType);
+}
+
+void RenderDeviceOpenGL::DestroyShaderStage(unsigned int shaderStage)
+{
+	glDeleteShader(shaderStage);
+}
+
+void RenderDeviceOpenGL::SetShaderStageSource(unsigned int shaderStage, const char* source, int length)
+{
+	glShaderSource(shaderStage, 1, &source, &length);
+}
+
+void RenderDeviceOpenGL::CompileShaderStage(unsigned int shaderStage)
+{
+	glCompileShader(shaderStage);
+}
+
+int RenderDeviceOpenGL::GetShaderStageParameterInt(unsigned int shaderStage, unsigned int parameter)
+{
+	int value = 0;
+	glGetShaderiv(shaderStage, parameter, &value);
+	return value;
+}
+
+void RenderDeviceOpenGL::GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut)
+{
+	glGetShaderInfoLog(shaderStage, maxLength, nullptr, logOut);
+}
+
+// UNIFORM
 
 int RenderDeviceOpenGL::GetUniformLocation(unsigned int shaderProgram, const char* uniformName)
 {
@@ -193,6 +271,8 @@ void RenderDeviceOpenGL::SetUniformInt(int uniform, int value)
 	glUniform1i(uniform, value);
 }
 
+// VERTEX ARRAY
+
 void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArray)
 {
 	glBindVertexArray(vertexArray);
@@ -202,3 +282,4 @@ void RenderDeviceOpenGL::DrawVertexArray(unsigned int primitiveMode, int indexCo
 {
 	glDrawElements(primitiveMode, indexCount, indexType, nullptr);
 }
+

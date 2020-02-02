@@ -9,8 +9,9 @@
 #include "System/File.hpp"
 #include "Core/Hash.hpp"
 
-ResourceManager::ResourceManager(Allocator* allocator) :
-	allocator(allocator)
+ResourceManager::ResourceManager(Allocator* allocator, RenderDevice* renderDevice) :
+	allocator(allocator),
+	renderDevice(renderDevice)
 {
 }
 
@@ -79,7 +80,7 @@ bool ResourceManager::LoadShader(Shader& shader, const char* configPath)
 	Buffer<char> configuration(allocator);
 
 	if (File::ReadText(configPath, configuration))
-		return shader.LoadFromConfiguration(configuration.GetRef(), allocator);
+		return shader.LoadFromConfiguration(configuration.GetRef(), allocator, renderDevice);
 	else
 		return false;
 }

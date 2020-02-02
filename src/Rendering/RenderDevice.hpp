@@ -44,7 +44,21 @@ public:
 	virtual void SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value) = 0;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) = 0;
 
+	virtual unsigned int CreateShaderProgram() = 0;
+	virtual void DestroyShaderProgram(unsigned int shaderProgram) = 0;
+	virtual void AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage) = 0;
+	virtual void LinkShaderProgram(unsigned int shaderProgram) = 0;
 	virtual void UseShaderProgram(unsigned int shaderProgram) = 0;
+	virtual int GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter) = 0;
+	virtual void GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut) = 0;
+
+	virtual unsigned int CreateShaderStage(unsigned int shaderType) = 0;
+	virtual void DestroyShaderStage(unsigned int shaderStage) = 0;
+	virtual void SetShaderStageSource(unsigned int shaderStage, const char* source, int length) = 0;
+	virtual void CompileShaderStage(unsigned int shaderStage) = 0;
+	virtual int GetShaderStageParameterInt(unsigned int shaderStage, unsigned int parameter) = 0;
+	virtual void GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut) = 0;
+
 	virtual int GetUniformLocation(unsigned int shaderProgram, const char* uniformName) = 0;
 	virtual void SetUniformMat4x4f(int uniform, unsigned int count, const float* values) = 0;
 	virtual void SetUniformVec4f(int uniform, unsigned int count, const float* values) = 0;

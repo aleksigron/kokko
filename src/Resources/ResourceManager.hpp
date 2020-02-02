@@ -3,7 +3,7 @@
 #include <cstdint>
 
 class Allocator;
-
+class RenderDevice;
 struct Shader;
 struct Texture;
 
@@ -11,6 +11,7 @@ class ResourceManager
 {
 private:
 	Allocator* allocator;
+	RenderDevice* renderDevice;
 
 	// Shaders
 
@@ -29,7 +30,7 @@ private:
 	bool LoadTexture(Texture* texture, const char* texturePath);
 
 public:
-	ResourceManager(Allocator* allocator);
+	ResourceManager(Allocator* allocator, RenderDevice* renderDevice);
 	~ResourceManager();
 
 	Shader* GetShader(uint32_t hash) const;

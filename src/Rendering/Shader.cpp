@@ -1,21 +1,24 @@
 #include "Rendering/Shader.hpp"
 
-#include "System/IncludeOpenGL.hpp"
-
 #include "rapidjson/document.h"
 
 #include <cstdio>
 #include <cstring>
 #include <cassert>
 
-#include "System/File.hpp"
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
 
-#include "Engine/Engine.hpp"
 #include "Debug/Debug.hpp"
 #include "Debug/DebugLog.hpp"
+
+#include "Engine/Engine.hpp"
+
+#include "Rendering/RenderDevice.hpp"
+
+#include "System/File.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 const unsigned int ShaderUniform::TypeSizes[] = {
 	4, // Texture2D
@@ -43,7 +46,10 @@ Shader::Shader() :
 
 }
 
-bool Shader::LoadFromConfiguration(BufferRef<char> configuration, Allocator* allocator)
+bool Shader::LoadFromConfiguration(
+	BufferRef<char> configuration,
+	Allocator* allocator,
+	RenderDevice* renderDevice)
 {
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 	using ValueItr = rapidjson::Value::ConstValueIterator;
@@ -184,9 +190,9 @@ bool Shader::LoadFromConfiguration(BufferRef<char> configuration, Allocator* all
 
 	if (File::ReadText(vsPath, vertexSource) &&
 		File::ReadText(fsPath, fragmentSource) &&
-		this->CompileAndLink(allocator, vertexSource.GetRef(), fragmentSource.GetRef()))
+		this->CompileAndLink(vertexSource.GetRef(), fragmentSource.GetRef(), allocator, renderDevice))
 	{
-		this->AddMaterialUniforms(uniformCount, uniformTypes, uniformNames);
+		this->AddMaterialUniforms(renderDevice, uniformCount, uniformTypes, uniformNames);
 
 		return true;
 	}
@@ -194,22 +200,26 @@ bool Shader::LoadFromConfiguration(BufferRef<char> configuration, Allocator* all
 	return false;
 }
 
-bool Shader::CompileAndLink(Allocator* allocator, BufferRef<char> vertSource, BufferRef<char> fragSource)
+bool Shader::CompileAndLink(
+	BufferRef<char> vertSource,
+	BufferRef<char> fragSource,
+	Allocator* allocator,
+	RenderDevice* renderDevice)
 {
-	GLuint vertexShader = 0;
+	unsigned int vertexShader = 0;
 
-	if (this->Compile(allocator, ShaderType::Vertex, vertSource, vertexShader) == false)
+	if (this->Compile(allocator, renderDevice, ShaderType::Vertex, vertSource, vertexShader) == false)
 	{
 		assert(false);
 		return false;
 	}
 	
-	GLuint fragmentShader = 0;
+	unsigned int fragmentShader = 0;
 
-	if (this->Compile(allocator, ShaderType::Fragment, fragSource, fragmentShader) == false)
+	if (this->Compile(allocator, renderDevice, ShaderType::Fragment, fragSource, fragmentShader) == false)
 	{
 		// Release already compiled vertex shader
-		glDeleteShader(vertexShader);
+		renderDevice->DestroyShaderStage(vertexShader);
 
 		assert(false);
 		return false;
@@ -218,38 +228,36 @@ bool Shader::CompileAndLink(Allocator* allocator, BufferRef<char> vertSource, Bu
 	// At this point we know that both shader compilations were successful
 	
 	// Link the program
-	GLuint programId = glCreateProgram();
-	glAttachShader(programId, vertexShader);
-	glAttachShader(programId, fragmentShader);
-	glLinkProgram(programId);
+	unsigned int programId = renderDevice->CreateShaderProgram();
+	renderDevice->AttachShaderStageToProgram(programId, vertexShader);
+	renderDevice->AttachShaderStageToProgram(programId, fragmentShader);
+	renderDevice->LinkShaderProgram(programId);
 	
 	// Release shaders
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	renderDevice->DestroyShaderStage(vertexShader);
+	renderDevice->DestroyShaderStage(fragmentShader);
 	
 	// Check link status
-	GLint linkStatus = GL_FALSE;
-	glGetProgramiv(programId, GL_LINK_STATUS, &linkStatus);
+	int linkStatus = renderDevice->GetShaderProgramParameterInt(programId, GL_LINK_STATUS);
 	
 	if (linkStatus == GL_TRUE)
 	{
-		driverId = programId;
-		uniformMatMVP = glGetUniformLocation(programId, "_MVP");
-		uniformMatMV = glGetUniformLocation(programId, "_MV");
-		uniformMatVP = glGetUniformLocation(programId, "_VP");
-		uniformMatM = glGetUniformLocation(programId, "_M");
-		uniformMatV = glGetUniformLocation(programId, "_V");
-		uniformMatP = glGetUniformLocation(programId, "_P");
+		this->driverId = programId;
+
+		uniformMatMVP = renderDevice->GetUniformLocation(programId, "_MVP");
+		uniformMatMV = renderDevice->GetUniformLocation(programId, "_MV");
+		uniformMatVP = renderDevice->GetUniformLocation(programId, "_VP");
+		uniformMatM = renderDevice->GetUniformLocation(programId, "_M");
+		uniformMatV = renderDevice->GetUniformLocation(programId, "_V");
+		uniformMatP = renderDevice->GetUniformLocation(programId, "_P");
 		
 		return true;
 	}
 	else
 	{
-		driverId = 0;
+		this->driverId = 0;
 
-		// Get info log length
-		GLint infoLogLength = 0;
-		glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
+		int infoLogLength = renderDevice->GetShaderProgramParameterInt(programId, GL_INFO_LOG_LENGTH);
 		
 		if (infoLogLength > 0)
 		{
@@ -257,7 +265,7 @@ bool Shader::CompileAndLink(Allocator* allocator, BufferRef<char> vertSource, Bu
 			infoLog.Resize(infoLogLength);
 
 			// Get info log
-			glGetProgramInfoLog(programId, infoLogLength, nullptr, infoLog.Begin());
+			renderDevice->GetShaderProgramInfoLog(programId, infoLogLength, infoLog.Begin());
 
 			DebugLog* log = Engine::GetInstance()->GetDebug()->GetLog();
 			log->Log(infoLog);
@@ -270,11 +278,12 @@ bool Shader::CompileAndLink(Allocator* allocator, BufferRef<char> vertSource, Bu
 
 bool Shader::Compile(
 	Allocator* allocator,
+	RenderDevice* renderDevice,
 	ShaderType type,
 	BufferRef<char> source,
 	unsigned int& shaderIdOut)
 {
-	GLenum shaderType = 0;
+	unsigned int shaderType = 0;
 	if (type == ShaderType::Vertex)
 		shaderType = GL_VERTEX_SHADER;
 	else if (type == ShaderType::Fragment)
@@ -287,16 +296,13 @@ bool Shader::Compile(
 		const char* data = source.data;
 		int length = static_cast<int>(source.count);
 
-		GLuint shaderId = glCreateShader(shaderType);
+		unsigned int shaderId = renderDevice->CreateShaderStage(shaderType);
 
-		// Copy shader source to OpenGL
-		glShaderSource(shaderId, 1, &data, &length);
-
-		glCompileShader(shaderId);
+		renderDevice->SetShaderStageSource(shaderId, data, length);
+		renderDevice->CompileShaderStage(shaderId);
 
 		// Check compile status
-		GLint compileStatus = GL_FALSE;
-		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
+		int compileStatus = renderDevice->GetShaderStageParameterInt(shaderId, GL_COMPILE_STATUS);
 
 		if (compileStatus == GL_TRUE)
 		{
@@ -306,8 +312,7 @@ bool Shader::Compile(
 		else
 		{
 			// Get info log length
-			GLint infoLogLength = 0;
-			glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
+			int infoLogLength = renderDevice->GetShaderStageParameterInt(shaderId, GL_INFO_LOG_LENGTH);
 
 			if (infoLogLength > 0)
 			{
@@ -315,7 +320,7 @@ bool Shader::Compile(
 				infoLog.Resize(infoLogLength);
 
 				// Print out info log
-				glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLog.Begin());
+				renderDevice->GetShaderStageInfoLog(shaderId, infoLogLength, infoLog.Begin());
 
 				DebugLog* log = Engine::GetInstance()->GetDebug()->GetLog();
 				log->Log(infoLog);
@@ -327,6 +332,7 @@ bool Shader::Compile(
 }
 
 void Shader::AddMaterialUniforms(
+	RenderDevice* renderDevice,
 	unsigned int count,
 	const ShaderUniformType* types,
 	const char** names)
@@ -337,8 +343,8 @@ void Shader::AddMaterialUniforms(
 	{
 		ShaderUniform& uniform = this->materialUniforms[uIndex];
 
-		// Get the uniform location from OpenGL
-		uniform.location = glGetUniformLocation(driverId, names[uIndex]);
+		// Get the uniform location in shader program
+		uniform.location = renderDevice->GetUniformLocation(driverId, names[uIndex]);
 
 		// Compute uniform name hash
 		unsigned len = std::strlen(names[uIndex]);

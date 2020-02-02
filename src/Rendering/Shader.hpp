@@ -6,6 +6,7 @@
 #include "Rendering/TransparencyType.hpp"
 
 class Allocator;
+class RenderDevice;
 
 enum class ShaderUniformType
 {
@@ -40,16 +41,19 @@ private:
 
 	bool Compile(
 		Allocator* allocator,
+		RenderDevice* renderDevice,
 		ShaderType type,
 		BufferRef<char> source,
 		unsigned int& shaderIdOut);
 
 	bool CompileAndLink(
-		Allocator* allocator,
 		BufferRef<char> vertSource,
-		BufferRef<char> fragSource);
+		BufferRef<char> fragSource,
+		Allocator* allocator,
+		RenderDevice* renderDevice);
 
 	void AddMaterialUniforms(
+		RenderDevice* renderDevice,
 		unsigned int count,
 		const ShaderUniformType* types,
 		const char** names);
@@ -75,5 +79,8 @@ public:
 
 	Shader();
 	
-	bool LoadFromConfiguration(BufferRef<char> configuration, Allocator* allocator);
+	bool LoadFromConfiguration(
+		BufferRef<char> configuration,
+		Allocator* allocator,
+		RenderDevice* renderDevice);
 };
