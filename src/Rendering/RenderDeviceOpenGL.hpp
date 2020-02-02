@@ -4,6 +4,7 @@
 
 class RenderDeviceOpenGL : public RenderDevice
 {
+public:
 	virtual void Clear(unsigned int mask) override;
 	virtual void ClearColor(const RenderCommandData::ClearColorData* data) override;
 	virtual void ClearDepth(float depth) override;
@@ -28,7 +29,22 @@ class RenderDeviceOpenGL : public RenderDevice
 	virtual void CullFaceFront() override;
 	virtual void CullFaceBack() override;
 
+	virtual void CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut) override;
+	virtual void DestroyFramebuffers(unsigned int count, unsigned int* framebuffers) override;
 	virtual void BindFramebuffer(const RenderCommandData::BindFramebufferData* data) override;
+	virtual void BindFramebuffer(unsigned int target, unsigned int framebuffer) override;
+	virtual void AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data) override;
+	virtual void SetFramebufferDrawBuffers(unsigned int count, unsigned int* buffers) override;
 
-	virtual void BlitFramebuffer(const RenderCommandData::BlitFramebufferData* data) override;
+	virtual void CreateTextures(unsigned int count, unsigned int* texturesOut) override;
+	virtual void DestroyTextures(unsigned int count, unsigned int* textures) override;
+	virtual void BindTexture(unsigned int target, unsigned int texture) override;
+	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) override;
+	virtual void SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value) override;
+	virtual void SetActiveTextureUnit(unsigned int textureUnit) override;
+
+	virtual void UseShaderProgram(unsigned int shaderProgram) override;
+
+	virtual void BindVertexArray(unsigned int vertexArray) override;
+	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) override;
 };

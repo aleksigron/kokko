@@ -94,48 +94,73 @@ void Renderer::Initialize(Window* window)
 
 		// Create and bind framebuffer
 
-		glGenFramebuffers(1, &gbuffer.framebuffer);
-		glBindFramebuffer(GL_FRAMEBUFFER, gbuffer.framebuffer);
+		device->CreateFramebuffers(1, &gbuffer.framebuffer);
+		device->BindFramebuffer(GL_FRAMEBUFFER, gbuffer.framebuffer);
 
 		gbuffer.textureCount = 3;
-		glGenTextures(gbuffer.textureCount, gbuffer.textures);
+		device->CreateTextures(gbuffer.textureCount, gbuffer.textures);
 		unsigned int colAtt[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 
 		// Normal buffer
+
 		unsigned int norTexture = gbuffer.textures[NormalTextureIdx];
-		glBindTexture(GL_TEXTURE_2D, norTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, s.x, s.y, 0, GL_RGB, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[0], GL_TEXTURE_2D, norTexture, 0);
+		device->BindTexture(GL_TEXTURE_2D, norTexture);
+
+		RenderCommandData::SetTextureImage2D norTextureImage{
+			GL_TEXTURE_2D, 0, GL_RGB16F, s.x, s.y, GL_RGB, GL_FLOAT, nullptr
+		};
+		device->SetTextureImage2D(&norTextureImage);
+
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		RenderCommandData::AttachFramebufferTexture2D norAttachTexture{
+			GL_FRAMEBUFFER, colAtt[0], GL_TEXTURE_2D, norTexture, 0
+		};
+		device->AttachFramebufferTexture2D(&norAttachTexture);
 
 		// Albedo color + specular buffer
+
 		unsigned int asTexture = gbuffer.textures[AlbedoSpecTextureIdx];
-		glBindTexture(GL_TEXTURE_2D, asTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, s.x, s.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, colAtt[1], GL_TEXTURE_2D, asTexture, 0);
+		device->BindTexture(GL_TEXTURE_2D, asTexture);
+
+		RenderCommandData::SetTextureImage2D asTextureImage{
+			GL_TEXTURE_2D, 0, GL_RGBA, s.x, s.y, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+		};
+		device->SetTextureImage2D(&asTextureImage);
+
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		RenderCommandData::AttachFramebufferTexture2D asAttachTexture{
+			GL_FRAMEBUFFER, colAtt[1], GL_TEXTURE_2D, asTexture, 0
+		};
+		device->AttachFramebufferTexture2D(&asAttachTexture);
 
 		// Which color attachments we'll use for rendering
-		glDrawBuffers(2, colAtt);
+		device->SetFramebufferDrawBuffers(2, colAtt);
 
 		// Create and attach depth buffer
 		unsigned int depthTexture = gbuffer.textures[DepthTextureIdx];
-		glBindTexture(GL_TEXTURE_2D, depthTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s.x, s.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+		device->BindTexture(GL_TEXTURE_2D, depthTexture);
 
-		glBindTexture(GL_TEXTURE_2D, 0);
+		RenderCommandData::SetTextureImage2D depthTextureImage{
+			GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s.x, s.y, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+		};
+		device->SetTextureImage2D(&depthTextureImage);
 
-		// Finally check if framebuffer is complete
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-		}
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
+			GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0
+		};
+		device->AttachFramebufferTexture2D(&depthAttachTexture);
+
+		// Reset active texture and framebuffer
+
+		device->BindTexture(GL_TEXTURE_2D, 0);
+		device->BindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	Engine* engine = Engine::GetInstance();
@@ -194,8 +219,8 @@ void Renderer::Deinitialize()
 
 		if (framebufferData[i].framebuffer != 0)
 		{
-			glDeleteTextures(framebufferData[i].textureCount, framebufferData[i].textures);
-			glDeleteFramebuffers(1, &framebufferData[i].framebuffer);
+			device->DestroyTextures(framebufferData[i].textureCount, framebufferData[i].textures);
+			device->DestroyFramebuffers(1, &framebufferData[i].framebuffer);
 		}
 	}
 
@@ -253,7 +278,7 @@ void Renderer::Render(Scene* scene)
 				unsigned int shaderId = materialManager->GetShaderId(matId);
 				Shader* shader = res->GetShader(shaderId);
 
-				glUseProgram(shader->driverId);
+				device->UseShaderProgram(shader->driverId);
 
 				unsigned int usedTextures = 0;
 
@@ -296,8 +321,8 @@ void Renderer::Render(Scene* scene)
 							uint32_t textureHash = *reinterpret_cast<uint32_t*>(d);
 							Texture* texture = res->GetTexture(textureHash);
 
-							glActiveTexture(GL_TEXTURE0 + usedTextures);
-							glBindTexture(texture->targetType, texture->driverId);
+							device->SetActiveTextureUnit(usedTextures);
+							device->BindTexture(texture->targetType, texture->driverId);
 							glUniform1i(u.location, usedTextures);
 
 							++usedTextures;
@@ -345,10 +370,8 @@ void Renderer::Render(Scene* scene)
 
 				MeshId mesh = data.mesh[objIdx];
 				MeshDrawData* draw = meshManager->GetDrawData(mesh);
-				
-				glBindVertexArray(draw->vertexArrayObject);
-
-				glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
+				device->BindVertexArray(draw->vertexArrayObject);
+				device->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
 			}
 			else // Pass is OpaqueLighting
 			{
@@ -380,7 +403,7 @@ void Renderer::Render(Scene* scene)
 				int cascadeCountLoc = glGetUniformLocation(shaderId, "shadow_params.cascade_count");
 				int nearDepthLoc = glGetUniformLocation(shaderId, "shadow_params.splits[0]");
 
-				glUseProgram(shaderId);
+				device->UseShaderProgram(shaderId);
 
 				glUniform1i(normLoc, 0);
 				glUniform1i(albSpecLoc, 1);
@@ -433,12 +456,12 @@ void Renderer::Render(Scene* scene)
 
 				const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
 
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[NormalTextureIdx]);
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[AlbedoSpecTextureIdx]);
-				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, gbuffer.textures[DepthTextureIdx]);
+				device->SetActiveTextureUnit(0);
+				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[NormalTextureIdx]);
+				device->SetActiveTextureUnit(1);
+				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[AlbedoSpecTextureIdx]);
+				device->SetActiveTextureUnit(2);
+				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[DepthTextureIdx]);
 
 				unsigned int usedSamplerSlots = 3;
 
@@ -480,8 +503,8 @@ void Renderer::Render(Scene* scene)
 
 					const RendererFramebuffer& fb = framebufferData[vp.framebufferIndex];
 
-					glActiveTexture(GL_TEXTURE0 + usedSamplerSlots + vpIdx);
-					glBindTexture(GL_TEXTURE_2D, fb.textures[0]);
+					device->SetActiveTextureUnit(usedSamplerSlots + vpIdx);
+					device->BindTexture(GL_TEXTURE_2D, fb.textures[0]);
 
 					glUniform1i(shadowSamplerLoc, usedSamplerSlots + vpIdx);
 
@@ -491,9 +514,8 @@ void Renderer::Render(Scene* scene)
 				// Draw fullscreen quad
 
 				MeshDrawData* draw = meshManager->GetDrawData(lightingData.dirMesh);
-				glBindVertexArray(draw->vertexArrayObject);
-
-				glDrawElements(draw->primitiveMode, draw->indexCount, draw->indexElementType, nullptr);
+				device->BindVertexArray(draw->vertexArrayObject);
+				device->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
 			}
 		}
 	}
@@ -617,15 +639,6 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* bind = reinterpret_cast<RenderCommandData::BindFramebufferData*>(data);
 			device->BindFramebuffer(bind);
-		}
-			break;
-			
-		case RenderControlType::BlitFramebuffer:
-		{
-			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
-			uint8_t* data = commandList.commandData.GetData() + offset;
-			auto* blit = reinterpret_cast<RenderCommandData::BlitFramebufferData*>(data);
-			device->BlitFramebuffer(blit);
 		}
 			break;
 	}
@@ -953,33 +966,41 @@ unsigned int Renderer::GetDepthFramebufferOfSize(const Vec2i& size)
 
 		// Create and bind framebuffer
 
-		glGenFramebuffers(1, &framebuffer.framebuffer);
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.framebuffer);
+		device->CreateFramebuffers(1, &framebuffer.framebuffer);
+		device->BindFramebuffer(GL_FRAMEBUFFER, framebuffer.framebuffer);
 
 		// We aren't rendering to any color attachments
-		glDrawBuffer(GL_NONE);
+		unsigned int drawBuffers = GL_NONE;
+		device->SetFramebufferDrawBuffers(1, &drawBuffers);
 
 		// Create texture
 		framebuffer.textureCount = 1;
-		glGenTextures(framebuffer.textureCount, &framebuffer.textures[0]);
+		device->CreateTextures(framebuffer.textureCount, &framebuffer.textures[0]);
 
 		// Create and attach depth buffer
 		unsigned int depthTexture = framebuffer.textures[0];
-		glBindTexture(GL_TEXTURE_2D, depthTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, size.x, size.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+		device->BindTexture(GL_TEXTURE_2D, depthTexture);
 
-		// Clear texture bind
-		glBindTexture(GL_TEXTURE_2D, 0);
+		RenderCommandData::SetTextureImage2D depthTextureImage{
+			GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, size.x, size.y, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+		};
+		device->SetTextureImage2D(&depthTextureImage);
 
-		// Clear framebuffer bind
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
+		RenderCommandData::AttachFramebufferTexture2D depthFramebufferTexture{
+			GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0
+		};
+		device->AttachFramebufferTexture2D(&depthFramebufferTexture);
+
+		// Clear texture and framebuffer binds
+		device->BindTexture(GL_TEXTURE_2D, 0);
+		device->BindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		return fbIdx;
 	}

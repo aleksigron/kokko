@@ -30,25 +30,30 @@ namespace RenderCommandData
 		unsigned int framebuffer;
 	};
 
-	struct BlitFramebufferData
+	struct AttachFramebufferTexture2D
 	{
-		float srcLeft;
-		float srcTop;
-		float srcWidth;
-		float srcHeight;
-
-		float dstLeft;
-		float dstTop;
-		float dstWidth;
-		float dstHeight;
-
-		unsigned int mask;
-		unsigned int filter;
+		unsigned int target;
+		unsigned int attachment;
+		unsigned int textureTarget;
+		unsigned int texture;
+		int mipLevel;
 	};
 
 	struct BlendFunctionData
 	{
 		unsigned int srcFactor;
 		unsigned int dstFactor;
+	};
+
+	struct SetTextureImage2D
+	{
+		unsigned int target;
+		int mipLevel;
+		unsigned int internalFormat;
+		int width;
+		int height;
+		unsigned int format;
+		unsigned int type;
+		const void* data;
 	};
 }

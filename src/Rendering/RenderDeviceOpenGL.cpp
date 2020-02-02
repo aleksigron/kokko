@@ -2,8 +2,6 @@
 
 #include "System/IncludeOpenGL.hpp"
 
-#include "Rendering/RenderCommandData.hpp"
-
 void RenderDeviceOpenGL::Clear(unsigned int mask)
 {
 	glClear(mask);
@@ -89,15 +87,78 @@ void RenderDeviceOpenGL::CullFaceBack()
 	glCullFace(GL_BACK);
 }
 
-void RenderDeviceOpenGL::BindFramebuffer(const RenderCommandData::BindFramebufferData* data)
+void RenderDeviceOpenGL::CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut)
 {
-	glBindFramebuffer(data->target, data->framebuffer);
+	glGenFramebuffers(count, framebuffersOut);
 }
 
-void RenderDeviceOpenGL::BlitFramebuffer(const RenderCommandData::BlitFramebufferData* data)
+void RenderDeviceOpenGL::DestroyFramebuffers(unsigned int count, unsigned int* framebuffers)
 {
-	glBlitFramebuffer(
-		data->srcLeft, data->srcTop, data->srcWidth, data->srcHeight,
-		data->dstLeft, data->dstTop, data->dstWidth, data->dstHeight,
-		data->mask, data->filter);
+	glDeleteFramebuffers(count, framebuffers);
+}
+
+void RenderDeviceOpenGL::BindFramebuffer(const RenderCommandData::BindFramebufferData* data)
+{
+	BindFramebuffer(data->target, data->framebuffer);
+}
+
+void RenderDeviceOpenGL::BindFramebuffer(unsigned int target, unsigned int framebuffer)
+{
+	glBindFramebuffer(target, framebuffer);
+}
+
+void RenderDeviceOpenGL::AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data)
+{
+	glFramebufferTexture2D(data->target, data->attachment, data->textureTarget, data->texture, data->mipLevel);
+}
+
+void RenderDeviceOpenGL::SetFramebufferDrawBuffers(unsigned int count, unsigned int* buffers)
+{
+	glDrawBuffers(count, buffers);
+}
+
+void RenderDeviceOpenGL::CreateTextures(unsigned int count, unsigned int* texturesOut)
+{
+	glGenTextures(count, texturesOut);
+}
+
+void RenderDeviceOpenGL::DestroyTextures(unsigned int count, unsigned int* textures)
+{
+	glDeleteTextures(count, textures);
+}
+
+void RenderDeviceOpenGL::BindTexture(unsigned int target, unsigned int texture)
+{
+	glBindTexture(target, texture);
+}
+
+void RenderDeviceOpenGL::SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data)
+{
+	glTexImage2D(data->target, data->mipLevel, data->internalFormat,
+		data->width, data->height, 0, data->format, data->type, data->data);
+}
+
+void RenderDeviceOpenGL::SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value)
+{
+	glTexParameteri(target, parameter, value);
+}
+
+void RenderDeviceOpenGL::SetActiveTextureUnit(unsigned int textureUnit)
+{
+	glActiveTexture(GL_TEXTURE0 + textureUnit);
+}
+
+void RenderDeviceOpenGL::UseShaderProgram(unsigned int shaderProgram)
+{
+	glUseProgram(shaderProgram);
+}
+
+void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArray)
+{
+	glBindVertexArray(vertexArray);
+}
+
+void RenderDeviceOpenGL::DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType)
+{
+	glDrawElements(primitiveMode, indexCount, indexType, nullptr);
 }

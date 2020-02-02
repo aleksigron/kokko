@@ -1,17 +1,6 @@
 #pragma once
 
-#include "Core/Color.hpp"
-#include "Math/Rectangle.hpp"
-
-namespace RenderCommandData
-{
-	struct ClearColorData;
-	struct BlendFunctionData;
-	struct DepthRangeData;
-	struct ViewportData;
-	struct BindFramebufferData;
-	struct BlitFramebufferData;
-}
+#include "Rendering/RenderCommandData.hpp"
 
 class RenderDevice
 {
@@ -40,7 +29,22 @@ public:
 	virtual void CullFaceFront() = 0;
 	virtual void CullFaceBack() = 0;
 
+	virtual void CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut) = 0;
+	virtual void DestroyFramebuffers(unsigned int count, unsigned int* framebuffers) = 0;
 	virtual void BindFramebuffer(const RenderCommandData::BindFramebufferData* data) = 0;
+	virtual void BindFramebuffer(unsigned int target, unsigned int framebuffer) = 0;
+	virtual void AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data) = 0;
+	virtual void SetFramebufferDrawBuffers(unsigned int count, unsigned int* buffers) = 0;
 
-	virtual void BlitFramebuffer(const RenderCommandData::BlitFramebufferData* data) = 0;
+	virtual void CreateTextures(unsigned int count, unsigned int* texturesOut) = 0;
+	virtual void DestroyTextures(unsigned int count, unsigned int* textures) = 0;
+	virtual void BindTexture(unsigned int target, unsigned int texture) = 0;
+	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) = 0;
+	virtual void SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value) = 0;
+	virtual void SetActiveTextureUnit(unsigned int textureUnit) = 0;
+
+	virtual void UseShaderProgram(unsigned int shaderProgram) = 0;
+
+	virtual void BindVertexArray(unsigned int vertexArray) = 0;
+	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) = 0;
 };
