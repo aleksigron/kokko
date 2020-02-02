@@ -292,27 +292,27 @@ void Renderer::Render(Scene* scene)
 					switch (u.type)
 					{
 						case ShaderUniformType::Mat4x4:
-							glUniformMatrix4fv(u.location, 1, GL_FALSE, reinterpret_cast<float*>(d));
+							device->SetUniformMat4x4f(u.location, 1, reinterpret_cast<float*>(d));
 							break;
 
 						case ShaderUniformType::Vec4:
-							glUniform4fv(u.location, 1, reinterpret_cast<float*>(d));
+							device->SetUniformVec4f(u.location, 1, reinterpret_cast<float*>(d));
 							break;
 
 						case ShaderUniformType::Vec3:
-							glUniform3fv(u.location, 1, reinterpret_cast<float*>(d));
+							device->SetUniformVec3f(u.location, 1, reinterpret_cast<float*>(d));
 							break;
 
 						case ShaderUniformType::Vec2:
-							glUniform2fv(u.location, 1, reinterpret_cast<float*>(d));
+							device->SetUniformVec2f(u.location, 1, reinterpret_cast<float*>(d));
 							break;
 
 						case ShaderUniformType::Float:
-							glUniform1f(u.location, *reinterpret_cast<float*>(d));
+							device->SetUniformFloat(u.location, *reinterpret_cast<float*>(d));
 							break;
 
 						case ShaderUniformType::Int:
-							glUniform1i(u.location, *reinterpret_cast<int*>(d));
+							device->SetUniformInt(u.location, *reinterpret_cast<int*>(d));
 							break;
 
 						case ShaderUniformType::Tex2D:
@@ -323,7 +323,7 @@ void Renderer::Render(Scene* scene)
 
 							device->SetActiveTextureUnit(usedTextures);
 							device->BindTexture(texture->targetType, texture->driverId);
-							glUniform1i(u.location, usedTextures);
+							device->SetUniformInt(u.location, usedTextures);
 
 							++usedTextures;
 						}
@@ -339,33 +339,33 @@ void Renderer::Render(Scene* scene)
 				if (shader->uniformMatMVP >= 0)
 				{
 					Mat4x4f mvp = viewProjection * model;
-					glUniformMatrix4fv(shader->uniformMatMVP, 1, GL_FALSE, mvp.ValuePointer());
+					device->SetUniformMat4x4f(shader->uniformMatMVP, 1, mvp.ValuePointer());
 				}
 
 				if (shader->uniformMatMV >= 0)
 				{
 					Mat4x4f mv = view * model;
-					glUniformMatrix4fv(shader->uniformMatMV, 1, GL_FALSE, mv.ValuePointer());
+					device->SetUniformMat4x4f(shader->uniformMatMV, 1, mv.ValuePointer());
 				}
 
 				if (shader->uniformMatVP >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatVP, 1, GL_FALSE, viewProjection.ValuePointer());
+					device->SetUniformMat4x4f(shader->uniformMatVP, 1, viewProjection.ValuePointer());
 				}
 
 				if (shader->uniformMatM >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatM, 1, GL_FALSE, model.ValuePointer());
+					device->SetUniformMat4x4f(shader->uniformMatM, 1, model.ValuePointer());
 				}
 
 				if (shader->uniformMatV >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatV, 1, GL_FALSE, view.ValuePointer());
+					device->SetUniformMat4x4f(shader->uniformMatV, 1, view.ValuePointer());
 				}
 
 				if (shader->uniformMatP >= 0)
 				{
-					glUniformMatrix4fv(shader->uniformMatP, 1, GL_FALSE, projection.ValuePointer());
+					device->SetUniformMat4x4f(shader->uniformMatP, 1, projection.ValuePointer());
 				}
 
 				MeshId mesh = data.mesh[objIdx];
@@ -393,42 +393,42 @@ void Renderer::Render(Scene* scene)
 
 				const unsigned int shaderId = shader->driverId;
 
-				int normLoc = glGetUniformLocation(shaderId, "g_norm");
-				int albSpecLoc = glGetUniformLocation(shaderId, "g_alb_spec");
-				int depthLoc = glGetUniformLocation(shaderId, "g_depth");
+				int normLoc = device->GetUniformLocation(shaderId, "g_norm");
+				int albSpecLoc = device->GetUniformLocation(shaderId, "g_alb_spec");
+				int depthLoc = device->GetUniformLocation(shaderId, "g_depth");
 
-				int halfNearPlaneLoc = glGetUniformLocation(shaderId, "half_near_plane");
-				int persMatLoc = glGetUniformLocation(shaderId, "pers_mat");
+				int halfNearPlaneLoc = device->GetUniformLocation(shaderId, "half_near_plane");
+				int persMatLoc = device->GetUniformLocation(shaderId, "pers_mat");
 
-				int cascadeCountLoc = glGetUniformLocation(shaderId, "shadow_params.cascade_count");
-				int nearDepthLoc = glGetUniformLocation(shaderId, "shadow_params.splits[0]");
+				int cascadeCountLoc = device->GetUniformLocation(shaderId, "shadow_params.cascade_count");
+				int nearDepthLoc = device->GetUniformLocation(shaderId, "shadow_params.splits[0]");
 
 				device->UseShaderProgram(shaderId);
 
-				glUniform1i(normLoc, 0);
-				glUniform1i(albSpecLoc, 1);
-				glUniform1i(depthLoc, 2);
+				device->SetUniformInt(normLoc, 0);
+				device->SetUniformInt(albSpecLoc, 1);
+				device->SetUniformInt(depthLoc, 2);
 
-				glUniform2f(halfNearPlaneLoc, halfNearPlane.x, halfNearPlane.y);
+				device->SetUniformVec2f(halfNearPlaneLoc, 1, halfNearPlane.ValuePointer());
 
 				// Set the perspective matrix
-				glUniformMatrix4fv(persMatLoc, 1, GL_FALSE, fsvp.projection.ValuePointer());
+				device->SetUniformMat4x4f(persMatLoc, 1, fsvp.projection.ValuePointer());
 
 				// Directional light
 				if (directionalLights.GetCount() > 0)
 				{
-					int lightDirLoc = glGetUniformLocation(shaderId, "dir_light.direction");
-					int lightColLoc = glGetUniformLocation(shaderId, "dir_light.color");
+					int lightDirLoc = device->GetUniformLocation(shaderId, "dir_light.direction");
+					int lightColLoc = device->GetUniformLocation(shaderId, "dir_light.color");
 
 					LightId dirLightId = directionalLights[0];
 
 					Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
 					Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 					Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
-					glUniform3f(lightDirLoc, vLightDir.x, vLightDir.y, vLightDir.z);
+					device->SetUniformVec3f(lightDirLoc, 1, vLightDir.ValuePointer());
 
 					Vec3f lightCol = lightManager->GetColor(dirLightId);
-					glUniform3f(lightColLoc, lightCol.x, lightCol.y, lightCol.z);
+					device->SetUniformVec3f(lightColLoc, 1, lightCol.ValuePointer());
 				}
 
 				char uniformNameBuf[32];
@@ -437,19 +437,19 @@ void Renderer::Render(Scene* scene)
 				for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
 				{
 					std::sprintf(uniformNameBuf, "point_light[%u].position", lightIdx);
-					int lightPosLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+					int lightPosLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
 					std::sprintf(uniformNameBuf, "point_light[%u].color", lightIdx);
-					int lightColLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+					int lightColLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
 					LightId pointLightId = nonDirLights[lightIdx];
 
 					Vec3f wLightPos = lightManager->GetPosition(pointLightId);
 					Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
-					glUniform3f(lightPosLoc, vLightPos.x, vLightPos.y, vLightPos.z);
+					device->SetUniformVec3f(lightPosLoc, 1, vLightPos.ValuePointer());
 
 					Vec3f lightCol = lightManager->GetColor(pointLightId);
-					glUniform3f(lightColLoc, lightCol.x, lightCol.y, lightCol.z);
+					device->SetUniformVec3f(lightColLoc, 1, lightCol.ValuePointer());
 				}
 
 				// Bind textures
@@ -465,10 +465,10 @@ void Renderer::Render(Scene* scene)
 
 				unsigned int usedSamplerSlots = 3;
 
-				glUniform1f(nearDepthLoc, renderCamera->parameters.near);
+				device->SetUniformFloat(nearDepthLoc, renderCamera->parameters.near);
 
 				unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
-				glUniform1i(cascadeCountLoc, shadowCascadeCount);
+				device->SetUniformInt(cascadeCountLoc, shadowCascadeCount);
 
 				// Need for each shadow casting light / shadow cascade
 				for (unsigned int vpIdx = 0; vpIdx < viewportCount; ++vpIdx)
@@ -476,14 +476,14 @@ void Renderer::Render(Scene* scene)
 					// Format uniform names and find locations
 
 					std::sprintf(uniformNameBuf, "shadow_params.matrices[%u]", vpIdx);
-					int shadowMatrixLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+					int shadowMatrixLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
 					std::sprintf(uniformNameBuf, "shadow_params.samplers[%u]", vpIdx);
-					int shadowSamplerLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+					int shadowSamplerLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
 					// shadow_params.splits[0] is the near depth
 					std::sprintf(uniformNameBuf, "shadow_params.splits[%u]", vpIdx + 1);
-					int cascadeSplitLoc = glGetUniformLocation(shaderId, uniformNameBuf);
+					int cascadeSplitLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
 					const RendererViewport& vp = viewportData[vpIdx];
 
@@ -499,16 +499,16 @@ void Renderer::Render(Scene* scene)
 					Mat4x4f viewToLight = vp.viewProjection * renderCameraTransform;
 					Mat4x4f shadowMat = bias * viewToLight;
 
-					glUniformMatrix4fv(shadowMatrixLoc, 1, GL_FALSE, shadowMat.ValuePointer());
+					device->SetUniformMat4x4f(shadowMatrixLoc, 1, shadowMat.ValuePointer());
 
 					const RendererFramebuffer& fb = framebufferData[vp.framebufferIndex];
 
 					device->SetActiveTextureUnit(usedSamplerSlots + vpIdx);
 					device->BindTexture(GL_TEXTURE_2D, fb.textures[0]);
 
-					glUniform1i(shadowSamplerLoc, usedSamplerSlots + vpIdx);
+					device->SetUniformInt(shadowSamplerLoc, usedSamplerSlots + vpIdx);
 
-					glUniform1f(cascadeSplitLoc, cascadeSplitDepths[vpIdx]);
+					device->SetUniformFloat(cascadeSplitLoc, cascadeSplitDepths[vpIdx]);
 				}
 
 				// Draw fullscreen quad

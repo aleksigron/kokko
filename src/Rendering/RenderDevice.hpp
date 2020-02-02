@@ -44,6 +44,13 @@ public:
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) = 0;
 
 	virtual void UseShaderProgram(unsigned int shaderProgram) = 0;
+	virtual int GetUniformLocation(unsigned int shaderProgram, const char* uniformName) = 0;
+	virtual void SetUniformMat4x4f(int uniform, unsigned int count, const float* values) = 0;
+	virtual void SetUniformVec4f(int uniform, unsigned int count, const float* values) = 0;
+	virtual void SetUniformVec3f(int uniform, unsigned int count, const float* values) = 0;
+	virtual void SetUniformVec2f(int uniform, unsigned int count, const float* values) = 0;
+	virtual void SetUniformFloat(int uniform, float value) = 0;
+	virtual void SetUniformInt(int uniform, int value) = 0;
 
 	virtual void BindVertexArray(unsigned int vertexArray) = 0;
 	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) = 0;

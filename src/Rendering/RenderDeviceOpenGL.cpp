@@ -153,6 +153,41 @@ void RenderDeviceOpenGL::UseShaderProgram(unsigned int shaderProgram)
 	glUseProgram(shaderProgram);
 }
 
+int RenderDeviceOpenGL::GetUniformLocation(unsigned int shaderProgram, const char* uniformName)
+{
+	return glGetUniformLocation(shaderProgram, uniformName);
+}
+
+void RenderDeviceOpenGL::SetUniformMat4x4f(int uniform, unsigned int count, const float* values)
+{
+	glUniformMatrix4fv(uniform, count, GL_FALSE, values);
+}
+
+void RenderDeviceOpenGL::SetUniformVec4f(int uniform, unsigned int count, const float* values)
+{
+	glUniform4fv(uniform, count, values);
+}
+
+void RenderDeviceOpenGL::SetUniformVec3f(int uniform, unsigned int count, const float* values)
+{
+	glUniform3fv(uniform, count, values);
+}
+
+void RenderDeviceOpenGL::SetUniformVec2f(int uniform, unsigned int count, const float* values)
+{
+	glUniform2fv(uniform, count, values);
+}
+
+void RenderDeviceOpenGL::SetUniformFloat(int uniform, float value)
+{
+	glUniform1f(uniform, value);
+}
+
+void RenderDeviceOpenGL::SetUniformInt(int uniform, int value)
+{
+	glUniform1i(uniform, value);
+}
+
 void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArray)
 {
 	glBindVertexArray(vertexArray);
