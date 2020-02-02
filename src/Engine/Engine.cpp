@@ -25,16 +25,10 @@
 #include "Scene/SceneManager.hpp"
 #include "Scene/Scene.hpp"
 
-#include "System/IncludeGLFW.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
 Engine* Engine::instance = nullptr;
-
-static void OnGlfwError(int errorCode, const char* description)
-{
-	printf("Error: %d, \"%s\"", errorCode, description);
-}
 
 Engine::Engine()
 {
@@ -100,8 +94,6 @@ Engine::~Engine()
 
 bool Engine::Initialize()
 {
-	glfwSetErrorCallback(OnGlfwError);
-	
 	Vec2i windowSize(1600, 900);
 
 	if (this->mainWindow->Initialize(windowSize.x, windowSize.y, "Kokko"))

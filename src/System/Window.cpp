@@ -5,6 +5,11 @@
 #include "System/IncludeOpenGL.hpp"
 #include "System/InputManager.hpp"
 
+static void OnGlfwError(int errorCode, const char* description)
+{
+	printf("Error: %d, \"%s\"", errorCode, description);
+}
+
 Window::Window(Allocator* allocator) :
 	allocator(allocator),
 	windowHandle(nullptr),
@@ -22,11 +27,13 @@ Window::~Window()
 
 bool Window::Initialize(int width, int height, const char* windowTitle)
 {
-	if (glfwInit() == GL_TRUE)
+	glfwSetErrorCallback(OnGlfwError);
+
+	if (glfwInit() == GLFW_TRUE)
 	{
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		
 		windowHandle = glfwCreateWindow(width, height, windowTitle, NULL, NULL);
