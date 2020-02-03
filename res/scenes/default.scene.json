@@ -4,7 +4,7 @@
 	[
 		{
             "mesh": "res/models/ground_plane.mesh",
-            "material": "res/materials/geometry_pos_nor_white.material.json"
+            "material": "res/materials/geom_wood_floor.material.json"
         },
 		{
             "mesh": "res/models/cabinet.mesh",
