@@ -12,7 +12,8 @@ struct ImageData;
 enum class TextureFilterMode
 {
 	Nearest,
-	Linear
+	Linear,
+	LinearMipmap
 };
 
 enum class TextureWrapMode
@@ -31,8 +32,11 @@ enum class TextureType
 
 struct TextureOptions
 {
-	TextureFilterMode filter = TextureFilterMode::Linear;
-	TextureWrapMode wrap = TextureWrapMode::Repeat;
+	TextureFilterMode minFilter = TextureFilterMode::Linear;
+	TextureFilterMode magFilter = TextureFilterMode::Linear;
+	TextureWrapMode wrapModeU = TextureWrapMode::Repeat;
+	TextureWrapMode wrapModeV = TextureWrapMode::Repeat;
+	bool generateMipmaps = false;
 };
 
 struct Texture
@@ -50,9 +54,6 @@ struct Texture
 		Allocator* allocator,
 		RenderDevice* renderDevice);
 
-	void Upload_2D(RenderDevice* renderDevice, const ImageData& image);
 	void Upload_2D(RenderDevice* renderDevice, const ImageData& image, const TextureOptions& options);
-
-	void Upload_Cube(RenderDevice* renderDevice, const ImageData* images);
 	void Upload_Cube(RenderDevice* renderDevice, const ImageData* images, const TextureOptions& options);
 };

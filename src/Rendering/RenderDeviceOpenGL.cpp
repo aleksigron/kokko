@@ -157,6 +157,11 @@ void RenderDeviceOpenGL::SetTextureImageCompressed2D(const RenderCommandData::Se
 		data->width, data->height, 0, data->dataSize, data->data);
 }
 
+void RenderDeviceOpenGL::GenerateTextureMipmaps(unsigned int target)
+{
+	glGenerateMipmap(target);
+}
+
 void RenderDeviceOpenGL::SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value)
 {
 	glTexParameteri(target, parameter, value);

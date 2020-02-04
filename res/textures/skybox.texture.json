@@ -1,5 +1,7 @@
 {
 	"type": "texCube",
+	"wrap_mode_u": "clamp",
+	"wrap_mode_v": "clamp",
 	"texture":
 	[
 	 "res/textures/skybox_xp.dxt1.glraw",

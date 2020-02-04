@@ -42,6 +42,7 @@ public:
 	virtual void BindTexture(unsigned int target, unsigned int texture) override;
 	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) override;
 	virtual void SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data) override;
+	virtual void GenerateTextureMipmaps(unsigned int target) override;
 	virtual void SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value) override;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) override;
 

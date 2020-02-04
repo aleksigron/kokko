@@ -12,15 +12,41 @@
 #include "System/File.hpp"
 #include "System/IncludeOpenGL.hpp"
 
+static TextureFilterMode ParseFilterModeString(const char* str, std::size_t strLen)
+{
+	uint32_t hash = Hash::FNV1a_32(str, strLen);
+
+	switch (hash)
+	{
+	case "nearest"_hash: return TextureFilterMode::Nearest;
+	case "linear"_hash: return TextureFilterMode::Linear;
+	case "linear_mipmap"_hash: return TextureFilterMode::LinearMipmap;
+	default: return TextureFilterMode::Linear;
+	}
+}
 
 static int GetFilterModeValue(TextureFilterMode mode)
 {
 	static const int values[] = {
 		GL_NEAREST,
-		GL_LINEAR
+		GL_LINEAR,
+		GL_LINEAR_MIPMAP_LINEAR
 	};
 
 	return values[static_cast<unsigned long>(mode)];
+}
+
+static TextureWrapMode ParseWrapModeString(const char* str, std::size_t strLen)
+{
+	uint32_t hash = Hash::FNV1a_32(str, strLen);
+
+	switch (hash)
+	{
+	case "repeat"_hash: return TextureWrapMode::Repeat;
+	case "mirror"_hash: return TextureWrapMode::MirroredRepeat;
+	case "clamp"_hash: return TextureWrapMode::ClampToEdge;
+	default: return TextureWrapMode::Repeat;
+	}
 }
 
 static int GetWrapModeValue(TextureWrapMode mode)
@@ -43,6 +69,49 @@ static unsigned int GetTargetType(TextureType type)
 	};
 
 	return values[static_cast<unsigned long>(type)];
+}
+
+static TextureOptions GetOptionsFromJson(const rapidjson::Value& json)
+{
+	using MemberIterator = rapidjson::Value::ConstMemberIterator;
+
+	TextureOptions opts;
+
+	MemberIterator minfItr = json.FindMember("min_filter");
+	if (minfItr != json.MemberEnd() && minfItr->value.IsString())
+	{
+		opts.minFilter = ParseFilterModeString(
+			minfItr->value.GetString(), minfItr->value.GetStringLength());
+	}
+
+	MemberIterator magfItr = json.FindMember("mag_filter");
+	if (magfItr != json.MemberEnd() && magfItr->value.IsString())
+	{
+		opts.magFilter = ParseFilterModeString(
+			magfItr->value.GetString(), magfItr->value.GetStringLength());
+	}
+
+	MemberIterator wmuItr = json.FindMember("wrap_mode_u");
+	if (wmuItr != json.MemberEnd() && wmuItr->value.IsString())
+	{
+		opts.wrapModeU = ParseWrapModeString(
+			wmuItr->value.GetString(), wmuItr->value.GetStringLength());
+	}
+
+	MemberIterator wmvItr = json.FindMember("wrap_mode_v");
+	if (wmvItr != json.MemberEnd() && wmvItr->value.IsString())
+	{
+		opts.wrapModeV = ParseWrapModeString(
+			wmvItr->value.GetString(), wmvItr->value.GetStringLength());
+	}
+
+	MemberIterator gmmItr = json.FindMember("generate_mipmaps");
+	if (gmmItr != json.MemberEnd() && gmmItr->value.IsBool())
+	{
+		opts.generateMipmaps = gmmItr->value.GetBool();
+	}
+
+	return opts;
 }
 
 bool Texture::LoadFromConfiguration(
@@ -93,7 +162,9 @@ bool Texture::LoadFromConfiguration(
 			ImageData image;
 			if (image.LoadGlraw(textureContent.GetRef()))
 			{
-				this->Upload_2D(renderDevice, image);
+				TextureOptions opts = GetOptionsFromJson(config);
+
+				this->Upload_2D(renderDevice, image, opts);
 
 				return true;
 			}
@@ -140,18 +211,15 @@ bool Texture::LoadFromConfiguration(
 
 		if (allTextureLoadsSucceeded)
 		{
-			this->Upload_Cube(renderDevice, cubeFaceImages);
+			TextureOptions opts = GetOptionsFromJson(config);
+
+			this->Upload_Cube(renderDevice, cubeFaceImages, opts);
 
 			return true;
 		}
 	}
 
 	return false;
-}
-
-void Texture::Upload_2D(RenderDevice* renderDevice, const ImageData& image)
-{
-	this->Upload_2D(renderDevice, image, TextureOptions());
 }
 
 void Texture::Upload_2D(RenderDevice* renderDevice, const ImageData& image, const TextureOptions& options)
@@ -183,24 +251,22 @@ void Texture::Upload_2D(RenderDevice* renderDevice, const ImageData& image, cons
 		renderDevice->SetTextureImage2D(&textureImage);
 	}
 
-	int filterMode = GetFilterModeValue(options.filter);
+	if (options.generateMipmaps)
+	{
+		renderDevice->GenerateTextureMipmaps(targetType);
+	}
 
-	// Set filter
-	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MIN_FILTER, filterMode);
-	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MAG_FILTER, filterMode);
+	int minFilter = GetFilterModeValue(options.minFilter);
+	int magFilter = GetFilterModeValue(options.magFilter);
 
-	int wrapMode = GetWrapModeValue(options.wrap);
+	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MIN_FILTER, minFilter);
+	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MAG_FILTER, magFilter);
 
-	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_S, wrapMode);
-	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_T, wrapMode);
-}
+	int wrapModeU = GetWrapModeValue(options.wrapModeU);
+	int wrapModeV = GetWrapModeValue(options.wrapModeV);
 
-void Texture::Upload_Cube(RenderDevice* renderDevice, const ImageData* images)
-{
-	TextureOptions options;
-	options.wrap = TextureWrapMode::ClampToEdge;
-
-	this->Upload_Cube(renderDevice, images, options);
+	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_S, wrapModeU);
+	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_T, wrapModeV);
 }
 
 void Texture::Upload_Cube(RenderDevice* renderDevice, const ImageData* images, const TextureOptions& options)
@@ -214,8 +280,10 @@ void Texture::Upload_Cube(RenderDevice* renderDevice, const ImageData* images, c
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 	};
 
-	int filterMode = GetFilterModeValue(options.filter);
-	int wrapMode = GetWrapModeValue(options.wrap);
+	int minFilter = GetFilterModeValue(options.minFilter);
+	int magFilter = GetFilterModeValue(options.magFilter);
+	int wrapModeU = GetWrapModeValue(options.wrapModeU);
+	int wrapModeV = GetWrapModeValue(options.wrapModeV);
 
 	// There's really no reason to use different size faces
 	// We can simply use the size of the first image
@@ -251,13 +319,16 @@ void Texture::Upload_Cube(RenderDevice* renderDevice, const ImageData* images, c
 			renderDevice->SetTextureImage2D(&textureImage);
 		}
 
-		// Set filter mode
-		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MIN_FILTER, filterMode);
-		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MAG_FILTER, filterMode);
+		if (options.generateMipmaps)
+		{
+			renderDevice->GenerateTextureMipmaps(targetType);
+		}
 
-		// Set wrap mode
-		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_S, wrapMode);
-		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_T, wrapMode);
+		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MIN_FILTER, minFilter);
+		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MAG_FILTER, magFilter);
+
+		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_S, wrapModeU);
+		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_T, wrapModeV);
 	}
 }
 
