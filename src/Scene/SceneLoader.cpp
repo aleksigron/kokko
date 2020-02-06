@@ -50,7 +50,9 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 
 		MaterialId matId = materialManager->GetIdByPath(materialPath);
 		if (matId.IsNull() == false)
-			scene->skybox.Initialize(scene, matId);
+		{
+			scene->SetSkyboxMaterial(matId);
+		}
 	}
 }
 

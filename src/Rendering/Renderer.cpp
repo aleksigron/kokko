@@ -3,35 +3,39 @@
 #include <cstring>
 #include <cstdio>
 
-#include "System/IncludeOpenGL.hpp"
+#include "Core/BitPack.hpp"
+#include "Core/Sort.hpp"
 
 #include "Debug/Debug.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
 #include "Engine/Engine.hpp"
-#include "System/Window.hpp"
-#include "Memory/Allocator.hpp"
+#include "Entity/EntityManager.hpp"
 
-#include "Resources/ResourceManager.hpp"
-#include "Resources/MaterialManager.hpp"
-#include "Rendering/LightManager.hpp"
-#include "Resources/MeshManager.hpp"
-#include "Rendering/Shader.hpp"
-#include "Resources/Texture.hpp"
-#include "Scene/Scene.hpp"
-
-#include "Rendering/Camera.hpp"
 #include "Math/Rectangle.hpp"
 #include "Math/BoundingBox.hpp"
 #include "Math/Intersect3D.hpp"
-#include "Core/BitPack.hpp"
-#include "Rendering/CascadedShadowMap.hpp"
 
+#include "Memory/Allocator.hpp"
+
+#include "Rendering/LightManager.hpp"
+#include "Rendering/Shader.hpp"
+#include "Rendering/Camera.hpp"
+#include "Rendering/CascadedShadowMap.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
 
-#include "Core/Sort.hpp"
+#include "Resources/MaterialManager.hpp"
+#include "Resources/MeshManager.hpp"
+#include "Resources/MeshPresets.hpp"
+#include "Resources/ResourceManager.hpp"
+#include "Resources/Texture.hpp"
+
+#include "Scene/Scene.hpp"
+
+#include "System/IncludeOpenGL.hpp"
+#include "System/Window.hpp"
 
 Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManager* lightManager) :
 	allocator(allocator),
@@ -166,27 +170,8 @@ void Renderer::Initialize(Window* window)
 
 	{
 		// Create screen filling quad
-
-		static const Vertex3f vertexData[] = {
-			Vertex3f{ Vec3f(-1.0f, -1.0f, 0.0f) },
-			Vertex3f{ Vec3f(1.0f, -1.0f, 0.0f) },
-			Vertex3f{ Vec3f(-1.0f, 1.0f, 0.0f) },
-			Vertex3f{ Vec3f(1.0f, 1.0f, 0.0f) }
-		};
-
-		static const unsigned short indexData[] = { 0, 1, 2, 1, 3, 2 };
-
-
 		lightingData.dirMesh = meshManager->CreateMesh();
-
-		IndexedVertexData<Vertex3f, unsigned short> data;
-		data.primitiveMode = MeshPrimitiveMode::Triangles;
-		data.vertData = vertexData;
-		data.vertCount = sizeof(vertexData) / sizeof(Vertex3f);
-		data.idxData = indexData;
-		data.idxCount = sizeof(indexData) / sizeof(unsigned short);
-
-		meshManager->Upload_3f(lightingData.dirMesh, data);
+		MeshPresets::UploadPlane(meshManager, lightingData.dirMesh);
 	}
 	
 	{
@@ -199,6 +184,18 @@ void Renderer::Initialize(Window* window)
 
 		Shader* shader = resManager->GetShader(path);
 		lightingData.dirShaderHash = shader->nameHash;
+	}
+
+	// Create skybox entity
+	{
+		EntityManager* em = engine->GetEntityManager();
+		skyboxEntity = em->Create();
+
+		RenderObjectId skyboxRenderObj = AddRenderObject(skyboxEntity);
+
+		MeshId skyboxMesh = meshManager->CreateMesh();
+		MeshPresets::UploadCube(meshManager, skyboxMesh);
+		SetMeshId(skyboxRenderObj, skyboxMesh);
 	}
 }
 
@@ -245,9 +242,6 @@ void Renderer::Render(Scene* scene)
 	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());
 	Mat4x4f renderCameraTransform = scene->GetWorldTransform(renderCameraObject);
 	Vec3f cameraPosition = (renderCameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-
-	if (scene->skybox.IsInitialized()) // Update skybox transform
-		scene->skybox.UpdateTransform(cameraPosition);
 
 	PopulateCommandList(scene);
 
@@ -930,6 +924,16 @@ void Renderer::PopulateCommandList(Scene* scene)
 			RenderPass pass = static_cast<RenderPass>(o.transparency);
 			commandList.AddDraw(fsvp, pass, depth, o.material, i);
 		}
+	}
+
+	// Render skybox
+	{
+		RenderObjectId skyboxRenderObj = Lookup(skyboxEntity);
+		MaterialId skyboxMaterial = scene->GetSkyboxMaterial();
+		commandList.AddDraw(fsvp, RenderPass::Skybox, 0.0f, skyboxMaterial, skyboxRenderObj.i);
+
+		Mat4x4f skyboxTransform = Mat4x4f::Translate(cameraPos);
+		data.transform[skyboxRenderObj.i] = skyboxTransform;
 	}
 
 	commandList.Sort();

@@ -125,6 +125,8 @@ private:
 	RenderCommandList commandList;
 	Array<BitPack> objectVisibility;
 
+	Entity skyboxEntity;
+
 	unsigned int GetDepthFramebufferOfSize(const Vec2i& size);
 	void ClearFramebufferUsageFlags();
 

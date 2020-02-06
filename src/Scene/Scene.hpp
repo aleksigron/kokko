@@ -3,12 +3,13 @@
 #include "Core/HashMap.hpp"
 #include "Core/Array.hpp"
 #include "Core/SortedArray.hpp"
-
-#include "Math/Mat4x4.hpp"
 #include "Core/Color.hpp"
-#include "Resources/Skybox.hpp"
 
 #include "Entity/Entity.hpp"
+
+#include "Math/Mat4x4.hpp"
+
+#include "Resources/MaterialData.hpp"
 
 class Camera;
 class Allocator;
@@ -48,6 +49,8 @@ private:
 
 	unsigned int sceneId;
 
+	MaterialId skyboxMaterial;
+
 	Camera* activeCamera;
 
 	void Reallocate(unsigned int required);
@@ -61,7 +64,6 @@ public:
 	Scene& operator=(Scene&& other);
 
 	Color backgroundColor;
-	Skybox skybox;
 
 	unsigned int GetSceneId() const { return sceneId; }
 
@@ -90,6 +92,9 @@ public:
 	const Mat4x4f& GetLocalTransform(SceneObjectId id) { return data.local[id.i]; }
 
 	void NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers);
+
+	void SetSkyboxMaterial(MaterialId materialId) { skyboxMaterial = materialId; }
+	MaterialId GetSkyboxMaterial() const { return skyboxMaterial; }
 
 	void SetActiveCamera(Camera* camera) { activeCamera = camera; }
 	Camera* GetActiveCamera() { return activeCamera; }

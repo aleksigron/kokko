@@ -130,10 +130,10 @@ set (KOKKO_SOURCES
 	src/Resources/MeshLoader.hpp
 	src/Resources/MeshManager.cpp
 	src/Resources/MeshManager.hpp
+	src/Resources/MeshPresets.cpp
+	src/Resources/MeshPresets.hpp
 	src/Resources/ResourceManager.cpp
 	src/Resources/ResourceManager.hpp
-	src/Resources/Skybox.cpp
-	src/Resources/Skybox.hpp
 	src/Resources/Texture.cpp
 	src/Resources/Texture.hpp
 	src/Resources/ValueSerialization.cpp
