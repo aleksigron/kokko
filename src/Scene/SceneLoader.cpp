@@ -133,13 +133,12 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 		StringRef matPath(materialItr->value.GetString(), materialItr->value.GetStringLength());
 		MaterialId matId = materialManager->GetIdByPath(matPath);
 
-		if (matId.IsNull() == false)
-		{
-			RenderOrderData data;
-			data.material = matId;
-			data.transparency = materialManager->GetTransparency(matId);
+		assert(matId.IsNull() == false);
 
-			renderer->SetOrderData(renderObj, data);
-		}
+		RenderOrderData data;
+		data.material = matId;
+		data.transparency = materialManager->GetTransparency(matId);
+
+		renderer->SetOrderData(renderObj, data);
 	}
 }
