@@ -57,7 +57,7 @@ def write(context, filepath, options):
     if obj.type != 'MESH': return False
     
     # Create a new mesh from the active object
-    mesh_data = obj.to_mesh(context.depsgraph, options['apply_modifiers'], 'PREVIEW')
+    mesh_data = obj.to_mesh()
     
     # Triangulate mesh copy
     process_mesh(mesh_data)
@@ -89,8 +89,22 @@ def write(context, filepath, options):
     
     vert_count = len(mesh_data.vertices)
     
-    #epsilon = 1 / (2 ** 20)
-    
+    tex_coord_data = array('f')
+
+    if save_tex_coord:
+        # Create an empty array of required size
+        for i in range(0, vert_count * 2):
+            tex_coord_data.append(0.0)
+
+        # Get the texture coordinates for each corner of each polygon
+        # Write coordinates to the corresponding vertex index in the array
+        for poly in mesh_data.polygons:
+            for i in poly.loop_indices:
+                loop = mesh_data.loops[i]
+                uv = mesh_data.uv_layers[0].data[loop.index].uv
+                tex_coord_data[loop.vertex_index * 2 + 0] = uv[0]
+                tex_coord_data[loop.vertex_index * 2 + 1] = uv[1]
+
     vert_col_data = array('f')
     
     if save_vert_color:
@@ -129,6 +143,14 @@ def write(context, filepath, options):
             vertex_data.extend([v.co.x, v.co.z, -v.co.y])
             vertex_data.extend([v.normal.x, v.normal.z, -v.normal.y])
     
+    # Vertex position, normal and texture coordinates
+    elif vert_comps == (vert_position_comp | vert_normal_comp | vert_texcoord_comp):
+        for i in range(0, vert_count):
+            v = verts[i]
+            vertex_data.extend([v.co.x, v.co.z, -v.co.y])
+            vertex_data.extend([v.normal.x, v.normal.z, -v.normal.y])
+            vertex_data.extend([tex_coord_data[i * 2 + 0], tex_coord_data[i * 2 + 1]])
+            
     # Vertex position and color
     elif vert_comps == (vert_position_comp | vert_color_comp):
         for i in range(0, vert_count):
@@ -170,7 +192,7 @@ def write(context, filepath, options):
     header = pack('=III', vert_comps, vert_count, index_count)
     
     # Remove the mesh we created earlier
-    bpy.data.meshes.remove(mesh_data)
+    obj.to_mesh_clear()
 
     # Open output file
     with open(filepath, 'wb') as outfile:
