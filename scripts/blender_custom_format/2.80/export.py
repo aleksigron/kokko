@@ -51,13 +51,17 @@ def process_mesh(mesh):
     bm.free()
 
 def write(context, filepath, options):
-    
     obj = context.active_object
-    
-    if obj.type != 'MESH': return False
-    
+    if obj is None or obj.type != 'MESH':
+        self.report({'INFO'}, "No active mesh object to get info from")
+        return False
+
+    # Get evaluated object from depsgraph
+    depsgraph = context.evaluated_depsgraph_get()
+    object_eval = obj.evaluated_get(depsgraph)
+
     # Create a new mesh from the active object
-    mesh_data = obj.to_mesh()
+    mesh_data = object_eval.to_mesh()
     
     # Triangulate mesh copy
     process_mesh(mesh_data)

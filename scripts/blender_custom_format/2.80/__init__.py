@@ -20,10 +20,6 @@ class CUSTOM_OT_export_format(bpy.types.Operator, ExportHelper):
     filename_ext = ".mesh"
     filter_glob = StringProperty(default="*.mesh", options={'HIDDEN'})
     
-    apply_modifiers: BoolProperty(
-        name = "Apply modifiers",
-        default = True)
-    
     save_normal: BoolProperty(
         name = "Save vertex normals",
         default = True)
@@ -39,7 +35,6 @@ class CUSTOM_OT_export_format(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         
         options = {}
-        options["apply_modifiers"] = self.apply_modifiers
         options["save_normal"] = self.save_normal
         options["save_tex_coord"] = self.save_tex_coord
         options["save_vert_color"] = self.save_vert_color
