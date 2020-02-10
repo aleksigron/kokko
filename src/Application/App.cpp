@@ -53,7 +53,7 @@ void App::Initialize()
 	SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);
 	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 1.6f, 4.0f));
 	scene->SetLocalTransform(cameraSceneObject, cameraTransform);
-
+	
 	{
 		// Create directional light entity and components
 		Entity lightEntity = entityManager->Create();
@@ -68,19 +68,19 @@ void App::Initialize()
 		Mat4x4f lightTransform = Mat4x4f::LookAt(Vec3f(), Vec3f(-0.4f, -1.0f, -0.6f), Vec3f(0.0f, 1.0f, 0.0f));
 		scene->SetLocalTransform(lightSceneObject, lightTransform);
 	}
-
+	
 	{
 		// Create point light entity and components
 		Entity lightEntity = entityManager->Create();
 
 		LightId lightId = lightManager->AddLight(lightEntity);
 		lightManager->SetLightType(lightId, LightType::Point);
-		lightManager->SetColor(lightId, Vec3f(2.0f, 3.0f, 5.0f));
-		lightManager->SetFarDistance(lightId, 10.0f);
+		lightManager->SetColor(lightId, Vec3f(1.9f, 1.5f, 1.2f));
+		lightManager->SetFarDistance(lightId, 6.0f);
 		lightManager->SetShadowCasting(lightId, false);
 
 		SceneObjectId lightSceneObject = scene->AddSceneObject(lightEntity);
-		Mat4x4f lightTransform = Mat4x4f::Translate(Vec3f(-5.0f, 1.5f, 4.5f));
+		Mat4x4f lightTransform = Mat4x4f::Translate(Vec3f(2.6f, 2.8f, 1.0f));
 		scene->SetLocalTransform(lightSceneObject, lightTransform);
 	}
 
@@ -90,12 +90,27 @@ void App::Initialize()
 
 		LightId lightId = lightManager->AddLight(lightEntity);
 		lightManager->SetLightType(lightId, LightType::Point);
-		lightManager->SetColor(lightId, Vec3f(5.0f, 3.0f, 2.0f));
-		lightManager->SetFarDistance(lightId, 10.0f);
+		lightManager->SetColor(lightId, Vec3f(1.9f, 1.5f, 1.2f));
+		lightManager->SetFarDistance(lightId, 6.0f);
 		lightManager->SetShadowCasting(lightId, false);
 
 		SceneObjectId lightSceneObject = scene->AddSceneObject(lightEntity);
-		Mat4x4f lightTransform = Mat4x4f::Translate(Vec3f(5.0f, 1.5f, 4.5f));
+		Mat4x4f lightTransform = Mat4x4f::Translate(Vec3f(0.0f, 2.8f, 2.3f));
+		scene->SetLocalTransform(lightSceneObject, lightTransform);
+	}
+
+	{
+		// Create point light entity and components
+		Entity lightEntity = entityManager->Create();
+
+		LightId lightId = lightManager->AddLight(lightEntity);
+		lightManager->SetLightType(lightId, LightType::Point);
+		lightManager->SetColor(lightId, Vec3f(1.9f, 1.5f, 1.2f));
+		lightManager->SetFarDistance(lightId, 6.0f);
+		lightManager->SetShadowCasting(lightId, false);
+
+		SceneObjectId lightSceneObject = scene->AddSceneObject(lightEntity);
+		Mat4x4f lightTransform = Mat4x4f::Translate(Vec3f(-2.6f, 2.8f, 1.0f));
 		scene->SetLocalTransform(lightSceneObject, lightTransform);
 	}
 

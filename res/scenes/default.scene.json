@@ -7,6 +7,25 @@
             "material": "res/materials/geom_wood_floor.material.json"
         },
 		{
+            "mesh": "res/models/bar_top_floor.mesh",
+            "material": "res/materials/geometry_pos_nor_white.material.json"
+        },
+		{
+            "mesh": "res/models/ceiling_lamp.mesh",
+            "material": "res/materials/geometry_pos_nor_white.material.json",
+            "position": [ 2.6, 3.5, 1 ]
+		},
+		{
+            "mesh": "res/models/ceiling_lamp.mesh",
+            "material": "res/materials/geometry_pos_nor_white.material.json",
+            "position": [ 0, 3.5, 2.3 ]
+		},
+		{
+            "mesh": "res/models/ceiling_lamp.mesh",
+            "material": "res/materials/geometry_pos_nor_white.material.json",
+            "position": [ -2.6, 3.5, 1 ]
+		},
+		{
             "mesh": "res/models/cabinet.mesh",
             "material": "res/materials/geometry_pos_nor_white.material.json",
             "position": [ -1, 0, 0 ]
