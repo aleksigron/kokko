@@ -110,6 +110,7 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderCommandType.hpp
 	src/Rendering/Renderer.cpp
 	src/Rendering/Renderer.hpp
+	src/Rendering/RendererData.hpp
 	src/Rendering/RenderOrder.hpp
 	src/Rendering/RenderDevice.hpp
 	src/Rendering/RenderDeviceOpenGL.cpp

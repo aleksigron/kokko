@@ -3,7 +3,6 @@
 #include <cstring>
 #include <cstdio>
 
-#include "Core/BitPack.hpp"
 #include "Core/Sort.hpp"
 
 #include "Debug/Debug.hpp"
@@ -18,13 +17,13 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "Rendering/LightManager.hpp"
-#include "Rendering/Shader.hpp"
 #include "Rendering/Camera.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
+#include "Rendering/LightManager.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
+#include "Rendering/Shader.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
@@ -36,6 +35,35 @@
 
 #include "System/IncludeOpenGL.hpp"
 #include "System/Window.hpp"
+
+struct RendererFramebuffer
+{
+	static const unsigned int MaxTextureCount = 4;
+
+	unsigned int framebuffer;
+	unsigned int textureCount;
+	unsigned int textures[MaxTextureCount];
+	int width;
+	int height;
+	bool used;
+};
+
+struct RendererViewport
+{
+	Vec3f position;
+	Vec3f forward;
+
+	float farMinusNear;
+	float minusNear;
+
+	Mat4x4f view;
+	Mat4x4f projection;
+	Mat4x4f viewProjection;
+
+	FrustumPlanes frustum;
+
+	unsigned int framebufferIndex;
+};
 
 Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManager* lightManager) :
 	allocator(allocator),
@@ -52,7 +80,9 @@ Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManage
 	commandList(allocator),
 	objectVisibility(allocator)
 {
-	lightingData = LightingData{};
+	lightingMesh = MeshId{ 0 };
+	lightingShader = 0;
+	shadowMaterial = MaterialId{ 0 };
 
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
@@ -84,13 +114,13 @@ void Renderer::Initialize(Window* window)
 	{
 		// Create geometry framebuffer and textures
 
-		Vec2f sf = window->GetFrameBufferSize();
-		Vec2i s(static_cast<float>(sf.x), static_cast<float>(sf.y));
+		Vec2f framebufferSize = window->GetFrameBufferSize();
 
 		framebufferCount += 1;
 
 		RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
-		gbuffer.resolution = s;
+		gbuffer.width = static_cast<int>(framebufferSize.x);
+		gbuffer.height = static_cast<int>(framebufferSize.y);
 
 		// Create and bind framebuffer
 
@@ -107,7 +137,7 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(GL_TEXTURE_2D, norTexture);
 
 		RenderCommandData::SetTextureImage2D norTextureImage{
-			GL_TEXTURE_2D, 0, GL_RGB16F, s.x, s.y, GL_RGB, GL_FLOAT, nullptr
+			GL_TEXTURE_2D, 0, GL_RGB16F, gbuffer.width, gbuffer.height, GL_RGB, GL_FLOAT, nullptr
 		};
 		device->SetTextureImage2D(&norTextureImage);
 
@@ -125,7 +155,7 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(GL_TEXTURE_2D, asTexture);
 
 		RenderCommandData::SetTextureImage2D asTextureImage{
-			GL_TEXTURE_2D, 0, GL_RGBA, s.x, s.y, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+			GL_TEXTURE_2D, 0, GL_RGBA, gbuffer.width, gbuffer.height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
 		};
 		device->SetTextureImage2D(&asTextureImage);
 
@@ -145,7 +175,7 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(GL_TEXTURE_2D, depthTexture);
 
 		RenderCommandData::SetTextureImage2D depthTextureImage{
-			GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s.x, s.y, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+			GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, gbuffer.width, gbuffer.height, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
 		};
 		device->SetTextureImage2D(&depthTextureImage);
 
@@ -170,20 +200,20 @@ void Renderer::Initialize(Window* window)
 
 	{
 		// Create screen filling quad
-		lightingData.dirMesh = meshManager->CreateMesh();
-		MeshPresets::UploadPlane(meshManager, lightingData.dirMesh);
+		lightingMesh = meshManager->CreateMesh();
+		MeshPresets::UploadPlane(meshManager, lightingMesh);
 	}
 	
 	{
 		const char* const matPath = "res/materials/depth.material.json";
-		lightingData.shadowMaterial = materialManager->GetIdByPath(StringRef(matPath));
+		shadowMaterial = materialManager->GetIdByPath(StringRef(matPath));
 	}
 
 	{
 		static const char* const path = "res/shaders/lighting.shader.json";
 
 		Shader* shader = resManager->GetShader(path);
-		lightingData.dirShaderHash = shader->nameHash;
+		lightingShader = shader->nameHash;
 	}
 
 	// Create skybox entity
@@ -203,8 +233,8 @@ void Renderer::Deinitialize()
 {
 	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
 
-	if (lightingData.dirMesh.IsValid())
-		meshManager->RemoveMesh(lightingData.dirMesh);
+	if (lightingMesh.IsValid())
+		meshManager->RemoveMesh(lightingMesh);
 
 	for (unsigned int i = 0; i < framebufferCount; ++i)
 	{
@@ -366,7 +396,7 @@ void Renderer::Render(Scene* scene)
 			else // Pass is OpaqueLighting
 			{
 				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
-				Shader* shader = res->GetShader(lightingData.dirShaderHash);
+				Shader* shader = res->GetShader(lightingShader);
 
 				const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
 
@@ -503,7 +533,7 @@ void Renderer::Render(Scene* scene)
 
 				// Draw fullscreen quad
 
-				MeshDrawData* draw = meshManager->GetDrawData(lightingData.dirMesh);
+				MeshDrawData* draw = meshManager->GetDrawData(lightingMesh);
 				device->BindVertexArray(draw->vertexArrayObject);
 				device->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
 			}
@@ -775,8 +805,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 			RenderCommandData::ViewportData data;
 			data.x = 0;
 			data.y = 0;
-			data.w = framebuffer.resolution.x;
-			data.h = framebuffer.resolution.y;
+			data.w = framebuffer.width;
+			data.h = framebuffer.height;
 
 			commandList.AddControl(vpIdx, g_pass, 7, ctrl::Viewport, sizeof(data), &data);
 		}
@@ -817,8 +847,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 		RenderCommandData::ViewportData data;
 		data.x = 0;
 		data.y = 0;
-		data.w = gbuffer.resolution.x;
-		data.h = gbuffer.resolution.y;
+		data.w = gbuffer.width;
+		data.h = gbuffer.height;
 
 		commandList.AddControl(fsvp, g_pass, 1, ctrl::Viewport, sizeof(data), &data);
 	}
@@ -876,8 +906,6 @@ void Renderer::PopulateCommandList(Scene* scene)
 	}
 
 	// Create draw commands for render objects in scene
-
-	MaterialId shadowMaterial = lightingData.shadowMaterial;
 
 	FrustumPlanes frustum[MaxViewportCount];
 	frustum[fsvp].Update(cullingCamera->parameters, cullingCameraTransform);
@@ -946,7 +974,7 @@ unsigned int Renderer::GetDepthFramebufferOfSize(const Vec2i& size)
 	for (unsigned int i = 1; i < framebufferCount; ++i)
 	{
 		RendererFramebuffer& fb = framebufferData[i];
-		if (fb.used == false && fb.resolution.x == size.x && fb.resolution.y == size.y)
+		if (fb.used == false && fb.width == size.x && fb.height == size.y)
 		{
 			fb.used = true;
 			return i;
@@ -961,7 +989,8 @@ unsigned int Renderer::GetDepthFramebufferOfSize(const Vec2i& size)
 
 		RendererFramebuffer& framebuffer = framebufferData[fbIdx];
 
-		framebuffer.resolution = size;
+		framebuffer.width = size.x;
+		framebuffer.height = size.y;
 		framebuffer.used = true;
 
 		// Create and bind framebuffer

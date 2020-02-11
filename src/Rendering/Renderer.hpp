@@ -1,72 +1,33 @@
 #pragma once
 
-#include "Scene/ITransformUpdateReceiver.hpp"
+#include "Core/Array.hpp"
+#include "Core/BitPack.hpp"
+#include "Core/HashMap.hpp"
+
+#include "Entity/Entity.hpp"
 
 #include "Math/Mat4x4.hpp"
 #include "Math/Vec3.hpp"
 #include "Math/Vec2.hpp"
-#include "Entity/Entity.hpp"
-#include "Math/Frustum.hpp"
+
 #include "Resources/MeshData.hpp"
 #include "Resources/MaterialData.hpp"
 
 #include "Rendering/RenderCommandList.hpp"
+#include "Rendering/RendererData.hpp"
 #include "Rendering/RenderOrder.hpp"
 
-#include "Core/Array.hpp"
-#include "Core/HashMap.hpp"
+#include "Scene/ITransformUpdateReceiver.hpp"
 
 class Allocator;
-
-struct BoundingBox;
-struct BitPack;
 class Camera;
-class Window;
-class Scene;
 class LightManager;
-
 class RenderDevice;
-
-struct RenderObjectId
-{
-	unsigned int i;
-
-	bool IsNull() const { return i == 0; }
-};
-
-struct RenderOrderData
-{
-	MaterialId material;
-	TransparencyType transparency;
-};
-
-struct RendererViewport
-{
-	Vec3f position;
-	Vec3f forward;
-
-	float farMinusNear;
-	float minusNear;
-
-	Mat4x4f view;
-	Mat4x4f projection;
-	Mat4x4f viewProjection;
-
-	FrustumPlanes frustum;
-
-	unsigned int framebufferIndex;
-};
-
-struct RendererFramebuffer
-{
-	static const unsigned int MaxTextureCount = 4;
-
-	unsigned int framebuffer;
-	unsigned int textures[MaxTextureCount];
-	unsigned int textureCount;
-	Vec2i resolution;
-	bool used;
-};
+class Scene;
+class Window;
+struct BoundingBox;
+struct RendererFramebuffer;
+struct RendererViewport;
 
 class Renderer : public ITransformUpdateReceiver
 {
@@ -77,27 +38,22 @@ private:
 	static const unsigned int AlbedoSpecTextureIdx = 1;
 	static const unsigned int DepthTextureIdx = 2;
 
+	static const unsigned int FramebufferIndexGBuffer = 0;
+
 	Allocator* allocator;
 
 	RenderDevice* device;
 
 	RendererFramebuffer* framebufferData;
 	unsigned int framebufferCount;
-	static const unsigned int FramebufferIndexGBuffer = 0;
 
 	RendererViewport* viewportData;
 	unsigned int viewportCount;
 	unsigned int viewportIndexFullscreen;
 
-	struct LightingData
-	{
-		MeshId dirMesh;
-
-		unsigned int dirShaderHash;
-
-		MaterialId shadowMaterial;
-	}
-	lightingData;
+	MeshId lightingMesh;
+	unsigned int lightingShader;
+	MaterialId shadowMaterial;
 
 	struct InstanceData
 	{
