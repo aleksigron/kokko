@@ -169,7 +169,7 @@ set (KOKKO_SOURCES
 )
 
 source_group(Dependencies FILES ${DEPS_SOURCES})
-source_group(TREE ../src FILES ${KOKKO_SOURCES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})
 
 add_executable(${EXECUTABLE_NAME} ${DEPS_SOURCES} ${KOKKO_SOURCES})
 
@@ -184,4 +184,4 @@ add_subdirectory(deps/glfw)
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${EXECUTABLE_NAME} glfw)
-target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_gl_LIBRARY})
+target_link_libraries(${EXECUTABLE_NAME} OpenGL::GL)

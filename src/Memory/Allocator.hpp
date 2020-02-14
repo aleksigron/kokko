@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdio>
+#include <new>
 
 class Allocator
 {
