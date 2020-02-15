@@ -223,7 +223,7 @@ void Renderer::Initialize(Window* window)
 	}
 	
 	{
-		const char* const matPath = "res/materials/depth.material.json";
+		const char* const matPath = "res/materials/deferred_geometry/shadow_depth.material.json";
 		shadowMaterial = materialManager->GetIdByPath(StringRef(matPath));
 	}
 

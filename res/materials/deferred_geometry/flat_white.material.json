@@ -1,5 +1,5 @@
 {
-	"shader": "res/shaders/geometry_pos_nor.shader.json",
+	"shader": "res/shaders/deferred_geometry/pos_nor.shader.json",
 	"variables":
 	[
 		{ "name": "base_color", "value": [ 1, 1, 1 ] }

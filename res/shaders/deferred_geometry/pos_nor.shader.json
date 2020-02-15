@@ -1,0 +1,8 @@
+{
+	"vertexShaderFile": "res/shaders/deferred_geometry/pos_nor.vert.glsl",
+	"fragmentShaderFile": "res/shaders/deferred_geometry/pos_nor.frag.glsl",
+	"materialUniforms":
+	[
+		{ "name": "base_color", "type": "vec3" }
+	]
+}

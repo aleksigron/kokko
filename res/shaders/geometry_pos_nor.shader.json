@@ -1,8 +1,0 @@
-{
-	"vertexShaderFile": "res/shaders/geometry_pos_nor.vert.glsl",
-	"fragmentShaderFile": "res/shaders/geometry_pos_nor.frag.glsl",
-	"materialUniforms":
-	[
-		{ "name": "base_color", "type": "vec3" }
-	]
-}

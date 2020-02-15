@@ -1,4 +1,0 @@
-{
-	"vertexShaderFile": "res/shaders/depth.vert.glsl",
-	"fragmentShaderFile": "res/shaders/depth.frag.glsl"
-}

@@ -1,5 +1,5 @@
 {
-	"shader": "res/shaders/geometry_pos_nor_tex.shader.json",
+	"shader": "res/shaders/deferred_geometry/pos_nor_tex.shader.json",
 	"variables":
 	[
 		{ "name": "base_color", "value": "res/textures/wood_planks.texture.json" }
