@@ -1,5 +1,7 @@
 #version 330 core
 
+#define PI 3.1415926538
+
 in vec2 tex_coord;
 in vec3 eye_dir;
 
@@ -55,10 +57,18 @@ float calc_spec_factor(vec3 eye_dir, vec3 light_dir, vec3 normal)
 	return pow(max(dir_dot, 0.0), spec_power);
 }
 
+vec3 unpack_normal(vec2 packed_normal)
+{
+	float a = (packed_normal.r - 0.5) * 2.0 * PI;
+	float d = cos((packed_normal.g - 0.5) * PI);
+	return vec3(cos(a) * d, sin(a) * d, cos(packed_normal.g * PI));
+}
+
 void main()
 {
 	// Read input buffers
-    vec3 surface_norm = texture(g_norm, tex_coord).xyz;
+	vec3 surface_norm = unpack_normal(texture(g_norm, tex_coord).rg);
+
 	vec4 albSpec = texture(g_alb_spec, tex_coord);
 	float window_z = texture(g_depth, tex_coord).r;
 	vec3 albedo = albSpec.rgb;
@@ -127,4 +137,9 @@ void main()
 	
 	gl_FragDepth = window_z;
 	color = color_acc;
+
+	//color = surface_norm;
+	//color = surface_norm * 0.5 + vec3(0.5);
+	//color = vec3((surface_norm * 0.5 + vec3(0.5)).x);
+	//color = vec3(length(surface_norm) * 0.5);
 }

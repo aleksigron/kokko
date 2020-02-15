@@ -137,7 +137,7 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(GL_TEXTURE_2D, norTexture);
 
 		RenderCommandData::SetTextureImage2D norTextureImage{
-			GL_TEXTURE_2D, 0, GL_RGB16F, gbuffer.width, gbuffer.height, GL_RGB, GL_FLOAT, nullptr
+			GL_TEXTURE_2D, 0, GL_RG16, gbuffer.width, gbuffer.height, GL_RG, GL_UNSIGNED_SHORT, nullptr
 		};
 		device->SetTextureImage2D(&norTextureImage);
 
