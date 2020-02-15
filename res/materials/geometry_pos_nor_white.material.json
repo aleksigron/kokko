@@ -2,6 +2,6 @@
 	"shader": "res/shaders/geometry_pos_nor.shader.json",
 	"variables":
 	[
-		{ "name": "base_color", "value": [ 0.8, 0.8, 0.8 ] }
+		{ "name": "base_color", "value": [ 1, 1, 1 ] }
 	]
 }

@@ -27,7 +27,7 @@
 		},
 		{
             "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/geometry_pos_nor_white.material.json",
+            "material": "res/materials/deferred_geometry/emissive_cyan.material.json",
             "position": [ -1, 1.485, 2.65 ]
         },
 		{
@@ -37,7 +37,7 @@
         },
 		{
             "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/geometry_pos_nor_white.material.json",
+            "material": "res/materials/deferred_geometry/emissive_orange.material.json",
             "position": [ 1, 1.485, 2.65 ]
         },
 		{

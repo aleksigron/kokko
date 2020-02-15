@@ -9,6 +9,7 @@ out vec3 color;
 
 uniform sampler2D g_norm;
 uniform sampler2D g_alb_spec;
+uniform sampler2D g_emissive;
 uniform sampler2D g_depth;
 
 const int max_cascade_count = 4;
@@ -67,11 +68,12 @@ vec3 unpack_normal(vec2 packed_normal)
 void main()
 {
 	// Read input buffers
-	vec3 surface_norm = unpack_normal(texture(g_norm, tex_coord).rg);
-
 	vec4 albSpec = texture(g_alb_spec, tex_coord);
+	vec3 surface_norm = unpack_normal(texture(g_norm, tex_coord).rg);
+	float surface_emissivity = texture(g_emissive, tex_coord).r;
 	float window_z = texture(g_depth, tex_coord).r;
-	vec3 albedo = albSpec.rgb;
+
+	vec3 surface_albedo = albSpec.rgb;
 	float surface_spec_int = albSpec.a;
 
 	// Calculate position from window_z, pers_mat and eye_dir
@@ -81,7 +83,7 @@ void main()
 	vec3 surface_pos = eye_dir * -view_z;
 	vec3 surface_to_eye = normalize(-surface_pos);
 
-	vec3 color_acc = vec3(0.0, 0.0, 0.0);
+	color = vec3(0.0, 0.0, 0.0);
 
 	{
 		// Select correct shadow cascade
@@ -105,14 +107,14 @@ void main()
 
 		// Diffuse lighting
 
-		vec3 diffuse = normDotLightDir * albedo * dir_light.color;
+		vec3 diffuse = normDotLightDir * surface_albedo * dir_light.color;
 
 		// Specular lighting
 
 		float spec_factor = calc_spec_factor(surface_to_eye, -dir_light.direction, surface_norm);
 		vec3 spec = dir_light.color * surface_spec_int * spec_factor;
 
-		color_acc += (diffuse + spec) * shadow;
+		color += (diffuse + spec) * shadow;
 	}
 
 	for (int i = 0; i < max_point_light_count; ++i)
@@ -123,18 +125,18 @@ void main()
 
 		vec3 light_dir = normalize(surface_to_light);
 		float light_dot = max(dot(surface_norm, light_dir), 0.0);
-		vec3 diffuse = attenuation * light_dot * albedo * point_light[i].color;
+		vec3 diffuse = attenuation * light_dot * surface_albedo * point_light[i].color;
 
 		// Specular lighting
 
 		float spec_factor = calc_spec_factor(surface_to_eye, light_dir, surface_norm);
 		vec3 spec = attenuation * surface_spec_int * spec_factor * point_light[i].color;
 
-		color_acc += diffuse + spec;
+		color += diffuse + spec;
 	}
 
-	// Output
-	
+	// Emissive lighting
+	color += surface_emissivity * surface_albedo;
+
 	gl_FragDepth = window_z;
-	color = color_acc;
 }

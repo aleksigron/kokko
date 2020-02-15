@@ -127,27 +127,9 @@ void Renderer::Initialize(Window* window)
 		device->CreateFramebuffers(1, &gbuffer.framebuffer);
 		device->BindFramebuffer(GL_FRAMEBUFFER, gbuffer.framebuffer);
 
-		gbuffer.textureCount = 3;
+		gbuffer.textureCount = 4;
 		device->CreateTextures(gbuffer.textureCount, gbuffer.textures);
-		unsigned int colAtt[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-
-		// Normal buffer
-
-		unsigned int norTexture = gbuffer.textures[NormalTextureIdx];
-		device->BindTexture(GL_TEXTURE_2D, norTexture);
-
-		RenderCommandData::SetTextureImage2D norTextureImage{
-			GL_TEXTURE_2D, 0, GL_RG16, gbuffer.width, gbuffer.height, GL_RG, GL_UNSIGNED_SHORT, nullptr
-		};
-		device->SetTextureImage2D(&norTextureImage);
-
-		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		RenderCommandData::AttachFramebufferTexture2D norAttachTexture{
-			GL_FRAMEBUFFER, colAtt[0], GL_TEXTURE_2D, norTexture, 0
-		};
-		device->AttachFramebufferTexture2D(&norAttachTexture);
+		unsigned int colAtt[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
 
 		// Albedo color + specular buffer
 
@@ -163,12 +145,48 @@ void Renderer::Initialize(Window* window)
 		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 		RenderCommandData::AttachFramebufferTexture2D asAttachTexture{
-			GL_FRAMEBUFFER, colAtt[1], GL_TEXTURE_2D, asTexture, 0
+			GL_FRAMEBUFFER, colAtt[0], GL_TEXTURE_2D, asTexture, 0
 		};
 		device->AttachFramebufferTexture2D(&asAttachTexture);
 
+		// Normal buffer
+
+		unsigned int norTexture = gbuffer.textures[NormalTextureIdx];
+		device->BindTexture(GL_TEXTURE_2D, norTexture);
+
+		RenderCommandData::SetTextureImage2D norTextureImage{
+			GL_TEXTURE_2D, 0, GL_RG16, gbuffer.width, gbuffer.height, GL_RG, GL_UNSIGNED_SHORT, nullptr
+		};
+		device->SetTextureImage2D(&norTextureImage);
+
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		RenderCommandData::AttachFramebufferTexture2D norAttachTexture{
+			GL_FRAMEBUFFER, colAtt[1], GL_TEXTURE_2D, norTexture, 0
+		};
+		device->AttachFramebufferTexture2D(&norAttachTexture);
+
+		// Emissivity buffer
+
+		unsigned int emTexture = gbuffer.textures[EmissiveTextureIdx];
+		device->BindTexture(GL_TEXTURE_2D, emTexture);
+
+		RenderCommandData::SetTextureImage2D emTextureImage{
+			GL_TEXTURE_2D, 0, GL_R8, gbuffer.width, gbuffer.height, GL_RED, GL_UNSIGNED_BYTE, nullptr
+		};
+		device->SetTextureImage2D(&emTextureImage);
+
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		RenderCommandData::AttachFramebufferTexture2D emAttachTexture{
+			GL_FRAMEBUFFER, colAtt[2], GL_TEXTURE_2D, emTexture, 0
+		};
+		device->AttachFramebufferTexture2D(&emAttachTexture);
+
 		// Which color attachments we'll use for rendering
-		device->SetFramebufferDrawBuffers(2, colAtt);
+		device->SetFramebufferDrawBuffers(sizeof(colAtt) / sizeof(colAtt[0]), colAtt);
 
 		// Create and attach depth buffer
 		unsigned int depthTexture = gbuffer.textures[DepthTextureIdx];
@@ -413,8 +431,9 @@ void Renderer::Render(Scene* scene)
 
 				const unsigned int shaderId = shader->driverId;
 
-				int normLoc = device->GetUniformLocation(shaderId, "g_norm");
 				int albSpecLoc = device->GetUniformLocation(shaderId, "g_alb_spec");
+				int normLoc = device->GetUniformLocation(shaderId, "g_norm");
+				int emissiveLoc = device->GetUniformLocation(shaderId, "g_emissive");
 				int depthLoc = device->GetUniformLocation(shaderId, "g_depth");
 
 				int halfNearPlaneLoc = device->GetUniformLocation(shaderId, "half_near_plane");
@@ -425,9 +444,10 @@ void Renderer::Render(Scene* scene)
 
 				device->UseShaderProgram(shaderId);
 
-				device->SetUniformInt(normLoc, 0);
-				device->SetUniformInt(albSpecLoc, 1);
-				device->SetUniformInt(depthLoc, 2);
+				device->SetUniformInt(albSpecLoc, 0);
+				device->SetUniformInt(normLoc, 1);
+				device->SetUniformInt(emissiveLoc, 2);
+				device->SetUniformInt(depthLoc, 3);
 
 				device->SetUniformVec2f(halfNearPlaneLoc, 1, halfNearPlane.ValuePointer());
 
@@ -477,13 +497,15 @@ void Renderer::Render(Scene* scene)
 				const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
 
 				device->SetActiveTextureUnit(0);
-				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[NormalTextureIdx]);
-				device->SetActiveTextureUnit(1);
 				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[AlbedoSpecTextureIdx]);
+				device->SetActiveTextureUnit(1);
+				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[NormalTextureIdx]);
 				device->SetActiveTextureUnit(2);
+				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[EmissiveTextureIdx]);
+				device->SetActiveTextureUnit(3);
 				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[DepthTextureIdx]);
 
-				unsigned int usedSamplerSlots = 3;
+				unsigned int usedSamplerSlots = 4;
 
 				device->SetUniformFloat(nearDepthLoc, renderCamera->parameters.near);
 

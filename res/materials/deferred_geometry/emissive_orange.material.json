@@ -1,0 +1,7 @@
+{
+	"shader": "res/shaders/deferred_geometry/emissive.shader.json",
+	"variables":
+	[
+		{ "name": "base_color", "value": [ 1.0, 0.21, 0.0 ] }
+	]
+}
