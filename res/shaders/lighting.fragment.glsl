@@ -79,7 +79,7 @@ void main()
 	float ndc_z = 2.0 * window_z - 1.0;
 	float view_z = pers_mat[3][2] / ((pers_mat[2][3] * ndc_z) - pers_mat[2][2]);
 	vec3 surface_pos = eye_dir * -view_z;
-	vec3 eye_dir = normalize(-surface_pos);
+	vec3 surface_to_eye = normalize(-surface_pos);
 
 	vec3 color_acc = vec3(0.0, 0.0, 0.0);
 
@@ -109,7 +109,7 @@ void main()
 
 		// Specular lighting
 
-		float spec_factor = calc_spec_factor(eye_dir, dir_light.direction, surface_norm);
+		float spec_factor = calc_spec_factor(surface_to_eye, -dir_light.direction, surface_norm);
 		vec3 spec = dir_light.color * surface_spec_int * spec_factor;
 
 		color_acc += (diffuse + spec) * shadow;
@@ -127,7 +127,7 @@ void main()
 
 		// Specular lighting
 
-		float spec_factor = calc_spec_factor(eye_dir, light_dir, surface_norm);
+		float spec_factor = calc_spec_factor(surface_to_eye, light_dir, surface_norm);
 		vec3 spec = attenuation * surface_spec_int * spec_factor * point_light[i].color;
 
 		color_acc += diffuse + spec;
@@ -137,9 +137,4 @@ void main()
 	
 	gl_FragDepth = window_z;
 	color = color_acc;
-
-	//color = surface_norm;
-	//color = surface_norm * 0.5 + vec3(0.5);
-	//color = vec3((surface_norm * 0.5 + vec3(0.5)).x);
-	//color = vec3(length(surface_norm) * 0.5);
 }

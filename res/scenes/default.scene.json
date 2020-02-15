@@ -26,6 +26,21 @@
             "position": [ -2.6, 3.5, 1 ]
 		},
 		{
+            "mesh": "res/models/sphere.mesh",
+            "material": "res/materials/geometry_pos_nor_white.material.json",
+            "position": [ -1, 1.485, 2.65 ]
+        },
+		{
+            "mesh": "res/models/sphere.mesh",
+            "material": "res/materials/geometry_pos_nor_white.material.json",
+            "position": [ 0, 1.485, 2.65 ]
+        },
+		{
+            "mesh": "res/models/sphere.mesh",
+            "material": "res/materials/geometry_pos_nor_white.material.json",
+            "position": [ 1, 1.485, 2.65 ]
+        },
+		{
             "mesh": "res/models/cabinet.mesh",
             "material": "res/materials/geometry_pos_nor_white.material.json",
             "position": [ -1, 0, 0 ]
