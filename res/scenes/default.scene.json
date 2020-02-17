@@ -1,5 +1,5 @@
 {
-    "skybox-material": "res/materials/skybox.material.json",
+    "skybox-material": "res/materials/skybox/storm_clouds.material.json",
 	"objects":
 	[
 		{
@@ -228,12 +228,12 @@
         },
 		{
             "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/blend.material.json",
+            "material": "res/materials/forward/blend.material.json",
             "position": [ 0.2, 1, 5 ]
 		},
 		{
             "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/blend.material.json",
+            "material": "res/materials/forward/blend.material.json",
             "position": [ -0.2, 1, 5 ]
 		},
 		{

@@ -282,7 +282,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 		Engine* engine = Engine::GetInstance();
 		MeshManager* meshManager = engine->GetMeshManager();
 		ResourceManager* rm = engine->GetResourceManager();
-		Shader* shader = rm->GetShader("res/shaders/debug_vector.shader.json");
+		Shader* shader = rm->GetShader("res/shaders/debug/debug_vector.shader.json");
 
 		if (shader == nullptr)
 			return;

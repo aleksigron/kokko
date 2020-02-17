@@ -112,7 +112,7 @@ void DebugTextRenderer::Render()
 
 		CreateAndUploadData();
 
-		Shader* shader = rm->GetShader("res/shaders/debug_text.shader.json");
+		Shader* shader = rm->GetShader("res/shaders/debug/debug_text.shader.json");
 
 		const ShaderUniform* textureUniform = nullptr;
 		const ShaderUniform* shadowOffsetUniform = nullptr;

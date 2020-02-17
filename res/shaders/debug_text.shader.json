@@ -1,9 +1,0 @@
-{
-	"vertexShaderFile": "res/shaders/debug_text.vertex.glsl",
-	"fragmentShaderFile": "res/shaders/debug_text.fragment.glsl",
-	"materialUniforms":
-	[
-		{ "name": "glyph_tex", "type": "tex2d" },
-		{ "name": "shadow_offset", "type": "float" }
-	]
-}

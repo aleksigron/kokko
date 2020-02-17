@@ -228,7 +228,7 @@ void Renderer::Initialize(Window* window)
 	}
 
 	{
-		static const char* const path = "res/shaders/lighting.shader.json";
+		static const char* const path = "res/shaders/deferred_lighting/lighting.shader.json";
 
 		Shader* shader = resManager->GetShader(path);
 		lightingShader = shader->nameHash;

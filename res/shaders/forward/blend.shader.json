@@ -1,0 +1,5 @@
+{
+	"vertexShaderFile": "res/shaders/forward/blend.vert.glsl",
+	"fragmentShaderFile": "res/shaders/forward/blend.frag.glsl",
+	"transparencyType": "transparentMix"
+}

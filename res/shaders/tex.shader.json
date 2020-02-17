@@ -1,9 +1,0 @@
-{
-	"vertexShaderFile": "res/shaders/tex.vertex.glsl",
-	"fragmentShaderFile": "res/shaders/tex.fragment.glsl",
-	"materialUniforms":
-	[
-		{ "name": "base_color", "type": "vec3" },
-		{ "name": "color_map", "type": "tex2d" }
-	]
-}

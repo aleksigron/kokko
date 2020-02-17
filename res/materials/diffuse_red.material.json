@@ -1,7 +1,0 @@
-{
-	"shader": "res/shaders/lighting.shader.json",
-	"variables":
-	[
-		{ "name": "base_color", "value": [ 1.0, 0.25, 0.25 ] }
-	]
-}

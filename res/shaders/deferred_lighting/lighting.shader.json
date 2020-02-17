@@ -1,0 +1,4 @@
+{
+	"vertexShaderFile": "res/shaders/deferred_lighting/lighting.vert.glsl",
+	"fragmentShaderFile": "res/shaders/deferred_lighting/lighting.frag.glsl"
+}

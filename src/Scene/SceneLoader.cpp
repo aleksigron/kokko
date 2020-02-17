@@ -49,10 +49,10 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 		StringRef materialPath(skyboxItr->value.GetString(), skyboxItr->value.GetStringLength());
 
 		MaterialId matId = materialManager->GetIdByPath(materialPath);
-		if (matId.IsNull() == false)
-		{
-			scene->SetSkyboxMaterial(matId);
-		}
+		
+		assert(matId.IsNull() == false);
+
+		scene->SetSkyboxMaterial(matId);
 	}
 }
 

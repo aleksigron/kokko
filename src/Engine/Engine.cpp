@@ -94,7 +94,7 @@ Engine::~Engine()
 
 bool Engine::Initialize()
 {
-	Vec2i windowSize(1600, 900);
+	Vec2i windowSize(1920, 1080);
 
 	if (this->mainWindow->Initialize(windowSize.x, windowSize.y, "Kokko"))
 	{

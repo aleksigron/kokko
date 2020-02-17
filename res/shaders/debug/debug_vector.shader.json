@@ -1,0 +1,5 @@
+{
+	"vertexShaderFile": "res/shaders/debug/debug_vector.vert.glsl",
+	"fragmentShaderFile": "res/shaders/debug/debug_vector.frag.glsl",
+	"materialUniforms": [ { "name": "base_color", "type": "vec4" } ]
+}
