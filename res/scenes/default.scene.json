@@ -1,254 +1,753 @@
 {
-    "skybox-material": "res/materials/skybox/storm_clouds.material.json",
-	"objects":
-	[
+	"skybox-material": "res/materials/skybox/storm_clouds.material.json",
+	"objects": [
 		{
-            "mesh": "res/models/ground_plane.mesh",
-            "material": "res/materials/deferred_geometry/wood_floor.material.json"
-        },
-		{
-            "mesh": "res/models/bar_top_floor.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json"
-        },
-		{
-            "mesh": "res/models/ceiling_lamp.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ 2.6, 3.5, 1 ]
-		},
-		{
-            "mesh": "res/models/ceiling_lamp.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ 0, 3.5, 2.3 ]
-		},
-		{
-            "mesh": "res/models/ceiling_lamp.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ -2.6, 3.5, 1 ]
-		},
-		{
-            "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/deferred_geometry/emissive_cyan.material.json",
-            "position": [ -1, 1.485, 2.65 ]
-        },
-		{
-            "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ 0, 1.485, 2.65 ]
-        },
-		{
-            "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/deferred_geometry/emissive_orange.material.json",
-            "position": [ 1, 1.485, 2.65 ]
-        },
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ -1, 0, 0 ]
-		},
-		{
-            "mesh": "res/models/shelf.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ -1, 0.95, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ 0, 0, 0 ]
-		},
-		{
-            "mesh": "res/models/shelf.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ 0, 0.95, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ 1, 0, 0 ]
-		},
-		{
-            "mesh": "res/models/shelf.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ 1, 0.95, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -2, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -1, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 0, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 1, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 2, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet_corner.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 3.1, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 3.1, 0, 1.5 ],
-			"rotation": [ 0, -90, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 3.1, 0, 0.5 ],
-			"rotation": [ 0, -90, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet_corner.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -3.1, 0, 2.6 ],
-			"rotation": [ 0, 90, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -3.1, 0, 1.5 ],
-			"rotation": [ 0, 90, 0 ]
-		},
-		{
-            "mesh": "res/models/cabinet.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -3.1, 0, 0.5 ],
-			"rotation": [ 0, 90, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_straight.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -3.1, 0, 0.5 ],
-			"rotation": [ 0, 90, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_straight.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -3.1, 0, 1.5 ],
-			"rotation": [ 0, 90, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_corner.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -3.1, 0, 2.6 ],
-			"rotation": [ 0, 90, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_straight.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -2, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_straight.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -1, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_straight.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 0, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_straight.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 1, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_straight.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 2, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_corner.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 3.1, 0, 2.6 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_straight.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 3.1, 0, 1.5 ],
-			"rotation": [ 0, -90, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_straight.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 3.1, 0, 0.5 ],
-			"rotation": [ 0, -90, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_top_long.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 0, 1.2, 2.4 ],
-			"rotation": [ 0, 180, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_top_short.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ 2.9, 1.2, 1.2 ],
-			"rotation": [ 0, -90, 0 ]
-		},
-		{
-            "mesh": "res/models/bar_top_short.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-			"position": [ -2.9, 1.2, 1.2 ],
-			"rotation": [ 0, 90, 0 ]
-		},
-
-		{
-            "mesh": "res/models/round_table.mesh",
-            "material": "res/materials/deferred_geometry/flat_white.material.json",
-            "position": [ 0, 0, 5 ]
-        },
-		{
-            "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/forward/blend.material.json",
-            "position": [ 0.2, 1, 5 ]
-		},
-		{
-            "mesh": "res/models/sphere.mesh",
-            "material": "res/materials/forward/blend.material.json",
-            "position": [ -0.2, 1, 5 ]
-		},
-		{
-			"position": [ 0, 0.74, 5.45 ],
-			"children":
-			[
+			"position": [
+				0,
+				0,
+				0
+			],
+			"components": [
 				{
-					"mesh": "res/models/tea_cup.mesh",
-					"material": "res/materials/deferred_geometry/flat_white.material.json",
-					"position": [ 0.1, 0, 0 ]
+					"type": "renderObject",
+					"mesh": "res/models/ground_plane.mesh",
+					"material": "res/materials/deferred_geometry/wood_floor.material.json"
+				}
+			]
+		},
+		{
+			"position": [
+				0,
+				0,
+				0
+			],
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_top_floor.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/ceiling_lamp.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				2.6,
+				3.5,
+				1
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/ceiling_lamp.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				0,
+				3.5,
+				2.3
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/ceiling_lamp.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-2.6,
+				3.5,
+				1
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/sphere.mesh",
+					"material": "res/materials/deferred_geometry/emissive_cyan.material.json"
+				}
+			],
+			"position": [
+				-1,
+				1.485,
+				2.65
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/sphere.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				0,
+				1.485,
+				2.65
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/sphere.mesh",
+					"material": "res/materials/deferred_geometry/emissive_orange.material.json"
+				}
+			],
+			"position": [
+				1,
+				1.485,
+				2.65
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-1,
+				0,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/shelf.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-1,
+				0.95,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				0,
+				0,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/shelf.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				0,
+				0.95,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				1,
+				0,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/shelf.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				1,
+				0.95,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-2,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-1,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				0,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				1,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				2,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet_corner.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				3.1,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				3.1,
+				0,
+				1.5
+			],
+			"rotation": [
+				0,
+				-90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				3.1,
+				0,
+				0.5
+			],
+			"rotation": [
+				0,
+				-90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet_corner.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-3.1,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-3.1,
+				0,
+				1.5
+			],
+			"rotation": [
+				0,
+				90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/cabinet.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-3.1,
+				0,
+				0.5
+			],
+			"rotation": [
+				0,
+				90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_straight.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-3.1,
+				0,
+				0.5
+			],
+			"rotation": [
+				0,
+				90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_straight.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-3.1,
+				0,
+				1.5
+			],
+			"rotation": [
+				0,
+				90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_corner.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-3.1,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_straight.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-2,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_straight.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-1,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_straight.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				0,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_straight.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				1,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_straight.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				2,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_corner.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				3.1,
+				0,
+				2.6
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_straight.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				3.1,
+				0,
+				1.5
+			],
+			"rotation": [
+				0,
+				-90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_straight.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				3.1,
+				0,
+				0.5
+			],
+			"rotation": [
+				0,
+				-90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_top_long.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				0,
+				1.2,
+				2.4
+			],
+			"rotation": [
+				0,
+				180,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_top_short.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				2.9,
+				1.2,
+				1.2
+			],
+			"rotation": [
+				0,
+				-90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/bar_top_short.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				-2.9,
+				1.2,
+				1.2
+			],
+			"rotation": [
+				0,
+				90,
+				0
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/round_table.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			],
+			"position": [
+				0,
+				0,
+				5
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/sphere.mesh",
+					"material": "res/materials/forward/blend.material.json"
+				}
+			],
+			"position": [
+				0.2,
+				1,
+				5
+			]
+		},
+		{
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/sphere.mesh",
+					"material": "res/materials/forward/blend.material.json"
+				}
+			],
+			"position": [
+				-0.2,
+				1,
+				5
+			]
+		},
+		{
+			"position": [
+				0,
+				0.74,
+				5.45
+			],
+			"children": [
+				{
+					"components": [
+						{
+							"type": "renderObject",
+							"mesh": "res/models/tea_cup.mesh",
+							"material": "res/materials/deferred_geometry/flat_white.material.json"
+						}
+					],
+					"position": [
+						0.1,
+						0,
+						0
+					]
 				},
 				{
-					"mesh": "res/models/tea_cup.mesh",
-					"material": "res/materials/deferred_geometry/flat_white.material.json",
-					"position": [ -0.1, 0, 0 ]
+					"components": [
+						{
+							"type": "renderObject",
+							"mesh": "res/models/tea_cup.mesh",
+							"material": "res/materials/deferred_geometry/flat_white.material.json"
+						}
+					],
+					"position": [
+						-0.1,
+						0,
+						0
+					]
 				}
 			]
 		}

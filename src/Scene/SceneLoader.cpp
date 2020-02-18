@@ -65,7 +65,12 @@ void SceneLoader::CreateObjects(ValueItr itr, ValueItr end)
 			Entity entity = entityManager->Create();
 			SceneObjectId sceneObj = scene->AddSceneObject(entity);
 			CreateSceneObject(itr, sceneObj);
-			CreateRenderObject(itr, entity);
+
+			MemberItr componentsItr = itr->FindMember("components");
+			if (componentsItr != itr->MemberEnd() && componentsItr->value.IsArray())
+			{
+				CreateComponents(componentsItr->value.Begin(), componentsItr->value.End(), entity);
+			}
 		}
 	}
 }
@@ -80,7 +85,12 @@ void SceneLoader::CreateChildObjects(ValueItr itr, ValueItr end, SceneObjectId p
 			SceneObjectId sceneObj = scene->AddSceneObject(entity);
 			scene->SetParent(sceneObj, parent);
 			CreateSceneObject(itr, sceneObj);
-			CreateRenderObject(itr, entity);
+
+			MemberItr componentsItr = itr->FindMember("components");
+			if (componentsItr != itr->MemberEnd() && componentsItr->value.IsArray())
+			{
+				CreateComponents(componentsItr->value.Begin(), componentsItr->value.End(), entity);
+			}
 		}
 	}
 }
@@ -112,6 +122,29 @@ void SceneLoader::CreateSceneObject(ValueItr itr, SceneObjectId sceneObject)
 		rapidjson::Value::ConstValueIterator end = childrenItr->value.End();
 
 		CreateChildObjects(itr, end, sceneObject);
+	}
+}
+
+void SceneLoader::CreateComponents(ValueItr itr, ValueItr end, Entity entity)
+{
+	for (; itr != end; ++itr)
+	{
+		if (itr->IsObject())
+		{
+			MemberItr typeItr = itr->FindMember("type");
+			if (typeItr != itr->MemberEnd() && typeItr->value.IsString())
+			{
+				StringRef type(typeItr->value.GetString(), typeItr->value.GetStringLength());
+				uint32_t typeHash = Hash::FNV1a_32(type.str, type.len);
+
+				switch (typeHash)
+				{
+				case "renderObject"_hash:
+					CreateRenderObject(itr, entity);
+					break;
+				}
+			}
+		}
 	}
 }
 

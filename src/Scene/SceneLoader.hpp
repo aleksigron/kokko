@@ -28,6 +28,7 @@ private:
 	void CreateObjects(ValueItr begin, ValueItr end);
 	void CreateChildObjects(ValueItr begin, ValueItr end, SceneObjectId parent);
 	void CreateSceneObject(ValueItr itr, SceneObjectId sceneObject);
+	void CreateComponents(ValueItr itr, ValueItr end, Entity entity);
 	void CreateRenderObject(ValueItr itr, Entity entity);
 
 public:
