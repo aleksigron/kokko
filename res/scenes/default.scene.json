@@ -2,6 +2,26 @@
 	"skybox-material": "res/materials/skybox/storm_clouds.material.json",
 	"objects": [
 		{
+			"rotation": [
+				-55,
+				40,
+				0
+			],
+			"components": [
+				{
+					"type": "light",
+					"lightType": "directional",
+					"shadowCasting": true,
+					"distance": 100,
+					"color": [
+						0.8,
+						0.8,
+						0.8
+					]
+				}
+			]
+		},
+		{
 			"position": [
 				0,
 				0,
@@ -41,6 +61,27 @@
 				2.6,
 				3.5,
 				1
+			],
+			"children": [
+				{
+					"components": [
+						{
+							"type": "light",
+							"lightType": "point",
+							"distance": 6,
+							"color": [
+								1.9,
+								1.5,
+								1.2
+							]
+						}
+					],
+					"position": [
+						0,
+						-0.7,
+						0
+					]
+				}
 			]
 		},
 		{
@@ -55,6 +96,27 @@
 				0,
 				3.5,
 				2.3
+			],
+			"children": [
+				{
+					"components": [
+						{
+							"type": "light",
+							"lightType": "point",
+							"distance": 6,
+							"color": [
+								1.9,
+								1.5,
+								1.2
+							]
+						}
+					],
+					"position": [
+						0,
+						-0.7,
+						0
+					]
+				}
 			]
 		},
 		{
@@ -69,6 +131,27 @@
 				-2.6,
 				3.5,
 				1
+			],
+			"children": [
+				{
+					"components": [
+						{
+							"type": "light",
+							"lightType": "point",
+							"distance": 6,
+							"color": [
+								1.9,
+								1.5,
+								1.2
+							]
+						}
+					],
+					"position": [
+						0,
+						-0.7,
+						0
+					]
+				}
 			]
 		},
 		{

@@ -11,6 +11,7 @@ class MeshManager;
 class MaterialManager;
 class EntityManager;
 class ResourceManager;
+class LightManager;
 
 class SceneLoader
 {
@@ -24,12 +25,15 @@ private:
 	MaterialManager* materialManager;
 	EntityManager* entityManager;
 	ResourceManager* resourceManager;
+	LightManager* lightManager;
 
 	void CreateObjects(ValueItr begin, ValueItr end);
 	void CreateChildObjects(ValueItr begin, ValueItr end, SceneObjectId parent);
 	void CreateSceneObject(ValueItr itr, SceneObjectId sceneObject);
+
 	void CreateComponents(ValueItr itr, ValueItr end, Entity entity);
 	void CreateRenderObject(ValueItr itr, Entity entity);
+	void CreateLight(ValueItr itr, Entity entity);
 
 public:
 	SceneLoader(Engine* engine, Scene* scene);

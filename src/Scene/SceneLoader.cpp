@@ -4,6 +4,7 @@
 
 #include "Engine/Engine.hpp"
 #include "Rendering/Renderer.hpp"
+#include "Rendering/LightManager.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Entity/EntityManager.hpp"
 #include "Resources/ResourceManager.hpp"
@@ -16,7 +17,8 @@ SceneLoader::SceneLoader(Engine* engine, Scene* scene):
 	meshManager(engine->GetMeshManager()),
 	materialManager(engine->GetMaterialManager()),
 	entityManager(engine->GetEntityManager()),
-	resourceManager(engine->GetResourceManager())
+	resourceManager(engine->GetResourceManager()),
+	lightManager(engine->GetLightManager())
 {
 }
 
@@ -142,6 +144,14 @@ void SceneLoader::CreateComponents(ValueItr itr, ValueItr end, Entity entity)
 				case "renderObject"_hash:
 					CreateRenderObject(itr, entity);
 					break;
+
+				case "light"_hash:
+					CreateLight(itr, entity);
+					break;
+
+				default:
+					// TODO: Log warning
+					break;
 				}
 			}
 		}
@@ -174,4 +184,57 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 
 		renderer->SetOrderData(renderObj, data);
 	}
+}
+
+void SceneLoader::CreateLight(ValueItr itr, Entity entity)
+{
+	LightType type;
+	MemberItr typeItr = itr->FindMember("lightType");
+	if (typeItr != itr->MemberEnd() && typeItr->value.IsString())
+	{
+		StringRef typeStr(typeItr->value.GetString(), typeItr->value.GetStringLength());
+		uint32_t typeHash = Hash::FNV1a_32(typeStr.str, typeStr.len);
+
+		switch (typeHash)
+		{
+		case "directional"_hash:
+			type = LightType::Directional;
+			break;
+
+		case "point"_hash:
+			type = LightType::Point;
+			break;
+
+		default:
+			// TODO: Log warning
+			return;
+		}
+	}
+
+	Vec3f color(1.0f, 1.0f, 1.0f);
+	MemberItr colorItr = itr->FindMember("color");
+	if (colorItr != itr->MemberEnd())
+	{
+		color = ValueSerialization::Deserialize_Vec3f(colorItr->value);
+	}
+
+	bool shadowCasting = false;
+	MemberItr shadowItr = itr->FindMember("shadowCasting");
+	if (shadowItr != itr->MemberEnd() && shadowItr->value.IsBool())
+	{
+		shadowCasting = shadowItr->value.GetBool();
+	}
+
+	float radius = 1.0f;
+	MemberItr radiusItr = itr->FindMember("radius");
+	if (radiusItr != itr->MemberEnd() && radiusItr->value.IsNumber())
+	{
+		radius = radiusItr->value.GetFloat();
+	}
+
+	LightId lightId = lightManager->AddLight(entity);
+	lightManager->SetLightType(lightId, type);
+	lightManager->SetColor(lightId, color);
+	lightManager->SetShadowCasting(lightId, shadowCasting);
+	lightManager->SetFarDistance(lightId, radius);
 }
