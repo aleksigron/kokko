@@ -2,11 +2,16 @@
 
 #include "rapidjson/document.h"
 
+#include "Debug/LogHelper.hpp"
+
 #include "Engine/Engine.hpp"
+
+#include "Entity/EntityManager.hpp"
+
 #include "Rendering/Renderer.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Resources/MeshManager.hpp"
-#include "Entity/EntityManager.hpp"
+
 #include "Resources/ResourceManager.hpp"
 #include "Resources/MaterialManager.hpp"
 #include "Resources/ValueSerialization.hpp"
@@ -150,10 +155,12 @@ void SceneLoader::CreateComponents(ValueItr itr, ValueItr end, Entity entity)
 					break;
 
 				default:
-					// TODO: Log warning
+					Log::Info("[SceneLoader] Unknown component type");
 					break;
 				}
 			}
+			else
+				Log::Info("[SceneLoader] Invalid component type");
 		}
 	}
 }
@@ -206,10 +213,12 @@ void SceneLoader::CreateLight(ValueItr itr, Entity entity)
 			break;
 
 		default:
-			// TODO: Log warning
+			Log::Info("[SceneLoader] Unknown light type");
 			return;
 		}
 	}
+	else
+		Log::Info("[SceneLoader] Invalid light type");
 
 	Vec3f color(1.0f, 1.0f, 1.0f);
 	MemberItr colorItr = itr->FindMember("color");

@@ -65,6 +65,8 @@ set (KOKKO_SOURCES
 	src/Debug/DebugUtil.hpp
 	src/Debug/DebugVectorRenderer.cpp
 	src/Debug/DebugVectorRenderer.hpp
+	src/Debug/LogHelper.cpp
+	src/Debug/LogHelper.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
 	src/Entity/Entity.hpp

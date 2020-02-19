@@ -21,6 +21,7 @@
 #include "Debug/DebugConsole.hpp"
 #include "Debug/DebugLog.hpp"
 #include "Debug/DebugMemoryStats.hpp"
+#include "Debug/LogHelper.hpp"
 
 Debug::Debug(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
@@ -36,6 +37,9 @@ Debug::Debug(Allocator* allocator, RenderDevice* renderDevice) :
 	console = allocator->MakeNew<DebugConsole>(allocator, textRenderer, vectorRenderer);
 	log = allocator->MakeNew<DebugLog>(console);
 
+	// Set up log instance in LogHelper
+	Log::SetLogInstance(log);
+
 	AllocatorManager* allocManager = Engine::GetInstance()->GetAllocatorManager();
 	memoryStats = allocator->MakeNew<DebugMemoryStats>(allocManager, textRenderer);
 }
@@ -43,6 +47,10 @@ Debug::Debug(Allocator* allocator, RenderDevice* renderDevice) :
 Debug::~Debug()
 {
 	allocator->MakeDelete(memoryStats);
+
+	// Clear log instance in LogHelper
+	Log::SetLogInstance(nullptr);
+
 	allocator->MakeDelete(log);
 	allocator->MakeDelete(console);
 	allocator->MakeDelete(culling);
