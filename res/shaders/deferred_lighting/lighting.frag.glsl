@@ -2,6 +2,15 @@
 
 #define PI 3.1415926538
 
+#define MAX_LIGHT_COUNT 10
+#define DIR_LIGHT_INDEX 0
+
+#define MAX_CASCADE_COUNT 4
+
+#define SPEC_POWER 40
+#define ATT_CONST_FAC 1
+#define ATT_LIN_FAC 0.5
+
 in vec2 tex_coord;
 in vec3 eye_dir;
 
@@ -12,9 +21,6 @@ uniform sampler2D g_alb_spec;
 uniform sampler2D g_emissive;
 uniform sampler2D g_depth;
 
-const int max_cascade_count = 4;
-const int max_point_light_count = 8;
-const float spec_power = 40;
 const float att_const_fac = 1.0;
 const float att_lin_fac = 0.5;
 
@@ -23,25 +29,22 @@ uniform mat4x4 pers_mat;
 uniform struct 
 {
 	int cascade_count;
-	float splits[max_cascade_count + 1];
-	mat4x4 matrices[max_cascade_count];
-	sampler2DShadow samplers[max_cascade_count];
+	float splits[MAX_CASCADE_COUNT + 1];
+	mat4x4 matrices[MAX_CASCADE_COUNT];
+	sampler2DShadow samplers[MAX_CASCADE_COUNT];
 }
 shadow_params;
 
 uniform struct
 {
-	vec3 direction;
-	vec3 color;
+	vec3 col[MAX_LIGHT_COUNT];
+	vec3 pos[MAX_LIGHT_COUNT];
+	vec3 dir[MAX_LIGHT_COUNT];
+	float angle[MAX_LIGHT_COUNT];
+	int point_count;
+	int spot_count;
 }
-dir_light;
-
-uniform struct
-{
-	vec3 position;
-	vec3 color;
-}
-point_light[max_point_light_count];
+lights;
 
 const int shadow_sample_count = 4;
 const float shadow_dist_factor = 0.001;
@@ -55,7 +58,7 @@ vec2 poisson_disk[shadow_sample_count] = vec2[](
 float calc_spec_factor(vec3 eye_dir, vec3 light_dir, vec3 normal)
 {
 	float dir_dot = dot(eye_dir, reflect(-light_dir, normal));
-	return pow(max(dir_dot, 0.0), spec_power);
+	return pow(max(dir_dot, 0.0), SPEC_POWER);
 }
 
 vec3 unpack_normal(vec2 packed_normal)
@@ -94,7 +97,7 @@ void main()
 
 		// Get shadow depth
 		vec4 shadow_coord = shadow_params.matrices[cascade_index] * vec4(surface_pos, 1.0);
-		float normDotLightDir = max(dot(surface_norm, -dir_light.direction), 0.0);
+		float normDotLightDir = max(dot(surface_norm, -lights.dir[DIR_LIGHT_INDEX]), 0.0);
 		float compare_depth = shadow_coord.z - clamp(0.001875 * tan(acos(normDotLightDir)), 0, 0.005);
 		float shadow = 0.0;
 
@@ -107,32 +110,54 @@ void main()
 
 		// Diffuse lighting
 
-		vec3 diffuse = normDotLightDir * surface_albedo * dir_light.color;
+		vec3 diffuse = normDotLightDir * surface_albedo * lights.col[DIR_LIGHT_INDEX];
 
 		// Specular lighting
 
-		float spec_factor = calc_spec_factor(surface_to_eye, -dir_light.direction, surface_norm);
-		vec3 spec = dir_light.color * surface_spec_int * spec_factor;
+		float spec_factor = calc_spec_factor(surface_to_eye, -lights.dir[DIR_LIGHT_INDEX], surface_norm);
+		vec3 spec = lights.col[DIR_LIGHT_INDEX] * surface_spec_int * spec_factor;
 
 		color += (diffuse + spec) * shadow;
 	}
 
-	for (int i = 0; i < max_point_light_count; ++i)
+	int idx = 1;
+
+	for (; idx < lights.point_count + 1; ++idx)
 	{
-		vec3 surface_to_light = point_light[i].position - surface_pos;
+		vec3 surface_to_light = lights.pos[idx] - surface_pos;
 		float distance = length(surface_to_light);
-		float attenuation = 1.0 / (att_const_fac + att_lin_fac * distance + distance * distance);
+		float attenuation = 1.0 / (ATT_CONST_FAC + ATT_LIN_FAC * distance + distance * distance);
 
 		vec3 light_dir = normalize(surface_to_light);
 		float light_dot = max(dot(surface_norm, light_dir), 0.0);
-		vec3 diffuse = attenuation * light_dot * surface_albedo * point_light[i].color;
+		vec3 diffuse = attenuation * light_dot * surface_albedo * lights.col[idx];
 
 		// Specular lighting
 
 		float spec_factor = calc_spec_factor(surface_to_eye, light_dir, surface_norm);
-		vec3 spec = attenuation * surface_spec_int * spec_factor * point_light[i].color;
+		vec3 spec = attenuation * surface_spec_int * spec_factor * lights.col[idx];
 
 		color += diffuse + spec;
+	}
+	
+	for (; idx < lights.point_count + lights.spot_count + 1; ++idx)
+	{
+		vec3 surface_to_light = lights.pos[idx] - surface_pos;
+		float distance = length(surface_to_light);
+		float attenuation = 1.0 / (ATT_CONST_FAC + ATT_LIN_FAC * distance + distance * distance);
+
+		vec3 light_dir = normalize(surface_to_light);
+		float light_dot = max(dot(surface_norm, light_dir), 0.0);
+		vec3 diffuse = attenuation * light_dot * surface_albedo * lights.col[idx];
+
+		// Specular lighting
+
+		float spec_factor = calc_spec_factor(surface_to_eye, light_dir, surface_norm);
+		vec3 spec = attenuation * surface_spec_int * spec_factor * lights.col[idx];
+
+		float dir_att = clamp(cos(dot(light_dir, lights.dir[idx])) - lights.angle[idx] * 100, 0, 1);
+
+		color += (diffuse + spec) * dir_att;
 	}
 
 	// Emissive lighting

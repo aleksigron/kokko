@@ -41,6 +41,7 @@ private:
 		LightType* type;
 		Vec3f* color;
 		float* far;
+		float* angle;
 		bool* shadowCasting;
 	}
 	data;
@@ -74,6 +75,9 @@ public:
 
 	float GetFarDistance(LightId id) const { return data.far[id.i]; }
 	void SetFarDistance(LightId id, float distance) { data.far[id.i] = distance; }
+
+	float GetSpotAngle(LightId id) const { return data.angle[id.i]; }
+	void SetSpotAngle(LightId id, float angle) { data.angle[id.i] = angle; }
 
 	bool GetShadowCasting(LightId id) const { return data.shadowCasting[id.i]; }
 	void SetShadowCasting(LightId id, bool shadowCasting) { data.shadowCasting[id.i] = shadowCasting; }

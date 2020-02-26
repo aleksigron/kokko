@@ -68,7 +68,7 @@
 						{
 							"type": "light",
 							"lightType": "point",
-							"distance": 6,
+							"radius": 6,
 							"color": [
 								1.9,
 								1.5,
@@ -103,7 +103,7 @@
 						{
 							"type": "light",
 							"lightType": "point",
-							"distance": 6,
+							"radius": 6,
 							"color": [
 								1.9,
 								1.5,
@@ -138,7 +138,7 @@
 						{
 							"type": "light",
 							"lightType": "point",
-							"distance": 6,
+							"radius": 6,
 							"color": [
 								1.9,
 								1.5,

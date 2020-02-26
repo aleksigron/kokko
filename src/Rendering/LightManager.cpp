@@ -45,7 +45,8 @@ void LightManager::Reallocate(unsigned int required)
 	newData.type = reinterpret_cast<LightType*>(newData.orientation + required);
 	newData.color = reinterpret_cast<Vec3f*>(newData.type + required);
 	newData.far = reinterpret_cast<float*>(newData.color + required);
-	newData.shadowCasting = reinterpret_cast<bool*>(newData.far + required);
+	newData.angle = reinterpret_cast<float*>(newData.far + required);
+	newData.shadowCasting = reinterpret_cast<bool*>(newData.angle + required);
 
 	if (data.buffer != nullptr)
 	{
@@ -55,6 +56,7 @@ void LightManager::Reallocate(unsigned int required)
 		std::memcpy(newData.type, data.type, data.count * sizeof(LightType));
 		std::memcpy(newData.color, data.color, data.count * sizeof(Vec3f));
 		std::memcpy(newData.far, data.far, data.count * sizeof(float));
+		std::memcpy(newData.angle, data.angle, data.count * sizeof(float));
 		std::memcpy(newData.shadowCasting, data.shadowCasting, data.count * sizeof(bool));
 
 		allocator->Deallocate(data.buffer);

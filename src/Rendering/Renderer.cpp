@@ -413,7 +413,6 @@ void Renderer::Render(Scene* scene)
 			}
 			else // Pass is OpaqueLighting
 			{
-				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
 				Shader* shader = res->GetShader(lightingShader);
 
 				const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
@@ -457,8 +456,8 @@ void Renderer::Render(Scene* scene)
 				// Directional light
 				if (directionalLights.GetCount() > 0)
 				{
-					int lightDirLoc = device->GetUniformLocation(shaderId, "dir_light.direction");
-					int lightColLoc = device->GetUniformLocation(shaderId, "dir_light.color");
+					int lightDirLoc = device->GetUniformLocation(shaderId, "lights.dir[0]");
+					int lightColLoc = device->GetUniformLocation(shaderId, "lights.col[0]");
 
 					LightId dirLightId = directionalLights[0];
 
@@ -473,22 +472,63 @@ void Renderer::Render(Scene* scene)
 
 				char uniformNameBuf[32];
 
+				unsigned int pointLightCount = 0;
+				unsigned int spotLightCount = 0;
+
+				for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
+				{
+					LightType type = lightManager->GetLightType(nonDirLights[lightIdx]);
+					if (type == LightType::Point)
+						pointLightCount += 1;
+					else if (type == LightType::Spot)
+						spotLightCount += 1;
+				}
+				
+				int pointCountLoc = device->GetUniformLocation(shaderId, "lights.point_count");
+				int spotCountLoc = device->GetUniformLocation(shaderId, "lights.spot_count");
+
+				device->SetUniformInt(pointCountLoc, pointLightCount);
+				device->SetUniformInt(spotCountLoc, spotLightCount);
+
 				// Light other visible lights
 				for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
 				{
-					std::sprintf(uniformNameBuf, "point_light[%u].position", lightIdx);
+					unsigned int shaderLightIdx = lightIdx + 1;
+
+					LightId lightId = nonDirLights[lightIdx];
+
+					// Point lights come first, so offset spot lights with the amount of point lights
+					LightType type = lightManager->GetLightType(lightId);
+					if (type == LightType::Spot)
+					{
+						shaderLightIdx += pointLightCount;
+
+						std::sprintf(uniformNameBuf, "lights.dir[%u]", shaderLightIdx);
+						int lightDirLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
+
+						std::sprintf(uniformNameBuf, "lights.angle[%u]", shaderLightIdx);
+						int lightAngleLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
+
+						Mat3x3f orientation = lightManager->GetOrientation(lightId);
+						Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
+						Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
+						device->SetUniformVec3f(lightDirLoc, 1, vLightDir.ValuePointer());
+
+						float spotAngle = lightManager->GetSpotAngle(lightId);
+						device->SetUniformFloat(lightAngleLoc, spotAngle);
+					}
+
+					std::sprintf(uniformNameBuf, "lights.pos[%u]", shaderLightIdx);
 					int lightPosLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
-					std::sprintf(uniformNameBuf, "point_light[%u].color", lightIdx);
+					std::sprintf(uniformNameBuf, "lights.col[%u]", shaderLightIdx);
 					int lightColLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
-					LightId pointLightId = nonDirLights[lightIdx];
-
-					Vec3f wLightPos = lightManager->GetPosition(pointLightId);
+					Vec3f wLightPos = lightManager->GetPosition(lightId);
 					Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
 					device->SetUniformVec3f(lightPosLoc, 1, vLightPos.ValuePointer());
 
-					Vec3f lightCol = lightManager->GetColor(pointLightId);
+					Vec3f lightCol = lightManager->GetColor(lightId);
 					device->SetUniformVec3f(lightColLoc, 1, lightCol.ValuePointer());
 				}
 
