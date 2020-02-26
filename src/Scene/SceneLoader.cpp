@@ -196,29 +196,35 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 void SceneLoader::CreateLight(ValueItr itr, Entity entity)
 {
 	LightType type;
+
 	MemberItr typeItr = itr->FindMember("lightType");
-	if (typeItr != itr->MemberEnd() && typeItr->value.IsString())
+	if (typeItr == itr->MemberEnd() || typeItr->value.IsString() == false)
 	{
-		StringRef typeStr(typeItr->value.GetString(), typeItr->value.GetStringLength());
-		uint32_t typeHash = Hash::FNV1a_32(typeStr.str, typeStr.len);
-
-		switch (typeHash)
-		{
-		case "directional"_hash:
-			type = LightType::Directional;
-			break;
-
-		case "point"_hash:
-			type = LightType::Point;
-			break;
-
-		default:
-			Log::Info("[SceneLoader] Unknown light type");
-			return;
-		}
-	}
-	else
 		Log::Info("[SceneLoader] Invalid light type");
+		return;	
+	}
+
+	StringRef typeStr(typeItr->value.GetString(), typeItr->value.GetStringLength());
+	uint32_t typeHash = Hash::FNV1a_32(typeStr.str, typeStr.len);
+
+	switch (typeHash)
+	{
+	case "directional"_hash:
+		type = LightType::Directional;
+		break;
+
+	case "point"_hash:
+		type = LightType::Point;
+		break;
+
+	case "spot"_hash:
+		type = LightType::Spot;
+		break;
+
+	default:
+		Log::Info("[SceneLoader] Unknown light type");
+		return;
+	}
 
 	Vec3f color(1.0f, 1.0f, 1.0f);
 	MemberItr colorItr = itr->FindMember("color");
@@ -241,9 +247,21 @@ void SceneLoader::CreateLight(ValueItr itr, Entity entity)
 		radius = radiusItr->value.GetFloat();
 	}
 
+	float angle = 0.0f;
+	MemberItr angleItr = itr->FindMember("angle");
+	if (angleItr != itr->MemberEnd() && angleItr->value.IsNumber())
+	{
+		angle = angleItr->value.GetFloat();
+	}
+
 	LightId lightId = lightManager->AddLight(entity);
 	lightManager->SetLightType(lightId, type);
 	lightManager->SetColor(lightId, color);
 	lightManager->SetShadowCasting(lightId, shadowCasting);
-	lightManager->SetFarDistance(lightId, radius);
+
+	if (type != LightType::Directional)
+		lightManager->SetFarDistance(lightId, radius);
+
+	if (type == LightType::Spot)
+		lightManager->SetSpotAngle(lightId, radius);
 }
