@@ -155,7 +155,8 @@ void main()
 		float spec_factor = calc_spec_factor(surface_to_eye, light_dir, surface_norm);
 		vec3 spec = attenuation * surface_spec_int * spec_factor * lights.col[idx];
 
-		float dir_att = clamp(cos(dot(light_dir, lights.dir[idx])) - lights.angle[idx] * 100, 0, 1);
+		float dir_asin = asin(dot(light_dir, lights.dir[idx]));
+		float dir_att = clamp((dir_asin - (PI/2) + lights.angle[idx]) * 20, 0, 1);
 
 		color += (diffuse + spec) * dir_att;
 	}

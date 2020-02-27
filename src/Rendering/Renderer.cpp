@@ -490,10 +490,14 @@ void Renderer::Render(Scene* scene)
 				device->SetUniformInt(pointCountLoc, pointLightCount);
 				device->SetUniformInt(spotCountLoc, spotLightCount);
 
+				const unsigned int dirLightOffset = 1;
+				unsigned int pointLightsAdded = 0;
+				unsigned int spotLightsAdded = 0;
+
 				// Light other visible lights
 				for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
 				{
-					unsigned int shaderLightIdx = lightIdx + 1;
+					unsigned int shaderLightIdx;
 
 					LightId lightId = nonDirLights[lightIdx];
 
@@ -501,7 +505,8 @@ void Renderer::Render(Scene* scene)
 					LightType type = lightManager->GetLightType(lightId);
 					if (type == LightType::Spot)
 					{
-						shaderLightIdx += pointLightCount;
+						shaderLightIdx = dirLightOffset + pointLightCount + spotLightsAdded;
+						spotLightsAdded += 1;
 
 						std::sprintf(uniformNameBuf, "lights.dir[%u]", shaderLightIdx);
 						int lightDirLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
@@ -516,6 +521,11 @@ void Renderer::Render(Scene* scene)
 
 						float spotAngle = lightManager->GetSpotAngle(lightId);
 						device->SetUniformFloat(lightAngleLoc, spotAngle);
+					}
+					else
+					{
+						shaderLightIdx = dirLightOffset + pointLightsAdded;
+						pointLightsAdded += 1;
 					}
 
 					std::sprintf(uniformNameBuf, "lights.pos[%u]", shaderLightIdx);

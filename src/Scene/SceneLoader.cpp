@@ -263,5 +263,5 @@ void SceneLoader::CreateLight(ValueItr itr, Entity entity)
 		lightManager->SetFarDistance(lightId, radius);
 
 	if (type == LightType::Spot)
-		lightManager->SetSpotAngle(lightId, radius);
+		lightManager->SetSpotAngle(lightId, Math::DegreesToRadians(angle));
 }
