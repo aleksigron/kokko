@@ -192,8 +192,13 @@ void String::Resize(SizeType size)
 		if (size > allocated)
 		{
 			char* newString = static_cast<char*>(allocator->Allocate(size + 1));
-			std::memcpy(newString, string, length);
-			allocator->Deallocate(string);
+
+			if (this->string != nullptr)
+			{
+				std::memcpy(newString, string, length);
+				allocator->Deallocate(string);
+			}
+
 			string = newString;
 		}
 

@@ -33,7 +33,7 @@ void LightManager::Reallocate(unsigned int required)
 
 	InstanceData newData;
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(LightType) + sizeof(Vec3f) * 2 +
-		sizeof(Mat3x3f) + sizeof(float) + sizeof(bool));
+		sizeof(Mat3x3f) + sizeof(float) * 2 + sizeof(bool));
 
 	newData.buffer = allocator->Allocate(bytes);
 	newData.count = data.count;

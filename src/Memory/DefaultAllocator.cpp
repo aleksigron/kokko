@@ -12,7 +12,10 @@ void* DefaultAllocator::Allocate(std::size_t size)
 
 void DefaultAllocator::Deallocate(void* ptr)
 {
-	std::free(static_cast<char*>(ptr) - PreambleSize);
+	if (ptr != nullptr)
+	{
+		std::free(static_cast<char*>(ptr) - PreambleSize);
+	}
 }
 
 std::size_t DefaultAllocator::GetAllocatedSize(void* ptr)
