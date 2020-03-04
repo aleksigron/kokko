@@ -256,12 +256,12 @@ void Renderer::Deinitialize()
 
 	for (unsigned int i = 0; i < framebufferCount; ++i)
 	{
-		const RendererFramebuffer& fb = framebufferData[i];
+		RendererFramebuffer& fb = framebufferData[i];
 
-		if (framebufferData[i].framebuffer != 0)
+		if (fb.framebuffer != 0)
 		{
-			device->DestroyTextures(framebufferData[i].textureCount, framebufferData[i].textures);
-			device->DestroyFramebuffers(1, &framebufferData[i].framebuffer);
+			device->DestroyTextures(fb.textureCount, fb.textures);
+			device->DestroyFramebuffers(1, &fb.framebuffer);
 		}
 	}
 
@@ -289,7 +289,6 @@ void Renderer::Render(Scene* scene)
 	Camera* renderCamera = this->GetRenderCamera(scene);
 	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());
 	Mat4x4f renderCameraTransform = scene->GetWorldTransform(renderCameraObject);
-	Vec3f cameraPosition = (renderCameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 	PopulateCommandList(scene);
 
@@ -757,12 +756,24 @@ void Renderer::PopulateCommandList(Scene* scene)
 	Mat4x4f cullingCameraTransform = scene->GetWorldTransform(cullingCameraObject);
 
 	Vec3f cameraPos = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-	Vec3f cameraForward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 
 	int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
 	Vec2i shadowSize(shadowSide, shadowSide);
 	Mat4x4f cascadeViewTransforms[CascadedShadowMap::MaxCascadeCount];
 	ProjectionParameters lightProjections[CascadedShadowMap::MaxCascadeCount];
+
+	// Update skybox parameters
+	{
+		RenderObjectId skyboxRenderObj = Lookup(skyboxEntity);
+
+		RenderOrderData order;
+		order.material = scene->GetSkyboxMaterial();
+		order.transparency = TransparencyType::Skybox;
+		SetOrderData(skyboxRenderObj, order);
+
+		Mat4x4f skyboxTransform = Mat4x4f::Translate(cameraPos);
+		data.transform[skyboxRenderObj.i] = skyboxTransform;
+	}
 
 	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 
@@ -1024,16 +1035,6 @@ void Renderer::PopulateCommandList(Scene* scene)
 			RenderPass pass = static_cast<RenderPass>(o.transparency);
 			commandList.AddDraw(fsvp, pass, depth, o.material, i);
 		}
-	}
-
-	// Render skybox
-	{
-		RenderObjectId skyboxRenderObj = Lookup(skyboxEntity);
-		MaterialId skyboxMaterial = scene->GetSkyboxMaterial();
-		commandList.AddDraw(fsvp, RenderPass::Skybox, 0.0f, skyboxMaterial, skyboxRenderObj.i);
-
-		Mat4x4f skyboxTransform = Mat4x4f::Translate(cameraPos);
-		data.transform[skyboxRenderObj.i] = skyboxTransform;
 	}
 
 	commandList.Sort();
