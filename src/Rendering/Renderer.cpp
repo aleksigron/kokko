@@ -244,6 +244,11 @@ void Renderer::Initialize(Window* window)
 		MeshId skyboxMesh = meshManager->CreateMesh();
 		MeshPresets::UploadCube(meshManager, skyboxMesh);
 		SetMeshId(skyboxRenderObj, skyboxMesh);
+
+		// Expand skybox extents to make sure it is always rendered
+		BoundingBox skyboxBounds;
+		skyboxBounds.extents = Vec3f(1e9, 1e9, 1e9);
+		data.bounds[skyboxRenderObj.i] = skyboxBounds;
 	}
 }
 
