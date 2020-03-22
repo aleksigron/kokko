@@ -11,7 +11,7 @@ bool File::ReadBinary(const char* path, Buffer<unsigned char>& output)
 	{
 		// Find the size of the file
 		std::fseek(fileHandle, 0L, SEEK_END);
-		unsigned long fileLength = ftell(fileHandle);
+		long fileLength = ftell(fileHandle);
 		std::rewind(fileHandle);
 
 		// Get the file contents
@@ -33,13 +33,41 @@ bool File::ReadText(const char* path, Buffer<char>& output)
 	{
 		// Find the size of the file
 		std::fseek(fileHandle, 0L, SEEK_END);
-		unsigned long fileLength = std::ftell(fileHandle);
+		long fileLength = std::ftell(fileHandle);
 		std::rewind(fileHandle);
 
 		// Get the file contents
 		output.Allocate(fileLength + 1);
 
 		std::fread(output.Data(), 1, fileLength, fileHandle);
+		std::fclose(fileHandle);
+
+		// Null-terminate so it can be used as a c-string
+		output[fileLength] = '\0';
+
+		return true;
+	}
+
+	return false;
+}
+
+bool File::ReadText(const char* path, Allocator* allocator, BufferRef<char>& output)
+{
+	FILE* fileHandle = std::fopen(path, "rb");
+
+	if (fileHandle != nullptr)
+	{
+		// Find the size of the file
+		std::fseek(fileHandle, 0L, SEEK_END);
+		long fileLength = std::ftell(fileHandle);
+		std::rewind(fileHandle);
+
+		void* buffer = allocator->Allocate(fileLength + 1);
+
+		output.data = static_cast<char*>(buffer);
+		output.count = fileLength;
+
+		std::fread(output.data, 1, fileLength, fileHandle);
 		std::fclose(fileHandle);
 
 		// Null-terminate so it can be used as a c-string
