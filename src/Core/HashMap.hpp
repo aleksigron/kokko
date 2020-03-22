@@ -15,6 +15,44 @@ class HashMap
 public:
 	using KeyValuePair = Pair<KeyType, ValueType>;
 
+	class Iterator
+	{
+	private:
+		KeyValuePair* current;
+		KeyValuePair* end; // We need end to know when to stop in operator++()
+
+		friend class HashMap;
+
+	public:
+		KeyValuePair& operator*() { return *current; }
+		KeyValuePair* operator->() { return current; }
+
+		bool operator==(Iterator other) const { return this->current == other.current; }
+		bool operator!=(Iterator other) const { return operator==(other) == false; }
+
+		Iterator& operator++()
+		{
+			while (current != end)
+			{
+				++current;
+
+				if (current->first)
+				{
+					break;
+				}
+			}
+
+			return *this;
+		}
+
+		Iterator operator++(int)
+		{
+			Iterator itr = *this;
+			operator++();
+			return itr;
+		}
+	};
+
 private:
 	Allocator* allocator;
 	KeyValuePair* data;
@@ -28,31 +66,6 @@ private:
 	unsigned int GetOffset(KeyValuePair* a, KeyValuePair* b) const
 	{
 		return b >= a ? b - a : allocated + b - a;
-	}
-
-public:
-	HashMap(Allocator* allocator) :
-		allocator(allocator),
-		data(nullptr),
-		population(0),
-		allocated(0),
-		zeroUsed(false)
-	{
-		zeroPair = KeyValuePair{};
-	}
-
-	~HashMap()
-	{
-		if (data != nullptr)
-		{
-			KeyValuePair* itr = data;
-			KeyValuePair* end = data + allocated;
-			for (; itr != end; ++itr)
-				if (itr->first)
-					itr->second.~ValueType();
-
-			allocator->Deallocate(data);
-		}
 	}
 
 	void ReserveInternal(unsigned int desiredCount)
@@ -85,6 +98,58 @@ public:
 
 		data = newData;
 		allocated = desiredCount;
+	}
+
+public:
+	HashMap(Allocator* allocator) :
+		allocator(allocator),
+		data(nullptr),
+		population(0),
+		allocated(0),
+		zeroUsed(false)
+	{
+		zeroPair = KeyValuePair{};
+	}
+
+	~HashMap()
+	{
+		if (data != nullptr)
+		{
+			KeyValuePair* itr = data;
+			KeyValuePair* end = data + allocated;
+			for (; itr != end; ++itr)
+				if (itr->first)
+					itr->second.~ValueType();
+
+			allocator->Deallocate(data);
+		}
+	}
+
+	Iterator Begin()
+	{
+		Iterator itr;
+		itr.end = this->data + this->allocated;
+
+		if (this->data != nullptr)
+		{
+			// Start at one before this->data
+			itr.current = this->data - 1;
+
+			// Find first valid item with the real increment operator
+			++itr;
+		}
+		else
+			itr.current = itr.end;
+
+		return itr;
+	}
+
+	Iterator End()
+	{
+		Iterator itr;
+		itr.end = this->data + this->allocated;
+		itr.current = itr.end;
+		return itr;
 	}
 
 	KeyValuePair* Lookup(KeyType key)
