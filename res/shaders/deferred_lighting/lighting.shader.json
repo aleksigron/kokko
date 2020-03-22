@@ -1,4 +1,10 @@
 {
+	"vsIncludes": [
+		"res/shaders/deferred_lighting/lighting_ubo.glsl"
+	],
 	"vertexShaderFile": "res/shaders/deferred_lighting/lighting.vert.glsl",
+	"fsIncludes": [
+		"res/shaders/deferred_lighting/lighting_ubo.glsl"
+	],
 	"fragmentShaderFile": "res/shaders/deferred_lighting/lighting.frag.glsl"
 }

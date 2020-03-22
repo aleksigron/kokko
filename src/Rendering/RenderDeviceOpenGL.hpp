@@ -79,5 +79,6 @@ public:
 	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) override;
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) override;
 	virtual void BindBuffer(unsigned int target, unsigned int buffer) override;
+	virtual void BindBufferBase(unsigned int target, unsigned int bindingPoint, unsigned int buffer) override;
 	virtual void SetBufferData(unsigned int target, unsigned int size, const void* data, unsigned int usage) override;
 };

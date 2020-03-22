@@ -5,6 +5,8 @@
 class RenderDevice
 {
 public:
+	virtual ~RenderDevice() {}
+
 	virtual void Clear(unsigned int mask) = 0;
 	virtual void ClearColor(const RenderCommandData::ClearColorData* data) = 0;
 	virtual void ClearDepth(float depth) = 0;
@@ -79,5 +81,6 @@ public:
 	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) = 0;
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) = 0;
 	virtual void BindBuffer(unsigned int target, unsigned int buffer) = 0;
+	virtual void BindBufferBase(unsigned int target, unsigned int bindingPoint, unsigned int buffer) = 0;
 	virtual void SetBufferData(unsigned int target, unsigned int size, const void* data, unsigned int usage) = 0;
 };

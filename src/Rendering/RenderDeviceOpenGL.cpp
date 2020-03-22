@@ -330,6 +330,11 @@ void RenderDeviceOpenGL::BindBuffer(unsigned int target, unsigned int buffer)
 	glBindBuffer(target, buffer);
 }
 
+void RenderDeviceOpenGL::BindBufferBase(unsigned int target, unsigned int bindingPoint, unsigned int buffer)
+{
+	glBindBufferBase(target, bindingPoint, buffer);
+}
+
 void RenderDeviceOpenGL::SetBufferData(unsigned int target, unsigned int size, const void* data, unsigned int usage)
 {
 	glBufferData(target, size, data, usage);

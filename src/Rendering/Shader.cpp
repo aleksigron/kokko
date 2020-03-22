@@ -7,13 +7,11 @@
 #include <cassert>
 
 #include "Core/Hash.hpp"
+#include "Core/HashMap.hpp"
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
 
-#include "Debug/Debug.hpp"
-#include "Debug/DebugLog.hpp"
-
-#include "Engine/Engine.hpp"
+#include "Debug/LogHelper.hpp"
 
 #include "Rendering/RenderDevice.hpp"
 
@@ -31,6 +29,111 @@ const unsigned int ShaderUniform::TypeSizes[] = {
 	4 // Int
 };
 
+bool LoadIncludes(
+	rapidjson::Value::ConstMemberIterator member,
+	HashMap<uint32_t, BufferRef<char>>& includeFiles,
+	Allocator* allocator)
+{
+	if (member->value.IsArray() == false)
+	{
+		Log::Info("Error: LoadIncludes() member->value is not an array");
+		return false;
+	}
+
+	using ValueItr = rapidjson::Value::ConstValueIterator;
+	for (ValueItr itr = member->value.Begin(), end = member->value.End(); itr != end; ++itr)
+	{
+		if (itr->IsString())
+		{
+			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
+			auto* file = includeFiles.Lookup(hash);
+
+			// File with this hash hasn't been read before, read it now
+			if (file == nullptr)
+			{
+				BufferRef<char> content;
+				if (File::ReadText(itr->GetString(), allocator, content))
+				{
+					file = includeFiles.Insert(hash);
+					file->second = content;
+				}
+				else
+					Log::Info("Error: shader include couldn't be read from file");
+			}
+		}
+		else
+			Log::Info("Error: shader include isn't a string");
+	}
+
+	return true;
+}
+
+bool ProcessSource(
+	const char* mainPath,
+	rapidjson::Value::ConstMemberIterator includePaths,
+	HashMap<uint32_t, BufferRef<char>>& includeFiles,
+	Allocator* allocator,
+	Buffer<char>& output)
+{
+	static const char versionStr[] = "#version 440\n";
+	static const std::size_t versionStrLen = sizeof(versionStr) - 1;
+
+	if (includePaths->value.IsArray() == false)
+	{
+		Log::Info("Error: ProcessSource() includePaths->value is not an array");
+		return false;
+	}
+
+	// Count include files length
+	std::size_t totalLength = versionStrLen;
+
+	const rapidjson::Value& pathArray = includePaths->value;
+	for (auto itr = pathArray.Begin(), end = pathArray.End(); itr != end; ++itr)
+	{
+		uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
+		auto* file = includeFiles.Lookup(hash);
+
+		if (file == nullptr)
+		{
+			Log::Info("Error: ProcessSource() include file source not found from includeFiles map");
+			return false;
+		}
+
+		totalLength += file->second.count - 1;
+	}
+
+	Buffer<char> mainFile(allocator);
+
+	if (File::ReadText(mainPath, mainFile) == false)
+	{
+		Log::Info("Error: ProcessSource() failed to read main shader file");
+		return false;
+	}
+
+	totalLength += mainFile.Count();
+
+	output.Allocate(totalLength);
+
+	// Concatenate all files together
+
+	char* dest = output.Data();
+	std::strcpy(dest, versionStr);
+	dest += versionStrLen;
+
+	for (auto itr = pathArray.Begin(), end = pathArray.End(); itr != end; ++itr)
+	{
+		uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
+		auto* file = includeFiles.Lookup(hash);
+
+		std::strcpy(dest, file->second.data);
+		dest += file->second.count - 1;
+	}
+
+	std::strcpy(dest, mainFile.Data());
+
+	return true;
+}
+
 Shader::Shader() :
 	nameHash(0),
 	driverId(0),
@@ -43,7 +146,6 @@ Shader::Shader() :
 	transparencyType(TransparencyType::Opaque),
 	materialUniformCount(0)
 {
-
 }
 
 bool Shader::LoadFromConfiguration(
@@ -182,22 +284,72 @@ bool Shader::LoadFromConfiguration(
 		fsItr == config.MemberEnd() || !fsItr->value.IsString())
 		return false;
 
-	const char* vsPath = vsItr->value.GetString();
-	const char* fsPath = fsItr->value.GetString();
+	// Load all include files, they can be shared between shader stages
+
+	HashMap<uint32_t, BufferRef<char>> includeFiles(allocator);
+
+	bool includeLoadSuccess = true;
+
+	MemberItr vsIncItr = config.FindMember("vsIncludes");
+	if (vsIncItr != config.MemberEnd())
+	{
+		if (LoadIncludes(vsIncItr, includeFiles, allocator) == false)
+			includeLoadSuccess = false;
+	}
+
+	MemberItr fsIncItr = config.FindMember("fsIncludes");
+	if (fsIncItr != config.MemberEnd())
+	{
+		if (LoadIncludes(fsIncItr, includeFiles, allocator) == false)
+			includeLoadSuccess = false;
+	}
+
+	// Process included files into complete source
+
+	bool processSuccess = true;
 
 	Buffer<char> vertexSource(allocator);
 	Buffer<char> fragmentSource(allocator);
 
-	if (File::ReadText(vsPath, vertexSource) &&
-		File::ReadText(fsPath, fragmentSource) &&
+	if (includeLoadSuccess)
+	{
+		const char* vsPath = vsItr->value.GetString();
+		const char* fsPath = fsItr->value.GetString();
+
+		if (vsIncItr != config.MemberEnd())
+		{
+			if (ProcessSource(vsPath, vsIncItr, includeFiles, allocator, vertexSource) == false)
+				processSuccess = false;
+		}
+		else if (File::ReadText(vsPath, vertexSource) == false)
+			processSuccess = false;
+
+		if (fsIncItr != config.MemberEnd())
+		{
+			if (ProcessSource(fsPath, fsIncItr, includeFiles, allocator, fragmentSource) == false)
+				processSuccess = false;
+		}
+		else if (File::ReadText(fsPath, fragmentSource) == false)
+			processSuccess = false;
+	}
+
+	bool success = false;
+
+	if (processSuccess &&
 		this->CompileAndLink(vertexSource.GetRef(), fragmentSource.GetRef(), allocator, renderDevice))
 	{
 		this->AddMaterialUniforms(renderDevice, uniformCount, uniformTypes, uniformNames);
 
-		return true;
+		success = true;
 	}
 
-	return false;
+	// Release loaded include files
+	for (auto itr = includeFiles.Begin(), end = includeFiles.End(); itr != end; ++itr)
+	{
+		allocator->Deallocate(itr->second.data);
+	}
+
+	return success;
 }
 
 bool Shader::CompileAndLink(
@@ -267,8 +419,7 @@ bool Shader::CompileAndLink(
 			// Get info log
 			renderDevice->GetShaderProgramInfoLog(programId, infoLogLength, infoLog.Begin());
 
-			DebugLog* log = Engine::GetInstance()->GetDebug()->GetLog();
-			log->Log(infoLog);
+			Log::Info(infoLog.GetCStr(), infoLog.GetLength());
 		}
 
 		assert(false);
@@ -322,8 +473,7 @@ bool Shader::Compile(
 				// Print out info log
 				renderDevice->GetShaderStageInfoLog(shaderId, infoLogLength, infoLog.Begin());
 
-				DebugLog* log = Engine::GetInstance()->GetDebug()->GetLog();
-				log->Log(infoLog);
+				Log::Info(infoLog.GetCStr(), infoLog.GetLength());
 			}
 		}
 	}

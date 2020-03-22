@@ -120,6 +120,7 @@ set (KOKKO_SOURCES
 	src/Rendering/Shader.cpp
 	src/Rendering/Shader.hpp
 	src/Rendering/TransparencyType.hpp
+	src/Rendering/UniformBufferData.hpp
 	src/Rendering/VertexFormat.cpp
 	src/Rendering/VertexFormat.hpp
 	src/Resources/BitmapFont.cpp

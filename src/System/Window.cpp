@@ -20,9 +20,13 @@ Window::Window(Allocator* allocator) :
 
 Window::~Window()
 {
-	glfwTerminate();
-
 	allocator->MakeDelete(inputManager);
+
+	if (windowHandle != nullptr)
+	{
+		glfwDestroyWindow(windowHandle);
+		glfwTerminate();
+	}
 }
 
 bool Window::Initialize(int width, int height, const char* windowTitle)
@@ -31,8 +35,8 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 
 	if (glfwInit() == GLFW_TRUE)
 	{
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		

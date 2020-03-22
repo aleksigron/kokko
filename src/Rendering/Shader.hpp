@@ -39,18 +39,18 @@ private:
 		Fragment
 	};
 
+	bool CompileAndLink(
+		BufferRef<char> vertSource,
+		BufferRef<char> fragSource,
+		Allocator* allocator,
+		RenderDevice* renderDevice);
+
 	bool Compile(
 		Allocator* allocator,
 		RenderDevice* renderDevice,
 		ShaderType type,
 		BufferRef<char> source,
 		unsigned int& shaderIdOut);
-
-	bool CompileAndLink(
-		BufferRef<char> vertSource,
-		BufferRef<char> fragSource,
-		Allocator* allocator,
-		RenderDevice* renderDevice);
 
 	void AddMaterialUniforms(
 		RenderDevice* renderDevice,

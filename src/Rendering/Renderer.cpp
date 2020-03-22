@@ -80,6 +80,7 @@ Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManage
 	commandList(allocator),
 	objectVisibility(allocator)
 {
+	lightingUniformBuffer = 0;
 	lightingMesh = MeshId{ 0 };
 	lightingShader = 0;
 	shadowMaterial = MaterialId{ 0 };
@@ -215,6 +216,9 @@ void Renderer::Initialize(Window* window)
 	MaterialManager* materialManager = engine->GetMaterialManager();
 	MeshManager* meshManager = engine->GetMeshManager();
 	ResourceManager* resManager = engine->GetResourceManager();
+
+	device->CreateBuffers(1, &lightingUniformBuffer);
+
 
 	{
 		// Create screen filling quad
@@ -439,12 +443,6 @@ void Renderer::Render(Scene* scene)
 				int emissiveLoc = device->GetUniformLocation(shaderId, "g_emissive");
 				int depthLoc = device->GetUniformLocation(shaderId, "g_depth");
 
-				int halfNearPlaneLoc = device->GetUniformLocation(shaderId, "half_near_plane");
-				int persMatLoc = device->GetUniformLocation(shaderId, "pers_mat");
-
-				int cascadeCountLoc = device->GetUniformLocation(shaderId, "shadow_params.cascade_count");
-				int nearDepthLoc = device->GetUniformLocation(shaderId, "shadow_params.splits[0]");
-
 				device->UseShaderProgram(shaderId);
 
 				device->SetUniformInt(albSpecLoc, 0);
@@ -452,26 +450,23 @@ void Renderer::Render(Scene* scene)
 				device->SetUniformInt(emissiveLoc, 2);
 				device->SetUniformInt(depthLoc, 3);
 
-				device->SetUniformVec2f(halfNearPlaneLoc, 1, halfNearPlane.ValuePointer());
+				lightingUniforms.SetHalfNearPlane(halfNearPlane);
 
 				// Set the perspective matrix
-				device->SetUniformMat4x4f(persMatLoc, 1, fsvp.projection.ValuePointer());
+				lightingUniforms.SetPerspectiveMatrix(fsvp.projection);
 
 				// Directional light
 				if (directionalLights.GetCount() > 0)
 				{
-					int lightDirLoc = device->GetUniformLocation(shaderId, "lights.dir[0]");
-					int lightColLoc = device->GetUniformLocation(shaderId, "lights.col[0]");
-
 					LightId dirLightId = directionalLights[0];
 
 					Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
 					Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 					Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
-					device->SetUniformVec3f(lightDirLoc, 1, vLightDir.ValuePointer());
+					lightingUniforms.SetLightDirection(0, vLightDir);
 
 					Vec3f lightCol = lightManager->GetColor(dirLightId);
-					device->SetUniformVec3f(lightColLoc, 1, lightCol.ValuePointer());
+					lightingUniforms.SetLightColor(0, lightCol);
 				}
 
 				char uniformNameBuf[32];
@@ -488,11 +483,8 @@ void Renderer::Render(Scene* scene)
 						spotLightCount += 1;
 				}
 				
-				int pointCountLoc = device->GetUniformLocation(shaderId, "lights.point_count");
-				int spotCountLoc = device->GetUniformLocation(shaderId, "lights.spot_count");
-
-				device->SetUniformInt(pointCountLoc, pointLightCount);
-				device->SetUniformInt(spotCountLoc, spotLightCount);
+				lightingUniforms.SetPointLightCount(pointLightCount);
+				lightingUniforms.SetSpotLightCount(spotLightCount);
 
 				const unsigned int dirLightOffset = 1;
 				unsigned int pointLightsAdded = 0;
@@ -512,19 +504,13 @@ void Renderer::Render(Scene* scene)
 						shaderLightIdx = dirLightOffset + pointLightCount + spotLightsAdded;
 						spotLightsAdded += 1;
 
-						std::sprintf(uniformNameBuf, "lights.dir[%u]", shaderLightIdx);
-						int lightDirLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
-
-						std::sprintf(uniformNameBuf, "lights.angle[%u]", shaderLightIdx);
-						int lightAngleLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
-
 						Mat3x3f orientation = lightManager->GetOrientation(lightId);
 						Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 						Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
-						device->SetUniformVec3f(lightDirLoc, 1, vLightDir.ValuePointer());
+						lightingUniforms.SetLightDirection(shaderLightIdx, vLightDir);
 
 						float spotAngle = lightManager->GetSpotAngle(lightId);
-						device->SetUniformFloat(lightAngleLoc, spotAngle);
+						lightingUniforms.SetLightAngle(shaderLightIdx, spotAngle);
 					}
 					else
 					{
@@ -532,18 +518,12 @@ void Renderer::Render(Scene* scene)
 						pointLightsAdded += 1;
 					}
 
-					std::sprintf(uniformNameBuf, "lights.pos[%u]", shaderLightIdx);
-					int lightPosLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
-
-					std::sprintf(uniformNameBuf, "lights.col[%u]", shaderLightIdx);
-					int lightColLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
-
 					Vec3f wLightPos = lightManager->GetPosition(lightId);
 					Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
-					device->SetUniformVec3f(lightPosLoc, 1, vLightPos.ValuePointer());
+					lightingUniforms.SetLightPosition(shaderLightIdx, vLightPos);
 
 					Vec3f lightCol = lightManager->GetColor(lightId);
-					device->SetUniformVec3f(lightColLoc, 1, lightCol.ValuePointer());
+					lightingUniforms.SetLightColor(shaderLightIdx, lightCol);
 				}
 
 				// Bind textures
@@ -561,25 +541,19 @@ void Renderer::Render(Scene* scene)
 
 				unsigned int usedSamplerSlots = 4;
 
-				device->SetUniformFloat(nearDepthLoc, renderCamera->parameters.near);
+				// shadow_params.splits[0] is the near depth
+				lightingUniforms.SetShadowSplit(0, renderCamera->parameters.near);
 
 				unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
-				device->SetUniformInt(cascadeCountLoc, shadowCascadeCount);
+				lightingUniforms.SetShadowCascadeCount(shadowCascadeCount);
 
 				// Need for each shadow casting light / shadow cascade
-				for (unsigned int vpIdx = 0; vpIdx < viewportCount; ++vpIdx)
+				for (unsigned int vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
 				{
 					// Format uniform names and find locations
 
-					std::sprintf(uniformNameBuf, "shadow_params.matrices[%u]", vpIdx);
-					int shadowMatrixLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
-
-					std::sprintf(uniformNameBuf, "shadow_params.samplers[%u]", vpIdx);
+					std::sprintf(uniformNameBuf, "shd_smp[%u]", vpIdx);
 					int shadowSamplerLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
-
-					// shadow_params.splits[0] is the near depth
-					std::sprintf(uniformNameBuf, "shadow_params.splits[%u]", vpIdx + 1);
-					int cascadeSplitLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
 					const RendererViewport& vp = viewportData[vpIdx];
 
@@ -595,7 +569,7 @@ void Renderer::Render(Scene* scene)
 					Mat4x4f viewToLight = vp.viewProjection * renderCameraTransform;
 					Mat4x4f shadowMat = bias * viewToLight;
 
-					device->SetUniformMat4x4f(shadowMatrixLoc, 1, shadowMat.ValuePointer());
+					lightingUniforms.SetShadowMatrix(vpIdx, shadowMat);
 
 					const RendererFramebuffer& fb = framebufferData[vp.framebufferIndex];
 
@@ -604,11 +578,17 @@ void Renderer::Render(Scene* scene)
 
 					device->SetUniformInt(shadowSamplerLoc, usedSamplerSlots + vpIdx);
 
-					device->SetUniformFloat(cascadeSplitLoc, cascadeSplitDepths[vpIdx]);
+					lightingUniforms.SetShadowSplit(vpIdx + 1, cascadeSplitDepths[vpIdx]);
 				}
 
-				// Draw fullscreen quad
+				// Update lightingUniformBuffer data
+				device->BindBuffer(GL_UNIFORM_BUFFER, lightingUniformBuffer);
+				device->SetBufferData(GL_UNIFORM_BUFFER, lightingUniforms.BufferSize, lightingUniforms.GetData(), GL_STATIC_DRAW);
 
+				// Bind uniform buffer to binding point 0
+				device->BindBufferBase(GL_UNIFORM_BUFFER, 0, lightingUniformBuffer);
+
+				// Draw fullscreen quad
 				MeshDrawData* draw = meshManager->GetDrawData(lightingMesh);
 				device->BindVertexArray(draw->vertexArrayObject);
 				device->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
