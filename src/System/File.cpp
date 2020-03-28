@@ -51,7 +51,7 @@ bool File::ReadText(const char* path, Buffer<char>& output)
 	return false;
 }
 
-bool File::ReadText(const char* path, Allocator* allocator, BufferRef<char>& output)
+bool File::ReadText(const char* path, Allocator* allocator, char*& strOut, size_t& lenOut)
 {
 	FILE* fileHandle = std::fopen(path, "rb");
 
@@ -62,16 +62,16 @@ bool File::ReadText(const char* path, Allocator* allocator, BufferRef<char>& out
 		long fileLength = std::ftell(fileHandle);
 		std::rewind(fileHandle);
 
-		void* buffer = allocator->Allocate(fileLength + 1);
+		void* buffer = allocator->Allocate(static_cast<size_t>(fileLength) + 1);
 
-		output.data = static_cast<char*>(buffer);
-		output.count = fileLength;
-
-		std::fread(output.data, 1, fileLength, fileHandle);
+		std::fread(buffer, 1, fileLength, fileHandle);
 		std::fclose(fileHandle);
 
 		// Null-terminate so it can be used as a c-string
-		output[fileLength] = '\0';
+		static_cast<char*>(buffer)[fileLength] = '\0';
+
+		strOut = static_cast<char*>(buffer);
+		lenOut = fileLength;
 
 		return true;
 	}

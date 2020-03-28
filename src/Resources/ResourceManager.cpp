@@ -2,12 +2,15 @@
 
 #include <cstring>
 
+#include "Core/Hash.hpp"
+
 #include "Rendering/Shader.hpp"
+
+#include "Resources/ShaderLoader.hpp"
 #include "Resources/Texture.hpp"
 #include "Resources/ImageData.hpp"
 
 #include "System/File.hpp"
-#include "Core/Hash.hpp"
 
 ResourceManager::ResourceManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
@@ -85,7 +88,7 @@ bool ResourceManager::LoadShader(Shader& shader, const char* configPath)
 	Buffer<char> configuration(allocator);
 
 	if (File::ReadText(configPath, configuration))
-		return shader.LoadFromConfiguration(configuration.GetRef(), allocator, renderDevice);
+		return ShaderLoader::LoadFromConfiguration(shader, configuration.GetRef(), allocator, renderDevice);
 	else
 		return false;
 }

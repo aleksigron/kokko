@@ -138,6 +138,8 @@ set (KOKKO_SOURCES
 	src/Resources/MeshPresets.hpp
 	src/Resources/ResourceManager.cpp
 	src/Resources/ResourceManager.hpp
+	src/Resources/ShaderLoader.cpp
+	src/Resources/ShaderLoader.hpp
 	src/Resources/Texture.cpp
 	src/Resources/Texture.hpp
 	src/Resources/ValueSerialization.cpp

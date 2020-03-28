@@ -32,33 +32,6 @@ struct ShaderUniform
 
 struct Shader
 {
-private:
-	enum class ShaderType
-	{
-		Vertex,
-		Fragment
-	};
-
-	bool CompileAndLink(
-		BufferRef<char> vertSource,
-		BufferRef<char> fragSource,
-		Allocator* allocator,
-		RenderDevice* renderDevice);
-
-	bool Compile(
-		Allocator* allocator,
-		RenderDevice* renderDevice,
-		ShaderType type,
-		BufferRef<char> source,
-		unsigned int& shaderIdOut);
-
-	void AddMaterialUniforms(
-		RenderDevice* renderDevice,
-		unsigned int count,
-		const ShaderUniformType* types,
-		const char** names);
-
-public:
 	uint32_t nameHash;
 
 	unsigned int driverId;
@@ -78,9 +51,4 @@ public:
 	ShaderUniform materialUniforms[MaxMaterialUniforms];
 
 	Shader();
-	
-	bool LoadFromConfiguration(
-		BufferRef<char> configuration,
-		Allocator* allocator,
-		RenderDevice* renderDevice);
 };
