@@ -16,7 +16,6 @@
 #include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RendererData.hpp"
 #include "Rendering/RenderOrder.hpp"
-#include "Rendering/UniformBufferData.hpp"
 
 #include "Scene/ITransformUpdateReceiver.hpp"
 
@@ -53,11 +52,12 @@ private:
 	unsigned int viewportCount;
 	unsigned int viewportIndexFullscreen;
 
-	unsigned int lightingUniformBuffer;
 	MeshId lightingMesh;
 	unsigned int lightingShader;
 	MaterialId shadowMaterial;
-	UniformBuffer::LightingBlock lightingUniforms;
+
+	unsigned int lightingUniformBufferId;
+	unsigned char* lightingUniformBuffer;
 
 	struct InstanceData
 	{

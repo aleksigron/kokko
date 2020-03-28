@@ -24,6 +24,7 @@
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
 #include "Rendering/Shader.hpp"
+#include "Rendering/UniformBufferData.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
@@ -80,10 +81,11 @@ Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManage
 	commandList(allocator),
 	objectVisibility(allocator)
 {
-	lightingUniformBuffer = 0;
 	lightingMesh = MeshId{ 0 };
 	lightingShader = 0;
 	shadowMaterial = MaterialId{ 0 };
+	lightingUniformBufferId = 0;
+	lightingUniformBuffer = nullptr;
 
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
@@ -217,8 +219,11 @@ void Renderer::Initialize(Window* window)
 	MeshManager* meshManager = engine->GetMeshManager();
 	ResourceManager* resManager = engine->GetResourceManager();
 
-	device->CreateBuffers(1, &lightingUniformBuffer);
-
+	{
+		device->CreateBuffers(1, &lightingUniformBufferId);
+		void* buffer = allocator->Allocate(UniformBuffer::LightingBlock::BufferSize);
+		lightingUniformBuffer = static_cast<unsigned char*>(buffer);
+	}
 
 	{
 		// Create screen filling quad
@@ -262,6 +267,11 @@ void Renderer::Deinitialize()
 
 	if (lightingMesh.IsValid())
 		meshManager->RemoveMesh(lightingMesh);
+
+	if (lightingUniformBufferId != 0)
+		device->DestroyBuffers(1, &lightingUniformBufferId);
+
+	this->allocator->Deallocate(lightingUniformBuffer);
 
 	for (unsigned int i = 0; i < framebufferCount; ++i)
 	{
@@ -421,6 +431,8 @@ void Renderer::Render(Scene* scene)
 			}
 			else // Pass is OpaqueLighting
 			{
+				using LightingBlock = UniformBuffer::LightingBlock;
+
 				Shader* shader = res->GetShader(lightingShader);
 
 				const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
@@ -450,10 +462,10 @@ void Renderer::Render(Scene* scene)
 				device->SetUniformInt(emissiveLoc, 2);
 				device->SetUniformInt(depthLoc, 3);
 
-				lightingUniforms.SetHalfNearPlane(halfNearPlane);
+				LightingBlock::halfNearPlane.Set(lightingUniformBuffer, halfNearPlane);
 
 				// Set the perspective matrix
-				lightingUniforms.SetPerspectiveMatrix(fsvp.projection);
+				LightingBlock::perspectiveMatrix.Set(lightingUniformBuffer, fsvp.projection);
 
 				// Directional light
 				if (directionalLights.GetCount() > 0)
@@ -463,10 +475,10 @@ void Renderer::Render(Scene* scene)
 					Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
 					Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 					Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
-					lightingUniforms.SetLightDirection(0, vLightDir);
+					LightingBlock::lightDirections.SetOne(lightingUniformBuffer, 0, vLightDir);
 
 					Vec3f lightCol = lightManager->GetColor(dirLightId);
-					lightingUniforms.SetLightColor(0, lightCol);
+					LightingBlock::lightColors.SetOne(lightingUniformBuffer, 0, lightCol);
 				}
 
 				char uniformNameBuf[32];
@@ -483,8 +495,8 @@ void Renderer::Render(Scene* scene)
 						spotLightCount += 1;
 				}
 				
-				lightingUniforms.SetPointLightCount(pointLightCount);
-				lightingUniforms.SetSpotLightCount(spotLightCount);
+				LightingBlock::pointLightCount.Set(lightingUniformBuffer, pointLightCount);
+				LightingBlock::spotLightCount.Set(lightingUniformBuffer, spotLightCount);
 
 				const unsigned int dirLightOffset = 1;
 				unsigned int pointLightsAdded = 0;
@@ -507,10 +519,10 @@ void Renderer::Render(Scene* scene)
 						Mat3x3f orientation = lightManager->GetOrientation(lightId);
 						Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 						Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
-						lightingUniforms.SetLightDirection(shaderLightIdx, vLightDir);
+						LightingBlock::lightDirections.SetOne(lightingUniformBuffer, shaderLightIdx, vLightDir);
 
 						float spotAngle = lightManager->GetSpotAngle(lightId);
-						lightingUniforms.SetLightAngle(shaderLightIdx, spotAngle);
+						LightingBlock::lightAngles.SetOne(lightingUniformBuffer, shaderLightIdx, spotAngle);
 					}
 					else
 					{
@@ -520,10 +532,10 @@ void Renderer::Render(Scene* scene)
 
 					Vec3f wLightPos = lightManager->GetPosition(lightId);
 					Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
-					lightingUniforms.SetLightPosition(shaderLightIdx, vLightPos);
+					LightingBlock::lightPositions.SetOne(lightingUniformBuffer, shaderLightIdx, vLightPos);
 
 					Vec3f lightCol = lightManager->GetColor(lightId);
-					lightingUniforms.SetLightColor(shaderLightIdx, lightCol);
+					LightingBlock::lightColors.SetOne(lightingUniformBuffer, shaderLightIdx, lightCol);
 				}
 
 				// Bind textures
@@ -542,13 +554,13 @@ void Renderer::Render(Scene* scene)
 				unsigned int usedSamplerSlots = 4;
 
 				// shadow_params.splits[0] is the near depth
-				lightingUniforms.SetShadowSplit(0, renderCamera->parameters.near);
+				LightingBlock::shadowSplits.SetOne(lightingUniformBuffer, 0, renderCamera->parameters.near);
 
 				unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
-				lightingUniforms.SetShadowCascadeCount(shadowCascadeCount);
+				LightingBlock::cascadeCount.Set(lightingUniformBuffer, shadowCascadeCount);
 
 				// Need for each shadow casting light / shadow cascade
-				for (unsigned int vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
+				for (size_t vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
 				{
 					// Format uniform names and find locations
 
@@ -569,7 +581,7 @@ void Renderer::Render(Scene* scene)
 					Mat4x4f viewToLight = vp.viewProjection * renderCameraTransform;
 					Mat4x4f shadowMat = bias * viewToLight;
 
-					lightingUniforms.SetShadowMatrix(vpIdx, shadowMat);
+					LightingBlock::shadowMatrices.SetOne(lightingUniformBuffer, vpIdx, shadowMat);
 
 					const RendererFramebuffer& fb = framebufferData[vp.framebufferIndex];
 
@@ -578,15 +590,15 @@ void Renderer::Render(Scene* scene)
 
 					device->SetUniformInt(shadowSamplerLoc, usedSamplerSlots + vpIdx);
 
-					lightingUniforms.SetShadowSplit(vpIdx + 1, cascadeSplitDepths[vpIdx]);
+					LightingBlock::shadowSplits.SetOne(lightingUniformBuffer, vpIdx + 1, cascadeSplitDepths[vpIdx]);
 				}
 
 				// Update lightingUniformBuffer data
-				device->BindBuffer(GL_UNIFORM_BUFFER, lightingUniformBuffer);
-				device->SetBufferData(GL_UNIFORM_BUFFER, lightingUniforms.BufferSize, lightingUniforms.GetData(), GL_STATIC_DRAW);
+				device->BindBuffer(GL_UNIFORM_BUFFER, lightingUniformBufferId);
+				device->SetBufferData(GL_UNIFORM_BUFFER, LightingBlock::BufferSize, lightingUniformBuffer, GL_STATIC_DRAW);
 
 				// Bind uniform buffer to binding point 0
-				device->BindBufferBase(GL_UNIFORM_BUFFER, 0, lightingUniformBuffer);
+				device->BindBufferBase(GL_UNIFORM_BUFFER, 0, lightingUniformBufferId);
 
 				// Draw fullscreen quad
 				MeshDrawData* draw = meshManager->GetDrawData(lightingMesh);

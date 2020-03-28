@@ -4,95 +4,185 @@
 
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
+#include "Math/Vec4.hpp"
 #include "Math/Mat4x4.hpp"
 
 namespace UniformBuffer
 {
-	class LightingBlock
+	template <typename ValueType, size_t Offset>
+	class ScalarUniform
 	{
 	public:
-		static const std::size_t MaxLightCount = 8;
-		static const std::size_t MaxCascadeCount = 4;
-		static const std::size_t BufferSize = 944;
-
-	private:
-		unsigned char data[BufferSize];
-
-		void SetInt(std::size_t offset, int value)
+		static void Set(unsigned char* buffer, const ValueType& value)
 		{
-			*reinterpret_cast<int*>(data + offset) = value;
+			*reinterpret_cast<ValueType*>(buffer + Offset) = value;
 		}
+	};
 
-		void SetFloat(std::size_t offset, float value)
+	template <size_t Offset>
+	class ScalarUniform<Vec2f, Offset>
+	{
+	public:
+		static void Set(unsigned char* buffer, const Vec2f& value)
 		{
-			*reinterpret_cast<float*>(data + offset) = value;
+			*reinterpret_cast<float*>(buffer + Offset + 0) = value.x;
+			*reinterpret_cast<float*>(buffer + Offset + 4) = value.y;
 		}
+	};
 
-		void SetFloatArray(std::size_t offset, std::size_t count, const float* values)
+	template <size_t Offset>
+	class ScalarUniform<Vec3f, Offset>
+	{
+	public:
+		static void Set(unsigned char* buffer, const Vec3f& value)
 		{
-			for (size_t i = 0; i < MaxLightCount; ++i)
-				*reinterpret_cast<float*>(data + offset + i * 16) = values[i];
+			*reinterpret_cast<float*>(buffer + Offset + 0) = value.x;
+			*reinterpret_cast<float*>(buffer + Offset + 4) = value.y;
+			*reinterpret_cast<float*>(buffer + Offset + 8) = value.z;
 		}
+	};
 
-		void SetVec2f(std::size_t offset, const Vec2f& value)
+	template <size_t Offset>
+	class ScalarUniform<Vec4f, Offset>
+	{
+	public:
+		static void Set(unsigned char* buffer, const Vec4f& value)
 		{
-			*reinterpret_cast<float*>(data + offset + 0) = value.x;
-			*reinterpret_cast<float*>(data + offset + 4) = value.y;
+			*reinterpret_cast<float*>(buffer + Offset + 0) = value.x;
+			*reinterpret_cast<float*>(buffer + Offset + 4) = value.y;
+			*reinterpret_cast<float*>(buffer + Offset + 8) = value.z;
+			*reinterpret_cast<float*>(buffer + Offset + 12) = value.w;
 		}
+	};
 
-		void SetVec3f(std::size_t offset, const Vec3f& value)
-		{
-			*reinterpret_cast<float*>(data + offset + 0) = value.x;
-			*reinterpret_cast<float*>(data + offset + 4) = value.y;
-			*reinterpret_cast<float*>(data + offset + 8) = value.z;
-		}
-
-		void SetVec3fArray(std::size_t offset, std::size_t count, const Vec3f* values)
-		{
-			for (size_t i = 0; i < count; ++i)
-				for (size_t j = 0; j < 3; ++j)
-					*reinterpret_cast<float*>(data + offset + i * 16 + j * 4) = values[i][j];
-		}
-
-		void SetMat4x4f(std::size_t offset, const Mat4x4f& value)
+	template <size_t Offset>
+	class ScalarUniform<Mat4x4f, Offset>
+	{
+	public:
+		static void Set(unsigned char* buffer, const Mat4x4f& value)
 		{
 			for (size_t i = 0; i < 16; ++i)
-				*reinterpret_cast<float*>(data + offset + i * 4) = value[i];
+			{
+				*reinterpret_cast<float*>(buffer + Offset + i * 4) = value[i];
+			}
+		}
+	};
+
+	template <typename ValueType, size_t Offset>
+	class ArrayUniform
+	{
+	public:
+		static void SetOne(unsigned char* buffer, size_t index, const ValueType& value)
+		{
+			*reinterpret_cast<ValueType*>(buffer + Offset + index * 16) = value;
 		}
 
-		void SetMat4x4fArray(std::size_t offset, std::size_t count, const Mat4x4f* values)
+		static void SetMany(unsigned char* buffer, size_t count, const ValueType* values)
+		{
+			for (size_t i = 0; i < count; ++i)
+				*reinterpret_cast<ValueType*>(buffer + Offset + i * 16) = values[i];
+		}
+	};
+
+	template <size_t Offset>
+	class ArrayUniform<Vec2f, Offset>
+	{
+	public:
+		static void SetOne(unsigned char* buffer, size_t index, const Vec2f& value)
+		{
+			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 0) = value.x;
+			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 4) = value.y;
+		}
+
+		static void SetMany(unsigned char* buffer, size_t count, const Vec2f* values)
+		{
+			for (size_t i = 0; i < count; ++i)
+			{
+				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 0) = values[i].x;
+				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 4) = values[i].y;
+			}
+		}
+	};
+
+	template <size_t Offset>
+	class ArrayUniform<Vec3f, Offset>
+	{
+	public:
+		static void SetOne(unsigned char* buffer, size_t index, const Vec3f& value)
+		{
+			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 0) = value.x;
+			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 4) = value.y;
+			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 8) = value.z;
+		}
+
+		static void SetMany(unsigned char* buffer, size_t count, const Vec3f* values)
+		{
+			for (size_t i = 0; i < count; ++i)
+			{
+				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 0) = values[i].x;
+				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 4) = values[i].y;
+				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 8) = values[i].z;
+			}
+		}
+	};
+
+	template <size_t Offset>
+	class ArrayUniform<Vec4f, Offset>
+	{
+	public:
+		static void SetOne(unsigned char* buffer, size_t index, const Vec4f& value)
+		{
+			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 0) = value.x;
+			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 4) = value.y;
+			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 8) = value.z;
+			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 12) = value.w;
+		}
+
+		static void SetMany(unsigned char* buffer, size_t count, const Vec4f* values)
+		{
+			for (size_t i = 0; i < count; ++i)
+			{
+				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 0) = values[i].x;
+				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 4) = values[i].y;
+				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 8) = values[i].z;
+				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 12) = values[i].w;
+			}
+		}
+	};
+
+	template <size_t Offset>
+	class ArrayUniform<Mat4x4f, Offset>
+	{
+	public:
+		static void SetOne(unsigned char* buffer, size_t index, const Mat4x4f& value)
+		{
+			for (size_t i = 0; i < 16; ++i)
+				*reinterpret_cast<float*>(buffer + Offset + index * 64 + i * 4) = value[i];
+		}
+
+		static void SetMany(unsigned char* buffer, size_t count, const Mat4x4f* values)
 		{
 			for (size_t i = 0; i < count; ++i)
 				for (size_t j = 0; j < 16; ++j)
-					*reinterpret_cast<float*>(data + offset + i * 64 + j * 4) = values[i][j];
+					*reinterpret_cast<float*>(buffer + Offset + i * 64 + j * 4) = values[i][j];
 		}
+	};
 
+	class LightingBlock
+	{
 	public:
-		unsigned char* GetData() { return data; }
-		const unsigned char* GetData() const { return data; }
+		static const std::size_t BufferSize = 944;
 
-		void SetPointLightCount(int pointLightCount) { SetInt(0, pointLightCount); }
-		void SetSpotLightCount(int spotLightCount) { SetInt(4, spotLightCount); }
-		void SetShadowCascadeCount(int cascadeCount) { SetInt(8, cascadeCount); }
-		void SetHalfNearPlane(const Vec2f& halfNearPlane) { SetVec2f(16, halfNearPlane); }
-		void SetPerspectiveMatrix(const Mat4x4f& matrix) { SetMat4x4f(32, matrix); }
-
-		void SetLightColor(std::size_t index, const Vec3f& color) { SetVec3f(96 + index * 16, color); }
-		void SetLightColors(std::size_t count, const Vec3f* colors) { SetVec3fArray(96, count, colors); }
-
-		void SetLightPosition(std::size_t index, const Vec3f& position) { SetVec3f(224 + index * 16, position); }
-		void SetLightPositions(std::size_t count, const Vec3f* positions) { SetVec3fArray(224, count, positions); }
-
-		void SetLightDirection(std::size_t index, const Vec3f& direction) { SetVec3f(352 + index * 16, direction); }
-		void SetLightDirections(std::size_t count, const Vec3f* directions) { SetVec3fArray(352, count, directions); }
-
-		void SetLightAngle(std::size_t index, float angle) { SetFloat(480 + index * 16, angle); }
-		void SetLightAngles(std::size_t count, const float* angles) { SetFloatArray(480, count, angles); }
-
-		void SetShadowMatrix(std::size_t index, const Mat4x4f& matrix) { SetMat4x4f(608 + index * 64, matrix); }
-		void SetShadowMatrices(std::size_t count, const Mat4x4f* matrices) { SetMat4x4fArray(608, count, matrices); }
-
-		void SetShadowSplit(std::size_t index, float split) { SetFloat(864 + index * 16, split); }
-		void SetShadowSplits(std::size_t count, const float* splits) { SetFloatArray(864, count, splits); }
+		static ScalarUniform<int, 0> pointLightCount;
+		static ScalarUniform<int, 4> spotLightCount;
+		static ScalarUniform<int, 8> cascadeCount;
+		static ScalarUniform<Vec2f, 16> halfNearPlane;
+		static ScalarUniform<Mat4x4f, 32> perspectiveMatrix;
+		static ArrayUniform<Vec3f, 96> lightColors;
+		static ArrayUniform<Vec3f, 224> lightPositions;
+		static ArrayUniform<Vec3f, 352> lightDirections;
+		static ArrayUniform<float, 480> lightAngles;
+		static ArrayUniform<Mat4x4f, 608> shadowMatrices;
+		static ArrayUniform<float, 864> shadowSplits;
 	};
 }
