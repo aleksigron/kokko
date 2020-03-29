@@ -1,5 +1,6 @@
 {
 	"vertexShaderFile": "res/shaders/forward/blend.vert.glsl",
+	"fsIncludes": [ "res/shaders/common/viewport_block.glsl" ],
 	"fragmentShaderFile": "res/shaders/forward/blend.frag.glsl",
 	"transparencyType": "transparentMix"
 }

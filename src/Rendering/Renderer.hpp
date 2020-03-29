@@ -55,9 +55,7 @@ private:
 	MeshId lightingMesh;
 	unsigned int lightingShader;
 	MaterialId shadowMaterial;
-
 	unsigned int lightingUniformBufferId;
-	unsigned char* lightingUniformBuffer;
 
 	struct InstanceData
 	{
@@ -70,6 +68,7 @@ private:
 		RenderOrderData* order;
 		BoundingBox* bounds;
 		Mat4x4f* transform;
+		unsigned int* transformUBO;
 	}
 	data;
 

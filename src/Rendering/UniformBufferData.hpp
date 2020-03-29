@@ -172,6 +172,7 @@ namespace UniformBuffer
 	{
 	public:
 		static const std::size_t BufferSize = 944;
+		static const unsigned int BindingPoint = 0;
 
 		static ScalarUniform<int, 0> pointLightCount;
 		static ScalarUniform<int, 4> spotLightCount;
@@ -184,5 +185,15 @@ namespace UniformBuffer
 		static ArrayUniform<float, 480> lightAngles;
 		static ArrayUniform<Mat4x4f, 608> shadowMatrices;
 		static ArrayUniform<float, 864> shadowSplits;
+	};
+
+	struct ViewportBlock
+	{
+		static const std::size_t BufferSize = 192;
+		static const unsigned int BindingPoint = 1;
+
+		static ScalarUniform<Mat4x4f, 0> VP;
+		static ScalarUniform<Mat4x4f, 64> V;
+		static ScalarUniform<Mat4x4f, 128> P;
 	};
 }

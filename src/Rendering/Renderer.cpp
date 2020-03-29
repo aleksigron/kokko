@@ -64,6 +64,8 @@ struct RendererViewport
 	FrustumPlanes frustum;
 
 	unsigned int framebufferIndex;
+
+	unsigned int uniformBlockObject;
 };
 
 Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManager* lightManager) :
@@ -85,7 +87,6 @@ Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManage
 	lightingShader = 0;
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
-	lightingUniformBuffer = nullptr;
 
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
@@ -112,6 +113,13 @@ void Renderer::Initialize(Window* window)
 		// Allocate viewport data storage
 		void* buf = this->allocator->Allocate(sizeof(RendererViewport) * MaxViewportCount);
 		viewportData = static_cast<RendererViewport*>(buf);
+
+		// Create uniform buffer objects 
+		unsigned int buffers[MaxViewportCount];
+		device->CreateBuffers(MaxViewportCount, buffers);
+
+		for (size_t i = 0; i < MaxViewportCount; ++i)
+			viewportData[i].uniformBlockObject = buffers[i];
 	}
 
 	{
@@ -221,8 +229,6 @@ void Renderer::Initialize(Window* window)
 
 	{
 		device->CreateBuffers(1, &lightingUniformBufferId);
-		void* buffer = allocator->Allocate(UniformBuffer::LightingBlock::BufferSize);
-		lightingUniformBuffer = static_cast<unsigned char*>(buffer);
 	}
 
 	{
@@ -271,8 +277,6 @@ void Renderer::Deinitialize()
 	if (lightingUniformBufferId != 0)
 		device->DestroyBuffers(1, &lightingUniformBufferId);
 
-	this->allocator->Deallocate(lightingUniformBuffer);
-
 	for (unsigned int i = 0; i < framebufferCount; ++i)
 	{
 		RendererFramebuffer& fb = framebufferData[i];
@@ -284,8 +288,15 @@ void Renderer::Deinitialize()
 		}
 	}
 
+	for (size_t i = 0; i < MaxViewportCount; ++i)
+		if (viewportData[i].uniformBlockObject != 0)
+			device->DestroyBuffers(1, &(viewportData[i].uniformBlockObject));
+
 	this->allocator->Deallocate(viewportData);
+	viewportData = nullptr;
+
 	this->allocator->Deallocate(framebufferData);
+	framebufferData = nullptr;
 }
 
 Camera* Renderer::GetRenderCamera(Scene* scene)
@@ -311,6 +322,8 @@ void Renderer::Render(Scene* scene)
 
 	PopulateCommandList(scene);
 
+	unsigned int lastVpIdx = MaxViewportCount;
+
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
 	for (; itr != end; ++itr)
@@ -328,6 +341,16 @@ void Renderer::Render(Scene* scene)
 				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
 				unsigned int mat = renderOrder.materialId.GetValue(command);
 				MaterialId matId = MaterialId{mat};
+
+				// Update viewport uniform block
+				if (vpIdx != lastVpIdx)
+				{
+					unsigned int ubo = viewportData[vpIdx].uniformBlockObject;
+					unsigned int binding = UniformBuffer::ViewportBlock::BindingPoint;
+					device->BindBufferBase(GL_UNIFORM_BUFFER, binding, ubo);
+
+					lastVpIdx = vpIdx;
+				}
 
 				const MaterialUniformData& mu = materialManager->GetUniformData(matId);
 
@@ -387,41 +410,23 @@ void Renderer::Render(Scene* scene)
 					}
 				}
 
-				const Mat4x4f& view = viewportData[vpIdx].view;
-				const Mat4x4f& projection = viewportData[vpIdx].projection;
-				const Mat4x4f& viewProjection = viewportData[vpIdx].viewProjection;
 				const Mat4x4f& model = data.transform[objIdx];
 
 				if (shader->uniformMatMVP >= 0)
 				{
-					Mat4x4f mvp = viewProjection * model;
+					Mat4x4f mvp = viewportData[vpIdx].viewProjection * model;
 					device->SetUniformMat4x4f(shader->uniformMatMVP, 1, mvp.ValuePointer());
 				}
 
 				if (shader->uniformMatMV >= 0)
 				{
-					Mat4x4f mv = view * model;
+					Mat4x4f mv = viewportData[vpIdx].view * model;
 					device->SetUniformMat4x4f(shader->uniformMatMV, 1, mv.ValuePointer());
-				}
-
-				if (shader->uniformMatVP >= 0)
-				{
-					device->SetUniformMat4x4f(shader->uniformMatVP, 1, viewProjection.ValuePointer());
 				}
 
 				if (shader->uniformMatM >= 0)
 				{
 					device->SetUniformMat4x4f(shader->uniformMatM, 1, model.ValuePointer());
-				}
-
-				if (shader->uniformMatV >= 0)
-				{
-					device->SetUniformMat4x4f(shader->uniformMatV, 1, view.ValuePointer());
-				}
-
-				if (shader->uniformMatP >= 0)
-				{
-					device->SetUniformMat4x4f(shader->uniformMatP, 1, projection.ValuePointer());
 				}
 
 				MeshId mesh = data.mesh[objIdx];
@@ -432,6 +437,7 @@ void Renderer::Render(Scene* scene)
 			else // Pass is OpaqueLighting
 			{
 				using LightingBlock = UniformBuffer::LightingBlock;
+				unsigned char lightingUniformBuffer[LightingBlock::BufferSize];
 
 				Shader* shader = res->GetShader(lightingShader);
 
@@ -564,7 +570,7 @@ void Renderer::Render(Scene* scene)
 				{
 					// Format uniform names and find locations
 
-					std::sprintf(uniformNameBuf, "shd_smp[%u]", vpIdx);
+					std::sprintf(uniformNameBuf, "shd_smp[%d]", static_cast<int>(vpIdx));
 					int shadowSamplerLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
 					const RendererViewport& vp = viewportData[vpIdx];
@@ -780,6 +786,9 @@ void Renderer::PopulateCommandList(Scene* scene)
 	// Update directional light viewports
 	Array<LightId> directionalLights(allocator);
 	lightManager->GetDirectionalLights(directionalLights);
+
+	using ViewportBlock = UniformBuffer::ViewportBlock;
+	unsigned char viewportBlockBuffer[ViewportBlock::BufferSize];
 	
 	for (unsigned int i = 0, count = directionalLights.GetCount(); i < count; ++i)
 	{
@@ -808,6 +817,13 @@ void Renderer::PopulateCommandList(Scene* scene)
 				vp.viewProjection = vp.projection * vp.view;
 				vp.frustum.Update(lightProjections[cascade], cascadeViewTransforms[cascade]);
 				vp.framebufferIndex = GetDepthFramebufferOfSize(shadowSize);
+
+				ViewportBlock::VP.Set(viewportBlockBuffer, vp.viewProjection);
+				ViewportBlock::V.Set(viewportBlockBuffer, vp.view);
+				ViewportBlock::P.Set(viewportBlockBuffer, vp.projection);
+
+				device->BindBuffer(GL_UNIFORM_BUFFER, vp.uniformBlockObject);
+				device->SetBufferData(GL_UNIFORM_BUFFER, ViewportBlock::BufferSize, viewportBlockBuffer, GL_STATIC_DRAW);
 			}
 		}
 	}
@@ -829,6 +845,13 @@ void Renderer::PopulateCommandList(Scene* scene)
 		vp.viewProjection = vp.projection * vp.view;
 		vp.frustum.Update(cullingCamera->parameters, cullingCameraTransform);
 		vp.framebufferIndex = FramebufferIndexGBuffer;
+
+		ViewportBlock::VP.Set(viewportBlockBuffer, vp.viewProjection);
+		ViewportBlock::V.Set(viewportBlockBuffer, vp.view);
+		ViewportBlock::P.Set(viewportBlockBuffer, vp.projection);
+
+		device->BindBuffer(GL_UNIFORM_BUFFER, vp.uniformBlockObject);
+		device->SetBufferData(GL_UNIFORM_BUFFER, ViewportBlock::BufferSize, viewportBlockBuffer, GL_STATIC_DRAW);
 
 		this->viewportIndexFullscreen = vpIdx;
 	}
@@ -997,7 +1020,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 	BitPack* vis[MaxViewportCount];
 
-	for (unsigned int vpIdx = 0, count = viewportCount; vpIdx < count; ++vpIdx)
+	for (size_t vpIdx = 0, count = viewportCount; vpIdx < count; ++vpIdx)
 	{
 		vis[vpIdx] = objectVisibility.GetData() + visRequired * vpIdx;
 		Intersect::FrustumAABB(viewportData[vpIdx].frustum, data.count, data.bounds, vis[vpIdx]);
@@ -1128,7 +1151,7 @@ void Renderer::ReallocateRenderObjects(unsigned int required)
 
 	InstanceData newData;
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(RenderOrderData) +
-		sizeof(BoundingBox) + sizeof(Mat4x4f));
+		sizeof(BoundingBox) + sizeof(Mat4x4f) + sizeof(unsigned int));
 
 	newData.buffer = this->allocator->Allocate(bytes);
 	newData.count = data.count;
@@ -1139,6 +1162,7 @@ void Renderer::ReallocateRenderObjects(unsigned int required)
 	newData.order = reinterpret_cast<RenderOrderData*>(newData.mesh + required);
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.order + required);
 	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
+	newData.transformUBO = reinterpret_cast<unsigned int*>(newData.transform + required);
 
 	if (data.buffer != nullptr)
 	{
@@ -1147,6 +1171,7 @@ void Renderer::ReallocateRenderObjects(unsigned int required)
 		std::memcpy(newData.order, data.order, data.count * sizeof(RenderOrderData));
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
 		std::memcpy(newData.transform, data.transform, data.count * sizeof(Mat4x4f));
+		std::memcpy(newData.transformUBO, data.transformUBO, data.count * sizeof(unsigned int));
 
 		this->allocator->Deallocate(data.buffer);
 	}
