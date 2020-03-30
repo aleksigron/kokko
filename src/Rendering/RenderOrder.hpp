@@ -41,8 +41,8 @@ struct RenderOrderConfiguration
 
 		// Calculate maximum integer depth values in advance
 
-		maxTransparentDepth = (1 << transparentDepth.bits) - 1;
-		maxOpaqueDepth = (1 << opaqueDepth.bits) - 1;
+		maxTransparentDepth = (1ULL << transparentDepth.bits) - 1;
+		maxOpaqueDepth = (1ULL << opaqueDepth.bits) - 1;
 	}
 
 	BitfieldVariable<uint64_t> viewportIndex;

@@ -115,7 +115,7 @@ unsigned int EncodingUtf8::FindLastCharacter(StringRef input)
 			(c & 0xf0) == 0xe0 || // 3-byte char
 			(c & 0xf8) == 0xf0) // 4-byte char
 		{
-			return itr - input.str;
+			return static_cast<unsigned int>(itr - input.str);
 		}
 	}
 

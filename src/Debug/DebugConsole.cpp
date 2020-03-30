@@ -67,7 +67,7 @@ void DebugConsole::AddLogEntry(StringRef text)
 	int lineHeight = font->GetLineHeight();
 
 	Vec2f areaSize = this->drawArea.size;
-	int screenRows = areaSize.y / lineHeight;
+	int screenRows = static_cast<int>(areaSize.y / lineHeight);
 
 	// Check if we have to allocate the buffer
 	if (stringData == nullptr)
@@ -198,8 +198,10 @@ void DebugConsole::UpdateAndDraw()
 		int chars = EncodingUtf8::CountCharacters(inputValue.GetRef());
 
 		Rectanglef caretRectangle;
-		caretRectangle.position = Vec2f(chars * font->GetGlyphWidth(), inputPos.y);
-		caretRectangle.size = Vec2f(1, lineHeight);
+		caretRectangle.position.x = static_cast<float>(chars * font->GetGlyphWidth());
+		caretRectangle.position.y = inputPos.y;
+		caretRectangle.size.x = 1.0f;
+		caretRectangle.size.y = static_cast<float>(lineHeight);
 
 		vectorRenderer->DrawRectangleScreen(caretRectangle, white);
 	}
@@ -218,7 +220,7 @@ void DebugConsole::UpdateAndDraw()
 		area.position.x = areaPos.x;
 		area.position.y = areaPos.y + areaSize.y - (lineHeight * rowsUsed);
 		area.size.x = areaSize.x;
-		area.size.y = lineHeight * entry.rows;
+		area.size.y = static_cast<float>(lineHeight * entry.rows);
 
 		textRenderer->AddText(entry.text, area);
 	}

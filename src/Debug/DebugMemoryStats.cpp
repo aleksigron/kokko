@@ -39,8 +39,8 @@ void DebugMemoryStats::UpdateAndDraw()
 		Rectanglef area;
 		area.position.x = areaPos.x;
 		area.position.y = areaPos.y;
-		area.size.x = glyphWidth * columnWidth0;
-		area.size.y = lineHeight;
+		area.size.x = static_cast<float>(glyphWidth * columnWidth0);
+		area.size.y = static_cast<float>(lineHeight);
 
 		textRenderer->AddText(StringRef("Scope name"), area);
 	}
@@ -49,8 +49,8 @@ void DebugMemoryStats::UpdateAndDraw()
 		Rectanglef area;
 		area.position.x = areaPos.x + glyphWidth * columnWidth0;
 		area.position.y = areaPos.y;
-		area.size.x = glyphWidth * columnWidth1;
-		area.size.y = lineHeight;
+		area.size.x = static_cast<float>(glyphWidth * columnWidth1);
+		area.size.y = static_cast<float>(lineHeight);
 
 		textRenderer->AddText(StringRef("Count"), area);
 	}
@@ -59,8 +59,8 @@ void DebugMemoryStats::UpdateAndDraw()
 		Rectanglef area;
 		area.position.x = areaPos.x + glyphWidth * (columnWidth0 + columnWidth1);
 		area.position.y = areaPos.y;
-		area.size.x = glyphWidth * columnWidth2;
-		area.size.y = lineHeight;
+		area.size.x = static_cast<float>(glyphWidth * columnWidth2);
+		area.size.y = static_cast<float>(lineHeight);
 
 		textRenderer->AddText(StringRef("Size"), area);
 	}
@@ -78,8 +78,8 @@ void DebugMemoryStats::UpdateAndDraw()
 			Rectanglef area;
 			area.position.x = areaPos.x;
 			area.position.y = areaPos.y + (lineHeight * (i + 1));
-			area.size.x = glyphWidth * columnWidth0;
-			area.size.y = lineHeight;
+			area.size.x = static_cast<float>(glyphWidth * columnWidth0);
+			area.size.y = static_cast<float>(lineHeight);
 
 			textRenderer->AddText(StringRef(name), area);
 		}
@@ -88,10 +88,10 @@ void DebugMemoryStats::UpdateAndDraw()
 			Rectanglef area;
 			area.position.x = areaPos.x + glyphWidth * columnWidth0;
 			area.position.y = areaPos.y + (lineHeight * (i + 1));
-			area.size.x = glyphWidth * columnWidth1;
-			area.size.y = lineHeight;
+			area.size.x = static_cast<float>(glyphWidth * columnWidth1);
+			area.size.y = static_cast<float>(lineHeight);
 
-			std::sprintf(buffer, "%u", allocCount);
+			std::sprintf(buffer, "%llu", static_cast<unsigned long long>(allocCount));
 			textRenderer->AddText(StringRef(buffer), area);
 		}
 
@@ -99,10 +99,10 @@ void DebugMemoryStats::UpdateAndDraw()
 			Rectanglef area;
 			area.position.x = areaPos.x + glyphWidth * (columnWidth0 + columnWidth1);
 			area.position.y = areaPos.y + (lineHeight * (i + 1));
-			area.size.x = glyphWidth * columnWidth2;
-			area.size.y = lineHeight;
+			area.size.x = static_cast<float>(glyphWidth * columnWidth2);
+			area.size.y = static_cast<float>(lineHeight);
 
-			std::sprintf(buffer, "%u", allocSize);
+			std::sprintf(buffer, "%llu", static_cast<unsigned long long>(allocSize));
 			textRenderer->AddText(StringRef(buffer), area);
 		}
 	}
