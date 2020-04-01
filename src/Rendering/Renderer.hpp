@@ -68,7 +68,6 @@ private:
 		RenderOrderData* order;
 		BoundingBox* bounds;
 		Mat4x4f* transform;
-		unsigned int* transformUBO;
 	}
 	data;
 
@@ -84,6 +83,8 @@ private:
 	RenderCommandList commandList;
 	Array<BitPack> objectVisibility;
 
+	Array<unsigned int> uniformBufferIds;
+
 	Entity skyboxEntity;
 
 	unsigned int GetDepthFramebufferOfSize(const Vec2i& size);
@@ -91,7 +92,7 @@ private:
 
 	void ReallocateRenderObjects(unsigned int required);
 
-	void PopulateCommandList(Scene* scene);
+	void PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOut);
 
 	bool ParseControlCommand(uint64_t orderKey);
 

@@ -1,4 +1,5 @@
 {
+	"vsIncludes": [ "res/shaders/common/transform_block.glsl" ],
 	"vertexShaderFile": "res/shaders/deferred_geometry/shadow_depth.vert.glsl",
 	"fragmentShaderFile": "res/shaders/deferred_geometry/shadow_depth.frag.glsl"
 }

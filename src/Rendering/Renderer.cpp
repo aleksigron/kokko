@@ -81,7 +81,8 @@ Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManage
 	overrideRenderCamera(nullptr),
 	overrideCullingCamera(nullptr),
 	commandList(allocator),
-	objectVisibility(allocator)
+	objectVisibility(allocator),
+	uniformBufferIds(allocator)
 {
 	lightingMesh = MeshId{ 0 };
 	lightingShader = 0;
@@ -297,6 +298,12 @@ void Renderer::Deinitialize()
 
 	this->allocator->Deallocate(framebufferData);
 	framebufferData = nullptr;
+
+	if (uniformBufferIds.GetCount() > 0)
+	{
+		device->DestroyBuffers(uniformBufferIds.GetCount(), uniformBufferIds.GetData());
+		uniformBufferIds.Clear();
+	}
 }
 
 Camera* Renderer::GetRenderCamera(Scene* scene)
@@ -320,9 +327,25 @@ void Renderer::Render(Scene* scene)
 	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());
 	Mat4x4f renderCameraTransform = scene->GetWorldTransform(renderCameraObject);
 
-	PopulateCommandList(scene);
+	unsigned int objectDrawCount = 0;
+	PopulateCommandList(scene, objectDrawCount);
+
+	// Create new object transform uniform buffers if needed
+	if (objectDrawCount > uniformBufferIds.GetCount())
+	{
+		unsigned int currentCount = uniformBufferIds.GetCount();
+		uniformBufferIds.Resize(objectDrawCount);
+		
+		unsigned int addCount = objectDrawCount - currentCount;
+		device->CreateBuffers(addCount, uniformBufferIds.GetData() + currentCount);
+	}
 
 	unsigned int lastVpIdx = MaxViewportCount;
+	unsigned int lastShaderProgram = 0;
+
+	using namespace UniformBuffer;
+	unsigned char uboBuffer[TransformBlock::BufferSize];
+	unsigned int uniformBufferIdx = 0;
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -357,7 +380,11 @@ void Renderer::Render(Scene* scene)
 				unsigned int shaderId = materialManager->GetShaderId(matId);
 				Shader* shader = res->GetShader(shaderId);
 
-				device->UseShaderProgram(shader->driverId);
+				if (shader->driverId != lastShaderProgram)
+				{
+					device->UseShaderProgram(shader->driverId);
+					lastShaderProgram = shader->driverId;
+				}
 
 				unsigned int usedTextures = 0;
 
@@ -410,24 +437,21 @@ void Renderer::Render(Scene* scene)
 					}
 				}
 
+				// Update the object transform uniform buffer
+
 				const Mat4x4f& model = data.transform[objIdx];
+				TransformBlock::MVP.Set(uboBuffer, viewportData[vpIdx].viewProjection * model);
+				TransformBlock::MV.Set(uboBuffer, viewportData[vpIdx].view * model);
+				TransformBlock::M.Set(uboBuffer, model);
 
-				if (shader->uniformMatMVP >= 0)
-				{
-					Mat4x4f mvp = viewportData[vpIdx].viewProjection * model;
-					device->SetUniformMat4x4f(shader->uniformMatMVP, 1, mvp.ValuePointer());
-				}
+				unsigned int ubo = uniformBufferIds[uniformBufferIdx];
+				device->BindBuffer(GL_UNIFORM_BUFFER, ubo);
+				device->SetBufferData(GL_UNIFORM_BUFFER, TransformBlock::BufferSize, uboBuffer, GL_STATIC_DRAW);
 
-				if (shader->uniformMatMV >= 0)
-				{
-					Mat4x4f mv = viewportData[vpIdx].view * model;
-					device->SetUniformMat4x4f(shader->uniformMatMV, 1, mv.ValuePointer());
-				}
+				// Bind uniform block to shader
+				device->BindBufferBase(GL_UNIFORM_BUFFER, TransformBlock::BindingPoint, ubo);
 
-				if (shader->uniformMatM >= 0)
-				{
-					device->SetUniformMat4x4f(shader->uniformMatM, 1, model.ValuePointer());
-				}
+				// Draw mesh
 
 				MeshId mesh = data.mesh[objIdx];
 				MeshDrawData* draw = meshManager->GetDrawData(mesh);
@@ -745,7 +769,7 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 	return (Vec3f::Dot(objPos - eyePos, eyeForward) - minusNear) / farMinusNear;
 }
 
-void Renderer::PopulateCommandList(Scene* scene)
+void Renderer::PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOut)
 {
 	// Get camera transforms
 
@@ -1026,6 +1050,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 		Intersect::FrustumAABB(viewportData[vpIdx].frustum, data.count, data.bounds, vis[vpIdx]);
 	}
 
+	unsigned int objectDrawCount = 0;
+
 	for (unsigned int i = 1; i < data.count; ++i)
 	{
 		Vec3f objPos = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
@@ -1041,6 +1067,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 				float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
 				commandList.AddDraw(vpIdx, RenderPass::OpaqueGeometry, depth, shadowMaterial, i);
+
+				objectDrawCount += 1;
 			}
 		}
 
@@ -1054,10 +1082,14 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 			RenderPass pass = static_cast<RenderPass>(o.transparency);
 			commandList.AddDraw(fsvp, pass, depth, o.material, i);
+
+			objectDrawCount += 1;
 		}
 	}
 
 	commandList.Sort();
+
+	objectDrawCountOut = objectDrawCount;
 }
 
 unsigned int Renderer::GetDepthFramebufferOfSize(const Vec2i& size)
@@ -1151,7 +1183,7 @@ void Renderer::ReallocateRenderObjects(unsigned int required)
 
 	InstanceData newData;
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(RenderOrderData) +
-		sizeof(BoundingBox) + sizeof(Mat4x4f) + sizeof(unsigned int));
+		sizeof(BoundingBox) + sizeof(Mat4x4f));
 
 	newData.buffer = this->allocator->Allocate(bytes);
 	newData.count = data.count;
@@ -1162,7 +1194,6 @@ void Renderer::ReallocateRenderObjects(unsigned int required)
 	newData.order = reinterpret_cast<RenderOrderData*>(newData.mesh + required);
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.order + required);
 	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
-	newData.transformUBO = reinterpret_cast<unsigned int*>(newData.transform + required);
 
 	if (data.buffer != nullptr)
 	{
@@ -1171,7 +1202,6 @@ void Renderer::ReallocateRenderObjects(unsigned int required)
 		std::memcpy(newData.order, data.order, data.count * sizeof(RenderOrderData));
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
 		std::memcpy(newData.transform, data.transform, data.count * sizeof(Mat4x4f));
-		std::memcpy(newData.transformUBO, data.transformUBO, data.count * sizeof(unsigned int));
 
 		this->allocator->Deallocate(data.buffer);
 	}

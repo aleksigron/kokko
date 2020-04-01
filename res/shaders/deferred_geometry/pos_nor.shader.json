@@ -1,4 +1,5 @@
 {
+	"vsIncludes": [ "res/shaders/common/transform_block.glsl" ],
 	"vertexShaderFile": "res/shaders/deferred_geometry/pos_nor.vert.glsl",
 	"fragmentShaderFile": "res/shaders/deferred_geometry/pos_nor.frag.glsl",
 	"materialUniforms":

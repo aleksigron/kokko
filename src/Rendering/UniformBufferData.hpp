@@ -196,4 +196,14 @@ namespace UniformBuffer
 		static ScalarUniform<Mat4x4f, 64> V;
 		static ScalarUniform<Mat4x4f, 128> P;
 	};
+
+	struct TransformBlock
+	{
+		static const std::size_t BufferSize = 192;
+		static const unsigned int BindingPoint = 2;
+
+		static ScalarUniform<Mat4x4f, 0> MVP;
+		static ScalarUniform<Mat4x4f, 64> MV;
+		static ScalarUniform<Mat4x4f, 128> M;
+	};
 }
