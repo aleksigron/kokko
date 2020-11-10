@@ -33,7 +33,7 @@ void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 	data.idxData = indexData;
 	data.idxCount = sizeof(indexData) / sizeof(unsigned short);
 
-	meshManager->Upload_3f(meshId, data);
+	meshManager->Upload_3f(meshId, data, RenderData::BufferUsage::StaticDraw);
 
 	BoundingBox bounds;
 	bounds.center = Vec3f(0.0f, 0.0f, 0.0f);
@@ -59,5 +59,5 @@ void MeshPresets::UploadPlane(MeshManager* meshManager, MeshId meshId)
 	data.idxData = indexData;
 	data.idxCount = sizeof(indexData) / sizeof(unsigned short);
 
-	meshManager->Upload_3f(meshId, data);
+	meshManager->Upload_3f(meshId, data, RenderData::BufferUsage::StaticDraw);
 }

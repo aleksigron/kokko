@@ -59,7 +59,7 @@ void DebugVectorRenderer::CreateMeshes()
 		data.idxData = lineIndexData;
 		data.idxCount = sizeof(lineIndexData) / sizeof(unsigned short);
 
-		meshManager->Upload_3f(lineMeshId, data);
+		meshManager->Upload_3f(lineMeshId, data, RenderData::BufferUsage::StaticDraw);
 	}
 
 	{
@@ -90,7 +90,7 @@ void DebugVectorRenderer::CreateMeshes()
 		data.idxData = cubeIndexData;
 		data.idxCount = sizeof(cubeIndexData) / sizeof(unsigned short);
 
-		meshManager->Upload_3f(cubeMeshId, data);
+		meshManager->Upload_3f(cubeMeshId, data, RenderData::BufferUsage::StaticDraw);
 	}
 
 	{
@@ -143,7 +143,7 @@ void DebugVectorRenderer::CreateMeshes()
 		data.idxData = sphereIndexData;
 		data.idxCount = sizeof(sphereIndexData) / sizeof(unsigned short);
 
-		meshManager->Upload_3f(sphereMeshId, data);
+		meshManager->Upload_3f(sphereMeshId, data, RenderData::BufferUsage::StaticDraw);
 	}
 
 	{
@@ -166,7 +166,7 @@ void DebugVectorRenderer::CreateMeshes()
 		data.idxData = rectangleIndexData;
 		data.idxCount = sizeof(rectangleIndexData) / sizeof(unsigned short);
 
-		meshManager->Upload_3f(rectangleMeshId, data);
+		meshManager->Upload_3f(rectangleMeshId, data, RenderData::BufferUsage::StaticDraw);
 	}
 
 	meshesInitialized = true;

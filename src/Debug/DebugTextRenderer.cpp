@@ -285,5 +285,6 @@ void DebugTextRenderer::CreateAndUploadData()
 	data.idxData = indexData.GetData();
 	data.idxCount = indexData.GetCount();
 
-	Engine::GetInstance()->GetMeshManager()->Upload_3f2f(meshId, data);
+	using namespace RenderData;
+	Engine::GetInstance()->GetMeshManager()->Upload_3f2f(meshId, data, BufferUsage::DynamicDraw);
 }

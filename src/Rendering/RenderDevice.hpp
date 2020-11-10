@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/RenderCommandData.hpp"
+#include "Rendering/RenderDeviceEnums.hpp"
 
 class RenderDevice
 {
@@ -82,5 +83,6 @@ public:
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) = 0;
 	virtual void BindBuffer(unsigned int target, unsigned int buffer) = 0;
 	virtual void BindBufferBase(unsigned int target, unsigned int bindingPoint, unsigned int buffer) = 0;
-	virtual void SetBufferData(unsigned int target, unsigned int size, const void* data, unsigned int usage) = 0;
+	virtual void SetBufferData(unsigned int target, unsigned int size, const void* data, RenderData::BufferUsage usage) = 0;
+	virtual void SetBufferSubData(unsigned int target, unsigned int offset, unsigned int size, const void* data) = 0;
 };

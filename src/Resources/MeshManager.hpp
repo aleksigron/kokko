@@ -2,14 +2,16 @@
 
 #include <cstdint>
 
-#include "Resources/MeshData.hpp"
-
 #include "Core/HashMap.hpp"
 #include "Core/BufferRef.hpp"
 #include "Core/StringRef.hpp"
 
 #include "Math/BoundingBox.hpp"
+
+#include "Rendering/RenderDeviceEnums.hpp"
 #include "Rendering/VertexFormat.hpp"
+
+#include "Resources/MeshData.hpp"
 
 struct BoundingBox;
 class Allocator;
@@ -29,6 +31,7 @@ struct MeshBufferData
 
 	unsigned int vertexArrayObject;
 	unsigned int bufferObjects[2];
+	unsigned int bufferSizes[2];
 };
 
 class MeshManager
@@ -56,7 +59,14 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	MeshBufferData CreateBuffers(const void* vd, unsigned int vs, const void* id, unsigned int is) const;
+	MeshBufferData CreateBuffers(
+		const void* vd, unsigned int vs, const void* id, unsigned int is,
+		RenderData::BufferUsage usage);
+
+	void UpdateBuffers(MeshBufferData& bufferDataInOut,
+		const void* vd, unsigned int vs, const void* id, unsigned int is,
+		RenderData::BufferUsage usage);
+
 	void DeleteBuffers(MeshBufferData& buffers) const;
 
 public:
@@ -80,9 +90,9 @@ public:
 
 	MeshBufferData* GetBufferData(MeshId id) { return data.bufferData + id.i; }
 
-	void Upload_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> data);
-	void Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned short> data);
-	void Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned short> data);
-	void Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsigned short> data);
-	void Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsigned short> data);
+	void Upload_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> data, RenderData::BufferUsage usage);
+	void Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned short> data, RenderData::BufferUsage usage);
+	void Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned short> data, RenderData::BufferUsage usage);
+	void Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsigned short> data, RenderData::BufferUsage usage);
+	void Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsigned short> data, RenderData::BufferUsage usage);
 };

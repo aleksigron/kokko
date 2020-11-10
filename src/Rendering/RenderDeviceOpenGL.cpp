@@ -335,7 +335,29 @@ void RenderDeviceOpenGL::BindBufferBase(unsigned int target, unsigned int bindin
 	glBindBufferBase(target, bindingPoint, buffer);
 }
 
-void RenderDeviceOpenGL::SetBufferData(unsigned int target, unsigned int size, const void* data, unsigned int usage)
+static unsigned int ConvertBufferUsage(RenderData::BufferUsage usage)
 {
-	glBufferData(target, size, data, usage);
+	switch (usage)
+	{
+	case RenderData::BufferUsage::StreamDraw: return GL_STREAM_DRAW;
+	case RenderData::BufferUsage::StreamRead: return GL_STREAM_READ;
+	case RenderData::BufferUsage::StreamCopy: return GL_STREAM_COPY;
+	case RenderData::BufferUsage::StaticDraw: return GL_STATIC_DRAW;
+	case RenderData::BufferUsage::StaticRead: return GL_STATIC_READ;
+	case RenderData::BufferUsage::StaticCopy: return GL_STATIC_COPY;
+	case RenderData::BufferUsage::DynamicDraw: return GL_DYNAMIC_DRAW;
+	case RenderData::BufferUsage::DynamicRead: return GL_DYNAMIC_READ;
+	case RenderData::BufferUsage::DynamicCopy: return GL_DYNAMIC_COPY;
+	default: return GL_STATIC_DRAW;
+	}
+}
+
+void RenderDeviceOpenGL::SetBufferData(unsigned int target, unsigned int size, const void* data, RenderData::BufferUsage usage)
+{
+	glBufferData(target, size, data, ConvertBufferUsage(usage));
+}
+
+void RenderDeviceOpenGL::SetBufferSubData(unsigned int target, unsigned int offset, unsigned int size, const void* data)
+{
+	glBufferSubData(target, offset, size, data);
 }

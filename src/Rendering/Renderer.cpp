@@ -446,7 +446,7 @@ void Renderer::Render(Scene* scene)
 
 				unsigned int ubo = uniformBufferIds[uniformBufferIdx];
 				device->BindBuffer(GL_UNIFORM_BUFFER, ubo);
-				device->SetBufferData(GL_UNIFORM_BUFFER, TransformBlock::BufferSize, uboBuffer, GL_STATIC_DRAW);
+				device->SetBufferData(GL_UNIFORM_BUFFER, TransformBlock::BufferSize, uboBuffer, RenderData::BufferUsage::StaticDraw);
 
 				// Bind uniform block to shader
 				device->BindBufferBase(GL_UNIFORM_BUFFER, TransformBlock::BindingPoint, ubo);
@@ -625,7 +625,7 @@ void Renderer::Render(Scene* scene)
 
 				// Update lightingUniformBuffer data
 				device->BindBuffer(GL_UNIFORM_BUFFER, lightingUniformBufferId);
-				device->SetBufferData(GL_UNIFORM_BUFFER, LightingBlock::BufferSize, lightingUniformBuffer, GL_STATIC_DRAW);
+				device->SetBufferData(GL_UNIFORM_BUFFER, LightingBlock::BufferSize, lightingUniformBuffer, RenderData::BufferUsage::StaticDraw);
 
 				// Bind uniform buffer to binding point 0
 				device->BindBufferBase(GL_UNIFORM_BUFFER, 0, lightingUniformBufferId);
@@ -847,7 +847,7 @@ void Renderer::PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOu
 				ViewportBlock::P.Set(viewportBlockBuffer, vp.projection);
 
 				device->BindBuffer(GL_UNIFORM_BUFFER, vp.uniformBlockObject);
-				device->SetBufferData(GL_UNIFORM_BUFFER, ViewportBlock::BufferSize, viewportBlockBuffer, GL_STATIC_DRAW);
+				device->SetBufferData(GL_UNIFORM_BUFFER, ViewportBlock::BufferSize, viewportBlockBuffer, RenderData::BufferUsage::StaticDraw);
 			}
 		}
 	}
@@ -875,7 +875,7 @@ void Renderer::PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOu
 		ViewportBlock::P.Set(viewportBlockBuffer, vp.projection);
 
 		device->BindBuffer(GL_UNIFORM_BUFFER, vp.uniformBlockObject);
-		device->SetBufferData(GL_UNIFORM_BUFFER, ViewportBlock::BufferSize, viewportBlockBuffer, GL_STATIC_DRAW);
+		device->SetBufferData(GL_UNIFORM_BUFFER, ViewportBlock::BufferSize, viewportBlockBuffer, RenderData::BufferUsage::StaticDraw);
 
 		this->viewportIndexFullscreen = vpIdx;
 	}

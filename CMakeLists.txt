@@ -115,6 +115,7 @@ set (KOKKO_SOURCES
 	src/Rendering/RendererData.hpp
 	src/Rendering/RenderOrder.hpp
 	src/Rendering/RenderDevice.hpp
+	src/Rendering/RenderDeviceEnums.hpp
 	src/Rendering/RenderDeviceOpenGL.cpp
 	src/Rendering/RenderDeviceOpenGL.hpp
 	src/Rendering/Shader.cpp
