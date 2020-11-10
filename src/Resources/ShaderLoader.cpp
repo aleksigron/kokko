@@ -257,13 +257,6 @@ static bool CompileAndLink(
 	{
 		shaderOut.driverId = programId;
 
-		shaderOut.uniformMatMVP = renderDevice->GetUniformLocation(programId, "_MVP");
-		shaderOut.uniformMatMV = renderDevice->GetUniformLocation(programId, "_MV");
-		shaderOut.uniformMatVP = renderDevice->GetUniformLocation(programId, "_VP");
-		shaderOut.uniformMatM = renderDevice->GetUniformLocation(programId, "_M");
-		shaderOut.uniformMatV = renderDevice->GetUniformLocation(programId, "_V");
-		shaderOut.uniformMatP = renderDevice->GetUniformLocation(programId, "_P");
-
 		return true;
 	}
 	else

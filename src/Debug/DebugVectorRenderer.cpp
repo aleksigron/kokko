@@ -10,6 +10,7 @@
 #include "Rendering/Camera.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/Shader.hpp"
+#include "Rendering/UniformBufferData.hpp"
 
 #include "Resources/ResourceManager.hpp"
 #include "Resources/MeshManager.hpp"
@@ -18,11 +19,13 @@
 #include "Scene/SceneManager.hpp"
 
 #include "System/Window.hpp"
+#include "System/IncludeOpenGL.hpp"
 
 DebugVectorRenderer::DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
-	meshesInitialized(false)
+	meshesInitialized(false),
+	objectUniformBufferId(0)
 {
 	primitiveCount = 0;
 	primitiveAllocated = 1024;
@@ -34,6 +37,19 @@ DebugVectorRenderer::DebugVectorRenderer(Allocator* allocator, RenderDevice* ren
 DebugVectorRenderer::~DebugVectorRenderer()
 {
 	allocator->Deallocate(primitives);
+
+	if (meshesInitialized)
+	{
+		Engine* engine = Engine::GetInstance();
+		MeshManager* meshManager = engine->GetMeshManager();
+		for (unsigned int i = 0; i < 4; ++i)
+			meshManager->RemoveMesh(meshIds[i]);
+	}
+
+	if (objectUniformBufferId != 0)
+	{
+		renderDevice->DestroyBuffers(1, &objectUniformBufferId);
+	}
 }
 
 void DebugVectorRenderer::CreateMeshes()
@@ -290,13 +306,24 @@ void DebugVectorRenderer::Render(Camera* camera)
 		if (meshesInitialized == false)
 			this->CreateMeshes();
 
+		if (objectUniformBufferId == 0)
+		{
+			renderDevice->CreateBuffers(1, &objectUniformBufferId);
+			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, objectUniformBufferId);
+			renderDevice->SetBufferData(GL_UNIFORM_BUFFER, UniformBuffer::TransformBlock::BufferSize, nullptr, RenderData::BufferUsage::DynamicDraw);
+		}
+
 		SceneManager* sm = engine->GetSceneManager();
 		Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
 		SceneObjectId cameraSceneObject = scene->Lookup(camera->GetEntity());
 		const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
 
-		Mat4x4f viewProj = camera->parameters.GetProjectionMatrix() * Camera::GetViewMatrix(cameraTransform);
+		Mat4x4f proj = camera->parameters.GetProjectionMatrix();
+		Mat4x4f view = Camera::GetViewMatrix(cameraTransform);
+		Mat4x4f viewProj = proj * view;
 		Mat4x4f screenProj = engine->GetMainWindow()->GetScreenSpaceProjectionMatrix();
+
+		unsigned char objectUboBuffer[UniformBuffer::TransformBlock::BufferSize];
 
 		int colorUniformLocation = -1;
 		for (unsigned int i = 0; i < shader->materialUniformCount; ++i)
@@ -317,14 +344,23 @@ void DebugVectorRenderer::Render(Camera* camera)
 		{
 			const Primitive& primitive = primitives[i];
 
-			// Multiply transform with P or VP based on whether this is a screen-space primitive
-			Mat4x4f mvp = (primitive.screenSpace ? screenProj : viewProj) * primitive.transform;
-
 			// Set color uniform
 			renderDevice->SetUniformVec4f(colorUniformLocation, 1, primitive.color.ValuePointer());
 
-			// Set transform matrix uniform
-			renderDevice->SetUniformMat4x4f(shader->uniformMatMVP, 1, mvp.ValuePointer());
+			// Use view or screen based transform depending on whether this is a screen-space primitive
+			Mat4x4f mvp = (primitive.screenSpace ? screenProj : viewProj) * primitive.transform;
+
+			// Update object transform uniform buffer
+
+			UniformBuffer::TransformBlock::MVP.Set(objectUboBuffer, mvp);
+			UniformBuffer::TransformBlock::MV.Set(objectUboBuffer, view * primitive.transform);
+			UniformBuffer::TransformBlock::M.Set(objectUboBuffer, primitive.transform);
+
+			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, objectUniformBufferId);
+			renderDevice->SetBufferSubData(GL_UNIFORM_BUFFER, 0, UniformBuffer::TransformBlock::BufferSize, objectUboBuffer);
+
+			// Bind uniform block to shader
+			renderDevice->BindBufferBase(GL_UNIFORM_BUFFER, UniformBuffer::TransformBlock::BindingPoint, objectUniformBufferId);
 
 			// Draw
 

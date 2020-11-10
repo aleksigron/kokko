@@ -14,12 +14,6 @@ const unsigned int ShaderUniform::TypeSizes[] = {
 Shader::Shader() :
 	nameHash(0),
 	driverId(0),
-	uniformMatMVP(-1),
-	uniformMatMV(-1),
-	uniformMatVP(-1),
-	uniformMatM(-1),
-	uniformMatV(-1),
-	uniformMatP(-1),
 	transparencyType(TransparencyType::Opaque),
 	materialUniformCount(0)
 {

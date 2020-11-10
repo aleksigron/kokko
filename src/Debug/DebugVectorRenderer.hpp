@@ -42,6 +42,8 @@ private:
 	bool meshesInitialized;
 	MeshId meshIds[4];
 
+	unsigned int objectUniformBufferId;
+
 	void CreateMeshes();
 
 public:

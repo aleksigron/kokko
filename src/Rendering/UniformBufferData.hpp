@@ -187,6 +187,14 @@ namespace UniformBuffer
 		static ArrayUniform<float, 864> shadowSplits;
 	};
 
+	struct FrameBlock
+	{
+		static const std::size_t BufferSize = 4;
+		static const unsigned int BindingPoint = 0;
+
+		static ScalarUniform<float, 0> deltaTime;
+	};
+
 	struct ViewportBlock
 	{
 		static const std::size_t BufferSize = 192;

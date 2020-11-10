@@ -36,13 +36,6 @@ struct Shader
 
 	unsigned int driverId;
 
-	int uniformMatMVP;
-	int uniformMatMV;
-	int uniformMatVP;
-	int uniformMatM;
-	int uniformMatV;
-	int uniformMatP;
-
 	TransparencyType transparencyType;
 
 	static const unsigned MaxMaterialUniforms = 8;
