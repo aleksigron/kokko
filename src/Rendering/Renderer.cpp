@@ -81,13 +81,13 @@ Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManage
 	overrideRenderCamera(nullptr),
 	overrideCullingCamera(nullptr),
 	commandList(allocator),
-	objectVisibility(allocator),
-	uniformBufferIds(allocator)
+	objectVisibility(allocator)
 {
 	lightingMesh = MeshId{ 0 };
 	lightingShader = 0;
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
+	objectUniformBufferId = 0;
 
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
@@ -115,12 +115,16 @@ void Renderer::Initialize(Window* window)
 		void* buf = this->allocator->Allocate(sizeof(RendererViewport) * MaxViewportCount);
 		viewportData = static_cast<RendererViewport*>(buf);
 
-		// Create uniform buffer objects 
+		// Create uniform buffer objects
 		unsigned int buffers[MaxViewportCount];
 		device->CreateBuffers(MaxViewportCount, buffers);
 
 		for (size_t i = 0; i < MaxViewportCount; ++i)
+		{
 			viewportData[i].uniformBlockObject = buffers[i];
+			device->BindBuffer(GL_UNIFORM_BUFFER, viewportData[i].uniformBlockObject);
+			device->SetBufferData(GL_UNIFORM_BUFFER, UniformBuffer::ViewportBlock::BufferSize, nullptr, RenderData::BufferUsage::DynamicDraw);
+		}
 	}
 
 	{
@@ -229,7 +233,19 @@ void Renderer::Initialize(Window* window)
 	ResourceManager* resManager = engine->GetResourceManager();
 
 	{
+		// Create per-object uniform buffer
+
+		device->CreateBuffers(1, &objectUniformBufferId);
+		device->BindBuffer(GL_UNIFORM_BUFFER, objectUniformBufferId);
+		device->SetBufferData(GL_UNIFORM_BUFFER, UniformBuffer::TransformBlock::BufferSize, nullptr, RenderData::BufferUsage::DynamicDraw);
+	}
+
+	{
+		// Create opaque lighting pass uniform buffer
+
 		device->CreateBuffers(1, &lightingUniformBufferId);
+		device->BindBuffer(GL_UNIFORM_BUFFER, lightingUniformBufferId);
+		device->SetBufferData(GL_UNIFORM_BUFFER, UniformBuffer::LightingBlock::BufferSize, nullptr, RenderData::BufferUsage::DynamicDraw);
 	}
 
 	{
@@ -278,6 +294,9 @@ void Renderer::Deinitialize()
 	if (lightingUniformBufferId != 0)
 		device->DestroyBuffers(1, &lightingUniformBufferId);
 
+	if (objectUniformBufferId != 0)
+		device->DestroyBuffers(1, &objectUniformBufferId);
+
 	for (unsigned int i = 0; i < framebufferCount; ++i)
 	{
 		RendererFramebuffer& fb = framebufferData[i];
@@ -298,12 +317,6 @@ void Renderer::Deinitialize()
 
 	this->allocator->Deallocate(framebufferData);
 	framebufferData = nullptr;
-
-	if (uniformBufferIds.GetCount() > 0)
-	{
-		device->DestroyBuffers(uniformBufferIds.GetCount(), uniformBufferIds.GetData());
-		uniformBufferIds.Clear();
-	}
 }
 
 Camera* Renderer::GetRenderCamera(Scene* scene)
@@ -327,25 +340,13 @@ void Renderer::Render(Scene* scene)
 	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());
 	Mat4x4f renderCameraTransform = scene->GetWorldTransform(renderCameraObject);
 
-	unsigned int objectDrawCount = 0;
-	PopulateCommandList(scene, objectDrawCount);
-
-	// Create new object transform uniform buffers if needed
-	if (objectDrawCount > uniformBufferIds.GetCount())
-	{
-		unsigned int currentCount = uniformBufferIds.GetCount();
-		uniformBufferIds.Resize(objectDrawCount);
-		
-		unsigned int addCount = objectDrawCount - currentCount;
-		device->CreateBuffers(addCount, uniformBufferIds.GetData() + currentCount);
-	}
+	PopulateCommandList(scene);
 
 	unsigned int lastVpIdx = MaxViewportCount;
 	unsigned int lastShaderProgram = 0;
 
 	using namespace UniformBuffer;
 	unsigned char uboBuffer[TransformBlock::BufferSize];
-	unsigned int uniformBufferIdx = 0;
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -444,12 +445,11 @@ void Renderer::Render(Scene* scene)
 				TransformBlock::MV.Set(uboBuffer, viewportData[vpIdx].view * model);
 				TransformBlock::M.Set(uboBuffer, model);
 
-				unsigned int ubo = uniformBufferIds[uniformBufferIdx];
-				device->BindBuffer(GL_UNIFORM_BUFFER, ubo);
-				device->SetBufferData(GL_UNIFORM_BUFFER, TransformBlock::BufferSize, uboBuffer, RenderData::BufferUsage::StaticDraw);
+				device->BindBuffer(GL_UNIFORM_BUFFER, objectUniformBufferId);
+				device->SetBufferSubData(GL_UNIFORM_BUFFER, 0, UniformBuffer::TransformBlock::BufferSize, uboBuffer);
 
 				// Bind uniform block to shader
-				device->BindBufferBase(GL_UNIFORM_BUFFER, TransformBlock::BindingPoint, ubo);
+				device->BindBufferBase(GL_UNIFORM_BUFFER, TransformBlock::BindingPoint, objectUniformBufferId);
 
 				// Draw mesh
 
@@ -625,7 +625,7 @@ void Renderer::Render(Scene* scene)
 
 				// Update lightingUniformBuffer data
 				device->BindBuffer(GL_UNIFORM_BUFFER, lightingUniformBufferId);
-				device->SetBufferData(GL_UNIFORM_BUFFER, LightingBlock::BufferSize, lightingUniformBuffer, RenderData::BufferUsage::StaticDraw);
+				device->SetBufferSubData(GL_UNIFORM_BUFFER, 0, LightingBlock::BufferSize, lightingUniformBuffer);
 
 				// Bind uniform buffer to binding point 0
 				device->BindBufferBase(GL_UNIFORM_BUFFER, 0, lightingUniformBufferId);
@@ -769,7 +769,7 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 	return (Vec3f::Dot(objPos - eyePos, eyeForward) - minusNear) / farMinusNear;
 }
 
-void Renderer::PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOut)
+void Renderer::PopulateCommandList(Scene* scene)
 {
 	// Get camera transforms
 
@@ -847,7 +847,7 @@ void Renderer::PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOu
 				ViewportBlock::P.Set(viewportBlockBuffer, vp.projection);
 
 				device->BindBuffer(GL_UNIFORM_BUFFER, vp.uniformBlockObject);
-				device->SetBufferData(GL_UNIFORM_BUFFER, ViewportBlock::BufferSize, viewportBlockBuffer, RenderData::BufferUsage::StaticDraw);
+				device->SetBufferSubData(GL_UNIFORM_BUFFER, 0, ViewportBlock::BufferSize, viewportBlockBuffer);
 			}
 		}
 	}
@@ -875,7 +875,7 @@ void Renderer::PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOu
 		ViewportBlock::P.Set(viewportBlockBuffer, vp.projection);
 
 		device->BindBuffer(GL_UNIFORM_BUFFER, vp.uniformBlockObject);
-		device->SetBufferData(GL_UNIFORM_BUFFER, ViewportBlock::BufferSize, viewportBlockBuffer, RenderData::BufferUsage::StaticDraw);
+		device->SetBufferSubData(GL_UNIFORM_BUFFER, 0, ViewportBlock::BufferSize, viewportBlockBuffer);
 
 		this->viewportIndexFullscreen = vpIdx;
 	}
@@ -1050,8 +1050,6 @@ void Renderer::PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOu
 		Intersect::FrustumAABB(viewportData[vpIdx].frustum, data.count, data.bounds, vis[vpIdx]);
 	}
 
-	unsigned int objectDrawCount = 0;
-
 	for (unsigned int i = 1; i < data.count; ++i)
 	{
 		Vec3f objPos = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
@@ -1067,8 +1065,6 @@ void Renderer::PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOu
 				float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
 				commandList.AddDraw(vpIdx, RenderPass::OpaqueGeometry, depth, shadowMaterial, i);
-
-				objectDrawCount += 1;
 			}
 		}
 
@@ -1082,14 +1078,10 @@ void Renderer::PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOu
 
 			RenderPass pass = static_cast<RenderPass>(o.transparency);
 			commandList.AddDraw(fsvp, pass, depth, o.material, i);
-
-			objectDrawCount += 1;
 		}
 	}
 
 	commandList.Sort();
-
-	objectDrawCountOut = objectDrawCount;
 }
 
 unsigned int Renderer::GetDepthFramebufferOfSize(const Vec2i& size)

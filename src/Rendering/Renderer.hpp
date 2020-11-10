@@ -56,6 +56,7 @@ private:
 	unsigned int lightingShader;
 	MaterialId shadowMaterial;
 	unsigned int lightingUniformBufferId;
+	unsigned int objectUniformBufferId;
 
 	struct InstanceData
 	{
@@ -83,8 +84,6 @@ private:
 	RenderCommandList commandList;
 	Array<BitPack> objectVisibility;
 
-	Array<unsigned int> uniformBufferIds;
-
 	Entity skyboxEntity;
 
 	unsigned int GetDepthFramebufferOfSize(const Vec2i& size);
@@ -92,7 +91,7 @@ private:
 
 	void ReallocateRenderObjects(unsigned int required);
 
-	void PopulateCommandList(Scene* scene, unsigned int& objectDrawCountOut);
+	void PopulateCommandList(Scene* scene);
 
 	bool ParseControlCommand(uint64_t orderKey);
 
