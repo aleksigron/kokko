@@ -32,11 +32,14 @@ public:
 
 		Iterator& operator++()
 		{
-			while (current != end)
+			if (current == end)
+				return *this;
+
+			while (true)
 			{
 				++current;
 
-				if (current->first)
+				if (current == end || current->first)
 				{
 					break;
 				}
