@@ -376,9 +376,9 @@ void Renderer::Render(Scene* scene)
 					lastVpIdx = vpIdx;
 				}
 
-				const MaterialUniformData& mu = materialManager->GetUniformData(matId);
+				const MaterialData& matData = materialManager->GetMaterialData(matId);
 
-				unsigned int shaderId = materialManager->GetShaderId(matId);
+				unsigned int shaderId = matData.shader;
 				Shader* shader = res->GetShader(shaderId);
 
 				if (shader->driverId != lastShaderProgram)
@@ -390,11 +390,11 @@ void Renderer::Render(Scene* scene)
 				unsigned int usedTextures = 0;
 
 				// Bind each material uniform with a value
-				for (unsigned uIndex = 0; uIndex < mu.count; ++uIndex)
+				for (unsigned uIndex = 0; uIndex < matData.uniformCount; ++uIndex)
 				{
-					const MaterialUniform& u = mu.uniforms[uIndex];
+					const MaterialUniform& u = matData.uniforms[uIndex];
 
-					unsigned char* d = mu.data + u.dataOffset;
+					unsigned char* d = matData.uniformData + u.dataOffset;
 
 					switch (u.type)
 					{

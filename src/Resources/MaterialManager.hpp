@@ -6,15 +6,18 @@
 #include "Core/StringRef.hpp"
 
 #include "Resources/MaterialData.hpp"
+
 #include "Rendering/TransparencyType.hpp"
 
 class Allocator;
 
-struct MaterialUniformData
+struct MaterialData
 {
-	unsigned int count;
-	unsigned int usedData;
-	unsigned char* data;
+	TransparencyType transparency;
+	unsigned int shader;
+	unsigned int uniformCount;
+	unsigned int uniformDataSize;
+	unsigned char* uniformData;
 	MaterialUniform uniforms[Shader::MaxMaterialUniforms];
 };
 
@@ -30,9 +33,7 @@ private:
 		void *buffer;
 
 		unsigned int* freeList;
-		unsigned int* shader;
-		MaterialUniformData* uniform;
-		TransparencyType* transparency;
+		MaterialData* material;
 	}
 	data;
 
@@ -59,12 +60,8 @@ public:
 		return pair != nullptr ? pair->second : MaterialId{};
 	}
 
-	unsigned int GetShaderId(MaterialId id) const
-	{ return data.shader[id.i]; }
-
-	const MaterialUniformData& GetUniformData(MaterialId id) const
-	{ return data.uniform[id.i]; }
-
-	TransparencyType GetTransparency(MaterialId id) const
-	{ return data.transparency[id.i]; }
+	const MaterialData& GetMaterialData(MaterialId id) const
+	{
+		return data.material[id.i];
+	}
 };

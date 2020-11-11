@@ -4,14 +4,18 @@
 
 #include "rapidjson/document.h"
 
-#include "Memory/Allocator.hpp"
 #include "Core/String.hpp"
 #include "Core/Hash.hpp"
-#include "System/File.hpp"
-#include "Resources/ValueSerialization.hpp"
+
 #include "Engine/Engine.hpp"
+
+#include "Memory/Allocator.hpp"
+
 #include "Resources/ResourceManager.hpp"
 #include "Resources/Texture.hpp"
+#include "Resources/ValueSerialization.hpp"
+
+#include "System/File.hpp"
 
 MaterialManager::MaterialManager(Allocator* allocator) :
 	allocator(allocator),
@@ -28,8 +32,8 @@ MaterialManager::MaterialManager(Allocator* allocator) :
 MaterialManager::~MaterialManager()
 {
 	for (unsigned int i = 1; i < data.count; ++i)
-		if (data.uniform[i].data != nullptr)
-			allocator->Deallocate(data.uniform[i].data);
+		if (data.material[i].uniformData != nullptr)
+			allocator->Deallocate(data.material[i].uniformData);
 
 	allocator->Deallocate(data.buffer);
 }
@@ -41,24 +45,20 @@ void MaterialManager::Reallocate(unsigned int required)
 
 	required = Math::UpperPowerOfTwo(required);
 
-	unsigned int objectBytes = 2 * sizeof(unsigned int) + sizeof(MaterialUniformData) + sizeof(TransparencyType);
-
 	InstanceData newData;
-	newData.buffer = allocator->Allocate(required * objectBytes);
+	newData.buffer = allocator->Allocate((sizeof(unsigned int) + sizeof(MaterialData)) * required);
 	newData.count = data.count;
 	newData.allocated = required;
 
 	newData.freeList = static_cast<unsigned int*>(newData.buffer);
-	newData.shader = newData.freeList + required;
-	newData.uniform = reinterpret_cast<MaterialUniformData*>(newData.shader + required);
-	newData.transparency = reinterpret_cast<TransparencyType*>(newData.uniform + required);
+	newData.material = reinterpret_cast<MaterialData*>(newData.freeList + required);
 
 	if (data.buffer != nullptr)
 	{
-		std::memcpy(newData.freeList, data.freeList, data.allocated * sizeof(unsigned int));
-		std::memcpy(newData.shader, data.shader, data.count * sizeof(unsigned int));
-		std::memcpy(newData.uniform, data.uniform, data.count * sizeof(MaterialUniformData));
-		std::memcpy(newData.transparency, data.transparency, data.count * sizeof(TransparencyType));
+		// Since the whole freelist needs to be copied, combine copies of freeList and material
+		// Aligment of MaterialData is 8 bytes, allocated needs to be an even number
+		size_t copyBytes = data.allocated * sizeof(unsigned int) + data.count * sizeof(MaterialData);
+		std::memcpy(newData.buffer, data.buffer, copyBytes);
 
 		allocator->Deallocate(data.buffer);
 	}
@@ -84,9 +84,9 @@ MaterialId MaterialManager::CreateMaterial()
 		freeListFirst = data.freeList[freeListFirst];
 	}
 
-	data.uniform[id.i].count = 0;
-	data.uniform[id.i].usedData = 0;
-	data.uniform[id.i].data = nullptr;
+	data.material[id.i].uniformCount = 0;
+	data.material[id.i].uniformDataSize = 0;
+	data.material[id.i].uniformData = nullptr;
 
 	++data.count;
 
@@ -95,10 +95,10 @@ MaterialId MaterialManager::CreateMaterial()
 
 void MaterialManager::RemoveMaterial(MaterialId id)
 {
-	if (data.uniform[id.i].data != nullptr)
+	if (data.material[id.i].uniformData != nullptr)
 	{
-		allocator->Deallocate(data.uniform[id.i].data);
-		data.uniform[id.i].data = nullptr;
+		allocator->Deallocate(data.material[id.i].uniformData);
+		data.material[id.i].uniformData = nullptr;
 	}
 
 	// Material isn't the last one
@@ -148,25 +148,26 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 void MaterialManager::SetShader(MaterialId id, const Shader* shader)
 {
 	const unsigned int idx = id.i;
+	MaterialData& material = data.material[idx];
 
-	if (data.uniform[idx].data != nullptr) // Release old uniform data
+	if (material.uniformData != nullptr) // Release old uniform data
 	{
-		allocator->Deallocate(data.uniform[idx].data);
-		data.uniform[idx].data = nullptr;
+		allocator->Deallocate(material.uniformData);
+		material.uniformData = nullptr;
 	}
 
-	data.shader[idx] = shader->nameHash;
-	data.transparency[idx] = shader->transparencyType;
+	material.shader = shader->nameHash;
+	material.transparency = shader->transparencyType;
 
 	// Copy uniform information
-	data.uniform[idx].count = shader->materialUniformCount;
+	material.uniformCount = shader->materialUniformCount;
 
 	unsigned int usedData = 0;
 
 	for (unsigned i = 0, count = shader->materialUniformCount; i < count; ++i)
 	{
 		const ShaderUniform* mu = shader->materialUniforms + i;
-		MaterialUniform& u = data.uniform[idx].uniforms[i];
+		MaterialUniform& u = material.uniforms[i];
 
 		u.location = mu->location;
 		u.nameHash = mu->nameHash;
@@ -178,93 +179,93 @@ void MaterialManager::SetShader(MaterialId id, const Shader* shader)
 		usedData += ShaderUniform::TypeSizes[typeIndex];
 	}
 
-	data.uniform[idx].usedData = usedData;
+	material.uniformDataSize = usedData;
 
 	if (usedData > 0)
 	{
-		data.uniform[idx].data = static_cast<unsigned char*>(allocator->Allocate(usedData));
+		material.uniformData = static_cast<unsigned char*>(allocator->Allocate(usedData));
 
 		// TODO: Set default values for uniforms
 	}
 	else
-		data.uniform[idx].data = nullptr;
+		material.uniformData = nullptr;
 }
 
-void SetUniformI(MaterialUniformData& mu, unsigned int uniformIndex, int value)
+void SetUniformI(MaterialData& material, unsigned int uniformIndex, int value)
 {
-	if (mu.data != nullptr && mu.count > uniformIndex)
+	if (material.uniformData != nullptr && material.uniformCount > uniformIndex)
 	{
-		unsigned char* uData = mu.data + mu.uniforms[uniformIndex].dataOffset;
+		unsigned char* uData = material.uniformData + material.uniforms[uniformIndex].dataOffset;
 		int* uniform = reinterpret_cast<int*>(uData);
 		*uniform = value;
 	}
 }
 
-void SetUniformF(MaterialUniformData& mu, unsigned int uniformIndex, float value)
+void SetUniformF(MaterialData& material, unsigned int uniformIndex, float value)
 {
-	if (mu.data != nullptr && mu.count > uniformIndex)
+	if (material.uniformData != nullptr && material.uniformCount > uniformIndex)
 	{
-		unsigned char* uData = mu.data + mu.uniforms[uniformIndex].dataOffset;
+		unsigned char* uData = material.uniformData + material.uniforms[uniformIndex].dataOffset;
 		float* uniform = reinterpret_cast<float*>(uData);
 		*uniform = value;
 	}
 }
 
-void SetUniformFv(MaterialUniformData& mu, unsigned int uniformIndex, const float* values, unsigned int count)
+void SetUniformFv(MaterialData& material, unsigned int uniformIndex, const float* values, unsigned int count)
 {
-	if (mu.data != nullptr && mu.count > uniformIndex)
+	if (material.uniformData != nullptr && material.uniformCount > uniformIndex)
 	{
-		unsigned char* uData = mu.data + mu.uniforms[uniformIndex].dataOffset;
+		unsigned char* uData = material.uniformData + material.uniforms[uniformIndex].dataOffset;
 		std::memcpy(uData, values, sizeof(float) * count);
 	}
 }
 
-void SetUniformTex2D(MaterialUniformData& mu, unsigned int uidx, unsigned int value)
+void SetUniformTex2D(MaterialData& material, unsigned int uidx, unsigned int value)
 {
-	assert(mu.uniforms[uidx].type == ShaderUniformType::Tex2D);
-	SetUniformI(mu, uidx, value);
+	assert(material.uniforms[uidx].type == ShaderUniformType::Tex2D);
+	SetUniformI(material, uidx, value);
 }
 
-void SetUniformTexCube(MaterialUniformData& mu, unsigned int uidx, unsigned int value)
+void SetUniformTexCube(MaterialData& material, unsigned int uidx, unsigned int value)
 {
-	assert(mu.uniforms[uidx].type == ShaderUniformType::TexCube);
-	SetUniformI(mu, uidx, value);
+	assert(material.uniforms[uidx].type == ShaderUniformType::TexCube);
+	SetUniformI(material, uidx, value);
 }
 
-void SetUniformMat4x4(MaterialUniformData& mu, unsigned int uidx, const Mat4x4f& value)
+void SetUniformMat4x4(MaterialData& material, unsigned int uidx, const Mat4x4f& value)
 {
-	assert(mu.uniforms[uidx].type == ShaderUniformType::Mat4x4);
-	SetUniformFv(mu, uidx, value.ValuePointer(), 16);
+	assert(material.uniforms[uidx].type == ShaderUniformType::Mat4x4);
+	SetUniformFv(material, uidx, value.ValuePointer(), 16);
 }
 
-void SetUniformVec4(MaterialUniformData& mu, unsigned int uidx, const Vec4f& value)
+void SetUniformVec4(MaterialData& material, unsigned int uidx, const Vec4f& value)
 {
-	assert(mu.uniforms[uidx].type == ShaderUniformType::Vec4);
-	SetUniformFv(mu, uidx, value.ValuePointer(), 4);
+	assert(material.uniforms[uidx].type == ShaderUniformType::Vec4);
+	SetUniformFv(material, uidx, value.ValuePointer(), 4);
 }
 
-void SetUniformVec3(MaterialUniformData& mu, unsigned int uidx, const Vec3f& value)
+void SetUniformVec3(MaterialData& material, unsigned int uidx, const Vec3f& value)
 {
-	assert(mu.uniforms[uidx].type == ShaderUniformType::Vec3);
-	SetUniformFv(mu, uidx, value.ValuePointer(), 3);
+	assert(material.uniforms[uidx].type == ShaderUniformType::Vec3);
+	SetUniformFv(material, uidx, value.ValuePointer(), 3);
 }
 
-void SetUniformVec2(MaterialUniformData& mu, unsigned int uidx, const Vec2f& value)
+void SetUniformVec2(MaterialData& material, unsigned int uidx, const Vec2f& value)
 {
-	assert(mu.uniforms[uidx].type == ShaderUniformType::Vec2);
-	SetUniformFv(mu, uidx, value.ValuePointer(), 2);
+	assert(material.uniforms[uidx].type == ShaderUniformType::Vec2);
+	SetUniformFv(material, uidx, value.ValuePointer(), 2);
 }
 
-void SetUniformFloat(MaterialUniformData& mu, unsigned int uidx, float value)
+void SetUniformFloat(MaterialData& material, unsigned int uidx, float value)
 {
-	assert(mu.uniforms[uidx].type == ShaderUniformType::Float);
-	SetUniformF(mu, uidx, value);
+	assert(material.uniforms[uidx].type == ShaderUniformType::Float);
+	SetUniformF(material, uidx, value);
 }
 
-void SetUniformInt(MaterialUniformData& mu, unsigned int uidx, unsigned int value)
+void SetUniformInt(MaterialData& material, unsigned int uidx, unsigned int value)
 {
 	assert(mu.uniforms[uidx].type == ShaderUniformType::Int);
-	SetUniformI(mu, uidx, value);
+	SetUniformI(material, uidx, value);
 }
 
 bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
@@ -315,7 +316,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 			int varIndex = -1;
 			uint32_t varNameHash = Hash::FNV1a_32(nameStr, nameLen);
 
-			const unsigned int uniformCount = data.uniform[id.i].count;
+			const unsigned int uniformCount = data.material[id.i].uniformCount;
 
 			// Find the index at which there's a variable with the same name
 			for (unsigned int i = 0; i < uniformCount; ++i)
@@ -332,8 +333,8 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 			{
 				// Now let's try to read the value
 
-				MaterialUniformData& mu = data.uniform[id.i];
-				ShaderUniformType type = mu.uniforms[varIndex].type;
+				MaterialData& material = data.material[id.i];
+				ShaderUniformType type = material.uniforms[varIndex].type;
 
 				const rapidjson::Value& varVal = valueItr->value;
 
@@ -342,27 +343,27 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 				switch (type)
 				{
 					case ShaderUniformType::Mat4x4:
-						SetUniformMat4x4(mu, varIndex, Deserialize_Mat4x4f(varVal));
+						SetUniformMat4x4(material, varIndex, Deserialize_Mat4x4f(varVal));
 						break;
 
 					case ShaderUniformType::Vec4:
-						SetUniformVec4(mu, varIndex, Deserialize_Vec4f(varVal));
+						SetUniformVec4(material, varIndex, Deserialize_Vec4f(varVal));
 						break;
 
 					case ShaderUniformType::Vec3:
-						SetUniformVec3(mu, varIndex, Deserialize_Vec3f(varVal));
+						SetUniformVec3(material, varIndex, Deserialize_Vec3f(varVal));
 						break;
 
 					case ShaderUniformType::Vec2:
-						SetUniformVec2(mu, varIndex, Deserialize_Vec2f(varVal));
+						SetUniformVec2(material, varIndex, Deserialize_Vec2f(varVal));
 						break;
 
 					case ShaderUniformType::Float:
-						SetUniformFloat(mu, varIndex, Deserialize_Float(varVal));
+						SetUniformFloat(material, varIndex, Deserialize_Float(varVal));
 						break;
 
 					case ShaderUniformType::Int:
-						SetUniformInt(mu, varIndex, Deserialize_Int(varVal));
+						SetUniformInt(material, varIndex, Deserialize_Int(varVal));
 						break;
 
 					case ShaderUniformType::Tex2D:
@@ -370,7 +371,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 						const char* texturePath = varVal.GetString();
 						Texture* texture = res->GetTexture(texturePath);
 						if (texture != nullptr)
-							SetUniformTex2D(mu, varIndex, texture->nameHash);
+							SetUniformTex2D(material, varIndex, texture->nameHash);
 					}
 						break;
 
@@ -379,7 +380,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 						const char* texturePath = varVal.GetString();
 						Texture* texture = res->GetTexture(texturePath);
 						if (texture != nullptr)
-							SetUniformTexCube(mu, varIndex, texture->nameHash);
+							SetUniformTexCube(material, varIndex, texture->nameHash);
 					}
 						break;
 				}
