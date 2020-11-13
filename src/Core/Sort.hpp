@@ -5,7 +5,7 @@
 template <typename T>
 void InsertionSortAsc(T* array, size_t count)
 {
-	for (size_t i = 2; i < count; ++i)
+	for (size_t i = 1; i < count; ++i)
 	{
 		for (size_t k = i; k > 1 && array[k] < array[k - 1]; --k)
 		{
@@ -19,7 +19,7 @@ void InsertionSortAsc(T* array, size_t count)
 template <typename T>
 void InsertionSortDesc(T* array, size_t count)
 {
-	for (size_t i = 2; i < count; ++i)
+	for (size_t i = 1; i < count; ++i)
 	{
 		for (size_t k = i; k > 1 && array[k] > array[k - 1]; --k)
 		{
@@ -33,7 +33,7 @@ void InsertionSortDesc(T* array, size_t count)
 template <typename T>
 void InsertionSortPred(T* array, size_t count, bool(*pred)(const T&, const T&))
 {
-	for (size_t i = 2; i < count; ++i)
+	for (size_t i = 1; i < count; ++i)
 	{
 		for (size_t k = i; k > 1 && pred(array[k], array[k - 1]); --k)
 		{
