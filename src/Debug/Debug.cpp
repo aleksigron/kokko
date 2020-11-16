@@ -3,16 +3,7 @@
 #include <cassert>
 #include <cstdio>
 
-#include "System/IncludeOpenGL.hpp"
-
 #include "Engine/Engine.hpp"
-#include "System/Time.hpp"
-#include "System/Window.hpp"
-#include "Scene/Scene.hpp"
-#include "System/InputManager.hpp"
-#include "System/KeyboardInputView.hpp"
-#include "Resources/BitmapFont.hpp"
-#include "Rendering/Renderer.hpp"
 
 #include "Debug/DebugVectorRenderer.hpp"
 #include "Debug/DebugTextRenderer.hpp"
@@ -23,7 +14,22 @@
 #include "Debug/DebugMemoryStats.hpp"
 #include "Debug/LogHelper.hpp"
 
-Debug::Debug(Allocator* allocator, RenderDevice* renderDevice) :
+#include "Rendering/Renderer.hpp"
+
+#include "Resources/BitmapFont.hpp"
+#include "Resources/ShaderManager.hpp"
+
+#include "Scene/Scene.hpp"
+
+#include "System/IncludeOpenGL.hpp"
+#include "System/InputManager.hpp"
+#include "System/KeyboardInputView.hpp"
+#include "System/Time.hpp"
+#include "System/Window.hpp"
+
+Debug::Debug(
+	Allocator* allocator,
+	RenderDevice* renderDevice) :
 	allocator(allocator),
 	window(nullptr),
 	currentFrameRate(0.0),
@@ -59,9 +65,12 @@ Debug::~Debug()
 	allocator->MakeDelete(vectorRenderer);
 }
 
-void Debug::SetWindow(Window* window)
+void Debug::Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager)
 {
 	this->window = window;
+
+	textRenderer->Initialize(shaderManager);
+	vectorRenderer->Initialize(meshManager, shaderManager);
 
 	Vec2f frameSize = this->window->GetFrameBufferSize();
 	float screenCoordScale = this->window->GetScreenCoordinateScale();

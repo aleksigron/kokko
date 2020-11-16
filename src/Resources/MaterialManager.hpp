@@ -5,26 +5,43 @@
 #include "Core/HashMap.hpp"
 #include "Core/StringRef.hpp"
 
-#include "Resources/MaterialData.hpp"
-
+#include "Rendering/Uniform.hpp"
 #include "Rendering/TransparencyType.hpp"
 
+#include "Resources/MaterialData.hpp"
+#include "Resources/ShaderId.hpp"
+
 class Allocator;
+class ShaderManager;
+class ResourceManager;
+class RenderDevice;
 
 struct MaterialData
 {
 	TransparencyType transparency;
-	unsigned int shader;
+	ShaderId shaderId;
+	unsigned int cachedShaderDeviceId;
+
+	unsigned int textureCount;
+
+	unsigned int uniformBufferObject;
+	unsigned int uniformBufferSize;
+
 	unsigned int uniformCount;
 	unsigned int uniformDataSize;
 	unsigned char* uniformData;
-	MaterialUniform uniforms[Shader::MaxMaterialUniforms];
+
+	BufferUniform bufferUniforms[ShaderUniform::MaxBufferUniformCount];
+	TextureUniform textureUniforms[ShaderUniform::MaxTextureUniformCount];
 };
 
 class MaterialManager
 {
 private:
 	Allocator* allocator;
+	RenderDevice* renderDevice;
+	ShaderManager* shaderManager;
+	ResourceManager* resourceManager;
 
 	struct InstanceData
 	{
@@ -44,10 +61,15 @@ private:
 
 	bool LoadFromConfiguration(MaterialId id, char* config);
 
-	void SetShader(MaterialId id, const Shader* shader);
+	void SetShader(MaterialId id, ShaderId shaderId);
 
 public:
-	MaterialManager(Allocator* allocator);
+	MaterialManager(
+		Allocator* allocator,
+		RenderDevice* renderDevice,
+		ShaderManager* shaderManager,
+		ResourceManager* resourceManager);
+
 	~MaterialManager();
 
 	MaterialId CreateMaterial();

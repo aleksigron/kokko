@@ -9,11 +9,11 @@
 
 #include "Rendering/Camera.hpp"
 #include "Rendering/RenderDevice.hpp"
-#include "Rendering/Shader.hpp"
 #include "Rendering/UniformBufferData.hpp"
 
-#include "Resources/ResourceManager.hpp"
 #include "Resources/MeshManager.hpp"
+#include "Resources/ResourceManager.hpp"
+#include "Resources/ShaderManager.hpp"
 
 #include "Scene/Scene.hpp"
 #include "Scene/SceneManager.hpp"
@@ -21,11 +21,22 @@
 #include "System/Window.hpp"
 #include "System/IncludeOpenGL.hpp"
 
-DebugVectorRenderer::DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice) :
+struct MaterialBlock
+{
+	static const std::size_t BufferSize = 16;
+
+	static UniformBuffer::ScalarUniform<Vec4f, 0> color;
+};
+
+DebugVectorRenderer::DebugVectorRenderer(
+	Allocator* allocator,
+	RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
+	shaderManager(nullptr),
+	meshManager(nullptr),
 	meshesInitialized(false),
-	objectUniformBufferId(0)
+	buffersInitialized(false)
 {
 	primitiveCount = 0;
 	primitiveAllocated = 1024;
@@ -46,16 +57,24 @@ DebugVectorRenderer::~DebugVectorRenderer()
 			meshManager->RemoveMesh(meshIds[i]);
 	}
 
-	if (objectUniformBufferId != 0)
+	if (buffersInitialized)
 	{
-		renderDevice->DestroyBuffers(1, &objectUniformBufferId);
+		renderDevice->DestroyBuffers(2, uniformBufferIds);
 	}
 }
 
-void DebugVectorRenderer::CreateMeshes()
+void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager)
 {
-	Engine* engine = Engine::GetInstance();
-	MeshManager* meshManager = engine->GetMeshManager();
+	// Initialize shaders
+
+	this->shaderManager = shaderManager;
+
+	const char* shaderPath = "res/shaders/debug/debug_vector.shader.json";
+	shaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
+
+	// Initialize meshes
+
+	this->meshManager = meshManager;
 
 	{
 		Vertex3f lineVertexData[] = {
@@ -184,6 +203,11 @@ void DebugVectorRenderer::CreateMeshes()
 
 		meshManager->Upload_3f(rectangleMeshId, data, RenderData::BufferUsage::StaticDraw);
 	}
+}
+
+void DebugVectorRenderer::CreateMeshes()
+{
+	Engine* engine = Engine::GetInstance();
 
 	meshesInitialized = true;
 }
@@ -295,24 +319,27 @@ void DebugVectorRenderer::Render(Camera* camera)
 {
 	if (primitiveCount > 0)
 	{
-		Engine* engine = Engine::GetInstance();
-		MeshManager* meshManager = engine->GetMeshManager();
-		ResourceManager* rm = engine->GetResourceManager();
-		Shader* shader = rm->GetShader("res/shaders/debug/debug_vector.shader.json");
-
-		if (shader == nullptr)
-			return;
+		const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
 		if (meshesInitialized == false)
 			this->CreateMeshes();
 
-		if (objectUniformBufferId == 0)
+		if (buffersInitialized == false)
 		{
-			renderDevice->CreateBuffers(1, &objectUniformBufferId);
-			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, objectUniformBufferId);
-			renderDevice->SetBufferData(GL_UNIFORM_BUFFER, UniformBuffer::TransformBlock::BufferSize, nullptr, RenderData::BufferUsage::DynamicDraw);
+			RenderData::BufferUsage usage = RenderData::BufferUsage::DynamicDraw;
+
+			renderDevice->CreateBuffers(2, uniformBufferIds);
+
+			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, uniformBufferIds[ObjectBuffer]);
+			renderDevice->SetBufferData(GL_UNIFORM_BUFFER, UniformBuffer::TransformBlock::BufferSize, nullptr, usage);
+
+			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, uniformBufferIds[MaterialBuffer]);
+			renderDevice->SetBufferData(GL_UNIFORM_BUFFER, MaterialBlock::BufferSize, nullptr, usage);
+
+			buffersInitialized = true;
 		}
 
+		Engine* engine = Engine::GetInstance();
 		SceneManager* sm = engine->GetSceneManager();
 		Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
 		SceneObjectId cameraSceneObject = scene->Lookup(camera->GetEntity());
@@ -324,28 +351,25 @@ void DebugVectorRenderer::Render(Camera* camera)
 		Mat4x4f screenProj = engine->GetMainWindow()->GetScreenSpaceProjectionMatrix();
 
 		unsigned char objectUboBuffer[UniformBuffer::TransformBlock::BufferSize];
+		unsigned char materialUboBuffer[MaterialBlock::BufferSize];
 
 		int colorUniformLocation = -1;
-		for (unsigned int i = 0; i < shader->materialUniformCount; ++i)
+		for (unsigned int i = 0; i < shader.bufferUniformCount; ++i)
 		{
-			if (shader->materialUniforms[i].type == ShaderUniformType::Vec4)
+			if (shader.bufferUniforms[i].type == UniformDataType::Vec4)
 			{
-				colorUniformLocation = shader->materialUniforms[i].location;
+				//colorUniformLocation = shader.bufferUniforms[i].location;
 			}
 		}
 
 		renderDevice->DepthTestDisable();
 		renderDevice->BlendingDisable();
 
-		// Use shader
-		renderDevice->UseShaderProgram(shader->driverId);
+		renderDevice->UseShaderProgram(shader.driverId);
 
 		for (unsigned int i = 0; i < primitiveCount; ++i)
 		{
 			const Primitive& primitive = primitives[i];
-
-			// Set color uniform
-			renderDevice->SetUniformVec4f(colorUniformLocation, 1, primitive.color.ValuePointer());
 
 			// Use view or screen based transform depending on whether this is a screen-space primitive
 			Mat4x4f mvp = (primitive.screenSpace ? screenProj : viewProj) * primitive.transform;
@@ -356,11 +380,22 @@ void DebugVectorRenderer::Render(Camera* camera)
 			UniformBuffer::TransformBlock::MV.Set(objectUboBuffer, view * primitive.transform);
 			UniformBuffer::TransformBlock::M.Set(objectUboBuffer, primitive.transform);
 
-			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, objectUniformBufferId);
+			unsigned int objectBufferId = uniformBufferIds[ObjectBuffer];
+			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, objectBufferId);
 			renderDevice->SetBufferSubData(GL_UNIFORM_BUFFER, 0, UniformBuffer::TransformBlock::BufferSize, objectUboBuffer);
 
-			// Bind uniform block to shader
-			renderDevice->BindBufferBase(GL_UNIFORM_BUFFER, UniformBuffer::TransformBlock::BindingPoint, objectUniformBufferId);
+			renderDevice->BindBufferBase(GL_UNIFORM_BUFFER, UniformBuffer::TransformBlock::BindingPoint, objectBufferId);
+
+			// Update color
+
+			Vec4f colorVec4(primitive.color.r, primitive.color.g, primitive.color.b, primitive.color.a);
+			MaterialBlock::color.Set(materialUboBuffer, colorVec4);
+
+			unsigned int materialBufferId = uniformBufferIds[MaterialBuffer];
+			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, materialBufferId);
+			renderDevice->SetBufferSubData(GL_UNIFORM_BUFFER, 0, MaterialBlock::BufferSize, materialUboBuffer);
+
+			renderDevice->BindBufferBase(GL_UNIFORM_BUFFER, UniformBuffer::MaterialBlock::BindingPoint, materialBufferId);
 
 			// Draw
 

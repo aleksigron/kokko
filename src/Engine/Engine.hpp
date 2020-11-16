@@ -7,6 +7,7 @@ class RenderDevice;
 class EntityManager;
 class Renderer;
 class MeshManager;
+class ShaderManager;
 class MaterialManager;
 class ResourceManager;
 class SceneManager;
@@ -28,6 +29,7 @@ private:
 	LightManager* lightManager;
 	Renderer* renderer;
 	MeshManager* meshManager;
+	ShaderManager* shaderManager;
 	MaterialManager* materialManager;
 	ResourceManager* resourceManager;
 	SceneManager* sceneManager;

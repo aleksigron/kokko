@@ -1,11 +1,8 @@
-#version 330 core
-
 in vec2 fs_tex_coord;
 
 out vec4 color;
 
 uniform sampler2D glyph_tex;
-uniform float shadow_offset;
 
 void main()
 {

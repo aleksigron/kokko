@@ -8,6 +8,7 @@
 
 #include "Core/Hash.hpp"
 #include "Core/HashMap.hpp"
+#include "Core/Sort.hpp"
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
 
@@ -15,8 +16,10 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "Rendering/Shader.hpp"
 #include "Rendering/RenderDevice.hpp"
+#include "Rendering/Uniform.hpp"
+
+#include "Resources/ShaderManager.hpp"
 
 #include "System/File.hpp"
 #include "System/IncludeOpenGL.hpp"
@@ -74,36 +77,37 @@ static bool LoadIncludes(
 
 static bool ProcessSource(
 	const char* mainPath,
-	rapidjson::Value::ConstMemberIterator includePaths,
+	StringRef versionStr,
+	StringRef uniformBlock,
+	const rapidjson::Value* includePaths,
 	HashMap<uint32_t, FileString>& includeFiles,
 	Allocator* allocator,
 	Buffer<char>& output)
 {
-	static const char versionStr[] = "#version 440\n";
-	static const std::size_t versionStrLen = sizeof(versionStr) - 1;
-
-	if (includePaths->value.IsArray() == false)
-	{
-		Log::Info("Error: ProcessSource() includePaths->value is not an array");
-		return false;
-	}
-
 	// Count include files length
-	std::size_t totalLength = versionStrLen;
+	std::size_t totalLength = versionStr.len + uniformBlock.len;
 
-	const rapidjson::Value& pathArray = includePaths->value;
-	for (auto itr = pathArray.Begin(), end = pathArray.End(); itr != end; ++itr)
+	if (includePaths != nullptr)
 	{
-		uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
-		auto* file = includeFiles.Lookup(hash);
-
-		if (file == nullptr)
+		if (includePaths->IsArray() == false)
 		{
-			Log::Info("Error: ProcessSource() include file source not found from includeFiles map");
+			Log::Info("Error: ProcessSource() includePaths->value is not an array");
 			return false;
 		}
 
-		totalLength += file->second.length;
+		for (auto itr = includePaths->Begin(), end = includePaths->End(); itr != end; ++itr)
+		{
+			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
+			auto* file = includeFiles.Lookup(hash);
+
+			if (file == nullptr)
+			{
+				Log::Info("Error: ProcessSource() include file source not found from includeFiles map");
+				return false;
+			}
+
+			totalLength += file->second.length;
+		}
 	}
 
 	Buffer<char> mainFile(allocator);
@@ -121,16 +125,25 @@ static bool ProcessSource(
 	// Concatenate all files together
 
 	char* dest = output.Data();
-	std::strcpy(dest, versionStr);
-	dest += versionStrLen;
+	std::memcpy(dest, versionStr.str, versionStr.len);
+	dest += versionStr.len;
 
-	for (auto itr = pathArray.Begin(), end = pathArray.End(); itr != end; ++itr)
+	if (uniformBlock.str != nullptr)
 	{
-		uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
-		auto* file = includeFiles.Lookup(hash);
+		std::memcpy(dest, uniformBlock.str, uniformBlock.len);
+		dest += uniformBlock.len;
+	}
 
-		std::strcpy(dest, file->second.string);
-		dest += file->second.length;
+	if (includePaths != nullptr)
+	{
+		for (auto itr = includePaths->Begin(), end = includePaths->End(); itr != end; ++itr)
+		{
+			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
+			auto* file = includeFiles.Lookup(hash);
+
+			std::memcpy(dest, file->second.string, file->second.length);
+			dest += file->second.length;
+		}
 	}
 
 	std::strcpy(dest, mainFile.Data());
@@ -138,35 +151,189 @@ static bool ProcessSource(
 	return true;
 }
 
-static void AddMaterialUniforms(
-	Shader& shaderOut,
-	RenderDevice* renderDevice,
+static bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUniform& b)
+{
+	const UniformTypeInfo& aType = UniformTypeInfo::Types[static_cast<unsigned int>(a.type)];
+	const UniformTypeInfo& bType = UniformTypeInfo::Types[static_cast<unsigned int>(b.type)];
+	return aType.size < bType.size;
+}
+
+static void AddUniforms(
+	ShaderData& shaderOut,
 	unsigned int count,
-	const ShaderUniformType* types,
+	const UniformDataType* types,
 	const char** names)
 {
-	shaderOut.materialUniformCount = count;
+	unsigned int textureUniformCount = 0;
+	unsigned int bufferUniformCount = 0;
 
 	for (unsigned uIndex = 0; uIndex < count; ++uIndex)
 	{
-		ShaderUniform& uniform = shaderOut.materialUniforms[uIndex];
+		ShaderUniform* baseUniform = nullptr;
 
-		// Get the uniform location in shader program
-		uniform.location = renderDevice->GetUniformLocation(shaderOut.driverId, names[uIndex]);
+		unsigned int typeIndex = static_cast<unsigned int>(types[uIndex]);
+		if (UniformTypeInfo::Types[typeIndex].isTexture)
+		{
+			TextureUniform& uniform = shaderOut.textureUniforms[textureUniformCount];
+
+			// Since shader is not compiled at this point, we can't know the uniform location
+			uniform.uniformLocation = -1;
+
+			// TODO: Support more texture types
+			uniform.textureTarget = types[uIndex] == UniformDataType::Tex2D ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP;
+			uniform.textureName = 0;
+
+			++textureUniformCount;
+
+			baseUniform = static_cast<ShaderUniform*>(&uniform);
+		}
+		else
+		{
+			BufferUniform& uniform = shaderOut.bufferUniforms[bufferUniformCount];
+			uniform.dataOffset = 0;
+			uniform.bufferObjectOffset = 0;
+
+			++bufferUniformCount;
+
+			baseUniform = static_cast<ShaderUniform*>(&uniform);
+		}
 
 		// Compute uniform name hash
-		unsigned len = std::strlen(names[uIndex]);
-		uniform.nameHash = Hash::FNV1a_32(names[uIndex], len);
+		unsigned int len = std::strlen(names[uIndex]);
 
-		uniform.type = types[uIndex];
+		baseUniform->name = StringRef(names[uIndex], len); // Temporarily point to original buffer
+		baseUniform->nameHash = Hash::FNV1a_32(names[uIndex], len);
+		baseUniform->type = types[uIndex];
+	}
 
-		// Make sure the uniform was found
-		assert(uniform.location >= 0);
+	shaderOut.bufferUniformCount = bufferUniformCount;
+	shaderOut.textureUniformCount = textureUniformCount;
+
+	// Order buffer uniforms based on size
+	InsertionSortPred(shaderOut.bufferUniforms, bufferUniformCount, BufferUniformSortPredicate);
+
+	// Calculate CPU and GPU buffer offsets for buffer uniforms
+
+	unsigned int dataBufferOffset = 0;
+	unsigned int bufferObjectOffset = 0;
+
+	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+	{
+		BufferUniform& uniform = shaderOut.bufferUniforms[i];
+		const UniformTypeInfo& type = UniformTypeInfo::FromType(uniform.type);
+
+		unsigned int alignmentModulo = bufferObjectOffset % type.alignment;
+		if (alignmentModulo > 0)
+			bufferObjectOffset += type.alignment - alignmentModulo;
+
+		uniform.dataOffset = dataBufferOffset;
+		uniform.bufferObjectOffset = bufferObjectOffset;
+
+		dataBufferOffset += type.size;
+		bufferObjectOffset += type.size;
+	}
+
+	shaderOut.uniformDataSize = dataBufferOffset;
+	shaderOut.uniformBufferSize = bufferObjectOffset;
+}
+
+static void CopyNamesAndGenerateBlockDefinition(ShaderData& shaderInOut, Allocator* allocator)
+{
+	const char* blockStart = "layout(std140, binding = 3) uniform MaterialBlock {\n";
+	const size_t blockStartLen = std::strlen(blockStart);
+	const char* blockRowFormat = "layout(offset = %u) %s %s;\n";
+	const size_t blockRowPlaceholdersLen = 6;
+	const size_t blockRowMaxLayoutDigits = 5;
+	const size_t blockRowFixedMaxLen = std::strlen(blockRowFormat) - blockRowPlaceholdersLen + blockRowMaxLayoutDigits;
+	const char* blockEnd = "};\n";
+	const size_t blockEndLen = std::strlen(blockEnd);
+
+	if (shaderInOut.bufferUniformCount == 0)
+	{
+		shaderInOut.uniformBlockDefinition = StringRef();
+		return;
+	}
+
+	// Calculate how much memory we need to store uniform names and uniform block definition
+
+	size_t nameBytesRequired = 0;
+	size_t uniformBlockBytesRequired = blockStartLen + blockEndLen + 1;
+
+	for (unsigned int i = 0, count = shaderInOut.bufferUniformCount; i < count; ++i)
+	{
+		const BufferUniform& uniform = shaderInOut.bufferUniforms[i];
+		const UniformTypeInfo& type = UniformTypeInfo::FromType(uniform.type);
+		
+		nameBytesRequired += uniform.name.len + 1;
+		uniformBlockBytesRequired += uniform.name.len + type.typeNameLength + blockRowFixedMaxLen;
+	}
+
+	for (unsigned int i = 0, count = shaderInOut.textureUniformCount; i < count; ++i)
+	{
+		const TextureUniform& uniform = shaderInOut.textureUniforms[i];
+		nameBytesRequired += uniform.name.len + 1;
+	}
+
+	// Allocate memory
+
+	shaderInOut.buffer = allocator->Allocate(nameBytesRequired + uniformBlockBytesRequired);
+	char* bufferPtr = static_cast<char*>(shaderInOut.buffer);
+
+	// Copy uniform names to buffer
+
+	for (unsigned int i = 0, count = shaderInOut.bufferUniformCount; i < count; ++i)
+	{
+		StringRef& uniformName = shaderInOut.bufferUniforms[i].name;
+
+		std::strncpy(bufferPtr, uniformName.str, uniformName.len + 1);
+		uniformName.str = bufferPtr; // Change uniform name to point to allocated memory
+		bufferPtr += uniformName.len + 1;
+	}
+
+	for (unsigned int i = 0, count = shaderInOut.textureUniformCount; i < count; ++i)
+	{
+		StringRef& uniformName = shaderInOut.textureUniforms[i].name;
+
+		std::strncpy(bufferPtr, uniformName.str, uniformName.len + 1);
+		uniformName.str = bufferPtr; // Change uniform name to point to allocated memory
+		bufferPtr += uniformName.len + 1;
+	}
+
+	// Generate uniform block definition
+
+	shaderInOut.uniformBlockDefinition.str = bufferPtr;
+
+	std::strncpy(bufferPtr, blockStart, blockStartLen + 1);
+	bufferPtr += blockStartLen;
+
+	for (unsigned int i = 0, count = shaderInOut.bufferUniformCount; i < count; ++i)
+	{
+		const BufferUniform& uniform = shaderInOut.bufferUniforms[i];
+		const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
+
+		int written = std::sprintf(bufferPtr, blockRowFormat, uniform.bufferObjectOffset, typeInfo.typeName, uniform.name.str);
+		bufferPtr += written;
+	}
+
+	std::strncpy(bufferPtr, blockEnd, blockEndLen + 1);
+	bufferPtr += blockEndLen;
+
+	shaderInOut.uniformBlockDefinition.len = bufferPtr - shaderInOut.uniformBlockDefinition.str;
+}
+
+static void UpdateTextureUniformLocations(
+	ShaderData& shaderInOut,
+	RenderDevice* renderDevice)
+{
+	for (unsigned idx = 0, count = shaderInOut.textureUniformCount; idx < count; ++idx)
+	{
+		TextureUniform& u = shaderInOut.textureUniforms[idx];
+		u.uniformLocation = renderDevice->GetUniformLocation(shaderInOut.driverId, u.name.str);
 	}
 }
 
 static bool Compile(
-	Shader& shaderOut,
+	ShaderData& shaderOut,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	unsigned int shaderType,
@@ -213,7 +380,7 @@ static bool Compile(
 }
 
 static bool CompileAndLink(
-	Shader& shaderOut,
+	ShaderData& shaderOut,
 	BufferRef<char> vertSource,
 	BufferRef<char> fragSource,
 	Allocator* allocator,
@@ -282,17 +449,13 @@ static bool CompileAndLink(
 }
 
 bool ShaderLoader::LoadFromConfiguration(
-	Shader& shaderOut,
+	ShaderData& shaderOut,
 	BufferRef<char> configuration,
 	Allocator* allocator,
 	RenderDevice* renderDevice)
 {
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 	using ValueItr = rapidjson::Value::ConstValueIterator;
-
-	const char* uniformNames[Shader::MaxMaterialUniforms];
-	ShaderUniformType uniformTypes[Shader::MaxMaterialUniforms];
-	unsigned int uniformCount = 0;
 
 	char* data = configuration.data;
 	unsigned long size = configuration.count;
@@ -341,6 +504,10 @@ bool ShaderLoader::LoadFromConfiguration(
 		}
 	}
 
+	const char* uniformNames[ShaderUniform::MaxBufferUniformCount];
+	UniformDataType uniformTypes[ShaderUniform::MaxBufferUniformCount];
+	unsigned int uniformCount = 0;
+
 	MemberItr uniformListItr = config.FindMember("materialUniforms");
 
 	if (uniformListItr != config.MemberEnd() && uniformListItr->value.IsArray())
@@ -365,42 +532,42 @@ bool ShaderLoader::LoadFromConfiguration(
 				switch (typeHash)
 				{
 				case "tex2d"_hash:
-					uniformTypes[uniformCount] = ShaderUniformType::Tex2D;
+					uniformTypes[uniformCount] = UniformDataType::Tex2D;
 					++uniformCount;
 					break;
 
 				case "texCube"_hash:
-					uniformTypes[uniformCount] = ShaderUniformType::TexCube;
+					uniformTypes[uniformCount] = UniformDataType::TexCube;
 					++uniformCount;
 					break;
 
 				case "mat4x4"_hash:
-					uniformTypes[uniformCount] = ShaderUniformType::Mat4x4;
+					uniformTypes[uniformCount] = UniformDataType::Mat4x4;
 					++uniformCount;
 					break;
 
 				case "vec4"_hash:
-					uniformTypes[uniformCount] = ShaderUniformType::Vec4;
+					uniformTypes[uniformCount] = UniformDataType::Vec4;
 					++uniformCount;
 					break;
 
 				case "vec3"_hash:
-					uniformTypes[uniformCount] = ShaderUniformType::Vec3;
+					uniformTypes[uniformCount] = UniformDataType::Vec3;
 					++uniformCount;
 					break;
 
 				case "vec2"_hash:
-					uniformTypes[uniformCount] = ShaderUniformType::Vec2;
+					uniformTypes[uniformCount] = UniformDataType::Vec2;
 					++uniformCount;
 					break;
 
 				case "float"_hash:
-					uniformTypes[uniformCount] = ShaderUniformType::Float;
+					uniformTypes[uniformCount] = UniformDataType::Float;
 					++uniformCount;
 					break;
 
 				case "int"_hash:
-					uniformTypes[uniformCount] = ShaderUniformType::Int;
+					uniformTypes[uniformCount] = UniformDataType::Int;
 					++uniformCount;
 					break;
 
@@ -410,6 +577,9 @@ bool ShaderLoader::LoadFromConfiguration(
 			}
 		}
 	}
+
+	AddUniforms(shaderOut, uniformCount, uniformTypes, uniformNames);
+	CopyNamesAndGenerateBlockDefinition(shaderOut, allocator);
 
 	MemberItr vsItr = config.FindMember("vertexShaderFile");
 	MemberItr fsItr = config.FindMember("fragmentShaderFile");
@@ -442,37 +612,31 @@ bool ShaderLoader::LoadFromConfiguration(
 
 	bool processSuccess = true;
 
-	Buffer<char> vertexSource(allocator);
-	Buffer<char> fragmentSource(allocator);
+	Buffer<char> vertSrc(allocator);
+	Buffer<char> fragSrc(allocator);
 
 	if (includeLoadSuccess)
 	{
-		const char* vsPath = vsItr->value.GetString();
-		const char* fsPath = fsItr->value.GetString();
+		StringRef versionStr("#version 440\n");
+		StringRef uniformBlock = shaderOut.uniformBlockDefinition;
 
-		if (vsIncItr != config.MemberEnd())
-		{
-			if (ProcessSource(vsPath, vsIncItr, includeFiles, allocator, vertexSource) == false)
-				processSuccess = false;
-		}
-		else if (File::ReadText(vsPath, vertexSource) == false)
+		const char* vsPath = vsItr->value.GetString();
+		const rapidjson::Value* vsInc = vsIncItr != config.MemberEnd() ? &vsIncItr->value : nullptr;
+		if (ProcessSource(vsPath, versionStr, uniformBlock, vsInc, includeFiles, allocator, vertSrc) == false)
 			processSuccess = false;
 
-		if (fsIncItr != config.MemberEnd())
-		{
-			if (ProcessSource(fsPath, fsIncItr, includeFiles, allocator, fragmentSource) == false)
-				processSuccess = false;
-		}
-		else if (File::ReadText(fsPath, fragmentSource) == false)
+		const char* fsPath = fsItr->value.GetString();
+		const rapidjson::Value* fsInc = fsIncItr != config.MemberEnd() ? &fsIncItr->value : nullptr;
+		if (ProcessSource(fsPath, versionStr, uniformBlock, fsInc, includeFiles, allocator, fragSrc) == false)
 			processSuccess = false;
 	}
 
 	bool success = false;
 
 	if (processSuccess &&
-		CompileAndLink(shaderOut, vertexSource.GetRef(), fragmentSource.GetRef(), allocator, renderDevice))
+		CompileAndLink(shaderOut, vertSrc.GetRef(), fragSrc.GetRef(), allocator, renderDevice))
 	{
-		AddMaterialUniforms(shaderOut, renderDevice, uniformCount, uniformTypes, uniformNames);
+		UpdateTextureUniformLocations(shaderOut, renderDevice);
 
 		success = true;
 	}

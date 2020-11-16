@@ -23,13 +23,13 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
-#include "Rendering/Shader.hpp"
 #include "Rendering/UniformBufferData.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
 #include "Resources/ResourceManager.hpp"
+#include "Resources/ShaderManager.hpp"
 #include "Resources/Texture.hpp"
 
 #include "Scene/Scene.hpp"
@@ -39,11 +39,11 @@
 
 struct RendererFramebuffer
 {
-	static const unsigned int MaxTextureCount = 4;
+	static const unsigned int MaxTextureUniformCount = 4;
 
 	unsigned int framebuffer;
 	unsigned int textureCount;
-	unsigned int textures[MaxTextureCount];
+	unsigned int textures[MaxTextureUniformCount];
 	int width;
 	int height;
 	bool used;
@@ -68,7 +68,11 @@ struct RendererViewport
 	unsigned int uniformBlockObject;
 };
 
-Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManager* lightManager) :
+Renderer::Renderer(
+	Allocator* allocator,
+	RenderDevice* renderDevice,
+	LightManager* lightManager,
+	ShaderManager* shaderManager) :
 	allocator(allocator),
 	device(renderDevice),
 	framebufferData(nullptr),
@@ -78,13 +82,14 @@ Renderer::Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManage
 	viewportIndexFullscreen(0),
 	entityMap(allocator),
 	lightManager(lightManager),
+	shaderManager(shaderManager),
 	overrideRenderCamera(nullptr),
 	overrideCullingCamera(nullptr),
 	commandList(allocator),
 	objectVisibility(allocator)
 {
 	lightingMesh = MeshId{ 0 };
-	lightingShader = 0;
+	lightingShader = ShaderId{ 0 };
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
 	objectUniformBufferId = 0;
@@ -262,8 +267,8 @@ void Renderer::Initialize(Window* window)
 	{
 		static const char* const path = "res/shaders/deferred_lighting/lighting.shader.json";
 
-		Shader* shader = resManager->GetShader(path);
-		lightingShader = shader->nameHash;
+		ShaderId shaderId = shaderManager->GetIdByPath(StringRef(path));
+		lightingShader = shaderId;
 	}
 
 	// Create skybox entity
@@ -344,6 +349,7 @@ void Renderer::Render(Scene* scene)
 
 	unsigned int lastVpIdx = MaxViewportCount;
 	unsigned int lastShaderProgram = 0;
+	MaterialId lastMaterialId = MaterialId{ 0 };
 
 	using namespace UniformBuffer;
 	unsigned char uboBuffer[TransformBlock::BufferSize];
@@ -370,72 +376,53 @@ void Renderer::Render(Scene* scene)
 				if (vpIdx != lastVpIdx)
 				{
 					unsigned int ubo = viewportData[vpIdx].uniformBlockObject;
-					unsigned int binding = UniformBuffer::ViewportBlock::BindingPoint;
+					unsigned int binding = ViewportBlock::BindingPoint;
 					device->BindBufferBase(GL_UNIFORM_BUFFER, binding, ubo);
 
 					lastVpIdx = vpIdx;
 				}
 
-				const MaterialData& matData = materialManager->GetMaterialData(matId);
-
-				unsigned int shaderId = matData.shader;
-				Shader* shader = res->GetShader(shaderId);
-
-				if (shader->driverId != lastShaderProgram)
-				{
-					device->UseShaderProgram(shader->driverId);
-					lastShaderProgram = shader->driverId;
-				}
 
 				unsigned int usedTextures = 0;
 
-				// Bind each material uniform with a value
-				for (unsigned uIndex = 0; uIndex < matData.uniformCount; ++uIndex)
+				if (matId != lastMaterialId)
 				{
-					const MaterialUniform& u = matData.uniforms[uIndex];
+					lastMaterialId = matId;
+					const MaterialData& matData = materialManager->GetMaterialData(matId);
 
-					unsigned char* d = matData.uniformData + u.dataOffset;
-
-					switch (u.type)
+					if (matData.cachedShaderDeviceId != lastShaderProgram)
 					{
-						case ShaderUniformType::Mat4x4:
-							device->SetUniformMat4x4f(u.location, 1, reinterpret_cast<float*>(d));
-							break;
+						device->UseShaderProgram(matData.cachedShaderDeviceId);
+						lastShaderProgram = matData.cachedShaderDeviceId;
 
-						case ShaderUniformType::Vec4:
-							device->SetUniformVec4f(u.location, 1, reinterpret_cast<float*>(d));
-							break;
-
-						case ShaderUniformType::Vec3:
-							device->SetUniformVec3f(u.location, 1, reinterpret_cast<float*>(d));
-							break;
-
-						case ShaderUniformType::Vec2:
-							device->SetUniformVec2f(u.location, 1, reinterpret_cast<float*>(d));
-							break;
-
-						case ShaderUniformType::Float:
-							device->SetUniformFloat(u.location, *reinterpret_cast<float*>(d));
-							break;
-
-						case ShaderUniformType::Int:
-							device->SetUniformInt(u.location, *reinterpret_cast<int*>(d));
-							break;
-
-						case ShaderUniformType::Tex2D:
-						case ShaderUniformType::TexCube:
+						// Bind textures
+						for (unsigned uIndex = 0; uIndex < matData.textureCount; ++uIndex)
 						{
-							uint32_t textureHash = *reinterpret_cast<uint32_t*>(d);
-							Texture* texture = res->GetTexture(textureHash);
+							const TextureUniform& u = matData.textureUniforms[uIndex];
 
-							device->SetActiveTextureUnit(usedTextures);
-							device->BindTexture(texture->targetType, texture->driverId);
-							device->SetUniformInt(u.location, usedTextures);
+							switch (u.type)
+							{
+							case UniformDataType::Tex2D:
+							case UniformDataType::TexCube:
+								device->SetActiveTextureUnit(usedTextures);
+								device->BindTexture(u.textureTarget, u.textureName);
+								device->SetUniformInt(u.uniformLocation, usedTextures);
+								++usedTextures;
+								break;
 
-							++usedTextures;
+							case UniformDataType::Mat4x4:
+							case UniformDataType::Vec4:
+							case UniformDataType::Vec3:
+							case UniformDataType::Vec2:
+							case UniformDataType::Float:
+							case UniformDataType::Int:
+								break;
+							}
 						}
-							break;
 					}
+
+					// Bind material uniform block to shader
+					device->BindBufferBase(GL_UNIFORM_BUFFER, MaterialBlock::BindingPoint, matData.uniformBufferObject);
 				}
 
 				// Update the object transform uniform buffer
@@ -446,9 +433,9 @@ void Renderer::Render(Scene* scene)
 				TransformBlock::M.Set(uboBuffer, model);
 
 				device->BindBuffer(GL_UNIFORM_BUFFER, objectUniformBufferId);
-				device->SetBufferSubData(GL_UNIFORM_BUFFER, 0, UniformBuffer::TransformBlock::BufferSize, uboBuffer);
+				device->SetBufferSubData(GL_UNIFORM_BUFFER, 0, TransformBlock::BufferSize, uboBuffer);
 
-				// Bind uniform block to shader
+				// Bind object transform uniform block to shader
 				device->BindBufferBase(GL_UNIFORM_BUFFER, TransformBlock::BindingPoint, objectUniformBufferId);
 
 				// Draw mesh
@@ -463,7 +450,7 @@ void Renderer::Render(Scene* scene)
 				using LightingBlock = UniformBuffer::LightingBlock;
 				unsigned char lightingUniformBuffer[LightingBlock::BufferSize];
 
-				Shader* shader = res->GetShader(lightingShader);
+				const ShaderData& shader = shaderManager->GetShaderData(lightingShader);
 
 				const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
 
@@ -478,7 +465,7 @@ void Renderer::Render(Scene* scene)
 				halfNearPlane.y = std::tan(renderCamera->parameters.height * 0.5f);
 				halfNearPlane.x = halfNearPlane.y * renderCamera->parameters.aspect;
 
-				const unsigned int shaderId = shader->driverId;
+				const unsigned int shaderId = shader.driverId;
 
 				int albSpecLoc = device->GetUniformLocation(shaderId, "g_alb_spec");
 				int normLoc = device->GetUniformLocation(shaderId, "g_norm");

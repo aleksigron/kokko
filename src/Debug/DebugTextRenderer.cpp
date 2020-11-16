@@ -10,25 +10,38 @@
 #include "Engine/Engine.hpp"
 
 #include "Rendering/RenderDevice.hpp"
-#include "Rendering/Shader.hpp"
+#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/UniformBufferData.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/BitmapFont.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/ResourceManager.hpp"
+#include "Resources/ShaderManager.hpp"
 
 #include "System/IncludeOpenGL.hpp"
 #include "System/File.hpp"
 
-DebugTextRenderer::DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice) :
+struct MaterialBlock
+{
+	static const std::size_t BufferSize = 16;
+
+	static UniformBuffer::ScalarUniform<float, 0> shadowOffset;
+};
+
+DebugTextRenderer::DebugTextRenderer(
+	Allocator* allocator,
+	RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
+	shaderManager(nullptr),
 	font(nullptr),
 	stringCharCount(0),
 	stringData(allocator),
 	renderData(allocator),
 	scaleFactor(1.0f),
 	meshId(MeshId{}),
+	materialBufferObjectId(0),
 	vertexData(allocator),
 	indexData(allocator)
 {
@@ -37,6 +50,16 @@ DebugTextRenderer::DebugTextRenderer(Allocator* allocator, RenderDevice* renderD
 DebugTextRenderer::~DebugTextRenderer()
 {
 	allocator->MakeDelete(font);
+
+	if (materialBufferObjectId != 0)
+	{
+		renderDevice->DestroyBuffers(1, &materialBufferObjectId);
+	}
+}
+
+void DebugTextRenderer::Initialize(ShaderManager* shaderManager)
+{
+	this->shaderManager = shaderManager;
 }
 
 void DebugTextRenderer::SetFrameSize(const Vec2f& size)
@@ -110,23 +133,35 @@ void DebugTextRenderer::Render()
 			meshId = meshManager->CreateMesh();
 		}
 
+		if (materialBufferObjectId == 0)
+		{
+			using namespace RenderData;
+			BufferUsage usage = BufferUsage::DynamicDraw;
+
+			renderDevice->CreateBuffers(1, &materialBufferObjectId);
+
+			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, materialBufferObjectId);
+			renderDevice->SetBufferData(GL_UNIFORM_BUFFER, MaterialBlock::BufferSize, nullptr, usage);
+		}
+
 		CreateAndUploadData();
 
-		Shader* shader = rm->GetShader("res/shaders/debug/debug_text.shader.json");
+		const char* shaderPath = "res/shaders/debug/debug_text.shader.json";
+		ShaderId shaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
-		const ShaderUniform* textureUniform = nullptr;
-		const ShaderUniform* shadowOffsetUniform = nullptr;
-		for (unsigned int i = 0; i < shader->materialUniformCount; ++i)
+		if (shaderId.IsNull())
+			return;
+
+		const ShaderData& shader = shaderManager->GetShaderData(shaderId);
+
+		const TextureUniform* textureUniform = nullptr;
+		for (unsigned int i = 0; i < shader.textureUniformCount; ++i)
 		{
-			ShaderUniformType type = shader->materialUniforms[i].type;
+			UniformDataType type = shader.textureUniforms[i].type;
 
-			if (type == ShaderUniformType::Tex2D)
+			if (type == UniformDataType::Tex2D)
 			{
-				textureUniform = shader->materialUniforms + i;
-			}
-			else if (type == ShaderUniformType::Float)
-			{
-				shadowOffsetUniform = shader->materialUniforms + i;
+				textureUniform = shader.textureUniforms + i;
 			}
 		}
 
@@ -136,21 +171,25 @@ void DebugTextRenderer::Render()
 		renderDevice->BlendFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// Use shader
-		renderDevice->UseShaderProgram(shader->driverId);
+		renderDevice->UseShaderProgram(shader.driverId);
 
-		// Bind shadow offset
-		if (shadowOffsetUniform != nullptr)
-		{
-			Vec2f texSize = font->GetTextureSize();
-			renderDevice->SetUniformFloat(shadowOffsetUniform->location, 1.0f / texSize.y);
-		}
+		// Update shadow offset
+
+		unsigned char materialUboBuffer[MaterialBlock::BufferSize];
+		Vec2f texSize = font->GetTextureSize();
+		MaterialBlock::shadowOffset.Set(materialUboBuffer, 1.0f / texSize.y);
+
+		renderDevice->BindBuffer(GL_UNIFORM_BUFFER, materialBufferObjectId);
+		renderDevice->SetBufferSubData(GL_UNIFORM_BUFFER, 0, MaterialBlock::BufferSize, materialUboBuffer);
+
+		renderDevice->BindBufferBase(GL_UNIFORM_BUFFER, UniformBuffer::MaterialBlock::BindingPoint, materialBufferObjectId);
 
 		// Bind texture
 		if (textureUniform != nullptr)
 		{
 			renderDevice->SetActiveTextureUnit(0);
 			renderDevice->BindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
-			renderDevice->SetUniformInt(textureUniform->location, 0);
+			renderDevice->SetUniformInt(textureUniform->uniformLocation, 0);
 		}
 
 		// Draw

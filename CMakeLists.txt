@@ -118,9 +118,9 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDeviceEnums.hpp
 	src/Rendering/RenderDeviceOpenGL.cpp
 	src/Rendering/RenderDeviceOpenGL.hpp
-	src/Rendering/Shader.cpp
-	src/Rendering/Shader.hpp
 	src/Rendering/TransparencyType.hpp
+	src/Rendering/Uniform.cpp
+	src/Rendering/Uniform.hpp
 	src/Rendering/UniformBufferData.hpp
 	src/Rendering/VertexFormat.cpp
 	src/Rendering/VertexFormat.hpp
@@ -139,8 +139,11 @@ set (KOKKO_SOURCES
 	src/Resources/MeshPresets.hpp
 	src/Resources/ResourceManager.cpp
 	src/Resources/ResourceManager.hpp
+	src/Resources/ShaderId.hpp
 	src/Resources/ShaderLoader.cpp
 	src/Resources/ShaderLoader.hpp
+	src/Resources/ShaderManager.cpp
+	src/Resources/ShaderManager.hpp
 	src/Resources/Texture.cpp
 	src/Resources/Texture.hpp
 	src/Resources/ValueSerialization.cpp

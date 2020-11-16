@@ -2,6 +2,8 @@
 
 class Allocator;
 class RenderDevice;
+class MeshManager;
+class ShaderManager;
 class Scene;
 class Window;
 
@@ -46,7 +48,7 @@ public:
 	Debug(Allocator* allocator, RenderDevice* renderDevice);
 	~Debug();
 
-	void SetWindow(Window* window);
+	void Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager);
 	
 	void Render(Scene* scene);
 

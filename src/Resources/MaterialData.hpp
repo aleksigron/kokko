@@ -1,15 +1,11 @@
 #pragma once
 
-#include "Rendering/Shader.hpp"
-
-struct MaterialUniform : ShaderUniform
-{
-	unsigned int dataOffset;
-};
-
 struct MaterialId
 {
 	unsigned int i;
 
 	bool IsNull() const { return i == 0; }
+
+	bool operator==(MaterialId other) { return i == other.i; }
+	bool operator!=(MaterialId other) { return operator==(other) == false; }
 };

@@ -4,8 +4,6 @@
 
 #include "Core/Hash.hpp"
 
-#include "Rendering/Shader.hpp"
-
 #include "Resources/ShaderLoader.hpp"
 #include "Resources/Texture.hpp"
 #include "Resources/ImageData.hpp"
@@ -14,83 +12,21 @@
 
 ResourceManager::ResourceManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
-	renderDevice(renderDevice)
+	renderDevice(renderDevice),
+	textures(nullptr),
+	textureCount(0),
+	textureAllocated(0)
 {
 }
 
 ResourceManager::~ResourceManager()
 {
 	allocator->Deallocate(textures);
-	allocator->Deallocate(shaders);
 }
 
 RenderDevice* ResourceManager::GetRenderDevice()
 {
 	return renderDevice;
-}
-
-Shader* ResourceManager::GetShader(uint32_t hash) const
-{
-	for (unsigned int i = 0; i < shaderCount; ++i)
-	{
-		if (shaders[i].nameHash == hash)
-		{
-			return shaders + i;
-		}
-	}
-
-	return nullptr;
-}
-
-Shader* ResourceManager::GetShader(const char* path)
-{
-	size_t shaderNameLen = std::strlen(path);
-	uint32_t shaderNameHash = Hash::FNV1a_32(path, shaderNameLen);
-
-	// Try to find the shader using shader path hash
-	Shader* result = this->GetShader(shaderNameHash);
-
-	if (result == nullptr)
-	{
-		if (shaderCount == shaderAllocated)
-		{
-			unsigned int newAllocatedCount = (shaderAllocated > 0) ? shaderAllocated * 2 : 32;
-			unsigned int newAllocatedSize = newAllocatedCount * sizeof(Shader);
-			Shader* newShaders = static_cast<Shader*>(allocator->Allocate(newAllocatedSize));
-
-			for (unsigned int i = 0; i < shaderCount; ++i)
-			{
-				newShaders[i] = shaders[i];
-			}
-
-			allocator->Deallocate(shaders);
-			shaders = newShaders;
-			shaderAllocated = newAllocatedCount;
-		}
-
-		Shader& shader = shaders[shaderCount];
-
-		if (this->LoadShader(shader, path))
-		{
-			++shaderCount;
-
-			shader.nameHash = shaderNameHash;
-
-			result = &shader;
-		}
-	}
-
-	return result;
-}
-
-bool ResourceManager::LoadShader(Shader& shader, const char* configPath)
-{
-	Buffer<char> configuration(allocator);
-
-	if (File::ReadText(configPath, configuration))
-		return ShaderLoader::LoadFromConfiguration(shader, configuration.GetRef(), allocator, renderDevice);
-	else
-		return false;
 }
 
 Texture* ResourceManager::GetTexture(uint32_t hash) const

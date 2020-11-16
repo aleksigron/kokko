@@ -7,6 +7,7 @@
 #include "Debug/Debug.hpp"
 #include "Debug/DebugLog.hpp"
 #include "Debug/DebugTextRenderer.hpp"
+#include "Debug/DebugVectorRenderer.hpp"
 
 #include "Entity/EntityManager.hpp"
 
@@ -19,6 +20,7 @@
 #include "Rendering/Renderer.hpp"
 
 #include "Resources/MeshManager.hpp"
+#include "Resources/ShaderManager.hpp"
 #include "Resources/MaterialManager.hpp"
 #include "Resources/ResourceManager.hpp"
 
@@ -55,17 +57,21 @@ Engine::Engine()
 	Allocator* meshManagerAlloc = allocatorManager->CreateAllocatorScope("MeshManager", defaultAllocator);
 	this->meshManager = defaultAllocator->MakeNew<MeshManager>(meshManagerAlloc, renderDevice);
 
-	Allocator* materialManagerAlloc = allocatorManager->CreateAllocatorScope("MaterialManager", defaultAllocator);
-	this->materialManager = defaultAllocator->MakeNew<MaterialManager>(materialManagerAlloc);
-
 	Allocator* resourceManagerAlloc = allocatorManager->CreateAllocatorScope("ResourceManager", defaultAllocator);
 	this->resourceManager = defaultAllocator->MakeNew<ResourceManager>(resourceManagerAlloc, renderDevice);
+
+	Allocator* shaderManagerAlloc = allocatorManager->CreateAllocatorScope("ShaderManager", defaultAllocator);
+	this->shaderManager = defaultAllocator->MakeNew<ShaderManager>(shaderManagerAlloc, renderDevice);
+
+	Allocator* materialManagerAlloc = allocatorManager->CreateAllocatorScope("MaterialManager", defaultAllocator);
+	this->materialManager = defaultAllocator->MakeNew<MaterialManager>(
+		materialManagerAlloc, renderDevice, shaderManager, resourceManager);
 
 	Allocator* lightManagerAlloc = allocatorManager->CreateAllocatorScope("LightManager", defaultAllocator);
 	this->lightManager = defaultAllocator->MakeNew<LightManager>(lightManagerAlloc);
 
 	Allocator* rendererAlloc = allocatorManager->CreateAllocatorScope("Renderer", defaultAllocator);
-	this->renderer = defaultAllocator->MakeNew<Renderer>(rendererAlloc, renderDevice, lightManager);
+	this->renderer = defaultAllocator->MakeNew<Renderer>(rendererAlloc, renderDevice, lightManager, shaderManager);
 
 	Allocator* sceneManagerAlloc = allocatorManager->CreateAllocatorScope("SceneManager", defaultAllocator);
 	this->sceneManager = defaultAllocator->MakeNew<SceneManager>(sceneManagerAlloc);
@@ -78,8 +84,9 @@ Engine::~Engine()
 	defaultAllocator->MakeDelete(this->sceneManager);
 	defaultAllocator->MakeDelete(this->renderer);
 	defaultAllocator->MakeDelete(this->lightManager);
-	defaultAllocator->MakeDelete(this->resourceManager);
 	defaultAllocator->MakeDelete(this->materialManager);
+	defaultAllocator->MakeDelete(this->shaderManager);
+	defaultAllocator->MakeDelete(this->resourceManager);
 	defaultAllocator->MakeDelete(this->meshManager);
 	defaultAllocator->MakeDelete(this->entityManager);
 	defaultAllocator->MakeDelete(this->time);
@@ -113,7 +120,7 @@ bool Engine::Initialize()
 			debugLog->Log(logText);
 		}
 
-		debug->SetWindow(mainWindow);
+		debug->Initialize(mainWindow, meshManager, shaderManager);
 
 		renderer->Initialize(mainWindow);
 

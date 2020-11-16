@@ -12,6 +12,7 @@
 
 #include "Resources/MeshData.hpp"
 #include "Resources/MaterialData.hpp"
+#include "Resources/ShaderId.hpp"
 
 #include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RendererData.hpp"
@@ -22,9 +23,11 @@
 class Allocator;
 class Camera;
 class LightManager;
+class ShaderManager;
 class RenderDevice;
 class Scene;
 class Window;
+
 struct BoundingBox;
 struct RendererFramebuffer;
 struct RendererViewport;
@@ -53,7 +56,7 @@ private:
 	unsigned int viewportIndexFullscreen;
 
 	MeshId lightingMesh;
-	unsigned int lightingShader;
+	ShaderId lightingShader;
 	MaterialId shadowMaterial;
 	unsigned int lightingUniformBufferId;
 	unsigned int objectUniformBufferId;
@@ -77,6 +80,7 @@ private:
 	RenderOrderConfiguration renderOrder;
 
 	LightManager* lightManager;
+	ShaderManager* shaderManager;
 
 	Camera* overrideRenderCamera;
 	Camera* overrideCullingCamera;
@@ -99,7 +103,8 @@ private:
 	Camera* GetCullingCamera(Scene* scene);
 	
 public:
-	Renderer(Allocator* allocator, RenderDevice* renderDevice, LightManager* lightManager);
+	Renderer(Allocator* allocator, RenderDevice* renderDevice,
+		LightManager* lightManager, ShaderManager* shaderManager);
 	~Renderer();
 
 	void Initialize(Window* window);

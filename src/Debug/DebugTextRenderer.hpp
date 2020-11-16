@@ -2,14 +2,18 @@
 
 #include "Core/Array.hpp"
 #include "Core/StringRef.hpp"
+
 #include "Math/Rectangle.hpp"
-#include "Rendering/VertexFormat.hpp"
 #include "Math/Vec2.hpp"
+
+#include "Rendering/VertexFormat.hpp"
+
 #include "Resources/MeshData.hpp"
 
 class Allocator;
 class BitmapFont;
 class RenderDevice;
+class ShaderManager;
 
 class DebugTextRenderer
 {
@@ -22,8 +26,8 @@ private:
 	};
 
 	Allocator* allocator;
-
 	RenderDevice* renderDevice;
+	ShaderManager* shaderManager;
 
 	BitmapFont* font;
 	unsigned int stringCharCount;
@@ -38,11 +42,15 @@ private:
 	Array<Vertex3f2f> vertexData;
 	Array<unsigned short> indexData;
 
+	unsigned int materialBufferObjectId;
+
 	void CreateAndUploadData();
 
 public:
 	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice);
 	~DebugTextRenderer();
+
+	void Initialize(ShaderManager* shaderManager);
 
 	bool LoadBitmapFont(const char* filePath);
 	bool HasValidFont() const { return font != nullptr; }

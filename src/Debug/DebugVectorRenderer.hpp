@@ -1,16 +1,21 @@
 #pragma once
 
+#include "Core/Color.hpp"
+
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
 #include "Math/Mat4x4.hpp"
 #include "Math/Rectangle.hpp"
-#include "Core/Color.hpp"
-#include "Resources/MeshData.hpp"
 #include "Math/Projection.hpp"
+
+#include "Resources/MeshData.hpp"
+#include "Resources/ShaderId.hpp"
 
 class Allocator;
 class Camera;
 class RenderDevice;
+class MeshManager;
+class ShaderManager;
 
 class DebugVectorRenderer
 {
@@ -32,8 +37,9 @@ private:
 	};
 
 	Allocator* allocator;
-
 	RenderDevice* renderDevice;
+	MeshManager* meshManager;
+	ShaderManager* shaderManager;
 
 	Primitive* primitives;
 	unsigned int primitiveCount;
@@ -42,13 +48,20 @@ private:
 	bool meshesInitialized;
 	MeshId meshIds[4];
 
-	unsigned int objectUniformBufferId;
+	ShaderId shaderId;
+
+	enum UniformBufferType { ObjectBuffer, MaterialBuffer };
+
+	bool buffersInitialized;
+	unsigned int uniformBufferIds[2];
 
 	void CreateMeshes();
 
 public:
 	DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice);
 	~DebugVectorRenderer();
+
+	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager);
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
 	void DrawLine(const Vec3f& start, const Vec3f& end, const Color& color);

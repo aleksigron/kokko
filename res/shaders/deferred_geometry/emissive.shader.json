@@ -1,6 +1,7 @@
 {
 	"vsIncludes": [ "res/shaders/common/transform_block.glsl" ],
 	"vertexShaderFile": "res/shaders/deferred_geometry/emissive.vert.glsl",
+	"fsIncludes": [ "res/shaders/common/constants.glsl" ],
 	"fragmentShaderFile": "res/shaders/deferred_geometry/emissive.frag.glsl",
 	"materialUniforms":
 	[

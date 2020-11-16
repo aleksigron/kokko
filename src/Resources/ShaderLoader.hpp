@@ -6,12 +6,12 @@
 
 class Allocator;
 class RenderDevice;
-struct Shader;
+struct ShaderData;
 
 namespace ShaderLoader
 {
 	bool LoadFromConfiguration(
-		Shader& shaderOut,
+		ShaderData& shaderOut,
 		BufferRef<char> configuration,
 		Allocator* allocator,
 		RenderDevice* renderDevice);
