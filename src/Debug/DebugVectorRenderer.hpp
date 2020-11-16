@@ -62,6 +62,7 @@ public:
 	~DebugVectorRenderer();
 
 	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager);
+	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
 	void DrawLine(const Vec3f& start, const Vec3f& end, const Color& color);

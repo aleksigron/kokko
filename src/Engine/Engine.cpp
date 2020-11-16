@@ -79,6 +79,9 @@ Engine::Engine()
 
 Engine::~Engine()
 {
+	renderer->Deinitialize();
+	debug->Deinitialize();
+
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
 
 	defaultAllocator->MakeDelete(this->sceneManager);

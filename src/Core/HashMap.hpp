@@ -8,6 +8,7 @@
 #include "Memory/Allocator.hpp"
 
 // Based on https://github.com/preshing/CompareIntegerMaps
+// TODO: Make sure iterator will also go through zero pair
 
 template <typename KeyType, typename ValueType>
 class HashMap
@@ -247,7 +248,7 @@ public:
 						return;
 					}
 
-					KeyValuePair* ideal = GetIndex(Hash::FNV1a_32(neighbor->first));
+					KeyValuePair* ideal = data + GetIndex(Hash::FNV1a_32(neighbor->first));
 					if (GetOffset(ideal, pair) < GetOffset(ideal, neighbor))
 					{
 						// Swap with neighbor, then make neighbor the new cell to remove.

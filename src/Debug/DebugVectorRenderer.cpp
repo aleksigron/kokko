@@ -47,20 +47,6 @@ DebugVectorRenderer::DebugVectorRenderer(
 
 DebugVectorRenderer::~DebugVectorRenderer()
 {
-	allocator->Deallocate(primitives);
-
-	if (meshesInitialized)
-	{
-		Engine* engine = Engine::GetInstance();
-		MeshManager* meshManager = engine->GetMeshManager();
-		for (unsigned int i = 0; i < 4; ++i)
-			meshManager->RemoveMesh(meshIds[i]);
-	}
-
-	if (buffersInitialized)
-	{
-		renderDevice->DestroyBuffers(2, uniformBufferIds);
-	}
 }
 
 void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager)
@@ -202,6 +188,28 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.idxCount = sizeof(rectangleIndexData) / sizeof(unsigned short);
 
 		meshManager->Upload_3f(rectangleMeshId, data, RenderData::BufferUsage::StaticDraw);
+	}
+}
+
+void DebugVectorRenderer::Deinitialize()
+{
+	allocator->Deallocate(primitives);
+	primitives = nullptr;
+
+	if (meshesInitialized)
+	{
+		Engine* engine = Engine::GetInstance();
+		MeshManager* meshManager = engine->GetMeshManager();
+		for (unsigned int i = 0; i < 4; ++i)
+			meshManager->RemoveMesh(meshIds[i]);
+
+		meshesInitialized = false;
+	}
+
+	if (buffersInitialized)
+	{
+		renderDevice->DestroyBuffers(2, uniformBufferIds);
+		buffersInitialized = false;
 	}
 }
 

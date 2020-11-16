@@ -49,6 +49,7 @@ public:
 	~Debug();
 
 	void Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager);
+	void Deinitialize();
 	
 	void Render(Scene* scene);
 

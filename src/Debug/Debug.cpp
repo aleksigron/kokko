@@ -107,6 +107,11 @@ void Debug::Initialize(Window* window, MeshManager* meshManager, ShaderManager* 
 	culling->SetGuideTextPosition(Vec2f(0.0f, scaledLineHeight));
 }
 
+void Debug::Deinitialize()
+{
+	vectorRenderer->Deinitialize();
+}
+
 void Debug::Render(Scene* scene)
 {
 	bool vsync = false;

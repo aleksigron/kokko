@@ -294,34 +294,56 @@ void Renderer::Deinitialize()
 	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
 
 	if (lightingMesh.IsValid())
-		meshManager->RemoveMesh(lightingMesh);
-
-	if (lightingUniformBufferId != 0)
-		device->DestroyBuffers(1, &lightingUniformBufferId);
-
-	if (objectUniformBufferId != 0)
-		device->DestroyBuffers(1, &objectUniformBufferId);
-
-	for (unsigned int i = 0; i < framebufferCount; ++i)
 	{
-		RendererFramebuffer& fb = framebufferData[i];
-
-		if (fb.framebuffer != 0)
-		{
-			device->DestroyTextures(fb.textureCount, fb.textures);
-			device->DestroyFramebuffers(1, &fb.framebuffer);
-		}
+		meshManager->RemoveMesh(lightingMesh);
+		lightingMesh = MeshId{ 0 };
 	}
 
-	for (size_t i = 0; i < MaxViewportCount; ++i)
-		if (viewportData[i].uniformBlockObject != 0)
-			device->DestroyBuffers(1, &(viewportData[i].uniformBlockObject));
+	if (lightingUniformBufferId != 0)
+	{
+		device->DestroyBuffers(1, &lightingUniformBufferId);
+		lightingUniformBufferId = 0;
+	}
 
-	this->allocator->Deallocate(viewportData);
-	viewportData = nullptr;
+	if (objectUniformBufferId != 0)
+	{
+		device->DestroyBuffers(1, &objectUniformBufferId);
+		objectUniformBufferId = 0;
+	}
 
-	this->allocator->Deallocate(framebufferData);
-	framebufferData = nullptr;
+	if (framebufferData != nullptr)
+	{
+		for (unsigned int i = 0; i < framebufferCount; ++i)
+		{
+			RendererFramebuffer& fb = framebufferData[i];
+
+			if (fb.framebuffer != 0)
+			{
+				device->DestroyTextures(fb.textureCount, fb.textures);
+				device->DestroyFramebuffers(1, &fb.framebuffer);
+
+				fb.framebuffer = 0;
+			}
+		}
+
+		this->allocator->Deallocate(framebufferData);
+		framebufferData = nullptr;
+	}
+
+	if (viewportData != nullptr)
+	{
+		for (size_t i = 0; i < MaxViewportCount; ++i)
+		{
+			if (viewportData[i].uniformBlockObject != 0)
+			{
+				device->DestroyBuffers(1, &(viewportData[i].uniformBlockObject));
+				viewportData[i].uniformBlockObject = 0;
+			}
+		}
+
+		this->allocator->Deallocate(viewportData);
+		viewportData = nullptr;
+	}
 }
 
 Camera* Renderer::GetRenderCamera(Scene* scene)

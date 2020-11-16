@@ -30,6 +30,9 @@ ShaderManager::ShaderManager(Allocator* allocator, RenderDevice* renderDevice) :
 
 ShaderManager::~ShaderManager()
 {
+	for (unsigned int i = 1, count = data.count; i < count; ++i)
+		allocator->Deallocate(data.shader[i].buffer);
+
 	allocator->Deallocate(data.buffer);
 }
 
@@ -95,7 +98,25 @@ ShaderId ShaderManager::CreateShader()
 
 void ShaderManager::RemoveShader(ShaderId id)
 {
-	// Material isn't the last one
+	{
+		HashMap<uint32_t, ShaderId>::Iterator itr = nameHashMap.Begin();
+		HashMap<uint32_t, ShaderId>::Iterator end = nameHashMap.End();
+		for (; itr != end; ++itr)
+			if (itr->second == id)
+				break;
+
+		// TODO: Fix this hack, make removing by value easier
+		if (itr != end)
+			nameHashMap.Remove(&*itr);
+	}
+
+	if (data.shader[id.i].buffer != nullptr)
+	{
+		allocator->Deallocate(data.shader[id.i].buffer);
+		data.shader[id.i].buffer = nullptr;
+	}
+
+	// If material isn't the last one, add it to the freelist
 	if (id.i < data.count - 1)
 	{
 		data.freeList[id.i] = freeListFirst;
