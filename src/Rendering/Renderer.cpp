@@ -86,7 +86,8 @@ Renderer::Renderer(
 	overrideRenderCamera(nullptr),
 	overrideCullingCamera(nullptr),
 	commandList(allocator),
-	objectVisibility(allocator)
+	objectVisibility(allocator),
+	lightResultArray(allocator)
 {
 	lightingMesh = MeshId{ 0 };
 	lightingShader = ShaderId{ 0 };
@@ -477,11 +478,8 @@ void Renderer::Render(Scene* scene)
 				const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
 
 				// Update directional light viewports
-				Array<LightId> directionalLights(allocator);
+				Array<LightId>& directionalLights = lightResultArray;
 				lightManager->GetDirectionalLights(directionalLights);
-
-				Array<LightId> nonDirLights(allocator);
-				lightManager->GetNonDirectionalLightsWithinFrustum(fsvp.frustum, nonDirLights);
 
 				Vec2f halfNearPlane;
 				halfNearPlane.y = std::tan(renderCamera->parameters.height * 0.5f);
@@ -521,6 +519,10 @@ void Renderer::Render(Scene* scene)
 				}
 
 				char uniformNameBuf[32];
+
+				lightResultArray.Clear();
+				Array<LightId>& nonDirLights = lightResultArray;
+				lightManager->GetNonDirectionalLightsWithinFrustum(fsvp.frustum, nonDirLights);
 
 				unsigned int pointLightCount = 0;
 				unsigned int spotLightCount = 0;
@@ -576,6 +578,8 @@ void Renderer::Render(Scene* scene)
 					Vec3f lightCol = lightManager->GetColor(lightId);
 					LightingBlock::lightColors.SetOne(lightingUniformBuffer, shaderLightIdx, lightCol);
 				}
+
+				lightResultArray.Clear();
 
 				// Bind textures
 
@@ -817,15 +821,14 @@ void Renderer::PopulateCommandList(Scene* scene)
 	viewportCount = 0;
 
 	// Update directional light viewports
-	Array<LightId> directionalLights(allocator);
-	lightManager->GetDirectionalLights(directionalLights);
+	lightManager->GetDirectionalLights(lightResultArray);
 
 	using ViewportBlock = UniformBuffer::ViewportBlock;
 	unsigned char viewportBlockBuffer[ViewportBlock::BufferSize];
 	
-	for (unsigned int i = 0, count = directionalLights.GetCount(); i < count; ++i)
+	for (unsigned int i = 0, count = lightResultArray.GetCount(); i < count; ++i)
 	{
-		LightId id = directionalLights[i];
+		LightId id = lightResultArray[i];
 
 		if (lightManager->GetShadowCasting(id) &&
 			viewportCount + shadowCascadeCount + 1 <= MaxViewportCount)
@@ -861,6 +864,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 		}
 	}
 
+	lightResultArray.Clear();
+
 	unsigned int numShadowViewports = viewportCount;
 
 	{
@@ -890,9 +895,6 @@ void Renderer::PopulateCommandList(Scene* scene)
 	}
 
 	const FrustumPlanes& fullscreenFrustum = viewportData[viewportIndexFullscreen].frustum;
-
-	Array<LightId> nonDirLights(allocator);
-	lightManager->GetNonDirectionalLightsWithinFrustum(fullscreenFrustum, nonDirLights);
 
 	unsigned int colorAndDepthMask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
 

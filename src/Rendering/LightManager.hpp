@@ -15,13 +15,6 @@
 
 class Allocator;
 
-struct LightId
-{
-	unsigned int i;
-
-	bool IsNull() const { return i == 0; }
-};
-
 class LightManager : public ITransformUpdateReceiver
 {
 private:

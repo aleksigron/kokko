@@ -14,6 +14,7 @@
 #include "Resources/MaterialData.hpp"
 #include "Resources/ShaderId.hpp"
 
+#include "Rendering/Light.hpp"
 #include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RendererData.hpp"
 #include "Rendering/RenderOrder.hpp"
@@ -87,6 +88,8 @@ private:
 
 	RenderCommandList commandList;
 	Array<BitPack> objectVisibility;
+
+	Array<LightId> lightResultArray;
 
 	Entity skyboxEntity;
 
