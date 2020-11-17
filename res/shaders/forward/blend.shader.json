@@ -1,7 +1,11 @@
 {
-	"vsIncludes": [ "res/shaders/common/transform_block.glsl" ],
-	"vertexShaderFile": "res/shaders/forward/blend.vert.glsl",
-	"fsIncludes": [ "res/shaders/common/viewport_block.glsl" ],
-	"fragmentShaderFile": "res/shaders/forward/blend.frag.glsl",
+	"vs": {
+		"main": "res/shaders/forward/blend.vert.glsl",
+		"includes": [ "res/shaders/common/transform_block.glsl" ]
+	},
+	"fs": {
+		"main": "res/shaders/forward/blend.frag.glsl",
+		"includes": [ "res/shaders/common/viewport_block.glsl" ]
+	},
 	"transparencyType": "transparentMix"
 }

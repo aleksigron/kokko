@@ -31,18 +31,18 @@ struct FileString
 };
 
 static bool LoadIncludes(
-	rapidjson::Value::ConstMemberIterator member,
+	const rapidjson::Value& value,
 	HashMap<uint32_t, FileString>& includeFiles,
 	Allocator* allocator)
 {
-	if (member->value.IsArray() == false)
+	if (value.IsArray() == false)
 	{
-		Log::Info("Error: LoadIncludes() member->value is not an array");
+		Log::Info("Error: LoadIncludes() value is not an array");
 		return false;
 	}
 
 	using ValueItr = rapidjson::Value::ConstValueIterator;
-	for (ValueItr itr = member->value.Begin(), end = member->value.End(); itr != end; ++itr)
+	for (ValueItr itr = value.Begin(), end = value.End(); itr != end; ++itr)
 	{
 		if (itr->IsString())
 		{
@@ -508,7 +508,7 @@ bool ShaderLoader::LoadFromConfiguration(
 	UniformDataType uniformTypes[ShaderUniform::MaxBufferUniformCount];
 	unsigned int uniformCount = 0;
 
-	MemberItr uniformListItr = config.FindMember("materialUniforms");
+	MemberItr uniformListItr = config.FindMember("properties");
 
 	if (uniformListItr != config.MemberEnd() && uniformListItr->value.IsArray())
 	{
@@ -581,11 +581,18 @@ bool ShaderLoader::LoadFromConfiguration(
 	AddUniforms(shaderOut, uniformCount, uniformTypes, uniformNames);
 	CopyNamesAndGenerateBlockDefinition(shaderOut, allocator);
 
-	MemberItr vsItr = config.FindMember("vertexShaderFile");
-	MemberItr fsItr = config.FindMember("fragmentShaderFile");
+	MemberItr vsItr = config.FindMember("vs");
+	MemberItr fsItr = config.FindMember("fs");
 
-	if (vsItr == config.MemberEnd() || !vsItr->value.IsString() ||
-		fsItr == config.MemberEnd() || !fsItr->value.IsString())
+	if (vsItr == config.MemberEnd() || !vsItr->value.IsObject() ||
+		fsItr == config.MemberEnd() || !fsItr->value.IsObject())
+		return false;
+
+	MemberItr vsMainItr = vsItr->value.FindMember("main");
+	MemberItr fsMainItr = fsItr->value.FindMember("main");
+
+	if (vsMainItr == vsItr->value.MemberEnd() || !vsMainItr->value.IsString() ||
+		fsMainItr == fsItr->value.MemberEnd() || !fsMainItr->value.IsString())
 		return false;
 
 	// Load all include files, they can be shared between shader stages
@@ -594,17 +601,17 @@ bool ShaderLoader::LoadFromConfiguration(
 
 	bool includeLoadSuccess = true;
 
-	MemberItr vsIncItr = config.FindMember("vsIncludes");
-	if (vsIncItr != config.MemberEnd())
+	MemberItr vsIncItr = vsItr->value.FindMember("includes");
+	if (vsIncItr != vsItr->value.MemberEnd())
 	{
-		if (LoadIncludes(vsIncItr, includeFiles, allocator) == false)
+		if (LoadIncludes(vsIncItr->value, includeFiles, allocator) == false)
 			includeLoadSuccess = false;
 	}
 
-	MemberItr fsIncItr = config.FindMember("fsIncludes");
-	if (fsIncItr != config.MemberEnd())
+	MemberItr fsIncItr = fsItr->value.FindMember("includes");
+	if (fsIncItr != fsItr->value.MemberEnd())
 	{
-		if (LoadIncludes(fsIncItr, includeFiles, allocator) == false)
+		if (LoadIncludes(fsIncItr->value, includeFiles, allocator) == false)
 			includeLoadSuccess = false;
 	}
 
@@ -620,13 +627,13 @@ bool ShaderLoader::LoadFromConfiguration(
 		StringRef versionStr("#version 440\n");
 		StringRef uniformBlock = shaderOut.uniformBlockDefinition;
 
-		const char* vsPath = vsItr->value.GetString();
-		const rapidjson::Value* vsInc = vsIncItr != config.MemberEnd() ? &vsIncItr->value : nullptr;
+		const char* vsPath = vsMainItr->value.GetString();
+		const rapidjson::Value* vsInc = vsIncItr != vsItr->value.MemberEnd() ? &vsIncItr->value : nullptr;
 		if (ProcessSource(vsPath, versionStr, uniformBlock, vsInc, includeFiles, allocator, vertSrc) == false)
 			processSuccess = false;
 
-		const char* fsPath = fsItr->value.GetString();
-		const rapidjson::Value* fsInc = fsIncItr != config.MemberEnd() ? &fsIncItr->value : nullptr;
+		const char* fsPath = fsMainItr->value.GetString();
+		const rapidjson::Value* fsInc = fsIncItr != fsItr->value.MemberEnd() ? &fsIncItr->value : nullptr;
 		if (ProcessSource(fsPath, versionStr, uniformBlock, fsInc, includeFiles, allocator, fragSrc) == false)
 			processSuccess = false;
 	}

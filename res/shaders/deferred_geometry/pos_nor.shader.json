@@ -1,10 +1,13 @@
 {
-	"vsIncludes": [ "res/shaders/common/transform_block.glsl" ],
-	"vertexShaderFile": "res/shaders/deferred_geometry/pos_nor.vert.glsl",
-	"fsIncludes": [ "res/shaders/common/constants.glsl" ],
-	"fragmentShaderFile": "res/shaders/deferred_geometry/pos_nor.frag.glsl",
-	"materialUniforms":
-	[
+	"vs": {
+		"main": "res/shaders/deferred_geometry/pos_nor.vert.glsl",
+		"includes": [ "res/shaders/common/transform_block.glsl" ]
+	},
+	"fs": {
+		"main": "res/shaders/deferred_geometry/pos_nor.frag.glsl",
+		"includes": [ "res/shaders/common/constants.glsl" ]
+	},
+	"properties": [
 		{ "name": "base_color", "type": "vec3" }
 	]
 }

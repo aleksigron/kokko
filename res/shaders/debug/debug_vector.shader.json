@@ -1,6 +1,12 @@
 {
-	"vsIncludes": [ "res/shaders/common/transform_block.glsl" ],
-	"vertexShaderFile": "res/shaders/debug/debug_vector.vert.glsl",
-	"fragmentShaderFile": "res/shaders/debug/debug_vector.frag.glsl",
-	"materialUniforms": [ { "name": "base_color", "type": "vec4" } ]
+	"vs": {
+		"main": "res/shaders/debug/debug_vector.vert.glsl",
+		"includes": [ "res/shaders/common/transform_block.glsl" ]
+	},
+	"fs": {
+		"main": "res/shaders/debug/debug_vector.frag.glsl"
+	},
+	"properties": [
+		{ "name": "base_color", "type": "vec4" }
+	]
 }

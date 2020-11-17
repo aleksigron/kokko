@@ -1,10 +1,13 @@
 {
-	"vsIncludes": [ "res/shaders/common/transform_block.glsl" ],
-	"vertexShaderFile": "res/shaders/skybox/skybox.vert.glsl",
-	"fragmentShaderFile": "res/shaders/skybox/skybox.frag.glsl",
+	"vs": {
+		"main": "res/shaders/skybox/skybox.vert.glsl",
+		"includes": [ "res/shaders/common/transform_block.glsl" ]
+	},
+	"fs": {
+		"main": "res/shaders/skybox/skybox.frag.glsl"
+	},
 	"transparencyType": "skybox",
-	"materialUniforms":
-	[
+	"properties": [
 		{ "name": "tex", "type": "texCube" }
 	]
 }

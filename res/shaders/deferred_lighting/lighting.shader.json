@@ -1,11 +1,13 @@
 {
-	"vsIncludes": [
-		"res/shaders/deferred_lighting/lighting_ubo.glsl"
-	],
-	"vertexShaderFile": "res/shaders/deferred_lighting/lighting.vert.glsl",
-	"fsIncludes": [
-		"res/shaders/common/constants.glsl",
-		"res/shaders/deferred_lighting/lighting_ubo.glsl"
-	],
-	"fragmentShaderFile": "res/shaders/deferred_lighting/lighting.frag.glsl"
+	"vs": {
+		"main": "res/shaders/deferred_lighting/lighting.vert.glsl",
+		"includes": [ "res/shaders/deferred_lighting/lighting_ubo.glsl" ]
+	},
+	"fs": {
+		"main": "res/shaders/deferred_lighting/lighting.frag.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/deferred_lighting/lighting_ubo.glsl"
+		]
+	}
 }
