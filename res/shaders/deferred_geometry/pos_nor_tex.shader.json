@@ -5,7 +5,10 @@
 	},
 	"fs": {
 		"main": "res/shaders/deferred_geometry/pos_nor_tex.frag.glsl",
-		"includes": [ "res/shaders/common/constants.glsl" ]
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/common/deferred_frag_output.glsl"
+		]
 	},
 	"properties": [
 		{ "name": "base_color", "type": "tex2d" }
