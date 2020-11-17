@@ -82,6 +82,10 @@ private:
 		{
 			KeyValuePair* p = data;
 			KeyValuePair* end = p + allocated;
+
+			// this->allocated needs to be set here because GetIndex() uses it
+			allocated = desiredCount;
+
 			for (; p != end; ++p)
 			{
 				if (p->first) // Pair has value
@@ -99,9 +103,10 @@ private:
 
 			allocator->Deallocate(data);
 		}
+		else
+			allocated = desiredCount;
 
 		data = newData;
-		allocated = desiredCount;
 	}
 
 public:
