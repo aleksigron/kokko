@@ -9,5 +9,12 @@
 			"res/shaders/common/constants.glsl",
 			"res/shaders/deferred_lighting/lighting_ubo.glsl"
 		]
-	}
+	},
+	"properties": [
+		{ "name": "g_alb_spec", "type": "tex2d" },
+		{ "name": "g_norm", "type": "tex2d" },
+		{ "name": "g_emissive", "type": "tex2d" },
+		{ "name": "g_depth", "type": "tex2d" },
+		{ "name": "shd_smp", "type": "tex2d" }
+	]
 }

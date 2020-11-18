@@ -16,6 +16,24 @@
 
 #include "System/File.hpp"
 
+const BufferUniform* ShaderData::FindBufferUniformFromNameHash(uint32_t nameHash) const
+{
+	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+		if (bufferUniforms[i].nameHash == nameHash)
+			return &bufferUniforms[i];
+
+	return nullptr;
+}
+
+const TextureUniform* ShaderData::FindTextureUniformFromNameHash(uint32_t nameHash) const
+{
+	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
+		if (textureUniforms[i].nameHash == nameHash)
+			return &textureUniforms[i];
+
+	return nullptr;
+}
+
 ShaderManager::ShaderManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),

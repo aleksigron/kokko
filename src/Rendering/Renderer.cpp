@@ -9,6 +9,7 @@
 #include "Debug/DebugVectorRenderer.hpp"
 
 #include "Engine/Engine.hpp"
+
 #include "Entity/EntityManager.hpp"
 
 #include "Math/Rectangle.hpp"
@@ -524,12 +525,46 @@ void Renderer::Render(Scene* scene)
 			}
 			else // Pass is OpaqueLighting
 			{
-				using LightingBlock = UniformBuffer::LightingBlock;
-				unsigned char lightingUniformBuffer[LightingBlock::BufferSize];
-
 				const ShaderData& shader = shaderManager->GetShaderData(lightingShader);
 
+				// Bind textures
+
+				static const unsigned int textureUniformCount = 5;
+				static const uint32_t uniformNameHashes[textureUniformCount] = {
+					"g_alb_spec"_hash,
+					"g_norm"_hash,
+					"g_emissive"_hash,
+					"g_depth"_hash,
+					"shd_smp"_hash
+				};
+
+				const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
+				const unsigned int textureObjectNames[textureUniformCount] = {
+					gbuffer.textures[AlbedoSpecTextureIdx],
+					gbuffer.textures[NormalTextureIdx],
+					gbuffer.textures[EmissiveTextureIdx],
+					gbuffer.textures[DepthTextureIdx],
+					framebufferData[FramebufferIndexShadow].textures[0]
+				};
+
+				device->UseShaderProgram(shader.driverId);
+
+				for (unsigned int i = 0; i < textureUniformCount; ++i)
+				{
+					const TextureUniform* tu = shader.FindTextureUniformFromNameHash(uniformNameHashes[i]);
+					if (tu != nullptr)
+					{
+						device->SetUniformInt(tu->uniformLocation, i);
+						device->SetActiveTextureUnit(i);
+						device->BindTexture(GL_TEXTURE_2D, textureObjectNames[i]);
+					}
+				}
+
+				// Update the lighting uniform buffer
+
 				const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
+				using LightingBlock = UniformBuffer::LightingBlock;
+				unsigned char lightingUniformBuffer[LightingBlock::BufferSize];
 
 				// Update directional light viewports
 				Array<LightId>& directionalLights = lightResultArray;
@@ -538,23 +573,6 @@ void Renderer::Render(Scene* scene)
 				Vec2f halfNearPlane;
 				halfNearPlane.y = std::tan(renderCamera->parameters.height * 0.5f);
 				halfNearPlane.x = halfNearPlane.y * renderCamera->parameters.aspect;
-
-				const unsigned int shaderId = shader.driverId;
-
-				int albSpecLoc = device->GetUniformLocation(shaderId, "g_alb_spec");
-				int normLoc = device->GetUniformLocation(shaderId, "g_norm");
-				int emissiveLoc = device->GetUniformLocation(shaderId, "g_emissive");
-				int depthLoc = device->GetUniformLocation(shaderId, "g_depth");
-				int shadowSamplerLoc = device->GetUniformLocation(shaderId, "shd_smp");
-
-				device->UseShaderProgram(shaderId);
-
-				device->SetUniformInt(albSpecLoc, 0);
-				device->SetUniformInt(normLoc, 1);
-				device->SetUniformInt(emissiveLoc, 2);
-				device->SetUniformInt(depthLoc, 3);
-				device->SetUniformInt(shadowSamplerLoc, 4);
-
 				LightingBlock::halfNearPlane.Set(lightingUniformBuffer, halfNearPlane);
 
 				// Set the perspective matrix
@@ -579,6 +597,8 @@ void Renderer::Render(Scene* scene)
 				lightResultArray.Clear();
 				Array<LightId>& nonDirLights = lightResultArray;
 				lightManager->GetNonDirectionalLightsWithinFrustum(fsvp.frustum, nonDirLights);
+
+				// Count the different light types
 
 				unsigned int pointLightCount = 0;
 				unsigned int spotLightCount = 0;
@@ -637,21 +657,6 @@ void Renderer::Render(Scene* scene)
 
 				lightResultArray.Clear();
 
-				// Bind textures
-
-				const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
-
-				device->SetActiveTextureUnit(0);
-				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[AlbedoSpecTextureIdx]);
-				device->SetActiveTextureUnit(1);
-				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[NormalTextureIdx]);
-				device->SetActiveTextureUnit(2);
-				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[EmissiveTextureIdx]);
-				device->SetActiveTextureUnit(3);
-				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[DepthTextureIdx]);
-				device->SetActiveTextureUnit(4);
-				device->BindTexture(GL_TEXTURE_2D, framebufferData[FramebufferIndexShadow].textures[0]);
-
 				// shadow_params.splits[0] is the near depth
 				LightingBlock::shadowSplits.SetOne(lightingUniformBuffer, 0, renderCamera->parameters.near);
 
@@ -661,21 +666,16 @@ void Renderer::Render(Scene* scene)
 				float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
 				CascadedShadowMap::CalculateSplitDepths(renderCamera->parameters, cascadeSplitDepths);
 
-				// Need for each shadow casting light / shadow cascade
+				Mat4x4f bias;
+				bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
+				bias[4] = 0.0; bias[5] = 0.5; bias[6] = 0.0; bias[7] = 0.0;
+				bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
+				bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
+
+				// Update transforms and split depths for each shadow cascade
 				for (size_t vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
 				{
-					// Format uniform names and find locations
-
-					const RendererViewport& vp = viewportData[vpIdx];
-
-					Mat4x4f bias;
-					bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
-					bias[4] = 0.0; bias[5] = 0.5; bias[6] = 0.0; bias[7] = 0.0;
-					bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
-					bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
-
-
-					Mat4x4f viewToLight = vp.viewProjection * renderCameraTransform;
+					Mat4x4f viewToLight = viewportData[vpIdx].viewProjection * renderCameraTransform;
 					Mat4x4f shadowMat = bias * viewToLight;
 
 					LightingBlock::shadowMatrices.SetOne(lightingUniformBuffer, vpIdx, shadowMat);

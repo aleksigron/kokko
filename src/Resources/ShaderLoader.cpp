@@ -251,6 +251,9 @@ static void CopyNamesAndGenerateBlockDefinition(ShaderData& shaderInOut, Allocat
 	if (shaderInOut.bufferUniformCount == 0)
 	{
 		shaderInOut.uniformBlockDefinition = StringRef();
+
+		// TODO: We could still copy the names of textures uniforms to our buffer
+
 		return;
 	}
 
