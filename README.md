@@ -4,20 +4,20 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 programming in the process. I hope that little by little, this will become a
 good, small game engine that might offer some new ways to solve old problems.
 
-![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20200529.JPG)
+![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20201118.jpg)
 
 ## Prerequisites
+- OpenGL 4.4
 - CMake for building the project
 - C++14 compliant compiler
 - Blender for exporting mesh files
 - Glraw for encoding textures
-Use CMake to generate IDE project files or directly build the project.
 
-### Creating a Visual Studio solution on Windows
+### Creating a x64 Visual Studio solution on Windows
 ```
 mkdir build
 cd build
-cmake -G "Visual Studio 15 2017" ../
+cmake -G "Visual Studio 16 2019" -A x64 ../
 ```
 
 You can find a list of the available generators in the 
@@ -29,18 +29,15 @@ You need to set a custom working directory in the IDE when running the project.
 In Visual Studio, go to project properties > _Configuration Properties_ >
 _Debugging_ and set _Working Directory_ to the repository root.
 
-In Xcode, choose _Product_ > _Scheme_ > _Edit Scheme_. Select the _Run_ scheme
-and go to the _Options_ tab. Enable _Custom working directory_ and set the it
-to the repository root.
-
 ## Features
 
 ### Graphics
-- OpenGL 3.3
 - Deferred renderer
 - Separated command list build, ordering, dispatch
-- Cascaded shadow maps
 - Diffuse, specular and emissive shading
+- Directional, point and spot lights
+- Cascaded shadow maps for directional lights
+- Simple data-driven material system
 
 ### Resources
 - Resource configuration files are JSON for human-readability
