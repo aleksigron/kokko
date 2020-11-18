@@ -44,6 +44,7 @@ private:
 	static const unsigned int DepthTextureIdx = 3;
 
 	static const unsigned int FramebufferIndexGBuffer = 0;
+	static const unsigned int FramebufferIndexShadow = 1;
 
 	Allocator* allocator;
 
@@ -92,9 +93,6 @@ private:
 	Array<LightId> lightResultArray;
 
 	Entity skyboxEntity;
-
-	unsigned int GetDepthFramebufferOfSize(const Vec2i& size);
-	void ClearFramebufferUsageFlags();
 
 	void ReallocateRenderObjects(unsigned int required);
 

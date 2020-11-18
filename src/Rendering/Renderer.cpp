@@ -39,14 +39,14 @@
 
 struct RendererFramebuffer
 {
-	static const unsigned int MaxTextureUniformCount = 4;
+	static const unsigned int MaxTextureCount = 4;
 
 	unsigned int framebuffer;
 	unsigned int textureCount;
-	unsigned int textures[MaxTextureUniformCount];
+	unsigned int textures[MaxTextureCount];
+
 	int width;
 	int height;
-	bool used;
 };
 
 struct RendererViewport
@@ -60,6 +60,8 @@ struct RendererViewport
 	Mat4x4f view;
 	Mat4x4f projection;
 	Mat4x4f viewProjection;
+
+	Rectanglei viewportRectangle;
 
 	FrustumPlanes frustum;
 
@@ -229,6 +231,58 @@ void Renderer::Initialize(Window* window)
 
 		// Reset active texture and framebuffer
 
+		device->BindTexture(GL_TEXTURE_2D, 0);
+		device->BindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	{
+		// Create shadow framebuffer
+
+		int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
+		unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
+		Vec2i size(shadowSide * shadowCascadeCount, shadowSide);
+
+		framebufferCount += 1;
+
+		RendererFramebuffer& framebuffer = framebufferData[FramebufferIndexShadow];
+		framebuffer.width = size.x;
+		framebuffer.height = size.y;
+
+		// Create and bind framebuffer
+
+		device->CreateFramebuffers(1, &framebuffer.framebuffer);
+		device->BindFramebuffer(GL_FRAMEBUFFER, framebuffer.framebuffer);
+
+		// We aren't rendering to any color attachments
+		unsigned int drawBuffers = GL_NONE;
+		device->SetFramebufferDrawBuffers(1, &drawBuffers);
+
+		// Create texture
+		framebuffer.textureCount = 1;
+		device->CreateTextures(framebuffer.textureCount, &framebuffer.textures[0]);
+
+		// Create and attach depth buffer
+		unsigned int depthTexture = framebuffer.textures[0];
+		device->BindTexture(GL_TEXTURE_2D, depthTexture);
+
+		RenderCommandData::SetTextureImage2D depthTextureImage{
+			GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, size.x, size.y, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+		};
+		device->SetTextureImage2D(&depthTextureImage);
+
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
+		RenderCommandData::AttachFramebufferTexture2D depthFramebufferTexture{
+			GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0
+		};
+		device->AttachFramebufferTexture2D(&depthFramebufferTexture);
+
+		// Clear texture and framebuffer binds
 		device->BindTexture(GL_TEXTURE_2D, 0);
 		device->BindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -491,6 +545,7 @@ void Renderer::Render(Scene* scene)
 				int normLoc = device->GetUniformLocation(shaderId, "g_norm");
 				int emissiveLoc = device->GetUniformLocation(shaderId, "g_emissive");
 				int depthLoc = device->GetUniformLocation(shaderId, "g_depth");
+				int shadowSamplerLoc = device->GetUniformLocation(shaderId, "shd_smp");
 
 				device->UseShaderProgram(shaderId);
 
@@ -498,6 +553,7 @@ void Renderer::Render(Scene* scene)
 				device->SetUniformInt(normLoc, 1);
 				device->SetUniformInt(emissiveLoc, 2);
 				device->SetUniformInt(depthLoc, 3);
+				device->SetUniformInt(shadowSamplerLoc, 4);
 
 				LightingBlock::halfNearPlane.Set(lightingUniformBuffer, halfNearPlane);
 
@@ -593,8 +649,8 @@ void Renderer::Render(Scene* scene)
 				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[EmissiveTextureIdx]);
 				device->SetActiveTextureUnit(3);
 				device->BindTexture(GL_TEXTURE_2D, gbuffer.textures[DepthTextureIdx]);
-
-				unsigned int usedSamplerSlots = 4;
+				device->SetActiveTextureUnit(4);
+				device->BindTexture(GL_TEXTURE_2D, framebufferData[FramebufferIndexShadow].textures[0]);
 
 				// shadow_params.splits[0] is the near depth
 				LightingBlock::shadowSplits.SetOne(lightingUniformBuffer, 0, renderCamera->parameters.near);
@@ -602,13 +658,13 @@ void Renderer::Render(Scene* scene)
 				unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 				LightingBlock::cascadeCount.Set(lightingUniformBuffer, shadowCascadeCount);
 
+				float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
+				CascadedShadowMap::CalculateSplitDepths(renderCamera->parameters, cascadeSplitDepths);
+
 				// Need for each shadow casting light / shadow cascade
 				for (size_t vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
 				{
 					// Format uniform names and find locations
-
-					std::sprintf(uniformNameBuf, "shd_smp[%d]", static_cast<int>(vpIdx));
-					int shadowSamplerLoc = device->GetUniformLocation(shaderId, uniformNameBuf);
 
 					const RendererViewport& vp = viewportData[vpIdx];
 
@@ -618,21 +674,11 @@ void Renderer::Render(Scene* scene)
 					bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
 					bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
 
-					float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
-					CascadedShadowMap::CalculateSplitDepths(renderCamera->parameters, cascadeSplitDepths);
 
 					Mat4x4f viewToLight = vp.viewProjection * renderCameraTransform;
 					Mat4x4f shadowMat = bias * viewToLight;
 
 					LightingBlock::shadowMatrices.SetOne(lightingUniformBuffer, vpIdx, shadowMat);
-
-					const RendererFramebuffer& fb = framebufferData[vp.framebufferIndex];
-
-					device->SetActiveTextureUnit(usedSamplerSlots + vpIdx);
-					device->BindTexture(GL_TEXTURE_2D, fb.textures[0]);
-
-					device->SetUniformInt(shadowSamplerLoc, usedSamplerSlots + vpIdx);
-
 					LightingBlock::shadowSplits.SetOne(lightingUniformBuffer, vpIdx + 1, cascadeSplitDepths[vpIdx]);
 				}
 
@@ -652,7 +698,6 @@ void Renderer::Render(Scene* scene)
 	}
 
 	commandList.Clear();
-	ClearFramebufferUsageFlags();
 }
 
 bool Renderer::ParseControlCommand(uint64_t orderKey)
@@ -798,7 +843,9 @@ void Renderer::PopulateCommandList(Scene* scene)
 	Vec3f cameraPos = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 	int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
-	Vec2i shadowSize(shadowSide, shadowSide);
+	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
+	Vec2i shadowCascadeSize(shadowSide, shadowSide);
+	Vec2i shadowTextureSize(shadowSide * shadowCascadeCount, shadowSide);
 	Mat4x4f cascadeViewTransforms[CascadedShadowMap::MaxCascadeCount];
 	ProjectionParameters lightProjections[CascadedShadowMap::MaxCascadeCount];
 
@@ -814,8 +861,6 @@ void Renderer::PopulateCommandList(Scene* scene)
 		Mat4x4f skyboxTransform = Mat4x4f::Translate(cameraPos);
 		data.transform[skyboxRenderObj.i] = skyboxTransform;
 	}
-
-	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 
 	// Reset the used viewport count
 	viewportCount = 0;
@@ -851,8 +896,10 @@ void Renderer::PopulateCommandList(Scene* scene)
 				vp.view = cascadeViewTransforms[cascade].GetInverse();
 				vp.projection = lightProjections[cascade].GetProjectionMatrix();
 				vp.viewProjection = vp.projection * vp.view;
+				vp.viewportRectangle.size = shadowCascadeSize;
+				vp.viewportRectangle.position = Vec2i(cascade * shadowSide, 0);
 				vp.frustum.Update(lightProjections[cascade], cascadeViewTransforms[cascade]);
-				vp.framebufferIndex = GetDepthFramebufferOfSize(shadowSize);
+				vp.framebufferIndex = FramebufferIndexShadow;
 
 				ViewportBlock::VP.Set(viewportBlockBuffer, vp.viewProjection);
 				ViewportBlock::V.Set(viewportBlockBuffer, vp.view);
@@ -873,6 +920,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 		unsigned int vpIdx = viewportCount;
 		viewportCount += 1;
 
+		const RendererFramebuffer& fb = framebufferData[FramebufferIndexGBuffer];
+
 		RendererViewport& vp = viewportData[vpIdx];
 		vp.position = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 		vp.forward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
@@ -880,6 +929,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 		vp.minusNear = -renderCamera->parameters.near;
 		vp.view = Camera::GetViewMatrix(cameraTransform);
 		vp.projection = projectionParams.GetProjectionMatrix();
+		vp.viewportRectangle.size = Vec2i(fb.width, fb.height);
+		vp.viewportRectangle.position = Vec2i(0, 0);
 		vp.viewProjection = vp.projection * vp.view;
 		vp.frustum.Update(cullingCamera->parameters, cullingCameraTransform);
 		vp.framebufferIndex = FramebufferIndexGBuffer;
@@ -933,33 +984,44 @@ void Renderer::PopulateCommandList(Scene* scene)
 	// Disable blending
 	commandList.AddControl(0, g_pass, 6, ctrl::BlendingDisable);
 
+	{
+		// Bind shadow framebuffer before any shadow cascade draws
+		RenderCommandData::BindFramebufferData data;
+		data.target = GL_FRAMEBUFFER;
+		data.framebuffer = framebufferData[FramebufferIndexShadow].framebuffer;
+
+		commandList.AddControl(0, g_pass, 7, ctrl::BindFramebuffer, sizeof(data), &data);
+	}
+
+	{
+		const RendererFramebuffer& fb = framebufferData[FramebufferIndexShadow];
+
+		// Set viewport size to full framebuffer size before clearing
+		RenderCommandData::ViewportData data;
+		data.x = 0;
+		data.y = 0;
+		data.w = fb.width;
+		data.h = fb.height;
+
+		commandList.AddControl(0, g_pass, 8, ctrl::Viewport, sizeof(data), &data);
+	}
+
+	// Clear shadow framebuffer GL_FRAMEBUFFER
+	commandList.AddControl(0, g_pass, 9, ctrl::Clear, GL_DEPTH_BUFFER_BIT);
+
 	// For each shadow viewport
 	for (unsigned int vpIdx = 0; vpIdx < numShadowViewports; ++vpIdx)
 	{
-		const RendererFramebuffer& framebuffer = framebufferData[viewportData[vpIdx].framebufferIndex];
+		const RendererViewport& viewport = viewportData[vpIdx];
 
-		{
-			// Set viewport size
-			RenderCommandData::ViewportData data;
-			data.x = 0;
-			data.y = 0;
-			data.w = framebuffer.width;
-			data.h = framebuffer.height;
+		// Set viewport size
+		RenderCommandData::ViewportData data;
+		data.x = viewport.viewportRectangle.position.x;
+		data.y = viewport.viewportRectangle.position.y;
+		data.w = viewport.viewportRectangle.size.x;
+		data.h = viewport.viewportRectangle.size.y;
 
-			commandList.AddControl(vpIdx, g_pass, 7, ctrl::Viewport, sizeof(data), &data);
-		}
-
-		{
-			// Bind geometry framebuffer
-			RenderCommandData::BindFramebufferData data;
-			data.target = GL_FRAMEBUFFER;
-			data.framebuffer = framebuffer.framebuffer;
-
-			commandList.AddControl(vpIdx, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
-		}
-
-		// Clear currently bound GL_FRAMEBUFFER
-		commandList.AddControl(vpIdx, g_pass, 9, ctrl::Clear, GL_DEPTH_BUFFER_BIT);
+		commandList.AddControl(vpIdx, g_pass, 10, ctrl::Viewport, sizeof(data), &data);
 	}
 
 	// Before fullscreen viewport
@@ -1093,85 +1155,6 @@ void Renderer::PopulateCommandList(Scene* scene)
 	}
 
 	commandList.Sort();
-}
-
-unsigned int Renderer::GetDepthFramebufferOfSize(const Vec2i& size)
-{
-	// Try to find existing unused framebuffer that matches the requested size
-	// Skip index 0 as it is the G-Buffer
-	for (unsigned int i = 1; i < framebufferCount; ++i)
-	{
-		RendererFramebuffer& fb = framebufferData[i];
-		if (fb.used == false && fb.width == size.x && fb.height == size.y)
-		{
-			fb.used = true;
-			return i;
-		}
-	}
-
-	// If no existing framebuffer was found, create a new one if space permits
-	if (framebufferCount < MaxViewportCount)
-	{
-		unsigned int fbIdx = framebufferCount;
-		framebufferCount += 1;
-
-		RendererFramebuffer& framebuffer = framebufferData[fbIdx];
-
-		framebuffer.width = size.x;
-		framebuffer.height = size.y;
-		framebuffer.used = true;
-
-		// Create and bind framebuffer
-
-		device->CreateFramebuffers(1, &framebuffer.framebuffer);
-		device->BindFramebuffer(GL_FRAMEBUFFER, framebuffer.framebuffer);
-
-		// We aren't rendering to any color attachments
-		unsigned int drawBuffers = GL_NONE;
-		device->SetFramebufferDrawBuffers(1, &drawBuffers);
-
-		// Create texture
-		framebuffer.textureCount = 1;
-		device->CreateTextures(framebuffer.textureCount, &framebuffer.textures[0]);
-
-		// Create and attach depth buffer
-		unsigned int depthTexture = framebuffer.textures[0];
-		device->BindTexture(GL_TEXTURE_2D, depthTexture);
-
-		RenderCommandData::SetTextureImage2D depthTextureImage{
-			GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, size.x, size.y, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
-		};
-		device->SetTextureImage2D(&depthTextureImage);
-
-		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-		device->SetTextureParameterInt(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-
-		RenderCommandData::AttachFramebufferTexture2D depthFramebufferTexture{
-			GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0
-		};
-		device->AttachFramebufferTexture2D(&depthFramebufferTexture);
-
-		// Clear texture and framebuffer binds
-		device->BindTexture(GL_TEXTURE_2D, 0);
-		device->BindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		return fbIdx;
-	}
-
-	return 0;
-}
-
-void Renderer::ClearFramebufferUsageFlags()
-{
-	// Skip index 0 as it is the G-Buffer
-	for (unsigned int i = 1; i < framebufferCount; ++i)
-	{
-		framebufferData[i].used = false;
-	}
 }
 
 void Renderer::ReallocateRenderObjects(unsigned int required)

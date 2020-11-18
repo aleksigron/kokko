@@ -11,7 +11,7 @@ uniform sampler2D g_norm;
 uniform sampler2D g_alb_spec;
 uniform sampler2D g_emissive;
 uniform sampler2D g_depth;
-uniform sampler2DShadow shd_smp[MaxCascadeCount];
+uniform sampler2DShadow shd_smp;
 
 const float SpecPower = 40.0;
 const float AttConstFac = 1.0;
@@ -75,8 +75,10 @@ void main()
 		float shadow = 0.0;
 
 		for (int i = 0; i < shadow_sample_count; i++) {
-			vec3 coord = vec3(shadow_coord.xy + poisson_disk[i] * shadow_dist_factor, compare_depth);
-			shadow += texture(shd_smp[cascade_index], coord);
+			vec2 xy_coord = shadow_coord.xy + poisson_disk[i] * shadow_dist_factor;
+			xy_coord.x = (cascade_index + xy_coord.x) / un.shd_casc_count;
+			vec3 coord = vec3(xy_coord, compare_depth);
+			shadow += texture(shd_smp, coord);
 		}
 
 		shadow /= shadow_sample_count;
