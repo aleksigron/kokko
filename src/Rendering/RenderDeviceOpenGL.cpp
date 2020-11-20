@@ -304,6 +304,11 @@ void RenderDeviceOpenGL::DrawVertexArray(unsigned int primitiveMode, int indexCo
 	glDrawElements(primitiveMode, indexCount, indexType, nullptr);
 }
 
+void RenderDeviceOpenGL::Draw(unsigned int primitiveMode, int offset, int vertexCount)
+{
+	glDrawArrays(primitiveMode, offset, vertexCount);
+}
+
 void RenderDeviceOpenGL::EnableVertexAttribute(unsigned int index)
 {
 	glEnableVertexAttribArray(index);

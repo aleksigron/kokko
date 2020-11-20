@@ -76,6 +76,7 @@ public:
 	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) = 0;
 	virtual void BindVertexArray(unsigned int vertexArray) = 0;
 	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) = 0;
+	virtual void Draw(unsigned int primitiveMode, int offset, int vertexCount) = 0;
 	virtual void EnableVertexAttribute(unsigned int index) = 0;
 	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) = 0;
 

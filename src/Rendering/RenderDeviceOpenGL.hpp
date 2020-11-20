@@ -73,6 +73,7 @@ public:
 	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) override;
 	virtual void BindVertexArray(unsigned int vertexArray) override;
 	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) override;
+	virtual void Draw(unsigned int primitiveMode, int offset, int vertexCount) override;
 	virtual void EnableVertexAttribute(unsigned int index) override;
 	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) override;
 
