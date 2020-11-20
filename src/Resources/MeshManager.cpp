@@ -160,6 +160,28 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 }
 
 MeshBufferData MeshManager::CreateBuffers(
+	const void* vd, unsigned int vs,
+	RenderData::BufferUsage usage)
+{
+	MeshBufferData data;
+
+	// Create vertex array object
+	renderDevice->CreateVertexArrays(1, &data.vertexArrayObject);
+	renderDevice->BindVertexArray(data.vertexArrayObject);
+
+	// Create buffer objects
+	renderDevice->CreateBuffers(1, data.bufferObjects);
+	data.bufferObjects[MeshBufferData::IndexBuffer] = 0;
+
+	// Bind and upload vertex buffer
+	renderDevice->BindBuffer(GL_ARRAY_BUFFER, data.bufferObjects[MeshBufferData::VertexBuffer]);
+	renderDevice->SetBufferData(GL_ARRAY_BUFFER, vs, vd, usage);
+	data.bufferSizes[MeshBufferData::VertexBuffer] = vs;
+
+	return data;
+}
+
+MeshBufferData MeshManager::CreateIndexedBuffers(
 	const void* vd, unsigned int vs, const void* id, unsigned int is,
 	RenderData::BufferUsage usage)
 {
@@ -186,6 +208,30 @@ MeshBufferData MeshManager::CreateBuffers(
 }
 
 void MeshManager::UpdateBuffers(MeshBufferData& bufferDataInOut,
+	const void* vd, unsigned int vs,
+	RenderData::BufferUsage usage)
+{
+	assert(bufferDataInOut.vertexArrayObject != 0);
+
+	renderDevice->BindVertexArray(bufferDataInOut.vertexArrayObject);
+
+	// Bind and update vertex buffer
+	renderDevice->BindBuffer(GL_ARRAY_BUFFER, bufferDataInOut.bufferObjects[MeshBufferData::VertexBuffer]);
+
+	if (vs <= bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer])
+	{
+		// Only update the part of the buffer we need
+		renderDevice->SetBufferSubData(GL_ARRAY_BUFFER, 0, vs, vd);
+	}
+	else
+	{
+		// SetBufferData reallocates storage when needed
+		renderDevice->SetBufferData(GL_ARRAY_BUFFER, vs, vd, usage);
+		bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer] = vs;
+	}
+}
+
+void MeshManager::UpdateIndexedBuffers(MeshBufferData& bufferDataInOut,
 	const void* vd, unsigned int vs, const void* id, unsigned int is,
 	RenderData::BufferUsage usage)
 {
@@ -239,7 +285,44 @@ void MeshManager::DeleteBuffers(MeshBufferData& bufferDataInOut) const
 	}
 }
 
-void MeshManager::Upload_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> vdata, RenderData::BufferUsage usage)
+void MeshManager::Upload_3f(MeshId id, VertexData<Vertex3f> vdata, RenderData::BufferUsage usage)
+{
+	using V = Vertex3f;
+
+	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
+
+	MeshBufferData& bufferData = data.bufferData[id.i];
+
+	if (bufferData.vertexArrayObject != 0)
+	{
+		UpdateBuffers(bufferData, vdata.vertData, vertSize, usage);
+	}
+	else
+	{
+		bufferData = CreateBuffers(vdata.vertData, vertSize, usage);
+	}
+
+	MeshDrawData drawData;
+	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
+	drawData.vertexArrayObject = bufferData.vertexArrayObject;
+	drawData.count = vdata.vertCount;
+	drawData.indexType = 0;
+
+	data.drawData[id.i] = drawData;
+
+	renderDevice->EnableVertexAttribute(0);
+
+	RenderCommandData::SetVertexAttributePointer a{
+		0, V::aElemCount, V::aElemType, V::size, V::aOffset
+	};
+	renderDevice->SetVertexAttributePointer(&a);
+
+	// Unbind vertex array
+	renderDevice->BindVertexArray(0);
+}
+
+
+void MeshManager::UploadIndexed_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> vdata, RenderData::BufferUsage usage)
 {
 	using V = Vertex3f;
 
@@ -250,18 +333,18 @@ void MeshManager::Upload_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned shor
 
 	if (bufferData.vertexArrayObject != 0)
 	{
-		UpdateBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 	else
 	{
-		bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
-	drawData.indexCount = vdata.idxCount;
-	drawData.indexElementType = GL_UNSIGNED_SHORT;
+	drawData.count = vdata.idxCount;
+	drawData.indexType = GL_UNSIGNED_SHORT;
 
 	data.drawData[id.i] = drawData;
 
@@ -287,18 +370,18 @@ void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned 
 
 	if (bufferData.vertexArrayObject != 0)
 	{
-		UpdateBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 	else
 	{
-		bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
-	drawData.indexCount = vdata.idxCount;
-	drawData.indexElementType = GL_UNSIGNED_SHORT;
+	drawData.count = vdata.idxCount;
+	drawData.indexType = GL_UNSIGNED_SHORT;
 
 	data.drawData[id.i] = drawData;
 
@@ -329,18 +412,18 @@ void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned 
 
 	if (bufferData.vertexArrayObject != 0)
 	{
-		UpdateBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 	else
 	{
-		bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
-	drawData.indexCount = vdata.idxCount;
-	drawData.indexElementType = GL_UNSIGNED_SHORT;
+	drawData.count = vdata.idxCount;
+	drawData.indexType = GL_UNSIGNED_SHORT;
 
 	data.drawData[id.i] = drawData;
 
@@ -371,18 +454,18 @@ void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsig
 
 	if (bufferData.vertexArrayObject != 0)
 	{
-		UpdateBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 	else
 	{
-		bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
-	drawData.indexCount = vdata.idxCount;
-	drawData.indexElementType = GL_UNSIGNED_SHORT;
+	drawData.count = vdata.idxCount;
+	drawData.indexType = GL_UNSIGNED_SHORT;
 
 	data.drawData[id.i] = drawData;
 
@@ -419,18 +502,18 @@ void MeshManager::Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsig
 
 	if (bufferData.vertexArrayObject != 0)
 	{
-		UpdateBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 	else
 	{
-		bufferData = CreateBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
 	}
 
 	MeshDrawData drawData;
 	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
-	drawData.indexCount = vdata.idxCount;
-	drawData.indexElementType = GL_UNSIGNED_SHORT;
+	drawData.count = vdata.idxCount;
+	drawData.indexType = GL_UNSIGNED_SHORT;
 
 	data.drawData[id.i] = drawData;
 

@@ -20,9 +20,11 @@ class RenderDevice;
 struct MeshDrawData
 {
 	unsigned int vertexArrayObject;
-	int indexCount;
-	unsigned int indexElementType;
 	unsigned int primitiveMode;
+	int count;
+
+	// If indexType is 0, this is not an indexed mesh
+	unsigned int indexType;
 };
 
 struct MeshBufferData
@@ -59,12 +61,20 @@ private:
 
 	void Reallocate(unsigned int required);
 
+	MeshBufferData CreateIndexedBuffers(
+		const void* vd, unsigned int vs, const void* id, unsigned int is,
+		RenderData::BufferUsage usage);
+
 	MeshBufferData CreateBuffers(
+		const void* vd, unsigned int vs,
+		RenderData::BufferUsage usage);
+
+	void UpdateIndexedBuffers(MeshBufferData& bufferDataInOut,
 		const void* vd, unsigned int vs, const void* id, unsigned int is,
 		RenderData::BufferUsage usage);
 
 	void UpdateBuffers(MeshBufferData& bufferDataInOut,
-		const void* vd, unsigned int vs, const void* id, unsigned int is,
+		const void* vd, unsigned int vs,
 		RenderData::BufferUsage usage);
 
 	void DeleteBuffers(MeshBufferData& buffers) const;
@@ -90,7 +100,8 @@ public:
 
 	MeshBufferData* GetBufferData(MeshId id) { return data.bufferData + id.i; }
 
-	void Upload_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> data, RenderData::BufferUsage usage);
+	void Upload_3f(MeshId id, VertexData<Vertex3f> vdata, RenderData::BufferUsage usage);
+	void UploadIndexed_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> data, RenderData::BufferUsage usage);
 	void Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned short> data, RenderData::BufferUsage usage);
 	void Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned short> data, RenderData::BufferUsage usage);
 	void Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsigned short> data, RenderData::BufferUsage usage);

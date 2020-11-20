@@ -22,18 +22,23 @@ class DebugVectorRenderer
 private:
 	enum class PrimitiveType
 	{
+		// Static
 		Line,
 		WireCube,
 		WireSphere,
-		Rectangle
+		Rectangle,
+
+		// Dynamic
+		LineChain
 	};
 
 	struct Primitive
 	{
-		bool screenSpace;
-		PrimitiveType type;
 		Mat4x4f transform;
 		Color color;
+		int dynamicMeshIndex;
+		PrimitiveType type;
+		bool screenSpace;
 	};
 
 	Allocator* allocator;
@@ -45,8 +50,19 @@ private:
 	unsigned int primitiveCount;
 	unsigned int primitiveAllocated;
 
+	struct DynamicMesh
+	{
+		MeshId meshId;
+		unsigned int bufferSize;
+		bool used;
+	};
+
+	DynamicMesh* dynamicMeshes;
+	unsigned int dynamicMeshCount;
+	unsigned int dynamicMeshAllocated;
+
 	bool meshesInitialized;
-	MeshId meshIds[4];
+	MeshId staticMeshes[4];
 
 	ShaderId shaderId;
 
@@ -57,6 +73,8 @@ private:
 
 	void CreateMeshes();
 
+	DynamicMesh* GetDynamicMesh(unsigned int byteSize);
+
 public:
 	DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice);
 	~DebugVectorRenderer();
@@ -65,6 +83,7 @@ public:
 	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
+	void DrawLineChainScreen(unsigned int count, const Vec3f* points, const Color& color);
 	void DrawLine(const Vec3f& start, const Vec3f& end, const Color& color);
 
 	void DrawWireCube(const Mat4x4f& transform, const Color& color);

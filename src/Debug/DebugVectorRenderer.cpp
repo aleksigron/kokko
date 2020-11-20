@@ -35,7 +35,11 @@ DebugVectorRenderer::DebugVectorRenderer(
 	renderDevice(renderDevice),
 	shaderManager(nullptr),
 	meshManager(nullptr),
+	dynamicMeshes(nullptr),
+	dynamicMeshCount(0),
+	dynamicMeshAllocated(0),
 	meshesInitialized(false),
+	shaderId(ShaderId{0}),
 	buffersInitialized(false)
 {
 	primitiveCount = 0;
@@ -70,7 +74,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 
 		unsigned short lineIndexData[] = { 0, 1 };
 
-		MeshId& lineMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Line)];
+		MeshId& lineMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::Line)];
 		lineMeshId = meshManager->CreateMesh();
 
 		IndexedVertexData<Vertex3f, unsigned short> data;
@@ -80,7 +84,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.idxData = lineIndexData;
 		data.idxCount = sizeof(lineIndexData) / sizeof(unsigned short);
 
-		meshManager->Upload_3f(lineMeshId, data, RenderData::BufferUsage::StaticDraw);
+		meshManager->UploadIndexed_3f(lineMeshId, data, RenderData::BufferUsage::StaticDraw);
 	}
 
 	{
@@ -101,7 +105,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 			4, 5, 5, 7, 7, 6, 6, 4
 		};
 
-		MeshId& cubeMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::WireCube)];
+		MeshId& cubeMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::WireCube)];
 		cubeMeshId = meshManager->CreateMesh();
 
 		IndexedVertexData<Vertex3f, unsigned short> data;
@@ -111,7 +115,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.idxData = cubeIndexData;
 		data.idxCount = sizeof(cubeIndexData) / sizeof(unsigned short);
 
-		meshManager->Upload_3f(cubeMeshId, data, RenderData::BufferUsage::StaticDraw);
+		meshManager->UploadIndexed_3f(cubeMeshId, data, RenderData::BufferUsage::StaticDraw);
 	}
 
 	{
@@ -154,7 +158,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 			66, 67, 67, 68, 68, 69, 69, 70, 70, 71, 71, 48
 		};
 
-		MeshId& sphereMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::WireSphere)];
+		MeshId& sphereMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::WireSphere)];
 		sphereMeshId = meshManager->CreateMesh();
 
 		IndexedVertexData<Vertex3f, unsigned short> data;
@@ -164,7 +168,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.idxData = sphereIndexData;
 		data.idxCount = sizeof(sphereIndexData) / sizeof(unsigned short);
 
-		meshManager->Upload_3f(sphereMeshId, data, RenderData::BufferUsage::StaticDraw);
+		meshManager->UploadIndexed_3f(sphereMeshId, data, RenderData::BufferUsage::StaticDraw);
 	}
 
 	{
@@ -177,7 +181,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 
 		unsigned short rectangleIndexData[] = { 0, 1, 2, 3 };
 
-		MeshId& rectangleMeshId = this->meshIds[static_cast<unsigned int>(PrimitiveType::Rectangle)];
+		MeshId& rectangleMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::Rectangle)];
 		rectangleMeshId = meshManager->CreateMesh();
 
 		IndexedVertexData<Vertex3f, unsigned short> data;
@@ -187,7 +191,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.idxData = rectangleIndexData;
 		data.idxCount = sizeof(rectangleIndexData) / sizeof(unsigned short);
 
-		meshManager->Upload_3f(rectangleMeshId, data, RenderData::BufferUsage::StaticDraw);
+		meshManager->UploadIndexed_3f(rectangleMeshId, data, RenderData::BufferUsage::StaticDraw);
 	}
 }
 
@@ -201,7 +205,7 @@ void DebugVectorRenderer::Deinitialize()
 		Engine* engine = Engine::GetInstance();
 		MeshManager* meshManager = engine->GetMeshManager();
 		for (unsigned int i = 0; i < 4; ++i)
-			meshManager->RemoveMesh(meshIds[i]);
+			meshManager->RemoveMesh(staticMeshes[i]);
 
 		meshesInitialized = false;
 	}
@@ -220,6 +224,69 @@ void DebugVectorRenderer::CreateMeshes()
 	meshesInitialized = true;
 }
 
+DebugVectorRenderer::DynamicMesh* DebugVectorRenderer::GetDynamicMesh(unsigned int byteSize)
+{
+	int bestFit = -1;
+	unsigned int bestFitSize;
+	int largestUnused = -1;
+	unsigned int largestUnusedSize;
+
+	for (unsigned int i = 0, count = dynamicMeshCount; i < count; ++i)
+	{
+		const DynamicMesh& mesh = dynamicMeshes[i];
+		if (mesh.used == false)
+		{
+			if (largestUnused == -1 || largestUnusedSize < mesh.bufferSize)
+			{
+				largestUnused = i;
+				largestUnusedSize = mesh.bufferSize;
+			}
+
+			if (mesh.bufferSize >= byteSize)
+			{
+				if (bestFit == -1 || bestFitSize > mesh.bufferSize)
+				{
+					bestFit = i;
+					bestFitSize = mesh.bufferSize;
+				}
+			}
+		}
+	}
+
+	if (bestFit != -1)
+	{
+		return &dynamicMeshes[bestFit];
+	}
+	else if (largestUnused != -1)
+	{
+		return &dynamicMeshes[largestUnused];
+	}
+	else
+	{
+		if (dynamicMeshCount == dynamicMeshAllocated)
+		{
+			unsigned int newAllocated = dynamicMeshAllocated == 0 ? 8 : dynamicMeshAllocated * 2;
+			size_t newByteSize = newAllocated * sizeof(DynamicMesh);
+			DynamicMesh* newData = static_cast<DynamicMesh*>(allocator->Allocate(newByteSize));
+
+			if (dynamicMeshCount > 0)
+				std::memcpy(newData, dynamicMeshes, dynamicMeshCount * sizeof(DynamicMesh));
+
+			dynamicMeshes = newData;
+			dynamicMeshAllocated = newAllocated;
+		}
+
+		DynamicMesh* mesh = &dynamicMeshes[dynamicMeshCount];
+		dynamicMeshCount += 1;
+
+		mesh->meshId = meshManager->CreateMesh();
+		mesh->bufferSize = 0;
+		mesh->used = false;
+
+		return mesh;
+	}
+}
+
 void DebugVectorRenderer::DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color)
 {
 	if (primitiveCount < primitiveAllocated)
@@ -233,6 +300,40 @@ void DebugVectorRenderer::DrawLineScreen(const Vec2f& start, const Vec2f& end, c
 		prim->type = PrimitiveType::Line;
 		prim->transform = Mat4x4f::LookAt(start3, end3, Vec3f(0.0f, 0.0f, 1.0f)) * Mat4x4f::Scale(len);
 		prim->color = color;
+		prim->dynamicMeshIndex = -1;
+
+		++primitiveCount;
+	}
+}
+
+void DebugVectorRenderer::DrawLineChainScreen(unsigned int count, const Vec3f* points, const Color& color)
+{
+	if (primitiveCount < primitiveAllocated)
+	{
+		Primitive* prim = primitives + primitiveCount;
+		prim->screenSpace = true;
+		prim->type = PrimitiveType::LineChain;
+		prim->transform = Mat4x4f();
+		prim->color = color;
+
+		unsigned int requiredBufferSize = count * sizeof(points[0]);
+
+		// Find or create dynamic mesh to use
+		DynamicMesh* mesh = GetDynamicMesh(requiredBufferSize);
+
+		VertexData<Vertex3f> vertData;
+		vertData.primitiveMode = MeshPrimitiveMode::LineStrip;
+		vertData.vertData = reinterpret_cast<const Vertex3f*>(points);
+		vertData.vertCount = count;
+
+		meshManager->Upload_3f(mesh->meshId, vertData, RenderData::BufferUsage::DynamicDraw);
+
+		if (requiredBufferSize > mesh->bufferSize)
+			mesh->bufferSize = requiredBufferSize;
+
+		mesh->used = true;
+
+		prim->dynamicMeshIndex = mesh - dynamicMeshes;
 
 		++primitiveCount;
 	}
@@ -251,6 +352,7 @@ void DebugVectorRenderer::DrawLine(const Vec3f& start, const Vec3f& end, const C
 		prim->type = PrimitiveType::Line;
 		prim->transform = Mat4x4f::LookAt(start, end, up) * Mat4x4f::Scale(len);
 		prim->color = color;
+		prim->dynamicMeshIndex = -1;
 
 		++primitiveCount;
 	}
@@ -265,6 +367,7 @@ void DebugVectorRenderer::DrawWireCube(const Mat4x4f& transform, const Color& co
 		prim->type = PrimitiveType::WireCube;
 		prim->transform = transform;
 		prim->color = color;
+		prim->dynamicMeshIndex = -1;
 
 		++primitiveCount;
 	}
@@ -279,6 +382,7 @@ void DebugVectorRenderer::DrawWireSphere(const Vec3f& position, float radius, co
 		prim->type = PrimitiveType::WireSphere;
 		prim->transform = Mat4x4f::Translate(position) * Mat4x4f::Scale(radius);
 		prim->color = color;
+		prim->dynamicMeshIndex = -1;
 
 		++primitiveCount;
 	}
@@ -297,6 +401,7 @@ void DebugVectorRenderer::DrawRectangleScreen(const Rectanglef& rectangle, const
 		prim->type = PrimitiveType::Rectangle;
 		prim->transform = Mat4x4f::Translate(center3) * Mat4x4f::Scale(scale);
 		prim->color = color;
+		prim->dynamicMeshIndex = -1;
 
 		++primitiveCount;
 	}
@@ -361,15 +466,6 @@ void DebugVectorRenderer::Render(Camera* camera)
 		unsigned char objectUboBuffer[UniformBuffer::TransformBlock::BufferSize];
 		unsigned char materialUboBuffer[MaterialBlock::BufferSize];
 
-		int colorUniformLocation = -1;
-		for (unsigned int i = 0; i < shader.bufferUniformCount; ++i)
-		{
-			if (shader.bufferUniforms[i].type == UniformDataType::Vec4)
-			{
-				//colorUniformLocation = shader.bufferUniforms[i].location;
-			}
-		}
-
 		renderDevice->DepthTestDisable();
 		renderDevice->BlendingDisable();
 
@@ -407,14 +503,28 @@ void DebugVectorRenderer::Render(Camera* camera)
 
 			// Draw
 
-			MeshId meshId = this->meshIds[static_cast<unsigned int>(primitive.type)];
+			MeshId meshId;
+
+			if (primitive.dynamicMeshIndex >= 0)
+				meshId = this->dynamicMeshes[primitive.dynamicMeshIndex].meshId;
+			else
+				meshId = this->staticMeshes[static_cast<unsigned int>(primitive.type)];
+
 			MeshDrawData* draw = meshManager->GetDrawData(meshId);
 			renderDevice->BindVertexArray(draw->vertexArrayObject);
-			renderDevice->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
-		}
+
+			if (draw->indexType != 0)
+				renderDevice->DrawVertexArray(draw->primitiveMode, draw->count, draw->indexType);
+			else
+				renderDevice->Draw(draw->primitiveMode, 0, draw->count);
 
 		// Clear primitive count
+		}
 		primitiveCount = 0;
+
+		// Free dynamic meshes for use
+		for (unsigned int i = 0, count = dynamicMeshCount; i < count; ++i)
+			dynamicMeshes[i].used = false;
 	}
 }
 

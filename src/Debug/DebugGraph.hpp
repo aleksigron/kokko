@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Core/Array.hpp"
 #include "Core/Queue.hpp"
+
+#include "Math/Vec3.hpp"
 #include "Math/Rectangle.hpp"
 
 class DebugVectorRenderer;
@@ -19,6 +22,7 @@ private:
 	DebugVectorRenderer* vectorRenderer;
 	Rectanglef drawArea;
 	Queue<DataPoint> data;
+	Array<Vec3f> pointStorage;
 
 	double timeRange;
 

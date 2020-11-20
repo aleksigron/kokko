@@ -196,7 +196,7 @@ void DebugTextRenderer::Render()
 
 		MeshDrawData* draw = meshManager->GetDrawData(meshId);
 		renderDevice->BindVertexArray(draw->vertexArrayObject);
-		renderDevice->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
+		renderDevice->DrawVertexArray(draw->primitiveMode, draw->count, draw->indexType);
 
 		// Clear data
 

@@ -22,6 +22,15 @@ struct IndexedVertexData
 	unsigned int idxCount;
 };
 
+template<typename VertexType>
+struct VertexData
+{
+	MeshPrimitiveMode primitiveMode;
+
+	const VertexType* vertData;
+	unsigned int vertCount;
+};
+
 struct MeshId
 {
 	unsigned int i;

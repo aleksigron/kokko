@@ -13,6 +13,7 @@
 DebugGraph::DebugGraph(Allocator* allocator, DebugVectorRenderer* vr) :
 	vectorRenderer(vr),
 	data(allocator),
+	pointStorage(allocator),
 	timeRange(5.0)
 {
 }
@@ -34,10 +35,12 @@ void DebugGraph::Update()
 
 void DebugGraph::DrawToVectorRenderer()
 {
+	unsigned int count = data.GetCount();
+
 	// Find range
 	double min = std::numeric_limits<double>::max();
 	double max = std::numeric_limits<double>::min();
-	for (unsigned i = 0, count = data.GetCount(); i < count; ++i)
+	for (unsigned i = 0; i < count; ++i)
 	{
 		double value = data.At(i).data;
 		if (value < min) min = value;
@@ -52,34 +55,29 @@ void DebugGraph::DrawToVectorRenderer()
 	double timeNow = Time::GetRunningTime();
 	double cutoff = timeNow - timeRange;
 
+	Color color(1.0f, 1.0f, 1.0f);
+
 	if (cutoff < 0.0) cutoff = 0.0;
 
-	if (data.GetCount() >= 2) // Can't draw unless there's at least 2 data points
+	if (count >= 2) // Can't draw unless there's at least 2 data points
 	{
-		Vec2f prev;
-		{
-			DataPoint& dataPoint = data.At(0);
-			double y = (dataPoint.data - rangeMin) / rangeSize;
-			double x = (dataPoint.time - cutoff) / this->timeRange;
+		pointStorage.Resize(count);
 
-			prev.x = drawArea.position.x + static_cast<float>(x) * drawArea.size.x;
-			prev.y = drawArea.position.y + drawArea.size.y - (static_cast<float>(y) * drawArea.size.y);
-		}
-
-		for (unsigned i = 1, count = data.GetCount(); i < count; ++i)
+		for (unsigned i = 0, count = data.GetCount(); i < count; ++i)
 		{
 			DataPoint& dataPoint = data.At(i);
 			double y = (dataPoint.data - rangeMin) / rangeSize;
 			double x = (dataPoint.time - cutoff) / this->timeRange;
 
-			Vec2f pos;
+			Vec3f pos;
 			pos.x = drawArea.position.x + static_cast<float>(x) * drawArea.size.x;
 			pos.y = drawArea.position.y + drawArea.size.y - (static_cast<float>(y) * drawArea.size.y);
+			pos.z = 0.0f;
 
-			vectorRenderer->DrawLineScreen(prev, pos, Color(1.0f, 1.0f, 1.0f));
-
-			prev = pos;
+			pointStorage[i] = pos;
 		}
+
+		vectorRenderer->DrawLineChainScreen(count, pointStorage.GetData(), color);
 	}
 }
 

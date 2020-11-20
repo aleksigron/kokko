@@ -521,7 +521,7 @@ void Renderer::Render(Scene* scene)
 				MeshId mesh = data.mesh[objIdx];
 				MeshDrawData* draw = meshManager->GetDrawData(mesh);
 				device->BindVertexArray(draw->vertexArrayObject);
-				device->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
+				device->DrawVertexArray(draw->primitiveMode, draw->count, draw->indexType);
 			}
 			else // Pass is OpaqueLighting
 			{
@@ -692,7 +692,7 @@ void Renderer::Render(Scene* scene)
 				// Draw fullscreen quad
 				MeshDrawData* draw = meshManager->GetDrawData(lightingMesh);
 				device->BindVertexArray(draw->vertexArrayObject);
-				device->DrawVertexArray(draw->primitiveMode, draw->indexCount, draw->indexElementType);
+				device->DrawVertexArray(draw->primitiveMode, draw->count, draw->indexType);
 			}
 		}
 	}

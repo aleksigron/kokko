@@ -89,7 +89,7 @@ public:
 						data.vertData = reinterpret_cast<Vertex3f*>(vertData);
 						data.vertCount = vertCount;
 
-						meshManager->Upload_3f(meshId, data, RenderData::BufferUsage::StaticDraw);
+						meshManager->UploadIndexed_3f(meshId, data, RenderData::BufferUsage::StaticDraw);
 
 						return true;
 					}
