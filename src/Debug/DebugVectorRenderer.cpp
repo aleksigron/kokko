@@ -84,7 +84,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.idxData = lineIndexData;
 		data.idxCount = sizeof(lineIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_3f(lineMeshId, data, RenderData::BufferUsage::StaticDraw);
+		meshManager->UploadIndexed_3f(lineMeshId, data, RenderBufferUsage::StaticDraw);
 	}
 
 	{
@@ -115,7 +115,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.idxData = cubeIndexData;
 		data.idxCount = sizeof(cubeIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_3f(cubeMeshId, data, RenderData::BufferUsage::StaticDraw);
+		meshManager->UploadIndexed_3f(cubeMeshId, data, RenderBufferUsage::StaticDraw);
 	}
 
 	{
@@ -168,7 +168,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.idxData = sphereIndexData;
 		data.idxCount = sizeof(sphereIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_3f(sphereMeshId, data, RenderData::BufferUsage::StaticDraw);
+		meshManager->UploadIndexed_3f(sphereMeshId, data, RenderBufferUsage::StaticDraw);
 	}
 
 	{
@@ -191,7 +191,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.idxData = rectangleIndexData;
 		data.idxCount = sizeof(rectangleIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_3f(rectangleMeshId, data, RenderData::BufferUsage::StaticDraw);
+		meshManager->UploadIndexed_3f(rectangleMeshId, data, RenderBufferUsage::StaticDraw);
 	}
 }
 
@@ -326,7 +326,7 @@ void DebugVectorRenderer::DrawLineChainScreen(unsigned int count, const Vec3f* p
 		vertData.vertData = reinterpret_cast<const Vertex3f*>(points);
 		vertData.vertCount = count;
 
-		meshManager->Upload_3f(mesh->meshId, vertData, RenderData::BufferUsage::DynamicDraw);
+		meshManager->Upload_3f(mesh->meshId, vertData, RenderBufferUsage::DynamicDraw);
 
 		if (requiredBufferSize > mesh->bufferSize)
 			mesh->bufferSize = requiredBufferSize;
@@ -439,15 +439,15 @@ void DebugVectorRenderer::Render(Camera* camera)
 
 		if (buffersInitialized == false)
 		{
-			RenderData::BufferUsage usage = RenderData::BufferUsage::DynamicDraw;
+			RenderBufferUsage usage = RenderBufferUsage::DynamicDraw;
 
 			renderDevice->CreateBuffers(2, uniformBufferIds);
 
-			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, uniformBufferIds[ObjectBuffer]);
-			renderDevice->SetBufferData(GL_UNIFORM_BUFFER, UniformBuffer::TransformBlock::BufferSize, nullptr, usage);
+			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[ObjectBuffer]);
+			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, UniformBuffer::TransformBlock::BufferSize, nullptr, usage);
 
-			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, uniformBufferIds[MaterialBuffer]);
-			renderDevice->SetBufferData(GL_UNIFORM_BUFFER, MaterialBlock::BufferSize, nullptr, usage);
+			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[MaterialBuffer]);
+			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, MaterialBlock::BufferSize, nullptr, usage);
 
 			buffersInitialized = true;
 		}
@@ -485,10 +485,10 @@ void DebugVectorRenderer::Render(Camera* camera)
 			UniformBuffer::TransformBlock::M.Set(objectUboBuffer, primitive.transform);
 
 			unsigned int objectBufferId = uniformBufferIds[ObjectBuffer];
-			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, objectBufferId);
-			renderDevice->SetBufferSubData(GL_UNIFORM_BUFFER, 0, UniformBuffer::TransformBlock::BufferSize, objectUboBuffer);
+			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectBufferId);
+			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, UniformBuffer::TransformBlock::BufferSize, objectUboBuffer);
 
-			renderDevice->BindBufferBase(GL_UNIFORM_BUFFER, UniformBuffer::TransformBlock::BindingPoint, objectBufferId);
+			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBuffer::TransformBlock::BindingPoint, objectBufferId);
 
 			// Update color
 
@@ -496,10 +496,10 @@ void DebugVectorRenderer::Render(Camera* camera)
 			MaterialBlock::color.Set(materialUboBuffer, colorVec4);
 
 			unsigned int materialBufferId = uniformBufferIds[MaterialBuffer];
-			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, materialBufferId);
-			renderDevice->SetBufferSubData(GL_UNIFORM_BUFFER, 0, MaterialBlock::BufferSize, materialUboBuffer);
+			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferId);
+			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, MaterialBlock::BufferSize, materialUboBuffer);
 
-			renderDevice->BindBufferBase(GL_UNIFORM_BUFFER, UniformBuffer::MaterialBlock::BindingPoint, materialBufferId);
+			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBuffer::MaterialBlock::BindingPoint, materialBufferId);
 
 			// Draw
 
@@ -514,7 +514,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 			renderDevice->BindVertexArray(draw->vertexArrayObject);
 
 			if (draw->indexType != 0)
-				renderDevice->DrawVertexArray(draw->primitiveMode, draw->count, draw->indexType);
+				renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 			else
 				renderDevice->Draw(draw->primitiveMode, 0, draw->count);
 

@@ -60,17 +60,6 @@ static int GetWrapModeValue(TextureWrapMode mode)
 	return values[static_cast<unsigned long>(mode)];
 }
 
-static unsigned int GetTargetType(TextureType type)
-{
-	static const unsigned int values[] = {
-		0,
-		GL_TEXTURE_2D,
-		GL_TEXTURE_CUBE_MAP
-	};
-
-	return values[static_cast<unsigned long>(type)];
-}
-
 static TextureOptions GetOptionsFromJson(const rapidjson::Value& json)
 {
 	using MemberIterator = rapidjson::Value::ConstMemberIterator;
@@ -138,19 +127,19 @@ bool Texture::LoadFromConfiguration(
 
 	switch (typeHash)
 	{
-		case "tex2d"_hash: textureType = TextureType::Texture2D; break;
-		case "texCube"_hash: textureType = TextureType::TextureCube; break;
-		default: textureType = TextureType::Undefined; break;
+		case "tex1d"_hash: textureTarget = RenderTextureTarget::Texture1d; break;
+		case "tex2d"_hash: textureTarget = RenderTextureTarget::Texture2d; break;
+		case "texCube"_hash: textureTarget = RenderTextureTarget::TextureCubeMap; break;
+		default: 
+			return false;
 	}
-
-	targetType = GetTargetType(textureType);
 
 	MemberIterator textureItr = config.FindMember("texture");
 	assert(textureItr != config.MemberEnd());
 
 	const rapidjson::Value& textureValue = textureItr->value;
 
-	if (textureType == TextureType::Texture2D)
+	if (textureTarget == RenderTextureTarget::Texture2d)
 	{
 		assert(textureValue.IsString());
 
@@ -170,7 +159,7 @@ bool Texture::LoadFromConfiguration(
 			}
 		}
 	}
-	else if (textureType == TextureType::TextureCube)
+	else if (textureTarget == RenderTextureTarget::TextureCubeMap)
 	{
 		assert(textureValue.IsArray());
 		assert(textureValue.Size() == 6);
@@ -227,15 +216,15 @@ void Texture::Upload_2D(RenderDevice* renderDevice, const ImageData& image, cons
 	textureSize.x = static_cast<float>(image.imageSize.x);
 	textureSize.y = static_cast<float>(image.imageSize.y);
 
-	targetType = GL_TEXTURE_2D;
+	textureTarget = RenderTextureTarget::Texture2d;
 
 	renderDevice->CreateTextures(1, &driverId);
-	renderDevice->BindTexture(targetType, driverId);
+	renderDevice->BindTexture(textureTarget, driverId);
 
 	if (image.compressed)
 	{
 		RenderCommandData::SetTextureImageCompressed2D textureImage{
-			targetType, 0, image.pixelFormat, image.imageSize.x,
+			textureTarget, 0, image.pixelFormat, image.imageSize.x,
 			image.imageSize.y, image.compressedSize, image.imageData
 		};
 
@@ -244,7 +233,7 @@ void Texture::Upload_2D(RenderDevice* renderDevice, const ImageData& image, cons
 	else
 	{
 		RenderCommandData::SetTextureImage2D textureImage{
-			targetType, 0, image.pixelFormat, image.imageSize.x, image.imageSize.y,
+			textureTarget, 0, image.pixelFormat, image.imageSize.x, image.imageSize.y,
 			image.pixelFormat, image.componentDataType, image.imageData
 		};
 
@@ -253,31 +242,31 @@ void Texture::Upload_2D(RenderDevice* renderDevice, const ImageData& image, cons
 
 	if (options.generateMipmaps)
 	{
-		renderDevice->GenerateTextureMipmaps(targetType);
+		renderDevice->GenerateTextureMipmaps(textureTarget);
 	}
 
 	int minFilter = GetFilterModeValue(options.minFilter);
 	int magFilter = GetFilterModeValue(options.magFilter);
 
-	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MIN_FILTER, minFilter);
-	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MAG_FILTER, magFilter);
+	renderDevice->SetTextureParameterInt(textureTarget, GL_TEXTURE_MIN_FILTER, minFilter);
+	renderDevice->SetTextureParameterInt(textureTarget, GL_TEXTURE_MAG_FILTER, magFilter);
 
 	int wrapModeU = GetWrapModeValue(options.wrapModeU);
 	int wrapModeV = GetWrapModeValue(options.wrapModeV);
 
-	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_S, wrapModeU);
-	renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_T, wrapModeV);
+	renderDevice->SetTextureParameterInt(textureTarget, GL_TEXTURE_WRAP_S, wrapModeU);
+	renderDevice->SetTextureParameterInt(textureTarget, GL_TEXTURE_WRAP_T, wrapModeV);
 }
 
 void Texture::Upload_Cube(RenderDevice* renderDevice, const ImageData* images, const TextureOptions& options)
 {
-	static const unsigned int cubemapFaceValues[] = {
-		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-		GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+	static const RenderTextureTarget cubemapFaceValues[] = {
+		RenderTextureTarget::TextureCubeMap_PositiveX,
+		RenderTextureTarget::TextureCubeMap_NegativeX,
+		RenderTextureTarget::TextureCubeMap_PositiveY,
+		RenderTextureTarget::TextureCubeMap_NegativeY,
+		RenderTextureTarget::TextureCubeMap_PositiveZ,
+		RenderTextureTarget::TextureCubeMap_NegativeZ
 	};
 
 	int minFilter = GetFilterModeValue(options.minFilter);
@@ -290,15 +279,15 @@ void Texture::Upload_Cube(RenderDevice* renderDevice, const ImageData* images, c
 	textureSize.x = static_cast<float>(images[0].imageSize.x);
 	textureSize.y = static_cast<float>(images[0].imageSize.y);
 
-	targetType = GL_TEXTURE_CUBE_MAP;
+	textureTarget = RenderTextureTarget::TextureCubeMap;
 
 	renderDevice->CreateTextures(1, &driverId);
-	renderDevice->BindTexture(targetType, driverId);
+	renderDevice->BindTexture(textureTarget, driverId);
 
 	for (unsigned int i = 0; i < 6; ++i)
 	{
 		const ImageData& image = images[i];
-		unsigned int targetFace = cubemapFaceValues[i];
+		RenderTextureTarget targetFace = cubemapFaceValues[i];
 
 		if (image.compressed)
 		{
@@ -321,14 +310,14 @@ void Texture::Upload_Cube(RenderDevice* renderDevice, const ImageData* images, c
 
 		if (options.generateMipmaps)
 		{
-			renderDevice->GenerateTextureMipmaps(targetType);
+			renderDevice->GenerateTextureMipmaps(textureTarget);
 		}
 
-		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MIN_FILTER, minFilter);
-		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_MAG_FILTER, magFilter);
+		renderDevice->SetTextureParameterInt(textureTarget, GL_TEXTURE_MIN_FILTER, minFilter);
+		renderDevice->SetTextureParameterInt(textureTarget, GL_TEXTURE_MAG_FILTER, magFilter);
 
-		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_S, wrapModeU);
-		renderDevice->SetTextureParameterInt(targetType, GL_TEXTURE_WRAP_T, wrapModeV);
+		renderDevice->SetTextureParameterInt(textureTarget, GL_TEXTURE_WRAP_S, wrapModeU);
+		renderDevice->SetTextureParameterInt(textureTarget, GL_TEXTURE_WRAP_T, wrapModeV);
 	}
 }
 

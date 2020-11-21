@@ -135,13 +135,12 @@ void DebugTextRenderer::Render()
 
 		if (materialBufferObjectId == 0)
 		{
-			using namespace RenderData;
-			BufferUsage usage = BufferUsage::DynamicDraw;
+			RenderBufferUsage usage = RenderBufferUsage::DynamicDraw;
 
 			renderDevice->CreateBuffers(1, &materialBufferObjectId);
 
-			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, materialBufferObjectId);
-			renderDevice->SetBufferData(GL_UNIFORM_BUFFER, MaterialBlock::BufferSize, nullptr, usage);
+			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferObjectId);
+			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, MaterialBlock::BufferSize, nullptr, usage);
 		}
 
 		CreateAndUploadData();
@@ -179,16 +178,16 @@ void DebugTextRenderer::Render()
 		Vec2f texSize = font->GetTextureSize();
 		MaterialBlock::shadowOffset.Set(materialUboBuffer, 1.0f / texSize.y);
 
-		renderDevice->BindBuffer(GL_UNIFORM_BUFFER, materialBufferObjectId);
-		renderDevice->SetBufferSubData(GL_UNIFORM_BUFFER, 0, MaterialBlock::BufferSize, materialUboBuffer);
+		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferObjectId);
+		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, MaterialBlock::BufferSize, materialUboBuffer);
 
-		renderDevice->BindBufferBase(GL_UNIFORM_BUFFER, UniformBuffer::MaterialBlock::BindingPoint, materialBufferObjectId);
+		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBuffer::MaterialBlock::BindingPoint, materialBufferObjectId);
 
 		// Bind texture
 		if (textureUniform != nullptr)
 		{
 			renderDevice->SetActiveTextureUnit(0);
-			renderDevice->BindTexture(GL_TEXTURE_2D, font->GetTextureDriverId());
+			renderDevice->BindTexture(RenderTextureTarget::Texture2d, font->GetTextureDriverId());
 			renderDevice->SetUniformInt(textureUniform->uniformLocation, 0);
 		}
 
@@ -196,7 +195,7 @@ void DebugTextRenderer::Render()
 
 		MeshDrawData* draw = meshManager->GetDrawData(meshId);
 		renderDevice->BindVertexArray(draw->vertexArrayObject);
-		renderDevice->DrawVertexArray(draw->primitiveMode, draw->count, draw->indexType);
+		renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 
 		// Clear data
 
@@ -324,6 +323,5 @@ void DebugTextRenderer::CreateAndUploadData()
 	data.idxData = indexData.GetData();
 	data.idxCount = indexData.GetCount();
 
-	using namespace RenderData;
-	Engine::GetInstance()->GetMeshManager()->Upload_3f2f(meshId, data, BufferUsage::DynamicDraw);
+	Engine::GetInstance()->GetMeshManager()->Upload_3f2f(meshId, data, RenderBufferUsage::DynamicDraw);
 }

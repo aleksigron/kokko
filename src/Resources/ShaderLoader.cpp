@@ -179,8 +179,21 @@ static void AddUniforms(
 			// Since shader is not compiled at this point, we can't know the uniform location
 			uniform.uniformLocation = -1;
 
-			// TODO: Support more texture types
-			uniform.textureTarget = types[uIndex] == UniformDataType::Tex2D ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP;
+			UniformDataType dataType = types[uIndex];
+
+			switch (dataType)
+			{
+			case UniformDataType::Tex2D:
+				uniform.textureTarget = RenderTextureTarget::Texture2d;
+				break;
+			case UniformDataType::TexCube:
+				uniform.textureTarget = RenderTextureTarget::TextureCubeMap;
+				break;
+			default:
+				uniform.textureTarget = RenderTextureTarget::Texture2d;
+				break;
+			}
+
 			uniform.textureName = 0;
 
 			++textureUniformCount;

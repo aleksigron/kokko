@@ -203,8 +203,8 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 		if (material.uniformBufferObject == 0)
 			renderDevice->CreateBuffers(1, &material.uniformBufferObject);
 
-		renderDevice->BindBuffer(GL_UNIFORM_BUFFER, material.uniformBufferObject);
-		renderDevice->SetBufferData(GL_UNIFORM_BUFFER, material.uniformBufferSize, nullptr, RenderData::BufferUsage::StaticDraw);
+		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
+		renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, material.uniformBufferSize, nullptr, RenderBufferUsage::StaticDraw);
 	}
 	else if (material.uniformBufferObject != 0)
 	{
@@ -368,8 +368,8 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 			for (unsigned int i = 0, count = material.uniformCount; i < count; ++i)
 				material.bufferUniforms[i].UpdateToUniformBuffer(material.uniformData, uniformBuffer);
 
-			renderDevice->BindBuffer(GL_UNIFORM_BUFFER, material.uniformBufferObject);
-			renderDevice->SetBufferSubData(GL_UNIFORM_BUFFER, 0, material.uniformBufferSize, uniformBuffer);
+			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
+			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, material.uniformBufferSize, uniformBuffer);
 
 			if (uniformBuffer != stackBuffer)
 				allocator->Deallocate(uniformBuffer);

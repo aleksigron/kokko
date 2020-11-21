@@ -2,8 +2,11 @@
 
 #include <cstdint>
 
-#include "Math/Vec2.hpp"
 #include "Core/BufferRef.hpp"
+
+#include "Math/Vec2.hpp"
+
+#include "Rendering/RenderDeviceEnums.hpp"
 
 class Allocator;
 class RenderDevice;
@@ -23,13 +26,6 @@ enum class TextureWrapMode
 	ClampToEdge,
 };
 
-enum class TextureType
-{
-	Undefined,
-	Texture2D,
-	TextureCube
-};
-
 struct TextureOptions
 {
 	TextureFilterMode minFilter = TextureFilterMode::Linear;
@@ -43,8 +39,7 @@ struct Texture
 {
 	uint32_t nameHash;
 
-	TextureType textureType;
-	unsigned int targetType;
+	RenderTextureTarget textureTarget;
 
 	unsigned int driverId;
 	Vec2f textureSize;

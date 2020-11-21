@@ -89,7 +89,7 @@ public:
 						data.vertData = reinterpret_cast<Vertex3f*>(vertData);
 						data.vertCount = vertCount;
 
-						meshManager->UploadIndexed_3f(meshId, data, RenderData::BufferUsage::StaticDraw);
+						meshManager->UploadIndexed_3f(meshId, data, RenderBufferUsage::StaticDraw);
 
 						return true;
 					}
@@ -102,7 +102,7 @@ public:
 						data.vertData = reinterpret_cast<Vertex3f2f*>(vertData);
 						data.vertCount = vertCount;
 
-						meshManager->Upload_3f2f(meshId, data, RenderData::BufferUsage::StaticDraw);
+						meshManager->Upload_3f2f(meshId, data, RenderBufferUsage::StaticDraw);
 
 						return true;
 					}
@@ -116,7 +116,7 @@ public:
 						data.vertData = reinterpret_cast<Vertex3f3f*>(vertData);
 						data.vertCount = vertCount;
 
-						meshManager->Upload_3f3f(meshId, data, RenderData::BufferUsage::StaticDraw);
+						meshManager->Upload_3f3f(meshId, data, RenderBufferUsage::StaticDraw);
 
 						return true;
 					}
@@ -129,7 +129,7 @@ public:
 						data.vertData = reinterpret_cast<Vertex3f3f2f*>(vertData);
 						data.vertCount = vertCount;
 
-						meshManager->Upload_3f3f2f(meshId, data, RenderData::BufferUsage::StaticDraw);
+						meshManager->Upload_3f3f2f(meshId, data, RenderBufferUsage::StaticDraw);
 
 						return true;
 					}
@@ -142,7 +142,7 @@ public:
 						data.vertData = reinterpret_cast<Vertex3f3f3f*>(vertData);
 						data.vertCount = vertCount;
 
-						meshManager->Upload_3f3f3f(meshId, data, RenderData::BufferUsage::StaticDraw);
+						meshManager->Upload_3f3f3f(meshId, data, RenderBufferUsage::StaticDraw);
 
 						return true;
 					}

@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "Rendering/RenderDeviceEnums.hpp"
+
 namespace RenderCommandData
 {
 	struct ClearColorData
@@ -28,15 +30,15 @@ namespace RenderCommandData
 
 	struct BindFramebufferData
 	{
-		unsigned int target;
+		RenderFramebufferTarget target;
 		unsigned int framebuffer;
 	};
 
 	struct AttachFramebufferTexture2D
 	{
-		unsigned int target;
+		RenderFramebufferTarget target;
 		unsigned int attachment;
-		unsigned int textureTarget;
+		RenderTextureTarget textureTarget;
 		unsigned int texture;
 		int mipLevel;
 	};
@@ -49,7 +51,7 @@ namespace RenderCommandData
 
 	struct SetTextureImage2D
 	{
-		unsigned int target;
+		RenderTextureTarget target;
 		int mipLevel;
 		unsigned int internalFormat;
 		int width;
@@ -61,7 +63,7 @@ namespace RenderCommandData
 
 	struct SetTextureImageCompressed2D
 	{
-		unsigned int target;
+		RenderTextureTarget target;
 		int mipLevel;
 		unsigned int internalFormat;
 		int width;

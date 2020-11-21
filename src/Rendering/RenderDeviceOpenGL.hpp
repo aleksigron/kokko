@@ -33,17 +33,17 @@ public:
 	virtual void CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut) override;
 	virtual void DestroyFramebuffers(unsigned int count, unsigned int* framebuffers) override;
 	virtual void BindFramebuffer(const RenderCommandData::BindFramebufferData* data) override;
-	virtual void BindFramebuffer(unsigned int target, unsigned int framebuffer) override;
+	virtual void BindFramebuffer(RenderFramebufferTarget target, unsigned int framebuffer) override;
 	virtual void AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data) override;
 	virtual void SetFramebufferDrawBuffers(unsigned int count, unsigned int* buffers) override;
 
 	virtual void CreateTextures(unsigned int count, unsigned int* texturesOut) override;
 	virtual void DestroyTextures(unsigned int count, unsigned int* textures) override;
-	virtual void BindTexture(unsigned int target, unsigned int texture) override;
+	virtual void BindTexture(RenderTextureTarget target, unsigned int texture) override;
 	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) override;
 	virtual void SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data) override;
-	virtual void GenerateTextureMipmaps(unsigned int target) override;
-	virtual void SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value) override;
+	virtual void GenerateTextureMipmaps(RenderTextureTarget target) override;
+	virtual void SetTextureParameterInt(RenderTextureTarget target, unsigned int parameter, unsigned int value) override;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) override;
 
 	virtual unsigned int CreateShaderProgram() override;
@@ -72,15 +72,15 @@ public:
 	virtual void CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut) override;
 	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) override;
 	virtual void BindVertexArray(unsigned int vertexArray) override;
-	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) override;
+	virtual void DrawIndexed(unsigned int primitiveMode, int indexCount, unsigned int indexType) override;
 	virtual void Draw(unsigned int primitiveMode, int offset, int vertexCount) override;
 	virtual void EnableVertexAttribute(unsigned int index) override;
 	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) override;
 
 	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) override;
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) override;
-	virtual void BindBuffer(unsigned int target, unsigned int buffer) override;
-	virtual void BindBufferBase(unsigned int target, unsigned int bindingPoint, unsigned int buffer) override;
-	virtual void SetBufferData(unsigned int target, unsigned int size, const void* data, RenderData::BufferUsage usage) override;
-	virtual void SetBufferSubData(unsigned int target, unsigned int offset, unsigned int size, const void* data) override;
+	virtual void BindBuffer(RenderBufferTarget target, unsigned int buffer) override;
+	virtual void BindBufferBase(RenderBufferTarget target, unsigned int bindingPoint, unsigned int buffer) override;
+	virtual void SetBufferData(RenderBufferTarget target, unsigned int size, const void* data, RenderBufferUsage usage) override;
+	virtual void SetBufferSubData(RenderBufferTarget target, unsigned int offset, unsigned int size, const void* data) override;
 };

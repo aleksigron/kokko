@@ -4,6 +4,8 @@
 
 #include "Core/StringRef.hpp"
 
+#include "Rendering/RenderDeviceEnums.hpp"
+
 enum class UniformDataType
 {
 	Tex2D,
@@ -59,7 +61,7 @@ struct BufferUniform : ShaderUniform
 struct TextureUniform : ShaderUniform
 {
 	int uniformLocation;
-	unsigned int textureTarget;
+	RenderTextureTarget textureTarget;
 	unsigned int textureName;
 };
 

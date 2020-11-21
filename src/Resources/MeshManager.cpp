@@ -161,7 +161,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 
 MeshBufferData MeshManager::CreateBuffers(
 	const void* vd, unsigned int vs,
-	RenderData::BufferUsage usage)
+	RenderBufferUsage usage)
 {
 	MeshBufferData data;
 
@@ -174,8 +174,8 @@ MeshBufferData MeshManager::CreateBuffers(
 	data.bufferObjects[MeshBufferData::IndexBuffer] = 0;
 
 	// Bind and upload vertex buffer
-	renderDevice->BindBuffer(GL_ARRAY_BUFFER, data.bufferObjects[MeshBufferData::VertexBuffer]);
-	renderDevice->SetBufferData(GL_ARRAY_BUFFER, vs, vd, usage);
+	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, data.bufferObjects[MeshBufferData::VertexBuffer]);
+	renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vs, vd, usage);
 	data.bufferSizes[MeshBufferData::VertexBuffer] = vs;
 
 	return data;
@@ -183,7 +183,7 @@ MeshBufferData MeshManager::CreateBuffers(
 
 MeshBufferData MeshManager::CreateIndexedBuffers(
 	const void* vd, unsigned int vs, const void* id, unsigned int is,
-	RenderData::BufferUsage usage)
+	RenderBufferUsage usage)
 {
 	MeshBufferData data;
 
@@ -195,13 +195,13 @@ MeshBufferData MeshManager::CreateIndexedBuffers(
 	renderDevice->CreateBuffers(2, data.bufferObjects);
 
 	// Bind and upload index buffer
-	renderDevice->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.bufferObjects[MeshBufferData::IndexBuffer]);
-	renderDevice->SetBufferData(GL_ELEMENT_ARRAY_BUFFER, is, id, usage);
+	renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, data.bufferObjects[MeshBufferData::IndexBuffer]);
+	renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, is, id, usage);
 	data.bufferSizes[MeshBufferData::IndexBuffer] = is;
 
 	// Bind and upload vertex buffer
-	renderDevice->BindBuffer(GL_ARRAY_BUFFER, data.bufferObjects[MeshBufferData::VertexBuffer]);
-	renderDevice->SetBufferData(GL_ARRAY_BUFFER, vs, vd, usage);
+	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, data.bufferObjects[MeshBufferData::VertexBuffer]);
+	renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vs, vd, usage);
 	data.bufferSizes[MeshBufferData::VertexBuffer] = vs;
 
 	return data;
@@ -209,63 +209,63 @@ MeshBufferData MeshManager::CreateIndexedBuffers(
 
 void MeshManager::UpdateBuffers(MeshBufferData& bufferDataInOut,
 	const void* vd, unsigned int vs,
-	RenderData::BufferUsage usage)
+	RenderBufferUsage usage)
 {
 	assert(bufferDataInOut.vertexArrayObject != 0);
 
 	renderDevice->BindVertexArray(bufferDataInOut.vertexArrayObject);
 
 	// Bind and update vertex buffer
-	renderDevice->BindBuffer(GL_ARRAY_BUFFER, bufferDataInOut.bufferObjects[MeshBufferData::VertexBuffer]);
+	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferDataInOut.bufferObjects[MeshBufferData::VertexBuffer]);
 
 	if (vs <= bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer])
 	{
 		// Only update the part of the buffer we need
-		renderDevice->SetBufferSubData(GL_ARRAY_BUFFER, 0, vs, vd);
+		renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vs, vd);
 	}
 	else
 	{
 		// SetBufferData reallocates storage when needed
-		renderDevice->SetBufferData(GL_ARRAY_BUFFER, vs, vd, usage);
+		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vs, vd, usage);
 		bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer] = vs;
 	}
 }
 
 void MeshManager::UpdateIndexedBuffers(MeshBufferData& bufferDataInOut,
 	const void* vd, unsigned int vs, const void* id, unsigned int is,
-	RenderData::BufferUsage usage)
+	RenderBufferUsage usage)
 {
 	assert(bufferDataInOut.vertexArrayObject != 0);
 
 	renderDevice->BindVertexArray(bufferDataInOut.vertexArrayObject);
 
 	// Bind and update index buffer
-	renderDevice->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferDataInOut.bufferObjects[MeshBufferData::IndexBuffer]);
+	renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, bufferDataInOut.bufferObjects[MeshBufferData::IndexBuffer]);
 
 	if (vs <= bufferDataInOut.bufferSizes[MeshBufferData::IndexBuffer])
 	{
 		// Only update the part of the buffer we need
-		renderDevice->SetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, is, id);
+		renderDevice->SetBufferSubData(RenderBufferTarget::IndexBuffer, 0, is, id);
 	}
 	else
 	{
 		// SetBufferData reallocates storage when needed
-		renderDevice->SetBufferData(GL_ELEMENT_ARRAY_BUFFER, is, id, usage);
+		renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, is, id, usage);
 		bufferDataInOut.bufferSizes[MeshBufferData::IndexBuffer] = is;
 	}
 
 	// Bind and update vertex buffer
-	renderDevice->BindBuffer(GL_ARRAY_BUFFER, bufferDataInOut.bufferObjects[MeshBufferData::VertexBuffer]);
+	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferDataInOut.bufferObjects[MeshBufferData::VertexBuffer]);
 
 	if (vs <= bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer])
 	{
 		// Only update the part of the buffer we need
-		renderDevice->SetBufferSubData(GL_ARRAY_BUFFER, 0, vs, vd);
+		renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vs, vd);
 	}
 	else
 	{
 		// SetBufferData reallocates storage when needed
-		renderDevice->SetBufferData(GL_ARRAY_BUFFER, vs, vd, usage);
+		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vs, vd, usage);
 		bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer] = vs;
 	}
 }
@@ -285,7 +285,7 @@ void MeshManager::DeleteBuffers(MeshBufferData& bufferDataInOut) const
 	}
 }
 
-void MeshManager::Upload_3f(MeshId id, VertexData<Vertex3f> vdata, RenderData::BufferUsage usage)
+void MeshManager::Upload_3f(MeshId id, VertexData<Vertex3f> vdata, RenderBufferUsage usage)
 {
 	using V = Vertex3f;
 
@@ -322,7 +322,7 @@ void MeshManager::Upload_3f(MeshId id, VertexData<Vertex3f> vdata, RenderData::B
 }
 
 
-void MeshManager::UploadIndexed_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> vdata, RenderData::BufferUsage usage)
+void MeshManager::UploadIndexed_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> vdata, RenderBufferUsage usage)
 {
 	using V = Vertex3f;
 
@@ -359,7 +359,7 @@ void MeshManager::UploadIndexed_3f(MeshId id, IndexedVertexData<Vertex3f, unsign
 	renderDevice->BindVertexArray(0);
 }
 
-void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned short> vdata, RenderData::BufferUsage usage)
+void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned short> vdata, RenderBufferUsage usage)
 {
 	using V = Vertex3f2f;
 
@@ -401,7 +401,7 @@ void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned 
 	renderDevice->BindVertexArray(0);
 }
 
-void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned short> vdata, RenderData::BufferUsage usage)
+void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned short> vdata, RenderBufferUsage usage)
 {
 	using V = Vertex3f3f;
 
@@ -443,7 +443,7 @@ void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned 
 	renderDevice->BindVertexArray(0);
 }
 
-void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsigned short> vdata, RenderData::BufferUsage usage)
+void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsigned short> vdata, RenderBufferUsage usage)
 {
 	using V = Vertex3f3f2f;
 
@@ -491,7 +491,7 @@ void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsig
 	renderDevice->BindVertexArray(0);
 }
 
-void MeshManager::Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsigned short> vdata, RenderData::BufferUsage usage)
+void MeshManager::Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsigned short> vdata, RenderBufferUsage usage)
 {
 	using V = Vertex3f3f3f;
 

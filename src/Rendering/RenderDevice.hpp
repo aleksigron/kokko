@@ -36,17 +36,17 @@ public:
 	virtual void CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut) = 0;
 	virtual void DestroyFramebuffers(unsigned int count, unsigned int* framebuffers) = 0;
 	virtual void BindFramebuffer(const RenderCommandData::BindFramebufferData* data) = 0;
-	virtual void BindFramebuffer(unsigned int target, unsigned int framebuffer) = 0;
+	virtual void BindFramebuffer(RenderFramebufferTarget target, unsigned int framebuffer) = 0;
 	virtual void AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data) = 0;
 	virtual void SetFramebufferDrawBuffers(unsigned int count, unsigned int* buffers) = 0;
 
 	virtual void CreateTextures(unsigned int count, unsigned int* texturesOut) = 0;
 	virtual void DestroyTextures(unsigned int count, unsigned int* textures) = 0;
-	virtual void BindTexture(unsigned int target, unsigned int texture) = 0;
+	virtual void BindTexture(RenderTextureTarget target, unsigned int texture) = 0;
 	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) = 0;
 	virtual void SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data) = 0;
-	virtual void GenerateTextureMipmaps(unsigned int target) = 0;
-	virtual void SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value) = 0;
+	virtual void GenerateTextureMipmaps(RenderTextureTarget target) = 0;
+	virtual void SetTextureParameterInt(RenderTextureTarget target, unsigned int parameter, unsigned int value) = 0;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) = 0;
 
 	virtual unsigned int CreateShaderProgram() = 0;
@@ -75,15 +75,15 @@ public:
 	virtual void CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut) = 0;
 	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) = 0;
 	virtual void BindVertexArray(unsigned int vertexArray) = 0;
-	virtual void DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType) = 0;
+	virtual void DrawIndexed(unsigned int primitiveMode, int indexCount, unsigned int indexType) = 0;
 	virtual void Draw(unsigned int primitiveMode, int offset, int vertexCount) = 0;
 	virtual void EnableVertexAttribute(unsigned int index) = 0;
 	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) = 0;
 
 	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) = 0;
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) = 0;
-	virtual void BindBuffer(unsigned int target, unsigned int buffer) = 0;
-	virtual void BindBufferBase(unsigned int target, unsigned int bindingPoint, unsigned int buffer) = 0;
-	virtual void SetBufferData(unsigned int target, unsigned int size, const void* data, RenderData::BufferUsage usage) = 0;
-	virtual void SetBufferSubData(unsigned int target, unsigned int offset, unsigned int size, const void* data) = 0;
+	virtual void BindBuffer(RenderBufferTarget target, unsigned int buffer) = 0;
+	virtual void BindBufferBase(RenderBufferTarget target, unsigned int bindingPoint, unsigned int buffer) = 0;
+	virtual void SetBufferData(RenderBufferTarget target, unsigned int size, const void* data, RenderBufferUsage usage) = 0;
+	virtual void SetBufferSubData(RenderBufferTarget target, unsigned int offset, unsigned int size, const void* data) = 0;
 };

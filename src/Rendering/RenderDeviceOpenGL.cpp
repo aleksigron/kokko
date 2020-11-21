@@ -2,6 +2,63 @@
 
 #include "System/IncludeOpenGL.hpp"
 
+static unsigned int ConvertBufferUsage(RenderBufferUsage usage)
+{
+	switch (usage)
+	{
+	case RenderBufferUsage::StreamDraw: return GL_STREAM_DRAW;
+	case RenderBufferUsage::StreamRead: return GL_STREAM_READ;
+	case RenderBufferUsage::StreamCopy: return GL_STREAM_COPY;
+	case RenderBufferUsage::StaticDraw: return GL_STATIC_DRAW;
+	case RenderBufferUsage::StaticRead: return GL_STATIC_READ;
+	case RenderBufferUsage::StaticCopy: return GL_STATIC_COPY;
+	case RenderBufferUsage::DynamicDraw: return GL_DYNAMIC_DRAW;
+	case RenderBufferUsage::DynamicRead: return GL_DYNAMIC_READ;
+	case RenderBufferUsage::DynamicCopy: return GL_DYNAMIC_COPY;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertBufferTarget(RenderBufferTarget target)
+{
+	switch (target)
+	{
+	case RenderBufferTarget::VertexBuffer: return GL_ARRAY_BUFFER;
+	case RenderBufferTarget::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
+	case RenderBufferTarget::UniformBuffer: return GL_UNIFORM_BUFFER;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertTextureTarget(RenderTextureTarget target)
+{
+	switch (target)
+	{
+	case RenderTextureTarget::Texture1d: return GL_TEXTURE_1D;
+	case RenderTextureTarget::Texture2d: return GL_TEXTURE_2D;
+	case RenderTextureTarget::Texture3d: return GL_TEXTURE_3D;
+	case RenderTextureTarget::Texture1dArray: return GL_TEXTURE_1D_ARRAY;
+	case RenderTextureTarget::Texture2dArray: return GL_TEXTURE_2D_ARRAY;
+	case RenderTextureTarget::TextureCubeMap: return GL_TEXTURE_CUBE_MAP;
+	case RenderTextureTarget::TextureCubeMap_PositiveX: return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+	case RenderTextureTarget::TextureCubeMap_NegativeX: return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+	case RenderTextureTarget::TextureCubeMap_PositiveY: return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+	case RenderTextureTarget::TextureCubeMap_NegativeY: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+	case RenderTextureTarget::TextureCubeMap_PositiveZ: return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+	case RenderTextureTarget::TextureCubeMap_NegativeZ: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertFramebufferTarget(RenderFramebufferTarget target)
+{
+	switch (target)
+	{
+	case RenderFramebufferTarget::Framebuffer: return GL_FRAMEBUFFER;
+	default: return 0;
+	}
+}
+
 void RenderDeviceOpenGL::Clear(unsigned int mask)
 {
 	glClear(mask);
@@ -113,14 +170,15 @@ void RenderDeviceOpenGL::BindFramebuffer(const RenderCommandData::BindFramebuffe
 	BindFramebuffer(data->target, data->framebuffer);
 }
 
-void RenderDeviceOpenGL::BindFramebuffer(unsigned int target, unsigned int framebuffer)
+void RenderDeviceOpenGL::BindFramebuffer(RenderFramebufferTarget target, unsigned int framebuffer)
 {
-	glBindFramebuffer(target, framebuffer);
+	glBindFramebuffer(ConvertFramebufferTarget(target), framebuffer);
 }
 
 void RenderDeviceOpenGL::AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data)
 {
-	glFramebufferTexture2D(data->target, data->attachment, data->textureTarget, data->texture, data->mipLevel);
+	glFramebufferTexture2D(ConvertFramebufferTarget(data->target), data->attachment,
+		ConvertTextureTarget(data->textureTarget), data->texture, data->mipLevel);
 }
 
 void RenderDeviceOpenGL::SetFramebufferDrawBuffers(unsigned int count, unsigned int* buffers)
@@ -140,31 +198,31 @@ void RenderDeviceOpenGL::DestroyTextures(unsigned int count, unsigned int* textu
 	glDeleteTextures(count, textures);
 }
 
-void RenderDeviceOpenGL::BindTexture(unsigned int target, unsigned int texture)
+void RenderDeviceOpenGL::BindTexture(RenderTextureTarget target, unsigned int texture)
 {
-	glBindTexture(target, texture);
+	glBindTexture(ConvertTextureTarget(target), texture);
 }
 
 void RenderDeviceOpenGL::SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data)
 {
-	glTexImage2D(data->target, data->mipLevel, data->internalFormat,
+	glTexImage2D(ConvertTextureTarget(data->target), data->mipLevel, data->internalFormat,
 		data->width, data->height, 0, data->format, data->type, data->data);
 }
 
 void RenderDeviceOpenGL::SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data)
 {
-	glCompressedTexImage2D(data->target, data->mipLevel, data->internalFormat,
+	glCompressedTexImage2D(ConvertTextureTarget(data->target), data->mipLevel, data->internalFormat,
 		data->width, data->height, 0, data->dataSize, data->data);
 }
 
-void RenderDeviceOpenGL::GenerateTextureMipmaps(unsigned int target)
+void RenderDeviceOpenGL::GenerateTextureMipmaps(RenderTextureTarget target)
 {
-	glGenerateMipmap(target);
+	glGenerateMipmap(ConvertTextureTarget(target));
 }
 
-void RenderDeviceOpenGL::SetTextureParameterInt(unsigned int target, unsigned int parameter, unsigned int value)
+void RenderDeviceOpenGL::SetTextureParameterInt(RenderTextureTarget target, unsigned int parameter, unsigned int value)
 {
-	glTexParameteri(target, parameter, value);
+	glTexParameteri(ConvertTextureTarget(target), parameter, value);
 }
 
 void RenderDeviceOpenGL::SetActiveTextureUnit(unsigned int textureUnit)
@@ -299,7 +357,7 @@ void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArray)
 	glBindVertexArray(vertexArray);
 }
 
-void RenderDeviceOpenGL::DrawVertexArray(unsigned int primitiveMode, int indexCount, unsigned int indexType)
+void RenderDeviceOpenGL::DrawIndexed(unsigned int primitiveMode, int indexCount, unsigned int indexType)
 {
 	glDrawElements(primitiveMode, indexCount, indexType, nullptr);
 }
@@ -330,39 +388,22 @@ void RenderDeviceOpenGL::DestroyBuffers(unsigned int count, unsigned int* buffer
 	glDeleteBuffers(count, buffers);
 }
 
-void RenderDeviceOpenGL::BindBuffer(unsigned int target, unsigned int buffer)
+void RenderDeviceOpenGL::BindBuffer(RenderBufferTarget target, unsigned int buffer)
 {
-	glBindBuffer(target, buffer);
+	glBindBuffer(ConvertBufferTarget(target), buffer);
 }
 
-void RenderDeviceOpenGL::BindBufferBase(unsigned int target, unsigned int bindingPoint, unsigned int buffer)
+void RenderDeviceOpenGL::BindBufferBase(RenderBufferTarget target, unsigned int bindingPoint, unsigned int buffer)
 {
-	glBindBufferBase(target, bindingPoint, buffer);
+	glBindBufferBase(ConvertBufferTarget(target), bindingPoint, buffer);
 }
 
-static unsigned int ConvertBufferUsage(RenderData::BufferUsage usage)
+void RenderDeviceOpenGL::SetBufferData(RenderBufferTarget target, unsigned int size, const void* data, RenderBufferUsage usage)
 {
-	switch (usage)
-	{
-	case RenderData::BufferUsage::StreamDraw: return GL_STREAM_DRAW;
-	case RenderData::BufferUsage::StreamRead: return GL_STREAM_READ;
-	case RenderData::BufferUsage::StreamCopy: return GL_STREAM_COPY;
-	case RenderData::BufferUsage::StaticDraw: return GL_STATIC_DRAW;
-	case RenderData::BufferUsage::StaticRead: return GL_STATIC_READ;
-	case RenderData::BufferUsage::StaticCopy: return GL_STATIC_COPY;
-	case RenderData::BufferUsage::DynamicDraw: return GL_DYNAMIC_DRAW;
-	case RenderData::BufferUsage::DynamicRead: return GL_DYNAMIC_READ;
-	case RenderData::BufferUsage::DynamicCopy: return GL_DYNAMIC_COPY;
-	default: return GL_STATIC_DRAW;
-	}
+	glBufferData(ConvertBufferTarget(target), size, data, ConvertBufferUsage(usage));
 }
 
-void RenderDeviceOpenGL::SetBufferData(unsigned int target, unsigned int size, const void* data, RenderData::BufferUsage usage)
+void RenderDeviceOpenGL::SetBufferSubData(RenderBufferTarget target, unsigned int offset, unsigned int size, const void* data)
 {
-	glBufferData(target, size, data, ConvertBufferUsage(usage));
-}
-
-void RenderDeviceOpenGL::SetBufferSubData(unsigned int target, unsigned int offset, unsigned int size, const void* data)
-{
-	glBufferSubData(target, offset, size, data);
+	glBufferSubData(ConvertBufferTarget(target), offset, size, data);
 }
