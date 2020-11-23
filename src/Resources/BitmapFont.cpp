@@ -3,14 +3,15 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "Application/App.hpp"
+
 #include "Core/Hash.hpp"
+#include "Core/Sort.hpp"
 
 #include "Engine/Engine.hpp"
-#include "Application/App.hpp"
-#include "Resources/Texture.hpp"
+
 #include "Resources/ImageData.hpp"
-#include "Resources/ResourceManager.hpp"
-#include "Core/Sort.hpp"
+#include "Resources/TextureManager.hpp"
 
 #include "System/IncludeOpenGL.hpp"
 
@@ -54,7 +55,7 @@ const BitmapGlyph* BitmapFont::GetGlyph(unsigned int codePoint) const
 	return nullptr;
 }
 
-bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
+bool BitmapFont::LoadFromBDF(TextureManager* textureManager, const Buffer<char>& content)
 {
 	using uint = unsigned int;
 
@@ -268,16 +269,14 @@ bool BitmapFont::LoadFromBDF(const Buffer<char>& content)
 		imageData.pixelFormat = GL_RED;
 		imageData.componentDataType = GL_UNSIGNED_BYTE;
 
-		Engine* engine = Engine::GetInstance();
-		ResourceManager* rm = engine->GetResourceManager();
+		TextureId id = textureManager->CreateTexture();
 
-		Texture* texture = rm->CreateTexture();
 		TextureOptions options;
-		options.minFilter = TextureFilterMode::Nearest;
-		options.magFilter = TextureFilterMode::Nearest;
-		texture->Upload_2D(rm->GetRenderDevice(), imageData, options);
+		options.minFilter = RenderTextureFilterMode::Nearest;
+		options.magFilter = RenderTextureFilterMode::Nearest;
+		textureManager->Upload_2D(id, imageData, options);
 
-		textureId = texture->driverId;
+		textureId = textureManager->GetTextureData(id).textureObjectId;
 		
 		return true;
 	}

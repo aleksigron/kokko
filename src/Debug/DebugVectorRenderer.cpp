@@ -12,7 +12,6 @@
 #include "Rendering/UniformBufferData.hpp"
 
 #include "Resources/MeshManager.hpp"
-#include "Resources/ResourceManager.hpp"
 #include "Resources/ShaderManager.hpp"
 
 #include "Scene/Scene.hpp"

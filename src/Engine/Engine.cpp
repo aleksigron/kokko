@@ -22,7 +22,7 @@
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/MaterialManager.hpp"
-#include "Resources/ResourceManager.hpp"
+#include "Resources/TextureManager.hpp"
 
 #include "Scene/SceneManager.hpp"
 #include "Scene/Scene.hpp"
@@ -57,15 +57,15 @@ Engine::Engine()
 	Allocator* meshManagerAlloc = allocatorManager->CreateAllocatorScope("MeshManager", defaultAllocator);
 	this->meshManager = defaultAllocator->MakeNew<MeshManager>(meshManagerAlloc, renderDevice);
 
-	Allocator* resourceManagerAlloc = allocatorManager->CreateAllocatorScope("ResourceManager", defaultAllocator);
-	this->resourceManager = defaultAllocator->MakeNew<ResourceManager>(resourceManagerAlloc, renderDevice);
+	Allocator* textureManagerAlloc = allocatorManager->CreateAllocatorScope("TextureManager", defaultAllocator);
+	this->textureManager = defaultAllocator->MakeNew<TextureManager>(textureManagerAlloc, renderDevice);
 
 	Allocator* shaderManagerAlloc = allocatorManager->CreateAllocatorScope("ShaderManager", defaultAllocator);
 	this->shaderManager = defaultAllocator->MakeNew<ShaderManager>(shaderManagerAlloc, renderDevice);
 
 	Allocator* materialManagerAlloc = allocatorManager->CreateAllocatorScope("MaterialManager", defaultAllocator);
 	this->materialManager = defaultAllocator->MakeNew<MaterialManager>(
-		materialManagerAlloc, renderDevice, shaderManager, resourceManager);
+		materialManagerAlloc, renderDevice, shaderManager, textureManager);
 
 	Allocator* lightManagerAlloc = allocatorManager->CreateAllocatorScope("LightManager", defaultAllocator);
 	this->lightManager = defaultAllocator->MakeNew<LightManager>(lightManagerAlloc);
@@ -89,7 +89,7 @@ Engine::~Engine()
 	defaultAllocator->MakeDelete(this->lightManager);
 	defaultAllocator->MakeDelete(this->materialManager);
 	defaultAllocator->MakeDelete(this->shaderManager);
-	defaultAllocator->MakeDelete(this->resourceManager);
+	defaultAllocator->MakeDelete(this->textureManager);
 	defaultAllocator->MakeDelete(this->meshManager);
 	defaultAllocator->MakeDelete(this->entityManager);
 	defaultAllocator->MakeDelete(this->time);
@@ -115,7 +115,7 @@ bool Engine::Initialize()
 		debugLog->OpenLogFile(logFilename, false);
 
 		DebugTextRenderer* debugTextRenderer = this->debug->GetTextRenderer();
-		bool fontLoaded = debugTextRenderer->LoadBitmapFont(debugFontFilename);
+		bool fontLoaded = debugTextRenderer->LoadBitmapFont(textureManager, debugFontFilename);
 		if (fontLoaded == false)
 		{
 			Allocator* defaultAllocator = Memory::GetDefaultAllocator();

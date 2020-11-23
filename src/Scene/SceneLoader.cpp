@@ -10,9 +10,8 @@
 
 #include "Rendering/Renderer.hpp"
 #include "Rendering/LightManager.hpp"
-#include "Resources/MeshManager.hpp"
 
-#include "Resources/ResourceManager.hpp"
+#include "Resources/MeshManager.hpp"
 #include "Resources/MaterialManager.hpp"
 #include "Resources/ValueSerialization.hpp"
 
@@ -22,7 +21,6 @@ SceneLoader::SceneLoader(Engine* engine, Scene* scene):
 	meshManager(engine->GetMeshManager()),
 	materialManager(engine->GetMaterialManager()),
 	entityManager(engine->GetEntityManager()),
-	resourceManager(engine->GetResourceManager()),
 	lightManager(engine->GetLightManager())
 {
 }

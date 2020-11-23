@@ -9,9 +9,7 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "Resources/ResourceManager.hpp"
 #include "Resources/ShaderLoader.hpp"
-#include "Resources/Texture.hpp"
 #include "Resources/ValueSerialization.hpp"
 
 #include "System/File.hpp"

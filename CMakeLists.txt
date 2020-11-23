@@ -137,15 +137,13 @@ set (KOKKO_SOURCES
 	src/Resources/MeshManager.hpp
 	src/Resources/MeshPresets.cpp
 	src/Resources/MeshPresets.hpp
-	src/Resources/ResourceManager.cpp
-	src/Resources/ResourceManager.hpp
 	src/Resources/ShaderId.hpp
 	src/Resources/ShaderLoader.cpp
 	src/Resources/ShaderLoader.hpp
 	src/Resources/ShaderManager.cpp
 	src/Resources/ShaderManager.hpp
-	src/Resources/Texture.cpp
-	src/Resources/Texture.hpp
+	src/Resources/TextureManager.cpp
+	src/Resources/TextureManager.hpp
 	src/Resources/ValueSerialization.cpp
 	src/Resources/ValueSerialization.hpp
 	src/Scene/ITransformUpdateReceiver.hpp

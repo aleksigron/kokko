@@ -16,7 +16,6 @@
 
 #include "Resources/BitmapFont.hpp"
 #include "Resources/MeshManager.hpp"
-#include "Resources/ResourceManager.hpp"
 #include "Resources/ShaderManager.hpp"
 
 #include "System/File.hpp"
@@ -86,14 +85,14 @@ int DebugTextRenderer::GetRowCountForTextLength(unsigned int characterCount) con
 	return (characterCount + charsPerRow - 1) / charsPerRow;
 }
 
-bool DebugTextRenderer::LoadBitmapFont(const char* filePath)
+bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const char* filePath)
 {
 	Buffer<char> content(allocator);
 
 	if (File::ReadText(filePath, content))
 	{
 		font = allocator->MakeNew<BitmapFont>(allocator);
-		return font->LoadFromBDF(content);
+		return font->LoadFromBDF(textureManager, content);
 	}
 	else
 		return false;
@@ -125,7 +124,6 @@ void DebugTextRenderer::Render()
 	{
 		Engine* engine = Engine::GetInstance();
 		MeshManager* meshManager = engine->GetMeshManager();
-		ResourceManager* rm = engine->GetResourceManager();
 
 		if (meshId.IsValid() == false)
 		{

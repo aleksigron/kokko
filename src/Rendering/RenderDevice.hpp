@@ -46,8 +46,16 @@ public:
 	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) = 0;
 	virtual void SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data) = 0;
 	virtual void GenerateTextureMipmaps(RenderTextureTarget target) = 0;
-	virtual void SetTextureParameterInt(RenderTextureTarget target, unsigned int parameter, unsigned int value) = 0;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) = 0;
+
+	virtual void SetTextureParameterInt(RenderTextureTarget target, RenderTextureParameter parameter, unsigned int value) = 0;
+	virtual void SetTextureMinFilter(RenderTextureTarget target, RenderTextureFilterMode mode) = 0;
+	virtual void SetTextureMagFilter(RenderTextureTarget target, RenderTextureFilterMode mode) = 0;
+	virtual void SetTextureWrapModeU(RenderTextureTarget target, RenderTextureWrapMode mode) = 0;
+	virtual void SetTextureWrapModeV(RenderTextureTarget target, RenderTextureWrapMode mode) = 0;
+	virtual void SetTextureWrapModeW(RenderTextureTarget target, RenderTextureWrapMode mode) = 0;
+	virtual void SetTextureCompareMode(RenderTextureTarget target, RenderTextureCompareMode mode) = 0;
+	virtual void SetTextureCompareFunc(RenderTextureTarget target, RenderTextureCompareFunc func) = 0;
 
 	virtual unsigned int CreateShaderProgram() = 0;
 	virtual void DestroyShaderProgram(unsigned int shaderProgram) = 0;

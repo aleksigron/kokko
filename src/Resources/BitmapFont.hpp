@@ -7,6 +7,7 @@
 #include "Core/Buffer.hpp"
 
 class Allocator;
+class TextureManager;
 
 struct BitmapGlyph
 {
@@ -51,5 +52,5 @@ public:
 	unsigned int GetTextureDriverId() const { return textureId; }
 	Vec2f GetTextureSize() const { return textureSize; }
 
-	bool LoadFromBDF(const Buffer<char>& content);
+	bool LoadFromBDF(TextureManager* textureManager, const Buffer<char>& content);
 };

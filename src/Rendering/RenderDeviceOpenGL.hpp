@@ -43,8 +43,16 @@ public:
 	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) override;
 	virtual void SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data) override;
 	virtual void GenerateTextureMipmaps(RenderTextureTarget target) override;
-	virtual void SetTextureParameterInt(RenderTextureTarget target, unsigned int parameter, unsigned int value) override;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) override;
+
+	virtual void SetTextureParameterInt(RenderTextureTarget target, RenderTextureParameter parameter, unsigned int value) override;
+	virtual void SetTextureMinFilter(RenderTextureTarget target, RenderTextureFilterMode mode) override;
+	virtual void SetTextureMagFilter(RenderTextureTarget target, RenderTextureFilterMode mode) override;
+	virtual void SetTextureWrapModeU(RenderTextureTarget target, RenderTextureWrapMode mode) override;
+	virtual void SetTextureWrapModeV(RenderTextureTarget target, RenderTextureWrapMode mode) override;
+	virtual void SetTextureWrapModeW(RenderTextureTarget target, RenderTextureWrapMode mode) override;
+	virtual void SetTextureCompareMode(RenderTextureTarget target, RenderTextureCompareMode mode) override;
+	virtual void SetTextureCompareFunc(RenderTextureTarget target, RenderTextureCompareFunc func) override;
 
 	virtual unsigned int CreateShaderProgram() override;
 	virtual void DestroyShaderProgram(unsigned int shaderProgram) override;

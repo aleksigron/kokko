@@ -13,9 +13,8 @@
 
 #include "Rendering/RenderDevice.hpp"
 
-#include "Resources/ResourceManager.hpp"
+#include "Resources/TextureManager.hpp"
 #include "Resources/ShaderManager.hpp"
-#include "Resources/Texture.hpp"
 #include "Resources/ValueSerialization.hpp"
 
 #include "System/File.hpp"
@@ -25,11 +24,11 @@ MaterialManager::MaterialManager(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	ShaderManager* shaderManager,
-	ResourceManager* resourceManager) :
+	TextureManager* textureManager) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
-	resourceManager(resourceManager),
+	textureManager(textureManager),
 	nameHashMap(allocator)
 {
 	data = InstanceData{};
@@ -292,10 +291,14 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 			{
 				if (isTexture)
 				{
-					Texture* texture = resourceManager->GetTexture(valueItr->value.GetString());
+					StringRef path(valueItr->value.GetString(), valueItr->value.GetStringLength());
+					TextureId id = textureManager->GetIdByPath(path);
 
-					if (texture != nullptr)
-						material.textureUniforms[varIndex].textureName = texture->driverId;
+					if (id.IsNull() == false)
+					{
+						const TextureData& texture = textureManager->GetTextureData(id);
+						material.textureUniforms[varIndex].textureName = texture.textureObjectId;
+					}
 				}
 				else
 				{

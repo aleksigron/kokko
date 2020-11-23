@@ -13,7 +13,7 @@
 
 class Allocator;
 class ShaderManager;
-class ResourceManager;
+class TextureManager;
 class RenderDevice;
 
 struct MaterialData
@@ -41,7 +41,7 @@ private:
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 	ShaderManager* shaderManager;
-	ResourceManager* resourceManager;
+	TextureManager* textureManager;
 
 	struct InstanceData
 	{
@@ -68,7 +68,7 @@ public:
 		Allocator* allocator,
 		RenderDevice* renderDevice,
 		ShaderManager* shaderManager,
-		ResourceManager* resourceManager);
+		TextureManager* textureManager);
 
 	~MaterialManager();
 

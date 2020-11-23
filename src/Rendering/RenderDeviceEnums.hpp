@@ -89,3 +89,46 @@ enum class RenderShaderStage
 	GeometryShader,
 	FragmentShader
 };
+
+enum class RenderTextureParameter
+{
+	MinificationFilter,
+	MagnificationFilter,
+	WrapModeU,
+	WrapModeV,
+	WrapModeW,
+	CompareMode,
+	CompareFunc,
+};
+
+enum class RenderTextureFilterMode
+{
+	Nearest,
+	Linear,
+	LinearMipmap
+};
+
+enum class RenderTextureWrapMode
+{
+	Repeat,
+	MirroredRepeat,
+	ClampToEdge,
+};
+
+enum class RenderTextureCompareMode
+{
+	None,
+	CompareRefToTexture
+};
+
+enum class RenderTextureCompareFunc
+{
+	LessThanOrEqual,
+	GreaterThanOrEqual,
+	Less,
+	Greater,
+	Equal,
+	NotEqual,
+	Always,
+	Never
+};

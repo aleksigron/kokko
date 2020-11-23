@@ -9,7 +9,7 @@ class Renderer;
 class MeshManager;
 class ShaderManager;
 class MaterialManager;
-class ResourceManager;
+class TextureManager;
 class SceneManager;
 class LightManager;
 
@@ -31,7 +31,7 @@ private:
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
 	MaterialManager* materialManager;
-	ResourceManager* resourceManager;
+	TextureManager* textureManager;
 	SceneManager* sceneManager;
 
 	Debug* debug;
@@ -53,7 +53,6 @@ public:
 	Renderer* GetRenderer() { return renderer; }
 	MaterialManager* GetMaterialManager() { return materialManager; }
 	MeshManager* GetMeshManager() { return meshManager; }
-	ResourceManager* GetResourceManager() { return resourceManager; }
 	SceneManager* GetSceneManager() { return sceneManager; }
 
 	Debug* GetDebug() { return debug; }

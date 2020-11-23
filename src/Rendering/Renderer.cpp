@@ -29,9 +29,8 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
-#include "Resources/ResourceManager.hpp"
 #include "Resources/ShaderManager.hpp"
-#include "Resources/Texture.hpp"
+#include "Resources/TextureManager.hpp"
 
 #include "Scene/Scene.hpp"
 
@@ -166,8 +165,8 @@ void Renderer::Initialize(Window* window)
 		};
 		device->SetTextureImage2D(&asTextureImage);
 
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
+		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
 		RenderCommandData::AttachFramebufferTexture2D asAttachTexture{
 			RenderFramebufferTarget::Framebuffer, colAtt[0], RenderTextureTarget::Texture2d, asTexture, 0
@@ -184,8 +183,8 @@ void Renderer::Initialize(Window* window)
 		};
 		device->SetTextureImage2D(&norTextureImage);
 
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
+		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
 		RenderCommandData::AttachFramebufferTexture2D norAttachTexture{
 			RenderFramebufferTarget::Framebuffer, colAtt[1], RenderTextureTarget::Texture2d, norTexture, 0
@@ -202,8 +201,8 @@ void Renderer::Initialize(Window* window)
 		};
 		device->SetTextureImage2D(&emTextureImage);
 
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
+		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
 		RenderCommandData::AttachFramebufferTexture2D emAttachTexture{
 			RenderFramebufferTarget::Framebuffer, colAtt[2], RenderTextureTarget::Texture2d, emTexture, 0
@@ -222,8 +221,8 @@ void Renderer::Initialize(Window* window)
 		};
 		device->SetTextureImage2D(&depthTextureImage);
 
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
+		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
 		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
 			RenderFramebufferTarget::Framebuffer, GL_DEPTH_ATTACHMENT, RenderTextureTarget::Texture2d, depthTexture, 0
@@ -271,12 +270,12 @@ void Renderer::Initialize(Window* window)
 		};
 		device->SetTextureImage2D(&depthTextureImage);
 
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-		device->SetTextureParameterInt(RenderTextureTarget::Texture2d, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
+		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
+		device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+		device->SetTextureCompareMode(RenderTextureTarget::Texture2d, RenderTextureCompareMode::CompareRefToTexture);
+		device->SetTextureCompareFunc(RenderTextureTarget::Texture2d, RenderTextureCompareFunc::LessThanOrEqual);
 
 		RenderCommandData::AttachFramebufferTexture2D depthFramebufferTexture{
 			RenderFramebufferTarget::Framebuffer, GL_DEPTH_ATTACHMENT, RenderTextureTarget::Texture2d, depthTexture, 0
@@ -291,7 +290,6 @@ void Renderer::Initialize(Window* window)
 	Engine* engine = Engine::GetInstance();
 	MaterialManager* materialManager = engine->GetMaterialManager();
 	MeshManager* meshManager = engine->GetMeshManager();
-	ResourceManager* resManager = engine->GetResourceManager();
 
 	{
 		// Create per-object uniform buffer
@@ -417,7 +415,6 @@ void Renderer::Render(Scene* scene)
 	Engine* engine = Engine::GetInstance();
 	MeshManager* meshManager = engine->GetMeshManager();
 	MaterialManager* materialManager = engine->GetMaterialManager();
-	ResourceManager* res = engine->GetResourceManager();
 
 	Camera* renderCamera = this->GetRenderCamera(scene);
 	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());

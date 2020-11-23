@@ -24,7 +24,6 @@ private:
 	MeshManager* meshManager;
 	MaterialManager* materialManager;
 	EntityManager* entityManager;
-	ResourceManager* resourceManager;
 	LightManager* lightManager;
 
 	void CreateObjects(ValueItr begin, ValueItr end);

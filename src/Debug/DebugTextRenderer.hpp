@@ -14,6 +14,7 @@ class Allocator;
 class BitmapFont;
 class RenderDevice;
 class ShaderManager;
+class TextureManager;
 
 class DebugTextRenderer
 {
@@ -52,7 +53,7 @@ public:
 
 	void Initialize(ShaderManager* shaderManager);
 
-	bool LoadBitmapFont(const char* filePath);
+	bool LoadBitmapFont(TextureManager* textureManager, const char* filePath);
 	bool HasValidFont() const { return font != nullptr; }
 
 	void SetFrameSize(const Vec2f& size);

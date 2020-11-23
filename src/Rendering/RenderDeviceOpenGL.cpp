@@ -50,6 +50,69 @@ static unsigned int ConvertTextureTarget(RenderTextureTarget target)
 	}
 }
 
+static unsigned int ConvertTextureParameter(RenderTextureParameter parameter)
+{
+	switch (parameter)
+	{
+	case RenderTextureParameter::MinificationFilter: return GL_TEXTURE_MIN_FILTER;
+	case RenderTextureParameter::MagnificationFilter: return GL_TEXTURE_MAG_FILTER;
+	case RenderTextureParameter::WrapModeU: return GL_TEXTURE_WRAP_S;
+	case RenderTextureParameter::WrapModeV: return GL_TEXTURE_WRAP_T;
+	case RenderTextureParameter::WrapModeW: return GL_TEXTURE_WRAP_R;
+	case RenderTextureParameter::CompareMode: return GL_TEXTURE_COMPARE_MODE;
+	case RenderTextureParameter::CompareFunc: return GL_TEXTURE_COMPARE_FUNC;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertTextureFilterMode(RenderTextureFilterMode mode)
+{
+	switch (mode)
+	{
+	case RenderTextureFilterMode::Nearest: return GL_NEAREST;
+	case RenderTextureFilterMode::Linear: return GL_LINEAR;
+	case RenderTextureFilterMode::LinearMipmap: return GL_LINEAR_MIPMAP_LINEAR;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertTextureWrapMode(RenderTextureWrapMode mode)
+{
+	switch (mode)
+	{
+	case RenderTextureWrapMode::Repeat: return GL_REPEAT;
+	case RenderTextureWrapMode::MirroredRepeat: return GL_MIRRORED_REPEAT;
+	case RenderTextureWrapMode::ClampToEdge: return GL_CLAMP_TO_EDGE;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertTextureCompareMode(RenderTextureCompareMode mode)
+{
+	switch (mode)
+	{
+	case RenderTextureCompareMode::None: return GL_NONE;
+	case RenderTextureCompareMode::CompareRefToTexture: return GL_COMPARE_REF_TO_TEXTURE;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertTextureCompareFunc(RenderTextureCompareFunc func)
+{
+	switch (func)
+	{
+	case RenderTextureCompareFunc::LessThanOrEqual: return GL_LEQUAL;
+	case RenderTextureCompareFunc::GreaterThanOrEqual: return GL_GEQUAL;
+	case RenderTextureCompareFunc::Less: return GL_LESS;
+	case RenderTextureCompareFunc::Greater: return GL_GREATER;
+	case RenderTextureCompareFunc::Equal: return GL_EQUAL;
+	case RenderTextureCompareFunc::NotEqual: return GL_NOTEQUAL;
+	case RenderTextureCompareFunc::Always: return GL_ALWAYS;
+	case RenderTextureCompareFunc::Never: return GL_NEVER;
+	default: return 0;
+	}
+}
+
 static unsigned int ConvertFramebufferTarget(RenderFramebufferTarget target)
 {
 	switch (target)
@@ -285,14 +348,49 @@ void RenderDeviceOpenGL::GenerateTextureMipmaps(RenderTextureTarget target)
 	glGenerateMipmap(ConvertTextureTarget(target));
 }
 
-void RenderDeviceOpenGL::SetTextureParameterInt(RenderTextureTarget target, unsigned int parameter, unsigned int value)
-{
-	glTexParameteri(ConvertTextureTarget(target), parameter, value);
-}
-
 void RenderDeviceOpenGL::SetActiveTextureUnit(unsigned int textureUnit)
 {
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
+}
+
+void RenderDeviceOpenGL::SetTextureParameterInt(RenderTextureTarget target, RenderTextureParameter parameter, unsigned int value)
+{
+	glTexParameteri(ConvertTextureTarget(target), ConvertTextureParameter(parameter), value);
+}
+
+void RenderDeviceOpenGL::SetTextureMinFilter(RenderTextureTarget target, RenderTextureFilterMode mode)
+{
+	SetTextureParameterInt(target, RenderTextureParameter::MinificationFilter, ConvertTextureFilterMode(mode));
+}
+
+void RenderDeviceOpenGL::SetTextureMagFilter(RenderTextureTarget target, RenderTextureFilterMode mode)
+{
+	SetTextureParameterInt(target, RenderTextureParameter::MagnificationFilter, ConvertTextureFilterMode(mode));
+}
+
+void RenderDeviceOpenGL::SetTextureWrapModeU(RenderTextureTarget target, RenderTextureWrapMode mode)
+{
+	SetTextureParameterInt(target, RenderTextureParameter::WrapModeU, ConvertTextureWrapMode(mode));
+}
+
+void RenderDeviceOpenGL::SetTextureWrapModeV(RenderTextureTarget target, RenderTextureWrapMode mode)
+{
+	SetTextureParameterInt(target, RenderTextureParameter::WrapModeV, ConvertTextureWrapMode(mode));
+}
+
+void RenderDeviceOpenGL::SetTextureWrapModeW(RenderTextureTarget target, RenderTextureWrapMode mode)
+{
+	SetTextureParameterInt(target, RenderTextureParameter::WrapModeW, ConvertTextureWrapMode(mode));
+}
+
+void RenderDeviceOpenGL::SetTextureCompareMode(RenderTextureTarget target, RenderTextureCompareMode mode)
+{
+	SetTextureParameterInt(target, RenderTextureParameter::CompareMode, ConvertTextureCompareMode(mode));
+}
+
+void RenderDeviceOpenGL::SetTextureCompareFunc(RenderTextureTarget target, RenderTextureCompareFunc func)
+{
+	SetTextureParameterInt(target, RenderTextureParameter::CompareFunc, ConvertTextureCompareFunc(func));
 }
 
 // SHADER PROGRAM
