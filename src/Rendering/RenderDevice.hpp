@@ -15,7 +15,7 @@ public:
 	virtual void BlendingEnable() = 0;
 	virtual void BlendingDisable() = 0;
 	virtual void BlendFunction(const RenderCommandData::BlendFunctionData* data) = 0;
-	virtual void BlendFunction(unsigned int srcFactor, unsigned int dstFactor) = 0;
+	virtual void BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor) = 0;
 
 	virtual void DepthRange(const RenderCommandData::DepthRangeData* data) = 0;
 	virtual void Viewport(const RenderCommandData::ViewportData* data) = 0;
@@ -55,13 +55,17 @@ public:
 	virtual void LinkShaderProgram(unsigned int shaderProgram) = 0;
 	virtual void UseShaderProgram(unsigned int shaderProgram) = 0;
 	virtual int GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter) = 0;
+	virtual bool GetShaderProgramLinkStatus(unsigned int shaderProgram) = 0;
+	virtual int GetShaderProgramInfoLogLength(unsigned int shaderProgram) = 0;
 	virtual void GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut) = 0;
 
-	virtual unsigned int CreateShaderStage(unsigned int shaderType) = 0;
+	virtual unsigned int CreateShaderStage(RenderShaderStage stage) = 0;
 	virtual void DestroyShaderStage(unsigned int shaderStage) = 0;
 	virtual void SetShaderStageSource(unsigned int shaderStage, const char* source, int length) = 0;
 	virtual void CompileShaderStage(unsigned int shaderStage) = 0;
 	virtual int GetShaderStageParameterInt(unsigned int shaderStage, unsigned int parameter) = 0;
+	virtual bool GetShaderStageCompileStatus(unsigned int shaderStage) = 0;
+	virtual int GetShaderStageInfoLogLength(unsigned int shaderStage) = 0;
 	virtual void GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut) = 0;
 
 	virtual int GetUniformLocation(unsigned int shaderProgram, const char* uniformName) = 0;
@@ -75,8 +79,8 @@ public:
 	virtual void CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut) = 0;
 	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) = 0;
 	virtual void BindVertexArray(unsigned int vertexArray) = 0;
-	virtual void DrawIndexed(unsigned int primitiveMode, int indexCount, unsigned int indexType) = 0;
-	virtual void Draw(unsigned int primitiveMode, int offset, int vertexCount) = 0;
+	virtual void DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType) = 0;
+	virtual void Draw(RenderPrimitiveMode mode, int offset, int vertexCount) = 0;
 	virtual void EnableVertexAttribute(unsigned int index) = 0;
 	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) = 0;
 

@@ -12,7 +12,7 @@ public:
 	virtual void BlendingEnable() override;
 	virtual void BlendingDisable() override;
 	virtual void BlendFunction(const RenderCommandData::BlendFunctionData* data) override;
-	virtual void BlendFunction(unsigned int srcFactor, unsigned int dstFactor) override;
+	virtual void BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor) override;
 
 	virtual void DepthRange(const RenderCommandData::DepthRangeData* data) override;
 	virtual void Viewport(const RenderCommandData::ViewportData* data) override;
@@ -51,14 +51,18 @@ public:
 	virtual void AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage) override;
 	virtual void LinkShaderProgram(unsigned int shaderProgram) override;
 	virtual void UseShaderProgram(unsigned int shaderProgram) override;
+	virtual bool GetShaderProgramLinkStatus(unsigned int shaderProgram) override;
+	virtual int GetShaderProgramInfoLogLength(unsigned int shaderProgram) override;
 	virtual int GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter) override;
 	virtual void GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut) override;
 
-	virtual unsigned int CreateShaderStage(unsigned int shaderType) override;
+	virtual unsigned int CreateShaderStage(RenderShaderStage stage) override;
 	virtual void DestroyShaderStage(unsigned int shaderStage) override;
 	virtual void SetShaderStageSource(unsigned int shaderStage, const char* source, int length) override;
 	virtual void CompileShaderStage(unsigned int shaderStage) override;
 	virtual int GetShaderStageParameterInt(unsigned int shaderStage, unsigned int parameter) override;
+	virtual bool GetShaderStageCompileStatus(unsigned int shaderStage) override;
+	virtual int GetShaderStageInfoLogLength(unsigned int shaderStage) override;
 	virtual void GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut) override;
 
 	virtual int GetUniformLocation(unsigned int shaderProgram, const char* uniformName) override;
@@ -72,8 +76,8 @@ public:
 	virtual void CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut) override;
 	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) override;
 	virtual void BindVertexArray(unsigned int vertexArray) override;
-	virtual void DrawIndexed(unsigned int primitiveMode, int indexCount, unsigned int indexType) override;
-	virtual void Draw(unsigned int primitiveMode, int offset, int vertexCount) override;
+	virtual void DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType) override;
+	virtual void Draw(RenderPrimitiveMode mode, int offset, int vertexCount) override;
 	virtual void EnableVertexAttribute(unsigned int index) override;
 	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) override;
 

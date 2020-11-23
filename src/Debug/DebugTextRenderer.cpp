@@ -19,7 +19,6 @@
 #include "Resources/ResourceManager.hpp"
 #include "Resources/ShaderManager.hpp"
 
-#include "System/IncludeOpenGL.hpp"
 #include "System/File.hpp"
 
 struct MaterialBlock
@@ -167,7 +166,7 @@ void DebugTextRenderer::Render()
 		renderDevice->DepthTestDisable();
 
 		renderDevice->BlendingEnable();
-		renderDevice->BlendFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		renderDevice->BlendFunction(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
 
 		// Use shader
 		renderDevice->UseShaderProgram(shader.driverId);
@@ -317,7 +316,7 @@ void DebugTextRenderer::CreateAndUploadData()
 	}
 
 	IndexedVertexData<Vertex3f2f, unsigned short> data;
-	data.primitiveMode = MeshPrimitiveMode::Triangles;
+	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertData = vertexData.GetData();
 	data.vertCount = vertexData.GetCount();
 	data.idxData = indexData.GetData();

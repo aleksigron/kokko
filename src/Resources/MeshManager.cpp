@@ -10,21 +10,6 @@
 #include "Resources/MeshLoader.hpp"
 
 #include "System/File.hpp"
-#include "System/IncludeOpenGL.hpp"
-
-static unsigned int PrimitiveModeValue(MeshPrimitiveMode mode)
-{
-	switch (mode) {
-		case MeshPrimitiveMode::Points: return GL_POINTS;
-		case MeshPrimitiveMode::LineStrip: return GL_LINE_STRIP;
-		case MeshPrimitiveMode::LineLoop: return GL_LINE_LOOP;
-		case MeshPrimitiveMode::Lines: return GL_LINES;
-		case MeshPrimitiveMode::TriangleStrip: return GL_TRIANGLE_STRIP;
-		case MeshPrimitiveMode::TriangleFan: return GL_TRIANGLE_FAN;
-		case MeshPrimitiveMode::Triangles: return GL_TRIANGLES;
-		default: return 0;
-	}
-}
 
 MeshManager::MeshManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
@@ -303,10 +288,10 @@ void MeshManager::Upload_3f(MeshId id, VertexData<Vertex3f> vdata, RenderBufferU
 	}
 
 	MeshDrawData drawData;
-	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
+	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.count = vdata.vertCount;
-	drawData.indexType = 0;
+	drawData.indexType = RenderIndexType::None;
 
 	data.drawData[id.i] = drawData;
 
@@ -341,10 +326,10 @@ void MeshManager::UploadIndexed_3f(MeshId id, IndexedVertexData<Vertex3f, unsign
 	}
 
 	MeshDrawData drawData;
-	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
+	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.count = vdata.idxCount;
-	drawData.indexType = GL_UNSIGNED_SHORT;
+	drawData.indexType = RenderIndexType::UnsignedShort;
 
 	data.drawData[id.i] = drawData;
 
@@ -378,10 +363,10 @@ void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned 
 	}
 
 	MeshDrawData drawData;
-	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
+	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.count = vdata.idxCount;
-	drawData.indexType = GL_UNSIGNED_SHORT;
+	drawData.indexType = RenderIndexType::UnsignedShort;
 
 	data.drawData[id.i] = drawData;
 
@@ -420,10 +405,10 @@ void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned 
 	}
 
 	MeshDrawData drawData;
-	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
+	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.count = vdata.idxCount;
-	drawData.indexType = GL_UNSIGNED_SHORT;
+	drawData.indexType = RenderIndexType::UnsignedShort;
 
 	data.drawData[id.i] = drawData;
 
@@ -462,10 +447,10 @@ void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsig
 	}
 
 	MeshDrawData drawData;
-	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
+	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.count = vdata.idxCount;
-	drawData.indexType = GL_UNSIGNED_SHORT;
+	drawData.indexType = RenderIndexType::UnsignedShort;
 
 	data.drawData[id.i] = drawData;
 
@@ -510,10 +495,10 @@ void MeshManager::Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsig
 	}
 
 	MeshDrawData drawData;
-	drawData.primitiveMode = PrimitiveModeValue(vdata.primitiveMode);
+	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = bufferData.vertexArrayObject;
 	drawData.count = vdata.idxCount;
-	drawData.indexType = GL_UNSIGNED_SHORT;
+	drawData.indexType = RenderIndexType::UnsignedShort;
 
 	data.drawData[id.i] = drawData;
 

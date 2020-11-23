@@ -2,6 +2,7 @@
 
 #include "Resources/MeshManager.hpp"
 
+#include "Rendering/RenderDeviceEnums.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
@@ -27,7 +28,7 @@ void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 	};
 
 	IndexedVertexData<Vertex3f, unsigned short> data;
-	data.primitiveMode = MeshPrimitiveMode::Triangles;
+	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertData = vertexData;
 	data.vertCount = sizeof(vertexData) / sizeof(Vertex3f);
 	data.idxData = indexData;
@@ -53,7 +54,7 @@ void MeshPresets::UploadPlane(MeshManager* meshManager, MeshId meshId)
 	static const unsigned short indexData[] = { 0, 1, 2, 1, 3, 2 };
 
 	IndexedVertexData<Vertex3f, unsigned short> data;
-	data.primitiveMode = MeshPrimitiveMode::Triangles;
+	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertData = vertexData;
 	data.vertCount = sizeof(vertexData) / sizeof(Vertex3f);
 	data.idxData = indexData;

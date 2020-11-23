@@ -40,3 +40,52 @@ enum class RenderFramebufferTarget
 {
 	Framebuffer
 };
+
+enum class RenderBlendFactor
+{
+	Zero,
+	One,
+	SrcColor,
+	OneMinusSrcColor,
+	DstColor,
+	OneMinusDstColor,
+	SrcAlpha,
+	OneMinusSrcAlpha,
+	DstAlpha,
+	OneMinusDstAlpha,
+	ConstantColor,
+	OneMinusConstantColor,
+	ConstantAlpha,
+	OneMinusConstantAlpha,
+	SrcAlphaSaturate,
+	Src1Color,
+	OneMinusSrc1Color,
+	Src1Alpha,
+	OneMinusSrc1Alpha
+};
+
+enum class RenderIndexType
+{
+	None,
+	UnsignedByte,
+	UnsignedShort,
+	UnsignedInt
+};
+
+enum class RenderPrimitiveMode
+{
+	Points,
+	LineStrip,
+	LineLoop,
+	Lines,
+	TriangleStrip,
+	TriangleFan,
+	Triangles
+};
+
+enum class RenderShaderStage
+{
+	VertexShader,
+	GeometryShader,
+	FragmentShader
+};

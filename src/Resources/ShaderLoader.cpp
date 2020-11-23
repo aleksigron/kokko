@@ -22,7 +22,6 @@
 #include "Resources/ShaderManager.hpp"
 
 #include "System/File.hpp"
-#include "System/IncludeOpenGL.hpp"
 
 struct FileString
 {
@@ -261,15 +260,6 @@ static void CopyNamesAndGenerateBlockDefinition(ShaderData& shaderInOut, Allocat
 	const char* blockEnd = "};\n";
 	const size_t blockEndLen = std::strlen(blockEnd);
 
-	if (shaderInOut.bufferUniformCount == 0)
-	{
-		shaderInOut.uniformBlockDefinition = StringRef();
-
-		// TODO: We could still copy the names of textures uniforms to our buffer
-
-		return;
-	}
-
 	// Calculate how much memory we need to store uniform names and uniform block definition
 
 	size_t nameBytesRequired = 0;
@@ -315,26 +305,33 @@ static void CopyNamesAndGenerateBlockDefinition(ShaderData& shaderInOut, Allocat
 		bufferPtr += uniformName.len + 1;
 	}
 
-	// Generate uniform block definition
-
-	shaderInOut.uniformBlockDefinition.str = bufferPtr;
-
-	std::strncpy(bufferPtr, blockStart, blockStartLen + 1);
-	bufferPtr += blockStartLen;
-
-	for (unsigned int i = 0, count = shaderInOut.bufferUniformCount; i < count; ++i)
+	if (shaderInOut.bufferUniformCount == 0)
 	{
-		const BufferUniform& uniform = shaderInOut.bufferUniforms[i];
-		const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
-
-		int written = std::sprintf(bufferPtr, blockRowFormat, uniform.bufferObjectOffset, typeInfo.typeName, uniform.name.str);
-		bufferPtr += written;
+		shaderInOut.uniformBlockDefinition = StringRef();
 	}
+	else
+	{
+		// Generate uniform block definition
 
-	std::strncpy(bufferPtr, blockEnd, blockEndLen + 1);
-	bufferPtr += blockEndLen;
+		shaderInOut.uniformBlockDefinition.str = bufferPtr;
 
-	shaderInOut.uniformBlockDefinition.len = bufferPtr - shaderInOut.uniformBlockDefinition.str;
+		std::strncpy(bufferPtr, blockStart, blockStartLen + 1);
+		bufferPtr += blockStartLen;
+
+		for (unsigned int i = 0, count = shaderInOut.bufferUniformCount; i < count; ++i)
+		{
+			const BufferUniform& uniform = shaderInOut.bufferUniforms[i];
+			const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
+
+			int written = std::sprintf(bufferPtr, blockRowFormat, uniform.bufferObjectOffset, typeInfo.typeName, uniform.name.str);
+			bufferPtr += written;
+		}
+
+		std::strncpy(bufferPtr, blockEnd, blockEndLen + 1);
+		bufferPtr += blockEndLen;
+
+		shaderInOut.uniformBlockDefinition.len = bufferPtr - shaderInOut.uniformBlockDefinition.str;
+	}
 }
 
 static void UpdateTextureUniformLocations(
@@ -352,7 +349,7 @@ static bool Compile(
 	ShaderData& shaderOut,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
-	unsigned int shaderType,
+	RenderShaderStage stage,
 	BufferRef<char> source,
 	unsigned int& shaderIdOut)
 {
@@ -361,15 +358,13 @@ static bool Compile(
 		const char* data = source.data;
 		int length = static_cast<int>(source.count);
 
-		unsigned int shaderId = renderDevice->CreateShaderStage(shaderType);
+		unsigned int shaderId = renderDevice->CreateShaderStage(stage);
 
 		renderDevice->SetShaderStageSource(shaderId, data, length);
 		renderDevice->CompileShaderStage(shaderId);
 
 		// Check compile status
-		int compileStatus = renderDevice->GetShaderStageParameterInt(shaderId, GL_COMPILE_STATUS);
-
-		if (compileStatus == GL_TRUE)
+		if (renderDevice->GetShaderStageCompileStatus(shaderId))
 		{
 			shaderIdOut = shaderId;
 			return true;
@@ -377,7 +372,7 @@ static bool Compile(
 		else
 		{
 			// Get info log length
-			int infoLogLength = renderDevice->GetShaderStageParameterInt(shaderId, GL_INFO_LOG_LENGTH);
+			int infoLogLength = renderDevice->GetShaderStageInfoLogLength(shaderId);
 
 			if (infoLogLength > 0)
 			{
@@ -404,7 +399,7 @@ static bool CompileAndLink(
 {
 	unsigned int vertexShader = 0;
 
-	if (Compile(shaderOut, allocator, renderDevice, GL_VERTEX_SHADER, vertSource, vertexShader) == false)
+	if (Compile(shaderOut, allocator, renderDevice, RenderShaderStage::VertexShader, vertSource, vertexShader) == false)
 	{
 		assert(false);
 		return false;
@@ -412,7 +407,7 @@ static bool CompileAndLink(
 
 	unsigned int fragmentShader = 0;
 
-	if (Compile(shaderOut, allocator, renderDevice, GL_FRAGMENT_SHADER, fragSource, fragmentShader) == false)
+	if (Compile(shaderOut, allocator, renderDevice, RenderShaderStage::FragmentShader, fragSource, fragmentShader) == false)
 	{
 		// Release already compiled vertex shader
 		renderDevice->DestroyShaderStage(vertexShader);
@@ -434,9 +429,7 @@ static bool CompileAndLink(
 	renderDevice->DestroyShaderStage(fragmentShader);
 
 	// Check link status
-	int linkStatus = renderDevice->GetShaderProgramParameterInt(programId, GL_LINK_STATUS);
-
-	if (linkStatus == GL_TRUE)
+	if (renderDevice->GetShaderProgramLinkStatus(programId))
 	{
 		shaderOut.driverId = programId;
 
@@ -446,7 +439,7 @@ static bool CompileAndLink(
 	{
 		shaderOut.driverId = 0;
 
-		int infoLogLength = renderDevice->GetShaderProgramParameterInt(programId, GL_INFO_LOG_LENGTH);
+		int infoLogLength = renderDevice->GetShaderProgramInfoLogLength(programId);
 
 		if (infoLogLength > 0)
 		{

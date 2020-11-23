@@ -59,6 +59,71 @@ static unsigned int ConvertFramebufferTarget(RenderFramebufferTarget target)
 	}
 }
 
+static unsigned int ConvertBlendFactor(RenderBlendFactor factor)
+{
+	switch (factor)
+	{
+	case RenderBlendFactor::Zero: return GL_ZERO;
+	case RenderBlendFactor::One: return GL_ONE;
+	case RenderBlendFactor::SrcColor: return GL_SRC_COLOR;
+	case RenderBlendFactor::OneMinusSrcColor: return GL_ONE_MINUS_SRC_COLOR;
+	case RenderBlendFactor::DstColor: return GL_DST_COLOR;
+	case RenderBlendFactor::OneMinusDstColor: return GL_ONE_MINUS_DST_COLOR;
+	case RenderBlendFactor::SrcAlpha: return GL_SRC_ALPHA;
+	case RenderBlendFactor::OneMinusSrcAlpha: return GL_ONE_MINUS_SRC_ALPHA;
+	case RenderBlendFactor::DstAlpha: return GL_DST_ALPHA;
+	case RenderBlendFactor::OneMinusDstAlpha: return GL_ONE_MINUS_DST_ALPHA;
+	case RenderBlendFactor::ConstantColor: return GL_CONSTANT_COLOR;
+	case RenderBlendFactor::OneMinusConstantColor: return GL_ONE_MINUS_CONSTANT_COLOR;
+	case RenderBlendFactor::ConstantAlpha: return GL_CONSTANT_ALPHA;
+	case RenderBlendFactor::OneMinusConstantAlpha: return GL_ONE_MINUS_CONSTANT_ALPHA;
+	case RenderBlendFactor::SrcAlphaSaturate: return GL_SRC_ALPHA_SATURATE;
+	case RenderBlendFactor::Src1Color: return GL_SRC1_COLOR;
+	case RenderBlendFactor::OneMinusSrc1Color: return GL_ONE_MINUS_SRC1_COLOR;
+	case RenderBlendFactor::Src1Alpha: return GL_SRC1_ALPHA;
+	case RenderBlendFactor::OneMinusSrc1Alpha: return GL_ONE_MINUS_SRC1_ALPHA;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertIndexType(RenderIndexType type)
+{
+	switch (type)
+	{
+	case RenderIndexType::None: return 0;
+	case RenderIndexType::UnsignedByte: return GL_UNSIGNED_BYTE;
+	case RenderIndexType::UnsignedShort: return GL_UNSIGNED_SHORT;
+	case RenderIndexType::UnsignedInt: return GL_UNSIGNED_INT;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertPrimitiveMode(RenderPrimitiveMode mode)
+{
+	switch (mode)
+	{
+	case RenderPrimitiveMode::Points: return GL_POINTS;
+	case RenderPrimitiveMode::LineStrip: return GL_LINE_STRIP;
+	case RenderPrimitiveMode::LineLoop: return GL_LINE_LOOP;
+	case RenderPrimitiveMode::Lines: return GL_LINES;
+	case RenderPrimitiveMode::TriangleStrip: return GL_TRIANGLE_STRIP;
+	case RenderPrimitiveMode::TriangleFan: return GL_TRIANGLE_FAN;
+	case RenderPrimitiveMode::Triangles: return GL_TRIANGLES;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertShaderStage(RenderShaderStage stage)
+{
+	switch (stage)
+	{
+	case RenderShaderStage::VertexShader: return GL_VERTEX_SHADER;
+	case RenderShaderStage::GeometryShader: return GL_GEOMETRY_SHADER;
+	case RenderShaderStage::FragmentShader: return GL_FRAGMENT_SHADER;
+	default: return 0;
+	}
+}
+
 void RenderDeviceOpenGL::Clear(unsigned int mask)
 {
 	glClear(mask);
@@ -89,9 +154,9 @@ void RenderDeviceOpenGL::BlendFunction(const RenderCommandData::BlendFunctionDat
 	BlendFunction(data->srcFactor, data->dstFactor);
 }
 
-void RenderDeviceOpenGL::BlendFunction(unsigned int srcFactor, unsigned int dstFactor)
+void RenderDeviceOpenGL::BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor)
 {
-	glBlendFunc(srcFactor, dstFactor);
+	glBlendFunc(ConvertBlendFactor(srcFactor), ConvertBlendFactor(dstFactor));
 }
 
 void RenderDeviceOpenGL::DepthRange(const RenderCommandData::DepthRangeData* data)
@@ -264,6 +329,16 @@ int RenderDeviceOpenGL::GetShaderProgramParameterInt(unsigned int shaderProgram,
 	return value;
 }
 
+bool RenderDeviceOpenGL::GetShaderProgramLinkStatus(unsigned int shaderProgram)
+{
+	return GetShaderProgramParameterInt(shaderProgram, GL_LINK_STATUS) == GL_TRUE;
+}
+
+int RenderDeviceOpenGL::GetShaderProgramInfoLogLength(unsigned int shaderProgram)
+{
+	return GetShaderProgramParameterInt(shaderProgram, GL_INFO_LOG_LENGTH);
+}
+
 void RenderDeviceOpenGL::GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut)
 {
 	glGetProgramInfoLog(shaderProgram, maxLength, nullptr, logOut);
@@ -271,9 +346,9 @@ void RenderDeviceOpenGL::GetShaderProgramInfoLog(unsigned int shaderProgram, uns
 
 // SHADER STAGE
 
-unsigned int RenderDeviceOpenGL::CreateShaderStage(unsigned int shaderType)
+unsigned int RenderDeviceOpenGL::CreateShaderStage(RenderShaderStage stage)
 {
-	return glCreateShader(shaderType);
+	return glCreateShader(ConvertShaderStage(stage));
 }
 
 void RenderDeviceOpenGL::DestroyShaderStage(unsigned int shaderStage)
@@ -296,6 +371,16 @@ int RenderDeviceOpenGL::GetShaderStageParameterInt(unsigned int shaderStage, uns
 	int value = 0;
 	glGetShaderiv(shaderStage, parameter, &value);
 	return value;
+}
+
+bool RenderDeviceOpenGL::GetShaderStageCompileStatus(unsigned int shaderStage)
+{
+	return GetShaderStageParameterInt(shaderStage, GL_COMPILE_STATUS) == GL_TRUE;
+}
+
+int RenderDeviceOpenGL::GetShaderStageInfoLogLength(unsigned int shaderStage)
+{
+	return GetShaderStageParameterInt(shaderStage, GL_INFO_LOG_LENGTH);
 }
 
 void RenderDeviceOpenGL::GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut)
@@ -357,14 +442,14 @@ void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArray)
 	glBindVertexArray(vertexArray);
 }
 
-void RenderDeviceOpenGL::DrawIndexed(unsigned int primitiveMode, int indexCount, unsigned int indexType)
+void RenderDeviceOpenGL::DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType)
 {
-	glDrawElements(primitiveMode, indexCount, indexType, nullptr);
+	glDrawElements(ConvertPrimitiveMode(mode), indexCount, ConvertIndexType(indexType), nullptr);
 }
 
-void RenderDeviceOpenGL::Draw(unsigned int primitiveMode, int offset, int vertexCount)
+void RenderDeviceOpenGL::Draw(RenderPrimitiveMode mode, int offset, int vertexCount)
 {
-	glDrawArrays(primitiveMode, offset, vertexCount);
+	glDrawArrays(ConvertPrimitiveMode(mode), offset, vertexCount);
 }
 
 void RenderDeviceOpenGL::EnableVertexAttribute(unsigned int index)

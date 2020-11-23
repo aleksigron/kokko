@@ -19,7 +19,6 @@
 #include "Scene/SceneManager.hpp"
 
 #include "System/Window.hpp"
-#include "System/IncludeOpenGL.hpp"
 
 struct MaterialBlock
 {
@@ -78,7 +77,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		lineMeshId = meshManager->CreateMesh();
 
 		IndexedVertexData<Vertex3f, unsigned short> data;
-		data.primitiveMode = MeshPrimitiveMode::Lines;
+		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertData = lineVertexData;
 		data.vertCount = sizeof(lineVertexData) / sizeof(Vertex3f);
 		data.idxData = lineIndexData;
@@ -109,7 +108,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		cubeMeshId = meshManager->CreateMesh();
 
 		IndexedVertexData<Vertex3f, unsigned short> data;
-		data.primitiveMode = MeshPrimitiveMode::Lines;
+		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertData = cubeVertexData;
 		data.vertCount = sizeof(cubeVertexData) / sizeof(Vertex3f);
 		data.idxData = cubeIndexData;
@@ -162,7 +161,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		sphereMeshId = meshManager->CreateMesh();
 
 		IndexedVertexData<Vertex3f, unsigned short> data;
-		data.primitiveMode = MeshPrimitiveMode::Lines;
+		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertData = sphereVertexData;
 		data.vertCount = sizeof(sphereVertexData) / sizeof(Vertex3f);
 		data.idxData = sphereIndexData;
@@ -185,7 +184,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		rectangleMeshId = meshManager->CreateMesh();
 
 		IndexedVertexData<Vertex3f, unsigned short> data;
-		data.primitiveMode = MeshPrimitiveMode::Lines;
+		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertData = rectangleVertexData;
 		data.vertCount = sizeof(rectangleVertexData) / sizeof(Vertex3f);
 		data.idxData = rectangleIndexData;
@@ -322,7 +321,7 @@ void DebugVectorRenderer::DrawLineChainScreen(unsigned int count, const Vec3f* p
 		DynamicMesh* mesh = GetDynamicMesh(requiredBufferSize);
 
 		VertexData<Vertex3f> vertData;
-		vertData.primitiveMode = MeshPrimitiveMode::LineStrip;
+		vertData.primitiveMode = RenderPrimitiveMode::LineStrip;
 		vertData.vertData = reinterpret_cast<const Vertex3f*>(points);
 		vertData.vertCount = count;
 
@@ -513,7 +512,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 			MeshDrawData* draw = meshManager->GetDrawData(meshId);
 			renderDevice->BindVertexArray(draw->vertexArrayObject);
 
-			if (draw->indexType != 0)
+			if (draw->indexType != RenderIndexType::None)
 				renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 			else
 				renderDevice->Draw(draw->primitiveMode, 0, draw->count);

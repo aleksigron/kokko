@@ -45,8 +45,8 @@ namespace RenderCommandData
 
 	struct BlendFunctionData
 	{
-		unsigned int srcFactor;
-		unsigned int dstFactor;
+		RenderBlendFactor srcFactor;
+		RenderBlendFactor dstFactor;
 	};
 
 	struct SetTextureImage2D

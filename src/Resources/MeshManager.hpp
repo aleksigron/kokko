@@ -20,11 +20,11 @@ class RenderDevice;
 struct MeshDrawData
 {
 	unsigned int vertexArrayObject;
-	unsigned int primitiveMode;
 	int count;
+	RenderPrimitiveMode primitiveMode;
 
-	// If indexType is 0, this is not an indexed mesh
-	unsigned int indexType;
+	// If indexType is None, this is not an indexed mesh
+	RenderIndexType indexType;
 };
 
 struct MeshBufferData

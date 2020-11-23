@@ -1,20 +1,11 @@
 #pragma once
 
-enum class MeshPrimitiveMode
-{
-	Points,
-	LineStrip,
-	LineLoop,
-	Lines,
-	TriangleStrip,
-	TriangleFan,
-	Triangles
-};
+#include "Rendering/RenderDeviceEnums.hpp"
 
 template<typename VertexType, typename IndexType>
 struct IndexedVertexData
 {
-	MeshPrimitiveMode primitiveMode;
+	RenderPrimitiveMode primitiveMode;
 
 	const VertexType* vertData;
 	unsigned int vertCount;
@@ -25,7 +16,7 @@ struct IndexedVertexData
 template<typename VertexType>
 struct VertexData
 {
-	MeshPrimitiveMode primitiveMode;
+	RenderPrimitiveMode primitiveMode;
 
 	const VertexType* vertData;
 	unsigned int vertCount;

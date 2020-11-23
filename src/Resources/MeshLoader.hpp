@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Rendering/RenderDeviceEnums.hpp"
+
 #include "Resources/MeshManager.hpp"
 
 class MeshLoader
@@ -83,7 +85,7 @@ public:
 					if (normCount == 0 && colCount == 0 && texCount == 0)
 					{
 						IndexedVertexData<Vertex3f, unsigned short> data;
-						data.primitiveMode = MeshPrimitiveMode::Triangles;
+						data.primitiveMode = RenderPrimitiveMode::Triangles;
 						data.idxData = indexData;
 						data.idxCount = indexCount;
 						data.vertData = reinterpret_cast<Vertex3f*>(vertData);
@@ -96,7 +98,7 @@ public:
 					else if (normCount == 0 && colCount == 0 && texCount == 1)
 					{
 						IndexedVertexData<Vertex3f2f, unsigned short> data;
-						data.primitiveMode = MeshPrimitiveMode::Triangles;
+						data.primitiveMode = RenderPrimitiveMode::Triangles;
 						data.idxData = indexData;
 						data.idxCount = indexCount;
 						data.vertData = reinterpret_cast<Vertex3f2f*>(vertData);
@@ -110,7 +112,7 @@ public:
 							 (normCount == 0 && colCount == 1 && texCount == 0))
 					{
 						IndexedVertexData<Vertex3f3f, unsigned short> data;
-						data.primitiveMode = MeshPrimitiveMode::Triangles;
+						data.primitiveMode = RenderPrimitiveMode::Triangles;
 						data.idxData = indexData;
 						data.idxCount = indexCount;
 						data.vertData = reinterpret_cast<Vertex3f3f*>(vertData);
@@ -123,7 +125,7 @@ public:
 					else if (normCount == 1 && colCount == 0 && texCount == 1)
 					{
 						IndexedVertexData<Vertex3f3f2f, unsigned short> data;
-						data.primitiveMode = MeshPrimitiveMode::Triangles;
+						data.primitiveMode = RenderPrimitiveMode::Triangles;
 						data.idxData = indexData;
 						data.idxCount = indexCount;
 						data.vertData = reinterpret_cast<Vertex3f3f2f*>(vertData);
@@ -136,7 +138,7 @@ public:
 					else if (normCount == 1 && colCount == 1 && texCount == 0)
 					{
 						IndexedVertexData<Vertex3f3f3f, unsigned short> data;
-						data.primitiveMode = MeshPrimitiveMode::Triangles;
+						data.primitiveMode = RenderPrimitiveMode::Triangles;
 						data.idxData = indexData;
 						data.idxCount = indexCount;
 						data.vertData = reinterpret_cast<Vertex3f3f3f*>(vertData);

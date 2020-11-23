@@ -1099,8 +1099,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 	{
 		// Set mix blending
 		RenderCommandData::BlendFunctionData data;
-		data.srcFactor = GL_SRC_ALPHA;
-		data.dstFactor = GL_ONE_MINUS_SRC_ALPHA;
+		data.srcFactor = RenderBlendFactor::SrcAlpha;
+		data.dstFactor = RenderBlendFactor::OneMinusSrcAlpha;
 
 		commandList.AddControl(fsvp, t_pass, 2, ctrl::BlendFunction, sizeof(data), &data);
 	}
