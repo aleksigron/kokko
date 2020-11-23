@@ -253,10 +253,9 @@ static void CopyNamesAndGenerateBlockDefinition(ShaderData& shaderInOut, Allocat
 {
 	const char* blockStart = "layout(std140, binding = 3) uniform MaterialBlock {\n";
 	const size_t blockStartLen = std::strlen(blockStart);
-	const char* blockRowFormat = "layout(offset = %u) %s %s;\n";
-	const size_t blockRowPlaceholdersLen = 6;
-	const size_t blockRowMaxLayoutDigits = 5;
-	const size_t blockRowFixedMaxLen = std::strlen(blockRowFormat) - blockRowPlaceholdersLen + blockRowMaxLayoutDigits;
+	const char* blockRowFormat = "%s %s;\n";
+	const size_t blockRowPlaceholdersLen = 4;
+	const size_t blockRowFixedMaxLen = std::strlen(blockRowFormat) - blockRowPlaceholdersLen;
 	const char* blockEnd = "};\n";
 	const size_t blockEndLen = std::strlen(blockEnd);
 
@@ -323,7 +322,7 @@ static void CopyNamesAndGenerateBlockDefinition(ShaderData& shaderInOut, Allocat
 			const BufferUniform& uniform = shaderInOut.bufferUniforms[i];
 			const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
 
-			int written = std::sprintf(bufferPtr, blockRowFormat, uniform.bufferObjectOffset, typeInfo.typeName, uniform.name.str);
+			int written = std::sprintf(bufferPtr, blockRowFormat, typeInfo.typeName, uniform.name.str);
 			bufferPtr += written;
 		}
 
@@ -633,7 +632,7 @@ bool ShaderLoader::LoadFromConfiguration(
 
 	if (includeLoadSuccess)
 	{
-		StringRef versionStr("#version 440\n");
+		StringRef versionStr("#version 420\n");
 		StringRef uniformBlock = shaderOut.uniformBlockDefinition;
 
 		const char* vsPath = vsMainItr->value.GetString();

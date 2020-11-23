@@ -7,7 +7,7 @@ good, small game engine that might offer some new ways to solve old problems.
 ![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20201118.jpg)
 
 ## Prerequisites
-- OpenGL 4.4
+- OpenGL 4.2
 - CMake for building the project
 - C++14 compliant compiler
 - Blender for exporting mesh files
