@@ -1,5 +1,5 @@
 layout(location = 0) in vec3 vert_pos;
-layout(location = 1) in vec2 vert_tex;
+layout(location = 4) in vec2 vert_tex;
 
 out vec2 fs_tex_coord;
 

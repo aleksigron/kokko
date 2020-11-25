@@ -207,8 +207,13 @@ void DebugTextRenderer::CreateAndUploadData()
 	// Make sure vertex indices fit in unsigned short type
 	assert(stringCharCount * 4 < (1 << 16));
 
-	vertexData.Resize(stringCharCount * 4);
-	indexData.Resize(stringCharCount * 6);
+	const unsigned int componentCount = 5;
+	const unsigned int verticesPerChar = 4;
+	const unsigned int floatsPerChar = componentCount * verticesPerChar;
+	const unsigned int indicesPerChar = 6;
+
+	vertexData.Resize(stringCharCount * floatsPerChar);
+	indexData.Resize(stringCharCount * indicesPerChar);
 
 	int fontLineHeight = font->GetLineHeight();
 	Vec2f textureSize = font->GetTextureSize();
@@ -216,8 +221,8 @@ void DebugTextRenderer::CreateAndUploadData()
 
 	Vec2f scaledInvFrame = Vec2f(2.0f / scaledFrameSize.x, 2.0f / scaledFrameSize.y);
 
-	Vertex3f2f* vertexBegin = vertexData.GetData();
-	Vertex3f2f* vertexItr = vertexBegin;
+	float* vertexBegin = vertexData.GetData();
+	float* vertexItr = vertexBegin;
 	unsigned short* indexItr = indexData.GetData();
 
 	const char* strData = stringData.GetData();
@@ -255,35 +260,22 @@ void DebugTextRenderer::CreateAndUploadData()
 					float uvRight = glyph.size.x * invTexSize.x;
 					float uvDown = glyph.size.y * invTexSize.y + invTexSize.y;
 
-					Vertex3f2f& v00 = vertexItr[0];
-					v00.a.x = quadPos.x * scaledInvFrame.x - 1.0f;
-					v00.a.y = quadPos.y * scaledInvFrame.y + 1.0f;
-					v00.a.z = 0.0f;
-					v00.b.x = uvX;
-					v00.b.y = uvY;
+					ptrdiff_t floatIndex = vertexItr - vertexBegin;
+					unsigned short vertIndex = static_cast<unsigned short>(floatIndex / componentCount);
 
-					Vertex3f2f& v10 = vertexItr[1];
-					v10.a.x = (quadPos.x + quadRight) * scaledInvFrame.x - 1.0f;
-					v10.a.y = quadPos.y * scaledInvFrame.y + 1.0f;
-					v10.a.z = 0.0f;
-					v10.b.x = uvX + uvRight;
-					v10.b.y = uvY;
+					for (unsigned int i = 0; i < verticesPerChar; ++i)
+					{
+						float x(i % 2);
+						float y(i / 2);
 
-					Vertex3f2f& v01 = vertexItr[2];
-					v01.a.x = quadPos.x * scaledInvFrame.x - 1.0f;
-					v01.a.y = (quadPos.y + quadDown) * scaledInvFrame.y + 1.0f;
-					v01.a.z = 0.0f;
-					v01.b.x = uvX;
-					v01.b.y = uvY + uvDown;
+						vertexItr[0] = (quadPos.x + x * quadRight) * scaledInvFrame.x - 1.0f;
+						vertexItr[1] = (quadPos.y + y * quadDown) * scaledInvFrame.y + 1.0f;
+						vertexItr[2] = 0.0f;
+						vertexItr[3] = uvX + x * uvRight;
+						vertexItr[4] = uvY + y * uvDown;
 
-					Vertex3f2f& v11 = vertexItr[3];
-					v11.a.x = (quadPos.x + quadRight) * scaledInvFrame.x - 1.0f;
-					v11.a.y = (quadPos.y + quadDown) * scaledInvFrame.y + 1.0f;
-					v11.a.z = 0.0f;
-					v11.b.x = uvX + uvRight;
-					v11.b.y = uvY + uvDown;
-
-					unsigned short vertIndex = static_cast<unsigned short>(vertexItr - vertexBegin);
+						vertexItr += componentCount;
+					}
 
 					indexItr[0] = vertIndex + 0;
 					indexItr[1] = vertIndex + 3;
@@ -300,11 +292,12 @@ void DebugTextRenderer::CreateAndUploadData()
 						drawPos.y = drawPos.y - fontLineHeight;
 					}
 				}
+				else
+					vertexItr += floatsPerChar;
+
+				indexItr += 6;
 
 				// TODO: Do we need to have empty char drawing in an else here?
-
-				vertexItr += 4;
-				indexItr += 6;
 			}
 			else // Not a valid UTF8 character, try next byte
 			{
@@ -313,12 +306,13 @@ void DebugTextRenderer::CreateAndUploadData()
 		}
 	}
 
-	IndexedVertexData<Vertex3f2f, unsigned short> data;
+	IndexedVertexData<unsigned short> data;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertData = vertexData.GetData();
-	data.vertCount = vertexData.GetCount();
+	data.vertCount = vertexItr - vertexBegin;
 	data.idxData = indexData.GetData();
 	data.idxCount = indexData.GetCount();
 
-	Engine::GetInstance()->GetMeshManager()->Upload_3f2f(meshId, data, RenderBufferUsage::DynamicDraw);
+	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
+	meshManager->UploadIndexed_Pos3_UV0(meshId, data, RenderBufferUsage::DynamicDraw);
 }

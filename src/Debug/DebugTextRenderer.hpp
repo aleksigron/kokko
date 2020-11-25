@@ -6,8 +6,6 @@
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
 
-#include "Rendering/VertexFormat.hpp"
-
 #include "Resources/MeshData.hpp"
 
 class Allocator;
@@ -40,7 +38,7 @@ private:
 	float scaleFactor;
 
 	MeshId meshId;
-	Array<Vertex3f2f> vertexData;
+	Array<float> vertexData;
 	Array<unsigned short> indexData;
 
 	unsigned int materialBufferObjectId;

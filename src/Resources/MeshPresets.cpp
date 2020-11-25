@@ -7,15 +7,15 @@
 
 void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 {
-	static const Vertex3f vertexData[] = {
-		Vertex3f{ Vec3f(-0.5f, -0.5f, -0.5f) },
-		Vertex3f{ Vec3f(0.5f, -0.5f, -0.5f) },
-		Vertex3f{ Vec3f(-0.5f, -0.5f, 0.5f) },
-		Vertex3f{ Vec3f(0.5f, -0.5f, 0.5f) },
-		Vertex3f{ Vec3f(-0.5f, 0.5f, -0.5f) },
-		Vertex3f{ Vec3f(0.5f, 0.5f, -0.5f) },
-		Vertex3f{ Vec3f(-0.5f, 0.5f, 0.5f) },
-		Vertex3f{ Vec3f(0.5f, 0.5f, 0.5f) }
+	static const float vertexData[] = {
+		-0.5f, -0.5f, -0.5f,
+		0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f, 0.5f,
+		0.5f, -0.5f, 0.5f,
+		-0.5f, 0.5f, -0.5f,
+		0.5f, 0.5f, -0.5f,
+		-0.5f, 0.5f, 0.5f,
+		0.5f, 0.5f, 0.5f
 	};
 
 	static const unsigned short indexData[] = {
@@ -27,14 +27,14 @@ void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 		3, 6, 7, 3, 2, 6
 	};
 
-	IndexedVertexData<Vertex3f, unsigned short> data;
+	IndexedVertexData<unsigned short> data;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertData = vertexData;
-	data.vertCount = sizeof(vertexData) / sizeof(Vertex3f);
+	data.vertCount = sizeof(vertexData) / (sizeof(float) * 3);
 	data.idxData = indexData;
 	data.idxCount = sizeof(indexData) / sizeof(unsigned short);
 
-	meshManager->UploadIndexed_3f(meshId, data, RenderBufferUsage::StaticDraw);
+	meshManager->UploadIndexed_Pos3(meshId, data, RenderBufferUsage::StaticDraw);
 
 	BoundingBox bounds;
 	bounds.center = Vec3f(0.0f, 0.0f, 0.0f);
@@ -44,21 +44,21 @@ void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 
 void MeshPresets::UploadPlane(MeshManager* meshManager, MeshId meshId)
 {
-	static const Vertex3f vertexData[] = {
-		Vertex3f{ Vec3f(-1.0f, -1.0f, 0.0f) },
-		Vertex3f{ Vec3f(1.0f, -1.0f, 0.0f) },
-		Vertex3f{ Vec3f(-1.0f, 1.0f, 0.0f) },
-		Vertex3f{ Vec3f(1.0f, 1.0f, 0.0f) }
+	static const float vertexData[] = {
+		-1.0f, -1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f
 	};
 
 	static const unsigned short indexData[] = { 0, 1, 2, 1, 3, 2 };
 
-	IndexedVertexData<Vertex3f, unsigned short> data;
+	IndexedVertexData<unsigned short> data;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertData = vertexData;
-	data.vertCount = sizeof(vertexData) / sizeof(Vertex3f);
+	data.vertCount = sizeof(vertexData) / (sizeof(float) * 3);
 	data.idxData = indexData;
 	data.idxCount = sizeof(indexData) / sizeof(unsigned short);
 
-	meshManager->UploadIndexed_3f(meshId, data, RenderBufferUsage::StaticDraw);
+	meshManager->UploadIndexed_Pos3(meshId, data, RenderBufferUsage::StaticDraw);
 }

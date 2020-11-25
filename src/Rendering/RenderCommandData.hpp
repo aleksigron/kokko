@@ -76,7 +76,7 @@ namespace RenderCommandData
 	{
 		unsigned int attributeIndex;
 		int elementCount;
-		unsigned int elementType;
+		RenderVertexElemType elementType;
 		int stride;
 		std::uintptr_t offset;
 	};

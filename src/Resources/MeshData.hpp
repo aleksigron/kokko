@@ -2,23 +2,22 @@
 
 #include "Rendering/RenderDeviceEnums.hpp"
 
-template<typename VertexType, typename IndexType>
+template<typename IndexType>
 struct IndexedVertexData
 {
 	RenderPrimitiveMode primitiveMode;
 
-	const VertexType* vertData;
+	const float* vertData;
 	unsigned int vertCount;
 	const IndexType* idxData;
 	unsigned int idxCount;
 };
 
-template<typename VertexType>
 struct VertexData
 {
 	RenderPrimitiveMode primitiveMode;
 
-	const VertexType* vertData;
+	const float* vertData;
 	unsigned int vertCount;
 };
 

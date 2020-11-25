@@ -187,6 +187,15 @@ static unsigned int ConvertShaderStage(RenderShaderStage stage)
 	}
 }
 
+static unsigned int ConvertVertexElemType(RenderVertexElemType type)
+{
+	switch (type)
+	{
+	case RenderVertexElemType::Float: return GL_FLOAT;
+	default: return 0;
+	}
+}
+
 void RenderDeviceOpenGL::Clear(unsigned int mask)
 {
 	glClear(mask);
@@ -557,7 +566,7 @@ void RenderDeviceOpenGL::EnableVertexAttribute(unsigned int index)
 
 void RenderDeviceOpenGL::SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data)
 {
-	glVertexAttribPointer(data->attributeIndex, data->elementCount, data->elementType,
+	glVertexAttribPointer(data->attributeIndex, data->elementCount, ConvertVertexElemType(data->elementType),
 		GL_FALSE, data->stride, reinterpret_cast<void*>(data->offset));
 }
 

@@ -144,114 +144,105 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	return MeshId{};
 }
 
-MeshBufferData MeshManager::CreateBuffers(
-	const void* vd, unsigned int vs,
-	RenderBufferUsage usage)
+void MeshManager::UpdateBuffers(MeshId id, const void* vdata, unsigned int vsize, RenderBufferUsage usage)
 {
-	MeshBufferData data;
+	MeshBufferData& bufferData = data.bufferData[id.i];
 
-	// Create vertex array object
-	renderDevice->CreateVertexArrays(1, &data.vertexArrayObject);
-	renderDevice->BindVertexArray(data.vertexArrayObject);
-
-	// Create buffer objects
-	renderDevice->CreateBuffers(1, data.bufferObjects);
-	data.bufferObjects[MeshBufferData::IndexBuffer] = 0;
-
-	// Bind and upload vertex buffer
-	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, data.bufferObjects[MeshBufferData::VertexBuffer]);
-	renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vs, vd, usage);
-	data.bufferSizes[MeshBufferData::VertexBuffer] = vs;
-
-	return data;
-}
-
-MeshBufferData MeshManager::CreateIndexedBuffers(
-	const void* vd, unsigned int vs, const void* id, unsigned int is,
-	RenderBufferUsage usage)
-{
-	MeshBufferData data;
-
-	// Create vertex array object
-	renderDevice->CreateVertexArrays(1, &data.vertexArrayObject);
-	renderDevice->BindVertexArray(data.vertexArrayObject);
-
-	// Create buffer objects
-	renderDevice->CreateBuffers(2, data.bufferObjects);
-
-	// Bind and upload index buffer
-	renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, data.bufferObjects[MeshBufferData::IndexBuffer]);
-	renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, is, id, usage);
-	data.bufferSizes[MeshBufferData::IndexBuffer] = is;
-
-	// Bind and upload vertex buffer
-	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, data.bufferObjects[MeshBufferData::VertexBuffer]);
-	renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vs, vd, usage);
-	data.bufferSizes[MeshBufferData::VertexBuffer] = vs;
-
-	return data;
-}
-
-void MeshManager::UpdateBuffers(MeshBufferData& bufferDataInOut,
-	const void* vd, unsigned int vs,
-	RenderBufferUsage usage)
-{
-	assert(bufferDataInOut.vertexArrayObject != 0);
-
-	renderDevice->BindVertexArray(bufferDataInOut.vertexArrayObject);
-
-	// Bind and update vertex buffer
-	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferDataInOut.bufferObjects[MeshBufferData::VertexBuffer]);
-
-	if (vs <= bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer])
+	if (bufferData.vertexArrayObject == 0)
 	{
-		// Only update the part of the buffer we need
-		renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vs, vd);
+		// Create vertex array object
+		renderDevice->CreateVertexArrays(1, &bufferData.vertexArrayObject);
+		renderDevice->BindVertexArray(bufferData.vertexArrayObject);
+
+		// Create buffer objects
+		renderDevice->CreateBuffers(1, bufferData.bufferObjects);
+
+		bufferData.bufferObjects[MeshBufferData::IndexBuffer] = 0;
+		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = 0;
+
+		// Bind and upload vertex buffer
+		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vsize, vdata, usage);
+		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vsize;
 	}
 	else
 	{
-		// SetBufferData reallocates storage when needed
-		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vs, vd, usage);
-		bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer] = vs;
+		renderDevice->BindVertexArray(bufferData.vertexArrayObject);
+
+		// Bind and update vertex buffer
+		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+
+		if (vsize <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
+		{
+			// Only update the part of the buffer we need
+			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vsize, vdata);
+		}
+		else
+		{
+			// SetBufferData reallocates storage when needed
+			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vsize, vdata, usage);
+			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vsize;
+		}
 	}
 }
 
-void MeshManager::UpdateIndexedBuffers(MeshBufferData& bufferDataInOut,
-	const void* vd, unsigned int vs, const void* id, unsigned int is,
-	RenderBufferUsage usage)
+void MeshManager::UpdateIndexedBuffers(
+	MeshId id, const void* vdata, unsigned int vsize, const void* idata, unsigned int isize, RenderBufferUsage usage)
 {
-	assert(bufferDataInOut.vertexArrayObject != 0);
+	MeshBufferData& bufferData = data.bufferData[id.i];
 
-	renderDevice->BindVertexArray(bufferDataInOut.vertexArrayObject);
-
-	// Bind and update index buffer
-	renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, bufferDataInOut.bufferObjects[MeshBufferData::IndexBuffer]);
-
-	if (vs <= bufferDataInOut.bufferSizes[MeshBufferData::IndexBuffer])
+	if (bufferData.vertexArrayObject == 0)
 	{
-		// Only update the part of the buffer we need
-		renderDevice->SetBufferSubData(RenderBufferTarget::IndexBuffer, 0, is, id);
+		// Create vertex array object
+		renderDevice->CreateVertexArrays(1, &bufferData.vertexArrayObject);
+		renderDevice->BindVertexArray(bufferData.vertexArrayObject);
+
+		// Create buffer objects
+		renderDevice->CreateBuffers(2, bufferData.bufferObjects);
+
+		// Bind and upload index buffer
+		renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
+		renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, isize, idata, usage);
+		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = isize;
+
+		// Bind and upload vertex buffer
+		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vsize, vdata, usage);
+		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vsize;
 	}
 	else
 	{
-		// SetBufferData reallocates storage when needed
-		renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, is, id, usage);
-		bufferDataInOut.bufferSizes[MeshBufferData::IndexBuffer] = is;
-	}
+		renderDevice->BindVertexArray(bufferData.vertexArrayObject);
 
-	// Bind and update vertex buffer
-	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferDataInOut.bufferObjects[MeshBufferData::VertexBuffer]);
+		// Bind and update index buffer
+		renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
 
-	if (vs <= bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer])
-	{
-		// Only update the part of the buffer we need
-		renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vs, vd);
-	}
-	else
-	{
-		// SetBufferData reallocates storage when needed
-		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vs, vd, usage);
-		bufferDataInOut.bufferSizes[MeshBufferData::VertexBuffer] = vs;
+		if (isize <= bufferData.bufferSizes[MeshBufferData::IndexBuffer])
+		{
+			// Only update the part of the buffer we need
+			renderDevice->SetBufferSubData(RenderBufferTarget::IndexBuffer, 0, isize, idata);
+		}
+		else
+		{
+			// SetBufferData reallocates storage when needed
+			renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, isize, idata, usage);
+			bufferData.bufferSizes[MeshBufferData::IndexBuffer] = isize;
+		}
+
+		// Bind and update vertex buffer
+		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+
+		if (vsize <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
+		{
+			// Only update the part of the buffer we need
+			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vsize, vdata);
+		}
+		else
+		{
+			// SetBufferData reallocates storage when needed
+			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vsize, vdata, usage);
+			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vsize;
+		}
 	}
 }
 
@@ -270,256 +261,101 @@ void MeshManager::DeleteBuffers(MeshBufferData& bufferDataInOut) const
 	}
 }
 
-void MeshManager::Upload_3f(MeshId id, VertexData<Vertex3f> vdata, RenderBufferUsage usage)
+void MeshManager::CreateDrawData(MeshId id, const VertexData& vdata)
 {
-	using V = Vertex3f;
-
-	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
-
-	MeshBufferData& bufferData = data.bufferData[id.i];
-
-	if (bufferData.vertexArrayObject != 0)
-	{
-		UpdateBuffers(bufferData, vdata.vertData, vertSize, usage);
-	}
-	else
-	{
-		bufferData = CreateBuffers(vdata.vertData, vertSize, usage);
-	}
-
-	MeshDrawData drawData;
+	MeshDrawData& drawData = data.drawData[id.i];
 	drawData.primitiveMode = vdata.primitiveMode;
-	drawData.vertexArrayObject = bufferData.vertexArrayObject;
+	drawData.vertexArrayObject = data.bufferData[id.i].vertexArrayObject;
 	drawData.count = vdata.vertCount;
 	drawData.indexType = RenderIndexType::None;
-
-	data.drawData[id.i] = drawData;
-
-	renderDevice->EnableVertexAttribute(0);
-
-	RenderCommandData::SetVertexAttributePointer a{
-		0, V::aElemCount, V::aElemType, V::size, V::aOffset
-	};
-	renderDevice->SetVertexAttributePointer(&a);
-
-	// Unbind vertex array
-	renderDevice->BindVertexArray(0);
 }
 
-
-void MeshManager::UploadIndexed_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> vdata, RenderBufferUsage usage)
+void MeshManager::CreateIndexedDrawData(MeshId id, const IndexedVertexData<unsigned short>& vdata)
 {
-	using V = Vertex3f;
-
-	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
-	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
-
-	MeshBufferData& bufferData = data.bufferData[id.i];
-
-	if (bufferData.vertexArrayObject != 0)
-	{
-		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	}
-	else
-	{
-		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	}
-
-	MeshDrawData drawData;
+	MeshDrawData& drawData = data.drawData[id.i];
 	drawData.primitiveMode = vdata.primitiveMode;
-	drawData.vertexArrayObject = bufferData.vertexArrayObject;
+	drawData.vertexArrayObject = data.bufferData[id.i].vertexArrayObject;
 	drawData.count = vdata.idxCount;
 	drawData.indexType = RenderIndexType::UnsignedShort;
-
-	data.drawData[id.i] = drawData;
-
-	renderDevice->EnableVertexAttribute(0);
-
-	RenderCommandData::SetVertexAttributePointer a{
-		0, V::aElemCount, V::aElemType, V::size, V::aOffset
-	};
-	renderDevice->SetVertexAttributePointer(&a);
-
-	// Unbind vertex array
-	renderDevice->BindVertexArray(0);
 }
 
-void MeshManager::Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned short> vdata, RenderBufferUsage usage)
+void MeshManager::SetVertexAttribPointers(int stride, unsigned int count, const VertexAttributeInfo* attributes)
 {
-	using V = Vertex3f2f;
-
-	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
-	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
-
-	MeshBufferData& bufferData = data.bufferData[id.i];
-
-	if (bufferData.vertexArrayObject != 0)
+	for (unsigned int i = 0; i < count; ++i)
 	{
-		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+		renderDevice->EnableVertexAttribute(attributes[i].attrIndex);
+		RenderCommandData::SetVertexAttributePointer attr{
+			attributes[i].attrIndex, attributes[i].elemCount, attributes[i].elemType, stride, attributes[i].offset
+		};
+		renderDevice->SetVertexAttributePointer(&attr);
 	}
-	else
-	{
-		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	}
-
-	MeshDrawData drawData;
-	drawData.primitiveMode = vdata.primitiveMode;
-	drawData.vertexArrayObject = bufferData.vertexArrayObject;
-	drawData.count = vdata.idxCount;
-	drawData.indexType = RenderIndexType::UnsignedShort;
-
-	data.drawData[id.i] = drawData;
-
-	renderDevice->EnableVertexAttribute(0);
-	RenderCommandData::SetVertexAttributePointer a{
-		0, V::aElemCount, V::aElemType, V::size, V::aOffset
-	};
-	renderDevice->SetVertexAttributePointer(&a);
-
-	renderDevice->EnableVertexAttribute(1);
-	RenderCommandData::SetVertexAttributePointer b{
-		1, V::bElemCount, V::bElemType, V::size, V::bOffset
-	};
-	renderDevice->SetVertexAttributePointer(&b);
-
-	// Unbind vertex array
-	renderDevice->BindVertexArray(0);
 }
 
-void MeshManager::Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned short> vdata, RenderBufferUsage usage)
+void MeshManager::Upload_Pos3(MeshId id, VertexData vdata, RenderBufferUsage usage)
 {
-	using V = Vertex3f3f;
+	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3::size * vdata.vertCount);
 
-	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
-	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
-
-	MeshBufferData& bufferData = data.bufferData[id.i];
-
-	if (bufferData.vertexArrayObject != 0)
-	{
-		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	}
-	else
-	{
-		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	}
-
-	MeshDrawData drawData;
-	drawData.primitiveMode = vdata.primitiveMode;
-	drawData.vertexArrayObject = bufferData.vertexArrayObject;
-	drawData.count = vdata.idxCount;
-	drawData.indexType = RenderIndexType::UnsignedShort;
-
-	data.drawData[id.i] = drawData;
-
-	renderDevice->EnableVertexAttribute(0);
-	RenderCommandData::SetVertexAttributePointer a{
-		0, V::aElemCount, V::aElemType, V::size, V::aOffset
-	};
-	renderDevice->SetVertexAttributePointer(&a);
-
-	renderDevice->EnableVertexAttribute(1);
-	RenderCommandData::SetVertexAttributePointer b{
-		1, V::bElemCount, V::bElemType, V::size, V::bOffset
-	};
-	renderDevice->SetVertexAttributePointer(&b);
-
-	// Unbind vertex array
-	renderDevice->BindVertexArray(0);
+	UpdateBuffers(id, vdata.vertData, vertSize, usage);
+	CreateDrawData(id, vdata);
+	SetVertexAttribPointers(VertexFormat_Pos3::size, 1, VertexFormat_Pos3::attr);
 }
 
-void MeshManager::Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsigned short> vdata, RenderBufferUsage usage)
+void MeshManager::UploadIndexed_Pos3(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
 {
-	using V = Vertex3f3f2f;
-
-	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
+	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3::size * vdata.vertCount);
 	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
-	MeshBufferData& bufferData = data.bufferData[id.i];
-
-	if (bufferData.vertexArrayObject != 0)
-	{
-		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	}
-	else
-	{
-		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	}
-
-	MeshDrawData drawData;
-	drawData.primitiveMode = vdata.primitiveMode;
-	drawData.vertexArrayObject = bufferData.vertexArrayObject;
-	drawData.count = vdata.idxCount;
-	drawData.indexType = RenderIndexType::UnsignedShort;
-
-	data.drawData[id.i] = drawData;
-
-	renderDevice->EnableVertexAttribute(0);
-	RenderCommandData::SetVertexAttributePointer a{
-		0, V::aElemCount, V::aElemType, V::size, V::aOffset
-	};
-	renderDevice->SetVertexAttributePointer(&a);
-
-	renderDevice->EnableVertexAttribute(1);
-	RenderCommandData::SetVertexAttributePointer b{
-		1, V::bElemCount, V::bElemType, V::size, V::bOffset
-	};
-	renderDevice->SetVertexAttributePointer(&b);
-
-	renderDevice->EnableVertexAttribute(2);
-	RenderCommandData::SetVertexAttributePointer c{
-		2, V::cElemCount, V::cElemType, V::size, V::cOffset
-	};
-	renderDevice->SetVertexAttributePointer(&c);
-
-	// Unbind vertex array
-	renderDevice->BindVertexArray(0);
+	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+	CreateIndexedDrawData(id, vdata);
+	SetVertexAttribPointers(VertexFormat_Pos3::size, 1, VertexFormat_Pos3::attr);
 }
 
-void MeshManager::Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsigned short> vdata, RenderBufferUsage usage)
+void MeshManager::UploadIndexed_Pos3_UV0(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
 {
-	using V = Vertex3f3f3f;
-
-	unsigned int vertSize = static_cast<unsigned int>(V::size * vdata.vertCount);
+	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_UV0::size * vdata.vertCount);
 	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
-	MeshBufferData& bufferData = data.bufferData[id.i];
+	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+	CreateIndexedDrawData(id, vdata);
+	SetVertexAttribPointers(VertexFormat_Pos3_UV0::size, 2, VertexFormat_Pos3_UV0::attr);
+}
 
-	if (bufferData.vertexArrayObject != 0)
-	{
-		UpdateIndexedBuffers(bufferData, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	}
-	else
-	{
-		bufferData = CreateIndexedBuffers(vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	}
+void MeshManager::UploadIndexed_Pos3_Nor(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
+{
+	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_Nor3::size * vdata.vertCount);
+	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
-	MeshDrawData drawData;
-	drawData.primitiveMode = vdata.primitiveMode;
-	drawData.vertexArrayObject = bufferData.vertexArrayObject;
-	drawData.count = vdata.idxCount;
-	drawData.indexType = RenderIndexType::UnsignedShort;
+	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+	CreateIndexedDrawData(id, vdata);
+	SetVertexAttribPointers(VertexFormat_Pos3_Nor3::size, 2, VertexFormat_Pos3_Nor3::attr);
+}
 
-	data.drawData[id.i] = drawData;
+void MeshManager::UploadIndexed_Pos3_Col(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
+{
+	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_Col3::size * vdata.vertCount);
+	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
-	renderDevice->EnableVertexAttribute(0);
-	RenderCommandData::SetVertexAttributePointer a{
-		0, V::aElemCount, V::aElemType, V::size, V::aOffset
-	};
-	renderDevice->SetVertexAttributePointer(&a);
+	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+	CreateIndexedDrawData(id, vdata);
+	SetVertexAttribPointers(VertexFormat_Pos3_Col3::size, 2, VertexFormat_Pos3_Col3::attr);
+}
 
-	renderDevice->EnableVertexAttribute(1);
-	RenderCommandData::SetVertexAttributePointer b{
-		1, V::bElemCount, V::bElemType, V::size, V::bOffset
-	};
-	renderDevice->SetVertexAttributePointer(&b);
+void MeshManager::UploadIndexed_Pos3_Nor_UV0(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
+{
+	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_Nor3_UV0::size * vdata.vertCount);
+	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
 
-	renderDevice->EnableVertexAttribute(2);
-	RenderCommandData::SetVertexAttributePointer c{
-		2, V::cElemCount, V::cElemType, V::size, V::cOffset
-	};
-	renderDevice->SetVertexAttributePointer(&c);
+	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+	CreateIndexedDrawData(id, vdata);
+	SetVertexAttribPointers(VertexFormat_Pos3_Nor3_UV0::size, 3, VertexFormat_Pos3_Nor3_UV0::attr);
+}
 
-	// Unbind vertex array
-	renderDevice->BindVertexArray(0);
+void MeshManager::UploadIndexed_Pos3_Nor_Col(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
+{
+	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_Nor3_Col3::size * vdata.vertCount);
+	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
+
+	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
+	CreateIndexedDrawData(id, vdata);
+	SetVertexAttribPointers(VertexFormat_Pos3_Nor3_Col3::size, 3, VertexFormat_Pos3_Nor3_Col3::attr);
 }

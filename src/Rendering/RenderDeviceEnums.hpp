@@ -132,3 +132,8 @@ enum class RenderTextureCompareFunc
 	Always,
 	Never
 };
+
+enum class RenderVertexElemType
+{
+	Float
+};

@@ -65,36 +65,32 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 	this->meshManager = meshManager;
 
 	{
-		Vertex3f lineVertexData[] = {
-			Vertex3f{ Vec3f(0.0f, 0.0f, 0.0f) },
-			Vertex3f{ Vec3f(0.0f, 0.0f, -1.0f) }
+		float lineVertexData[] = {
+			0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, -1.0f
 		};
-
-		unsigned short lineIndexData[] = { 0, 1 };
 
 		MeshId& lineMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::Line)];
 		lineMeshId = meshManager->CreateMesh();
 
-		IndexedVertexData<Vertex3f, unsigned short> data;
+		VertexData data;
 		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertData = lineVertexData;
-		data.vertCount = sizeof(lineVertexData) / sizeof(Vertex3f);
-		data.idxData = lineIndexData;
-		data.idxCount = sizeof(lineIndexData) / sizeof(unsigned short);
+		data.vertCount = 2;
 
-		meshManager->UploadIndexed_3f(lineMeshId, data, RenderBufferUsage::StaticDraw);
+		meshManager->Upload_Pos3(lineMeshId, data, RenderBufferUsage::StaticDraw);
 	}
 
 	{
-		Vertex3f cubeVertexData[] = {
-			Vertex3f{ Vec3f(-0.5f, -0.5f, -0.5f) },
-			Vertex3f{ Vec3f(0.5f, -0.5f, -0.5f) },
-			Vertex3f{ Vec3f(-0.5f, -0.5f, 0.5f) },
-			Vertex3f{ Vec3f(0.5f, -0.5f, 0.5f) },
-			Vertex3f{ Vec3f(-0.5f, 0.5f, -0.5f) },
-			Vertex3f{ Vec3f(0.5f, 0.5f, -0.5f) },
-			Vertex3f{ Vec3f(-0.5f, 0.5f, 0.5f) },
-			Vertex3f{ Vec3f(0.5f, 0.5f, 0.5f) }
+		float cubeVertexData[] = {
+			-0.5f, -0.5f, -0.5f,
+			0.5f, -0.5f, -0.5f,
+			-0.5f, -0.5f, 0.5f,
+			0.5f, -0.5f, 0.5f,
+			-0.5f, 0.5f, -0.5f,
+			0.5f, 0.5f, -0.5f,
+			-0.5f, 0.5f, 0.5f,
+			0.5f, 0.5f, 0.5f
 		};
 
 		unsigned short cubeIndexData[] = {
@@ -106,37 +102,43 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		MeshId& cubeMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::WireCube)];
 		cubeMeshId = meshManager->CreateMesh();
 
-		IndexedVertexData<Vertex3f, unsigned short> data;
+		IndexedVertexData<unsigned short> data;
 		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertData = cubeVertexData;
-		data.vertCount = sizeof(cubeVertexData) / sizeof(Vertex3f);
+		data.vertCount = sizeof(cubeVertexData) / (sizeof(float) * 3);
 		data.idxData = cubeIndexData;
 		data.idxCount = sizeof(cubeIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_3f(cubeMeshId, data, RenderBufferUsage::StaticDraw);
+		meshManager->UploadIndexed_Pos3(cubeMeshId, data, RenderBufferUsage::StaticDraw);
 	}
 
 	{
 		static const int sphereVertices = 72;
 
-		Vertex3f sphereVertexData[sphereVertices];
+		float sphereVertexData[sphereVertices * 3];
 
 		for (int i = 0; i < 24; ++i)
 		{
 			float f = Math::Const::Tau / 24 * i;
-			sphereVertexData[0 + i] = Vertex3f{ Vec3f(std::sin(f), std::cos(f), 0.0f) };
+			sphereVertexData[i * 3 + 0] = std::sin(f);
+			sphereVertexData[i * 3 + 1] = std::cos(f);
+			sphereVertexData[i * 3 + 2] = 0.0f;
 		}
 
 		for (int i = 0; i < 24; ++i)
 		{
 			float f = Math::Const::Tau / 24 * i;
-			sphereVertexData[24 + i] = Vertex3f{ Vec3f(0.0f, std::sin(f), std::cos(f)) };
+			sphereVertexData[24 * 3 + i * 3 + 0] = 0.0f;
+			sphereVertexData[24 * 3 + i * 3 + 1] = std::sin(f);
+			sphereVertexData[24 * 3 + i * 3 + 2] = std::cos(f);
 		}
 
 		for (int i = 0; i < 24; ++i)
 		{
 			float f = Math::Const::Tau / 24 * i;
-			sphereVertexData[48 + i] = Vertex3f{ Vec3f(std::cos(f), 0.0f, std::sin(f)) };
+			sphereVertexData[48 * 3 + i * 3 + 0] = std::cos(f);
+			sphereVertexData[48 * 3 + i * 3 + 1] = 0.0f;
+			sphereVertexData[48 * 3 + i * 3 + 2] = std::sin(f);
 		}
 
 		unsigned short sphereIndexData[sphereVertices * 2] = {
@@ -159,37 +161,37 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		MeshId& sphereMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::WireSphere)];
 		sphereMeshId = meshManager->CreateMesh();
 
-		IndexedVertexData<Vertex3f, unsigned short> data;
+		IndexedVertexData<unsigned short> data;
 		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertData = sphereVertexData;
-		data.vertCount = sizeof(sphereVertexData) / sizeof(Vertex3f);
+		data.vertCount = sizeof(sphereVertexData) / (sizeof(float) * 3);
 		data.idxData = sphereIndexData;
 		data.idxCount = sizeof(sphereIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_3f(sphereMeshId, data, RenderBufferUsage::StaticDraw);
+		meshManager->UploadIndexed_Pos3(sphereMeshId, data, RenderBufferUsage::StaticDraw);
 	}
 
 	{
-		Vertex3f rectangleVertexData[] = {
-			Vertex3f{ Vec3f(-0.5f, 0.5f, 0.0f) },
-			Vertex3f{ Vec3f(0.5f, 0.5f, 0.0f) },
-			Vertex3f{ Vec3f(0.5f, -0.5f, 0.0f) },
-			Vertex3f{ Vec3f(-0.5f, -0.5f, 0.0f) }
+		float rectangleVertexData[] = {
+			-0.5f, 0.5f, 0.0f,
+			0.5f, 0.5f, 0.0f,
+			0.5f, -0.5f, 0.0f,
+			-0.5f, -0.5f, 0.0f
 		};
 
-		unsigned short rectangleIndexData[] = { 0, 1, 2, 3 };
+		unsigned short rectangleIndexData[] = { 0, 1, 1, 2, 2, 3, 3, 0 };
 
 		MeshId& rectangleMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::Rectangle)];
 		rectangleMeshId = meshManager->CreateMesh();
 
-		IndexedVertexData<Vertex3f, unsigned short> data;
+		IndexedVertexData<unsigned short> data;
 		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertData = rectangleVertexData;
-		data.vertCount = sizeof(rectangleVertexData) / sizeof(Vertex3f);
+		data.vertCount = sizeof(rectangleVertexData) / (sizeof(float) * 3);
 		data.idxData = rectangleIndexData;
 		data.idxCount = sizeof(rectangleIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_3f(rectangleMeshId, data, RenderBufferUsage::StaticDraw);
+		meshManager->UploadIndexed_Pos3(rectangleMeshId, data, RenderBufferUsage::StaticDraw);
 	}
 }
 
@@ -319,12 +321,12 @@ void DebugVectorRenderer::DrawLineChainScreen(unsigned int count, const Vec3f* p
 		// Find or create dynamic mesh to use
 		DynamicMesh* mesh = GetDynamicMesh(requiredBufferSize);
 
-		VertexData<Vertex3f> vertData;
+		VertexData vertData;
 		vertData.primitiveMode = RenderPrimitiveMode::LineStrip;
-		vertData.vertData = reinterpret_cast<const Vertex3f*>(points);
+		vertData.vertData = reinterpret_cast<const float*>(points);
 		vertData.vertCount = count;
 
-		meshManager->Upload_3f(mesh->meshId, vertData, RenderBufferUsage::DynamicDraw);
+		meshManager->Upload_Pos3(mesh->meshId, vertData, RenderBufferUsage::DynamicDraw);
 
 		if (requiredBufferSize > mesh->bufferSize)
 			mesh->bufferSize = requiredBufferSize;

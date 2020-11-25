@@ -6,98 +6,91 @@
 #include "Math/Vec3.hpp"
 #include "Math/Vec4.hpp"
 
-struct Vertex3f
+#include "Rendering/RenderDeviceEnums.hpp"
+
+struct VertexFormat
 {
-	Vec3f a;
+	static constexpr unsigned int AttribIndexPos = 0;
+	static constexpr unsigned int AttribIndexNor = 1;
+	static constexpr unsigned int AttribIndexTan = 2;
+	static constexpr unsigned int AttribIndexCol = 3;
+	static constexpr unsigned int AttribIndexUV0 = 4;
 
-	static const int size;
-
-	static const int aElemCount;
-	static const unsigned aElemType;
-	static const std::size_t aOffset;
+	static void InitializeData();
 };
 
-struct Vertex4f
+struct VertexAttributeInfo
 {
-	Vec4f a;
+	VertexAttributeInfo(unsigned int attrIndex, int elemCount) :
+		attrIndex(attrIndex),
+		elemCount(elemCount),
+		offset(0),
+		elemType(RenderVertexElemType::Float)
+	{
+	}
 
-	static const int size;
-
-	static const int aElemCount;
-	static const unsigned aElemType;
-	static const std::size_t aOffset;
+	unsigned int attrIndex;
+	int elemCount;
+	uintptr_t offset;
+	RenderVertexElemType elemType;
 };
 
-struct Vertex3f2f
+struct VertexFormat_Pos2
 {
-	Vec3f a;
-	Vec2f b;
-
-	static const int size;
-
-	static const int aElemCount;
-	static const unsigned aElemType;
-	static const std::size_t aOffset;
-
-	static const int bElemCount;
-	static const unsigned bElemType;
-	static const std::size_t bOffset;
+	static VertexAttributeInfo attr[1];
+	static size_t size;
 };
 
-struct Vertex3f3f
+struct VertexFormat_Pos3
 {
-	Vec3f a;
-	Vec3f b;
-
-	static const int size;
-
-	static const int aElemCount;
-	static const unsigned aElemType;
-	static const std::size_t aOffset;
-
-	static const int bElemCount;
-	static const unsigned bElemType;
-	static const std::size_t bOffset;
+	static VertexAttributeInfo attr[1];
+	static size_t size;
 };
 
-struct Vertex3f3f2f
+struct VertexFormat_Pos4
 {
-	Vec3f a;
-	Vec3f b;
-	Vec2f c;
-
-	static const int size;
-
-	static const int aElemCount;
-	static const unsigned aElemType;
-	static const std::size_t aOffset;
-
-	static const int bElemCount;
-	static const unsigned bElemType;
-	static const std::size_t bOffset;
-
-	static const int cElemCount;
-	static const unsigned cElemType;
-	static const std::size_t cOffset;
+	static VertexAttributeInfo attr[1];
+	static size_t size;
 };
 
-struct Vertex3f3f3f
+struct VertexFormat_Pos3_UV0
 {
-	Vec3f a;
-	Vec3f b;
-	Vec2f c;
+	static VertexAttributeInfo attr[2];
+	static size_t size;
+};
 
-	static const int size;
+struct VertexFormat_Pos3_Nor3
+{
+	static VertexAttributeInfo attr[2];
+	static size_t size;
+};
 
-	static const int aElemCount;
-	static const unsigned aElemType;
-	static const std::size_t aOffset;
+struct VertexFormat_Pos3_Col3
+{
+	static VertexAttributeInfo attr[2];
+	static size_t size;
+};
 
-	static const int bElemCount;
-	static const unsigned bElemType;
-	static const std::size_t bOffset;
+struct VertexFormat_Pos3_Nor3_UV0
+{
+	static VertexAttributeInfo attr[3];
+	static size_t size;
+};
 
-	static const int cElemCount;
-	static const unsigned cElemType;
-	static const std::size_t cOffset;
+struct VertexFormat_Pos3_Nor3_Tan3
+{
+	static VertexAttributeInfo attr[3];
+	static size_t size;
+};
+
+struct VertexFormat_Pos3_Nor3_Col3
+{
+	static VertexAttributeInfo attr[3];
+	static size_t size;
+};
+
+struct VertexFormat_Pos3_Nor3_Tan3_UV0
+{
+	static VertexAttributeInfo attr[4];
+	static size_t size;
 };

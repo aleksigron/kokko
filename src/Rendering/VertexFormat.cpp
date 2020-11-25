@@ -2,74 +2,91 @@
 
 #include "System/IncludeOpenGL.hpp"
 
-// Generic: 3 float
+VertexAttributeInfo VertexFormat_Pos2::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 2)
+};
+size_t VertexFormat_Pos2::size;
 
-const int Vertex3f::size = static_cast<int>(sizeof(Vertex3f));
+VertexAttributeInfo VertexFormat_Pos3::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 3)
+};
+size_t VertexFormat_Pos3::size;
 
-const int Vertex3f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex3f::aElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f::aOffset = offsetof(Vertex3f, a);
+VertexAttributeInfo VertexFormat_Pos4::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 4)
+};
+size_t VertexFormat_Pos4::size;
 
-// Generic: 4 float
+VertexAttributeInfo VertexFormat_Pos3_UV0::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexUV0, 2)
+};
+size_t VertexFormat_Pos3_UV0::size;
 
-const int Vertex4f::size = static_cast<int>(sizeof(Vertex4f));
+VertexAttributeInfo VertexFormat_Pos3_Nor3::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexNor, 3)
+};
+size_t VertexFormat_Pos3_Nor3::size;
 
-const int Vertex4f::aElemCount = static_cast<int>(sizeof(Vec4f) / sizeof(float));
-const unsigned Vertex4f::aElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex4f::aOffset = offsetof(Vertex4f, a);
+VertexAttributeInfo VertexFormat_Pos3_Col3::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexCol, 3)
+};
+size_t VertexFormat_Pos3_Col3::size;
 
-// Generic: 3 float, 2 float
+VertexAttributeInfo VertexFormat_Pos3_Nor3_UV0::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexNor, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexUV0, 2)
+};
+size_t VertexFormat_Pos3_Nor3_UV0::size;
 
-const int Vertex3f2f::size = static_cast<int>(sizeof(Vertex3f2f));
+VertexAttributeInfo VertexFormat_Pos3_Nor3_Tan3::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexNor, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexTan, 3)
+};
+size_t VertexFormat_Pos3_Nor3_Tan3::size;
 
-const int Vertex3f2f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex3f2f::aElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f2f::aOffset = offsetof(Vertex3f2f, a);
+VertexAttributeInfo VertexFormat_Pos3_Nor3_Col3::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexNor, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexCol, 3)
+};
+size_t VertexFormat_Pos3_Nor3_Col3::size;
 
-const int Vertex3f2f::bElemCount = static_cast<int>(sizeof(Vec2f) / sizeof(float));
-const unsigned Vertex3f2f::bElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f2f::bOffset = offsetof(Vertex3f2f, b);
+VertexAttributeInfo VertexFormat_Pos3_Nor3_Tan3_UV0::attr[] = {
+	VertexAttributeInfo(VertexFormat::AttribIndexPos, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexNor, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexTan, 3),
+	VertexAttributeInfo(VertexFormat::AttribIndexUV0, 2)
+};
+size_t VertexFormat_Pos3_Nor3_Tan3_UV0::size;
 
-// Generic: 3 float, 3 float
+static size_t SetSizeAndOffsets(VertexAttributeInfo* attr, size_t count)
+{
+	size_t size = 0;
 
-const int Vertex3f3f::size = static_cast<int>(sizeof(Vertex3f3f));
+	for (size_t i = 0; i < count; ++i)
+	{
+		attr[i].offset = size;
+		size += attr[i].elemCount * 4;
+	}
 
-const int Vertex3f3f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex3f3f::aElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f3f::aOffset = offsetof(Vertex3f3f, a);
+	return size;
+}
 
-const int Vertex3f3f::bElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex3f3f::bElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f3f::bOffset = offsetof(Vertex3f3f, b);
-
-// Generic: 3 float, 3 float, 2 float
-
-const int Vertex3f3f2f::size = static_cast<int>(sizeof(Vertex3f3f2f));
-
-const int Vertex3f3f2f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex3f3f2f::aElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f3f2f::aOffset = offsetof(Vertex3f3f2f, a);
-
-const int Vertex3f3f2f::bElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex3f3f2f::bElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f3f2f::bOffset = offsetof(Vertex3f3f2f, b);
-
-const int Vertex3f3f2f::cElemCount = static_cast<int>(sizeof(Vec2f) / sizeof(float));
-const unsigned Vertex3f3f2f::cElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f3f2f::cOffset = offsetof(Vertex3f3f2f, c);
-
-// Generic: 3 float, 3 float, 3 float
-
-const int Vertex3f3f3f::size = static_cast<int>(sizeof(Vertex3f3f3f));
-
-const int Vertex3f3f3f::aElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex3f3f3f::aElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f3f3f::aOffset = offsetof(Vertex3f3f3f, a);
-
-const int Vertex3f3f3f::bElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex3f3f3f::bElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f3f3f::bOffset = offsetof(Vertex3f3f3f, b);
-
-const int Vertex3f3f3f::cElemCount = static_cast<int>(sizeof(Vec3f) / sizeof(float));
-const unsigned Vertex3f3f3f::cElemType = static_cast<unsigned>(GL_FLOAT);
-const std::size_t Vertex3f3f3f::cOffset = offsetof(Vertex3f3f3f, c);
+void VertexFormat::InitializeData()
+{
+	VertexFormat_Pos2::size = SetSizeAndOffsets(VertexFormat_Pos2::attr, 1);
+	VertexFormat_Pos3::size = SetSizeAndOffsets(VertexFormat_Pos3::attr, 1);
+	VertexFormat_Pos4::size = SetSizeAndOffsets(VertexFormat_Pos4::attr, 1);
+	VertexFormat_Pos3_UV0::size = SetSizeAndOffsets(VertexFormat_Pos3_UV0::attr, 2);
+	VertexFormat_Pos3_Nor3::size = SetSizeAndOffsets(VertexFormat_Pos3_Nor3::attr, 2);
+	VertexFormat_Pos3_Col3::size = SetSizeAndOffsets(VertexFormat_Pos3_Col3::attr, 2);
+	VertexFormat_Pos3_Nor3_UV0::size = SetSizeAndOffsets(VertexFormat_Pos3_Nor3_UV0::attr, 3);
+	VertexFormat_Pos3_Nor3_Tan3::size = SetSizeAndOffsets(VertexFormat_Pos3_Nor3_Tan3::attr, 3);
+	VertexFormat_Pos3_Nor3_Col3::size = SetSizeAndOffsets(VertexFormat_Pos3_Nor3_Col3::attr, 3);
+	VertexFormat_Pos3_Nor3_Tan3_UV0::size = SetSizeAndOffsets(VertexFormat_Pos3_Nor3_Tan3_UV0::attr, 4);
+}

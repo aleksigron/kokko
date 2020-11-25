@@ -82,70 +82,41 @@ public:
 
 					meshManager->SetBoundingBox(meshId, bounds);
 
+					IndexedVertexData<unsigned short> data;
+					data.primitiveMode = RenderPrimitiveMode::Triangles;
+					data.idxData = indexData;
+					data.idxCount = indexCount;
+					data.vertData = reinterpret_cast<float*>(vertData);
+					data.vertCount = vertCount;
+
 					if (normCount == 0 && colCount == 0 && texCount == 0)
 					{
-						IndexedVertexData<Vertex3f, unsigned short> data;
-						data.primitiveMode = RenderPrimitiveMode::Triangles;
-						data.idxData = indexData;
-						data.idxCount = indexCount;
-						data.vertData = reinterpret_cast<Vertex3f*>(vertData);
-						data.vertCount = vertCount;
-
-						meshManager->UploadIndexed_3f(meshId, data, RenderBufferUsage::StaticDraw);
-
+						meshManager->UploadIndexed_Pos3(meshId, data, RenderBufferUsage::StaticDraw);
 						return true;
 					}
 					else if (normCount == 0 && colCount == 0 && texCount == 1)
 					{
-						IndexedVertexData<Vertex3f2f, unsigned short> data;
-						data.primitiveMode = RenderPrimitiveMode::Triangles;
-						data.idxData = indexData;
-						data.idxCount = indexCount;
-						data.vertData = reinterpret_cast<Vertex3f2f*>(vertData);
-						data.vertCount = vertCount;
-
-						meshManager->Upload_3f2f(meshId, data, RenderBufferUsage::StaticDraw);
-
+						meshManager->UploadIndexed_Pos3_UV0(meshId, data, RenderBufferUsage::StaticDraw);
 						return true;
 					}
-					else if ((normCount == 1 && colCount == 0 && texCount == 0) ||
-							 (normCount == 0 && colCount == 1 && texCount == 0))
+					else if (normCount == 1 && colCount == 0 && texCount == 0)
 					{
-						IndexedVertexData<Vertex3f3f, unsigned short> data;
-						data.primitiveMode = RenderPrimitiveMode::Triangles;
-						data.idxData = indexData;
-						data.idxCount = indexCount;
-						data.vertData = reinterpret_cast<Vertex3f3f*>(vertData);
-						data.vertCount = vertCount;
-
-						meshManager->Upload_3f3f(meshId, data, RenderBufferUsage::StaticDraw);
-
+						meshManager->UploadIndexed_Pos3_Nor(meshId, data, RenderBufferUsage::StaticDraw);
+						return true;
+					}
+					else if (normCount == 0 && colCount == 1 && texCount == 0)
+					{
+						meshManager->UploadIndexed_Pos3_Col(meshId, data, RenderBufferUsage::StaticDraw);
 						return true;
 					}
 					else if (normCount == 1 && colCount == 0 && texCount == 1)
 					{
-						IndexedVertexData<Vertex3f3f2f, unsigned short> data;
-						data.primitiveMode = RenderPrimitiveMode::Triangles;
-						data.idxData = indexData;
-						data.idxCount = indexCount;
-						data.vertData = reinterpret_cast<Vertex3f3f2f*>(vertData);
-						data.vertCount = vertCount;
-
-						meshManager->Upload_3f3f2f(meshId, data, RenderBufferUsage::StaticDraw);
-
+						meshManager->UploadIndexed_Pos3_Nor_UV0(meshId, data, RenderBufferUsage::StaticDraw);
 						return true;
 					}
 					else if (normCount == 1 && colCount == 1 && texCount == 0)
 					{
-						IndexedVertexData<Vertex3f3f3f, unsigned short> data;
-						data.primitiveMode = RenderPrimitiveMode::Triangles;
-						data.idxData = indexData;
-						data.idxCount = indexCount;
-						data.vertData = reinterpret_cast<Vertex3f3f3f*>(vertData);
-						data.vertCount = vertCount;
-
-						meshManager->Upload_3f3f3f(meshId, data, RenderBufferUsage::StaticDraw);
-
+						meshManager->UploadIndexed_Pos3_Nor_Col(meshId, data, RenderBufferUsage::StaticDraw);
 						return true;
 					}
 				}

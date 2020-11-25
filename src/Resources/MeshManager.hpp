@@ -61,23 +61,17 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	MeshBufferData CreateIndexedBuffers(
-		const void* vd, unsigned int vs, const void* id, unsigned int is,
-		RenderBufferUsage usage);
+	void UpdateIndexedBuffers(MeshId id, const void* vdata, unsigned int vsize,
+		const void* idata, unsigned int isize, RenderBufferUsage usage);
 
-	MeshBufferData CreateBuffers(
-		const void* vd, unsigned int vs,
-		RenderBufferUsage usage);
-
-	void UpdateIndexedBuffers(MeshBufferData& bufferDataInOut,
-		const void* vd, unsigned int vs, const void* id, unsigned int is,
-		RenderBufferUsage usage);
-
-	void UpdateBuffers(MeshBufferData& bufferDataInOut,
-		const void* vd, unsigned int vs,
-		RenderBufferUsage usage);
+	void UpdateBuffers(MeshId id, const void* vdata, unsigned int vsize, RenderBufferUsage usage);
 
 	void DeleteBuffers(MeshBufferData& buffers) const;
+
+	void CreateDrawData(MeshId id, const VertexData& vdata);
+	void CreateIndexedDrawData(MeshId id, const IndexedVertexData<unsigned short>& vdata);
+
+	void SetVertexAttribPointers(int stride, unsigned int count, const VertexAttributeInfo* attributes);
 
 public:
 	MeshManager(Allocator* allocator, RenderDevice* renderDevice);
@@ -100,10 +94,11 @@ public:
 
 	MeshBufferData* GetBufferData(MeshId id) { return data.bufferData + id.i; }
 
-	void Upload_3f(MeshId id, VertexData<Vertex3f> vdata, RenderBufferUsage usage);
-	void UploadIndexed_3f(MeshId id, IndexedVertexData<Vertex3f, unsigned short> data, RenderBufferUsage usage);
-	void Upload_3f2f(MeshId id, IndexedVertexData<Vertex3f2f, unsigned short> data, RenderBufferUsage usage);
-	void Upload_3f3f(MeshId id, IndexedVertexData<Vertex3f3f, unsigned short> data, RenderBufferUsage usage);
-	void Upload_3f3f2f(MeshId id, IndexedVertexData<Vertex3f3f2f, unsigned short> data, RenderBufferUsage usage);
-	void Upload_3f3f3f(MeshId id, IndexedVertexData<Vertex3f3f3f, unsigned short> data, RenderBufferUsage usage);
+	void Upload_Pos3(MeshId id, VertexData vdata, RenderBufferUsage usage);
+	void UploadIndexed_Pos3(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
+	void UploadIndexed_Pos3_UV0(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
+	void UploadIndexed_Pos3_Nor(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
+	void UploadIndexed_Pos3_Col(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
+	void UploadIndexed_Pos3_Nor_UV0(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
+	void UploadIndexed_Pos3_Nor_Col(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
 };
