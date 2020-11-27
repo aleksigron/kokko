@@ -8,20 +8,17 @@
 
 #include "Rendering/RenderDeviceEnums.hpp"
 
-struct VertexFormat
+struct VertexAttribute
 {
-	static constexpr unsigned int AttribIndexPos = 0;
-	static constexpr unsigned int AttribIndexNor = 1;
-	static constexpr unsigned int AttribIndexTan = 2;
-	static constexpr unsigned int AttribIndexCol = 3;
-	static constexpr unsigned int AttribIndexUV0 = 4;
+	VertexAttribute() :
+		attrIndex(0),
+		elemCount(0),
+		offset(0),
+		elemType(RenderVertexElemType::Float)
+	{
+	}
 
-	static void InitializeData();
-};
-
-struct VertexAttributeInfo
-{
-	VertexAttributeInfo(unsigned int attrIndex, int elemCount) :
+	VertexAttribute(unsigned int attrIndex, int elemCount) :
 		attrIndex(attrIndex),
 		elemCount(elemCount),
 		offset(0),
@@ -33,64 +30,65 @@ struct VertexAttributeInfo
 	int elemCount;
 	uintptr_t offset;
 	RenderVertexElemType elemType;
+
+	static VertexAttribute pos2;
+	static VertexAttribute pos3;
+	static VertexAttribute pos4;
+	static VertexAttribute nor;
+	static VertexAttribute tan;
+	static VertexAttribute col3;
+	static VertexAttribute col4;
+	static VertexAttribute uv0;
+	static VertexAttribute uvw0;
+	static VertexAttribute uv1;
+	static VertexAttribute uvw1;
 };
 
-struct VertexFormat_Pos2
+struct VertexFormat
 {
-	static VertexAttributeInfo attr[1];
-	static size_t size;
+	VertexFormat() :
+		attributes(nullptr),
+		attributeCount(0),
+		vertexSize(0)
+	{
+	}
+
+	VertexFormat(VertexAttribute* attributes, unsigned int attributeCount) :
+		attributes(attributes),
+		attributeCount(attributeCount),
+		vertexSize(0)
+	{
+		CalculateSizeAndOffsets();
+	}
+
+	VertexAttribute* attributes;
+	unsigned int attributeCount;
+	unsigned int vertexSize;
+
+	void CalculateSizeAndOffsets()
+	{
+		unsigned int size = 0;
+
+		for (unsigned int i = 0; i < attributeCount; ++i)
+		{
+			attributes[i].offset = size;
+			size += attributes[i].elemCount * sizeof(float);
+		}
+
+		vertexSize = size;
+	}
+
+	enum AttributeIndex
+	{
+		AttributeIndexPos,
+		AttributeIndexNor,
+		AttributeIndexTan,
+		AttributeIndexBit,
+		AttributeIndexCol,
+		AttributeIndexUV0,
+		AttributeIndexUV1,
+
+		AttributeIndex_Count
+	};
 };
 
-struct VertexFormat_Pos3
-{
-	static VertexAttributeInfo attr[1];
-	static size_t size;
-};
-
-struct VertexFormat_Pos4
-{
-	static VertexAttributeInfo attr[1];
-	static size_t size;
-};
-
-struct VertexFormat_Pos3_UV0
-{
-	static VertexAttributeInfo attr[2];
-	static size_t size;
-};
-
-struct VertexFormat_Pos3_Nor3
-{
-	static VertexAttributeInfo attr[2];
-	static size_t size;
-};
-
-struct VertexFormat_Pos3_Col3
-{
-	static VertexAttributeInfo attr[2];
-	static size_t size;
-};
-
-struct VertexFormat_Pos3_Nor3_UV0
-{
-	static VertexAttributeInfo attr[3];
-	static size_t size;
-};
-
-struct VertexFormat_Pos3_Nor3_Tan3
-{
-	static VertexAttributeInfo attr[3];
-	static size_t size;
-};
-
-struct VertexFormat_Pos3_Nor3_Col3
-{
-	static VertexAttributeInfo attr[3];
-	static size_t size;
-};
-
-struct VertexFormat_Pos3_Nor3_Tan3_UV0
-{
-	static VertexAttributeInfo attr[4];
-	static size_t size;
-};

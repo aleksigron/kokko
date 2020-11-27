@@ -82,43 +82,32 @@ public:
 
 					meshManager->SetBoundingBox(meshId, bounds);
 
-					IndexedVertexData<unsigned short> data;
-					data.primitiveMode = RenderPrimitiveMode::Triangles;
-					data.idxData = indexData;
-					data.idxCount = indexCount;
-					data.vertData = reinterpret_cast<float*>(vertData);
-					data.vertCount = vertCount;
+					VertexAttribute attributes[VertexFormat::AttributeIndex_Count];
+					unsigned int attributeCount = 0;
 
-					if (normCount == 0 && colCount == 0 && texCount == 0)
-					{
-						meshManager->UploadIndexed_Pos3(meshId, data, RenderBufferUsage::StaticDraw);
-						return true;
-					}
-					else if (normCount == 0 && colCount == 0 && texCount == 1)
-					{
-						meshManager->UploadIndexed_Pos3_UV0(meshId, data, RenderBufferUsage::StaticDraw);
-						return true;
-					}
-					else if (normCount == 1 && colCount == 0 && texCount == 0)
-					{
-						meshManager->UploadIndexed_Pos3_Nor(meshId, data, RenderBufferUsage::StaticDraw);
-						return true;
-					}
-					else if (normCount == 0 && colCount == 1 && texCount == 0)
-					{
-						meshManager->UploadIndexed_Pos3_Col(meshId, data, RenderBufferUsage::StaticDraw);
-						return true;
-					}
-					else if (normCount == 1 && colCount == 0 && texCount == 1)
-					{
-						meshManager->UploadIndexed_Pos3_Nor_UV0(meshId, data, RenderBufferUsage::StaticDraw);
-						return true;
-					}
-					else if (normCount == 1 && colCount == 1 && texCount == 0)
-					{
-						meshManager->UploadIndexed_Pos3_Nor_Col(meshId, data, RenderBufferUsage::StaticDraw);
-						return true;
-					}
+					attributes[attributeCount++] = VertexAttribute::pos3;
+
+					if (normCount == 1)
+						attributes[attributeCount++] = VertexAttribute::nor;
+					if (colCount == 1)
+						attributes[attributeCount++] = VertexAttribute::col3;
+					if (texCount == 1)
+						attributes[attributeCount++] = VertexAttribute::uv0;
+
+					VertexFormat format(attributes, attributeCount);
+
+					IndexedVertexData data;
+					data.vertexFormat = format;
+					data.usage = RenderBufferUsage::StaticDraw;
+					data.primitiveMode = RenderPrimitiveMode::Triangles;
+					data.vertexData = vertData;
+					data.vertexCount = vertCount;
+					data.indexData = indexData;
+					data.indexCount = indexCount;
+
+					meshManager->UploadIndexed(meshId, data);
+
+					return true;
 				}
 			}
 		}

@@ -306,13 +306,21 @@ void DebugTextRenderer::CreateAndUploadData()
 		}
 	}
 
-	IndexedVertexData<unsigned short> data;
+	VertexAttribute attributes[] = {
+		VertexAttribute::pos3,
+		VertexAttribute::uv0
+	};
+	VertexFormat format(attributes, sizeof(attributes) / sizeof(attributes[0]));
+
+	IndexedVertexData data;
+	data.vertexFormat = format;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
-	data.vertData = vertexData.GetData();
-	data.vertCount = vertexItr - vertexBegin;
-	data.idxData = indexData.GetData();
-	data.idxCount = indexData.GetCount();
+	data.vertexData = vertexData.GetData();
+	data.vertexCount = vertexItr - vertexBegin;
+	data.indexData = indexData.GetData();
+	data.indexCount = indexData.GetCount();
+	data.usage = RenderBufferUsage::DynamicDraw;
 
 	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
-	meshManager->UploadIndexed_Pos3_UV0(meshId, data, RenderBufferUsage::DynamicDraw);
+	meshManager->UploadIndexed(meshId, data);
 }

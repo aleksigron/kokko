@@ -1,6 +1,6 @@
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-layout(location = 4) in vec2 texcoord;
+layout(location = VERTEX_ATTR_INDEX_POS) in vec3 position;
+layout(location = VERTEX_ATTR_INDEX_NOR) in vec3 normal;
+layout(location = VERTEX_ATTR_INDEX_UV0) in vec2 texcoord;
 
 out vec3 fs_v_norm;
 out vec2 fs_texcoord;

@@ -266,96 +266,55 @@ void MeshManager::CreateDrawData(MeshId id, const VertexData& vdata)
 	MeshDrawData& drawData = data.drawData[id.i];
 	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = data.bufferData[id.i].vertexArrayObject;
-	drawData.count = vdata.vertCount;
+	drawData.count = vdata.vertexCount;
 	drawData.indexType = RenderIndexType::None;
 }
 
-void MeshManager::CreateIndexedDrawData(MeshId id, const IndexedVertexData<unsigned short>& vdata)
+void MeshManager::CreateDrawDataIndexed(MeshId id, const IndexedVertexData& vdata)
 {
 	MeshDrawData& drawData = data.drawData[id.i];
 	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = data.bufferData[id.i].vertexArrayObject;
-	drawData.count = vdata.idxCount;
+	drawData.count = vdata.indexCount;
 	drawData.indexType = RenderIndexType::UnsignedShort;
 }
 
-void MeshManager::SetVertexAttribPointers(int stride, unsigned int count, const VertexAttributeInfo* attributes)
+void MeshManager::SetVertexAttribPointers(const VertexFormat& vertexFormat)
 {
-	for (unsigned int i = 0; i < count; ++i)
+	for (unsigned int i = 0; i < vertexFormat.attributeCount; ++i)
 	{
-		renderDevice->EnableVertexAttribute(attributes[i].attrIndex);
-		RenderCommandData::SetVertexAttributePointer attr{
-			attributes[i].attrIndex, attributes[i].elemCount, attributes[i].elemType, stride, attributes[i].offset
+		const VertexAttribute& attr = vertexFormat.attributes[i];
+
+		renderDevice->EnableVertexAttribute(attr.attrIndex);
+
+		RenderCommandData::SetVertexAttributePointer data{
+			attr.attrIndex, attr.elemCount, attr.elemType, vertexFormat.vertexSize, attr.offset
 		};
-		renderDevice->SetVertexAttributePointer(&attr);
+
+		renderDevice->SetVertexAttributePointer(&data);
 	}
 }
 
-void MeshManager::Upload_Pos3(MeshId id, VertexData vdata, RenderBufferUsage usage)
+void MeshManager::Upload(MeshId id, const VertexData& vdata)
 {
-	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3::size * vdata.vertCount);
+	assert(vdata.vertexFormat.attributes != nullptr && vdata.vertexFormat.attributeCount > 0);
 
-	UpdateBuffers(id, vdata.vertData, vertSize, usage);
+	unsigned int vsize = vdata.vertexFormat.vertexSize * vdata.vertexCount;
+
+	UpdateBuffers(id, vdata.vertexData, vsize, vdata.usage);
 	CreateDrawData(id, vdata);
-	SetVertexAttribPointers(VertexFormat_Pos3::size, 1, VertexFormat_Pos3::attr);
+	SetVertexAttribPointers(vdata.vertexFormat);
 }
 
-void MeshManager::UploadIndexed_Pos3(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
+void MeshManager::UploadIndexed(MeshId id, const IndexedVertexData& vdata)
 {
-	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3::size * vdata.vertCount);
-	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
+	assert(vdata.vertexFormat.attributes != nullptr && vdata.vertexFormat.attributeCount > 0);
 
-	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	CreateIndexedDrawData(id, vdata);
-	SetVertexAttribPointers(VertexFormat_Pos3::size, 1, VertexFormat_Pos3::attr);
+	unsigned int vsize = vdata.vertexFormat.vertexSize * vdata.vertexCount;
+	unsigned int isize = vdata.indexSize * vdata.indexCount;
+
+	UpdateIndexedBuffers(id, vdata.vertexData, vsize, vdata.indexData, isize, vdata.usage);
+	CreateDrawDataIndexed(id, vdata);
+	SetVertexAttribPointers(vdata.vertexFormat);
 }
 
-void MeshManager::UploadIndexed_Pos3_UV0(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
-{
-	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_UV0::size * vdata.vertCount);
-	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
-
-	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	CreateIndexedDrawData(id, vdata);
-	SetVertexAttribPointers(VertexFormat_Pos3_UV0::size, 2, VertexFormat_Pos3_UV0::attr);
-}
-
-void MeshManager::UploadIndexed_Pos3_Nor(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
-{
-	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_Nor3::size * vdata.vertCount);
-	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
-
-	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	CreateIndexedDrawData(id, vdata);
-	SetVertexAttribPointers(VertexFormat_Pos3_Nor3::size, 2, VertexFormat_Pos3_Nor3::attr);
-}
-
-void MeshManager::UploadIndexed_Pos3_Col(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
-{
-	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_Col3::size * vdata.vertCount);
-	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
-
-	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	CreateIndexedDrawData(id, vdata);
-	SetVertexAttribPointers(VertexFormat_Pos3_Col3::size, 2, VertexFormat_Pos3_Col3::attr);
-}
-
-void MeshManager::UploadIndexed_Pos3_Nor_UV0(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
-{
-	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_Nor3_UV0::size * vdata.vertCount);
-	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
-
-	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	CreateIndexedDrawData(id, vdata);
-	SetVertexAttribPointers(VertexFormat_Pos3_Nor3_UV0::size, 3, VertexFormat_Pos3_Nor3_UV0::attr);
-}
-
-void MeshManager::UploadIndexed_Pos3_Nor_Col(MeshId id, IndexedVertexData<unsigned short> vdata, RenderBufferUsage usage)
-{
-	unsigned int vertSize = static_cast<unsigned int>(VertexFormat_Pos3_Nor3_Col3::size * vdata.vertCount);
-	unsigned int idxSize = static_cast<unsigned int>(sizeof(unsigned short) * vdata.idxCount);
-
-	UpdateIndexedBuffers(id, vdata.vertData, vertSize, vdata.idxData, idxSize, usage);
-	CreateIndexedDrawData(id, vdata);
-	SetVertexAttribPointers(VertexFormat_Pos3_Nor3_Col3::size, 3, VertexFormat_Pos3_Nor3_Col3::attr);
-}

@@ -64,6 +64,9 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 
 	this->meshManager = meshManager;
 
+	VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
+	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
+
 	{
 		float lineVertexData[] = {
 			0.0f, 0.0f, 0.0f,
@@ -74,11 +77,12 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		lineMeshId = meshManager->CreateMesh();
 
 		VertexData data;
+		data.vertexFormat = vertexFormatPos;
 		data.primitiveMode = RenderPrimitiveMode::Lines;
-		data.vertData = lineVertexData;
-		data.vertCount = 2;
+		data.vertexData = lineVertexData;
+		data.vertexCount = 2;
 
-		meshManager->Upload_Pos3(lineMeshId, data, RenderBufferUsage::StaticDraw);
+		meshManager->Upload(lineMeshId, data);
 	}
 
 	{
@@ -102,14 +106,15 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		MeshId& cubeMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::WireCube)];
 		cubeMeshId = meshManager->CreateMesh();
 
-		IndexedVertexData<unsigned short> data;
+		IndexedVertexData data;
+		data.vertexFormat = vertexFormatPos;
 		data.primitiveMode = RenderPrimitiveMode::Lines;
-		data.vertData = cubeVertexData;
-		data.vertCount = sizeof(cubeVertexData) / (sizeof(float) * 3);
-		data.idxData = cubeIndexData;
-		data.idxCount = sizeof(cubeIndexData) / sizeof(unsigned short);
+		data.vertexData = cubeVertexData;
+		data.vertexCount = sizeof(cubeVertexData) / (sizeof(float) * 3);
+		data.indexData = cubeIndexData;
+		data.indexCount = sizeof(cubeIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_Pos3(cubeMeshId, data, RenderBufferUsage::StaticDraw);
+		meshManager->UploadIndexed(cubeMeshId, data);
 	}
 
 	{
@@ -161,14 +166,15 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		MeshId& sphereMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::WireSphere)];
 		sphereMeshId = meshManager->CreateMesh();
 
-		IndexedVertexData<unsigned short> data;
+		IndexedVertexData data;
+		data.vertexFormat = vertexFormatPos;
 		data.primitiveMode = RenderPrimitiveMode::Lines;
-		data.vertData = sphereVertexData;
-		data.vertCount = sizeof(sphereVertexData) / (sizeof(float) * 3);
-		data.idxData = sphereIndexData;
-		data.idxCount = sizeof(sphereIndexData) / sizeof(unsigned short);
+		data.vertexData = sphereVertexData;
+		data.vertexCount = sizeof(sphereVertexData) / (sizeof(float) * 3);
+		data.indexData = sphereIndexData;
+		data.indexCount = sizeof(sphereIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_Pos3(sphereMeshId, data, RenderBufferUsage::StaticDraw);
+		meshManager->UploadIndexed(sphereMeshId, data);
 	}
 
 	{
@@ -184,14 +190,15 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		MeshId& rectangleMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::Rectangle)];
 		rectangleMeshId = meshManager->CreateMesh();
 
-		IndexedVertexData<unsigned short> data;
+		IndexedVertexData data;
+		data.vertexFormat = vertexFormatPos;
 		data.primitiveMode = RenderPrimitiveMode::Lines;
-		data.vertData = rectangleVertexData;
-		data.vertCount = sizeof(rectangleVertexData) / (sizeof(float) * 3);
-		data.idxData = rectangleIndexData;
-		data.idxCount = sizeof(rectangleIndexData) / sizeof(unsigned short);
+		data.vertexData = rectangleVertexData;
+		data.vertexCount = sizeof(rectangleVertexData) / (sizeof(float) * 3);
+		data.indexData = rectangleIndexData;
+		data.indexCount = sizeof(rectangleIndexData) / sizeof(unsigned short);
 
-		meshManager->UploadIndexed_Pos3(rectangleMeshId, data, RenderBufferUsage::StaticDraw);
+		meshManager->UploadIndexed(rectangleMeshId, data);
 	}
 }
 
@@ -321,12 +328,17 @@ void DebugVectorRenderer::DrawLineChainScreen(unsigned int count, const Vec3f* p
 		// Find or create dynamic mesh to use
 		DynamicMesh* mesh = GetDynamicMesh(requiredBufferSize);
 
-		VertexData vertData;
-		vertData.primitiveMode = RenderPrimitiveMode::LineStrip;
-		vertData.vertData = reinterpret_cast<const float*>(points);
-		vertData.vertCount = count;
+		VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
+		VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
 
-		meshManager->Upload_Pos3(mesh->meshId, vertData, RenderBufferUsage::DynamicDraw);
+		VertexData data;
+		data.vertexFormat = vertexFormatPos;
+		data.primitiveMode = RenderPrimitiveMode::LineStrip;
+		data.usage = RenderBufferUsage::DynamicDraw;
+		data.vertexData = reinterpret_cast<const float*>(points);
+		data.vertexCount = count;
+
+		meshManager->Upload(mesh->meshId, data);
 
 		if (requiredBufferSize > mesh->bufferSize)
 			mesh->bufferSize = requiredBufferSize;

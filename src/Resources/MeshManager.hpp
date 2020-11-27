@@ -17,6 +17,43 @@ struct BoundingBox;
 class Allocator;
 class RenderDevice;
 
+struct VertexData
+{
+	VertexData() :
+		primitiveMode(RenderPrimitiveMode::Triangles),
+		usage(RenderBufferUsage::StaticDraw),
+		vertexData(nullptr),
+		vertexCount(0)
+	{
+	}
+
+	VertexFormat vertexFormat;
+
+	RenderPrimitiveMode primitiveMode;
+	RenderBufferUsage usage;
+
+	unsigned int vertexCount;
+	const void* vertexData;
+};
+
+struct IndexedVertexData : VertexData
+{
+	IndexedVertexData() :
+		indexData(nullptr),
+		indexCount(0),
+		indexSize(sizeof(unsigned short))
+	{
+	}
+
+	void SetIndexSizeShort() { indexSize = sizeof(unsigned short); }
+	void SetIndexSizeInt() { indexSize = sizeof(unsigned int); }
+
+	const void* indexData;
+	unsigned int indexCount;
+
+	unsigned int indexSize;
+};
+
 struct MeshDrawData
 {
 	unsigned int vertexArrayObject;
@@ -69,9 +106,9 @@ private:
 	void DeleteBuffers(MeshBufferData& buffers) const;
 
 	void CreateDrawData(MeshId id, const VertexData& vdata);
-	void CreateIndexedDrawData(MeshId id, const IndexedVertexData<unsigned short>& vdata);
+	void CreateDrawDataIndexed(MeshId id, const IndexedVertexData& vdata);
 
-	void SetVertexAttribPointers(int stride, unsigned int count, const VertexAttributeInfo* attributes);
+	void SetVertexAttribPointers(const VertexFormat& vertexFormat);
 
 public:
 	MeshManager(Allocator* allocator, RenderDevice* renderDevice);
@@ -94,11 +131,7 @@ public:
 
 	MeshBufferData* GetBufferData(MeshId id) { return data.bufferData + id.i; }
 
-	void Upload_Pos3(MeshId id, VertexData vdata, RenderBufferUsage usage);
-	void UploadIndexed_Pos3(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
-	void UploadIndexed_Pos3_UV0(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
-	void UploadIndexed_Pos3_Nor(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
-	void UploadIndexed_Pos3_Col(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
-	void UploadIndexed_Pos3_Nor_UV0(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
-	void UploadIndexed_Pos3_Nor_Col(MeshId id, IndexedVertexData<unsigned short> data, RenderBufferUsage usage);
+	void Upload(MeshId id, const VertexData& vdata);
+	void UploadIndexed(MeshId id, const IndexedVertexData& vdata);
+
 };

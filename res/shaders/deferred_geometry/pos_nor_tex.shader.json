@@ -1,7 +1,10 @@
 {
 	"vs": {
 		"main": "res/shaders/deferred_geometry/pos_nor_tex.vert.glsl",
-		"includes": [ "res/shaders/common/transform_block.glsl" ]
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/common/transform_block.glsl"
+		]
 	},
 	"fs": {
 		"main": "res/shaders/deferred_geometry/pos_nor_tex.frag.glsl",

@@ -27,14 +27,18 @@ void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 		3, 6, 7, 3, 2, 6
 	};
 
-	IndexedVertexData<unsigned short> data;
-	data.primitiveMode = RenderPrimitiveMode::Triangles;
-	data.vertData = vertexData;
-	data.vertCount = sizeof(vertexData) / (sizeof(float) * 3);
-	data.idxData = indexData;
-	data.idxCount = sizeof(indexData) / sizeof(unsigned short);
+	VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
+	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
 
-	meshManager->UploadIndexed_Pos3(meshId, data, RenderBufferUsage::StaticDraw);
+	IndexedVertexData data;
+	data.vertexFormat = vertexFormatPos;
+	data.primitiveMode = RenderPrimitiveMode::Triangles;
+	data.vertexData = vertexData;
+	data.vertexCount = sizeof(vertexData) / (sizeof(float) * 3);
+	data.indexData = indexData;
+	data.indexCount = sizeof(indexData) / sizeof(unsigned short);
+
+	meshManager->UploadIndexed(meshId, data);
 
 	BoundingBox bounds;
 	bounds.center = Vec3f(0.0f, 0.0f, 0.0f);
@@ -53,12 +57,15 @@ void MeshPresets::UploadPlane(MeshManager* meshManager, MeshId meshId)
 
 	static const unsigned short indexData[] = { 0, 1, 2, 1, 3, 2 };
 
-	IndexedVertexData<unsigned short> data;
-	data.primitiveMode = RenderPrimitiveMode::Triangles;
-	data.vertData = vertexData;
-	data.vertCount = sizeof(vertexData) / (sizeof(float) * 3);
-	data.idxData = indexData;
-	data.idxCount = sizeof(indexData) / sizeof(unsigned short);
+	VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
+	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
 
-	meshManager->UploadIndexed_Pos3(meshId, data, RenderBufferUsage::StaticDraw);
+	IndexedVertexData data;
+	data.vertexFormat = vertexFormatPos;
+	data.vertexData = vertexData;
+	data.vertexCount = sizeof(vertexData) / (sizeof(float) * 3);
+	data.indexData = indexData;
+	data.indexCount = sizeof(indexData) / sizeof(unsigned short);
+
+	meshManager->UploadIndexed(meshId, data);
 }

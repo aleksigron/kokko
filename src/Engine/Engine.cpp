@@ -18,7 +18,6 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/RenderDeviceOpenGL.hpp"
 #include "Rendering/Renderer.hpp"
-#include "Rendering/VertexFormat.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
@@ -36,8 +35,6 @@ Engine* Engine::instance = nullptr;
 Engine::Engine()
 {
 	Engine::instance = this;
-
-	VertexFormat::InitializeData();
 
 	Memory::InitializeMemorySystem();
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();

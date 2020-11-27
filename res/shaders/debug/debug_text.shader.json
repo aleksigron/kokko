@@ -1,6 +1,7 @@
 {
 	"vs": {
-		"main": "res/shaders/debug/debug_text.vert.glsl"
+		"main": "res/shaders/debug/debug_text.vert.glsl",
+		"includes": [ "res/shaders/common/constants.glsl" ]
 	},
 	"fs": {
 		"main": "res/shaders/debug/debug_text.frag.glsl"
