@@ -96,12 +96,6 @@ set (KOKKO_SOURCES
 	src/Memory/DefaultAllocator.hpp
 	src/Memory/ProxyAllocator.cpp
 	src/Memory/ProxyAllocator.hpp
-	src/Memory/StackAllocation.cpp
-	src/Memory/StackAllocation.hpp
-	src/Memory/StackAllocator.cpp
-	src/Memory/StackAllocator.hpp
-	src/Memory/VirtualMemory.cpp
-	src/Memory/VirtualMemory.hpp
 	src/Rendering/Camera.hpp
 	src/Rendering/CascadedShadowMap.cpp
 	src/Rendering/CascadedShadowMap.hpp
