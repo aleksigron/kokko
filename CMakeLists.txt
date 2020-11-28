@@ -67,6 +67,7 @@ set (KOKKO_SOURCES
 	src/Debug/DebugVectorRenderer.hpp
 	src/Debug/LogHelper.cpp
 	src/Debug/LogHelper.hpp
+	src/Debug/PerformanceTimer.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
 	src/Entity/Entity.hpp
@@ -77,6 +78,7 @@ set (KOKKO_SOURCES
 	src/Math/Intersect3D.hpp
 	src/Math/Mat2x2.hpp
 	src/Math/Mat3x3.hpp
+	src/Math/Mat4x4.cpp
 	src/Math/Mat4x4.hpp
 	src/Math/Math.hpp
 	src/Math/Plane.hpp
