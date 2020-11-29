@@ -469,30 +469,30 @@ void Renderer::Render(Scene* scene)
 					{
 						device->UseShaderProgram(matData.cachedShaderDeviceId);
 						lastShaderProgram = matData.cachedShaderDeviceId;
+					}
 
-						// Bind textures
-						for (unsigned uIndex = 0; uIndex < matData.textureCount; ++uIndex)
+					// Bind textures
+					for (unsigned uIndex = 0; uIndex < matData.textureCount; ++uIndex)
+					{
+						const TextureUniform& u = matData.textureUniforms[uIndex];
+
+						switch (u.type)
 						{
-							const TextureUniform& u = matData.textureUniforms[uIndex];
+						case UniformDataType::Tex2D:
+						case UniformDataType::TexCube:
+							device->SetActiveTextureUnit(usedTextures);
+							device->BindTexture(u.textureTarget, u.textureName);
+							device->SetUniformInt(u.uniformLocation, usedTextures);
+							++usedTextures;
+							break;
 
-							switch (u.type)
-							{
-							case UniformDataType::Tex2D:
-							case UniformDataType::TexCube:
-								device->SetActiveTextureUnit(usedTextures);
-								device->BindTexture(u.textureTarget, u.textureName);
-								device->SetUniformInt(u.uniformLocation, usedTextures);
-								++usedTextures;
-								break;
-
-							case UniformDataType::Mat4x4:
-							case UniformDataType::Vec4:
-							case UniformDataType::Vec3:
-							case UniformDataType::Vec2:
-							case UniformDataType::Float:
-							case UniformDataType::Int:
-								break;
-							}
+						case UniformDataType::Mat4x4:
+						case UniformDataType::Vec4:
+						case UniformDataType::Vec3:
+						case UniformDataType::Vec2:
+						case UniformDataType::Float:
+						case UniformDataType::Int:
+							break;
 						}
 					}
 
@@ -1235,7 +1235,8 @@ void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entitie
 			unsigned int dataIdx = obj.i;
 
 			// Recalculate bounding box
-			BoundingBox* bounds = meshManager->GetBoundingBox(data.mesh[dataIdx]);
+			MeshId meshId = data.mesh[dataIdx];
+			BoundingBox* bounds = meshManager->GetBoundingBox(meshId);
 			data.bounds[dataIdx] = bounds->Transform(transforms[entityIdx]);
 
 			// Set world transform
