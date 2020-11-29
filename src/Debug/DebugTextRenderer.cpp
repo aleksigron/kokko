@@ -316,7 +316,7 @@ void DebugTextRenderer::CreateAndUploadData()
 	data.vertexFormat = format;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertexData = vertexData.GetData();
-	data.vertexCount = vertexItr - vertexBegin;
+	data.vertexCount = (vertexItr - vertexBegin) / componentCount;
 	data.indexData = indexData.GetData();
 	data.indexCount = indexData.GetCount();
 	data.usage = RenderBufferUsage::DynamicDraw;

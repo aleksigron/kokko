@@ -47,7 +47,7 @@ void App::Initialize()
 	this->cameraController.SetControlledCamera(&this->mainCamera);
 
 	SceneManager* sceneManager = engine->GetSceneManager();
-	unsigned int sceneId = sceneManager->LoadSceneFromFile(StringRef("res/scenes/default.scene.json"));
+	unsigned int sceneId = sceneManager->LoadSceneFromFile(StringRef("res/scenes/test.scene.json"));
 
 	// Create an empty scene if one couldn't be loaded from file
 	if (sceneId == 0)
@@ -81,7 +81,7 @@ void App::Initialize()
 	StringRef meshPath("res/models/sphere.mesh");
 	MeshId meshId = meshManager->GetIdByPath(meshPath);
 
-	StringRef matPath("res/materials/deferred_geometry/flat_white.material.json");
+	StringRef matPath("res/materials/deferred_geometry/wood_floor.material.json");
 	MaterialId matId = materialManager->GetIdByPath(matPath);
 
 	if (meshId.IsValid() && !matId.IsNull())

@@ -36,12 +36,23 @@ struct VertexAttribute
 	static VertexAttribute pos4;
 	static VertexAttribute nor;
 	static VertexAttribute tan;
-	static VertexAttribute col3;
-	static VertexAttribute col4;
+	static VertexAttribute bit;
+	static VertexAttribute rgb0;
+	static VertexAttribute rgba0;
+	static VertexAttribute rgb1;
+	static VertexAttribute rgba1;
+	static VertexAttribute rgb2;
+	static VertexAttribute rgba2;
 	static VertexAttribute uv0;
 	static VertexAttribute uvw0;
 	static VertexAttribute uv1;
 	static VertexAttribute uvw1;
+	static VertexAttribute uv2;
+	static VertexAttribute uvw2;
+
+	static const VertexAttribute& GetPositionAttribute(unsigned componentCount);
+	static const VertexAttribute& GetColorAttribute(unsigned int index, unsigned componentCount);
+	static const VertexAttribute& GetTextureCoordAttribute(unsigned int index, unsigned componentCount);
 };
 
 struct VertexFormat
@@ -84,11 +95,11 @@ struct VertexFormat
 		AttributeIndexNor,
 		AttributeIndexTan,
 		AttributeIndexBit,
-		AttributeIndexCol,
+		AttributeIndexCol0,
+		AttributeIndexCol1,
+		AttributeIndexCol2,
 		AttributeIndexUV0,
 		AttributeIndexUV1,
-
-		AttributeIndex_Count
+		AttributeIndexUV2
 	};
 };
-

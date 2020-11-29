@@ -98,10 +98,9 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	void UpdateIndexedBuffers(MeshId id, const void* vdata, unsigned int vsize,
-		const void* idata, unsigned int isize, RenderBufferUsage usage);
-
-	void UpdateBuffers(MeshId id, const void* vdata, unsigned int vsize, RenderBufferUsage usage);
+	void UpdateBuffers(MeshId id, const void* vertBuf, unsigned int vertBytes, RenderBufferUsage usage);
+	void UpdateIndexedBuffers(MeshId id, const void* vertBuf, unsigned int vertBytes,
+		const void* idxBuf, unsigned int idxBytes, RenderBufferUsage usage);
 
 	void DeleteBuffers(MeshBufferData& buffers) const;
 

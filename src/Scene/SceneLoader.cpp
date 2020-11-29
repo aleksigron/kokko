@@ -175,8 +175,7 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 
 		StringRef meshPath(meshItr->value.GetString(), meshItr->value.GetStringLength());
 		MeshId meshId = meshManager->GetIdByPath(meshPath);
-		if (meshId.IsValid())
-			renderer->SetMeshId(renderObj, meshId);
+		renderer->SetMeshId(renderObj, meshId);
 
 		StringRef matPath(materialItr->value.GetString(), materialItr->value.GetStringLength());
 		MaterialId matId = materialManager->GetIdByPath(matPath);

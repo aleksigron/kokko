@@ -126,9 +126,10 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	if (File::ReadBinary(pathStr.GetCStr(), file))
 	{
 		MeshId id = CreateMesh();
-		MeshLoader loader(this, id);
+		MeshLoader loader(this);
 
-		if (loader.LoadFromBuffer(file.GetRef()))
+		MeshLoader::Status status = loader.LoadFromBuffer(id, file.GetRef());
+		if (status == MeshLoader::Status::Success)
 		{
 			pair = nameHashMap.Insert(hash);
 			pair->second = id;
@@ -144,7 +145,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	return MeshId{};
 }
 
-void MeshManager::UpdateBuffers(MeshId id, const void* vdata, unsigned int vsize, RenderBufferUsage usage)
+void MeshManager::UpdateBuffers(MeshId id, const void* vertBuf, unsigned int vertBytes, RenderBufferUsage usage)
 {
 	MeshBufferData& bufferData = data.bufferData[id.i];
 
@@ -162,8 +163,8 @@ void MeshManager::UpdateBuffers(MeshId id, const void* vdata, unsigned int vsize
 
 		// Bind and upload vertex buffer
 		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
-		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vsize, vdata, usage);
-		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vsize;
+		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertBuf, usage);
+		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vertBytes;
 	}
 	else
 	{
@@ -172,22 +173,23 @@ void MeshManager::UpdateBuffers(MeshId id, const void* vdata, unsigned int vsize
 		// Bind and update vertex buffer
 		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
 
-		if (vsize <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
+		if (vertBytes <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
 		{
 			// Only update the part of the buffer we need
-			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vsize, vdata);
+			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vertBytes, vertBuf);
 		}
 		else
 		{
 			// SetBufferData reallocates storage when needed
-			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vsize, vdata, usage);
-			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vsize;
+			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertBuf, usage);
+			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vertBytes;
 		}
 	}
 }
 
 void MeshManager::UpdateIndexedBuffers(
-	MeshId id, const void* vdata, unsigned int vsize, const void* idata, unsigned int isize, RenderBufferUsage usage)
+	MeshId id, const void* vertBuf, unsigned int vertBytes,
+	const void* idxBuf, unsigned int idxBytes, RenderBufferUsage usage)
 {
 	MeshBufferData& bufferData = data.bufferData[id.i];
 
@@ -202,13 +204,13 @@ void MeshManager::UpdateIndexedBuffers(
 
 		// Bind and upload index buffer
 		renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
-		renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, isize, idata, usage);
-		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = isize;
+		renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, idxBytes, idxBuf, usage);
+		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = idxBytes;
 
 		// Bind and upload vertex buffer
 		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
-		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vsize, vdata, usage);
-		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vsize;
+		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertBuf, usage);
+		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vertBytes;
 	}
 	else
 	{
@@ -217,31 +219,31 @@ void MeshManager::UpdateIndexedBuffers(
 		// Bind and update index buffer
 		renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
 
-		if (isize <= bufferData.bufferSizes[MeshBufferData::IndexBuffer])
+		if (idxBytes <= bufferData.bufferSizes[MeshBufferData::IndexBuffer])
 		{
 			// Only update the part of the buffer we need
-			renderDevice->SetBufferSubData(RenderBufferTarget::IndexBuffer, 0, isize, idata);
+			renderDevice->SetBufferSubData(RenderBufferTarget::IndexBuffer, 0, idxBytes, idxBuf);
 		}
 		else
 		{
 			// SetBufferData reallocates storage when needed
-			renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, isize, idata, usage);
-			bufferData.bufferSizes[MeshBufferData::IndexBuffer] = isize;
+			renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, idxBytes, idxBuf, usage);
+			bufferData.bufferSizes[MeshBufferData::IndexBuffer] = idxBytes;
 		}
 
 		// Bind and update vertex buffer
 		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
 
-		if (vsize <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
+		if (vertBytes <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
 		{
 			// Only update the part of the buffer we need
-			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vsize, vdata);
+			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vertBytes, vertBuf);
 		}
 		else
 		{
 			// SetBufferData reallocates storage when needed
-			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vsize, vdata, usage);
-			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vsize;
+			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertBuf, usage);
+			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vertBytes;
 		}
 	}
 }
