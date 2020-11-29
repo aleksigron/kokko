@@ -1,7 +1,7 @@
 # Mesh file format
-This document describes the data within the custom format mesh files created by the Blender exporter located in *scripts/blender_custom_format*. The files created by this exporter can be loaded with *src/Resources/MeshLoader.hpp*. Current version of the exporter and format is 1.0.0.
+This document describes the data within the custom format mesh files created by the Blender exporter located in *scripts/kokko_mesh_exporter*. The files created by this exporter can be loaded with *src/Resources/MeshLoader.hpp*. Current version of the exporter and format is 1.0.0.
 
-You can install the exporter by copying the *blender_custom_format* folder to your Blender installation's *scripts/addons_contrib* folder and enabling it in the add-ons menu.
+You can install the exporter by copying the *kokko_mesh_exporter* folder to your Blender installation's *scripts/addons_contrib* folder and enabling it in the add-ons menu. Blender versions from 2.80 onwards are supported.
 
 ## File content
 There are 4 main parts in the file
