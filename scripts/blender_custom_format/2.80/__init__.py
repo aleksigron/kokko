@@ -1,8 +1,8 @@
 bl_info = {
-    "name": "Custom mesh export",
-    "description": "Export mesh to custom file format",
+    "name": "Export Kokko Engine mesh",
+    "description": "Export meshes to custom file format to be used by Kokko Engine",
     "author": "Aleksi Grön",
-    "version": (0, 2),
+    "version": (0, 3, 0),
     "blender": (2, 80, 0),
     "location": "File > Export",
     "category": "Import-Export"
@@ -13,9 +13,9 @@ from bpy.props import StringProperty, BoolProperty
 from bpy_extras.io_utils import ExportHelper
 
 class CUSTOM_OT_export_format(bpy.types.Operator, ExportHelper):
-    """Custom format mesh export script"""
+    """Export Kokko Engine mesh"""
     bl_idname = "export_mesh.gtk_mesh"
-    bl_label = "Export custom mesh"
+    bl_label = "Export Kokko mesh"
     
     filename_ext = ".mesh"
     filter_glob = StringProperty(default="*.mesh", options={'HIDDEN'})
@@ -24,18 +24,27 @@ class CUSTOM_OT_export_format(bpy.types.Operator, ExportHelper):
         name = "Save vertex normals",
         default = True)
         
-    save_tex_coord: BoolProperty(
-        name = "Save texture coords (if available)",
+    save_tangent: BoolProperty(
+        name = "Save vertex tangents",
         default = True)
+        
+    save_bitangent: BoolProperty(
+        name = "Save vertex bitangents",
+        default = False)
         
     save_vert_color: BoolProperty(
         name = "Save vertex colors (if available)",
+        default = False)
+        
+    save_tex_coord: BoolProperty(
+        name = "Save texture coordinates (if available)",
         default = True)
 
     def execute(self, context):
-        
         options = {}
         options["save_normal"] = self.save_normal
+        options["save_tangent"] = self.save_tangent
+        options["save_bitangent"] = self.save_bitangent
         options["save_tex_coord"] = self.save_tex_coord
         options["save_vert_color"] = self.save_vert_color
         
@@ -46,7 +55,7 @@ class CUSTOM_OT_export_format(bpy.types.Operator, ExportHelper):
 
 
 def menuItemFunc_Export(self, context):
-    self.layout.operator(CUSTOM_OT_export_format.bl_idname, text="Custom file (.mesh)")
+    self.layout.operator(CUSTOM_OT_export_format.bl_idname, text="Kokko Engine mesh (.mesh)")
 
 def register():
     from bpy.utils import register_class
