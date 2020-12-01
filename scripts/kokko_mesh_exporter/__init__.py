@@ -2,7 +2,7 @@ bl_info = {
     "name": "Export Kokko Engine mesh",
     "description": "Export meshes to custom file format to be used by Kokko Engine",
     "author": "Aleksi Grön",
-    "version": (0, 3, 0),
+    "version": (1, 0, 1),
     "blender": (2, 80, 0),
     "location": "File > Export",
     "category": "Import-Export"

@@ -1,9 +1,20 @@
 import bpy
 import time
+import math
 from array import array
 from struct import pack
 
-def get_bounding_box(verts, bounding_box_data):
+class Bounds:
+    def __init__(self):
+        self.min = [0.0, 0.0, 0.0]
+        self.max = [0.0, 0.0, 0.0]
+        self.center = [0.0, 0.0, 0.0]
+        self.extents = [0.0, 0.0, 0.0]
+        self.size = [0.0, 0.0, 0.0]
+
+def get_bounding_box(verts):
+    bounds = Bounds()
+
     if len(verts) > 0:
         min_x = 1e9
         max_x = -1e9
@@ -20,20 +31,14 @@ def get_bounding_box(verts, bounding_box_data):
             if -v.co.y < min_z: min_z = -v.co.y
             elif -v.co.y > max_z: max_z = -v.co.y
         
-        # Center
-        bounding_box_data.append((min_x + max_x) * 0.5)
-        bounding_box_data.append((min_y + max_y) * 0.5)
-        bounding_box_data.append((min_z + max_z) * 0.5)
-        
-        # Extent
-        bounding_box_data.append((max_x - min_x) * 0.5)
-        bounding_box_data.append((max_y - min_y) * 0.5)
-        bounding_box_data.append((max_z - min_z) * 0.5)
-        
-    # Empty bounding box
-    else:
-        for i in range(0, 6):
-            bounding_box_data.append(0.0)
+        bounds = Bounds()
+        bounds.min = [min_x, min_y, min_z]
+        bounds.max = [max_x, max_y, max_z]
+        bounds.center = [(min_x + max_x) * 0.5, (min_y + max_y) * 0.5, (min_z + max_z) * 0.5]
+        bounds.extents = [(max_x - min_x) * 0.5, (max_y - min_y) * 0.5, (max_z - min_z) * 0.5]
+        bounds.size = [max_x - min_x, max_y - min_y, max_z - min_z]
+    
+    return bounds
 
 def process_mesh(mesh):
     import bmesh
@@ -62,9 +67,30 @@ def write(context, filepath, options):
     process_mesh(mesh_data)
     
     # Calculate bounding box from processed mesh
-    bounding_box_data = array('f')
-    get_bounding_box(mesh_data.vertices, bounding_box_data)
+    bounds = get_bounding_box(mesh_data.vertices)
     
+    target_cell_vert_count = 32
+    orig_vertex_count = len(mesh_data.vertices)
+
+    division_count = 0
+    axis_cells = [1, 1, 1]
+    while orig_vertex_count / (axis_cells[0] * axis_cells[1] * axis_cells[2]) > target_cell_vert_count:
+        axis_cells[division_count % 3] += 1
+        division_count += 1
+    
+    cell_count = axis_cells[0] * axis_cells[1] * axis_cells[2]
+    cell_vertices = [[] for c in range(cell_count)]
+
+    def get_cell_index(pos):
+        x_idx = math.floor((pos[0] - bounds.min[0]) / (bounds.size[0] / axis_cells[0]))
+        y_idx = math.floor((pos[1] - bounds.min[1]) / (bounds.size[1] / axis_cells[1]))
+        z_idx = math.floor((pos[2] - bounds.min[2]) / (bounds.size[2] / axis_cells[2]))
+        return x_idx * axis_cells[2] * axis_cells[1] + y_idx * axis_cells[2] + z_idx
+
+    bounding_box_array = array('f')
+    bounding_box_array.extend(bounds.center)
+    bounding_box_array.extend(bounds.extents)
+
     # Get vertex color and texture coordinate layer counts
     vert_color_count = len(mesh_data.vertex_colors)
     tex_coord_count = len(mesh_data.uv_layers)
@@ -96,8 +122,9 @@ def write(context, filepath, options):
             abs(a[1] - b[1]) <= 1e-7 and
             abs(a[2] - b[2]) <= 1e-7)
 
-    unique_verts = []
-    indices = []
+    cell_vertices = [[] for c in range(cell_count)]
+    cell_indices = []
+    vert_indices = []
     
     if save_tangent or save_bitangent:
         mesh_data.calc_tangents()
@@ -122,9 +149,11 @@ def write(context, filepath, options):
             if save_tex_coord:
                 this_vert.uv0 = mesh_data.uv_layers.active.data[loop_idx].uv
 
+            cell_index = get_cell_index(this_vert.pos)
+            cell = cell_vertices[cell_index]
             # Try to find an identical vertex
             vert_idx = -1
-            for index, vert in enumerate(unique_verts):
+            for index, vert in enumerate(cell):
                 if (vec3_eq(this_vert.pos, vert.pos) and
                     (save_normal is False or vec3_eq(this_vert.nor, vert.nor)) and
                     (save_tangent is False or vec3_eq(this_vert.tan, vert.tan)) and
@@ -136,51 +165,60 @@ def write(context, filepath, options):
             
             # If identical vertex exists, just add a new index to be drawn
             # Otherwise, add the vertex and add its index to the index list
-            if vert_idx >= 0:
-                indices.append(vert_idx)
-            else:
-                indices.append(len(unique_verts))
-                unique_verts.append(this_vert)
+            if vert_idx == -1:
+                vert_idx = len(cell)
+                cell.append(this_vert)
+
+            cell_indices.append(cell_index)
+            vert_indices.append(vert_idx)
 
     time_2 = time.time()
+        
+    # 'f' for 4-byte floating point
+    vertex_array = array('f')
+    vertex_count = 0
+    cumulative_cell_verts = []
 
-    vertex_count = len(unique_verts)
-    index_count = len(indices)
+    for cell in cell_vertices:
+        cumulative_cell_verts.append(vertex_count)
+        for vert in cell:
+            vertex_count += 1
+            vertex_array.append(vert.pos[0])
+            vertex_array.append(vert.pos[2])
+            vertex_array.append(-vert.pos[1])
+            if save_normal:
+                vertex_array.append(vert.nor[0])
+                vertex_array.append(vert.nor[2])
+                vertex_array.append(-vert.nor[1])
+            if save_tangent:
+                vertex_array.append(vert.tan[0])
+                vertex_array.append(vert.tan[2])
+                vertex_array.append(-vert.tan[1])
+            if save_bitangent:
+                vertex_array.append(vert.bit[0])
+                vertex_array.append(vert.bit[2])
+                vertex_array.append(-vert.bit[1])
+            if save_vert_color:
+                vertex_array.extend(vert.col)
+            if save_tex_coord:
+                vertex_array.extend(vert.uv0)
+
+    final_indices = []
+    for vert_index, cell_index in zip(vert_indices, cell_indices):
+        final_indices.append(cumulative_cell_verts[cell_index] + vert_index)
+            
+    index_count = len(final_indices)
     
     # 'H': unsigned 2-byte int, 'I': unsigned 4-byte int
     if vertex_count <= (1 << 16):
-        index_data = array('H', indices)
+        index_array = array('H', final_indices)
         idx_attr = 2
         index_size = 2
     else:
-        index_data = array('I', indices)
+        index_array = array('I', final_indices)
         idx_attr = 3
         index_size = 4
-        
-    # 'f' for 4-byte floating point
-    vertex_data = array('f')
 
-    for vert in unique_verts:
-        vertex_data.append(vert.pos[0])
-        vertex_data.append(vert.pos[2])
-        vertex_data.append(-vert.pos[1])
-        if save_normal:
-            vertex_data.append(vert.nor[0])
-            vertex_data.append(vert.nor[2])
-            vertex_data.append(-vert.nor[1])
-        if save_tangent:
-            vertex_data.append(vert.tan[0])
-            vertex_data.append(vert.tan[2])
-            vertex_data.append(-vert.tan[1])
-        if save_bitangent:
-            vertex_data.append(vert.bit[0])
-            vertex_data.append(vert.bit[2])
-            vertex_data.append(-vert.bit[1])
-        if save_vert_color:
-            vertex_data.extend(vert.col)
-        if save_tex_coord:
-            vertex_data.extend(vert.uv0)
-            
     time_3 = time.time()
 
     # Prepare data for the header
@@ -203,8 +241,8 @@ def write(context, filepath, options):
 
     header_size = 32
     bounds_data_size = 24
-    vertex_data_size = len(vertex_data) * vertex_data.itemsize
-    index_data_size = len(index_data) * index_data.itemsize
+    vertex_data_size = len(vertex_array) * vertex_array.itemsize
+    index_data_size = len(index_array) * index_array.itemsize
 
     file_magic = 0x10101991
     version_info = 0x00010000 # Version 1.0.0
@@ -226,9 +264,9 @@ def write(context, filepath, options):
     # Open output file
     with open(filepath, 'wb') as outfile:
         outfile.write(header)
-        bounding_box_data.tofile(outfile)
-        vertex_data.tofile(outfile)
-        index_data.tofile(outfile)
+        bounding_box_array.tofile(outfile)
+        vertex_array.tofile(outfile)
+        index_array.tofile(outfile)
     
     time_4 = time.time()
     fileSizeBytes = index_offset + index_data_size
@@ -238,8 +276,9 @@ def write(context, filepath, options):
     print("{} vertices, {:.0f} triangles".format(vertex_count, index_count / 3))
     print("Prepare mesh: {:.2f} s".format(time_1 - time_0))
     print("Find unique vertices: {:.2f} s".format(time_2 - time_1))
-    print("Output vertices to array: {:.2f} s".format(time_3 - time_2))
+    print("Output data to arrays: {:.2f} s".format(time_3 - time_2))
     print("Writing to file: {:.2f} s".format(time_4 - time_3))
     print("Total: {:.2f} s".format(time_4 - time_0))
+    print("Processed with {}x{}x{} cells".format(axis_cells[0], axis_cells[1], axis_cells[2]))
 
     return True
