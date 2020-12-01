@@ -82,9 +82,9 @@ def write(context, filepath, options):
     cell_vertices = [[] for c in range(cell_count)]
 
     def get_cell_index(pos):
-        x_idx = math.floor((pos[0] - bounds.min[0]) / (bounds.size[0] / axis_cells[0]))
-        y_idx = math.floor((pos[1] - bounds.min[1]) / (bounds.size[1] / axis_cells[1]))
-        z_idx = math.floor((pos[2] - bounds.min[2]) / (bounds.size[2] / axis_cells[2]))
+        x_idx = math.floor((pos[0] + 1e-4 - bounds.min[0]) / (bounds.size[0] + 2e-4) * axis_cells[0])
+        y_idx = math.floor((pos[1] + 1e-4 - bounds.min[1]) / (bounds.size[1] + 2e-4) * axis_cells[1])
+        z_idx = math.floor((pos[2] + 1e-4 - bounds.min[2]) / (bounds.size[2] + 2e-4) * axis_cells[2])
         return x_idx * axis_cells[2] * axis_cells[1] + y_idx * axis_cells[2] + z_idx
 
     bounding_box_array = array('f')
@@ -279,6 +279,5 @@ def write(context, filepath, options):
     print("Output data to arrays: {:.2f} s".format(time_3 - time_2))
     print("Writing to file: {:.2f} s".format(time_4 - time_3))
     print("Total: {:.2f} s".format(time_4 - time_0))
-    print("Processed with {}x{}x{} cells".format(axis_cells[0], axis_cells[1], axis_cells[2]))
 
     return True

@@ -33,7 +33,7 @@ The exporter will write out its version number to the file so we can make sure o
 0x00000000
         ^^ Patch version
       ^^ Minor version
-	^^ Major version
+    ^^ Major version
 ```
 
 Example: Version 1.23.4 would be `0x00011704`
@@ -82,7 +82,7 @@ The information is encoded into a 4-byte unsigned integer. Starting from the lea
 ```
 
 #### Start offsets and counts
-These properties are 4-byte unsigned integers. The vertex and index start offsets tell where each of the data buffers start within the file. These offsets are in bytes. The vertex and index counts determine how many vertices and triangle indices there are in the mesh.
+These properties are 4-byte unsigned integers. The vertex and index start offsets tell where each of the data buffers start within the file. These offsets are in bytes. The vertex and index counts determine how many vertices and triangle indices there are in the mesh. These also allow the loader to be forward compatible; even if the exporter adds new segments to the file in a later version, the loader can ignore those because it knows the locations of all the data it can understand.
 
 ### Bounding box
 The bounding box segment has 6 floats that contain the following parameters of an axis-aligned bounding box in the same order:
@@ -94,6 +94,7 @@ The bounding box segment has 6 floats that contain the following parameters of a
 - Z-axis extents
 
 ### Vertex data
+Contains the vertex data, as described by the attribute info. The different attributes are interleaved in the array, so first comes all data for vertex 0, then vertex 1, etc. Size of each vertex and location of attributes can be determined using the header field `attribute info`. You can look at the code in `MeshLoader` to see an example of how to do this.
 
 ### Index data
-Contains the triangle indices. Size of each index is determined based on the vertex count. If 
+Contains the triangle indices. Size of each index is determined by `index size` in the header field `attribute info`. The count of indices is stored in the header field `index count`. Currently it is assumed that the indices should be used to draw triangle primitives.
