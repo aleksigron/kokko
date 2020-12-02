@@ -3,8 +3,8 @@
 	"objects": [
 		{
 			"rotation": [
-				-55,
-				40,
+				-40,
+				15,
 				0
 			],
 			"components": [
@@ -32,6 +32,77 @@
 					"type": "renderObject",
 					"mesh": "res/models/ground_plane.mesh",
 					"material": "res/materials/deferred_geometry/wood_floor.material.json"
+				}
+			]
+		},
+		{
+			"position": [
+				0,
+				0,
+				0
+			],
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/ibex_statue.mesh",
+					"material": "res/materials/deferred_geometry/ibex_statue.material.json"
+				}
+			]
+		},
+		{
+			"position": [
+				-2.5,
+				1,
+				0
+			],
+			"components": [
+				{
+					"type": "light",
+					"lightType": "point",
+					"radius": 10,
+					"color": [
+						2.6,
+						2,
+						1.5
+					]
+				}
+			]
+		},
+		{
+			"position": [
+				0,
+				1,
+				-2.5
+			],
+			"components": [
+				{
+					"type": "light",
+					"lightType": "point",
+					"radius": 10,
+					"color": [
+						2,
+						2,
+						2
+					]
+				}
+			]
+		},
+		{
+			"position": [
+				2,
+				1,
+				0
+			],
+			"components": [
+				{
+					"type": "light",
+					"lightType": "point",
+					"radius": 10,
+					"color": [
+						1.5,
+						2,
+						2.6
+					]
 				}
 			]
 		}

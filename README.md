@@ -68,3 +68,6 @@ glraw-cmd --compressed-format GL_COMPRESSED_RGB_S3TC_DXT1_EXT example.jpg
 ```
 
 [Gohufont](https://github.com/hchargois/gohufont) is used for debug text rendering.
+
+## Assets
+[Ibex statue](https://sketchfab.com/3d-models/ibex-statue-scan-berlin-tierpark-0f274384b28044e3a29fd87e4c765238) by Christian Rambow
