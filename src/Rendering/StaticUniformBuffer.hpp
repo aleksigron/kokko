@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-#include "Rendering/UniformBufferData.hpp"
+#include "Rendering/UniformBuffer.hpp"
 
 template <typename ValueType, size_t Offset>
 struct UniformBlockScalar

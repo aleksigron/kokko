@@ -118,7 +118,7 @@ set (KOKKO_SOURCES
 	src/Rendering/TransparencyType.hpp
 	src/Rendering/Uniform.cpp
 	src/Rendering/Uniform.hpp
-	src/Rendering/UniformBufferData.hpp
+	src/Rendering/UniformBuffer.hpp
 	src/Rendering/VertexFormat.cpp
 	src/Rendering/VertexFormat.hpp
 	src/Resources/BitmapFont.cpp

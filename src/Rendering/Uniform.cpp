@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cassert>
 
-#include "Rendering/UniformBufferData.hpp"
+#include "Rendering/UniformBuffer.hpp"
 
 UniformTypeInfo::UniformTypeInfo(unsigned int size, unsigned int alignment,
 	const char* typeName, bool isArray, bool isTexture) :
