@@ -18,4 +18,5 @@ layout(std140, binding = 0) uniform Lighting
 
 	mat4x4 shd_mat[MaxCascadeCount];
 	float shd_splits[MaxCascadeCount + 1];
+    vec3 ambient_color;
 } un;

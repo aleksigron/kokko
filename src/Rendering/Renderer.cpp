@@ -504,7 +504,7 @@ void Renderer::Render(Scene* scene)
 
 				// Update lightingUniformBuffer data
 				unsigned char lightingUniformBuffer[LightingUniformBlock::BufferSize];
-				UpdateLightingDataToUniformBuffer(lightingUniformBuffer, renderCamera->parameters);
+				UpdateLightingDataToUniformBuffer(lightingUniformBuffer, renderCamera->parameters, scene);
 
 				device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
 				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, LightingUniformBlock::BufferSize, lightingUniformBuffer);
@@ -579,7 +579,8 @@ void Renderer::BindLightingTextures(const ShaderData& shader) const
 	}
 }
 
-void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const ProjectionParameters& projection)
+void Renderer::UpdateLightingDataToUniformBuffer(
+	unsigned char* toBuffer, const ProjectionParameters& projection, const Scene* scene)
 {
 	const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
 
@@ -698,6 +699,9 @@ void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const 
 		LightingUniformBlock::shadowMatrices.SetOne(toBuffer, vpIdx, shadowMat);
 		LightingUniformBlock::shadowSplits.SetOne(toBuffer, vpIdx + 1, cascadeSplitDepths[vpIdx]);
 	}
+
+	Vec3f ambientColor(scene->ambientColor.r, scene->ambientColor.g, scene->ambientColor.b);
+	LightingUniformBlock::ambientColor.Set(toBuffer, ambientColor);
 }
 
 bool Renderer::ParseControlCommand(uint64_t orderKey)

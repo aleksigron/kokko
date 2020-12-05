@@ -59,7 +59,7 @@ void main()
 	vec3 surface_pos = fs_in.eye_dir * -view_z;
 	vec3 surface_to_eye = normalize(-surface_pos);
 
-	color = vec3(0.0, 0.0, 0.0);
+	color = un.ambient_color * surface_albedo;
 
 	{
 		// Select correct shadow cascade

@@ -101,7 +101,8 @@ private:
 
 	void BindMaterialTextures(const MaterialData& material) const;
 	void BindLightingTextures(const ShaderData& shader) const;
-	void UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const ProjectionParameters& projection);
+	void UpdateLightingDataToUniformBuffer(
+		unsigned char* toBuffer, const ProjectionParameters& projection, const Scene* scene);
 
 	void PopulateCommandList(Scene* scene);
 

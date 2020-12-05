@@ -143,7 +143,7 @@ public:
 class LightingUniformBlock
 {
 public:
-	static const std::size_t BufferSize = 944;
+	static const std::size_t BufferSize = 960;
 	static const unsigned int BindingPoint = 0;
 
 	static UniformBlockScalar<int, 0> pointLightCount;
@@ -157,6 +157,7 @@ public:
 	static UniformBlockArray<float, 480> lightAngles;
 	static UniformBlockArray<Mat4x4f, 608> shadowMatrices;
 	static UniformBlockArray<float, 864> shadowSplits;
+	static UniformBlockScalar<Vec3f, 944> ambientColor;
 };
 
 struct ViewportUniformBlock

@@ -63,7 +63,7 @@ public:
 
 	Scene& operator=(Scene&& other);
 
-	Color backgroundColor;
+	Color ambientColor;
 
 	unsigned int GetSceneId() const { return sceneId; }
 

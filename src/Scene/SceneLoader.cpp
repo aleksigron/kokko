@@ -42,10 +42,10 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 		CreateObjects(itr, end);
 	}
 
-	MemberItr colorItr = doc.FindMember("background-color");
+	MemberItr colorItr = doc.FindMember("ambient-color");
 	if (colorItr != doc.MemberEnd())
 	{
-		scene->backgroundColor = ValueSerialization::Deserialize_Color(colorItr->value);
+		scene->ambientColor = ValueSerialization::Deserialize_Color(colorItr->value);
 	}
 
 	MemberItr skyboxItr = doc.FindMember("skybox-material");
