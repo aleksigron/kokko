@@ -40,200 +40,110 @@ namespace UniformBuffer
 		*reinterpret_cast<float*>(buffer + offset + 12) = value.w;
 	}
 
+	inline void SetScalarMat3x3f(unsigned char* buffer, size_t offset, const Mat3x3f& value)
+	{
+		for (size_t i = 0; i < 3; ++i)
+			for (size_t j = 0; j < 3; ++j)
+				*reinterpret_cast<float*>(buffer + offset + i * 16 + j * 4) = value[i * 3 + j];
+	}
+
 	inline void SetScalarMat4x4f(unsigned char* buffer, size_t offset, const Mat4x4f& value)
 	{
 		for (size_t i = 0; i < 16; ++i)
-		{
 			*reinterpret_cast<float*>(buffer + offset + i * 4) = value[i];
+	}
+
+	inline void SetArrayFloatOne(unsigned char* buffer, size_t offset, size_t index, float value)
+	{
+		*reinterpret_cast<float*>(buffer + offset + index * 16) = value;
+	}
+	inline void SetArrayFloatMany(unsigned char* buffer, size_t offset, size_t count, const float* values)
+	{
+		for (size_t i = 0; i < count; ++i)
+			*reinterpret_cast<float*>(buffer + offset + i * 16) = values[i];
+	}
+
+	inline void SetArrayIntOne(unsigned char* buffer, size_t offset, size_t index, int value)
+	{
+		*reinterpret_cast<int*>(buffer + offset + index * 16) = value;
+	}
+	inline void SetArrayIntMany(unsigned char* buffer, size_t offset, size_t count, const int* values)
+	{
+		for (size_t i = 0; i < count; ++i)
+			*reinterpret_cast<int*>(buffer + offset + i * 16) = values[i];
+	}
+
+	inline void SetArrayVec2fOne(unsigned char* buffer, size_t offset, size_t index, const Vec2f& value)
+	{
+		*reinterpret_cast<float*>(buffer + offset + index * 16 + 0) = value.x;
+		*reinterpret_cast<float*>(buffer + offset + index * 16 + 4) = value.y;
+	}
+	inline void SetArrayVec2fMany(unsigned char* buffer, size_t offset, size_t count, const Vec2f* values)
+	{
+		for (size_t i = 0; i < count; ++i)
+		{
+			*reinterpret_cast<float*>(buffer + offset + i * 16 + 0) = values[i].x;
+			*reinterpret_cast<float*>(buffer + offset + i * 16 + 4) = values[i].y;
 		}
 	}
 
-	template <typename ValueType, size_t Offset>
-	struct ScalarUniform
+	inline void SetArrayVec3fOne(unsigned char* buffer, size_t offset, size_t index, const Vec3f& value)
 	{
-		static void Set(unsigned char* buffer, const ValueType& value)
-		{
-			*reinterpret_cast<ValueType*>(buffer + Offset) = value;
-		}
-	};
-
-	template <size_t Offset>
-	struct ScalarUniform<Vec2f, Offset>
+		*reinterpret_cast<float*>(buffer + offset + index * 16 + 0) = value.x;
+		*reinterpret_cast<float*>(buffer + offset + index * 16 + 4) = value.y;
+		*reinterpret_cast<float*>(buffer + offset + index * 16 + 8) = value.z;
+	}
+	inline void SetArrayVec3fMany(unsigned char* buffer, size_t offset, size_t count, const Vec3f* values)
 	{
-		static void Set(unsigned char* buffer, const Vec2f& value)
+		for (size_t i = 0; i < count; ++i)
 		{
-			SetScalarVec2f(buffer, Offset, value);
+			*reinterpret_cast<float*>(buffer + offset + i * 16 + 0) = values[i].x;
+			*reinterpret_cast<float*>(buffer + offset + i * 16 + 4) = values[i].y;
+			*reinterpret_cast<float*>(buffer + offset + i * 16 + 8) = values[i].z;
 		}
-	};
+	}
 
-	template <size_t Offset>
-	struct ScalarUniform<Vec3f, Offset>
+	inline void SetArrayVec4fOne(unsigned char* buffer, size_t offset, size_t index, const Vec4f& value)
 	{
-		static void Set(unsigned char* buffer, const Vec3f& value)
-		{
-			SetScalarVec3f(buffer, Offset, value);
-		}
-	};
-
-	template <size_t Offset>
-	struct ScalarUniform<Vec4f, Offset>
+		*reinterpret_cast<float*>(buffer + offset + index * 16 + 0) = value.x;
+		*reinterpret_cast<float*>(buffer + offset + index * 16 + 4) = value.y;
+		*reinterpret_cast<float*>(buffer + offset + index * 16 + 8) = value.z;
+		*reinterpret_cast<float*>(buffer + offset + index * 16 + 12) = value.w;
+	}
+	inline void SetArrayVec4fMany(unsigned char* buffer, size_t offset, size_t count, const Vec4f* values)
 	{
-		static void Set(unsigned char* buffer, const Vec4f& value)
+		for (size_t i = 0; i < count; ++i)
 		{
-			SetScalarVec4f(buffer, Offset, value);
+			*reinterpret_cast<float*>(buffer + offset + i * 16 + 0) = values[i].x;
+			*reinterpret_cast<float*>(buffer + offset + i * 16 + 4) = values[i].y;
+			*reinterpret_cast<float*>(buffer + offset + i * 16 + 8) = values[i].z;
+			*reinterpret_cast<float*>(buffer + offset + i * 16 + 12) = values[i].w;
 		}
-	};
+	}
 
-	template <size_t Offset>
-	struct ScalarUniform<Mat4x4f, Offset>
+	inline void SetArrayMat3x3fOne(unsigned char* buffer, size_t offset, size_t index, const Mat3x3f& value)
 	{
-		static void Set(unsigned char* buffer, const Mat4x4f& value)
-		{
-			SetScalarMat4x4f(buffer, Offset, value);
-		}
-	};
-
-	template <typename ValueType, size_t Offset>
-	class ArrayUniform
+		for (size_t j = 0; j < 3; ++j)
+			for (size_t k = 0; k < 3; ++k)
+				*reinterpret_cast<float*>(buffer + offset + index * 64 + j * 16 + k) = value[j * 3 + k];
+	}
+	inline void SetArrayMat3x3fMany(unsigned char* buffer, size_t offset, size_t count, const Mat3x3f* values)
 	{
-	public:
-		static void SetOne(unsigned char* buffer, size_t index, const ValueType& value)
-		{
-			*reinterpret_cast<ValueType*>(buffer + Offset + index * 16) = value;
-		}
+		for (size_t i = 0; i < count; ++i)
+			for (size_t j = 0; j < 3; ++j)
+				for (size_t k = 0; k < 3; ++k)
+					*reinterpret_cast<float*>(buffer + offset + i * 64 + j * 16 + k) = values[i][j * 3 + k];
+	}
 
-		static void SetMany(unsigned char* buffer, size_t count, const ValueType* values)
-		{
-			for (size_t i = 0; i < count; ++i)
-				*reinterpret_cast<ValueType*>(buffer + Offset + i * 16) = values[i];
-		}
-	};
-
-	template <size_t Offset>
-	class ArrayUniform<Vec2f, Offset>
+	inline void SetArrayMat4x4fOne(unsigned char* buffer, size_t offset, size_t index, const Mat4x4f& value)
 	{
-	public:
-		static void SetOne(unsigned char* buffer, size_t index, const Vec2f& value)
-		{
-			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 0) = value.x;
-			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 4) = value.y;
-		}
-
-		static void SetMany(unsigned char* buffer, size_t count, const Vec2f* values)
-		{
-			for (size_t i = 0; i < count; ++i)
-			{
-				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 0) = values[i].x;
-				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 4) = values[i].y;
-			}
-		}
-	};
-
-	template <size_t Offset>
-	class ArrayUniform<Vec3f, Offset>
+		for (size_t i = 0; i < 16; ++i)
+			*reinterpret_cast<float*>(buffer + offset + index * 64 + i * 4) = value[i];
+	}
+	inline void SetArrayMat4x4fMany(unsigned char* buffer, size_t offset, size_t count, const Mat4x4f* values)
 	{
-	public:
-		static void SetOne(unsigned char* buffer, size_t index, const Vec3f& value)
-		{
-			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 0) = value.x;
-			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 4) = value.y;
-			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 8) = value.z;
-		}
-
-		static void SetMany(unsigned char* buffer, size_t count, const Vec3f* values)
-		{
-			for (size_t i = 0; i < count; ++i)
-			{
-				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 0) = values[i].x;
-				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 4) = values[i].y;
-				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 8) = values[i].z;
-			}
-		}
-	};
-
-	template <size_t Offset>
-	class ArrayUniform<Vec4f, Offset>
-	{
-	public:
-		static void SetOne(unsigned char* buffer, size_t index, const Vec4f& value)
-		{
-			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 0) = value.x;
-			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 4) = value.y;
-			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 8) = value.z;
-			*reinterpret_cast<float*>(buffer + Offset + index * 16 + 12) = value.w;
-		}
-
-		static void SetMany(unsigned char* buffer, size_t count, const Vec4f* values)
-		{
-			for (size_t i = 0; i < count; ++i)
-			{
-				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 0) = values[i].x;
-				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 4) = values[i].y;
-				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 8) = values[i].z;
-				*reinterpret_cast<float*>(buffer + Offset + i * 16 + 12) = values[i].w;
-			}
-		}
-	};
-
-	template <size_t Offset>
-	class ArrayUniform<Mat4x4f, Offset>
-	{
-	public:
-		static void SetOne(unsigned char* buffer, size_t index, const Mat4x4f& value)
-		{
-			for (size_t i = 0; i < 16; ++i)
-				*reinterpret_cast<float*>(buffer + Offset + index * 64 + i * 4) = value[i];
-		}
-
-		static void SetMany(unsigned char* buffer, size_t count, const Mat4x4f* values)
-		{
-			for (size_t i = 0; i < count; ++i)
-				for (size_t j = 0; j < 16; ++j)
-					*reinterpret_cast<float*>(buffer + Offset + i * 64 + j * 4) = values[i][j];
-		}
-	};
-
-	class LightingBlock
-	{
-	public:
-		static const std::size_t BufferSize = 944;
-		static const unsigned int BindingPoint = 0;
-
-		static ScalarUniform<int, 0> pointLightCount;
-		static ScalarUniform<int, 4> spotLightCount;
-		static ScalarUniform<int, 8> cascadeCount;
-		static ScalarUniform<Vec2f, 16> halfNearPlane;
-		static ScalarUniform<Mat4x4f, 32> perspectiveMatrix;
-		static ArrayUniform<Vec3f, 96> lightColors;
-		static ArrayUniform<Vec3f, 224> lightPositions;
-		static ArrayUniform<Vec3f, 352> lightDirections;
-		static ArrayUniform<float, 480> lightAngles;
-		static ArrayUniform<Mat4x4f, 608> shadowMatrices;
-		static ArrayUniform<float, 864> shadowSplits;
-	};
-
-	struct ViewportBlock
-	{
-		static const std::size_t BufferSize = 192;
-		static const unsigned int BindingPoint = 1;
-
-		static ScalarUniform<Mat4x4f, 0> VP;
-		static ScalarUniform<Mat4x4f, 64> V;
-		static ScalarUniform<Mat4x4f, 128> P;
-	};
-
-	struct TransformBlock
-	{
-		static const std::size_t BufferSize = 192;
-		static const unsigned int BindingPoint = 2;
-
-		static ScalarUniform<Mat4x4f, 0> MVP;
-		static ScalarUniform<Mat4x4f, 64> MV;
-		static ScalarUniform<Mat4x4f, 128> M;
-	};
-
-	struct MaterialBlock
-	{
-		static const unsigned int BindingPoint = 3;
-	};
+		for (size_t i = 0; i < count; ++i)
+			for (size_t j = 0; j < 16; ++j)
+				*reinterpret_cast<float*>(buffer + offset + i * 64 + j * 4) = values[i][j];
+	}
 }

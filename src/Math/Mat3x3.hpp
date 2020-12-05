@@ -13,6 +13,7 @@ struct Mat3x3f
 	const float& operator[](unsigned int index) const { return m[index]; }
 
 	float* ValuePointer() { return m; }
+	const float* ValuePointer() const { return m; }
 
 	Vec3f Right() const { return Vec3f(m[0], m[1], m[2]); }
 	Vec3f Up() const { return Vec3f(m[3], m[4], m[5]); }

@@ -150,6 +150,13 @@ static bool ProcessSource(
 	return true;
 }
 
+struct AddUniforms_UniformData
+{
+	StringRef name;
+	unsigned int arraySize;
+	UniformDataType type;
+};
+
 static bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUniform& b)
 {
 	const UniformTypeInfo& aType = UniformTypeInfo::Types[static_cast<unsigned int>(a.type)];
@@ -160,8 +167,7 @@ static bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUnifo
 static void AddUniforms(
 	ShaderData& shaderOut,
 	unsigned int count,
-	const UniformDataType* types,
-	const char** names)
+	const AddUniforms_UniformData* uniforms)
 {
 	unsigned int textureUniformCount = 0;
 	unsigned int bufferUniformCount = 0;
@@ -170,15 +176,15 @@ static void AddUniforms(
 	{
 		ShaderUniform* baseUniform = nullptr;
 
-		unsigned int typeIndex = static_cast<unsigned int>(types[uIndex]);
+		UniformDataType dataType = uniforms[uIndex].type;
+		unsigned int typeIndex = static_cast<unsigned int>(dataType);
+
 		if (UniformTypeInfo::Types[typeIndex].isTexture)
 		{
 			TextureUniform& uniform = shaderOut.textureUniforms[textureUniformCount];
 
 			// Since shader is not compiled at this point, we can't know the uniform location
 			uniform.uniformLocation = -1;
-
-			UniformDataType dataType = types[uIndex];
 
 			switch (dataType)
 			{
@@ -204,6 +210,7 @@ static void AddUniforms(
 			BufferUniform& uniform = shaderOut.bufferUniforms[bufferUniformCount];
 			uniform.dataOffset = 0;
 			uniform.bufferObjectOffset = 0;
+			uniform.arraySize = uniforms[uIndex].arraySize;
 
 			++bufferUniformCount;
 
@@ -211,11 +218,10 @@ static void AddUniforms(
 		}
 
 		// Compute uniform name hash
-		unsigned int len = std::strlen(names[uIndex]);
-
-		baseUniform->name = StringRef(names[uIndex], len); // Temporarily point to original buffer
-		baseUniform->nameHash = Hash::FNV1a_32(names[uIndex], len);
-		baseUniform->type = types[uIndex];
+	
+		baseUniform->name = uniforms[uIndex].name; // Temporarily point to original buffer
+		baseUniform->nameHash = Hash::FNV1a_32(baseUniform->name.str, baseUniform->name.len);
+		baseUniform->type = dataType;
 	}
 
 	shaderOut.bufferUniformCount = bufferUniformCount;
@@ -241,8 +247,18 @@ static void AddUniforms(
 		uniform.dataOffset = dataBufferOffset;
 		uniform.bufferObjectOffset = bufferObjectOffset;
 
-		dataBufferOffset += type.size;
-		bufferObjectOffset += type.size;
+		if (type.isArray)
+		{
+			unsigned int typeSize = type.size > type.alignment ? type.size : type.alignment;
+
+			dataBufferOffset += sizeof(unsigned int) + type.size * uniform.arraySize;
+			bufferObjectOffset += typeSize;
+		}
+		else
+		{
+			dataBufferOffset += type.size;
+			bufferObjectOffset += type.size;
+		}
 	}
 
 	shaderOut.uniformDataSize = dataBufferOffset;
@@ -512,8 +528,7 @@ bool ShaderLoader::LoadFromConfiguration(
 		}
 	}
 
-	const char* uniformNames[ShaderUniform::MaxBufferUniformCount];
-	UniformDataType uniformTypes[ShaderUniform::MaxBufferUniformCount];
+	AddUniforms_UniformData uniforms[ShaderUniform::MaxBufferUniformCount];
 	unsigned int uniformCount = 0;
 
 	MemberItr uniformListItr = config.FindMember("properties");
@@ -530,63 +545,50 @@ bool ShaderLoader::LoadFromConfiguration(
 			if (nameItr != uItr->MemberEnd() && nameItr->value.IsString() &&
 				typeItr != uItr->MemberEnd() && typeItr->value.IsString())
 			{
-				uniformNames[uniformCount] = nameItr->value.GetString();
+				AddUniforms_UniformData& uniform = uniforms[uniformCount];
 
-				const char* typeStr = typeItr->value.GetString();
-				unsigned int typeStrLen = typeItr->value.GetStringLength();
+				uniform.name = StringRef(nameItr->value.GetString(), nameItr->value.GetStringLength());
 
-				uint32_t typeHash = Hash::FNV1a_32(typeStr, typeStrLen);
+				uint32_t typeHash = Hash::FNV1a_32(typeItr->value.GetString(), typeItr->value.GetStringLength());
 
 				switch (typeHash)
 				{
-				case "tex2d"_hash:
-					uniformTypes[uniformCount] = UniformDataType::Tex2D;
-					++uniformCount;
-					break;
-
-				case "texCube"_hash:
-					uniformTypes[uniformCount] = UniformDataType::TexCube;
-					++uniformCount;
-					break;
-
-				case "mat4x4"_hash:
-					uniformTypes[uniformCount] = UniformDataType::Mat4x4;
-					++uniformCount;
-					break;
-
-				case "vec4"_hash:
-					uniformTypes[uniformCount] = UniformDataType::Vec4;
-					++uniformCount;
-					break;
-
-				case "vec3"_hash:
-					uniformTypes[uniformCount] = UniformDataType::Vec3;
-					++uniformCount;
-					break;
-
-				case "vec2"_hash:
-					uniformTypes[uniformCount] = UniformDataType::Vec2;
-					++uniformCount;
-					break;
-
-				case "float"_hash:
-					uniformTypes[uniformCount] = UniformDataType::Float;
-					++uniformCount;
-					break;
-
-				case "int"_hash:
-					uniformTypes[uniformCount] = UniformDataType::Int;
-					++uniformCount;
-					break;
+				case "tex2d"_hash: uniform.type = UniformDataType::Tex2D; break;
+				case "texCube"_hash: uniform.type = UniformDataType::TexCube; break;
+				case "mat4x4"_hash: uniform.type = UniformDataType::Mat4x4; break;
+				case "mat4x4Array"_hash: uniform.type = UniformDataType::Mat4x4Array; break;
+				case "vec4"_hash: uniform.type = UniformDataType::Vec4; break;
+				case "vec4Array"_hash: uniform.type = UniformDataType::Vec4Array; break;
+				case "vec3"_hash: uniform.type = UniformDataType::Vec3; break;
+				case "vec3Array"_hash: uniform.type = UniformDataType::Vec3Array; break;
+				case "vec2"_hash: uniform.type = UniformDataType::Vec2; break;
+				case "vec2Array"_hash: uniform.type = UniformDataType::Vec2Array; break;
+				case "float"_hash: uniform.type = UniformDataType::Float; break;
+				case "floatArray"_hash: uniform.type = UniformDataType::FloatArray; break;
+				case "int"_hash: uniform.type = UniformDataType::Int; break;
+				case "intArray"_hash: uniform.type = UniformDataType::IntArray; break;
 
 				default:
 					break;
 				}
+
+				uniform.arraySize = 0;
+
+				if (UniformTypeInfo::FromType(uniform.type).isArray)
+				{
+					MemberItr sizeItr = uItr->FindMember("size");
+					if (sizeItr != uItr->MemberEnd() && sizeItr->value.IsInt())
+						uniform.arraySize = sizeItr->value.GetInt();
+					else
+						Log::Info("Failed to parse shader array uniform because JSON didn't contain size");
+				}
+
+				uniformCount += 1;
 			}
 		}
 	}
 
-	AddUniforms(shaderOut, uniformCount, uniformTypes, uniformNames);
+	AddUniforms(shaderOut, uniformCount, uniforms);
 	CopyNamesAndGenerateBlockDefinition(shaderOut, allocator);
 
 	MemberItr vsItr = config.FindMember("vs");

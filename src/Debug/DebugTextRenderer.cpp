@@ -11,7 +11,7 @@
 
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderDeviceEnums.hpp"
-#include "Rendering/UniformBufferData.hpp"
+#include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/BitmapFont.hpp"
@@ -24,7 +24,7 @@ struct MaterialBlock
 {
 	static const std::size_t BufferSize = 16;
 
-	static UniformBuffer::ScalarUniform<float, 0> shadowOffset;
+	static UniformBlockScalar<float, 0> shadowOffset;
 };
 
 DebugTextRenderer::DebugTextRenderer(
@@ -178,7 +178,7 @@ void DebugTextRenderer::Render()
 		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferObjectId);
 		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, MaterialBlock::BufferSize, materialUboBuffer);
 
-		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBuffer::MaterialBlock::BindingPoint, materialBufferObjectId);
+		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, materialBufferObjectId);
 
 		// Bind texture
 		if (textureUniform != nullptr)

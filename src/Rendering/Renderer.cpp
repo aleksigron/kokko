@@ -24,7 +24,7 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
-#include "Rendering/UniformBufferData.hpp"
+#include "Rendering/StaticUniformBuffer.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
@@ -132,7 +132,7 @@ void Renderer::Initialize(Window* window)
 		{
 			viewportData[i].uniformBlockObject = buffers[i];
 			device->BindBuffer(RenderBufferTarget::UniformBuffer, viewportData[i].uniformBlockObject);
-			device->SetBufferData(RenderBufferTarget::UniformBuffer, UniformBuffer::ViewportBlock::BufferSize, nullptr, RenderBufferUsage::DynamicDraw);
+			device->SetBufferData(RenderBufferTarget::UniformBuffer, ViewportUniformBlock::BufferSize, nullptr, RenderBufferUsage::DynamicDraw);
 		}
 	}
 
@@ -297,7 +297,7 @@ void Renderer::Initialize(Window* window)
 
 		device->CreateBuffers(1, &objectUniformBufferId);
 		device->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBufferId);
-		device->SetBufferData(RenderBufferTarget::UniformBuffer, UniformBuffer::TransformBlock::BufferSize, nullptr, RenderBufferUsage::DynamicDraw);
+		device->SetBufferData(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BufferSize, nullptr, RenderBufferUsage::DynamicDraw);
 	}
 
 	{
@@ -305,7 +305,7 @@ void Renderer::Initialize(Window* window)
 
 		device->CreateBuffers(1, &lightingUniformBufferId);
 		device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
-		device->SetBufferData(RenderBufferTarget::UniformBuffer, UniformBuffer::LightingBlock::BufferSize, nullptr, RenderBufferUsage::DynamicDraw);
+		device->SetBufferData(RenderBufferTarget::UniformBuffer, LightingUniformBlock::BufferSize, nullptr, RenderBufferUsage::DynamicDraw);
 	}
 
 	{
@@ -428,7 +428,7 @@ void Renderer::Render(Scene* scene)
 	MaterialId lastMaterialId = MaterialId{ 0 };
 
 	using namespace UniformBuffer;
-	unsigned char uboBuffer[TransformBlock::BufferSize];
+	unsigned char uboBuffer[TransformUniformBlock::BufferSize];
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -452,7 +452,7 @@ void Renderer::Render(Scene* scene)
 				if (vpIdx != lastVpIdx)
 				{
 					unsigned int ubo = viewportData[vpIdx].uniformBlockObject;
-					device->BindBufferBase(RenderBufferTarget::UniformBuffer, ViewportBlock::BindingPoint, ubo);
+					device->BindBufferBase(RenderBufferTarget::UniformBuffer, ViewportUniformBlock::BindingPoint, ubo);
 
 					lastVpIdx = vpIdx;
 				}
@@ -471,21 +471,21 @@ void Renderer::Render(Scene* scene)
 					BindMaterialTextures(matData);
 
 					// Bind material uniform block to shader
-					device->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialBlock::BindingPoint, matData.uniformBufferObject);
+					device->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, matData.uniformBufferObject);
 				}
 
 				// Update the object transform uniform buffer
 
 				const Mat4x4f& model = data.transform[objIdx];
-				TransformBlock::MVP.Set(uboBuffer, viewportData[vpIdx].viewProjection * model);
-				TransformBlock::MV.Set(uboBuffer, viewportData[vpIdx].view * model);
-				TransformBlock::M.Set(uboBuffer, model);
+				TransformUniformBlock::MVP.Set(uboBuffer, viewportData[vpIdx].viewProjection * model);
+				TransformUniformBlock::MV.Set(uboBuffer, viewportData[vpIdx].view * model);
+				TransformUniformBlock::M.Set(uboBuffer, model);
 
 				device->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBufferId);
-				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, TransformBlock::BufferSize, uboBuffer);
+				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, TransformUniformBlock::BufferSize, uboBuffer);
 
 				// Bind object transform uniform block to shader
-				device->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformBlock::BindingPoint, objectUniformBufferId);
+				device->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint, objectUniformBufferId);
 
 				// Draw mesh
 
@@ -503,11 +503,11 @@ void Renderer::Render(Scene* scene)
 				BindLightingTextures(shader);
 
 				// Update lightingUniformBuffer data
-				unsigned char lightingUniformBuffer[LightingBlock::BufferSize];
+				unsigned char lightingUniformBuffer[LightingUniformBlock::BufferSize];
 				UpdateLightingDataToUniformBuffer(lightingUniformBuffer, renderCamera->parameters);
 
 				device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
-				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, LightingBlock::BufferSize, lightingUniformBuffer);
+				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, LightingUniformBlock::BufferSize, lightingUniformBuffer);
 
 				// Bind uniform buffer to binding point 0
 				device->BindBufferBase(RenderBufferTarget::UniformBuffer, 0, lightingUniformBufferId);
@@ -582,7 +582,6 @@ void Renderer::BindLightingTextures(const ShaderData& shader) const
 void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const ProjectionParameters& projection)
 {
 	const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
-	using LightingBlock = UniformBuffer::LightingBlock;
 
 	// Update directional light viewports
 	Array<LightId>& directionalLights = lightResultArray;
@@ -591,10 +590,10 @@ void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const 
 	Vec2f halfNearPlane;
 	halfNearPlane.y = std::tan(projection.height * 0.5f);
 	halfNearPlane.x = halfNearPlane.y * projection.aspect;
-	LightingBlock::halfNearPlane.Set(toBuffer, halfNearPlane);
+	LightingUniformBlock::halfNearPlane.Set(toBuffer, halfNearPlane);
 
 	// Set the perspective matrix
-	LightingBlock::perspectiveMatrix.Set(toBuffer, fsvp.projection);
+	LightingUniformBlock::perspectiveMatrix.Set(toBuffer, fsvp.projection);
 
 	// Directional light
 	if (directionalLights.GetCount() > 0)
@@ -604,10 +603,10 @@ void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const 
 		Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
 		Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 		Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
-		LightingBlock::lightDirections.SetOne(toBuffer, 0, vLightDir);
+		LightingUniformBlock::lightDirections.SetOne(toBuffer, 0, vLightDir);
 
 		Vec3f lightCol = lightManager->GetColor(dirLightId);
-		LightingBlock::lightColors.SetOne(toBuffer, 0, lightCol);
+		LightingUniformBlock::lightColors.SetOne(toBuffer, 0, lightCol);
 	}
 
 	char uniformNameBuf[32];
@@ -630,8 +629,8 @@ void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const 
 			spotLightCount += 1;
 	}
 
-	LightingBlock::pointLightCount.Set(toBuffer, pointLightCount);
-	LightingBlock::spotLightCount.Set(toBuffer, spotLightCount);
+	LightingUniformBlock::pointLightCount.Set(toBuffer, pointLightCount);
+	LightingUniformBlock::spotLightCount.Set(toBuffer, spotLightCount);
 
 	const unsigned int dirLightOffset = 1;
 	unsigned int pointLightsAdded = 0;
@@ -654,10 +653,10 @@ void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const 
 			Mat3x3f orientation = lightManager->GetOrientation(lightId);
 			Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 			Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
-			LightingBlock::lightDirections.SetOne(toBuffer, shaderLightIdx, vLightDir);
+			LightingUniformBlock::lightDirections.SetOne(toBuffer, shaderLightIdx, vLightDir);
 
 			float spotAngle = lightManager->GetSpotAngle(lightId);
-			LightingBlock::lightAngles.SetOne(toBuffer, shaderLightIdx, spotAngle);
+			LightingUniformBlock::lightAngles.SetOne(toBuffer, shaderLightIdx, spotAngle);
 		}
 		else
 		{
@@ -667,19 +666,19 @@ void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const 
 
 		Vec3f wLightPos = lightManager->GetPosition(lightId);
 		Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
-		LightingBlock::lightPositions.SetOne(toBuffer, shaderLightIdx, vLightPos);
+		LightingUniformBlock::lightPositions.SetOne(toBuffer, shaderLightIdx, vLightPos);
 
 		Vec3f lightCol = lightManager->GetColor(lightId);
-		LightingBlock::lightColors.SetOne(toBuffer, shaderLightIdx, lightCol);
+		LightingUniformBlock::lightColors.SetOne(toBuffer, shaderLightIdx, lightCol);
 	}
 
 	lightResultArray.Clear();
 
 	// shadow_params.splits[0] is the near depth
-	LightingBlock::shadowSplits.SetOne(toBuffer, 0, projection.near);
+	LightingUniformBlock::shadowSplits.SetOne(toBuffer, 0, projection.near);
 
 	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
-	LightingBlock::cascadeCount.Set(toBuffer, shadowCascadeCount);
+	LightingUniformBlock::cascadeCount.Set(toBuffer, shadowCascadeCount);
 
 	float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
 	CascadedShadowMap::CalculateSplitDepths(projection, cascadeSplitDepths);
@@ -696,8 +695,8 @@ void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const 
 		Mat4x4f viewToLight = viewportData[vpIdx].viewProjection * fsvp.viewToWorld;
 		Mat4x4f shadowMat = bias * viewToLight;
 
-		LightingBlock::shadowMatrices.SetOne(toBuffer, vpIdx, shadowMat);
-		LightingBlock::shadowSplits.SetOne(toBuffer, vpIdx + 1, cascadeSplitDepths[vpIdx]);
+		LightingUniformBlock::shadowMatrices.SetOne(toBuffer, vpIdx, shadowMat);
+		LightingUniformBlock::shadowSplits.SetOne(toBuffer, vpIdx + 1, cascadeSplitDepths[vpIdx]);
 	}
 }
 
@@ -869,8 +868,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 	// Update directional light viewports
 	lightManager->GetDirectionalLights(lightResultArray);
 
-	using ViewportBlock = UniformBuffer::ViewportBlock;
-	unsigned char viewportBlockBuffer[ViewportBlock::BufferSize];
+	unsigned char viewportBlockBuffer[ViewportUniformBlock::BufferSize];
 	
 	for (unsigned int i = 0, count = lightResultArray.GetCount(); i < count; ++i)
 	{
@@ -903,12 +901,12 @@ void Renderer::PopulateCommandList(Scene* scene)
 				vp.frustum.Update(lightProjections[cascade], cascadeViewTransforms[cascade]);
 				vp.framebufferIndex = FramebufferIndexShadow;
 
-				ViewportBlock::VP.Set(viewportBlockBuffer, vp.viewProjection);
-				ViewportBlock::V.Set(viewportBlockBuffer, vp.view);
-				ViewportBlock::P.Set(viewportBlockBuffer, vp.projection);
+				ViewportUniformBlock::VP.Set(viewportBlockBuffer, vp.viewProjection);
+				ViewportUniformBlock::V.Set(viewportBlockBuffer, vp.view);
+				ViewportUniformBlock::P.Set(viewportBlockBuffer, vp.projection);
 
 				device->BindBuffer(RenderBufferTarget::UniformBuffer, vp.uniformBlockObject);
-				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, ViewportBlock::BufferSize, viewportBlockBuffer);
+				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, ViewportUniformBlock::BufferSize, viewportBlockBuffer);
 			}
 		}
 	}
@@ -938,12 +936,12 @@ void Renderer::PopulateCommandList(Scene* scene)
 		vp.frustum.Update(cullingCamera->parameters, cullingCameraTransform);
 		vp.framebufferIndex = FramebufferIndexGBuffer;
 
-		ViewportBlock::VP.Set(viewportBlockBuffer, vp.viewProjection);
-		ViewportBlock::V.Set(viewportBlockBuffer, vp.view);
-		ViewportBlock::P.Set(viewportBlockBuffer, vp.projection);
+		ViewportUniformBlock::VP.Set(viewportBlockBuffer, vp.viewProjection);
+		ViewportUniformBlock::V.Set(viewportBlockBuffer, vp.view);
+		ViewportUniformBlock::P.Set(viewportBlockBuffer, vp.projection);
 
 		device->BindBuffer(RenderBufferTarget::UniformBuffer, vp.uniformBlockObject);
-		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, ViewportBlock::BufferSize, viewportBlockBuffer);
+		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, ViewportUniformBlock::BufferSize, viewportBlockBuffer);
 
 		this->viewportIndexFullscreen = vpIdx;
 	}

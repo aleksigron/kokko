@@ -4,8 +4,11 @@
 
 #include "rapidjson/document.h"
 
+#include "Core/Array.hpp"
 #include "Core/String.hpp"
 #include "Core/Hash.hpp"
+
+#include "Debug/LogHelper.hpp"
 
 #include "Engine/Engine.hpp"
 
@@ -244,6 +247,15 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 
 		MaterialData& material = data.material[id.i];
 
+		// For reusing memory when setting values to material dataBuffer
+		Array<Mat4x4f> array4x4(allocator);
+		Array<Mat3x3f> array3x3(allocator);
+		Array<Vec4f> array4(allocator);
+		Array<Vec3f> array3(allocator);
+		Array<Vec2f> array2(allocator);
+		Array<float> arrayf(allocator);
+		Array<int> arrayi(allocator);
+
 		for (; varItr < varEnd; ++varItr)
 		{
 			if (varItr->IsObject() == false)
@@ -310,28 +322,120 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 					case UniformDataType::Mat4x4:
 					{
 						Mat4x4f val = ValueSerialization::Deserialize_Mat4x4f(varVal);
-						uniform.SetValueFloatVec(material.uniformData, val.ValuePointer(), 16);
+						uniform.SetValueMat4x4f(material.uniformData, val);
+						break;
+					}
+					case UniformDataType::Mat4x4Array:
+					{
+						if (varVal.IsArray())
+						{
+							array4x4.Reserve(varVal.Size());
+
+							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
+								array4x4.PushBack(ValueSerialization::Deserialize_Mat4x4f(*itr));
+
+							uniform.SetArrayMat4x4f(material.uniformData, array4x4.GetData(), array4x4.GetCount());
+							array4x4.Clear();
+						}
+						else
+							Log::Info("Failed to read uniform Mat4x4Array, because JSON value was not array.");
+
+						break;
+					}
+
+					case UniformDataType::Mat3x3:
+					{
+						Mat3x3f val = ValueSerialization::Deserialize_Mat3x3f(varVal);
+						uniform.SetValueMat3x3f(material.uniformData, val);
+						break;
+					}
+					case UniformDataType::Mat3x3Array:
+					{
+						if (varVal.IsArray())
+						{
+							array3x3.Reserve(varVal.Size());
+
+							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
+								array3x3.PushBack(ValueSerialization::Deserialize_Mat3x3f(*itr));
+
+							uniform.SetArrayMat3x3f(material.uniformData, array3x3.GetData(), array3x3.GetCount());
+							array3x3.Clear();
+						}
+						else
+							Log::Info("Failed to read uniform Mat3x3Array, because JSON value was not array.");
+
 						break;
 					}
 
 					case UniformDataType::Vec4:
 					{
 						Vec4f val = ValueSerialization::Deserialize_Vec4f(varVal);
-						uniform.SetValueFloatVec(material.uniformData, val.ValuePointer(), 4);
+						uniform.SetValueVec4f(material.uniformData, val);
+						break;
+					}
+					case UniformDataType::Vec4Array:
+					{
+						if (varVal.IsArray())
+						{
+							array4.Reserve(varVal.Size());
+
+							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
+								array4.PushBack(ValueSerialization::Deserialize_Vec4f(*itr));
+
+							uniform.SetArrayVec4f(material.uniformData, array4.GetData(), array4.GetCount());
+							array4.Clear();
+						}
+						else
+							Log::Info("Failed to read uniform Vec4Array, because JSON value was not array.");
+
 						break;
 					}
 
 					case UniformDataType::Vec3:
 					{
 						Vec3f val = ValueSerialization::Deserialize_Vec3f(varVal);
-						uniform.SetValueFloatVec(material.uniformData, val.ValuePointer(), 3);
+						uniform.SetValueVec3f(material.uniformData, val);
+						break;
+					}
+					case UniformDataType::Vec3Array:
+					{
+						if (varVal.IsArray())
+						{
+							array3.Reserve(varVal.Size());
+
+							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
+								array3.PushBack(ValueSerialization::Deserialize_Vec3f(*itr));
+
+							uniform.SetArrayVec3f(material.uniformData, array3.GetData(), array3.GetCount());
+							array3.Clear();
+						}
+						else
+							Log::Info("Failed to read uniform Vec3Array, because JSON value was not array.");
+
 						break;
 					}
 
 					case UniformDataType::Vec2:
 					{
 						Vec2f val = ValueSerialization::Deserialize_Vec2f(varVal);
-						uniform.SetValueFloatVec(material.uniformData, val.ValuePointer(), 2);
+						uniform.SetValueVec2f(material.uniformData, val);
+						break;
+					}
+					case UniformDataType::Vec2Array:
+					{
+						if (varVal.IsArray())
+						{
+							array2.Reserve(varVal.Size());
+
+							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
+								array2.PushBack(ValueSerialization::Deserialize_Vec2f(*itr));
+
+							uniform.SetArrayVec2f(material.uniformData, array2.GetData(), array2.GetCount());
+							array2.Clear();
+						}
+						else
+							Log::Info("Failed to read uniform Vec2Array, because JSON value was not array.");
+
 						break;
 					}
 
@@ -341,11 +445,45 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 						uniform.SetValueFloat(material.uniformData, val);
 						break;
 					}
+					case UniformDataType::FloatArray:
+					{
+						if (varVal.IsArray())
+						{
+							arrayf.Reserve(varVal.Size());
+
+							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
+								arrayf.PushBack(ValueSerialization::Deserialize_Float(*itr));
+
+							uniform.SetArrayFloat(material.uniformData, arrayf.GetData(), arrayf.GetCount());
+							arrayf.Clear();
+						}
+						else
+							Log::Info("Failed to read uniform FloatArray, because JSON value was not array.");
+
+						break;
+					}
 
 					case UniformDataType::Int:
 					{
 						int val = ValueSerialization::Deserialize_Int(varVal);
 						uniform.SetValueInt(material.uniformData, val);
+						break;
+					}
+					case UniformDataType::IntArray:
+					{
+						if (varVal.IsArray())
+						{
+							arrayi.Reserve(varVal.Size());
+
+							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
+								arrayi.PushBack(ValueSerialization::Deserialize_Int(*itr));
+
+							uniform.SetArrayInt(material.uniformData, arrayi.GetData(), arrayi.GetCount());
+							arrayi.Clear();
+						}
+						else
+							Log::Info("Failed to read uniform IntArray, because JSON value was not array.");
+
 						break;
 					}
 

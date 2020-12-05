@@ -9,7 +9,7 @@
 
 #include "Rendering/Camera.hpp"
 #include "Rendering/RenderDevice.hpp"
-#include "Rendering/UniformBufferData.hpp"
+#include "Rendering/StaticUniformBuffer.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
@@ -23,7 +23,7 @@ struct MaterialBlock
 {
 	static const std::size_t BufferSize = 16;
 
-	static UniformBuffer::ScalarUniform<Vec4f, 0> color;
+	static UniformBlockScalar<Vec4f, 0> color;
 };
 
 DebugVectorRenderer::DebugVectorRenderer(
@@ -456,7 +456,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 			renderDevice->CreateBuffers(2, uniformBufferIds);
 
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[ObjectBuffer]);
-			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, UniformBuffer::TransformBlock::BufferSize, nullptr, usage);
+			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BufferSize, nullptr, usage);
 
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[MaterialBuffer]);
 			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, MaterialBlock::BufferSize, nullptr, usage);
@@ -475,7 +475,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 		Mat4x4f viewProj = proj * view;
 		Mat4x4f screenProj = engine->GetMainWindow()->GetScreenSpaceProjectionMatrix();
 
-		unsigned char objectUboBuffer[UniformBuffer::TransformBlock::BufferSize];
+		unsigned char objectUboBuffer[TransformUniformBlock::BufferSize];
 		unsigned char materialUboBuffer[MaterialBlock::BufferSize];
 
 		renderDevice->DepthTestDisable();
@@ -492,15 +492,15 @@ void DebugVectorRenderer::Render(Camera* camera)
 
 			// Update object transform uniform buffer
 
-			UniformBuffer::TransformBlock::MVP.Set(objectUboBuffer, mvp);
-			UniformBuffer::TransformBlock::MV.Set(objectUboBuffer, view * primitive.transform);
-			UniformBuffer::TransformBlock::M.Set(objectUboBuffer, primitive.transform);
+			TransformUniformBlock::MVP.Set(objectUboBuffer, mvp);
+			TransformUniformBlock::MV.Set(objectUboBuffer, view * primitive.transform);
+			TransformUniformBlock::M.Set(objectUboBuffer, primitive.transform);
 
 			unsigned int objectBufferId = uniformBufferIds[ObjectBuffer];
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectBufferId);
-			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, UniformBuffer::TransformBlock::BufferSize, objectUboBuffer);
+			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, TransformUniformBlock::BufferSize, objectUboBuffer);
 
-			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBuffer::TransformBlock::BindingPoint, objectBufferId);
+			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint, objectBufferId);
 
 			// Update color
 
@@ -511,7 +511,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferId);
 			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, MaterialBlock::BufferSize, materialUboBuffer);
 
-			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBuffer::MaterialBlock::BindingPoint, materialBufferId);
+			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, materialBufferId);
 
 			// Draw
 
