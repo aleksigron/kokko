@@ -57,6 +57,7 @@ struct RendererViewport
 	float farMinusNear;
 	float minusNear;
 
+	Mat4x4f viewToWorld;
 	Mat4x4f view;
 	Mat4x4f projection;
 	Mat4x4f viewProjection;
@@ -451,14 +452,10 @@ void Renderer::Render(Scene* scene)
 				if (vpIdx != lastVpIdx)
 				{
 					unsigned int ubo = viewportData[vpIdx].uniformBlockObject;
-					unsigned int binding = ViewportBlock::BindingPoint;
-					device->BindBufferBase(RenderBufferTarget::UniformBuffer, binding, ubo);
+					device->BindBufferBase(RenderBufferTarget::UniformBuffer, ViewportBlock::BindingPoint, ubo);
 
 					lastVpIdx = vpIdx;
 				}
-
-
-				unsigned int usedTextures = 0;
 
 				if (matId != lastMaterialId)
 				{
@@ -471,30 +468,7 @@ void Renderer::Render(Scene* scene)
 						lastShaderProgram = matData.cachedShaderDeviceId;
 					}
 
-					// Bind textures
-					for (unsigned uIndex = 0; uIndex < matData.textureCount; ++uIndex)
-					{
-						const TextureUniform& u = matData.textureUniforms[uIndex];
-
-						switch (u.type)
-						{
-						case UniformDataType::Tex2D:
-						case UniformDataType::TexCube:
-							device->SetActiveTextureUnit(usedTextures);
-							device->BindTexture(u.textureTarget, u.textureName);
-							device->SetUniformInt(u.uniformLocation, usedTextures);
-							++usedTextures;
-							break;
-
-						case UniformDataType::Mat4x4:
-						case UniformDataType::Vec4:
-						case UniformDataType::Vec3:
-						case UniformDataType::Vec2:
-						case UniformDataType::Float:
-						case UniformDataType::Int:
-							break;
-						}
-					}
+					BindMaterialTextures(matData);
 
 					// Bind material uniform block to shader
 					device->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialBlock::BindingPoint, matData.uniformBufferObject);
@@ -524,162 +498,14 @@ void Renderer::Render(Scene* scene)
 			{
 				const ShaderData& shader = shaderManager->GetShaderData(lightingShader);
 
-				// Bind textures
-
-				static const unsigned int textureUniformCount = 5;
-				static const uint32_t uniformNameHashes[textureUniformCount] = {
-					"g_alb_spec"_hash,
-					"g_norm"_hash,
-					"g_emissive"_hash,
-					"g_depth"_hash,
-					"shd_smp"_hash
-				};
-
-				const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
-				const unsigned int textureObjectNames[textureUniformCount] = {
-					gbuffer.textures[AlbedoSpecTextureIdx],
-					gbuffer.textures[NormalTextureIdx],
-					gbuffer.textures[EmissiveTextureIdx],
-					gbuffer.textures[DepthTextureIdx],
-					framebufferData[FramebufferIndexShadow].textures[0]
-				};
-
 				device->UseShaderProgram(shader.driverId);
 
-				for (unsigned int i = 0; i < textureUniformCount; ++i)
-				{
-					const TextureUniform* tu = shader.FindTextureUniformFromNameHash(uniformNameHashes[i]);
-					if (tu != nullptr)
-					{
-						device->SetUniformInt(tu->uniformLocation, i);
-						device->SetActiveTextureUnit(i);
-						device->BindTexture(RenderTextureTarget::Texture2d, textureObjectNames[i]);
-					}
-				}
-
-				// Update the lighting uniform buffer
-
-				const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
-				using LightingBlock = UniformBuffer::LightingBlock;
-				unsigned char lightingUniformBuffer[LightingBlock::BufferSize];
-
-				// Update directional light viewports
-				Array<LightId>& directionalLights = lightResultArray;
-				lightManager->GetDirectionalLights(directionalLights);
-
-				Vec2f halfNearPlane;
-				halfNearPlane.y = std::tan(renderCamera->parameters.height * 0.5f);
-				halfNearPlane.x = halfNearPlane.y * renderCamera->parameters.aspect;
-				LightingBlock::halfNearPlane.Set(lightingUniformBuffer, halfNearPlane);
-
-				// Set the perspective matrix
-				LightingBlock::perspectiveMatrix.Set(lightingUniformBuffer, fsvp.projection);
-
-				// Directional light
-				if (directionalLights.GetCount() > 0)
-				{
-					LightId dirLightId = directionalLights[0];
-
-					Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
-					Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
-					Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
-					LightingBlock::lightDirections.SetOne(lightingUniformBuffer, 0, vLightDir);
-
-					Vec3f lightCol = lightManager->GetColor(dirLightId);
-					LightingBlock::lightColors.SetOne(lightingUniformBuffer, 0, lightCol);
-				}
-
-				char uniformNameBuf[32];
-
-				lightResultArray.Clear();
-				Array<LightId>& nonDirLights = lightResultArray;
-				lightManager->GetNonDirectionalLightsWithinFrustum(fsvp.frustum, nonDirLights);
-
-				// Count the different light types
-
-				unsigned int pointLightCount = 0;
-				unsigned int spotLightCount = 0;
-
-				for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
-				{
-					LightType type = lightManager->GetLightType(nonDirLights[lightIdx]);
-					if (type == LightType::Point)
-						pointLightCount += 1;
-					else if (type == LightType::Spot)
-						spotLightCount += 1;
-				}
-				
-				LightingBlock::pointLightCount.Set(lightingUniformBuffer, pointLightCount);
-				LightingBlock::spotLightCount.Set(lightingUniformBuffer, spotLightCount);
-
-				const unsigned int dirLightOffset = 1;
-				unsigned int pointLightsAdded = 0;
-				unsigned int spotLightsAdded = 0;
-
-				// Light other visible lights
-				for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
-				{
-					unsigned int shaderLightIdx;
-
-					LightId lightId = nonDirLights[lightIdx];
-
-					// Point lights come first, so offset spot lights with the amount of point lights
-					LightType type = lightManager->GetLightType(lightId);
-					if (type == LightType::Spot)
-					{
-						shaderLightIdx = dirLightOffset + pointLightCount + spotLightsAdded;
-						spotLightsAdded += 1;
-
-						Mat3x3f orientation = lightManager->GetOrientation(lightId);
-						Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
-						Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
-						LightingBlock::lightDirections.SetOne(lightingUniformBuffer, shaderLightIdx, vLightDir);
-
-						float spotAngle = lightManager->GetSpotAngle(lightId);
-						LightingBlock::lightAngles.SetOne(lightingUniformBuffer, shaderLightIdx, spotAngle);
-					}
-					else
-					{
-						shaderLightIdx = dirLightOffset + pointLightsAdded;
-						pointLightsAdded += 1;
-					}
-
-					Vec3f wLightPos = lightManager->GetPosition(lightId);
-					Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
-					LightingBlock::lightPositions.SetOne(lightingUniformBuffer, shaderLightIdx, vLightPos);
-
-					Vec3f lightCol = lightManager->GetColor(lightId);
-					LightingBlock::lightColors.SetOne(lightingUniformBuffer, shaderLightIdx, lightCol);
-				}
-
-				lightResultArray.Clear();
-
-				// shadow_params.splits[0] is the near depth
-				LightingBlock::shadowSplits.SetOne(lightingUniformBuffer, 0, renderCamera->parameters.near);
-
-				unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
-				LightingBlock::cascadeCount.Set(lightingUniformBuffer, shadowCascadeCount);
-
-				float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
-				CascadedShadowMap::CalculateSplitDepths(renderCamera->parameters, cascadeSplitDepths);
-
-				Mat4x4f bias;
-				bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
-				bias[4] = 0.0; bias[5] = 0.5; bias[6] = 0.0; bias[7] = 0.0;
-				bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
-				bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
-
-				// Update transforms and split depths for each shadow cascade
-				for (size_t vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
-				{
-					Mat4x4f viewToLight = viewportData[vpIdx].viewProjection * renderCameraTransform;
-					Mat4x4f shadowMat = bias * viewToLight;
-
-					LightingBlock::shadowMatrices.SetOne(lightingUniformBuffer, vpIdx, shadowMat);
-					LightingBlock::shadowSplits.SetOne(lightingUniformBuffer, vpIdx + 1, cascadeSplitDepths[vpIdx]);
-				}
+				BindLightingTextures(shader);
 
 				// Update lightingUniformBuffer data
+				unsigned char lightingUniformBuffer[LightingBlock::BufferSize];
+				UpdateLightingDataToUniformBuffer(lightingUniformBuffer, renderCamera->parameters);
+
 				device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
 				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, LightingBlock::BufferSize, lightingUniformBuffer);
 
@@ -695,6 +521,184 @@ void Renderer::Render(Scene* scene)
 	}
 
 	commandList.Clear();
+}
+
+void Renderer::BindMaterialTextures(const MaterialData& material) const
+{
+	unsigned int usedTextures = 0;
+
+	for (unsigned uIndex = 0; uIndex < material.textureCount; ++uIndex)
+	{
+		const TextureUniform& u = material.textureUniforms[uIndex];
+
+		switch (u.type)
+		{
+		case UniformDataType::Tex2D:
+		case UniformDataType::TexCube:
+			device->SetActiveTextureUnit(usedTextures);
+			device->BindTexture(u.textureTarget, u.textureName);
+			device->SetUniformInt(u.uniformLocation, usedTextures);
+			++usedTextures;
+			break;
+
+		default:
+			break;
+		}
+	}
+}
+
+void Renderer::BindLightingTextures(const ShaderData& shader) const
+{
+	static const unsigned int textureUniformCount = 5;
+	static const uint32_t uniformNameHashes[textureUniformCount] = {
+		"g_alb_spec"_hash,
+		"g_norm"_hash,
+		"g_emissive"_hash,
+		"g_depth"_hash,
+		"shd_smp"_hash
+	};
+
+	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
+	const unsigned int textureObjectNames[textureUniformCount] = {
+		gbuffer.textures[AlbedoSpecTextureIdx],
+		gbuffer.textures[NormalTextureIdx],
+		gbuffer.textures[EmissiveTextureIdx],
+		gbuffer.textures[DepthTextureIdx],
+		framebufferData[FramebufferIndexShadow].textures[0]
+	};
+
+	for (unsigned int i = 0; i < textureUniformCount; ++i)
+	{
+		const TextureUniform* tu = shader.FindTextureUniformFromNameHash(uniformNameHashes[i]);
+		if (tu != nullptr)
+		{
+			device->SetUniformInt(tu->uniformLocation, i);
+			device->SetActiveTextureUnit(i);
+			device->BindTexture(RenderTextureTarget::Texture2d, textureObjectNames[i]);
+		}
+	}
+}
+
+void Renderer::UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const ProjectionParameters& projection)
+{
+	const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
+	using LightingBlock = UniformBuffer::LightingBlock;
+
+	// Update directional light viewports
+	Array<LightId>& directionalLights = lightResultArray;
+	lightManager->GetDirectionalLights(directionalLights);
+
+	Vec2f halfNearPlane;
+	halfNearPlane.y = std::tan(projection.height * 0.5f);
+	halfNearPlane.x = halfNearPlane.y * projection.aspect;
+	LightingBlock::halfNearPlane.Set(toBuffer, halfNearPlane);
+
+	// Set the perspective matrix
+	LightingBlock::perspectiveMatrix.Set(toBuffer, fsvp.projection);
+
+	// Directional light
+	if (directionalLights.GetCount() > 0)
+	{
+		LightId dirLightId = directionalLights[0];
+
+		Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
+		Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
+		Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
+		LightingBlock::lightDirections.SetOne(toBuffer, 0, vLightDir);
+
+		Vec3f lightCol = lightManager->GetColor(dirLightId);
+		LightingBlock::lightColors.SetOne(toBuffer, 0, lightCol);
+	}
+
+	char uniformNameBuf[32];
+
+	lightResultArray.Clear();
+	Array<LightId>& nonDirLights = lightResultArray;
+	lightManager->GetNonDirectionalLightsWithinFrustum(fsvp.frustum, nonDirLights);
+
+	// Count the different light types
+
+	unsigned int pointLightCount = 0;
+	unsigned int spotLightCount = 0;
+
+	for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
+	{
+		LightType type = lightManager->GetLightType(nonDirLights[lightIdx]);
+		if (type == LightType::Point)
+			pointLightCount += 1;
+		else if (type == LightType::Spot)
+			spotLightCount += 1;
+	}
+
+	LightingBlock::pointLightCount.Set(toBuffer, pointLightCount);
+	LightingBlock::spotLightCount.Set(toBuffer, spotLightCount);
+
+	const unsigned int dirLightOffset = 1;
+	unsigned int pointLightsAdded = 0;
+	unsigned int spotLightsAdded = 0;
+
+	// Light other visible lights
+	for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
+	{
+		unsigned int shaderLightIdx;
+
+		LightId lightId = nonDirLights[lightIdx];
+
+		// Point lights come first, so offset spot lights with the amount of point lights
+		LightType type = lightManager->GetLightType(lightId);
+		if (type == LightType::Spot)
+		{
+			shaderLightIdx = dirLightOffset + pointLightCount + spotLightsAdded;
+			spotLightsAdded += 1;
+
+			Mat3x3f orientation = lightManager->GetOrientation(lightId);
+			Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
+			Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
+			LightingBlock::lightDirections.SetOne(toBuffer, shaderLightIdx, vLightDir);
+
+			float spotAngle = lightManager->GetSpotAngle(lightId);
+			LightingBlock::lightAngles.SetOne(toBuffer, shaderLightIdx, spotAngle);
+		}
+		else
+		{
+			shaderLightIdx = dirLightOffset + pointLightsAdded;
+			pointLightsAdded += 1;
+		}
+
+		Vec3f wLightPos = lightManager->GetPosition(lightId);
+		Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
+		LightingBlock::lightPositions.SetOne(toBuffer, shaderLightIdx, vLightPos);
+
+		Vec3f lightCol = lightManager->GetColor(lightId);
+		LightingBlock::lightColors.SetOne(toBuffer, shaderLightIdx, lightCol);
+	}
+
+	lightResultArray.Clear();
+
+	// shadow_params.splits[0] is the near depth
+	LightingBlock::shadowSplits.SetOne(toBuffer, 0, projection.near);
+
+	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
+	LightingBlock::cascadeCount.Set(toBuffer, shadowCascadeCount);
+
+	float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
+	CascadedShadowMap::CalculateSplitDepths(projection, cascadeSplitDepths);
+
+	Mat4x4f bias;
+	bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
+	bias[4] = 0.0; bias[5] = 0.5; bias[6] = 0.0; bias[7] = 0.0;
+	bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
+	bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
+
+	// Update transforms and split depths for each shadow cascade
+	for (size_t vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
+	{
+		Mat4x4f viewToLight = viewportData[vpIdx].viewProjection * fsvp.viewToWorld;
+		Mat4x4f shadowMat = bias * viewToLight;
+
+		LightingBlock::shadowMatrices.SetOne(toBuffer, vpIdx, shadowMat);
+		LightingBlock::shadowSplits.SetOne(toBuffer, vpIdx + 1, cascadeSplitDepths[vpIdx]);
+	}
 }
 
 bool Renderer::ParseControlCommand(uint64_t orderKey)
@@ -890,7 +894,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 				vp.forward = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 				vp.farMinusNear = lightProjections[cascade].far - lightProjections[cascade].near;
 				vp.minusNear = -lightProjections[cascade].near;
-				vp.view = cascadeViewTransforms[cascade].GetInverse();
+				vp.viewToWorld = cascadeViewTransforms[cascade];
+				vp.view = vp.viewToWorld.GetInverse();
 				vp.projection = lightProjections[cascade].GetProjectionMatrix();
 				vp.viewProjection = vp.projection * vp.view;
 				vp.viewportRectangle.size = shadowCascadeSize;
@@ -924,7 +929,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 		vp.forward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 		vp.farMinusNear = renderCamera->parameters.far - renderCamera->parameters.near;
 		vp.minusNear = -renderCamera->parameters.near;
-		vp.view = Camera::GetViewMatrix(cameraTransform);
+		vp.viewToWorld = cameraTransform;
+		vp.view = Camera::GetViewMatrix(vp.viewToWorld);
 		vp.projection = projectionParams.GetProjectionMatrix();
 		vp.viewportRectangle.size = Vec2i(fb.width, fb.height);
 		vp.viewportRectangle.position = Vec2i(0, 0);

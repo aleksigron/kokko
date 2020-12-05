@@ -32,6 +32,9 @@ class Window;
 struct BoundingBox;
 struct RendererFramebuffer;
 struct RendererViewport;
+struct MaterialData;
+struct ShaderData;
+struct ProjectionParameters;
 
 class Renderer : public ITransformUpdateReceiver
 {
@@ -95,6 +98,10 @@ private:
 	Entity skyboxEntity;
 
 	void ReallocateRenderObjects(unsigned int required);
+
+	void BindMaterialTextures(const MaterialData& material) const;
+	void BindLightingTextures(const ShaderData& shader) const;
+	void UpdateLightingDataToUniformBuffer(unsigned char* toBuffer, const ProjectionParameters& projection);
 
 	void PopulateCommandList(Scene* scene);
 
