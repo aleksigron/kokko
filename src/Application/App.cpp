@@ -72,7 +72,7 @@ void App::Initialize()
 		mainCamera.parameters.projection = ProjectionType::Perspective;
 		mainCamera.parameters.near = 0.1f;
 		mainCamera.parameters.far = 100.0f;
-		mainCamera.parameters.height = Math::DegreesToRadians(45.0f);
+		mainCamera.parameters.height = Math::DegreesToRadians(60.0f);
 		mainCamera.parameters.SetAspectRatio(frameSize.x, frameSize.y);
 	}
 

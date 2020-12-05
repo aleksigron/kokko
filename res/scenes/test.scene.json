@@ -1,5 +1,5 @@
 {
-	"skybox-material": "res/materials/skybox/storm_clouds.material.json",
+	"skybox-material": "res/materials/skybox/sky_noon.material.json",
 	"objects": [
 		{
 			"rotation": [

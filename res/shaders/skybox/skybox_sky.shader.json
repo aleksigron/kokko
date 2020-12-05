@@ -1,0 +1,15 @@
+{
+	"vs": {
+		"main": "res/shaders/skybox/skybox_sky.vert.glsl",
+		"includes": [ "res/shaders/common/transform_block.glsl" ]
+	},
+	"fs": {
+		"main": "res/shaders/skybox/skybox_sky.frag.glsl"
+	},
+	"transparencyType": "skybox",
+	"properties": [
+		{ "name": "color_zenith", "type": "vec3" },
+		{ "name": "color_horizon", "type": "vec3" },
+		{ "name": "color_below_horizon", "type": "vec3" }
+	]
+}
