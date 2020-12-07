@@ -821,6 +821,14 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 			device->BindFramebuffer(bind);
 		}
 			break;
+
+		case RenderControlType::FramebufferSrgbEnable:
+			device->FramebufferSrgbEnable();
+			break;
+
+		case RenderControlType::FramebufferSrgbDisable:
+			device->FramebufferSrgbDisable();
+			break;
 	}
 
 	return true;
@@ -1028,6 +1036,9 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 		commandList.AddControl(vpIdx, g_pass, 10, ctrl::Viewport, sizeof(data), &data);
 	}
+
+	// Enable sRGB conversion for framebuffer
+	commandList.AddControl(0, g_pass, 11, ctrl::FramebufferSrgbEnable);
 
 	// Before fullscreen viewport
 

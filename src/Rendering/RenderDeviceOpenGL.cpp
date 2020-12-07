@@ -292,6 +292,16 @@ void RenderDeviceOpenGL::CullFaceBack()
 
 // FRAMEBUFFER
 
+void RenderDeviceOpenGL::FramebufferSrgbEnable()
+{
+	glEnable(GL_FRAMEBUFFER_SRGB);
+}
+
+void RenderDeviceOpenGL::FramebufferSrgbDisable()
+{
+	glDisable(GL_FRAMEBUFFER_SRGB);
+}
+
 void RenderDeviceOpenGL::CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut)
 {
 	glGenFramebuffers(count, framebuffersOut);

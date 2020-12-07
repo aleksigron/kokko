@@ -44,6 +44,6 @@ enum class RenderControlType
 	// Data: target, framebuffer ID
 	BindFramebuffer,
 
-	// Data: s_x0, s_y0, s_x1, s_y1, d_x0, d_y0, d_x1, d_y1, mask, filter
-	BlitFramebuffer
+	FramebufferSrgbEnable,
+	FramebufferSrgbDisable,
 };

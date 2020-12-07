@@ -33,6 +33,9 @@ public:
 	virtual void CullFaceFront() = 0;
 	virtual void CullFaceBack() = 0;
 
+	virtual void FramebufferSrgbEnable() = 0;
+	virtual void FramebufferSrgbDisable() = 0;
+
 	virtual void CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut) = 0;
 	virtual void DestroyFramebuffers(unsigned int count, unsigned int* framebuffers) = 0;
 	virtual void BindFramebuffer(const RenderCommandData::BindFramebufferData* data) = 0;

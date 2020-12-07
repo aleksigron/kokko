@@ -30,6 +30,9 @@ public:
 	virtual void CullFaceFront() override;
 	virtual void CullFaceBack() override;
 
+	virtual void FramebufferSrgbEnable() override;
+	virtual void FramebufferSrgbDisable() override;
+
 	virtual void CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut) override;
 	virtual void DestroyFramebuffers(unsigned int count, unsigned int* framebuffers) override;
 	virtual void BindFramebuffer(const RenderCommandData::BindFramebufferData* data) override;
