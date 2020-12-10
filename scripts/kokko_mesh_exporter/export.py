@@ -81,12 +81,6 @@ def write(context, filepath, options):
     cell_count = axis_cells[0] * axis_cells[1] * axis_cells[2]
     cell_vertices = [[] for c in range(cell_count)]
 
-    def get_cell_index(pos):
-        x_idx = math.floor((pos[0] + 1e-4 - bounds.min[0]) / (bounds.size[0] + 2e-4) * axis_cells[0])
-        y_idx = math.floor((pos[1] + 1e-4 - bounds.min[1]) / (bounds.size[1] + 2e-4) * axis_cells[1])
-        z_idx = math.floor((pos[2] + 1e-4 - bounds.min[2]) / (bounds.size[2] + 2e-4) * axis_cells[2])
-        return x_idx * axis_cells[2] * axis_cells[1] + y_idx * axis_cells[2] + z_idx
-
     bounding_box_array = array('f')
     bounding_box_array.extend(bounds.center)
     bounding_box_array.extend(bounds.extents)
@@ -130,6 +124,10 @@ def write(context, filepath, options):
         mesh_data.calc_tangents()
 
     time_1 = time.time()
+    
+    x_inv_divisor = 1 / (bounds.size[0] * axis_cells[0]) if bounds.size[0] > 0 else 0
+    y_inv_divisor = 1 / (bounds.size[1] * axis_cells[1]) if bounds.size[1] > 0 else 0
+    z_inv_divisor = 1 / (bounds.size[2] * axis_cells[2]) if bounds.size[2] > 0 else 0
 
     for poly in mesh_data.polygons: # For each triangle in mesh
         for loop_idx in poly.loop_indices: # For each corner in triangle
@@ -149,7 +147,13 @@ def write(context, filepath, options):
             if save_tex_coord:
                 this_vert.uv0 = mesh_data.uv_layers.active.data[loop_idx].uv
 
-            cell_index = get_cell_index(this_vert.pos)
+            x_idx = math.floor((this_vert.pos[0] - bounds.min[0]) * x_inv_divisor)
+            x_idx = axis_cells[0] - 1 if x_idx >= axis_cells[0] else (0 if x_idx < 0 else x_idx)
+            y_idx = math.floor((this_vert.pos[1] - bounds.min[1]) * y_inv_divisor)
+            y_idx = axis_cells[1] - 1 if y_idx >= axis_cells[1] else (0 if y_idx < 0 else y_idx)
+            z_idx = math.floor((this_vert.pos[2] - bounds.min[2]) * z_inv_divisor)
+            z_idx = axis_cells[2] - 1 if z_idx >= axis_cells[2] else (0 if z_idx < 0 else z_idx)
+            cell_index = x_idx * axis_cells[2] * axis_cells[1] + y_idx * axis_cells[2] + z_idx
             cell = cell_vertices[cell_index]
             # Try to find an identical vertex
             vert_idx = -1
