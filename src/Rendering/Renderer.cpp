@@ -162,7 +162,7 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(RenderTextureTarget::Texture2d, asTexture);
 
 		RenderCommandData::SetTextureImage2D asTextureImage{
-			RenderTextureTarget::Texture2d, 0, GL_RGBA, gbuffer.width, gbuffer.height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+			RenderTextureTarget::Texture2d, 0, GL_SRGB8_ALPHA8, gbuffer.width, gbuffer.height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
 		};
 		device->SetTextureImage2D(&asTextureImage);
 
