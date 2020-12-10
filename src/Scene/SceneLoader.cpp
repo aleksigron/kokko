@@ -160,12 +160,12 @@ void SceneLoader::CreateComponents(ValueItr itr, ValueItr end, Entity entity)
 					break;
 
 				default:
-					Log::Info("[SceneLoader] Unknown component type");
+					Log::Error("SceneLoader: Unknown component type");
 					break;
 				}
 			}
 			else
-				Log::Info("[SceneLoader] Invalid component type");
+				Log::Error("SceneLoader: Invalid component type");
 		}
 	}
 }
@@ -204,7 +204,7 @@ void SceneLoader::CreateLight(ValueItr itr, Entity entity)
 	MemberItr typeItr = itr->FindMember("lightType");
 	if (typeItr == itr->MemberEnd() || typeItr->value.IsString() == false)
 	{
-		Log::Info("[SceneLoader] Invalid light type");
+		Log::Error("SceneLoader: Invalid light type");
 		return;	
 	}
 
@@ -226,7 +226,7 @@ void SceneLoader::CreateLight(ValueItr itr, Entity entity)
 		break;
 
 	default:
-		Log::Info("[SceneLoader] Unknown light type");
+		Log::Error("SceneLoader: Unknown light type");
 		return;
 	}
 

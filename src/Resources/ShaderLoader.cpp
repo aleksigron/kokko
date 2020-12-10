@@ -36,7 +36,7 @@ static bool LoadIncludes(
 {
 	if (value.IsArray() == false)
 	{
-		Log::Info("Error: LoadIncludes() value is not an array");
+		Log::Error("LoadIncludes: value is not an array");
 		return false;
 	}
 
@@ -64,11 +64,11 @@ static bool LoadIncludes(
 					file->second = str;
 				}
 				else
-					Log::Info("Error: shader include couldn't be read from file");
+					Log::Error("Shader include couldn't be read from file");
 			}
 		}
 		else
-			Log::Info("Error: shader include isn't a string");
+			Log::Error("Shader include isn't a string");
 	}
 
 	return true;
@@ -90,7 +90,7 @@ static bool ProcessSource(
 	{
 		if (includePaths->IsArray() == false)
 		{
-			Log::Info("Error: ProcessSource() includePaths->value is not an array");
+			Log::Error("ProcessSource: includePaths->value is not an array");
 			return false;
 		}
 
@@ -101,7 +101,7 @@ static bool ProcessSource(
 
 			if (file == nullptr)
 			{
-				Log::Info("Error: ProcessSource() include file source not found from includeFiles map");
+				Log::Error("ProcessSource: include file source not found from includeFiles map");
 				return false;
 			}
 
@@ -113,7 +113,7 @@ static bool ProcessSource(
 
 	if (File::ReadText(mainPath, mainFile) == false)
 	{
-		Log::Info("Error: ProcessSource() failed to read main shader file");
+		Log::Error("ProcessSource: failed to read main shader file");
 		return false;
 	}
 
@@ -416,7 +416,7 @@ static bool CompileAndLink(
 
 	if (Compile(shaderOut, allocator, renderDevice, RenderShaderStage::VertexShader, vertSource, vertexShader) == false)
 	{
-		assert(false);
+		Log::Error("Compilation of vertex shader failed");
 		return false;
 	}
 
@@ -427,7 +427,7 @@ static bool CompileAndLink(
 		// Release already compiled vertex shader
 		renderDevice->DestroyShaderStage(vertexShader);
 
-		assert(false);
+		Log::Error("Compilation of fragment shader failed");
 		return false;
 	}
 
@@ -464,10 +464,10 @@ static bool CompileAndLink(
 			// Get info log
 			renderDevice->GetShaderProgramInfoLog(programId, infoLogLength, infoLog.Begin());
 
-			Log::Info(infoLog.GetCStr(), infoLog.GetLength());
+			Log::Error(infoLog.GetCStr(), infoLog.GetLength());
 		}
 
-		assert(false);
+		Log::Error("Linking of shader program failed");
 		return false;
 	}
 }
@@ -580,7 +580,7 @@ bool ShaderLoader::LoadFromConfiguration(
 					if (sizeItr != uItr->MemberEnd() && sizeItr->value.IsInt())
 						uniform.arraySize = sizeItr->value.GetInt();
 					else
-						Log::Info("Failed to parse shader array uniform because JSON didn't contain size");
+						Log::Error("Failed to parse shader array uniform because JSON didn't contain size");
 				}
 
 				uniformCount += 1;

@@ -5,9 +5,10 @@
 #include "Core/String.hpp"
 #include "Debug/DebugConsole.hpp"
 
-DebugLog::DebugLog(DebugConsole* console) :
+DebugLog::DebugLog(Allocator* allocator, DebugConsole* console) :
 	fileHandle(nullptr),
-	console(console)
+	console(console),
+	formatBuffer(allocator)
 {
 
 }
@@ -38,33 +39,55 @@ bool DebugLog::OpenLogFile(const char* filePath, bool append)
 	return false;
 }
 
-void DebugLog::Log(const char* text)
+void DebugLog::Log(const char* text, LogLevel level)
 {
-	this->Log(StringRef(text));
+	this->Log(StringRef(text), level);
 }
 
-void DebugLog::Log(const String& text)
+void DebugLog::Log(const String& text, LogLevel level)
 {
-	this->Log(text.GetRef());
+	this->Log(text.GetRef(), level);
 }
 
-void DebugLog::Log(StringRef text)
+void DebugLog::Log(StringRef text, LogLevel level)
 {
-	FILE* file = static_cast<FILE*>(fileHandle);
+	static const size_t levelStringLength = 10;
+	static const char const levelStrings[][levelStringLength] =
+	{
+		"[VERBOSE]",
+		"[INFO   ]",
+		"[WARNING]",
+		"[ERROR  ]"
+	};
+
+	const char* levelStr = levelStrings[static_cast<size_t>(level)];
+	formatBuffer.Resize(levelStringLength + text.len + 2);
+
+	char* buffer = formatBuffer.GetData();
+	std::memcpy(buffer, levelStr, levelStringLength - 1);
+	buffer[levelStringLength - 1] = ' ';
+	std::memcpy(buffer + levelStringLength, text.str, text.len);
+	buffer[levelStringLength + text.len] = '\0';
+
+	// Add to debug log view without newline
+	console->AddLogEntry(StringRef(buffer, levelStringLength + text.len), level);
+
+	// Add newline
+	buffer[levelStringLength + text.len] = '\n';
+	buffer[levelStringLength + text.len + 1] = '\0';
+
+	size_t totalLength = levelStringLength + text.len + 1;
 
 	if (fileHandle != nullptr)
 	{
+		FILE* file = static_cast<FILE*>(fileHandle);
+
 		// Write to log file
-		std::fwrite(text.str, 1, text.len, file);
-		std::fwrite("\n", 1, 1, file);
+		std::fwrite(buffer, 1, totalLength, file);
 	}
 
 	// Write to standard output (console)
-	std::fwrite(text.str, 1, text.len, stdout);
-	std::fwrite("\n", 1, 1, stdout);
-
-	// Add debug log view
-	console->AddLogEntry(text);
+	std::fwrite(buffer, 1, totalLength, stdout);
 }
 
 void DebugLog::FlushFileWrites()

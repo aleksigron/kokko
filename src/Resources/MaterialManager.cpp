@@ -338,7 +338,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 							array4x4.Clear();
 						}
 						else
-							Log::Info("Failed to read uniform Mat4x4Array, because JSON value was not array.");
+							Log::Error("Failed to read uniform Mat4x4Array, because JSON value was not array.");
 
 						break;
 					}
@@ -362,7 +362,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 							array3x3.Clear();
 						}
 						else
-							Log::Info("Failed to read uniform Mat3x3Array, because JSON value was not array.");
+							Log::Error("Failed to read uniform Mat3x3Array, because JSON value was not array.");
 
 						break;
 					}
@@ -386,7 +386,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 							array4.Clear();
 						}
 						else
-							Log::Info("Failed to read uniform Vec4Array, because JSON value was not array.");
+							Log::Error("Failed to read uniform Vec4Array, because JSON value was not array.");
 
 						break;
 					}
@@ -410,7 +410,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 							array3.Clear();
 						}
 						else
-							Log::Info("Failed to read uniform Vec3Array, because JSON value was not array.");
+							Log::Error("Failed to read uniform Vec3Array, because JSON value was not array.");
 
 						break;
 					}
@@ -434,7 +434,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 							array2.Clear();
 						}
 						else
-							Log::Info("Failed to read uniform Vec2Array, because JSON value was not array.");
+							Log::Error("Failed to read uniform Vec2Array, because JSON value was not array.");
 
 						break;
 					}
@@ -458,7 +458,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 							arrayf.Clear();
 						}
 						else
-							Log::Info("Failed to read uniform FloatArray, because JSON value was not array.");
+							Log::Error("Failed to read uniform FloatArray, because JSON value was not array.");
 
 						break;
 					}
@@ -482,7 +482,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 							arrayi.Clear();
 						}
 						else
-							Log::Info("Failed to read uniform IntArray, because JSON value was not array.");
+							Log::Error("Failed to read uniform IntArray, because JSON value was not array.");
 
 						break;
 					}

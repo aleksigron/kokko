@@ -2,17 +2,20 @@
 
 #include <cstring>
 
-#include "Engine/Engine.hpp"
-#include "System/Time.hpp"
+#include "Core/EncodingUtf8.hpp"
 
-#include "System/Window.hpp"
+#include "Debug/DebugTextRenderer.hpp"
+#include "Debug/DebugVectorRenderer.hpp"
+
+#include "Engine/Engine.hpp"
+
+#include "Resources/BitmapFont.hpp"
+
 #include "System/InputManager.hpp"
 #include "System/KeyboardInputView.hpp"
 #include "System/TextInput.hpp"
-#include "Core/EncodingUtf8.hpp"
-#include "Resources/BitmapFont.hpp"
-#include "Debug/DebugTextRenderer.hpp"
-#include "Debug/DebugVectorRenderer.hpp"
+#include "System/Time.hpp"
+#include "System/Window.hpp"
 
 DebugConsole::DebugConsole(
 	Allocator* allocator,
@@ -26,6 +29,8 @@ DebugConsole::DebugConsole(
 	stringDataFirst(0),
 	stringDataUsed(0),
 	stringDataAllocated(0),
+	totalWarningCount(0),
+	totalErrorCount(0),
 	inputValue(allocator),
 	lastTextInputTime(0)
 {
@@ -57,7 +62,7 @@ void DebugConsole::SetDrawArea(const Rectanglef& area)
 	this->drawArea = area;
 }
 
-void DebugConsole::AddLogEntry(StringRef text)
+void DebugConsole::AddLogEntry(StringRef text, LogLevel level)
 {
 	const BitmapFont* font = textRenderer->GetFont();
 
@@ -86,6 +91,12 @@ void DebugConsole::AddLogEntry(StringRef text)
 	newEntry.text = StringRef();
 	newEntry.rows = textRenderer->GetRowCountForTextLength(charCount);
 	newEntry.lengthWithPad = 0;
+	newEntry.level = level;
+
+	if (level == LogLevel::Warning)
+		totalWarningCount += 1;
+	else if (level == LogLevel::Error)
+		totalErrorCount += 1;
 
 	int currentRows = 0;
 

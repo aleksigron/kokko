@@ -41,7 +41,7 @@ Debug::Debug(
 	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
 	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
 	console = allocator->MakeNew<DebugConsole>(allocator, textRenderer, vectorRenderer);
-	log = allocator->MakeNew<DebugLog>(console);
+	log = allocator->MakeNew<DebugLog>(allocator, console);
 
 	// Set up log instance in LogHelper
 	Log::SetLogInstance(log);
@@ -209,10 +209,41 @@ void Debug::Render(Scene* scene)
 		nextFrameRateUpdate = now + 0.15;
 	}
 
+	unsigned int errs = console->GetTotalErrorCount();
+	unsigned int wrns = console->GetTotalWarningCount();
+
+	const BitmapFont* font = textRenderer->GetFont();
+	int glyphWidth = font->GetGlyphWidth();
+	int lineHeight = font->GetLineHeight();
+
+	if (errs > 0)
+	{
+		Rectanglef rect;
+		rect.position.x = 1.0f;
+		rect.position.y = 0.0f;
+		rect.size.x = static_cast<float>(6 * glyphWidth) - 1.0f;
+		rect.size.y = static_cast<float>(lineHeight);
+
+		Color red(1.0f, 0.0f, 0.0f);
+		vectorRenderer->DrawRectangleScreen(rect, red);
+	}
+
+	if (wrns > 0)
+	{
+		Rectanglef rect;
+		rect.position.x = static_cast<float>(7 * glyphWidth) + 1.0f;
+		rect.position.y = 0.0f;
+		rect.size.x = static_cast<float>(6 * glyphWidth) - 1.0f;
+		rect.size.y = static_cast<float>(lineHeight);
+
+		Color yellow(1.0f, 1.0f, 0.0f);
+		vectorRenderer->DrawRectangleScreen(rect, yellow);
+	}
+
 	// Draw debug mode guide
 	char buffer[128];
-	const char* format = "Debug: [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F8]Vsync: %c, %.1f fps";
-	std::snprintf(buffer, sizeof(buffer), format, logChar, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
+	const char* format = "E: %-3u W: %-3u [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F8]Vsync: %c, %.1f fps";
+	std::snprintf(buffer, sizeof(buffer), format, errs, wrns, logChar, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f));
 
 	// Add frame time to debug graph

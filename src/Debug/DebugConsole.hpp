@@ -3,7 +3,11 @@
 #include "Core/Queue.hpp"
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
+
+#include "Debug/LogLevel.hpp"
+
 #include "Math/Rectangle.hpp"
+
 #include "System/TextInputHandler.hpp"
 
 class Allocator;
@@ -19,6 +23,7 @@ private:
 		StringRef text;
 		unsigned lengthWithPad;
 		int rows;
+		LogLevel level;
 	};
 
 	Allocator* allocator;
@@ -35,6 +40,9 @@ private:
 	unsigned int stringDataUsed;
 	unsigned int stringDataAllocated;
 
+	unsigned int totalWarningCount;
+	unsigned int totalErrorCount;
+
 	String inputValue;
 	double lastTextInputTime;
 
@@ -49,9 +57,12 @@ public:
 	void RequestFocus();
 	void ReleaseFocus();
 
+	unsigned int GetTotalWarningCount() const { return totalWarningCount; }
+	unsigned int GetTotalErrorCount() const { return totalErrorCount; }
+
 	void SetDrawArea(const Rectanglef& area);
 
-	void AddLogEntry(StringRef text);
+	void AddLogEntry(StringRef text, LogLevel level = LogLevel::Info);
 
 	void UpdateAndDraw();
 };
