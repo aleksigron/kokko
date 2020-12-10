@@ -1,11 +1,44 @@
 {
 	"skybox-material": "res/materials/skybox/sky_noon.material.json",
-	"ambient-color": [ 0.16, 0.20, 0.24 ],
+	"ambient-color": [ 0.02, 0.025, 0.03 ],
 	"objects": [
 		{
+			"position": [
+				0,
+				0,
+				0
+			],
+			"scale": [
+				4,
+				4,
+				4
+			],
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/simple_plane.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			]
+		},
+		{
+			"position": [
+				0,
+				0.5,
+				0
+			],
+			"components": [
+				{
+					"type": "renderObject",
+					"mesh": "res/models/simple_cube.mesh",
+					"material": "res/materials/deferred_geometry/flat_white.material.json"
+				}
+			]
+		},
+		{
 			"rotation": [
-				-40,
-				15,
+				-60,
+				30,
 				0
 			],
 			"components": [
@@ -15,44 +48,16 @@
 					"shadowCasting": true,
 					"distance": 100,
 					"color": [
-						0.85,
-						0.82,
-						0.8
+						0.5,
+						0.5,
+						0.5
 					]
 				}
 			]
 		},
 		{
 			"position": [
-				0,
-				0,
-				0
-			],
-			"components": [
-				{
-					"type": "renderObject",
-					"mesh": "res/models/ground_plane.mesh",
-					"material": "res/materials/deferred_geometry/wood_floor.material.json"
-				}
-			]
-		},
-		{
-			"position": [
-				0,
-				0,
-				0
-			],
-			"components": [
-				{
-					"type": "renderObject",
-					"mesh": "res/models/ibex_statue.mesh",
-					"material": "res/materials/deferred_geometry/ibex_statue.material.json"
-				}
-			]
-		},
-		{
-			"position": [
-				-2.5,
+				-2,
 				1,
 				0
 			],
@@ -62,9 +67,9 @@
 					"lightType": "point",
 					"radius": 10,
 					"color": [
-						2.6,
-						2,
-						1.5
+						0.7,
+						0.6,
+						0.5
 					]
 				}
 			]
@@ -73,7 +78,7 @@
 			"position": [
 				0,
 				1,
-				-2.5
+				-2
 			],
 			"components": [
 				{
@@ -81,28 +86,9 @@
 					"lightType": "point",
 					"radius": 10,
 					"color": [
-						2,
-						2,
-						2
-					]
-				}
-			]
-		},
-		{
-			"position": [
-				2,
-				1,
-				0
-			],
-			"components": [
-				{
-					"type": "light",
-					"lightType": "point",
-					"radius": 10,
-					"color": [
-						1.5,
-						2,
-						2.6
+						0.5,
+						0.6,
+						0.7
 					]
 				}
 			]

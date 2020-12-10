@@ -23,7 +23,7 @@ You can find a list of the available generators in the [CMake documentation](htt
 ### Working directory
 You need to set a custom working directory in the IDE when running the project.
 
-In Visual Studio, go to project properties > _Configuration Properties_ > _Debugging_ and set _Working Directory_ to the repository root.
+In Visual Studio, go to project properties > _Configuration Properties_ > _Debugging_ and set _Working Directory_ to the repository root or some other directory where you store the resource files.
 
 ## Features
 
@@ -70,4 +70,4 @@ glraw-cmd --compressed-format GL_COMPRESSED_RGB_S3TC_DXT1_EXT example.jpg
 [Gohufont](https://github.com/hchargois/gohufont) is used for debug text rendering.
 
 ## Assets
-[Ibex statue](https://sketchfab.com/3d-models/ibex-statue-scan-berlin-tierpark-0f274384b28044e3a29fd87e4c765238) by Christian Rambow
+I've stopped storing assets in the code repository. While this makes it harder for people to test out the project, it removes the restrictions on asset sizes and licensing. It will make it easier to develop more advanced features and make sure performance issues don't arise when using more and bigger assets.

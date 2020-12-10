@@ -1,9 +1,0 @@
-{
-	"shader": "res/shaders/deferred_geometry/normal_mapped.shader.json",
-	"variables":
-	[
-		{ "name": "base_color", "value": "res/textures/ibex_statue_d.texture.json" },
-		{ "name": "normal_map", "value": "res/textures/ibex_statue_n.texture.json" },
-		{ "name": "spec_intensity", "value": 0.4 }
-	]
-}

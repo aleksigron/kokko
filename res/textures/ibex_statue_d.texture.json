@@ -1,7 +1,0 @@
-{
-	"type": "tex2d",
-	"min_filter": "linear_mipmap",
-	"mag_filter": "linear",
-	"generate_mipmaps": true,
-	"texture": "res/textures/ibex_statue_d_1024.dxt1.glraw"
-}

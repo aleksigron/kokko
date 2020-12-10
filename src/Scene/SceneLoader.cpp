@@ -104,6 +104,13 @@ void SceneLoader::CreateSceneObject(ValueItr itr, SceneObjectId sceneObject)
 {
 	Mat4x4f transform;
 
+	rapidjson::Value::ConstMemberIterator scaleItr = itr->FindMember("scale");
+	if (scaleItr != itr->MemberEnd())
+	{
+		Vec3f scale = ValueSerialization::Deserialize_Vec3f(scaleItr->value);
+		transform = Mat4x4f::Scale(scale) * transform;
+	}
+
 	rapidjson::Value::ConstMemberIterator rotItr = itr->FindMember("rotation");
 	if (rotItr != itr->MemberEnd())
 	{
