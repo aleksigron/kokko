@@ -1,3 +1,6 @@
 [submodule "deps/glfw"]
 	path = deps/glfw
 	url = https://github.com/glfw/glfw
+[submodule "deps/ktx"]
+	path = deps/ktx
+	url = https://github.com/KhronosGroup/KTX-Software

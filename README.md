@@ -62,10 +62,7 @@ The motivation behind using a custom format is to better understand the content 
 
 [Glad](https://github.com/Dav1dde/glad) is used to load the OpenGL profile and extensions.
 
-[glraw](https://github.com/cginternals/glraw) is used to process textures to a runtime-friendly format. Example command to convert image to compressed texture:
-```
-glraw-cmd --compressed-format GL_COMPRESSED_RGB_S3TC_DXT1_EXT example.jpg
-```
+[KTX](https://github.com/KhronosGroup/KTX-Software) is used to process textures to a runtime-friendly format.
 
 [Gohufont](https://github.com/hchargois/gohufont) is used for debug text rendering.
 

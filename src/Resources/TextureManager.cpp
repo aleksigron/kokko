@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "rapidjson/document.h"
+#include "ktx.h"
 
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
@@ -12,75 +13,7 @@
 #include "Resources/ImageData.hpp"
 
 #include "System/File.hpp"
-
-static RenderTextureFilterMode ParseFilterModeString(const char* str, std::size_t strLen)
-{
-	uint32_t hash = Hash::FNV1a_32(str, strLen);
-
-	switch (hash)
-	{
-	case "nearest"_hash: return RenderTextureFilterMode::Nearest;
-	case "linear"_hash: return RenderTextureFilterMode::Linear;
-	case "linear_mipmap"_hash: return RenderTextureFilterMode::LinearMipmap;
-	default: return RenderTextureFilterMode::Linear;
-	}
-}
-
-static RenderTextureWrapMode ParseWrapModeString(const char* str, std::size_t strLen)
-{
-	uint32_t hash = Hash::FNV1a_32(str, strLen);
-
-	switch (hash)
-	{
-	case "repeat"_hash: return RenderTextureWrapMode::Repeat;
-	case "mirror"_hash: return RenderTextureWrapMode::MirroredRepeat;
-	case "clamp"_hash: return RenderTextureWrapMode::ClampToEdge;
-	default: return RenderTextureWrapMode::Repeat;
-	}
-}
-
-static TextureOptions GetOptionsFromJson(const rapidjson::Value& json)
-{
-	using MemberIterator = rapidjson::Value::ConstMemberIterator;
-
-	TextureOptions opts;
-
-	MemberIterator minfItr = json.FindMember("min_filter");
-	if (minfItr != json.MemberEnd() && minfItr->value.IsString())
-	{
-		opts.minFilter = ParseFilterModeString(
-			minfItr->value.GetString(), minfItr->value.GetStringLength());
-	}
-
-	MemberIterator magfItr = json.FindMember("mag_filter");
-	if (magfItr != json.MemberEnd() && magfItr->value.IsString())
-	{
-		opts.magFilter = ParseFilterModeString(
-			magfItr->value.GetString(), magfItr->value.GetStringLength());
-	}
-
-	MemberIterator wmuItr = json.FindMember("wrap_mode_u");
-	if (wmuItr != json.MemberEnd() && wmuItr->value.IsString())
-	{
-		opts.wrapModeU = ParseWrapModeString(
-			wmuItr->value.GetString(), wmuItr->value.GetStringLength());
-	}
-
-	MemberIterator wmvItr = json.FindMember("wrap_mode_v");
-	if (wmvItr != json.MemberEnd() && wmvItr->value.IsString())
-	{
-		opts.wrapModeV = ParseWrapModeString(
-			wmvItr->value.GetString(), wmvItr->value.GetStringLength());
-	}
-
-	MemberIterator gmmItr = json.FindMember("generate_mipmaps");
-	if (gmmItr != json.MemberEnd() && gmmItr->value.IsBool())
-	{
-		opts.generateMipmaps = gmmItr->value.GetBool();
-	}
-
-	return opts;
-}
+#include "System/IncludeOpenGL.hpp"
 
 TextureManager::TextureManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
@@ -191,131 +124,69 @@ TextureId TextureManager::GetIdByPath(StringRef path)
 	Buffer<char> file(allocator);
 	String pathStr(allocator, path);
 
-	if (File::ReadText(pathStr.GetCStr(), file))
+	TextureId id = CreateTexture();
+
+	if (LoadFromKtxFile(id, pathStr.GetCStr()))
 	{
-		TextureId id = CreateTexture();
+		pair = nameHashMap.Insert(hash);
+		pair->second = id;
 
-		if (LoadFromConfiguration(id, file.GetRef()))
-		{
-			pair = nameHashMap.Insert(hash);
-			pair->second = id;
-
-			return id;
-		}
-		else
-		{
-			RemoveTexture(id);
-		}
+		return id;
 	}
-
-	return TextureId{};
+	else
+	{
+		RemoveTexture(id);
+		return TextureId{};
+	}
 }
 
-bool TextureManager::LoadFromConfiguration(TextureId id, BufferRef<char> configuration)
+bool TextureManager::LoadFromKtxFile(TextureId id, const char* ktxFilePath)
 {
-	TextureData& texture = data.texture[id.i];
+	TextureData& textureData = data.texture[id.i];
 
-	rapidjson::Document config;
-	config.ParseInsitu(configuration.data);
+	ktxTexture* kTexture;
+	KTX_error_code result;
 
-	assert(config.HasMember("type"));
+	result = ktxTexture_CreateFromNamedFile(ktxFilePath, KTX_TEXTURE_CREATE_NO_FLAGS, &kTexture);
 
-	using MemberIterator = rapidjson::Value::ConstMemberIterator;
-	MemberIterator typeItr = config.FindMember("type");
+	assert(result == KTX_SUCCESS);
 
-	assert(typeItr != config.MemberEnd());
-	assert(typeItr->value.IsString());
+	GLuint textureName = 0;
+	GLenum target;
 
-	StringRef typeName;
-	typeName.str = typeItr->value.GetString();
-	typeName.len = typeItr->value.GetStringLength();
-
-	uint32_t typeHash = Hash::FNV1a_32(typeName.str, typeName.len);
-
-	switch (typeHash)
+	if (kTexture->classId == ktxTexture2_c)
 	{
-	case "tex1d"_hash: texture.textureTarget = RenderTextureTarget::Texture1d; break;
-	case "tex2d"_hash: texture.textureTarget = RenderTextureTarget::Texture2d; break;
-	case "texCube"_hash: texture.textureTarget = RenderTextureTarget::TextureCubeMap; break;
-	default:
-		return false;
-	}
+		ktxTexture2* k2Texture = reinterpret_cast<ktxTexture2*>(kTexture);
 
-	MemberIterator textureItr = config.FindMember("texture");
-	assert(textureItr != config.MemberEnd());
-
-	const rapidjson::Value& textureValue = textureItr->value;
-
-	if (texture.textureTarget == RenderTextureTarget::Texture2d)
-	{
-		assert(textureValue.IsString());
-
-		const char* texturePath = textureValue.GetString();
-		Buffer<unsigned char> textureContent(allocator);
-
-		if (File::ReadBinary(texturePath, textureContent))
+		if (ktxTexture2_NeedsTranscoding(k2Texture))
 		{
-			ImageData image;
-			if (image.LoadGlraw(textureContent.GetRef()))
-			{
-				TextureOptions opts = GetOptionsFromJson(config);
+			ktx_texture_transcode_fmt_e tf = KTX_TTF_BC1_OR_3;
 
-				Upload_2D(id, image, opts);
-
-				return true;
-			}
-		}
-	}
-	else if (texture.textureTarget == RenderTextureTarget::TextureCubeMap)
-	{
-		assert(textureValue.IsArray());
-		assert(textureValue.Size() == 6);
-
-		bool allTextureLoadsSucceeded = true;
-		Buffer<unsigned char> fileContents[6] =
-		{
-			Buffer<unsigned char>(allocator),
-			Buffer<unsigned char>(allocator),
-			Buffer<unsigned char>(allocator),
-			Buffer<unsigned char>(allocator),
-			Buffer<unsigned char>(allocator),
-			Buffer<unsigned char>(allocator)
-		};
-
-		ImageData cubeFaceImages[6];
-
-		for (unsigned int i = 0, count = textureValue.Size(); i < count; ++i)
-		{
-			assert(textureValue[i].IsString());
-
-			const char* texturePath = textureValue[i].GetString();
-
-			if (File::ReadBinary(texturePath, fileContents[i]))
-			{
-				ImageData& image = cubeFaceImages[i];
-
-				if (image.LoadGlraw(fileContents[i].GetRef()) == false)
-				{
-					allTextureLoadsSucceeded = false;
-				}
-			}
-			else
-			{
-				allTextureLoadsSucceeded = false;
-			}
-		}
-
-		if (allTextureLoadsSucceeded)
-		{
-			TextureOptions opts = GetOptionsFromJson(config);
-
-			Upload_Cube(id, cubeFaceImages, opts);
-
-			return true;
+			result = ktxTexture2_TranscodeBasis(k2Texture, tf, 0);
+			assert(result == KTX_SUCCESS);
 		}
 	}
 
-	return false;
+
+	result = ktxTexture_GLUpload(kTexture, &textureName, &target, nullptr);
+
+	assert(result == KTX_SUCCESS);
+
+	ktxTexture_Destroy(kTexture);
+
+	textureData.textureObjectId = textureName;
+
+	switch (target)
+	{
+	case GL_TEXTURE_1D: textureData.textureTarget = RenderTextureTarget::Texture1d;
+	case GL_TEXTURE_2D: textureData.textureTarget = RenderTextureTarget::Texture2d;
+	case GL_TEXTURE_3D: textureData.textureTarget = RenderTextureTarget::Texture3d;
+	case GL_TEXTURE_1D_ARRAY: textureData.textureTarget = RenderTextureTarget::Texture1dArray;
+	case GL_TEXTURE_2D_ARRAY: textureData.textureTarget = RenderTextureTarget::Texture2dArray;
+	case GL_TEXTURE_CUBE_MAP: textureData.textureTarget = RenderTextureTarget::TextureCubeMap;
+	}
+
+	return true;
 }
 
 

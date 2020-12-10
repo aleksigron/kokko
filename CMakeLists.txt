@@ -185,7 +185,14 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(deps/glfw)
 
+set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "" FORCE)
+set(KTX_FEATURE_TESTS OFF CACHE BOOL "" FORCE)
+set(KTX_FEATURE_TOOLS OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(deps/ktx)
+
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${EXECUTABLE_NAME} glfw)
+target_link_libraries(${EXECUTABLE_NAME} ktx_read)
 target_link_libraries(${EXECUTABLE_NAME} OpenGL::GL)
