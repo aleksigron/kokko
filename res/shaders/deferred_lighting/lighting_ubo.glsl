@@ -3,20 +3,22 @@ const int MaxCascadeCount = 4;
 
 layout(std140, binding = 0) uniform Lighting
 {
-	int point_count;
-	int spot_count;
-	int shd_casc_count;
-
-    vec2 half_near_plane;
-
-	mat4x4 pers_mat;
-	
 	vec3 light_col[MaxLightCount];
 	vec3 light_pos[MaxLightCount];
-	vec3 light_dir[MaxLightCount];
-	float light_angle[MaxLightCount];
+	vec4 light_dir[MaxLightCount];
 
-	mat4x4 shd_mat[MaxCascadeCount];
-	float shd_splits[MaxCascadeCount + 1];
+	mat4x4 shadow_mats[MaxCascadeCount];
+	float shadow_splits[MaxCascadeCount + 1];
+
+	mat4x4 perspective_mat;
     vec3 ambient_color;
-} un;
+    vec2 half_near_plane;
+
+	int point_count;
+	int spot_count;
+	int shadow_casc_count;
+
+	float shadow_bias_offset;
+	float shadow_bias_factor;
+	float shadow_bias_clamp;
+};

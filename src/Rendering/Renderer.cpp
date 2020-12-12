@@ -603,7 +603,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 
 		Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
 		Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
-		Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
+		Vec4f vLightDir = fsvp.view * Vec4f(wLightDir, 0.0f);
 		LightingUniformBlock::lightDirections.SetOne(toBuffer, 0, vLightDir);
 
 		Vec3f lightCol = lightManager->GetColor(dirLightId);
@@ -653,11 +653,9 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 
 			Mat3x3f orientation = lightManager->GetOrientation(lightId);
 			Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
-			Vec3f vLightDir = (fsvp.view * Vec4f(wLightDir, 0.0f)).xyz();
+			Vec4f vLightDir = fsvp.view * Vec4f(wLightDir, 0.0f);
+			vLightDir.w = lightManager->GetSpotAngle(lightId);
 			LightingUniformBlock::lightDirections.SetOne(toBuffer, shaderLightIdx, vLightDir);
-
-			float spotAngle = lightManager->GetSpotAngle(lightId);
-			LightingUniformBlock::lightAngles.SetOne(toBuffer, shaderLightIdx, spotAngle);
 		}
 		else
 		{
@@ -702,6 +700,10 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 
 	Vec3f ambientColor(scene->ambientColor.r, scene->ambientColor.g, scene->ambientColor.b);
 	LightingUniformBlock::ambientColor.Set(toBuffer, ambientColor);
+
+	LightingUniformBlock::shadowBiasOffset.Set(toBuffer, 0.001f);
+	LightingUniformBlock::shadowBiasFactor.Set(toBuffer, 0.0019f);
+	LightingUniformBlock::shadowBiasClamp.Set(toBuffer, 0.01f);
 }
 
 bool Renderer::ParseControlCommand(uint64_t orderKey)

@@ -142,22 +142,39 @@ public:
 
 class LightingUniformBlock
 {
+private:
+	static constexpr size_t MaxLightCount = 8;
+	static constexpr size_t MaxCascadeCount = 4;
+
+	static constexpr size_t LightArraySize = MaxLightCount * 16;
+	static constexpr size_t ShadowMatOffset = LightArraySize * 3;
+	static constexpr size_t ShadowSplitOffset = ShadowMatOffset + MaxCascadeCount * 64;
+	static constexpr size_t PerspectiveMatOffset = ShadowSplitOffset + (MaxCascadeCount + 1) * 16;
+	static constexpr size_t LightCountOffset = PerspectiveMatOffset + 64 + 16 + 8;
+	static constexpr size_t ShadowBiasOffset = LightCountOffset + 3 * 4;
+
 public:
-	static const std::size_t BufferSize = 960;
+	static const std::size_t BufferSize = ShadowBiasOffset + 3 * 4;
 	static const unsigned int BindingPoint = 0;
 
-	static UniformBlockScalar<int, 0> pointLightCount;
-	static UniformBlockScalar<int, 4> spotLightCount;
-	static UniformBlockScalar<int, 8> cascadeCount;
-	static UniformBlockScalar<Vec2f, 16> halfNearPlane;
-	static UniformBlockScalar<Mat4x4f, 32> perspectiveMatrix;
-	static UniformBlockArray<Vec3f, 96> lightColors;
-	static UniformBlockArray<Vec3f, 224> lightPositions;
-	static UniformBlockArray<Vec3f, 352> lightDirections;
-	static UniformBlockArray<float, 480> lightAngles;
-	static UniformBlockArray<Mat4x4f, 608> shadowMatrices;
-	static UniformBlockArray<float, 864> shadowSplits;
-	static UniformBlockScalar<Vec3f, 944> ambientColor;
+	static UniformBlockArray<Vec3f, LightArraySize * 0> lightColors;
+	static UniformBlockArray<Vec3f, LightArraySize * 1> lightPositions;
+	static UniformBlockArray<Vec4f, LightArraySize * 2> lightDirections;
+
+	static UniformBlockArray<Mat4x4f, ShadowMatOffset> shadowMatrices;
+	static UniformBlockArray<float, ShadowSplitOffset> shadowSplits;
+
+	static UniformBlockScalar<Mat4x4f, PerspectiveMatOffset> perspectiveMatrix;
+	static UniformBlockScalar<Vec3f, PerspectiveMatOffset + 64> ambientColor;
+	static UniformBlockScalar<Vec2f, PerspectiveMatOffset + 64 + 16> halfNearPlane;
+
+	static UniformBlockScalar<int, LightCountOffset + 0> pointLightCount;
+	static UniformBlockScalar<int, LightCountOffset + 4> spotLightCount;
+	static UniformBlockScalar<int, LightCountOffset + 8> cascadeCount;
+
+	static UniformBlockScalar<float, ShadowBiasOffset + 0> shadowBiasOffset;
+	static UniformBlockScalar<float, ShadowBiasOffset + 4> shadowBiasFactor;
+	static UniformBlockScalar<float, ShadowBiasOffset + 8> shadowBiasClamp;
 };
 
 struct ViewportUniformBlock

@@ -10,6 +10,6 @@ vs_out;
 void main()
 {
 	vs_out.tex_coord = ndc_pos.xy * 0.5 + vec2(0.5, 0.5);
-	vs_out.eye_dir = vec3((2.0 * un.half_near_plane * vs_out.tex_coord) - un.half_near_plane, -1.0);
+	vs_out.eye_dir = vec3((2.0 * half_near_plane * vs_out.tex_coord) - half_near_plane, -1.0);
 	gl_Position = vec4(ndc_pos, 1.0);
 }

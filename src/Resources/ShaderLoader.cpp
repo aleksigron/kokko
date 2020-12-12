@@ -397,7 +397,7 @@ static bool Compile(
 				// Print out info log
 				renderDevice->GetShaderStageInfoLog(shaderId, infoLogLength, infoLog.Begin());
 
-				Log::Info(infoLog.GetCStr(), infoLog.GetLength());
+				Log::Error(infoLog.GetCStr(), infoLog.GetLength());
 			}
 		}
 	}
