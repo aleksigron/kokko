@@ -59,4 +59,7 @@ struct StringRef
 
 	// Modify the reference to remove the specified amount of bytes from the end
 	void TrimEnd(unsigned int amount);
+
+	bool StartsWith(const StringRef& other) const;
+	bool EndsWith(const StringRef& other) const;
 };

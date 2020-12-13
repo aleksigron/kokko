@@ -124,7 +124,7 @@ bool Engine::Initialize()
 		}
 
 		debug->Initialize(mainWindow, meshManager, shaderManager);
-
+		textureManager->Initialize();
 		renderer->Initialize(mainWindow);
 
 		return true;

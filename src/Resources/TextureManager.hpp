@@ -58,11 +58,24 @@ private:
 	unsigned int freeListFirst;
 	HashMap<uint32_t, TextureId> nameHashMap;
 
+	enum ConstantTextures
+	{
+		ConstTex_White2D,
+		ConstTex_Black2D,
+		ConstTex_EmptyNormal,
+
+		ConstTex_Count
+	};
+
+	TextureId constantTextures[ConstTex_Count];
+
 	void Reallocate(unsigned int required);
 
 public:
 	TextureManager(Allocator* allocator, RenderDevice* renderDevice);
 	~TextureManager();
+
+	void Initialize();
 
 	TextureId CreateTexture();
 	void RemoveTexture(TextureId id);
@@ -73,6 +86,10 @@ public:
 		auto pair = nameHashMap.Lookup(pathHash);
 		return pair != nullptr ? pair->second : TextureId{};
 	}
+
+	TextureId GetId_White2D() const { return constantTextures[ConstTex_White2D]; }
+	TextureId GetId_Black2D() const { return constantTextures[ConstTex_Black2D]; }
+	TextureId GetId_EmptyNormal() const { return constantTextures[ConstTex_EmptyNormal]; }
 
 	const TextureData& GetTextureData(TextureId id) { return data.texture[id.i]; }
 

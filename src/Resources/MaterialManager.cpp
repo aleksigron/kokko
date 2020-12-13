@@ -102,7 +102,7 @@ MaterialId MaterialManager::CreateMaterial()
 	data.material[id.i].textureCount = 0;
 	data.material[id.i].uniformBufferObject = 0;
 	data.material[id.i].uniformBufferSize = 0;
-	data.material[id.i].uniformCount = 0;
+	data.material[id.i].bufferUniformCount = 0;
 	data.material[id.i].uniformDataSize = 0;
 	data.material[id.i].uniformData = nullptr;
 
@@ -185,7 +185,7 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 	material.textureCount = shader.textureUniformCount;
 	material.uniformDataSize = shader.uniformDataSize;
 	material.uniformBufferSize = shader.uniformBufferSize;
-	material.uniformCount = shader.bufferUniformCount;
+	material.bufferUniformCount = shader.bufferUniformCount;
 
 	for (unsigned int i = 0, count = shader.bufferUniformCount; i < count; ++i)
 		material.bufferUniforms[i] = shader.bufferUniforms[i];
@@ -215,6 +215,275 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 	}
 }
 
+static const rapidjson::Value* FindVariableValue(const rapidjson::Value& variablesArray, const StringRef& name)
+{
+	if (variablesArray.IsArray())
+	{
+		rapidjson::Value::ConstValueIterator varItr = variablesArray.Begin();
+		rapidjson::Value::ConstValueIterator varEnd = variablesArray.End();
+
+		for (; varItr < varEnd; ++varItr)
+		{
+			rapidjson::Value::ConstMemberIterator nameItr = varItr->FindMember("name");
+
+			if (nameItr != varItr->MemberEnd() &&
+				nameItr->value.IsString() &&
+				StringRef(nameItr->value.GetString(), nameItr->value.GetStringLength()).ValueEquals(name))
+			{
+				rapidjson::Value::ConstMemberIterator valueItr = varItr->FindMember("value");
+				if (valueItr != varItr->MemberEnd())
+					return &valueItr->value;
+				else
+					return nullptr;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+static unsigned int PrepareUniformArray(const rapidjson::Value* jsonValue, unsigned int uniformArraySize)
+{
+	unsigned int valueCount = 0;
+
+	if (jsonValue == nullptr)
+		Log::Warning("Failed to read uniform, because JSON value does not exist.");
+	else if (jsonValue->IsArray() == false)
+		Log::Warning("Failed to read uniform, because JSON value was not an array.");
+	else
+	{
+		valueCount = jsonValue->Size();
+
+		if (valueCount < uniformArraySize)
+			Log::Warning("JSON didn't provide enough values to fill array");
+		else if (valueCount > uniformArraySize)
+		{
+			Log::Warning("JSON array was longer than shader array");
+			valueCount = uniformArraySize;
+		}
+	}
+
+	return valueCount;
+}
+
+static void SetBufferUniformValue(
+	const BufferUniform& uniform,
+	unsigned char* uniformData,
+	const rapidjson::Value* jsonValue,
+	Array<unsigned char>& cacheBuffer)
+{
+	using ValueItr = rapidjson::Value::ConstValueIterator;
+
+	switch (uniform.type)
+	{
+	case UniformDataType::Mat4x4:
+	{
+		Mat4x4f val;
+
+		if (jsonValue != nullptr)
+			val = ValueSerialization::Deserialize_Mat4x4f(*jsonValue);
+
+		uniform.SetValueMat4x4f(uniformData, val);
+		break;
+	}
+
+	case UniformDataType::Mat4x4Array:
+	{
+		cacheBuffer.Resize(uniform.arraySize * sizeof(Mat4x4f));
+		Mat4x4f* buffer = reinterpret_cast<Mat4x4f*>(cacheBuffer.GetData());
+
+		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
+			
+		unsigned int i = 0;
+		for (; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Mat4x4f(jsonValue[i]);
+		for (; i < uniform.arraySize; ++i)
+			buffer[i] = Mat4x4f();
+
+		uniform.SetArrayMat4x4f(uniformData, buffer, uniform.arraySize);
+
+		break;
+	}
+
+	case UniformDataType::Mat3x3:
+	{
+		Mat3x3f val;
+
+		if (jsonValue != nullptr)
+			val = ValueSerialization::Deserialize_Mat3x3f(*jsonValue);
+
+		uniform.SetValueMat3x3f(uniformData, val);
+		break;
+	}
+
+	case UniformDataType::Mat3x3Array:
+	{
+		cacheBuffer.Resize(uniform.arraySize * sizeof(Mat3x3f));
+		Mat3x3f* buffer = reinterpret_cast<Mat3x3f*>(cacheBuffer.GetData());
+
+		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
+
+		unsigned int i = 0;
+		for (; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Mat3x3f(jsonValue[i]);
+		for (; i < uniform.arraySize; ++i)
+			buffer[i] = Mat3x3f();
+
+		uniform.SetArrayMat3x3f(uniformData, buffer, uniform.arraySize);
+
+		break;
+	}
+
+	case UniformDataType::Vec4:
+	{
+		Vec4f val;
+
+		if (jsonValue != nullptr)
+			val = ValueSerialization::Deserialize_Vec4f(*jsonValue);
+
+		uniform.SetValueVec4f(uniformData, val);
+		break;
+	}
+
+	case UniformDataType::Vec4Array:
+	{
+		cacheBuffer.Resize(uniform.arraySize * sizeof(Vec4f));
+		Vec4f* buffer = reinterpret_cast<Vec4f*>(cacheBuffer.GetData());
+
+		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
+
+		unsigned int i = 0;
+		for (; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Vec4f(jsonValue[i]);
+		for (; i < uniform.arraySize; ++i)
+			buffer[i] = Vec4f();
+
+		uniform.SetArrayVec4f(uniformData, buffer, uniform.arraySize);
+
+		break;
+	}
+
+	case UniformDataType::Vec3:
+	{
+		Vec3f val;
+
+		if (jsonValue != nullptr)
+			val = ValueSerialization::Deserialize_Vec3f(*jsonValue);
+
+		uniform.SetValueVec3f(uniformData, val);
+		break;
+	}
+
+	case UniformDataType::Vec3Array:
+	{
+		cacheBuffer.Resize(uniform.arraySize * sizeof(Vec3f));
+		Vec3f* buffer = reinterpret_cast<Vec3f*>(cacheBuffer.GetData());
+
+		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
+
+		unsigned int i = 0;
+		for (; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Vec3f(jsonValue[i]);
+		for (; i < uniform.arraySize; ++i)
+			buffer[i] = Vec3f();
+
+		uniform.SetArrayVec3f(uniformData, buffer, uniform.arraySize);
+
+		break;
+	}
+
+	case UniformDataType::Vec2:
+	{
+		Vec2f val;
+
+		if (jsonValue != nullptr)
+			val = ValueSerialization::Deserialize_Vec2f(*jsonValue);
+
+		uniform.SetValueVec2f(uniformData, val);
+		break;
+	}
+
+	case UniformDataType::Vec2Array:
+	{
+		cacheBuffer.Resize(uniform.arraySize * sizeof(Vec2f));
+		Vec2f* buffer = reinterpret_cast<Vec2f*>(cacheBuffer.GetData());
+
+		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
+
+		unsigned int i = 0;
+		for (; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Vec2f(jsonValue[i]);
+		for (; i < uniform.arraySize; ++i)
+			buffer[i] = Vec2f();
+
+		uniform.SetArrayVec2f(uniformData, buffer, uniform.arraySize);
+
+		break;
+	}
+
+	case UniformDataType::Float:
+	{
+		float val = 0.0f;
+
+		if (jsonValue != nullptr)
+			val = ValueSerialization::Deserialize_Float(*jsonValue);
+
+		uniform.SetValueFloat(uniformData, val);
+		break;
+	}
+
+	case UniformDataType::FloatArray:
+	{
+		cacheBuffer.Resize(uniform.arraySize * sizeof(float));
+		float* buffer = reinterpret_cast<float*>(cacheBuffer.GetData());
+
+		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
+
+		unsigned int i = 0;
+		for (; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Float(jsonValue[i]);
+		for (; i < uniform.arraySize; ++i)
+			buffer[i] = 0.0f;
+
+		uniform.SetArrayFloat(uniformData, buffer, uniform.arraySize);
+
+		break;
+	}
+
+	case UniformDataType::Int:
+	{
+		int val = 0;
+
+		if (jsonValue != nullptr)
+			val = ValueSerialization::Deserialize_Int(*jsonValue);
+
+		uniform.SetValueInt(uniformData, val);
+		break;
+	}
+
+	case UniformDataType::IntArray:
+	{
+		cacheBuffer.Resize(uniform.arraySize * sizeof(int));
+		int* buffer = reinterpret_cast<int*>(cacheBuffer.GetData());
+
+		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
+
+		unsigned int i = 0;
+		for (; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Int(jsonValue[i]);
+		for (; i < uniform.arraySize; ++i)
+			buffer[i] = 0;
+
+		uniform.SetArrayInt(uniformData, buffer, uniform.arraySize);
+
+		break;
+	}
+
+	default:
+		break;
+	}
+}
+
 bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 {
 	using ValueItr = rapidjson::Value::ConstValueIterator;
@@ -236,285 +505,79 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 	// This initializes material uniforms from the shader's data
 	SetShader(id, shaderId);
 
+	MaterialData& material = data.material[id.i];
 	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
 	MemberItr variablesItr = doc.FindMember("variables");
+	const rapidjson::Value* varValue = nullptr;
+	bool variablesArrayIsValid = variablesItr != doc.MemberEnd() && variablesItr->value.IsArray();
 
-	if (variablesItr != doc.MemberEnd() && variablesItr->value.IsArray())
+	// For reusing memory when setting values to material dataBuffer
+	Array<unsigned char> cacheBuffer(allocator);
+
+	for (unsigned int uniformIdx = 0; uniformIdx < shader.bufferUniformCount; ++uniformIdx)
 	{
-		ValueItr varItr = variablesItr->value.Begin();
-		ValueItr varEnd = variablesItr->value.End();
+		const BufferUniform& shaderUniform = shader.bufferUniforms[uniformIdx];
+		const BufferUniform& materialUniform = material.bufferUniforms[uniformIdx];
+		
+		if (variablesArrayIsValid)
+			varValue = FindVariableValue(variablesItr->value, shaderUniform.name);
+		else
+			varValue = nullptr;
 
-		MaterialData& material = data.material[id.i];
+		SetBufferUniformValue(materialUniform, material.uniformData, varValue, cacheBuffer);
+	}
 
-		// For reusing memory when setting values to material dataBuffer
-		Array<Mat4x4f> array4x4(allocator);
-		Array<Mat3x3f> array3x3(allocator);
-		Array<Vec4f> array4(allocator);
-		Array<Vec3f> array3(allocator);
-		Array<Vec2f> array2(allocator);
-		Array<float> arrayf(allocator);
-		Array<int> arrayi(allocator);
+	// TEXTURE UNIFORMS
 
-		for (; varItr < varEnd; ++varItr)
+	for (unsigned int uniformIdx = 0; uniformIdx < shader.textureUniformCount; ++uniformIdx)
+	{
+		const TextureUniform& shaderUniform = shader.textureUniforms[uniformIdx];
+		TextureUniform& materialUniform = material.textureUniforms[uniformIdx];
+
+		TextureId textureId = TextureId{ 0 };
+
+		if (variablesArrayIsValid &&
+			(varValue = FindVariableValue(variablesItr->value, shaderUniform.name)) != nullptr &&
+			varValue->IsString())
 		{
-			if (varItr->IsObject() == false)
-				continue;
-
-			MemberItr nameItr = varItr->FindMember("name");
-			MemberItr valueItr = varItr->FindMember("value");
-
-			if (nameItr == varItr->MemberEnd() || !nameItr->value.IsString() ||
-				valueItr == varItr->MemberEnd())
-				continue;
-
-			const char* nameStr = nameItr->value.GetString();
-			unsigned int nameLen = nameItr->value.GetStringLength();
-
-			int varIndex = -1;
-			bool isTexture = false;
-			uint32_t varNameHash = Hash::FNV1a_32(nameStr, nameLen);
-
-			// Find the index at which there's a variable with the same name
-			for (unsigned int i = 0, count = shader.bufferUniformCount; i < count; ++i)
-			{
-				if (shader.bufferUniforms[i].nameHash == varNameHash)
-				{
-					varIndex = i;
-					break;
-				}
-			}
-
-			if (varIndex < 0)
-			{
-				for (unsigned int i = 0, count = shader.textureUniformCount; i < count; ++i)
-				{
-					if (shader.textureUniforms[i].nameHash == varNameHash)
-					{
-						isTexture = true;
-						varIndex = i;
-						break;
-					}
-				}
-			}
-
-			// The variable was found
-			if (varIndex >= 0)
-			{
-				if (isTexture)
-				{
-					StringRef path(valueItr->value.GetString(), valueItr->value.GetStringLength());
-					TextureId id = textureManager->GetIdByPath(path);
-
-					if (id.IsNull() == false)
-					{
-						const TextureData& texture = textureManager->GetTextureData(id);
-						material.textureUniforms[varIndex].textureName = texture.textureObjectId;
-					}
-				}
-				else
-				{
-					const BufferUniform& uniform = material.bufferUniforms[varIndex];
-					const rapidjson::Value& varVal = valueItr->value;
-
-					switch (uniform.type)
-					{
-					case UniformDataType::Mat4x4:
-					{
-						Mat4x4f val = ValueSerialization::Deserialize_Mat4x4f(varVal);
-						uniform.SetValueMat4x4f(material.uniformData, val);
-						break;
-					}
-					case UniformDataType::Mat4x4Array:
-					{
-						if (varVal.IsArray())
-						{
-							array4x4.Reserve(varVal.Size());
-
-							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
-								array4x4.PushBack(ValueSerialization::Deserialize_Mat4x4f(*itr));
-
-							uniform.SetArrayMat4x4f(material.uniformData, array4x4.GetData(), array4x4.GetCount());
-							array4x4.Clear();
-						}
-						else
-							Log::Error("Failed to read uniform Mat4x4Array, because JSON value was not array.");
-
-						break;
-					}
-
-					case UniformDataType::Mat3x3:
-					{
-						Mat3x3f val = ValueSerialization::Deserialize_Mat3x3f(varVal);
-						uniform.SetValueMat3x3f(material.uniformData, val);
-						break;
-					}
-					case UniformDataType::Mat3x3Array:
-					{
-						if (varVal.IsArray())
-						{
-							array3x3.Reserve(varVal.Size());
-
-							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
-								array3x3.PushBack(ValueSerialization::Deserialize_Mat3x3f(*itr));
-
-							uniform.SetArrayMat3x3f(material.uniformData, array3x3.GetData(), array3x3.GetCount());
-							array3x3.Clear();
-						}
-						else
-							Log::Error("Failed to read uniform Mat3x3Array, because JSON value was not array.");
-
-						break;
-					}
-
-					case UniformDataType::Vec4:
-					{
-						Vec4f val = ValueSerialization::Deserialize_Vec4f(varVal);
-						uniform.SetValueVec4f(material.uniformData, val);
-						break;
-					}
-					case UniformDataType::Vec4Array:
-					{
-						if (varVal.IsArray())
-						{
-							array4.Reserve(varVal.Size());
-
-							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
-								array4.PushBack(ValueSerialization::Deserialize_Vec4f(*itr));
-
-							uniform.SetArrayVec4f(material.uniformData, array4.GetData(), array4.GetCount());
-							array4.Clear();
-						}
-						else
-							Log::Error("Failed to read uniform Vec4Array, because JSON value was not array.");
-
-						break;
-					}
-
-					case UniformDataType::Vec3:
-					{
-						Vec3f val = ValueSerialization::Deserialize_Vec3f(varVal);
-						uniform.SetValueVec3f(material.uniformData, val);
-						break;
-					}
-					case UniformDataType::Vec3Array:
-					{
-						if (varVal.IsArray())
-						{
-							array3.Reserve(varVal.Size());
-
-							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
-								array3.PushBack(ValueSerialization::Deserialize_Vec3f(*itr));
-
-							uniform.SetArrayVec3f(material.uniformData, array3.GetData(), array3.GetCount());
-							array3.Clear();
-						}
-						else
-							Log::Error("Failed to read uniform Vec3Array, because JSON value was not array.");
-
-						break;
-					}
-
-					case UniformDataType::Vec2:
-					{
-						Vec2f val = ValueSerialization::Deserialize_Vec2f(varVal);
-						uniform.SetValueVec2f(material.uniformData, val);
-						break;
-					}
-					case UniformDataType::Vec2Array:
-					{
-						if (varVal.IsArray())
-						{
-							array2.Reserve(varVal.Size());
-
-							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
-								array2.PushBack(ValueSerialization::Deserialize_Vec2f(*itr));
-
-							uniform.SetArrayVec2f(material.uniformData, array2.GetData(), array2.GetCount());
-							array2.Clear();
-						}
-						else
-							Log::Error("Failed to read uniform Vec2Array, because JSON value was not array.");
-
-						break;
-					}
-
-					case UniformDataType::Float:
-					{
-						float val = ValueSerialization::Deserialize_Float(varVal);
-						uniform.SetValueFloat(material.uniformData, val);
-						break;
-					}
-					case UniformDataType::FloatArray:
-					{
-						if (varVal.IsArray())
-						{
-							arrayf.Reserve(varVal.Size());
-
-							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
-								arrayf.PushBack(ValueSerialization::Deserialize_Float(*itr));
-
-							uniform.SetArrayFloat(material.uniformData, arrayf.GetData(), arrayf.GetCount());
-							arrayf.Clear();
-						}
-						else
-							Log::Error("Failed to read uniform FloatArray, because JSON value was not array.");
-
-						break;
-					}
-
-					case UniformDataType::Int:
-					{
-						int val = ValueSerialization::Deserialize_Int(varVal);
-						uniform.SetValueInt(material.uniformData, val);
-						break;
-					}
-					case UniformDataType::IntArray:
-					{
-						if (varVal.IsArray())
-						{
-							arrayi.Reserve(varVal.Size());
-
-							for (ValueItr itr = varVal.Begin(), end = varVal.End(); itr != end; ++itr)
-								arrayi.PushBack(ValueSerialization::Deserialize_Int(*itr));
-
-							uniform.SetArrayInt(material.uniformData, arrayi.GetData(), arrayi.GetCount());
-							arrayi.Clear();
-						}
-						else
-							Log::Error("Failed to read uniform IntArray, because JSON value was not array.");
-
-						break;
-					}
-
-					default:
-						break;
-					}
-				}
-			}
+			StringRef path(varValue->GetString(), varValue->GetStringLength());
+			textureId = textureManager->GetIdByPath(path);
 		}
 
-		// Update uniform buffer object on the GPU
-		if (material.uniformCount > 0)
+		if (textureId.IsNull())
 		{
-			static const size_t stackBufferSize = 2048;
-			unsigned char stackBuffer[stackBufferSize];
-			unsigned char* uniformBuffer = nullptr;
-
-			if (material.uniformBufferSize <= stackBufferSize)
-				uniformBuffer = stackBuffer;
+			// TODO: Find a more robust solution to find default values for textures
+			if (shaderUniform.name.StartsWith(StringRef("normal")))
+				textureId = textureManager->GetId_EmptyNormal();
 			else
-				uniformBuffer = static_cast<unsigned char*>(allocator->Allocate(material.uniformBufferSize));
-
-			for (unsigned int i = 0, count = material.uniformCount; i < count; ++i)
-				material.bufferUniforms[i].UpdateToUniformBuffer(material.uniformData, uniformBuffer);
-
-			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
-			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, material.uniformBufferSize, uniformBuffer);
-
-			if (uniformBuffer != stackBuffer)
-				allocator->Deallocate(uniformBuffer);
+				textureId = textureManager->GetId_White2D();
 		}
+
+		const TextureData& texture = textureManager->GetTextureData(textureId);
+		materialUniform.textureName = texture.textureObjectId;
+	}
+
+	// Update uniform buffer object on the GPU
+	if (material.bufferUniformCount > 0)
+	{
+		static const size_t stackBufferSize = 2048;
+		unsigned char stackBuffer[stackBufferSize];
+		unsigned char* uniformBuffer = nullptr;
+
+		if (material.uniformBufferSize <= stackBufferSize)
+			uniformBuffer = stackBuffer;
+		else
+			uniformBuffer = static_cast<unsigned char*>(allocator->Allocate(material.uniformBufferSize));
+
+		for (unsigned int i = 0, count = material.bufferUniformCount; i < count; ++i)
+			material.bufferUniforms[i].UpdateToUniformBuffer(material.uniformData, uniformBuffer);
+
+		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
+		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, material.uniformBufferSize, uniformBuffer);
+
+		if (uniformBuffer != stackBuffer)
+			allocator->Deallocate(uniformBuffer);
 	}
 
 	return true;

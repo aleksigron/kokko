@@ -25,6 +25,9 @@ TextureManager::TextureManager(Allocator* allocator, RenderDevice* renderDevice)
 
 	freeListFirst = 0;
 
+	for (unsigned int i = 0; i < ConstTex_Count; ++i)
+		constantTextures[i] = TextureId{ 0 };
+
 	this->Reallocate(32);
 }
 
@@ -37,6 +40,52 @@ TextureManager::~TextureManager()
 	allocator->Deallocate(data.buffer);
 }
 
+void TextureManager::Initialize()
+{
+	static const unsigned int size = 16;
+	static const unsigned int bytesPerPixel = 3;
+	unsigned char buffer[size * size * bytesPerPixel];
+
+	ImageData imageData;
+	imageData.imageData = buffer;
+	imageData.imageDataSize = sizeof(buffer);
+
+	imageData.imageSize = Vec2i(size, size);
+	imageData.pixelFormat = GL_RGB;
+	imageData.componentDataType = GL_UNSIGNED_BYTE;
+
+	TextureOptions options;
+	options.minFilter = RenderTextureFilterMode::Nearest;
+	options.magFilter = RenderTextureFilterMode::Nearest;
+
+	{
+		std::memset(buffer, 255, sizeof(buffer));
+		TextureId white2d = CreateTexture();
+		Upload_2D(white2d, imageData, options);
+		constantTextures[ConstTex_White2D] = white2d;
+	}
+
+	{
+		std::memset(buffer, 0, sizeof(buffer));
+		TextureId black2d = CreateTexture();
+		Upload_2D(black2d, imageData, options);
+		constantTextures[ConstTex_Black2D] = black2d;
+	}
+
+	{
+		for (unsigned int i = 0, count = size * size; i < count; ++i)
+		{
+			buffer[i * bytesPerPixel + 0] = 128;
+			buffer[i * bytesPerPixel + 1] = 128;
+			buffer[i * bytesPerPixel + 2] = 255;
+		}
+
+		TextureId emptyNormal = CreateTexture();
+		Upload_2D(emptyNormal, imageData, options);
+		constantTextures[ConstTex_EmptyNormal] = emptyNormal;
+	}
+}
+
 void TextureManager::Reallocate(unsigned int required)
 {
 	if (required <= data.allocated)
@@ -44,7 +93,7 @@ void TextureManager::Reallocate(unsigned int required)
 
 	required = Math::UpperPowerOfTwo(required);
 
-	unsigned int objectBytes = sizeof(unsigned int) + sizeof(TextureData);
+	size_t objectBytes = sizeof(unsigned int) + sizeof(TextureData);
 
 	InstanceData newData;
 	newData.buffer = allocator->Allocate(required * objectBytes);

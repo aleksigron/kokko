@@ -49,3 +49,27 @@ void StringRef::TrimEnd(unsigned int amount)
 	else
 		this->Clear();
 }
+
+bool StringRef::StartsWith(const StringRef& other) const
+{
+	if (this->len < other.len)
+		return false;
+
+	for (unsigned int i = 0; i < other.len; ++i)
+		if (this->str[i] != other.str[i])
+			return false;
+
+	return true;
+}
+
+bool StringRef::EndsWith(const StringRef& other) const
+{
+	if (this->len < other.len)
+		return false;
+
+	for (unsigned int i = this->len - other.len; i < this->len; ++i)
+		if (this->str[i] != other.str[i])
+			return false;
+
+	return true;
+}

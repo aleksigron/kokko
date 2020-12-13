@@ -27,7 +27,7 @@ struct MaterialData
 	unsigned int uniformBufferObject;
 	unsigned int uniformBufferSize;
 
-	unsigned int uniformCount;
+	unsigned int bufferUniformCount;
 	unsigned int uniformDataSize;
 	unsigned char* uniformData;
 
