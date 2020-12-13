@@ -9,7 +9,7 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 - CMake for building the project
 - C++14 compliant compiler
 - Blender for exporting mesh files
-- Glraw for encoding textures
+- KTX for encoding textures
 
 ### Creating a x64 Visual Studio solution on Windows
 ```
@@ -40,8 +40,8 @@ In Visual Studio, go to project properties > _Configuration Properties_ > _Debug
   - Scenes
   - Materials
   - Shaders
-  - Texture metadata
 - Mesh files are using a custom format
+- Textures are processed to a runtime-friendly format with KTX
 
 ### Debugging
 - Logging
@@ -55,7 +55,7 @@ I'm using a proprietary model export script for Blender. More information in doc
 
 The motivation behind using a custom format is to better understand the content pipeline. Also, I'm not aware of a simple format for meshes that is optimized for runtime load speed. Pretty much all simple formats I could find were text-based and that's not good for efficiency. I'm hoping to develop the format and export enough to release it as a separate repository with proper documentation and examples.
 
-## Other tools
+## Tools
 [rapidjson](https://github.com/Tencent/rapidjson) is used to read JSON formatted resource files (scenes, shaders, materials, textures).
 
 [GLFW](https://github.com/glfw/glfw) is used to manage OpenGL context, windows and read input.
