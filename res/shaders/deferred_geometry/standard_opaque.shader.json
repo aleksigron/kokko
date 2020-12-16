@@ -1,0 +1,23 @@
+{
+	"vs": {
+		"main": "res/shaders/deferred_geometry/standard_opaque.vert.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/common/transform_block.glsl"
+		]
+	},
+	"fs": {
+		"main": "res/shaders/deferred_geometry/standard_opaque.frag.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/common/deferred_frag_output.glsl"
+		]
+	},
+	"properties": [
+		{ "name": "albedo_map", "type": "tex2d" },
+		{ "name": "normal_map", "type": "tex2d" },
+		{ "name": "roughness_map", "type": "tex2d" },
+		{ "name": "metalness", "type": "float" },
+		{ "name": "roughness", "type": "float" }
+	]
+}

@@ -17,7 +17,7 @@
 				{
 					"type": "renderObject",
 					"mesh": "res/models/simple_plane.mesh",
-					"material": "res/materials/deferred_geometry/flat_white.material.json"
+					"material": "res/materials/deferred_geometry/standard_gray_m00_r05.material.json"
 				}
 			]
 		},
@@ -31,7 +31,7 @@
 				{
 					"type": "renderObject",
 					"mesh": "res/models/simple_cube.mesh",
-					"material": "res/materials/deferred_geometry/flat_white.material.json"
+					"material": "res/materials/deferred_geometry/standard_gray_m10_r05.material.json"
 				}
 			]
 		},

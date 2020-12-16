@@ -156,23 +156,23 @@ void Renderer::Initialize(Window* window)
 		device->CreateTextures(gbuffer.textureCount, gbuffer.textures);
 		unsigned int colAtt[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
 
-		// Albedo color + specular buffer
+		// Albedo color buffer
 
-		unsigned int asTexture = gbuffer.textures[AlbedoSpecTextureIdx];
-		device->BindTexture(RenderTextureTarget::Texture2d, asTexture);
+		unsigned int albTexture = gbuffer.textures[AlbedoTextureIdx];
+		device->BindTexture(RenderTextureTarget::Texture2d, albTexture);
 
-		RenderCommandData::SetTextureImage2D asTextureImage{
-			RenderTextureTarget::Texture2d, 0, GL_SRGB8_ALPHA8, gbuffer.width, gbuffer.height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+		RenderCommandData::SetTextureImage2D albTextureImage{
+			RenderTextureTarget::Texture2d, 0, GL_SRGB8, gbuffer.width, gbuffer.height, GL_RGB, GL_UNSIGNED_BYTE, nullptr
 		};
-		device->SetTextureImage2D(&asTextureImage);
+		device->SetTextureImage2D(&albTextureImage);
 
 		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
-		RenderCommandData::AttachFramebufferTexture2D asAttachTexture{
-			RenderFramebufferTarget::Framebuffer, colAtt[0], RenderTextureTarget::Texture2d, asTexture, 0
+		RenderCommandData::AttachFramebufferTexture2D albAttachTexture{
+			RenderFramebufferTarget::Framebuffer, colAtt[0], RenderTextureTarget::Texture2d, albTexture, 0
 		};
-		device->AttachFramebufferTexture2D(&asAttachTexture);
+		device->AttachFramebufferTexture2D(&albAttachTexture);
 
 		// Normal buffer
 
@@ -194,21 +194,21 @@ void Renderer::Initialize(Window* window)
 
 		// Emissivity buffer
 
-		unsigned int emTexture = gbuffer.textures[EmissiveTextureIdx];
-		device->BindTexture(RenderTextureTarget::Texture2d, emTexture);
+		unsigned int matTexture = gbuffer.textures[MaterialTextureIdx];
+		device->BindTexture(RenderTextureTarget::Texture2d, matTexture);
 
-		RenderCommandData::SetTextureImage2D emTextureImage{
-			RenderTextureTarget::Texture2d, 0, GL_R8, gbuffer.width, gbuffer.height, GL_RED, GL_UNSIGNED_BYTE, nullptr
+		RenderCommandData::SetTextureImage2D matTextureImage{
+			RenderTextureTarget::Texture2d, 0, GL_RGB8, gbuffer.width, gbuffer.height, GL_RGB, GL_UNSIGNED_BYTE, nullptr
 		};
-		device->SetTextureImage2D(&emTextureImage);
+		device->SetTextureImage2D(&matTextureImage);
 
 		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
-		RenderCommandData::AttachFramebufferTexture2D emAttachTexture{
-			RenderFramebufferTarget::Framebuffer, colAtt[2], RenderTextureTarget::Texture2d, emTexture, 0
+		RenderCommandData::AttachFramebufferTexture2D matAttachTexture{
+			RenderFramebufferTarget::Framebuffer, colAtt[2], RenderTextureTarget::Texture2d, matTexture, 0
 		};
-		device->AttachFramebufferTexture2D(&emAttachTexture);
+		device->AttachFramebufferTexture2D(&matAttachTexture);
 
 		// Which color attachments we'll use for rendering
 		device->SetFramebufferDrawBuffers(sizeof(colAtt) / sizeof(colAtt[0]), colAtt);
@@ -551,18 +551,18 @@ void Renderer::BindLightingTextures(const ShaderData& shader) const
 {
 	static const unsigned int textureUniformCount = 5;
 	static const uint32_t uniformNameHashes[textureUniformCount] = {
-		"g_alb_spec"_hash,
-		"g_norm"_hash,
-		"g_emissive"_hash,
+		"g_albedo"_hash,
+		"g_normal"_hash,
+		"g_material"_hash,
 		"g_depth"_hash,
 		"shd_smp"_hash
 	};
 
 	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
 	const unsigned int textureObjectNames[textureUniformCount] = {
-		gbuffer.textures[AlbedoSpecTextureIdx],
+		gbuffer.textures[AlbedoTextureIdx],
 		gbuffer.textures[NormalTextureIdx],
-		gbuffer.textures[EmissiveTextureIdx],
+		gbuffer.textures[MaterialTextureIdx],
 		gbuffer.textures[DepthTextureIdx],
 		framebufferData[FramebufferIndexShadow].textures[0]
 	};

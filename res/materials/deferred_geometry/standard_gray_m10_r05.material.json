@@ -1,0 +1,8 @@
+{
+	"shader": "res/shaders/deferred_geometry/standard_opaque.shader.json",
+	"variables":
+	[
+		{ "name": "metalness", "value": 1.0 },
+		{ "name": "roughness", "value": 0.5 }
+	]
+}

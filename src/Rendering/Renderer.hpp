@@ -41,9 +41,9 @@ class Renderer : public ITransformUpdateReceiver
 private:
 	static const unsigned int MaxViewportCount = 8;
 
-	static const unsigned int AlbedoSpecTextureIdx = 0;
+	static const unsigned int AlbedoTextureIdx = 0;
 	static const unsigned int NormalTextureIdx = 1;
-	static const unsigned int EmissiveTextureIdx = 2;
+	static const unsigned int MaterialTextureIdx = 2;
 	static const unsigned int DepthTextureIdx = 3;
 
 	static const unsigned int FramebufferIndexGBuffer = 0;
