@@ -22,16 +22,7 @@ struct ShaderData
 
 	unsigned int driverId;
 
-	unsigned int uniformDataSize; // CPU side
-	unsigned int uniformBufferSize; // GPU side
-
-	unsigned int bufferUniformCount;
-	unsigned int textureUniformCount;
-	BufferUniform bufferUniforms[ShaderUniform::MaxBufferUniformCount];
-	TextureUniform textureUniforms[ShaderUniform::MaxTextureUniformCount];
-
-	const BufferUniform* FindBufferUniformFromNameHash(uint32_t nameHash) const;
-	const TextureUniform* FindTextureUniformFromNameHash(uint32_t nameHash) const;
+	UniformList uniforms;
 };
 
 class ShaderManager

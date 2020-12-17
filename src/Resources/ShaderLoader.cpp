@@ -6,6 +6,7 @@
 
 #include "rapidjson/document.h"
 
+#include "Core/BufferRef.hpp"
 #include "Core/Hash.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/Sort.hpp"
@@ -166,25 +167,81 @@ static bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUnifo
 
 static void AddUniforms(
 	ShaderData& shaderOut,
-	unsigned int count,
-	const AddUniforms_UniformData* uniforms)
+	BufferRef<const AddUniforms_UniformData> uniforms,
+	Allocator* allocator)
 {
-	unsigned int textureUniformCount = 0;
-	unsigned int bufferUniformCount = 0;
+	const char* blockStart = "layout(std140, binding = 3) uniform MaterialBlock {\n";
+	const size_t blockStartLen = std::strlen(blockStart);
+	const char* blockRowFormat = "%s %s;\n";
+	const size_t blockRowPlaceholdersLen = 4;
+	const size_t blockRowFixedMaxLen = std::strlen(blockRowFormat) - blockRowPlaceholdersLen;
+	const char* blockEnd = "};\n";
+	const size_t blockEndLen = std::strlen(blockEnd);
 
-	for (unsigned uIndex = 0; uIndex < count; ++uIndex)
+	// Calculate how much memory we need to store:
+	// - Uniform names
+	// - Uniform block definition
+	// - Buffer uniform definitions
+	// - Texture uniform definitions
+
+	size_t nameBytes = 0;
+	size_t uniformBlockBytes = blockStartLen + blockEndLen + 1;
+
+	size_t textureUniformCount = 0;
+	size_t bufferUniformCount = 0;
+
+	for (unsigned uIndex = 0; uIndex < uniforms.count; ++uIndex)
+	{
+		const AddUniforms_UniformData& uniform = uniforms[uIndex];
+		UniformTypeInfo type = UniformTypeInfo::FromType(uniform.type);
+
+		if (type.isTexture)
+		{
+			nameBytes += uniform.name.len + 1;
+			++textureUniformCount;
+		}
+		else
+		{
+			nameBytes += uniform.name.len + 1;
+			uniformBlockBytes += uniform.name.len + type.typeNameLength + blockRowFixedMaxLen;
+			++bufferUniformCount;
+		}
+	}
+
+	size_t bufferUniformBytes = sizeof(BufferUniform) * bufferUniformCount;
+	size_t textureUniformBytes = sizeof(TextureUniform) * textureUniformCount;
+	size_t shaderDataBytes = nameBytes + uniformBlockBytes + bufferUniformBytes + textureUniformBytes;
+
+	// Allocate memory
+
+	shaderOut.buffer = allocator->Allocate(shaderDataBytes);
+
+	char* namePtr = static_cast<char*>(shaderOut.buffer);
+	char* uniformBlockPtr = namePtr + nameBytes;
+	BufferUniform* bufferUniformPtr = reinterpret_cast<BufferUniform*>(uniformBlockPtr + uniformBlockBytes);
+	TextureUniform* textureUniformPtr = reinterpret_cast<TextureUniform*>(bufferUniformPtr + bufferUniformCount);
+
+	shaderOut.uniforms.bufferUniforms = bufferUniformPtr;
+	shaderOut.uniforms.textureUniforms = textureUniformPtr;
+
+	// Copy uniform definitions to allocated memory
+	
+	unsigned int textureUniformsCopied = 0;
+	unsigned int bufferUniformsCopied = 0;
+
+	for (unsigned uIndex = 0; uIndex < uniforms.count; ++uIndex)
 	{
 		ShaderUniform* baseUniform = nullptr;
 
 		UniformDataType dataType = uniforms[uIndex].type;
-		unsigned int typeIndex = static_cast<unsigned int>(dataType);
 
-		if (UniformTypeInfo::Types[typeIndex].isTexture)
+		if (UniformTypeInfo::FromType(dataType).isTexture)
 		{
-			TextureUniform& uniform = shaderOut.textureUniforms[textureUniformCount];
+			TextureUniform& uniform = shaderOut.uniforms.textureUniforms[textureUniformsCopied];
 
 			// Since shader is not compiled at this point, we can't know the uniform location
 			uniform.uniformLocation = -1;
+			uniform.textureName = 0;
 
 			switch (dataType)
 			{
@@ -199,36 +256,38 @@ static void AddUniforms(
 				break;
 			}
 
-			uniform.textureName = 0;
-
-			++textureUniformCount;
+			++textureUniformsCopied;
 
 			baseUniform = static_cast<ShaderUniform*>(&uniform);
 		}
 		else
 		{
-			BufferUniform& uniform = shaderOut.bufferUniforms[bufferUniformCount];
+			BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[bufferUniformsCopied];
 			uniform.dataOffset = 0;
 			uniform.bufferObjectOffset = 0;
 			uniform.arraySize = uniforms[uIndex].arraySize;
 
-			++bufferUniformCount;
+			++bufferUniformsCopied;
 
 			baseUniform = static_cast<ShaderUniform*>(&uniform);
 		}
 
+		// Copy uniform name
+		const StringRef& uniformName = uniforms[uIndex].name;
+		std::strncpy(namePtr, uniformName.str, uniformName.len + 1);
+		baseUniform->name = StringRef(namePtr, uniformName.len);
+		namePtr += uniformName.len + 1;
+
 		// Compute uniform name hash
-	
-		baseUniform->name = uniforms[uIndex].name; // Temporarily point to original buffer
 		baseUniform->nameHash = Hash::FNV1a_32(baseUniform->name.str, baseUniform->name.len);
 		baseUniform->type = dataType;
 	}
 
-	shaderOut.bufferUniformCount = bufferUniformCount;
-	shaderOut.textureUniformCount = textureUniformCount;
+	shaderOut.uniforms.bufferUniformCount = bufferUniformCount;
+	shaderOut.uniforms.textureUniformCount = textureUniformCount;
 
 	// Order buffer uniforms based on size
-	InsertionSortPred(shaderOut.bufferUniforms, bufferUniformCount, BufferUniformSortPredicate);
+	InsertionSortPred(shaderOut.uniforms.bufferUniforms, bufferUniformCount, BufferUniformSortPredicate);
 
 	// Calculate CPU and GPU buffer offsets for buffer uniforms
 
@@ -237,7 +296,7 @@ static void AddUniforms(
 
 	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
 	{
-		BufferUniform& uniform = shaderOut.bufferUniforms[i];
+		BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
 		const UniformTypeInfo& type = UniformTypeInfo::FromType(uniform.type);
 
 		unsigned int alignmentModulo = bufferObjectOffset % type.alignment;
@@ -261,91 +320,35 @@ static void AddUniforms(
 		}
 	}
 
-	shaderOut.uniformDataSize = dataBufferOffset;
-	shaderOut.uniformBufferSize = bufferObjectOffset;
-}
+	shaderOut.uniforms.uniformDataSize = dataBufferOffset;
+	shaderOut.uniforms.uniformBufferSize = bufferObjectOffset;
 
-static void CopyNamesAndGenerateBlockDefinition(ShaderData& shaderInOut, Allocator* allocator)
-{
-	const char* blockStart = "layout(std140, binding = 3) uniform MaterialBlock {\n";
-	const size_t blockStartLen = std::strlen(blockStart);
-	const char* blockRowFormat = "%s %s;\n";
-	const size_t blockRowPlaceholdersLen = 4;
-	const size_t blockRowFixedMaxLen = std::strlen(blockRowFormat) - blockRowPlaceholdersLen;
-	const char* blockEnd = "};\n";
-	const size_t blockEndLen = std::strlen(blockEnd);
+	// Generate uniform block definition
 
-	// Calculate how much memory we need to store uniform names and uniform block definition
-
-	size_t nameBytesRequired = 0;
-	size_t uniformBlockBytesRequired = blockStartLen + blockEndLen + 1;
-
-	for (unsigned int i = 0, count = shaderInOut.bufferUniformCount; i < count; ++i)
+	if (shaderOut.uniforms.bufferUniformCount == 0)
 	{
-		const BufferUniform& uniform = shaderInOut.bufferUniforms[i];
-		const UniformTypeInfo& type = UniformTypeInfo::FromType(uniform.type);
-		
-		nameBytesRequired += uniform.name.len + 1;
-		uniformBlockBytesRequired += uniform.name.len + type.typeNameLength + blockRowFixedMaxLen;
-	}
-
-	for (unsigned int i = 0, count = shaderInOut.textureUniformCount; i < count; ++i)
-	{
-		const TextureUniform& uniform = shaderInOut.textureUniforms[i];
-		nameBytesRequired += uniform.name.len + 1;
-	}
-
-	// Allocate memory
-
-	shaderInOut.buffer = allocator->Allocate(nameBytesRequired + uniformBlockBytesRequired);
-	char* bufferPtr = static_cast<char*>(shaderInOut.buffer);
-
-	// Copy uniform names to buffer
-
-	for (unsigned int i = 0, count = shaderInOut.bufferUniformCount; i < count; ++i)
-	{
-		StringRef& uniformName = shaderInOut.bufferUniforms[i].name;
-
-		std::strncpy(bufferPtr, uniformName.str, uniformName.len + 1);
-		uniformName.str = bufferPtr; // Change uniform name to point to allocated memory
-		bufferPtr += uniformName.len + 1;
-	}
-
-	for (unsigned int i = 0, count = shaderInOut.textureUniformCount; i < count; ++i)
-	{
-		StringRef& uniformName = shaderInOut.textureUniforms[i].name;
-
-		std::strncpy(bufferPtr, uniformName.str, uniformName.len + 1);
-		uniformName.str = bufferPtr; // Change uniform name to point to allocated memory
-		bufferPtr += uniformName.len + 1;
-	}
-
-	if (shaderInOut.bufferUniformCount == 0)
-	{
-		shaderInOut.uniformBlockDefinition = StringRef();
+		shaderOut.uniformBlockDefinition = StringRef();
 	}
 	else
 	{
-		// Generate uniform block definition
+		shaderOut.uniformBlockDefinition.str = uniformBlockPtr;
 
-		shaderInOut.uniformBlockDefinition.str = bufferPtr;
+		std::strncpy(uniformBlockPtr, blockStart, blockStartLen + 1);
+		uniformBlockPtr += blockStartLen;
 
-		std::strncpy(bufferPtr, blockStart, blockStartLen + 1);
-		bufferPtr += blockStartLen;
-
-		for (unsigned int i = 0, count = shaderInOut.bufferUniformCount; i < count; ++i)
+		for (unsigned int i = 0, count = shaderOut.uniforms.bufferUniformCount; i < count; ++i)
 		{
-			const BufferUniform& uniform = shaderInOut.bufferUniforms[i];
+			const BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
 			const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
 
-			int written = std::sprintf(bufferPtr, blockRowFormat, typeInfo.typeName, uniform.name.str);
-			bufferPtr += written;
+			int written = std::sprintf(uniformBlockPtr, blockRowFormat, typeInfo.typeName, uniform.name.str);
+			uniformBlockPtr += written;
 		}
 
-		std::strncpy(bufferPtr, blockEnd, blockEndLen + 1);
-		bufferPtr += blockEndLen;
+		std::strncpy(uniformBlockPtr, blockEnd, blockEndLen + 1);
+		uniformBlockPtr += blockEndLen;
 
-		shaderInOut.uniformBlockDefinition.len = bufferPtr - shaderInOut.uniformBlockDefinition.str;
+		shaderOut.uniformBlockDefinition.len = uniformBlockPtr - shaderOut.uniformBlockDefinition.str;
 	}
 }
 
@@ -353,9 +356,9 @@ static void UpdateTextureUniformLocations(
 	ShaderData& shaderInOut,
 	RenderDevice* renderDevice)
 {
-	for (unsigned idx = 0, count = shaderInOut.textureUniformCount; idx < count; ++idx)
+	for (unsigned idx = 0, count = shaderInOut.uniforms.textureUniformCount; idx < count; ++idx)
 	{
-		TextureUniform& u = shaderInOut.textureUniforms[idx];
+		TextureUniform& u = shaderInOut.uniforms.textureUniforms[idx];
 		u.uniformLocation = renderDevice->GetUniformLocation(shaderInOut.driverId, u.name.str);
 	}
 }
@@ -528,7 +531,8 @@ bool ShaderLoader::LoadFromConfiguration(
 		}
 	}
 
-	AddUniforms_UniformData uniforms[ShaderUniform::MaxBufferUniformCount];
+	static const size_t MaxUniformCount = 32;
+	AddUniforms_UniformData uniforms[MaxUniformCount];
 	unsigned int uniformCount = 0;
 
 	MemberItr uniformListItr = config.FindMember("properties");
@@ -588,8 +592,8 @@ bool ShaderLoader::LoadFromConfiguration(
 		}
 	}
 
-	AddUniforms(shaderOut, uniformCount, uniforms);
-	CopyNamesAndGenerateBlockDefinition(shaderOut, allocator);
+	BufferRef<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
+	AddUniforms(shaderOut, uniformBufferRef, allocator);
 
 	MemberItr vsItr = config.FindMember("vs");
 	MemberItr fsItr = config.FindMember("fs");

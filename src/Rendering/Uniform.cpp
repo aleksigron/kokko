@@ -273,3 +273,85 @@ void BufferUniform::UpdateToUniformBuffer(unsigned char* dataBuffer, unsigned ch
 		break;
 	}
 }
+
+UniformList::UniformList() :
+	uniformDataSize(0),
+	uniformBufferSize(0),
+	bufferUniformCount(0),
+	textureUniformCount(0),
+	bufferUniforms(nullptr),
+	textureUniforms(nullptr)
+{
+}
+
+BufferUniform* UniformList::FindBufferUniformByName(StringRef name)
+{
+	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+		if (bufferUniforms[i].name.ValueEquals(name))
+			return &bufferUniforms[i];
+
+	return nullptr;
+}
+
+const BufferUniform* UniformList::FindBufferUniformByName(StringRef name) const
+{
+	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+		if (bufferUniforms[i].name.ValueEquals(name))
+			return &bufferUniforms[i];
+
+	return nullptr;
+}
+
+BufferUniform* UniformList::FindBufferUniformByNameHash(uint32_t nameHash)
+{
+	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+		if (bufferUniforms[i].nameHash == nameHash)
+			return &bufferUniforms[i];
+
+	return nullptr;
+}
+
+const BufferUniform* UniformList::FindBufferUniformByNameHash(uint32_t nameHash) const
+{
+	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+		if (bufferUniforms[i].nameHash == nameHash)
+			return &bufferUniforms[i];
+
+	return nullptr;
+}
+
+TextureUniform* UniformList::FindTextureUniformByName(StringRef name)
+{
+	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
+		if (textureUniforms[i].name.ValueEquals(name))
+			return &textureUniforms[i];
+
+	return nullptr;
+}
+
+const TextureUniform* UniformList::FindTextureUniformByName(StringRef name) const
+{
+	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
+		if (textureUniforms[i].name.ValueEquals(name))
+			return &textureUniforms[i];
+
+	return nullptr;
+}
+
+TextureUniform* UniformList::FindTextureUniformByNameHash(uint32_t nameHash)
+{
+	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
+		if (textureUniforms[i].nameHash == nameHash)
+			return &textureUniforms[i];
+
+	return nullptr;
+}
+
+const TextureUniform* UniformList::FindTextureUniformByNameHash(uint32_t nameHash) const
+{
+	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
+		if (textureUniforms[i].nameHash == nameHash)
+			return &textureUniforms[i];
+
+	return nullptr;
+}

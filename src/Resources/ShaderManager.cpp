@@ -14,24 +14,6 @@
 
 #include "System/File.hpp"
 
-const BufferUniform* ShaderData::FindBufferUniformFromNameHash(uint32_t nameHash) const
-{
-	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
-		if (bufferUniforms[i].nameHash == nameHash)
-			return &bufferUniforms[i];
-
-	return nullptr;
-}
-
-const TextureUniform* ShaderData::FindTextureUniformFromNameHash(uint32_t nameHash) const
-{
-	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
-		if (textureUniforms[i].nameHash == nameHash)
-			return &textureUniforms[i];
-
-	return nullptr;
-}
-
 ShaderManager::ShaderManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
@@ -46,7 +28,7 @@ ShaderManager::ShaderManager(Allocator* allocator, RenderDevice* renderDevice) :
 
 ShaderManager::~ShaderManager()
 {
-	for (unsigned int i = 1, count = data.count; i < count; ++i)
+	for (unsigned int i = 1; i < data.allocated; ++i)
 		allocator->Deallocate(data.shader[i].buffer);
 
 	allocator->Deallocate(data.buffer);
@@ -59,8 +41,10 @@ void ShaderManager::Reallocate(unsigned int required)
 
 	required = Math::UpperPowerOfTwo(required);
 
+	size_t bytes = (sizeof(unsigned int) + sizeof(ShaderData)) * required;
+
 	InstanceData newData;
-	newData.buffer = allocator->Allocate((sizeof(unsigned int) + sizeof(ShaderData)) * required);
+	newData.buffer = allocator->Allocate(bytes);
 	newData.count = data.count;
 	newData.allocated = required;
 
@@ -102,10 +86,7 @@ ShaderId ShaderManager::CreateShader()
 	data.shader[id.i].uniformBlockDefinition = StringRef();
 	data.shader[id.i].transparencyType = TransparencyType::Opaque;
 	data.shader[id.i].driverId = 0;
-	data.shader[id.i].uniformDataSize = 0;
-	data.shader[id.i].uniformBufferSize = 0;
-	data.shader[id.i].bufferUniformCount = 0;
-	data.shader[id.i].textureUniformCount = 0;
+	data.shader[id.i].uniforms = UniformList();
 
 	++data.count;
 

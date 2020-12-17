@@ -22,17 +22,12 @@ struct MaterialData
 	ShaderId shaderId;
 	unsigned int cachedShaderDeviceId;
 
-	unsigned int textureCount;
-
 	unsigned int uniformBufferObject;
-	unsigned int uniformBufferSize;
 
-	unsigned int bufferUniformCount;
-	unsigned int uniformDataSize;
+	void* buffer;
 	unsigned char* uniformData;
 
-	BufferUniform bufferUniforms[ShaderUniform::MaxBufferUniformCount];
-	TextureUniform textureUniforms[ShaderUniform::MaxTextureUniformCount];
+	UniformList uniforms;
 };
 
 class MaterialManager
@@ -75,6 +70,8 @@ public:
 	MaterialId CreateMaterial();
 	void RemoveMaterial(MaterialId id);
 
+	MaterialId CreateCopy(MaterialId copyFrom);
+
 	MaterialId GetIdByPath(StringRef path);
 	MaterialId GetIdByPathHash(uint32_t pathHash)
 	{
@@ -86,4 +83,6 @@ public:
 	{
 		return data.material[id.i];
 	}
+
+	void UpdateUniformsToGPU(MaterialId id);
 };

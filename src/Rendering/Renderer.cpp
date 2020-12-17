@@ -527,9 +527,9 @@ void Renderer::BindMaterialTextures(const MaterialData& material) const
 {
 	unsigned int usedTextures = 0;
 
-	for (unsigned uIndex = 0; uIndex < material.textureCount; ++uIndex)
+	for (unsigned uIndex = 0; uIndex < material.uniforms.textureUniformCount; ++uIndex)
 	{
-		const TextureUniform& u = material.textureUniforms[uIndex];
+		const TextureUniform& u = material.uniforms.textureUniforms[uIndex];
 
 		switch (u.type)
 		{
@@ -569,7 +569,7 @@ void Renderer::BindLightingTextures(const ShaderData& shader) const
 
 	for (unsigned int i = 0; i < textureUniformCount; ++i)
 	{
-		const TextureUniform* tu = shader.FindTextureUniformFromNameHash(uniformNameHashes[i]);
+		const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(uniformNameHashes[i]);
 		if (tu != nullptr)
 		{
 			device->SetUniformInt(tu->uniformLocation, i);

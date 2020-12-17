@@ -1,6 +1,6 @@
 {
 	"skybox-material": "res/materials/skybox/sky_noon.material.json",
-	"ambient-color": [ 0.02, 0.025, 0.03 ],
+	"ambient-color": [ 0.005, 0.007, 0.009 ],
 	"objects": [
 		{
 			"position": [

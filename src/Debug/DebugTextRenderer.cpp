@@ -150,16 +150,8 @@ void DebugTextRenderer::Render()
 
 		const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
-		const TextureUniform* textureUniform = nullptr;
-		for (unsigned int i = 0; i < shader.textureUniformCount; ++i)
-		{
-			UniformDataType type = shader.textureUniforms[i].type;
-
-			if (type == UniformDataType::Tex2D)
-			{
-				textureUniform = shader.textureUniforms + i;
-			}
-		}
+		StringRef uniformName("glyph_tex");
+		const TextureUniform* textureUniform = shader.uniforms.FindTextureUniformByName(uniformName);
 
 		renderDevice->DepthTestDisable();
 

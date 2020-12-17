@@ -34,9 +34,6 @@ enum class UniformDataType
 
 struct ShaderUniform
 {
-	static const unsigned int MaxBufferUniformCount = 16;
-	static const unsigned int MaxTextureUniformCount = 8;
-
 	StringRef name;
 	uint32_t nameHash;
 	UniformDataType type;
@@ -92,6 +89,31 @@ struct TextureUniform : ShaderUniform
 	int uniformLocation;
 	RenderTextureTarget textureTarget;
 	unsigned int textureName;
+};
+
+struct UniformList
+{
+	unsigned int uniformDataSize; // CPU side
+	unsigned int uniformBufferSize; // GPU side
+
+	unsigned int bufferUniformCount;
+	unsigned int textureUniformCount;
+	BufferUniform* bufferUniforms;
+	TextureUniform* textureUniforms;
+
+	UniformList();
+
+	BufferUniform* FindBufferUniformByName(StringRef name);
+	const BufferUniform* FindBufferUniformByName(StringRef name) const;
+
+	BufferUniform* FindBufferUniformByNameHash(uint32_t nameHash);
+	const BufferUniform* FindBufferUniformByNameHash(uint32_t nameHash) const;
+
+	TextureUniform* FindTextureUniformByName(StringRef name);
+	const TextureUniform* FindTextureUniformByName(StringRef name) const;
+
+	TextureUniform* FindTextureUniformByNameHash(uint32_t nameHash);
+	const TextureUniform* FindTextureUniformByNameHash(uint32_t nameHash) const;
 };
 
 struct UniformTypeInfo

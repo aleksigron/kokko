@@ -39,7 +39,7 @@ MaterialManager::MaterialManager(
 
 	freeListFirst = 0;
 
-	this->Reallocate(32);
+	this->Reallocate(80);
 }
 
 MaterialManager::~MaterialManager()
@@ -97,16 +97,36 @@ MaterialId MaterialManager::CreateMaterial()
 		freeListFirst = data.freeList[freeListFirst];
 	}
 
+	data.material[id.i].transparency = TransparencyType::Opaque;
 	data.material[id.i].shaderId = ShaderId{};
 	data.material[id.i].cachedShaderDeviceId = 0;
-	data.material[id.i].textureCount = 0;
 	data.material[id.i].uniformBufferObject = 0;
-	data.material[id.i].uniformBufferSize = 0;
-	data.material[id.i].bufferUniformCount = 0;
-	data.material[id.i].uniformDataSize = 0;
+	data.material[id.i].uniforms = UniformList();
+	data.material[id.i].buffer = nullptr;
 	data.material[id.i].uniformData = nullptr;
 
 	++data.count;
+
+	return id;
+}
+
+MaterialId MaterialManager::CreateCopy(MaterialId copyFrom)
+{
+	const MaterialData& origMaterial = data.material[copyFrom.i];
+
+	MaterialId id = CreateMaterial();
+	SetShader(id, origMaterial.shaderId);
+	MaterialData& newMaterial = data.material[id.i];
+
+	// Copy buffer uniform data
+	std::memcpy(newMaterial.uniformData, origMaterial.uniformData, origMaterial.uniforms.uniformDataSize);
+
+	const TextureUniform* origTextures = origMaterial.uniforms.textureUniforms;
+	TextureUniform* newTextures = newMaterial.uniforms.textureUniforms;
+
+	// Copy texture object names
+	for (unsigned int uniformIdx = 0; uniformIdx < origMaterial.uniforms.textureUniformCount; ++uniformIdx)
+		newTextures[uniformIdx].textureName = origTextures[uniformIdx].textureName;
 
 	return id;
 }
@@ -165,13 +185,12 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 
 void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 {
-	const unsigned int idx = id.i;
-	MaterialData& material = data.material[idx];
+	MaterialData& material = data.material[id.i];
 
-	if (material.uniformData != nullptr) // Release old uniform data
+	if (material.buffer != nullptr) // Release old uniform data
 	{
-		allocator->Deallocate(material.uniformData);
-		material.uniformData = nullptr;
+		allocator->Deallocate(material.buffer);
+		material.buffer = nullptr;
 	}
 
 	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
@@ -182,36 +201,56 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 
 	// Copy uniform information
 
-	material.textureCount = shader.textureUniformCount;
-	material.uniformDataSize = shader.uniformDataSize;
-	material.uniformBufferSize = shader.uniformBufferSize;
-	material.bufferUniformCount = shader.bufferUniformCount;
+	material.uniforms.uniformDataSize = shader.uniforms.uniformDataSize;
+	material.uniforms.uniformBufferSize = shader.uniforms.uniformBufferSize;
+	material.uniforms.bufferUniformCount = shader.uniforms.bufferUniformCount;
+	material.uniforms.textureUniformCount = shader.uniforms.textureUniformCount;
 
-	for (unsigned int i = 0, count = shader.bufferUniformCount; i < count; ++i)
-		material.bufferUniforms[i] = shader.bufferUniforms[i];
-
-	for (unsigned int i = 0, count = shader.textureUniformCount; i < count; ++i)
-		material.textureUniforms[i] = shader.textureUniforms[i];
-
-	// Allocate CPU side data buffer
-	if (material.uniformDataSize > 0)
-		material.uniformData = static_cast<unsigned char*>(allocator->Allocate(material.uniformDataSize));
-	else
-		material.uniformData = nullptr;
-
-	// Create GPU uniform buffer and allocate storage
-	if (material.uniformBufferSize > 0)
+	unsigned int uboSize = material.uniforms.uniformDataSize;
+	
+	if (material.uniforms.bufferUniformCount > 0 ||
+		material.uniforms.textureUniformCount)
 	{
+		size_t bufferSize = material.uniforms.bufferUniformCount * sizeof(BufferUniform) +
+			material.uniforms.textureUniformCount * sizeof(TextureUniform) +
+			material.uniforms.uniformDataSize;
+
+		material.buffer = allocator->Allocate(bufferSize);
+
+		BufferUniform* bufferBuf = static_cast<BufferUniform*>(material.buffer);
+		TextureUniform* textureBuf = reinterpret_cast<TextureUniform*>(bufferBuf + material.uniforms.bufferUniformCount);
+		unsigned char* dataBuf = reinterpret_cast<unsigned char*>(textureBuf + material.uniforms.textureUniformCount);
+
+		material.uniforms.bufferUniforms = material.uniforms.bufferUniformCount > 0 ? bufferBuf : nullptr;
+		material.uniforms.textureUniforms = material.uniforms.textureUniformCount > 0 ? textureBuf : nullptr;
+		material.uniformData = material.uniforms.bufferUniformCount > 0 ? dataBuf : nullptr;
+
+		for (unsigned int i = 0, count = shader.uniforms.bufferUniformCount; i < count; ++i)
+			material.uniforms.bufferUniforms[i] = shader.uniforms.bufferUniforms[i];
+
+		for (unsigned int i = 0, count = shader.uniforms.textureUniformCount; i < count; ++i)
+			material.uniforms.textureUniforms[i] = shader.uniforms.textureUniforms[i];
+
+		// Create GPU uniform buffer and allocate storage
+
 		if (material.uniformBufferObject == 0)
 			renderDevice->CreateBuffers(1, &material.uniformBufferObject);
 
 		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
-		renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, material.uniformBufferSize, nullptr, RenderBufferUsage::StaticDraw);
+		renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, material.uniforms.uniformBufferSize, nullptr, RenderBufferUsage::StaticDraw);
 	}
-	else if (material.uniformBufferObject != 0)
+	else
 	{
-		renderDevice->DestroyBuffers(1, &material.uniformBufferObject);
-		material.uniformBufferObject = 0;
+		material.buffer = nullptr;
+		material.uniforms.bufferUniforms = nullptr;
+		material.uniforms.textureUniforms = nullptr;
+		material.uniformData = nullptr;
+
+		if (material.uniformBufferObject != 0)
+		{
+			renderDevice->DestroyBuffers(1, &material.uniformBufferObject);
+			material.uniformBufferObject = 0;
+		}
 	}
 }
 
@@ -515,10 +554,10 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 	// For reusing memory when setting values to material dataBuffer
 	Array<unsigned char> cacheBuffer(allocator);
 
-	for (unsigned int uniformIdx = 0; uniformIdx < shader.bufferUniformCount; ++uniformIdx)
+	for (unsigned int uniformIdx = 0; uniformIdx < shader.uniforms.bufferUniformCount; ++uniformIdx)
 	{
-		const BufferUniform& shaderUniform = shader.bufferUniforms[uniformIdx];
-		const BufferUniform& materialUniform = material.bufferUniforms[uniformIdx];
+		const BufferUniform& shaderUniform = shader.uniforms.bufferUniforms[uniformIdx];
+		const BufferUniform& materialUniform = material.uniforms.bufferUniforms[uniformIdx];
 		
 		if (variablesArrayIsValid)
 			varValue = FindVariableValue(variablesItr->value, shaderUniform.name);
@@ -530,10 +569,10 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 
 	// TEXTURE UNIFORMS
 
-	for (unsigned int uniformIdx = 0; uniformIdx < shader.textureUniformCount; ++uniformIdx)
+	for (unsigned int uniformIdx = 0; uniformIdx < shader.uniforms.textureUniformCount; ++uniformIdx)
 	{
-		const TextureUniform& shaderUniform = shader.textureUniforms[uniformIdx];
-		TextureUniform& materialUniform = material.textureUniforms[uniformIdx];
+		const TextureUniform& shaderUniform = shader.uniforms.textureUniforms[uniformIdx];
+		TextureUniform& materialUniform = material.uniforms.textureUniforms[uniformIdx];
 
 		TextureId textureId = TextureId{ 0 };
 
@@ -558,27 +597,34 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 		materialUniform.textureName = texture.textureObjectId;
 	}
 
+	UpdateUniformsToGPU(id);
+
+	return true;
+}
+
+void MaterialManager::UpdateUniformsToGPU(MaterialId id)
+{
+	MaterialData& material = data.material[id.i];
+
 	// Update uniform buffer object on the GPU
-	if (material.bufferUniformCount > 0)
+	if (material.uniforms.bufferUniformCount > 0)
 	{
 		static const size_t stackBufferSize = 2048;
 		unsigned char stackBuffer[stackBufferSize];
 		unsigned char* uniformBuffer = nullptr;
 
-		if (material.uniformBufferSize <= stackBufferSize)
+		if (material.uniforms.uniformBufferSize <= stackBufferSize)
 			uniformBuffer = stackBuffer;
 		else
-			uniformBuffer = static_cast<unsigned char*>(allocator->Allocate(material.uniformBufferSize));
+			uniformBuffer = static_cast<unsigned char*>(allocator->Allocate(material.uniforms.uniformBufferSize));
 
-		for (unsigned int i = 0, count = material.bufferUniformCount; i < count; ++i)
-			material.bufferUniforms[i].UpdateToUniformBuffer(material.uniformData, uniformBuffer);
+		for (unsigned int i = 0, count = material.uniforms.bufferUniformCount; i < count; ++i)
+			material.uniforms.bufferUniforms[i].UpdateToUniformBuffer(material.uniformData, uniformBuffer);
 
 		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
-		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, material.uniformBufferSize, uniformBuffer);
+		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, material.uniforms.uniformBufferSize, uniformBuffer);
 
 		if (uniformBuffer != stackBuffer)
 			allocator->Deallocate(uniformBuffer);
 	}
-
-	return true;
 }
