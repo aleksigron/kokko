@@ -17,7 +17,7 @@ class TextureManager;
 class DebugTextRenderer
 {
 private:
-	struct RenderData
+	struct DisplayData
 	{
 		unsigned int stringStart;
 		unsigned int stringLength;
@@ -31,7 +31,7 @@ private:
 	BitmapFont* font;
 	unsigned int stringCharCount;
 	Array<char> stringData;
-	Array<RenderData> renderData;
+	Array<DisplayData> displayData;
 
 	Vec2f frameSize;
 	Vec2f scaledFrameSize;
@@ -64,7 +64,12 @@ public:
 	int GetRowCountForTextLength(unsigned int characterCount) const;
 
 	/**
-	 * Add a text to be rendered this frame at a specified position.
+	 * Add a text to be rendered this frame at a specified normalized position.
+	 */
+	void AddTextNormalized(StringRef str, Vec2f position);
+
+	/**
+	 * Add a text to be rendered this frame at a specified pixel position.
 	 */
 	void AddText(StringRef str, Vec2f position);
 

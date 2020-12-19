@@ -45,8 +45,8 @@ MaterialManager::MaterialManager(
 MaterialManager::~MaterialManager()
 {
 	for (unsigned int i = 1; i < data.count; ++i)
-		if (data.material[i].uniformData != nullptr)
-			allocator->Deallocate(data.material[i].uniformData);
+		if (data.material[i].buffer != nullptr)
+			allocator->Deallocate(data.material[i].buffer);
 
 	allocator->Deallocate(data.buffer);
 }

@@ -18,6 +18,12 @@ struct Vec4
 	const T& operator[](std::size_t index) const { return (&x)[index]; }
 
 	Vec3<T> xyz() const { return Vec3<T>(x, y, z); }
+
+	// Component-wise multiplication (Hadamard product) of two vectors
+	static inline Vec4 Hadamard(const Vec4& lhs, const Vec4& rhs)
+	{
+		return Vec4(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w);
+	}
 };
 
 // Vector-vector addition

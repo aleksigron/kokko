@@ -71,7 +71,7 @@ void App::Initialize()
 		Vec2f frameSize = window->GetFrameBufferSize();
 		mainCamera.parameters.projection = ProjectionType::Perspective;
 		mainCamera.parameters.near = 0.1f;
-		mainCamera.parameters.far = 100.0f;
+		mainCamera.parameters.far = 500.0f;
 		mainCamera.parameters.height = Math::DegreesToRadians(60.0f);
 		mainCamera.parameters.SetAspectRatio(frameSize.x, frameSize.y);
 	}

@@ -81,17 +81,17 @@ void CameraController::Update()
 
 		cameraYaw += movement.x;
 
-		if (cameraYaw < -180.0f)
-			cameraYaw += 360.0f;
-		else if (cameraYaw >= 180.0f)
-			cameraYaw -= 360.0f;
+		if (cameraYaw < -Math::Const::Pi)
+			cameraYaw += Math::Const::Tau;
+		else if (cameraYaw >= Math::Const::Pi)
+			cameraYaw -= Math::Const::Tau;
 
 		cameraPitch += movement.y;
 
-		if (cameraPitch < -80.0f)
-			cameraPitch = -80.0f;
-		else if (cameraPitch > 80.0f)
-			cameraPitch = 80.0f;
+		if (cameraPitch < Math::DegreesToRadians(-80.0f))
+			cameraPitch = Math::DegreesToRadians(-80.0f);
+		else if (cameraPitch > Math::DegreesToRadians(80.0f))
+			cameraPitch = Math::DegreesToRadians(80.0f);
 	}
 
 	Mat3x3f rotation = Mat3x3f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), -cameraYaw) *
@@ -132,10 +132,13 @@ void CameraController::Update()
 	if (dir.SqrMagnitude() > 1.0f)
 		dir.Normalize();
 
-	float targetSpeed = cameraMaximumSpeed;
+	float targetSpeed = cameraSpeed;
 
 	if (kb->GetKey(Key::LeftShift))
-		targetSpeed *= 2.0f;
+		targetSpeed *= 4.0f;
+
+	if (kb->GetKey(Key::LeftControl))
+		targetSpeed *= 0.25f;
 
 	cameraVelocity += (dir * targetSpeed - cameraVelocity) * 0.15f;
 	position += cameraVelocity * Time::GetDeltaTime();

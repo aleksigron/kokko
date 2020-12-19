@@ -36,7 +36,7 @@ DebugTextRenderer::DebugTextRenderer(
 	font(nullptr),
 	stringCharCount(0),
 	stringData(allocator),
-	renderData(allocator),
+	displayData(allocator),
 	scaleFactor(1.0f),
 	meshId(MeshId{}),
 	materialBufferObjectId(0),
@@ -62,7 +62,7 @@ void DebugTextRenderer::Initialize(ShaderManager* shaderManager)
 
 void DebugTextRenderer::SetFrameSize(const Vec2f& size)
 {
-	assert(renderData.GetCount() == 0);
+	assert(displayData.GetCount() == 0);
 
 	frameSize = size;
 	scaledFrameSize = size * (1.0f / scaleFactor);
@@ -70,7 +70,7 @@ void DebugTextRenderer::SetFrameSize(const Vec2f& size)
 
 void DebugTextRenderer::SetScaleFactor(float scale)
 {
-	assert(renderData.GetCount() == 0);
+	assert(displayData.GetCount() == 0);
 
 	scaleFactor = scale;
 	scaledFrameSize = frameSize * (1.0f / scaleFactor);
@@ -98,9 +98,17 @@ bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const cha
 		return false;
 }
 
+void DebugTextRenderer::AddTextNormalized(StringRef str, Vec2f position)
+{
+	Vec2f pixelPos = Vec2f::Hadamard(position, scaledFrameSize);
+	Rectanglef area(pixelPos, scaledFrameSize);
+
+	this->AddText(str, area);
+}
+
 void DebugTextRenderer::AddText(StringRef str, Vec2f position)
 {
-	Rectanglef area(position, scaledFrameSize - position);
+	Rectanglef area(position, scaledFrameSize);
 
 	this->AddText(str, area);
 }
@@ -112,15 +120,15 @@ void DebugTextRenderer::AddText(StringRef str, const Rectanglef& area)
 	unsigned int stringPosition = stringData.GetCount();
 	stringData.InsertBack(str.str, str.len);
 
-	RenderData& rd = renderData.PushBack();
-	rd.stringStart = stringPosition;
-	rd.stringLength = str.len;
-	rd.area = area;
+	DisplayData& dd = displayData.PushBack();
+	dd.stringStart = stringPosition;
+	dd.stringLength = str.len;
+	dd.area = area;
 }
 
 void DebugTextRenderer::Render()
 {
-	if (renderData.GetCount() > 0 && font != nullptr)
+	if (displayData.GetCount() > 0 && font != nullptr)
 	{
 		Engine* engine = Engine::GetInstance();
 		MeshManager* meshManager = engine->GetMeshManager();
@@ -190,7 +198,7 @@ void DebugTextRenderer::Render()
 
 		stringCharCount = 0;
 		stringData.Clear();
-		renderData.Clear();
+		displayData.Clear();
 	}
 }
 
@@ -219,11 +227,11 @@ void DebugTextRenderer::CreateAndUploadData()
 
 	const char* strData = stringData.GetData();
 
-	RenderData* rdItr = renderData.GetData();
-	RenderData* rdEnd = rdItr + renderData.GetCount();
-	for (; rdItr != rdEnd; ++rdItr)
+	DisplayData* ddItr = displayData.GetData();
+	DisplayData* ddEnd = ddItr + displayData.GetCount();
+	for (; ddItr != ddEnd; ++ddItr)
 	{
-		RenderData rd = *rdItr;
+		DisplayData rd = *ddItr;
 		Vec2f drawPos = Vec2f(rd.area.position.x, -rd.area.position.y);
 
 		const char* strItr = strData + rd.stringStart;

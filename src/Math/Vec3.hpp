@@ -70,7 +70,13 @@ struct Vec3
 
 		return *this;
 	}
-	
+
+	// Component-wise multiplication (Hadamard product) of two vectors
+	static inline Vec3 Hadamard(const Vec3& lhs, const Vec3& rhs)
+	{
+		return Vec3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
+	}
+
 	// Dot product of two vectors
 	static inline T Dot(const Vec3& lhs, const Vec3& rhs)
 	{
