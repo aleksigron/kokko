@@ -28,6 +28,7 @@ class ShaderManager;
 class RenderDevice;
 class Scene;
 class Window;
+class DebugVectorRenderer;
 
 struct BoundingBox;
 struct RendererFramebuffer;
@@ -110,6 +111,8 @@ private:
 
 	Camera* GetRenderCamera(Scene* scene);
 	Camera* GetCullingCamera(Scene* scene);
+
+	void DebugRender(DebugVectorRenderer* vectorRenderer);
 	
 public:
 	Renderer(Allocator* allocator, RenderDevice* renderDevice,

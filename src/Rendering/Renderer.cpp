@@ -56,6 +56,7 @@ struct RendererViewport
 
 	float farMinusNear;
 	float minusNear;
+	float objectMinScreenSizePx;
 
 	Mat4x4f viewToWorld;
 	Mat4x4f view;
@@ -843,6 +844,9 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 
 void Renderer::PopulateCommandList(Scene* scene)
 {
+	const float mainViewportMinObjectSize = 50.0f;
+	const float shadowViewportMinObjectSize = 30.0f;
+
 	// Get camera transforms
 
 	Camera* renderCamera = this->GetRenderCamera(scene);
@@ -906,6 +910,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 				vp.forward = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 				vp.farMinusNear = lightProjections[cascade].far - lightProjections[cascade].near;
 				vp.minusNear = -lightProjections[cascade].near;
+				vp.objectMinScreenSizePx = shadowViewportMinObjectSize;
 				vp.viewToWorld = cascadeViewTransforms[cascade];
 				vp.view = vp.viewToWorld.GetInverse();
 				vp.projection = lightProjections[cascade].GetProjectionMatrix();
@@ -941,12 +946,13 @@ void Renderer::PopulateCommandList(Scene* scene)
 		vp.forward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 		vp.farMinusNear = renderCamera->parameters.far - renderCamera->parameters.near;
 		vp.minusNear = -renderCamera->parameters.near;
+		vp.objectMinScreenSizePx = mainViewportMinObjectSize;
 		vp.viewToWorld = cameraTransform;
 		vp.view = Camera::GetViewMatrix(vp.viewToWorld);
 		vp.projection = projectionParams.GetProjectionMatrix();
+		vp.viewProjection = vp.projection * vp.view;
 		vp.viewportRectangle.size = Vec2i(fb.width, fb.height);
 		vp.viewportRectangle.position = Vec2i(0, 0);
-		vp.viewProjection = vp.projection * vp.view;
 		vp.frustum.Update(cullingCamera->parameters, cullingCameraTransform);
 		vp.framebufferIndex = FramebufferIndexGBuffer;
 
@@ -1125,9 +1131,6 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 	// Create draw commands for render objects in scene
 
-	FrustumPlanes frustum[MaxViewportCount];
-	frustum[fsvp].Update(cullingCamera->parameters, cullingCameraTransform);
-
 	unsigned int visRequired = BitPack::CalculateRequired(data.count);
 	objectVisibility.Resize(visRequired * viewportCount);
 
@@ -1138,7 +1141,13 @@ void Renderer::PopulateCommandList(Scene* scene)
 	for (size_t vpIdx = 0, count = viewportCount; vpIdx < count; ++vpIdx)
 	{
 		vis[vpIdx] = objectVisibility.GetData() + visRequired * vpIdx;
-		Intersect::FrustumAABB(viewportData[vpIdx].frustum, data.count, data.bounds, vis[vpIdx]);
+
+		const FrustumPlanes& frustum = viewportData[vpIdx].frustum;
+		const Mat4x4f& viewProjection = viewportData[vpIdx].viewProjection;
+		const Vec2i viewPortSize = viewportData[vpIdx].viewportRectangle.size;
+		float minSize = viewportData[vpIdx].objectMinScreenSizePx / (viewPortSize.x * viewPortSize.y);
+
+		Intersect::FrustumAABBMinSize(frustum, viewProjection, minSize, data.count, data.bounds, vis[vpIdx]);
 	}
 
 	for (unsigned int i = 1; i < data.count; ++i)
@@ -1263,5 +1272,18 @@ void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entitie
 			// Set world transform
 			data.transform[dataIdx] = transforms[entityIdx];
 		}
+	}
+}
+
+void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer)
+{
+	Color color(1.0f, 1.0f, 1.0f, 1.0f);
+
+	for (unsigned int idx = 1; idx < data.count; ++idx)
+	{
+		Vec3f pos = (data.transform[idx] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+		Vec3f scale = data.bounds[idx].extents * 2.0f;
+		Mat4x4f transform = Mat4x4f::Scale(scale) * Mat4x4f::Translate(pos);
+		vectorRenderer->DrawWireCube(transform, color);
 	}
 }
