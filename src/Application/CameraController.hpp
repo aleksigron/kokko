@@ -18,7 +18,7 @@ private:
 	Vec3f cameraVelocity;
 	float cameraSpeed = 4.0f;
 
-	bool mouseLookEnable = false;
+	bool mouseLookActive = false;
 	bool mouseGrabActive = false;
 
 	float cameraAimSensitivity = -1.0f;

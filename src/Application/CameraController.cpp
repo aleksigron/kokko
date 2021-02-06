@@ -57,6 +57,9 @@ void CameraController::VerifySensitityIsLoaded()
 
 void CameraController::Update()
 {
+	static const int MouseButtonGrab = 0;
+	static const int MouseButtonLook = 1;
+
 	this->VerifySensitityIsLoaded();
 
 	SceneManager* sm = Engine::GetInstance()->GetSceneManager();
@@ -66,16 +69,20 @@ void CameraController::Update()
 	PointerInput* pi = inputManager->GetPointerInput();
 	KeyboardInputView* kb = inputManager->GetKeyboardInputView();
 
-	if (kb->GetKeyDown(Key::Space) && mouseGrabActive == false)
+	// Update mouseLookActive state
+	if (mouseLookActive == false && pi->GetMouseButtonDown(MouseButtonLook))
 	{
-		mouseLookEnable = !mouseLookEnable;
-
-		pi->SetCursorMode(mouseLookEnable ?
-						  PointerInput::CursorMode::Disabled :
-						  PointerInput::CursorMode::Normal);
+		mouseLookActive = true;
+		pi->SetCursorMode(PointerInput::CursorMode::Disabled);
+	}
+	else if (mouseLookActive == true && pi->GetMouseButtonUp(MouseButtonLook))
+	{
+		mouseLookActive = false;
+		pi->SetCursorMode(PointerInput::CursorMode::Normal);
 	}
 
-	if (mouseLookEnable == true)
+	// Update mouse look
+	if (mouseLookActive == true)
 	{
 		Vec2f movement = pi->GetCursorMovement() * 0.003f * this->cameraAimSensitivity;
 
@@ -106,11 +113,11 @@ void CameraController::Update()
 	Mat4x4f currentTransform = scene->GetLocalTransform(cameraSceneObject);
 	Vec3f position = (currentTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
-	if (mouseLookEnable == false)
+	if (mouseLookActive == false)
 	{
-		if (pi->GetMouseButtonDown(0))
+		if (pi->GetMouseButtonDown(MouseButtonGrab))
 			mouseGrabActive = true;
-		else if (pi->GetMouseButtonUp(0))
+		else if (pi->GetMouseButtonUp(MouseButtonGrab))
 			mouseGrabActive = false;
 
 		if (mouseGrabActive)
