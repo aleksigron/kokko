@@ -76,7 +76,9 @@ Renderer::Renderer(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	LightManager* lightManager,
-	ShaderManager* shaderManager) :
+	ShaderManager* shaderManager,
+	MeshManager* meshManager,
+	MaterialManager* materialManager) :
 	allocator(allocator),
 	device(renderDevice),
 	framebufferData(nullptr),
@@ -87,17 +89,21 @@ Renderer::Renderer(
 	entityMap(allocator),
 	lightManager(lightManager),
 	shaderManager(shaderManager),
+	meshManager(meshManager),
+	materialManager(materialManager),
 	overrideRenderCamera(nullptr),
 	overrideCullingCamera(nullptr),
 	commandList(allocator),
 	objectVisibility(allocator),
-	lightResultArray(allocator)
+	lightResultArray(allocator),
+	renderCallbacks(allocator)
 {
 	lightingMesh = MeshId{ 0 };
 	lightingShader = ShaderId{ 0 };
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
 	objectUniformBufferId = 0;
+	deferredLightingCallback = AddRenderCallback(DeferredLightingCallback, this);
 
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
@@ -414,14 +420,6 @@ Camera* Renderer::GetCullingCamera(Scene* scene)
 
 void Renderer::Render(Scene* scene)
 {
-	Engine* engine = Engine::GetInstance();
-	MeshManager* meshManager = engine->GetMeshManager();
-	MaterialManager* materialManager = engine->GetMaterialManager();
-
-	Camera* renderCamera = this->GetRenderCamera(scene);
-	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());
-	Mat4x4f renderCameraTransform = scene->GetWorldTransform(renderCameraObject);
-
 	PopulateCommandList(scene);
 
 	unsigned int lastVpIdx = MaxViewportCount;
@@ -440,14 +438,13 @@ void Renderer::Render(Scene* scene)
 		// If command is not control command, draw object
 		if (ParseControlCommand(command) == false)
 		{
-			RenderPass pass = static_cast<RenderPass>(renderOrder.viewportPass.GetValue(command));
+			unsigned int mat = renderOrder.materialId.GetValue(command);
 
-			if (pass != RenderPass::OpaqueLighting)
+			if (mat != RenderOrderConfiguration::CallbackMaterialId)
 			{
 				unsigned int vpIdx = renderOrder.viewportIndex.GetValue(command);
-				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
-				unsigned int mat = renderOrder.materialId.GetValue(command);
 				MaterialId matId = MaterialId{mat};
+				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
 
 				// Update viewport uniform block
 				if (vpIdx != lastVpIdx)
@@ -495,28 +492,21 @@ void Renderer::Render(Scene* scene)
 				device->BindVertexArray(draw->vertexArrayObject);
 				device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 			}
-			else // Pass is OpaqueLighting
+			else // Render with callback
 			{
-				const ShaderData& shader = shaderManager->GetShaderData(lightingShader);
+				unsigned int callbackId = renderOrder.renderObject.GetValue(command);
 
-				device->UseShaderProgram(shader.driverId);
+				if (callbackId > 0 && callbackId <= renderCallbacks.GetCount())
+				{
+					const RenderCallback callback = renderCallbacks[callbackId - 1];
 
-				BindLightingTextures(shader);
+					RenderCallbackParams params;
+					params.command = command;
+					params.scene = scene;
 
-				// Update lightingUniformBuffer data
-				unsigned char lightingUniformBuffer[LightingUniformBlock::BufferSize];
-				UpdateLightingDataToUniformBuffer(lightingUniformBuffer, renderCamera->parameters, scene);
-
-				device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
-				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, LightingUniformBlock::BufferSize, lightingUniformBuffer);
-
-				// Bind uniform buffer to binding point 0
-				device->BindBufferBase(RenderBufferTarget::UniformBuffer, 0, lightingUniformBufferId);
-
-				// Draw fullscreen quad
-				MeshDrawData* draw = meshManager->GetDrawData(lightingMesh);
-				device->BindVertexArray(draw->vertexArrayObject);
-				device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+					if (callback.callback != nullptr)
+						callback.callback(callback.userData, params);
+				}
 			}
 		}
 	}
@@ -546,6 +536,41 @@ void Renderer::BindMaterialTextures(const MaterialData& material) const
 			break;
 		}
 	}
+}
+
+void Renderer::DeferredLightingCallback(void* userData, const RenderCallbackParams& params)
+{
+	Renderer* renderer = static_cast<Renderer*>(userData);
+	renderer->RenderDeferredLighting(params);
+}
+
+void Renderer::RenderDeferredLighting(const RenderCallbackParams& params)
+{
+	Scene* scene = params.scene;
+	Camera* renderCamera = this->GetRenderCamera(scene);
+	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());
+	Mat4x4f renderCameraTransform = scene->GetWorldTransform(renderCameraObject);
+
+	const ShaderData& shader = shaderManager->GetShaderData(lightingShader);
+
+	device->UseShaderProgram(shader.driverId);
+
+	BindLightingTextures(shader);
+
+	// Update lightingUniformBuffer data
+	unsigned char lightingUniformBuffer[LightingUniformBlock::BufferSize];
+	UpdateLightingDataToUniformBuffer(lightingUniformBuffer, renderCamera->parameters, scene);
+
+	device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
+	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, LightingUniformBlock::BufferSize, lightingUniformBuffer);
+
+	// Bind uniform buffer to binding point 0
+	device->BindBufferBase(RenderBufferTarget::UniformBuffer, 0, lightingUniformBufferId);
+
+	// Draw fullscreen quad
+	MeshDrawData* draw = meshManager->GetDrawData(lightingMesh);
+	device->BindVertexArray(draw->vertexArrayObject);
+	device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 }
 
 void Renderer::BindLightingTextures(const ShaderData& shader) const
@@ -1106,7 +1131,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 	commandList.AddControl(fsvp, l_pass, 2, ctrl::DepthTestFunction, GL_ALWAYS);
 
 	// Draw lighting pass
-	commandList.AddDraw(fsvp, l_pass, 0.0f, MaterialId{}, 0);
+	commandList.AddDrawWithCallback(fsvp, l_pass, 0.0f, deferredLightingCallback);
 
 	// PASS: SKYBOX
 
@@ -1249,6 +1274,40 @@ void Renderer::AddRenderObject(unsigned int count, const Entity* entities, Rende
 	}
 
 	data.count += count;
+}
+
+unsigned int Renderer::AddRenderCallback(RenderCallbackFn callback, void* userData)
+{
+	for (unsigned int i = 0, count = renderCallbacks.GetCount(); i < count; ++i)
+	{
+		if (renderCallbacks[i].callback == nullptr)
+		{
+			renderCallbacks[i].callback = callback;
+			renderCallbacks[i].userData = userData;
+
+			return i + 1;
+		}
+	}
+
+	RenderCallback& addedCallback = renderCallbacks.PushBack();
+	addedCallback.callback = callback;
+	addedCallback.userData = userData;
+
+	return renderCallbacks.GetCount();
+}
+
+void Renderer::RemoveRenderCallback(unsigned int callbackId)
+{
+	if (callbackId == renderCallbacks.GetCount())
+	{
+		renderCallbacks.PopBack();
+	}
+	else if (callbackId < renderCallbacks.GetCount() && callbackId > 0)
+	{
+		RenderCallback& callback = renderCallbacks[callbackId - 1];
+		callback.callback = nullptr;
+		callback.userData = nullptr;
+	}
 }
 
 void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms)

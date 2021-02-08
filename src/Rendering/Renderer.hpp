@@ -25,6 +25,8 @@ class Allocator;
 class Camera;
 class LightManager;
 class ShaderManager;
+class MeshManager;
+class MaterialManager;
 class RenderDevice;
 class Scene;
 class Window;
@@ -39,7 +41,22 @@ struct ProjectionParameters;
 
 class Renderer : public ITransformUpdateReceiver
 {
+public:
+	struct RenderCallbackParams
+	{
+		uint64_t command;
+		Scene* scene;
+	};
+
+	using RenderCallbackFn = void(*)(void*, const RenderCallbackParams&);
+
 private:
+	struct RenderCallback
+	{
+		RenderCallbackFn callback;
+		void* userData;
+	};
+
 	static const unsigned int MaxViewportCount = 8;
 
 	static const unsigned int AlbedoTextureIdx = 0;
@@ -67,6 +84,8 @@ private:
 	unsigned int lightingUniformBufferId;
 	unsigned int objectUniformBufferId;
 
+	unsigned int deferredLightingCallback;
+
 	struct InstanceData
 	{
 		unsigned int count;
@@ -87,6 +106,8 @@ private:
 
 	LightManager* lightManager;
 	ShaderManager* shaderManager;
+	MeshManager* meshManager;
+	MaterialManager* materialManager;
 
 	Camera* overrideRenderCamera;
 	Camera* overrideCullingCamera;
@@ -96,9 +117,14 @@ private:
 
 	Array<LightId> lightResultArray;
 
+	Array<RenderCallback> renderCallbacks;
+
 	Entity skyboxEntity;
 
 	void ReallocateRenderObjects(unsigned int required);
+
+	static void DeferredLightingCallback(void* userData, const RenderCallbackParams& params);
+	void RenderDeferredLighting(const RenderCallbackParams& params);
 
 	void BindMaterialTextures(const MaterialData& material) const;
 	void BindLightingTextures(const ShaderData& shader) const;
@@ -116,7 +142,8 @@ private:
 	
 public:
 	Renderer(Allocator* allocator, RenderDevice* renderDevice,
-		LightManager* lightManager, ShaderManager* shaderManager);
+		LightManager* lightManager, ShaderManager* shaderManager,
+		MeshManager* meshManager, MaterialManager* materialManager);
 	~Renderer();
 
 	void Initialize(Window* window);
@@ -150,4 +177,8 @@ public:
 	{
 		data.order[id.i] = order;
 	}
+
+	// Render callback management
+	unsigned int AddRenderCallback(RenderCallbackFn callback, void* userData);
+	void RemoveRenderCallback(unsigned int callbackId);
 };

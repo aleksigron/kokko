@@ -71,7 +71,8 @@ Engine::Engine()
 	this->lightManager = defaultAllocator->MakeNew<LightManager>(lightManagerAlloc);
 
 	Allocator* rendererAlloc = allocatorManager->CreateAllocatorScope("Renderer", defaultAllocator);
-	this->renderer = defaultAllocator->MakeNew<Renderer>(rendererAlloc, renderDevice, lightManager, shaderManager);
+	this->renderer = defaultAllocator->MakeNew<Renderer>(
+		rendererAlloc, renderDevice, lightManager, shaderManager, meshManager, materialManager);
 
 	Allocator* sceneManagerAlloc = allocatorManager->CreateAllocatorScope("SceneManager", defaultAllocator);
 	this->sceneManager = defaultAllocator->MakeNew<SceneManager>(sceneManagerAlloc);

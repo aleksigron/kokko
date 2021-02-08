@@ -1,11 +1,11 @@
 #pragma once
 
+#include "Core/Array.hpp"
+
 #include "Resources/MaterialData.hpp"
 
 #include "Rendering/RenderOrder.hpp"
 #include "Rendering/RenderCommandType.hpp"
-
-#include "Core/Array.hpp"
 
 class Allocator;
 
@@ -43,6 +43,13 @@ struct RenderCommandList
 		float depth,
 		MaterialId material,
 		unsigned int objIndex);
+
+	void AddDrawWithCallback(
+		unsigned int viewport,
+		RenderPass pass,
+		float depth,
+		unsigned int callbackIndex
+	);
 
 	void Sort();
 

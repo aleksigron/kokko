@@ -6,6 +6,8 @@
 
 struct RenderOrderConfiguration
 {
+	static const uint64_t CallbackMaterialId = (1 << 12) - 1;
+
 	RenderOrderConfiguration()
 	{
 		viewportIndex.SetDefinition(3, sizeof(uint64_t) * 8);
