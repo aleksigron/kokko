@@ -12,6 +12,7 @@ class MaterialManager;
 class TextureManager;
 class SceneManager;
 class LightManager;
+class TerrainManager;
 
 class Debug;
 
@@ -33,6 +34,7 @@ private:
 	MaterialManager* materialManager;
 	TextureManager* textureManager;
 	SceneManager* sceneManager;
+	TerrainManager* terrainManager;
 
 	Debug* debug;
 

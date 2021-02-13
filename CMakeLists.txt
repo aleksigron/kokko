@@ -116,7 +116,12 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDeviceEnums.hpp
 	src/Rendering/RenderDeviceOpenGL.cpp
 	src/Rendering/RenderDeviceOpenGL.hpp
+	src/Rendering/RenderViewport.hpp
 	src/Rendering/StaticUniformBuffer.hpp
+	src/Rendering/TerrainInstance.cpp
+	src/Rendering/TerrainInstance.hpp
+	src/Rendering/TerrainManager.cpp
+	src/Rendering/TerrainManager.hpp
 	src/Rendering/TransparencyType.hpp
 	src/Rendering/Uniform.cpp
 	src/Rendering/Uniform.hpp

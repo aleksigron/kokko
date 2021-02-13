@@ -18,6 +18,7 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/RenderDeviceOpenGL.hpp"
 #include "Rendering/Renderer.hpp"
+#include "Rendering/TerrainManager.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
@@ -70,12 +71,15 @@ Engine::Engine()
 	Allocator* lightManagerAlloc = allocatorManager->CreateAllocatorScope("LightManager", defaultAllocator);
 	this->lightManager = defaultAllocator->MakeNew<LightManager>(lightManagerAlloc);
 
+	Allocator* sceneManagerAlloc = allocatorManager->CreateAllocatorScope("SceneManager", defaultAllocator);
+	this->sceneManager = defaultAllocator->MakeNew<SceneManager>(sceneManagerAlloc);
+
+	Allocator* terrainManagerAlloc = allocatorManager->CreateAllocatorScope("TerrainManager", defaultAllocator);
+	this->terrainManager = defaultAllocator->MakeNew<TerrainManager>(terrainManagerAlloc, renderDevice, meshManager, materialManager);
+
 	Allocator* rendererAlloc = allocatorManager->CreateAllocatorScope("Renderer", defaultAllocator);
 	this->renderer = defaultAllocator->MakeNew<Renderer>(
 		rendererAlloc, renderDevice, lightManager, shaderManager, meshManager, materialManager);
-
-	Allocator* sceneManagerAlloc = allocatorManager->CreateAllocatorScope("SceneManager", defaultAllocator);
-	this->sceneManager = defaultAllocator->MakeNew<SceneManager>(sceneManagerAlloc);
 }
 
 Engine::~Engine()
@@ -85,8 +89,9 @@ Engine::~Engine()
 
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
 
-	defaultAllocator->MakeDelete(this->sceneManager);
 	defaultAllocator->MakeDelete(this->renderer);
+	defaultAllocator->MakeDelete(this->terrainManager);
+	defaultAllocator->MakeDelete(this->sceneManager);
 	defaultAllocator->MakeDelete(this->lightManager);
 	defaultAllocator->MakeDelete(this->materialManager);
 	defaultAllocator->MakeDelete(this->shaderManager);
@@ -127,6 +132,7 @@ bool Engine::Initialize()
 		debug->Initialize(mainWindow, meshManager, shaderManager);
 		textureManager->Initialize();
 		renderer->Initialize(mainWindow);
+		terrainManager->Initialize(renderer);
 
 		return true;
 	}

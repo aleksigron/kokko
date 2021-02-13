@@ -3,6 +3,7 @@
 #include <cstdint>
 
 struct RenderCommandList;
+struct RenderViewport;
 class Scene;
 
 class CustomRenderer
@@ -18,6 +19,7 @@ public:
 
 	struct RenderParams
 	{
+		const RenderViewport* viewport;
 		unsigned int callbackId;
 		uint64_t command;
 		Scene* scene;

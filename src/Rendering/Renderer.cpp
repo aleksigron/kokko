@@ -24,6 +24,7 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
+#include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 
 #include "Resources/MaterialManager.hpp"
@@ -47,29 +48,6 @@ struct RendererFramebuffer
 
 	int width;
 	int height;
-};
-
-struct RendererViewport
-{
-	Vec3f position;
-	Vec3f forward;
-
-	float farMinusNear;
-	float minusNear;
-	float objectMinScreenSizePx;
-
-	Mat4x4f viewToWorld;
-	Mat4x4f view;
-	Mat4x4f projection;
-	Mat4x4f viewProjection;
-
-	Rectanglei viewportRectangle;
-
-	FrustumPlanes frustum;
-
-	unsigned int framebufferIndex;
-
-	unsigned int uniformBlockObject;
 };
 
 Renderer::Renderer(
@@ -128,8 +106,8 @@ void Renderer::Initialize(Window* window)
 
 	{
 		// Allocate viewport data storage
-		void* buf = this->allocator->Allocate(sizeof(RendererViewport) * MaxViewportCount);
-		viewportData = static_cast<RendererViewport*>(buf);
+		void* buf = this->allocator->Allocate(sizeof(RenderViewport) * MaxViewportCount);
+		viewportData = static_cast<RenderViewport*>(buf);
 
 		// Create uniform buffer objects
 		unsigned int buffers[MaxViewportCount];
@@ -433,10 +411,11 @@ void Renderer::Render(Scene* scene)
 		if (ParseControlCommand(command) == false)
 		{
 			unsigned int mat = renderOrder.materialId.GetValue(command);
+			unsigned int vpIdx = renderOrder.viewportIndex.GetValue(command);
+			const RenderViewport& viewport = viewportData[vpIdx];
 
 			if (mat != RenderOrderConfiguration::CallbackMaterialId)
 			{
-				unsigned int vpIdx = renderOrder.viewportIndex.GetValue(command);
 				MaterialId matId = MaterialId{mat};
 				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
 
@@ -497,6 +476,7 @@ void Renderer::Render(Scene* scene)
 					if (customRenderer != nullptr)
 					{
 						CustomRenderer::RenderParams params;
+						params.viewport = &viewport;
 						params.callbackId = callbackId;
 						params.command = command;
 						params.scene = scene;
@@ -533,11 +513,6 @@ void Renderer::BindMaterialTextures(const MaterialData& material) const
 			break;
 		}
 	}
-}
-
-void Renderer::AddRenderCommands(const CustomRenderer::CommandParams& params)
-{
-
 }
 
 void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
@@ -604,7 +579,7 @@ void Renderer::BindLightingTextures(const ShaderData& shader) const
 void Renderer::UpdateLightingDataToUniformBuffer(
 	unsigned char* toBuffer, const ProjectionParameters& projection, const Scene* scene)
 {
-	const RendererViewport& fsvp = viewportData[viewportIndexFullscreen];
+	const RenderViewport& fsvp = viewportData[viewportIndexFullscreen];
 
 	// Update directional light viewports
 	Array<LightId>& directionalLights = lightResultArray;
@@ -926,7 +901,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 				unsigned int vpIdx = viewportCount;
 				viewportCount += 1;
 
-				RendererViewport& vp = viewportData[vpIdx];
+				RenderViewport& vp = viewportData[vpIdx];
 				vp.position = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 				vp.forward = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 				vp.farMinusNear = lightProjections[cascade].far - lightProjections[cascade].near;
@@ -962,7 +937,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 		const RendererFramebuffer& fb = framebufferData[FramebufferIndexGBuffer];
 
-		RendererViewport& vp = viewportData[vpIdx];
+		RenderViewport& vp = viewportData[vpIdx];
 		vp.position = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 		vp.forward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 		vp.farMinusNear = renderCamera->parameters.far - renderCamera->parameters.near;
@@ -1054,7 +1029,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 	// For each shadow viewport
 	for (unsigned int vpIdx = 0; vpIdx < numShadowViewports; ++vpIdx)
 	{
-		const RendererViewport& viewport = viewportData[vpIdx];
+		const RenderViewport& viewport = viewportData[vpIdx];
 
 		// Set viewport size
 		RenderCommandData::ViewportData data;
@@ -1181,7 +1156,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 			if (BitPack::Get(vis[vpIdx], i) &&
 				static_cast<unsigned int>(data.order[i].transparency) <= compareTrIdx)
 			{
-				const RendererViewport& vp = viewportData[vpIdx];
+				const RenderViewport& vp = viewportData[vpIdx];
 
 				float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
@@ -1193,7 +1168,7 @@ void Renderer::PopulateCommandList(Scene* scene)
 		if (BitPack::Get(vis[fsvp], i))
 		{
 			const RenderOrderData& o = data.order[i];
-			const RendererViewport& vp = viewportData[fsvp];
+			const RenderViewport& vp = viewportData[fsvp];
 
 			float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 

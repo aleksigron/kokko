@@ -36,7 +36,7 @@ class CustomRenderer;
 
 struct BoundingBox;
 struct RendererFramebuffer;
-struct RendererViewport;
+struct RenderViewport;
 struct MaterialData;
 struct ShaderData;
 struct ProjectionParameters;
@@ -61,7 +61,7 @@ private:
 	RendererFramebuffer* framebufferData;
 	unsigned int framebufferCount;
 
-	RendererViewport* viewportData;
+	RenderViewport* viewportData;
 	unsigned int viewportCount;
 	unsigned int viewportIndexFullscreen;
 
@@ -110,8 +110,7 @@ private:
 
 	void ReallocateRenderObjects(unsigned int required);
 
-	virtual void AddRenderCommands(const CustomRenderer::CommandParams& params) override;
-	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override;
+	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
 
 	void BindMaterialTextures(const MaterialData& material) const;
 	void BindLightingTextures(const ShaderData& shader) const;
