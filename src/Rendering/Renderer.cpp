@@ -96,14 +96,14 @@ Renderer::Renderer(
 	commandList(allocator),
 	objectVisibility(allocator),
 	lightResultArray(allocator),
-	renderCallbacks(allocator)
+	customRenderers(allocator)
 {
 	lightingMesh = MeshId{ 0 };
 	lightingShader = ShaderId{ 0 };
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
 	objectUniformBufferId = 0;
-	deferredLightingCallback = AddRenderCallback(DeferredLightingCallback, this);
+	deferredLightingCallback = AddCustomRenderer(this);
 
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
@@ -295,10 +295,6 @@ void Renderer::Initialize(Window* window)
 		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
 	}
 
-	Engine* engine = Engine::GetInstance();
-	MaterialManager* materialManager = engine->GetMaterialManager();
-	MeshManager* meshManager = engine->GetMeshManager();
-
 	{
 		// Create per-object uniform buffer
 
@@ -335,7 +331,7 @@ void Renderer::Initialize(Window* window)
 
 	// Create skybox entity
 	{
-		EntityManager* em = engine->GetEntityManager();
+		EntityManager* em = Engine::GetInstance()->GetEntityManager();
 		skyboxEntity = em->Create();
 
 		RenderObjectId skyboxRenderObj = AddRenderObject(skyboxEntity);
@@ -353,8 +349,6 @@ void Renderer::Initialize(Window* window)
 
 void Renderer::Deinitialize()
 {
-	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
-
 	if (lightingMesh.IsValid())
 	{
 		meshManager->RemoveMesh(lightingMesh);
@@ -496,16 +490,19 @@ void Renderer::Render(Scene* scene)
 			{
 				unsigned int callbackId = renderOrder.renderObject.GetValue(command);
 
-				if (callbackId > 0 && callbackId <= renderCallbacks.GetCount())
+				if (callbackId > 0 && callbackId <= customRenderers.GetCount())
 				{
-					const RenderCallback callback = renderCallbacks[callbackId - 1];
+					CustomRenderer* customRenderer = customRenderers[callbackId - 1];
 
-					RenderCallbackParams params;
-					params.command = command;
-					params.scene = scene;
+					if (customRenderer != nullptr)
+					{
+						CustomRenderer::RenderParams params;
+						params.callbackId = callbackId;
+						params.command = command;
+						params.scene = scene;
 
-					if (callback.callback != nullptr)
-						callback.callback(callback.userData, params);
+						customRenderer->RenderCustom(params);
+					}
 				}
 			}
 		}
@@ -538,13 +535,12 @@ void Renderer::BindMaterialTextures(const MaterialData& material) const
 	}
 }
 
-void Renderer::DeferredLightingCallback(void* userData, const RenderCallbackParams& params)
+void Renderer::AddRenderCommands(const CustomRenderer::CommandParams& params)
 {
-	Renderer* renderer = static_cast<Renderer*>(userData);
-	renderer->RenderDeferredLighting(params);
+
 }
 
-void Renderer::RenderDeferredLighting(const RenderCallbackParams& params)
+void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 {
 	Scene* scene = params.scene;
 	Camera* renderCamera = this->GetRenderCamera(scene);
@@ -1206,6 +1202,20 @@ void Renderer::PopulateCommandList(Scene* scene)
 		}
 	}
 
+	for (unsigned int i = 0, count = customRenderers.GetCount(); i < count; ++i)
+	{
+		if (customRenderers[i] != nullptr)
+		{
+			CustomRenderer::CommandParams params;
+			params.fullscreenViewport = this->viewportIndexFullscreen;
+			params.commandList = &commandList;
+			params.callbackId = i + 1;
+			params.scene = scene;
+
+			customRenderers[i]->AddRenderCommands(params);
+		}
+	}
+
 	commandList.Sort();
 }
 
@@ -1276,44 +1286,36 @@ void Renderer::AddRenderObject(unsigned int count, const Entity* entities, Rende
 	data.count += count;
 }
 
-unsigned int Renderer::AddRenderCallback(RenderCallbackFn callback, void* userData)
+unsigned int Renderer::AddCustomRenderer(CustomRenderer* customRenderer)
 {
-	for (unsigned int i = 0, count = renderCallbacks.GetCount(); i < count; ++i)
+	for (unsigned int i = 0, count = customRenderers.GetCount(); i < count; ++i)
 	{
-		if (renderCallbacks[i].callback == nullptr)
+		if (customRenderers[i] == nullptr)
 		{
-			renderCallbacks[i].callback = callback;
-			renderCallbacks[i].userData = userData;
+			customRenderers[i] = customRenderer;
 
 			return i + 1;
 		}
 	}
 
-	RenderCallback& addedCallback = renderCallbacks.PushBack();
-	addedCallback.callback = callback;
-	addedCallback.userData = userData;
-
-	return renderCallbacks.GetCount();
+	customRenderers.PushBack(customRenderer);
+	return customRenderers.GetCount();
 }
 
-void Renderer::RemoveRenderCallback(unsigned int callbackId)
+void Renderer::RemoveCustomRenderer(unsigned int callbackId)
 {
-	if (callbackId == renderCallbacks.GetCount())
+	if (callbackId == customRenderers.GetCount())
 	{
-		renderCallbacks.PopBack();
+		customRenderers.PopBack();
 	}
-	else if (callbackId < renderCallbacks.GetCount() && callbackId > 0)
+	else if (callbackId < customRenderers.GetCount() && callbackId > 0)
 	{
-		RenderCallback& callback = renderCallbacks[callbackId - 1];
-		callback.callback = nullptr;
-		callback.userData = nullptr;
+		customRenderers[callbackId - 1] = nullptr;
 	}
 }
 
 void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms)
 {
-	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
-
 	for (unsigned int entityIdx = 0; entityIdx < count; ++entityIdx)
 	{
 		Entity entity = entities[entityIdx];

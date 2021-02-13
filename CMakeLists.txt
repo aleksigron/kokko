@@ -100,6 +100,7 @@ set (KOKKO_SOURCES
 	src/Rendering/Camera.hpp
 	src/Rendering/CascadedShadowMap.cpp
 	src/Rendering/CascadedShadowMap.hpp
+	src/Rendering/CustomRenderer.hpp
 	src/Rendering/Light.hpp
 	src/Rendering/LightManager.cpp
 	src/Rendering/LightManager.hpp

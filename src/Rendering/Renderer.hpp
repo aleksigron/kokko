@@ -14,6 +14,7 @@
 #include "Resources/MaterialData.hpp"
 #include "Resources/ShaderId.hpp"
 
+#include "Rendering/CustomRenderer.hpp"
 #include "Rendering/Light.hpp"
 #include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RendererData.hpp"
@@ -31,6 +32,7 @@ class RenderDevice;
 class Scene;
 class Window;
 class DebugVectorRenderer;
+class CustomRenderer;
 
 struct BoundingBox;
 struct RendererFramebuffer;
@@ -39,24 +41,9 @@ struct MaterialData;
 struct ShaderData;
 struct ProjectionParameters;
 
-class Renderer : public ITransformUpdateReceiver
+class Renderer : public ITransformUpdateReceiver, public CustomRenderer
 {
-public:
-	struct RenderCallbackParams
-	{
-		uint64_t command;
-		Scene* scene;
-	};
-
-	using RenderCallbackFn = void(*)(void*, const RenderCallbackParams&);
-
 private:
-	struct RenderCallback
-	{
-		RenderCallbackFn callback;
-		void* userData;
-	};
-
 	static const unsigned int MaxViewportCount = 8;
 
 	static const unsigned int AlbedoTextureIdx = 0;
@@ -117,14 +104,14 @@ private:
 
 	Array<LightId> lightResultArray;
 
-	Array<RenderCallback> renderCallbacks;
+	Array<CustomRenderer*> customRenderers;
 
 	Entity skyboxEntity;
 
 	void ReallocateRenderObjects(unsigned int required);
 
-	static void DeferredLightingCallback(void* userData, const RenderCallbackParams& params);
-	void RenderDeferredLighting(const RenderCallbackParams& params);
+	virtual void AddRenderCommands(const CustomRenderer::CommandParams& params) override;
+	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override;
 
 	void BindMaterialTextures(const MaterialData& material) const;
 	void BindLightingTextures(const ShaderData& shader) const;
@@ -178,7 +165,7 @@ public:
 		data.order[id.i] = order;
 	}
 
-	// Render callback management
-	unsigned int AddRenderCallback(RenderCallbackFn callback, void* userData);
-	void RemoveRenderCallback(unsigned int callbackId);
+	// Custom renderer management
+	unsigned int AddCustomRenderer(CustomRenderer* customRenderer);
+	void RemoveCustomRenderer(unsigned int callbackId);
 };
