@@ -1,0 +1,20 @@
+{
+	"vs": {
+		"main": "res/shaders/deferred_geometry/terrain.vert.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/common/transform_block.glsl"
+		]
+	},
+	"fs": {
+		"main": "res/shaders/deferred_geometry/terrain.frag.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/common/deferred_frag_output.glsl"
+		]
+	},
+	"properties": [
+		{ "name": "metalness", "type": "float" },
+		{ "name": "roughness", "type": "float" }
+	]
+}

@@ -482,6 +482,11 @@ void Renderer::Render(Scene* scene)
 						params.scene = scene;
 
 						customRenderer->RenderCustom(params);
+
+						// Reset state cache
+						lastVpIdx = MaxViewportCount;
+						lastShaderProgram = 0;
+						lastMaterialId = MaterialId{ 0 };
 					}
 				}
 			}

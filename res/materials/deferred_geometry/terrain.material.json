@@ -1,0 +1,8 @@
+{
+	"shader": "res/shaders/deferred_geometry/terrain.shader.json",
+	"variables":
+	[
+		{ "name": "metalness", "value": 0.0 },
+		{ "name": "roughness", "value": 0.8 }
+	]
+}

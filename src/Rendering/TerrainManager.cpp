@@ -35,10 +35,11 @@ void TerrainManager::Initialize(Renderer* renderer)
 {
 	renderer->AddCustomRenderer(this);
 	
-	StringRef path("res/materials/deferred_geometry/standard_gray_m00_r05.material.json");
+	StringRef path("res/materials/deferred_geometry/terrain.material.json");
 	terrainMaterial = materialManager->GetIdByPath(path);
 
 	terrainInstances = allocator->MakeNew<TerrainInstance>(allocator, renderDevice, meshManager);
+	terrainInstances->Initialize();
 
 	renderDevice->CreateBuffers(1, &objectUniformBufferId);
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBufferId);

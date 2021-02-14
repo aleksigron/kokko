@@ -21,7 +21,6 @@ TerrainInstance::TerrainInstance(
 	terrainResolution(32),
 	vertexArray(0)
 {
-	InitializeVertexArray();
 }
 
 TerrainInstance::~TerrainInstance()
@@ -30,21 +29,7 @@ TerrainInstance::~TerrainInstance()
 		renderDevice->DestroyVertexArrays(1, &vertexArray);
 }
 
-void TerrainInstance::RenderTerrain(const MaterialData& material)
-{
-
-	renderDevice->UseShaderProgram(material.cachedShaderDeviceId);
-
-	// Bind material uniform block to shader
-	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, material.uniformBufferObject);
-
-
-	MeshDrawData* draw = meshManager->GetDrawData(meshId);
-	renderDevice->BindVertexArray(draw->vertexArrayObject);
-	renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
-}
-
-void TerrainInstance::InitializeVertexArray()
+void TerrainInstance::Initialize()
 {
 	size_t sideVerts = terrainResolution + 1;
 	size_t vertCount = sideVerts * sideVerts;
@@ -106,4 +91,18 @@ void TerrainInstance::InitializeVertexArray()
 
 	allocator->Deallocate(indexData);
 	allocator->Deallocate(vertexData);
+}
+
+
+void TerrainInstance::RenderTerrain(const MaterialData& material)
+{
+	renderDevice->UseShaderProgram(material.cachedShaderDeviceId);
+
+	// Bind material uniform block to shader
+	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, material.uniformBufferObject);
+
+
+	MeshDrawData* draw = meshManager->GetDrawData(meshId);
+	renderDevice->BindVertexArray(draw->vertexArrayObject);
+	renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 }

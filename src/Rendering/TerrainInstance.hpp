@@ -30,11 +30,11 @@ private:
 
 	unsigned int vertexArray;
 
-	void InitializeVertexArray();
-
 public:
 	TerrainInstance(Allocator* allocator, RenderDevice* renderDevice, MeshManager* meshManager);
 	~TerrainInstance();
+
+	void Initialize();
 
 	void RenderTerrain(const MaterialData& material);
 };
