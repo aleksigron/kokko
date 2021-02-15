@@ -75,7 +75,8 @@ Engine::Engine()
 	this->sceneManager = defaultAllocator->MakeNew<SceneManager>(sceneManagerAlloc);
 
 	Allocator* terrainManagerAlloc = allocatorManager->CreateAllocatorScope("TerrainManager", defaultAllocator);
-	this->terrainManager = defaultAllocator->MakeNew<TerrainManager>(terrainManagerAlloc, renderDevice, meshManager, materialManager);
+	this->terrainManager = defaultAllocator->MakeNew<TerrainManager>(
+		terrainManagerAlloc, renderDevice, meshManager, materialManager);
 
 	Allocator* rendererAlloc = allocatorManager->CreateAllocatorScope("Renderer", defaultAllocator);
 	this->renderer = defaultAllocator->MakeNew<Renderer>(
@@ -132,7 +133,7 @@ bool Engine::Initialize()
 		debug->Initialize(mainWindow, meshManager, shaderManager);
 		textureManager->Initialize();
 		renderer->Initialize(mainWindow);
-		terrainManager->Initialize(renderer);
+		terrainManager->Initialize(renderer, shaderManager);
 
 		return true;
 	}

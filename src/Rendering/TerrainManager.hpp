@@ -8,6 +8,7 @@ class Allocator;
 class RenderDevice;
 class MeshManager;
 class MaterialManager;
+class ShaderManager;
 class Renderer;
 class TerrainInstance;
 
@@ -29,7 +30,7 @@ public:
 		MeshManager* meshManager, MaterialManager* materialManager);
 	~TerrainManager();
 
-	void Initialize(Renderer* renderer);
+	void Initialize(Renderer* renderer, ShaderManager* shaderManager);
 
 	virtual void AddRenderCommands(const CustomRenderer::CommandParams& params) override final;
 	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;

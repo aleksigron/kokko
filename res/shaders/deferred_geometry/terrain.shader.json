@@ -14,6 +14,7 @@
 		]
 	},
 	"properties": [
+		{ "name": "height_map", "type": "tex2d" },
 		{ "name": "metalness", "type": "float" },
 		{ "name": "roughness", "type": "float" }
 	]

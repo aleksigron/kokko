@@ -31,14 +31,14 @@ TerrainManager::~TerrainManager()
 	allocator->MakeDelete(terrainInstances);
 }
 
-void TerrainManager::Initialize(Renderer* renderer)
+void TerrainManager::Initialize(Renderer* renderer, ShaderManager* shaderManager)
 {
 	renderer->AddCustomRenderer(this);
 	
 	StringRef path("res/materials/deferred_geometry/terrain.material.json");
 	terrainMaterial = materialManager->GetIdByPath(path);
 
-	terrainInstances = allocator->MakeNew<TerrainInstance>(allocator, renderDevice, meshManager);
+	terrainInstances = allocator->MakeNew<TerrainInstance>(allocator, renderDevice, meshManager, shaderManager);
 	terrainInstances->Initialize();
 
 	renderDevice->CreateBuffers(1, &objectUniformBufferId);
