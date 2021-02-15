@@ -49,11 +49,33 @@ namespace RenderCommandData
 		RenderBlendFactor dstFactor;
 	};
 
+	struct SetTextureStorage2D
+	{
+		RenderTextureTarget target;
+		int levels;
+		unsigned int internalFormat;
+		int width;
+		int height;
+	};
+
 	struct SetTextureImage2D
 	{
 		RenderTextureTarget target;
 		int mipLevel;
 		unsigned int internalFormat;
+		int width;
+		int height;
+		unsigned int format;
+		unsigned int type;
+		const void* data;
+	};
+
+	struct SetTextureSubImage2D
+	{
+		RenderTextureTarget target;
+		int mipLevel;
+		int xOffset;
+		int yOffset;
 		int width;
 		int height;
 		unsigned int format;

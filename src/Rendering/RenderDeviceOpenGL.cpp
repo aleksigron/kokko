@@ -350,10 +350,21 @@ void RenderDeviceOpenGL::BindTexture(RenderTextureTarget target, unsigned int te
 	glBindTexture(ConvertTextureTarget(target), texture);
 }
 
+void RenderDeviceOpenGL::SetTextureStorage2D(const RenderCommandData::SetTextureStorage2D* data)
+{
+	glTexStorage2D(ConvertTextureTarget(data->target), data->levels, data->internalFormat, data->width, data->height);
+}
+
 void RenderDeviceOpenGL::SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data)
 {
 	glTexImage2D(ConvertTextureTarget(data->target), data->mipLevel, data->internalFormat,
 		data->width, data->height, 0, data->format, data->type, data->data);
+}
+
+void RenderDeviceOpenGL::SetTextureSubImage2D(const RenderCommandData::SetTextureSubImage2D* data)
+{
+	glTexSubImage2D(ConvertTextureTarget(data->target), data->mipLevel, data->xOffset, data->yOffset,
+		data->width, data->height, data->format, data->type, data->data);
 }
 
 void RenderDeviceOpenGL::SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data)
@@ -554,9 +565,9 @@ void RenderDeviceOpenGL::DestroyVertexArrays(unsigned int count, unsigned int* v
 	glDeleteVertexArrays(count, vertexArrays);
 }
 
-void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArray)
+void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArrayId)
 {
-	glBindVertexArray(vertexArray);
+	glBindVertexArray(vertexArrayId);
 }
 
 void RenderDeviceOpenGL::DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType)

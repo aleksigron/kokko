@@ -43,7 +43,9 @@ public:
 	virtual void CreateTextures(unsigned int count, unsigned int* texturesOut) override;
 	virtual void DestroyTextures(unsigned int count, unsigned int* textures) override;
 	virtual void BindTexture(RenderTextureTarget target, unsigned int texture) override;
+	virtual void SetTextureStorage2D(const RenderCommandData::SetTextureStorage2D* data) override;
 	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) override;
+	virtual void SetTextureSubImage2D(const RenderCommandData::SetTextureSubImage2D* data) override;
 	virtual void SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data) override;
 	virtual void GenerateTextureMipmaps(RenderTextureTarget target) override;
 	virtual void SetActiveTextureUnit(unsigned int textureUnit) override;
@@ -86,7 +88,7 @@ public:
 
 	virtual void CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut) override;
 	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) override;
-	virtual void BindVertexArray(unsigned int vertexArray) override;
+	virtual void BindVertexArray(unsigned int vertexArrayId) override;
 	virtual void DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType) override;
 	virtual void Draw(RenderPrimitiveMode mode, int offset, int vertexCount) override;
 	virtual void EnableVertexAttribute(unsigned int index) override;
