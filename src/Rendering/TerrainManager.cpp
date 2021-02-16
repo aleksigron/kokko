@@ -43,7 +43,7 @@ void TerrainManager::Initialize(Renderer* renderer, ShaderManager* shaderManager
 
 	renderDevice->CreateBuffers(1, &objectUniformBufferId);
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBufferId);
-	renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BufferSize, nullptr, RenderBufferUsage::DynamicDraw);
+	renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(TransformUniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
 }
 
 void TerrainManager::AddRenderCommands(const CustomRenderer::CommandParams& params)
@@ -53,16 +53,16 @@ void TerrainManager::AddRenderCommands(const CustomRenderer::CommandParams& para
 
 void TerrainManager::RenderCustom(const CustomRenderer::RenderParams& params)
 {
-	unsigned char uboBuffer[TransformUniformBlock::BufferSize];
+	TransformUniformBlock objectUniforms;
 
 	const MaterialData& material = materialManager->GetMaterialData(terrainMaterial);
 
-	TransformUniformBlock::MVP.Set(uboBuffer, params.viewport->viewProjection);
-	TransformUniformBlock::MV.Set(uboBuffer, params.viewport->view);
-	TransformUniformBlock::M.Set(uboBuffer, Mat4x4f());
+	objectUniforms.MVP = params.viewport->viewProjection;
+	objectUniforms.MV = params.viewport->view;
+	objectUniforms.M = Mat4x4f();
 
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBufferId);
-	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, TransformUniformBlock::BufferSize, uboBuffer);
+	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TransformUniformBlock), &objectUniforms);
 
 	// Bind object transform uniform block to shader
 	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint, objectUniformBufferId);

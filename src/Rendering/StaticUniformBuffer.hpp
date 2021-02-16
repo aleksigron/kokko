@@ -2,199 +2,69 @@
 
 #include <cstddef>
 
-#include "Rendering/UniformBuffer.hpp"
+#include "Math/Mat4x4.hpp"
+#include "Math/Vec4.hpp"
+#include "Math/Vec3.hpp"
+#include "Math/Vec2.hpp"
 
-template <typename ValueType, size_t Offset>
-struct UniformBlockScalar
-{
-	static void Set(unsigned char* buffer, const ValueType& value)
-	{
-		*reinterpret_cast<ValueType*>(buffer + Offset) = value;
-	}
-};
-
-template <size_t Offset>
-struct UniformBlockScalar<Vec2f, Offset>
-{
-	static void Set(unsigned char* buffer, const Vec2f& value)
-	{
-		UniformBuffer::SetScalarVec2f(buffer, Offset, value);
-	}
-};
-
-template <size_t Offset>
-struct UniformBlockScalar<Vec3f, Offset>
-{
-	static void Set(unsigned char* buffer, const Vec3f& value)
-	{
-		UniformBuffer::SetScalarVec3f(buffer, Offset, value);
-	}
-};
-
-template <size_t Offset>
-struct UniformBlockScalar<Vec4f, Offset>
-{
-	static void Set(unsigned char* buffer, const Vec4f& value)
-	{
-		UniformBuffer::SetScalarVec4f(buffer, Offset, value);
-	}
-};
-
-template <size_t Offset>
-struct UniformBlockScalar<Mat4x4f, Offset>
-{
-	static void Set(unsigned char* buffer, const Mat4x4f& value)
-	{
-		UniformBuffer::SetScalarMat4x4f(buffer, Offset, value);
-	}
-};
-
-template <typename ValueType, size_t Offset>
+template <typename Type, size_t Count>
 class UniformBlockArray
 {
-public:
-	static void SetOne(unsigned char* buffer, size_t index, const ValueType& value)
-	{
-		*reinterpret_cast<ValueType*>(buffer + Offset + index * 16) = value;
-	}
-
-	static void SetMany(unsigned char* buffer, size_t count, const ValueType* values)
-	{
-		for (size_t i = 0; i < count; ++i)
-			*reinterpret_cast<ValueType*>(buffer + Offset + i * 16) = values[i];
-	}
-};
-
-template <size_t Offset>
-class UniformBlockArray<Vec2f, Offset>
-{
-public:
-	static void SetOne(unsigned char* buffer, size_t index, const Vec2f& value)
-	{
-		UniformBuffer::SetArrayVec2fOne(buffer, Offset, index, value);
-	}
-
-	static void SetMany(unsigned char* buffer, size_t count, const Vec2f* values)
-	{
-		UniformBuffer::SetArrayVec2fMany(buffer, Offset, count, values);
-	}
-};
-
-template <size_t Offset>
-class UniformBlockArray<Vec3f, Offset>
-{
-public:
-	static void SetOne(unsigned char* buffer, size_t index, const Vec3f& value)
-	{
-		UniformBuffer::SetArrayVec3fOne(buffer, Offset, index, value);
-	}
-
-	static void SetMany(unsigned char* buffer, size_t count, const Vec3f* values)
-	{
-		UniformBuffer::SetArrayVec3fMany(buffer, Offset, count, values);
-	}
-};
-
-template <size_t Offset>
-class UniformBlockArray<Vec4f, Offset>
-{
-public:
-	static void SetOne(unsigned char* buffer, size_t index, const Vec4f& value)
-	{
-		UniformBuffer::SetArrayVec4fOne(buffer, Offset, index, value);
-	}
-
-	static void SetMany(unsigned char* buffer, size_t count, const Vec4f* values)
-	{
-		UniformBuffer::SetArrayVec4fMany(buffer, Offset, count, values);
-	}
-};
-
-template <size_t Offset>
-class UniformBlockArray<Mat3x3f, Offset>
-{
-public:
-	static void SetOne(unsigned char* buffer, size_t index, const Mat3x3f& value)
-	{
-		UniformBuffer::SetArrayMat3x3fOne(buffer, Offset, index, value);
-	}
-
-	static void SetMany(unsigned char* buffer, size_t count, const Mat3x3f* values)
-	{
-		UniformBuffer::SetArrayMat3x3fMany(buffer, Offset, count, values);
-	}
-};
-
-template <size_t Offset>
-class UniformBlockArray<Mat4x4f, Offset>
-{
-public:
-	static void SetOne(unsigned char* buffer, size_t index, const Mat4x4f& value)
-	{
-		UniformBuffer::SetArrayMat4x4fOne(buffer, Offset, index, value);
-	}
-
-	static void SetMany(unsigned char* buffer, size_t count, const Mat4x4f* values)
-	{
-		UniformBuffer::SetArrayMat4x4fMany(buffer, Offset, count, values);
-	}
-};
-
-class LightingUniformBlock
-{
 private:
+	struct alignas(16) AlignWrapper
+	{
+		Type value;
+	};
+
+	AlignWrapper values[Count];
+
+public:
+	Type& operator[](size_t index) { return values[index].value; }
+	const Type& operator[](size_t index) const { return values[index].value; }
+};
+
+struct LightingUniformBlock
+{
 	static constexpr size_t MaxLightCount = 8;
 	static constexpr size_t MaxCascadeCount = 4;
-
-	static constexpr size_t LightArraySize = MaxLightCount * 16;
-	static constexpr size_t ShadowMatOffset = LightArraySize * 3;
-	static constexpr size_t ShadowSplitOffset = ShadowMatOffset + MaxCascadeCount * 64;
-	static constexpr size_t PerspectiveMatOffset = ShadowSplitOffset + (MaxCascadeCount + 1) * 16;
-	static constexpr size_t LightCountOffset = PerspectiveMatOffset + 64 + 16 + 8;
-	static constexpr size_t ShadowBiasOffset = LightCountOffset + 3 * 4;
-
-public:
-	static const std::size_t BufferSize = ShadowBiasOffset + 3 * 4;
 	static const unsigned int BindingPoint = 0;
 
-	static UniformBlockArray<Vec3f, LightArraySize * 0> lightColors;
-	static UniformBlockArray<Vec3f, LightArraySize * 1> lightPositions;
-	static UniformBlockArray<Vec4f, LightArraySize * 2> lightDirections;
+	UniformBlockArray<Vec3f, MaxLightCount> lightColors;
+	UniformBlockArray<Vec3f, MaxLightCount> lightPositions;
+	UniformBlockArray<Vec4f, MaxLightCount> lightDirections;
 
-	static UniformBlockArray<Mat4x4f, ShadowMatOffset> shadowMatrices;
-	static UniformBlockArray<float, ShadowSplitOffset> shadowSplits;
+	UniformBlockArray<Mat4x4f, MaxCascadeCount> shadowMatrices;
+	UniformBlockArray<float, MaxCascadeCount + 1> shadowSplits;
 
-	static UniformBlockScalar<Mat4x4f, PerspectiveMatOffset> perspectiveMatrix;
-	static UniformBlockScalar<Vec3f, PerspectiveMatOffset + 64> ambientColor;
-	static UniformBlockScalar<Vec2f, PerspectiveMatOffset + 64 + 16> halfNearPlane;
+	alignas(16) Mat4x4f perspectiveMatrix;
+	alignas(16) Vec3f ambientColor;
+	alignas(8) Vec2f halfNearPlane;
 
-	static UniformBlockScalar<int, LightCountOffset + 0> pointLightCount;
-	static UniformBlockScalar<int, LightCountOffset + 4> spotLightCount;
-	static UniformBlockScalar<int, LightCountOffset + 8> cascadeCount;
+	alignas(4) int pointLightCount;
+	alignas(4) int spotLightCount;
+	alignas(4) int cascadeCount;
 
-	static UniformBlockScalar<float, ShadowBiasOffset + 0> shadowBiasOffset;
-	static UniformBlockScalar<float, ShadowBiasOffset + 4> shadowBiasFactor;
-	static UniformBlockScalar<float, ShadowBiasOffset + 8> shadowBiasClamp;
+	alignas(4) float shadowBiasOffset;
+	alignas(4) float shadowBiasFactor;
+	alignas(4) float shadowBiasClamp;
 };
 
 struct ViewportUniformBlock
 {
-	static const std::size_t BufferSize = 192;
 	static const unsigned int BindingPoint = 1;
 
-	static UniformBlockScalar<Mat4x4f, 0> VP;
-	static UniformBlockScalar<Mat4x4f, 64> V;
-	static UniformBlockScalar<Mat4x4f, 128> P;
+	alignas(16) Mat4x4f VP;
+	alignas(16) Mat4x4f V;
+	alignas(16) Mat4x4f P;
 };
 
 struct TransformUniformBlock
 {
-	static const std::size_t BufferSize = 192;
 	static const unsigned int BindingPoint = 2;
 
-	static UniformBlockScalar<Mat4x4f, 0> MVP;
-	static UniformBlockScalar<Mat4x4f, 64> MV;
-	static UniformBlockScalar<Mat4x4f, 128> M;
+	alignas(16) Mat4x4f MVP;
+	alignas(16) Mat4x4f MV;
+	alignas(16) Mat4x4f M;
 };
 
 struct MaterialUniformBlock

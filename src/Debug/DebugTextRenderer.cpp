@@ -24,7 +24,7 @@ struct MaterialBlock
 {
 	static const std::size_t BufferSize = 16;
 
-	static UniformBlockScalar<float, 0> shadowOffset;
+	float shadowOffset;
 };
 
 DebugTextRenderer::DebugTextRenderer(
@@ -171,12 +171,12 @@ void DebugTextRenderer::Render()
 
 		// Update shadow offset
 
-		unsigned char materialUboBuffer[MaterialBlock::BufferSize];
+		MaterialBlock materialUniforms;
 		Vec2f texSize = font->GetTextureSize();
-		MaterialBlock::shadowOffset.Set(materialUboBuffer, 1.0f / texSize.y);
+		materialUniforms.shadowOffset = 1.0f / texSize.y;
 
 		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferObjectId);
-		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, MaterialBlock::BufferSize, materialUboBuffer);
+		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, MaterialBlock::BufferSize, &materialUniforms);
 
 		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, materialBufferObjectId);
 

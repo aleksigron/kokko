@@ -2,6 +2,16 @@
 
 #include "System/IncludeOpenGL.hpp"
 
+static unsigned int ConvertDeviceParameter(RenderDeviceParameter parameter)
+{
+	switch (parameter)
+	{
+	case RenderDeviceParameter::MaxUniformBlockSize: return GL_MAX_UNIFORM_BLOCK_SIZE;
+	default:
+		break;
+	}
+}
+
 static unsigned int ConvertBufferUsage(RenderBufferUsage usage)
 {
 	switch (usage)
@@ -194,6 +204,11 @@ static unsigned int ConvertVertexElemType(RenderVertexElemType type)
 	case RenderVertexElemType::Float: return GL_FLOAT;
 	default: return 0;
 	}
+}
+
+void RenderDeviceOpenGL::GetIntegerValue(RenderDeviceParameter parameter, int* valueOut)
+{
+	glGetIntegerv(ConvertDeviceParameter(parameter), valueOut);
 }
 
 void RenderDeviceOpenGL::Clear(unsigned int mask)

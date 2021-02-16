@@ -23,7 +23,7 @@ struct MaterialBlock
 {
 	static const std::size_t BufferSize = 16;
 
-	static UniformBlockScalar<Vec4f, 0> color;
+	Vec4f color;
 };
 
 DebugVectorRenderer::DebugVectorRenderer(
@@ -456,10 +456,10 @@ void DebugVectorRenderer::Render(Camera* camera)
 			renderDevice->CreateBuffers(2, uniformBufferIds);
 
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[ObjectBuffer]);
-			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BufferSize, nullptr, usage);
+			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(TransformUniformBlock), nullptr, usage);
 
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[MaterialBuffer]);
-			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, MaterialBlock::BufferSize, nullptr, usage);
+			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(MaterialBlock), nullptr, usage);
 
 			buffersInitialized = true;
 		}
@@ -475,8 +475,8 @@ void DebugVectorRenderer::Render(Camera* camera)
 		Mat4x4f viewProj = proj * view;
 		Mat4x4f screenProj = engine->GetMainWindow()->GetScreenSpaceProjectionMatrix();
 
-		unsigned char objectUboBuffer[TransformUniformBlock::BufferSize];
-		unsigned char materialUboBuffer[MaterialBlock::BufferSize];
+		TransformUniformBlock objectUniforms;
+		MaterialBlock materialUniforms;
 
 		renderDevice->DepthTestDisable();
 		renderDevice->BlendingDisable();
@@ -492,24 +492,24 @@ void DebugVectorRenderer::Render(Camera* camera)
 
 			// Update object transform uniform buffer
 
-			TransformUniformBlock::MVP.Set(objectUboBuffer, mvp);
-			TransformUniformBlock::MV.Set(objectUboBuffer, view * primitive.transform);
-			TransformUniformBlock::M.Set(objectUboBuffer, primitive.transform);
+			objectUniforms.MVP = mvp;
+			objectUniforms.MV = view * primitive.transform;
+			objectUniforms.M = primitive.transform;
 
 			unsigned int objectBufferId = uniformBufferIds[ObjectBuffer];
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectBufferId);
-			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, TransformUniformBlock::BufferSize, objectUboBuffer);
+			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TransformUniformBlock), &objectUniforms);
 
 			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint, objectBufferId);
 
 			// Update color
 
 			Vec4f colorVec4(primitive.color.r, primitive.color.g, primitive.color.b, primitive.color.a);
-			MaterialBlock::color.Set(materialUboBuffer, colorVec4);
+			materialUniforms.color = colorVec4;
 
 			unsigned int materialBufferId = uniformBufferIds[MaterialBuffer];
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferId);
-			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, MaterialBlock::BufferSize, materialUboBuffer);
+			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(MaterialBlock), &materialUniforms);
 
 			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, materialBufferId);
 

@@ -8,6 +8,8 @@ class RenderDevice
 public:
 	virtual ~RenderDevice() {}
 
+	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) = 0;
+
 	virtual void Clear(unsigned int mask) = 0;
 	virtual void ClearColor(const RenderCommandData::ClearColorData* data) = 0;
 	virtual void ClearDepth(float depth) = 0;

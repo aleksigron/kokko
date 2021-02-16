@@ -1,5 +1,10 @@
 #pragma once
 
+enum class RenderDeviceParameter
+{
+	MaxUniformBlockSize
+};
+
 enum class RenderBufferUsage
 {
 	StreamDraw,

@@ -5,6 +5,8 @@
 class RenderDeviceOpenGL : public RenderDevice
 {
 public:
+	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) override;
+
 	virtual void Clear(unsigned int mask) override;
 	virtual void ClearColor(const RenderCommandData::ClearColorData* data) override;
 	virtual void ClearDepth(float depth) override;
