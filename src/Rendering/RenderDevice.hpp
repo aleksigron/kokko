@@ -103,6 +103,11 @@ public:
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) = 0;
 	virtual void BindBuffer(RenderBufferTarget target, unsigned int buffer) = 0;
 	virtual void BindBufferBase(RenderBufferTarget target, unsigned int bindingPoint, unsigned int buffer) = 0;
+	virtual void BindBufferRange(const RenderCommandData::BindBufferRange* data) = 0;
+	virtual void SetBufferStorage(const RenderCommandData::SetBufferStorage* data) = 0;
 	virtual void SetBufferData(RenderBufferTarget target, unsigned int size, const void* data, RenderBufferUsage usage) = 0;
 	virtual void SetBufferSubData(RenderBufferTarget target, unsigned int offset, unsigned int size, const void* data) = 0;
+	virtual void* MapBuffer(RenderBufferTarget target, RenderBufferAccess access) = 0;
+	virtual void* MapBufferRange(const RenderCommandData::MapBufferRange* data) = 0;
+	virtual void UnmapBuffer(RenderBufferTarget target) = 0;
 };

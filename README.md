@@ -5,7 +5,7 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 ![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20201118.jpg)
 
 ## Prerequisites
-- OpenGL 4.2
+- OpenGL 4.5
 - CMake for building the project
 - C++14 compliant compiler
 - Blender for exporting mesh files
@@ -40,7 +40,7 @@ In Visual Studio, go to project properties > _Configuration Properties_ > _Debug
   - Scenes
   - Materials
   - Shaders
-- Mesh files are using a custom format
+- Mesh files are using a custom binary format
 - Textures are processed to a runtime-friendly format with KTX
 
 ### Debugging

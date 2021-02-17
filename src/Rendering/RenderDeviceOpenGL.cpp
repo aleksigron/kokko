@@ -7,8 +7,8 @@ static unsigned int ConvertDeviceParameter(RenderDeviceParameter parameter)
 	switch (parameter)
 	{
 	case RenderDeviceParameter::MaxUniformBlockSize: return GL_MAX_UNIFORM_BLOCK_SIZE;
-	default:
-		break;
+	case RenderDeviceParameter::UniformBufferOffsetAlignment: return GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+	default: return 0;
 	}
 }
 
@@ -36,6 +36,17 @@ static unsigned int ConvertBufferTarget(RenderBufferTarget target)
 	case RenderBufferTarget::VertexBuffer: return GL_ARRAY_BUFFER;
 	case RenderBufferTarget::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
 	case RenderBufferTarget::UniformBuffer: return GL_UNIFORM_BUFFER;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertBufferAccess(RenderBufferAccess access)
+{
+	switch (access)
+	{
+	case RenderBufferAccess::ReadOnly: return GL_READ_ONLY;
+	case RenderBufferAccess::WriteOnly: return GL_WRITE_ONLY;
+	case RenderBufferAccess::ReadWrite: return GL_READ_WRITE;
 	default: return 0;
 	}
 }
@@ -626,6 +637,23 @@ void RenderDeviceOpenGL::BindBufferBase(RenderBufferTarget target, unsigned int 
 	glBindBufferBase(ConvertBufferTarget(target), bindingPoint, buffer);
 }
 
+void RenderDeviceOpenGL::BindBufferRange(const RenderCommandData::BindBufferRange* data)
+{
+	glBindBufferRange(ConvertBufferTarget(data->target), data->bindingPoint, data->buffer, data->offset, data->length);
+}
+
+void RenderDeviceOpenGL::SetBufferStorage(const RenderCommandData::SetBufferStorage* data)
+{
+	GLbitfield bits = 0;
+	if (data->dynamicStorage) bits |= GL_DYNAMIC_STORAGE_BIT;
+	if (data->mapReadAccess) bits |= GL_MAP_READ_BIT;
+	if (data->mapWriteAccess) bits |= GL_MAP_WRITE_BIT;
+	if (data->mapPersistent) bits |= GL_MAP_PERSISTENT_BIT;
+	if (data->mapCoherent) bits |= GL_MAP_COHERENT_BIT;
+
+	glBufferStorage(ConvertBufferTarget(data->target), data->size, data->data, bits);
+}
+
 void RenderDeviceOpenGL::SetBufferData(RenderBufferTarget target, unsigned int size, const void* data, RenderBufferUsage usage)
 {
 	glBufferData(ConvertBufferTarget(target), size, data, ConvertBufferUsage(usage));
@@ -634,4 +662,29 @@ void RenderDeviceOpenGL::SetBufferData(RenderBufferTarget target, unsigned int s
 void RenderDeviceOpenGL::SetBufferSubData(RenderBufferTarget target, unsigned int offset, unsigned int size, const void* data)
 {
 	glBufferSubData(ConvertBufferTarget(target), offset, size, data);
+}
+
+void* RenderDeviceOpenGL::MapBuffer(RenderBufferTarget target, RenderBufferAccess access)
+{
+	return glMapBuffer(ConvertBufferTarget(target), ConvertBufferAccess(access));
+}
+
+void* RenderDeviceOpenGL::MapBufferRange(const RenderCommandData::MapBufferRange* data)
+{
+	GLbitfield bits = 0;
+	if (data->readAccess) bits |= GL_MAP_READ_BIT;
+	if (data->writeAccess) bits |= GL_MAP_WRITE_BIT;
+	if (data->invalidateRange) bits |= GL_MAP_INVALIDATE_RANGE_BIT;
+	if (data->invalidateBuffer) bits |= GL_MAP_INVALIDATE_BUFFER_BIT;
+	if (data->flushExplicit) bits |= GL_MAP_FLUSH_EXPLICIT_BIT;
+	if (data->unsynchronized) bits |= GL_MAP_UNSYNCHRONIZED_BIT;
+	if (data->persistent) bits |= GL_MAP_PERSISTENT_BIT;
+	if (data->coherent) bits |= GL_MAP_COHERENT_BIT;
+
+	return glMapBufferRange(ConvertBufferTarget(data->target), data->offset, data->length, bits);
+}
+
+void RenderDeviceOpenGL::UnmapBuffer(RenderBufferTarget target)
+{
+	glUnmapBuffer(ConvertBufferTarget(target));
 }

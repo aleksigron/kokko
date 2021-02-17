@@ -2,7 +2,8 @@
 
 enum class RenderDeviceParameter
 {
-	MaxUniformBlockSize
+	MaxUniformBlockSize,
+	UniformBufferOffsetAlignment
 };
 
 enum class RenderBufferUsage
@@ -23,6 +24,13 @@ enum class RenderBufferTarget
 	VertexBuffer,
 	IndexBuffer,
 	UniformBuffer
+};
+
+enum class RenderBufferAccess
+{
+	ReadOnly,
+	WriteOnly,
+	ReadWrite
 };
 
 enum class RenderTextureTarget

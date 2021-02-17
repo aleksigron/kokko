@@ -100,6 +100,11 @@ public:
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) override;
 	virtual void BindBuffer(RenderBufferTarget target, unsigned int buffer) override;
 	virtual void BindBufferBase(RenderBufferTarget target, unsigned int bindingPoint, unsigned int buffer) override;
+	virtual void BindBufferRange(const RenderCommandData::BindBufferRange* data) override;
+	virtual void SetBufferStorage(const RenderCommandData::SetBufferStorage* data) override;
 	virtual void SetBufferData(RenderBufferTarget target, unsigned int size, const void* data, RenderBufferUsage usage) override;
 	virtual void SetBufferSubData(RenderBufferTarget target, unsigned int offset, unsigned int size, const void* data) override;
+	virtual void* MapBuffer(RenderBufferTarget target, RenderBufferAccess access) override;
+	virtual void* MapBufferRange(const RenderCommandData::MapBufferRange* data) override;
+	virtual void UnmapBuffer(RenderBufferTarget target) override;
 };
