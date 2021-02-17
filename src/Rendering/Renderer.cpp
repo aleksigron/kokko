@@ -64,6 +64,7 @@ Renderer::Renderer(
 	viewportData(nullptr),
 	viewportCount(0),
 	viewportIndexFullscreen(0),
+	objectUniformBuffers(allocator),
 	entityMap(allocator),
 	lightManager(lightManager),
 	shaderManager(shaderManager),
@@ -80,7 +81,11 @@ Renderer::Renderer(
 	lightingShader = ShaderId{ 0 };
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
-	objectUniformBufferId = 0;
+
+	uniformBufferOffsetAlignment = 0;
+	objectUniformBlockStride = 0;
+	objectsPerUniformBuffer = 0;
+
 	deferredLightingCallback = AddCustomRenderer(this);
 
 	data = InstanceData{};
@@ -98,6 +103,11 @@ Renderer::~Renderer()
 
 void Renderer::Initialize(Window* window)
 {
+	device->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &uniformBufferOffsetAlignment);
+
+	objectUniformBlockStride = (sizeof(TransformUniformBlock) * 2 - 1) / uniformBufferOffsetAlignment * uniformBufferOffsetAlignment;
+	objectsPerUniformBuffer = ObjectUniformBufferSize / objectUniformBlockStride;
+
 	{
 		// Allocate framebuffer data storage
 		void* buf = this->allocator->Allocate(sizeof(RendererFramebuffer) * MaxViewportCount);
@@ -274,14 +284,6 @@ void Renderer::Initialize(Window* window)
 	}
 
 	{
-		// Create per-object uniform buffer
-
-		device->CreateBuffers(1, &objectUniformBufferId);
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBufferId);
-		device->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(TransformUniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
-	}
-
-	{
 		// Create opaque lighting pass uniform buffer
 
 		device->CreateBuffers(1, &lightingUniformBufferId);
@@ -339,10 +341,10 @@ void Renderer::Deinitialize()
 		lightingUniformBufferId = 0;
 	}
 
-	if (objectUniformBufferId != 0)
+	if (objectUniformBuffers.GetCount() > 0)
 	{
-		device->DestroyBuffers(1, &objectUniformBufferId);
-		objectUniformBufferId = 0;
+		device->DestroyBuffers(objectUniformBuffers.GetCount(), objectUniformBuffers.GetData());
+		objectUniformBuffers.Clear();
 	}
 
 	if (framebufferData != nullptr)
@@ -392,7 +394,10 @@ Camera* Renderer::GetCullingCamera(Scene* scene)
 
 void Renderer::Render(Scene* scene)
 {
-	PopulateCommandList(scene);
+	unsigned int objectDrawCount = PopulateCommandList(scene);
+	UpdateUniformBuffers(objectDrawCount);
+
+	int objectDrawsProcessed = 0;
 
 	unsigned int lastVpIdx = MaxViewportCount;
 	unsigned int lastShaderProgram = 0;
@@ -444,18 +449,17 @@ void Renderer::Render(Scene* scene)
 					device->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, matData.uniformBufferObject);
 				}
 
-				// Update the object transform uniform buffer
-
-				const Mat4x4f& model = data.transform[objIdx];
-				objectUniforms.MVP = viewportData[vpIdx].viewProjection * model;
-				objectUniforms.MV = viewportData[vpIdx].view * model;
-				objectUniforms.M = model;
-
-				device->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBufferId);
-				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TransformUniformBlock), &objectUniforms);
-
 				// Bind object transform uniform block to shader
-				device->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint, objectUniformBufferId);
+
+				int bufferIndex = objectDrawsProcessed / objectsPerUniformBuffer;
+				int objectInBuffer = objectDrawsProcessed % objectsPerUniformBuffer;
+
+				RenderCommandData::BindBufferRange bind{
+					RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint,
+					objectUniformBuffers[bufferIndex], objectInBuffer * objectUniformBlockStride, objectUniformBlockStride
+				};
+
+				device->BindBufferRange(&bind);
 
 				// Draw mesh
 
@@ -463,6 +467,8 @@ void Renderer::Render(Scene* scene)
 				MeshDrawData* draw = meshManager->GetDrawData(mesh);
 				device->BindVertexArray(draw->vertexArrayObject);
 				device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+
+				objectDrawsProcessed += 1;
 			}
 			else // Render with callback
 			{
@@ -707,6 +713,90 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	uniformsOut.shadowBiasClamp = 0.01f;
 }
 
+void Renderer::UpdateUniformBuffers(unsigned int objectDrawCount)
+{
+	unsigned int buffersRequired = (objectDrawCount + objectsPerUniformBuffer - 1) / objectsPerUniformBuffer;
+
+	// Create new object transform uniform buffers if needed
+	if (buffersRequired > objectUniformBuffers.GetCount())
+	{
+		unsigned int currentCount = objectUniformBuffers.GetCount();
+		objectUniformBuffers.Resize(buffersRequired);
+
+		unsigned int addCount = buffersRequired - currentCount;
+		device->CreateBuffers(addCount, objectUniformBuffers.GetData() + currentCount);
+
+		for (unsigned int i = currentCount; i < buffersRequired; ++i)
+		{
+			device->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBuffers[i]);
+
+			RenderCommandData::SetBufferStorage setStorage{};
+			setStorage.target = RenderBufferTarget::UniformBuffer;
+			setStorage.size = ObjectUniformBufferSize;
+			setStorage.dynamicStorage = true;
+			setStorage.mapWriteAccess = true;
+
+			device->SetBufferStorage(&setStorage);
+		}
+	}
+
+	int mappedBufferIndex = -1;
+	char* mappedBuffer = nullptr;
+	int objectDrawsProcessed = 0;
+
+	uint64_t* itr = commandList.commands.GetData();
+	uint64_t* end = itr + commandList.commands.GetCount();
+	for (; itr != end; ++itr)
+	{
+		uint64_t command = *itr;
+		unsigned int mat = renderOrder.materialId.GetValue(command);
+		unsigned int vpIdx = renderOrder.viewportIndex.GetValue(command);
+		unsigned int objIdx = renderOrder.renderObject.GetValue(command);
+
+		// Is regular draw command
+		if (IsDrawCommand(command) && mat != RenderOrderConfiguration::CallbackMaterialId)
+		{
+			int bufferIndex = objectDrawsProcessed / objectsPerUniformBuffer;
+			int objectInBuffer = objectDrawsProcessed % objectsPerUniformBuffer;
+
+			if (bufferIndex != mappedBufferIndex)
+			{
+				if (mappedBufferIndex >= 0)
+					device->UnmapBuffer(RenderBufferTarget::UniformBuffer);
+
+				device->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBuffers[bufferIndex]);
+
+				RenderCommandData::MapBufferRange map{};
+				map.target = RenderBufferTarget::UniformBuffer;
+				map.offset = 0;
+				map.length = ObjectUniformBufferSize;
+				map.writeAccess = true;
+				map.invalidateBuffer = true;
+
+				mappedBuffer = static_cast<char*>(device->MapBufferRange(&map));
+				mappedBufferIndex = bufferIndex;
+			}
+
+			TransformUniformBlock* tu = reinterpret_cast<TransformUniformBlock*>(mappedBuffer + objectUniformBlockStride * objectInBuffer);
+
+			const Mat4x4f& model = data.transform[objIdx];
+			tu->MVP = viewportData[vpIdx].viewProjection * model;
+			tu->MV = viewportData[vpIdx].view * model;
+			tu->M = model;
+
+			objectDrawsProcessed += 1;
+		}
+	}
+
+	if (mappedBufferIndex >= 0)
+		device->UnmapBuffer(RenderBufferTarget::UniformBuffer);
+}
+
+bool Renderer::IsDrawCommand(uint64_t orderKey)
+{
+	return renderOrder.command.GetValue(orderKey) == static_cast<uint64_t>(RenderCommandType::Draw);
+}
+
 bool Renderer::ParseControlCommand(uint64_t orderKey)
 {
 	if (renderOrder.command.GetValue(orderKey) == static_cast<uint64_t>(RenderCommandType::Draw))
@@ -842,7 +932,7 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 	return (Vec3f::Dot(objPos - eyePos, eyeForward) - minusNear) / farMinusNear;
 }
 
-void Renderer::PopulateCommandList(Scene* scene)
+unsigned int Renderer::PopulateCommandList(Scene* scene)
 {
 	const float mainViewportMinObjectSize = 50.0f;
 	const float shadowViewportMinObjectSize = 30.0f;
@@ -1150,6 +1240,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 		Intersect::FrustumAABBMinSize(frustum, viewProjection, minSize, data.count, data.bounds, vis[vpIdx]);
 	}
 
+	unsigned int objectDrawCount = 0;
+
 	for (unsigned int i = 1; i < data.count; ++i)
 	{
 		Vec3f objPos = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
@@ -1165,6 +1257,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 				float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
 				commandList.AddDraw(vpIdx, RenderPass::OpaqueGeometry, depth, shadowMaterial, i);
+
+				objectDrawCount += 1;
 			}
 		}
 
@@ -1178,6 +1272,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 
 			RenderPass pass = static_cast<RenderPass>(o.transparency);
 			commandList.AddDraw(fsvp, pass, depth, o.material, i);
+
+			objectDrawCount += 1;
 		}
 	}
 
@@ -1196,6 +1292,8 @@ void Renderer::PopulateCommandList(Scene* scene)
 	}
 
 	commandList.Sort();
+
+	return objectDrawCount;
 }
 
 void Renderer::ReallocateRenderObjects(unsigned int required)

@@ -55,6 +55,8 @@ private:
 	static const unsigned int FramebufferIndexGBuffer = 0;
 	static const unsigned int FramebufferIndexShadow = 1;
 
+	static const unsigned int ObjectUniformBufferSize = 512 * 1024;
+
 	Allocator* allocator;
 
 	RenderDevice* device;
@@ -70,7 +72,12 @@ private:
 	ShaderId lightingShader;
 	MaterialId shadowMaterial;
 	unsigned int lightingUniformBufferId;
-	unsigned int objectUniformBufferId;
+
+	Array<unsigned int> objectUniformBuffers;
+
+	int uniformBufferOffsetAlignment;
+	unsigned int objectUniformBlockStride;
+	unsigned int objectsPerUniformBuffer;
 
 	unsigned int deferredLightingCallback;
 
@@ -118,8 +125,12 @@ private:
 	void UpdateLightingDataToUniformBuffer(
 		const ProjectionParameters& projection, const Scene* scene, LightingUniformBlock& uniformsOut);
 
-	void PopulateCommandList(Scene* scene);
+	// Returns the number of object draw commands added
+	unsigned int PopulateCommandList(Scene* scene);
 
+	void UpdateUniformBuffers(unsigned int objectDrawCount);
+
+	bool IsDrawCommand(uint64_t orderKey);
 	bool ParseControlCommand(uint64_t orderKey);
 
 	Camera* GetRenderCamera(Scene* scene);
