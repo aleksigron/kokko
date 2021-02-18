@@ -38,8 +38,7 @@ private:
 		None,
 		Console,
 		FrameTime,
-		CullingPri,
-		CullingSec,
+		Culling,
 		MemoryStats
 	}
 	mode;

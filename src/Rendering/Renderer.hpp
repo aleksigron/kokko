@@ -104,8 +104,8 @@ private:
 	MeshManager* meshManager;
 	MaterialManager* materialManager;
 
-	Camera* overrideRenderCamera;
-	Camera* overrideCullingCamera;
+	bool lockCullingCamera;
+	Mat4x4f lockCullingCameraTransform;
 
 	RenderCommandList commandList;
 	Array<BitPack> objectVisibility;
@@ -133,9 +133,6 @@ private:
 	bool IsDrawCommand(uint64_t orderKey);
 	bool ParseControlCommand(uint64_t orderKey);
 
-	Camera* GetRenderCamera(Scene* scene);
-	Camera* GetCullingCamera(Scene* scene);
-
 	void DebugRender(DebugVectorRenderer* vectorRenderer);
 	
 public:
@@ -147,8 +144,8 @@ public:
 	void Initialize(Window* window);
 	void Deinitialize();
 
-	void SetRenderCameraOverride(Camera* renderCamera) { overrideRenderCamera = renderCamera; }
-	void SetCullingCameraOverride(Camera* cullingCamera) { overrideCullingCamera = cullingCamera; }
+	void SetLockCullingCamera(bool lockEnable) { lockCullingCamera = lockEnable; }
+	const Mat4x4f& GetCullingCameraTransform() { return lockCullingCameraTransform; }
 
 	// Render the specified scene to the active OpenGL context
 	void Render(Scene* scene);

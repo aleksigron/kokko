@@ -137,10 +137,7 @@ void Debug::Render(Scene* scene)
 		}
 		else if (keyboard->GetKeyDown(Key::F3))
 		{
-			if (oldMode == DebugMode::CullingPri)
-				this->mode = DebugMode::CullingSec;
-			else
-				this->mode = DebugMode::CullingPri;
+			this->mode = DebugMode::Culling;
 		}
 		else if (keyboard->GetKeyDown(Key::F4))
 		{
@@ -165,39 +162,21 @@ void Debug::Render(Scene* scene)
 
 		// Check culling camera controller switching
 
-		if (oldMode != DebugMode::CullingSec && this->mode == DebugMode::CullingSec)
+		if (oldMode != DebugMode::Culling && this->mode == DebugMode::Culling)
 		{
 			// Disable main camera controller
-			culling->SetControlledCamera(true);
+			culling->SetLockCullingCamera(true);
 		}
-		else if (oldMode == DebugMode::CullingSec && this->mode != DebugMode::CullingSec)
+		else if (oldMode == DebugMode::Culling && this->mode != DebugMode::Culling)
 		{
 			// Enable main camera controller
-			culling->SetControlledCamera(false);
-		}
-
-		// Check culling override camera switching
-
-		if ((oldMode != DebugMode::CullingSec && oldMode != DebugMode::CullingPri) &&
-			(this->mode == DebugMode::CullingSec || this->mode == DebugMode::CullingPri))
-		{
-			// Enable debug camera
-			culling->EnableOverrideCamera(true);
-		}
-		else if ((oldMode == DebugMode::CullingSec || oldMode == DebugMode::CullingPri) &&
-			(this->mode != DebugMode::CullingSec && this->mode != DebugMode::CullingPri))
-		{
-			// Disable debug camera
-			culling->EnableOverrideCamera(false);
+			culling->SetLockCullingCamera(false);
 		}
 	}
 
 	char logChar = (mode == DebugMode::Console) ? '*' : ' ';
 	char timeChar = (mode == DebugMode::FrameTime) ? '*' : ' ';
-
-	bool cullingDebugEnable = mode == DebugMode::CullingPri || mode == DebugMode::CullingSec;
-	char cullChar = cullingDebugEnable ? '*' : ' ';
-
+	char cullChar = (mode == DebugMode::Culling) ? '*' : ' ';
 	char memChar = (mode == DebugMode::MemoryStats) ? '*' : ' ';
 
 	char vsyncChar = vsync ? 'Y' : 'N';
@@ -256,15 +235,13 @@ void Debug::Render(Scene* scene)
 	if (mode == DebugMode::FrameTime)
 		graph->DrawToVectorRenderer();
 
-	if (cullingDebugEnable)
-	{
+	if (mode == DebugMode::Culling)
 		culling->UpdateAndDraw(scene);
-	}
 
 	if (mode == DebugMode::MemoryStats)
 		memoryStats->UpdateAndDraw();
 
-	vectorRenderer->Render(cullingDebugEnable ? culling->GetCamera() : scene->GetActiveCamera());
+	vectorRenderer->Render(scene->GetActiveCamera());
 	textRenderer->Render();
 }
 

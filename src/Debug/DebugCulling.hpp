@@ -13,9 +13,7 @@ private:
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
 
-	Camera camera;
-	CameraController controller;
-	bool controllerEnable;
+	bool cullingCameraIsLocked;
 
 	Vec2f guideTextPosition;
 
@@ -25,9 +23,6 @@ public:
 
 	void UpdateAndDraw(Scene* scene);
 
-	void EnableOverrideCamera(bool enableDebugCamera);
-	void SetControlledCamera(bool enableDebugCamera);
+	void SetLockCullingCamera(bool lockCullingCamera);
 	void SetGuideTextPosition(const Vec2f& pos) { guideTextPosition = pos; }
-
-	Camera* GetCamera() { return &camera; }
 };

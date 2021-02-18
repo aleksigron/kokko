@@ -70,8 +70,7 @@ Renderer::Renderer(
 	shaderManager(shaderManager),
 	meshManager(meshManager),
 	materialManager(materialManager),
-	overrideRenderCamera(nullptr),
-	overrideCullingCamera(nullptr),
+	lockCullingCamera(false),
 	commandList(allocator),
 	objectVisibility(allocator),
 	lightResultArray(allocator),
@@ -382,16 +381,6 @@ void Renderer::Deinitialize()
 	}
 }
 
-Camera* Renderer::GetRenderCamera(Scene* scene)
-{
-	return overrideRenderCamera != nullptr ? overrideRenderCamera : scene->GetActiveCamera();
-}
-
-Camera* Renderer::GetCullingCamera(Scene* scene)
-{
-	return overrideCullingCamera != nullptr ? overrideCullingCamera : scene->GetActiveCamera();
-}
-
 void Renderer::Render(Scene* scene)
 {
 	unsigned int objectDrawCount = PopulateCommandList(scene);
@@ -528,7 +517,7 @@ void Renderer::BindMaterialTextures(const MaterialData& material) const
 void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 {
 	Scene* scene = params.scene;
-	Camera* renderCamera = this->GetRenderCamera(scene);
+	Camera* renderCamera = scene->GetActiveCamera();
 	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());
 	Mat4x4f renderCameraTransform = scene->GetWorldTransform(renderCameraObject);
 
@@ -939,14 +928,15 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	// Get camera transforms
 
-	Camera* renderCamera = this->GetRenderCamera(scene);
+	Camera* renderCamera = scene->GetActiveCamera();
 	const ProjectionParameters& projectionParams = renderCamera->parameters;
 	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
 	Mat4x4f cameraTransform = scene->GetWorldTransform(cameraObject);
 
-	Camera* cullingCamera = this->GetCullingCamera(scene);
-	SceneObjectId cullingCameraObject = scene->Lookup(cullingCamera->GetEntity());
-	Mat4x4f cullingCameraTransform = scene->GetWorldTransform(cullingCameraObject);
+	Mat4x4f cullingCameraTransform = lockCullingCamera ? lockCullingCameraTransform : cameraTransform;
+
+	if (lockCullingCamera == false)
+		lockCullingCameraTransform = cullingCameraTransform;
 
 	Vec3f cameraPos = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
@@ -1043,7 +1033,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 		vp.viewProjection = vp.projection * vp.view;
 		vp.viewportRectangle.size = Vec2i(fb.width, fb.height);
 		vp.viewportRectangle.position = Vec2i(0, 0);
-		vp.frustum.Update(cullingCamera->parameters, cullingCameraTransform);
+		vp.frustum.Update(renderCamera->parameters, cullingCameraTransform);
 		vp.framebufferIndex = FramebufferIndexGBuffer;
 
 		viewportUniforms.VP = vp.viewProjection;
