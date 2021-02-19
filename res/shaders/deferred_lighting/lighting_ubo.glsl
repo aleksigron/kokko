@@ -13,6 +13,8 @@ layout(std140, binding = 0) uniform Lighting
 	mat4x4 perspective_mat;
     vec3 ambient_color;
     vec2 half_near_plane;
+	vec2 shadow_map_scale;
+	vec2 frame_resolution;
 
 	int point_count;
 	int spot_count;

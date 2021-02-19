@@ -15,15 +15,6 @@ uniform sampler2DShadow shd_smp;
 
 const int DirLightIndex = 0;
 
-const int shadow_sample_count = 4;
-const float shadow_dist_factor = 0.0015;
-vec2 poisson_disk[shadow_sample_count] = vec2[](
-  vec2( -0.94201624, -0.39906216 ),
-  vec2( 0.94558609, -0.76890725 ),
-  vec2( -0.094184101, -0.92938870 ),
-  vec2( 0.34495938, 0.29387760 )
-);
-
 vec3 fresnel_schlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
@@ -88,6 +79,11 @@ vec3 calc_light(vec3 F0, vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light_col, fl
 	return (kD * albedo / M_PI + specular) * light_col * NdotL;
 }
 
+float offset_lookup(sampler2DShadow map, vec4 loc, vec2 offset)
+{
+    return textureProj(map, vec4(loc.xy + offset * shadow_map_scale * loc.w, loc.z, loc.w));
+}
+
 void main()
 {
 	// Read input buffers
@@ -123,21 +119,18 @@ void main()
 
 		// Get shadow depth
 		vec4 shadow_coord = shadow_mats[cascade_index] * vec4(surface_pos, 1.0);
+		shadow_coord.x = (cascade_index + shadow_coord.x) / shadow_casc_count;
 		float NdotL = max(dot(N, L), 0.0);
-		float s_bias = shadow_bias_offset + clamp(shadow_bias_factor * tan(acos(NdotL)), 0.0, shadow_bias_clamp);
-		float compare_depth = shadow_coord.z - s_bias;
-		float shadow = 0.0;
+		shadow_coord.z -= shadow_bias_offset + clamp(shadow_bias_factor * tan(acos(NdotL)), 0.0, shadow_bias_clamp);
 
-		for (int i = 0; i < shadow_sample_count; i++) {
-			vec2 xy_coord = shadow_coord.xy + poisson_disk[i] * shadow_dist_factor;
-			xy_coord.x = (cascade_index + xy_coord.x) / shadow_casc_count;
-			vec3 coord = vec3(xy_coord, compare_depth);
-			shadow += texture(shd_smp, coord);
-		}
-
-		shadow /= shadow_sample_count;
+		float shadow_coeff = 0.0;
+		for (float y = -1.5; y <= 1.5; y += 1.0)
+			for (float x = -1.5; x <= 1.5; x += 1.0)
+				shadow_coeff += offset_lookup(shd_smp, shadow_coord, vec2(x, y)); 
+				
+		shadow_coeff /= 16.0;
 		
-		Lo += calc_light(F0, N, V, L, albedo, light_col[DirLightIndex], metalness, roughness) * shadow;
+		Lo += calc_light(F0, N, V, L, albedo, light_col[DirLightIndex], metalness, roughness) * shadow_coeff;
 	}
 
 	int idx = 1;

@@ -589,6 +589,13 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	halfNearPlane.x = halfNearPlane.y * projection.aspect;
 	uniformsOut.halfNearPlane = halfNearPlane;
 
+	int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
+	unsigned int cascadeCount = CascadedShadowMap::GetCascadeCount();
+	uniformsOut.shadowMapScale = Vec2f(1.0f / (cascadeCount * shadowSide), 1.0f / shadowSide);
+
+	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
+	uniformsOut.frameResolution = Vec2f(gbuffer.width, gbuffer.height);
+
 	// Set the perspective matrix
 	uniformsOut.perspectiveMatrix = fsvp.projection;
 
@@ -605,8 +612,6 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 		Vec3f lightCol = lightManager->GetColor(dirLightId);
 		uniformsOut.lightColors[0] = lightCol;
 	}
-
-	char uniformNameBuf[32];
 
 	lightResultArray.Clear();
 	Array<LightId>& nonDirLights = lightResultArray;

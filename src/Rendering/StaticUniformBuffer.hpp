@@ -39,6 +39,8 @@ struct LightingUniformBlock
 	alignas(16) Mat4x4f perspectiveMatrix;
 	alignas(16) Vec3f ambientColor;
 	alignas(8) Vec2f halfNearPlane;
+	alignas(8) Vec2f shadowMapScale;
+	alignas(8) Vec2f frameResolution;
 
 	alignas(4) int pointLightCount;
 	alignas(4) int spotLightCount;
