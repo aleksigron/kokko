@@ -53,19 +53,7 @@ void TerrainManager::AddRenderCommands(const CustomRenderer::CommandParams& para
 
 void TerrainManager::RenderCustom(const CustomRenderer::RenderParams& params)
 {
-	TransformUniformBlock objectUniforms;
-
 	const MaterialData& material = materialManager->GetMaterialData(terrainMaterial);
 
-	objectUniforms.MVP = params.viewport->viewProjection;
-	objectUniforms.MV = params.viewport->view;
-	objectUniforms.M = Mat4x4f();
-
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBufferId);
-	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TransformUniformBlock), &objectUniforms);
-
-	// Bind object transform uniform block to shader
-	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint, objectUniformBufferId);
-
-	terrainInstances->RenderTerrain(material);
+	terrainInstances->RenderTerrain(material, *params.viewport);
 }

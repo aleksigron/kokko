@@ -9,6 +9,7 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/VertexFormat.hpp"
+#include "Rendering/RenderViewport.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/MaterialManager.hpp"
@@ -28,11 +29,12 @@ TerrainInstance::TerrainInstance(
 	heightValues(allocator),
 	terrainSize(64.0f),
 	terrainResolution(64),
-	minHeight(0.0f),
-	maxHeight(2.0f),
+	minHeight(-2.0f),
+	maxHeight(0.0f),
 	heightData(nullptr),
 	vertexArrayId(0),
-	textureId()
+	uniformBufferId(0),
+	textureId(0)
 {
 	meshId = MeshId{ 0 };
 }
@@ -145,25 +147,52 @@ void TerrainInstance::Initialize()
 
 	allocator->Deallocate(indexData);
 	allocator->Deallocate(vertexData);
+
+	// Create uniform buffer
+
+	renderDevice->CreateBuffers(1, &uniformBufferId);
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
+	renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(UniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
 }
 
-
-void TerrainInstance::RenderTerrain(const MaterialData& material)
+void TerrainInstance::RenderTerrain(const MaterialData& material, const RenderViewport& viewport)
 {
+	UniformBlock uniforms;
+	uniforms.MVP = viewport.viewProjection;
+	uniforms.MV = viewport.view;
+	uniforms.textureScale = Vec2f(0.25f, 0.25f);
+	uniforms.terrainSize = terrainSize;
+	uniforms.terrainResolution = terrainResolution;
+	uniforms.minHeight = minHeight;
+	uniforms.maxHeight = maxHeight;
+
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
+	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(UniformBlock), &uniforms);
+
+	// Bind object transform uniform block to shader
+	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint, uniformBufferId);
+
 	renderDevice->UseShaderProgram(material.cachedShaderDeviceId);
 
-	const ShaderData& shader = shaderManager->GetShaderData(material.shaderId);
-	const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash("height_map"_hash);
-	if (tu != nullptr)
+	const TextureUniform* heightMap = material.uniforms.FindTextureUniformByNameHash("height_map"_hash);
+	const TextureUniform* albedoMap = material.uniforms.FindTextureUniformByNameHash("albedo_map"_hash);
+
+	if (heightMap != nullptr)
 	{
-		renderDevice->SetUniformInt(tu->uniformLocation, 0);
+		renderDevice->SetUniformInt(heightMap->uniformLocation, 0);
 		renderDevice->SetActiveTextureUnit(0);
 		renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureId);
 	}
 
+	if (albedoMap != nullptr)
+	{
+		renderDevice->SetUniformInt(albedoMap->uniformLocation, 1);
+		renderDevice->SetActiveTextureUnit(1);
+		renderDevice->BindTexture(RenderTextureTarget::Texture2d, albedoMap->textureName);
+	}
+
 	// Bind material uniform block to shader
 	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, material.uniformBufferObject);
-
 
 	MeshDrawData* draw = meshManager->GetDrawData(meshId);
 	renderDevice->BindVertexArray(draw->vertexArrayObject);
