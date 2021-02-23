@@ -122,7 +122,8 @@ private:
 	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
 
 	void BindMaterialTextures(const MaterialData& material) const;
-	void BindSsaoTextures(const ShaderData& shader) const;
+	void BindSsaoOcclusionTextures(const ShaderData& shader) const;
+	void BindSsaoBlurTextures(const ShaderData& shader) const;
 	void BindLightingTextures(const ShaderData& shader) const;
 	void UpdateLightingDataToUniformBuffer(
 		const ProjectionParameters& projection, const Scene* scene, LightingUniformBlock& uniformsOut);

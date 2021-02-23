@@ -1,0 +1,17 @@
+{
+	"vs": {
+		"main": "res/shaders/post_process/ssao_blur.vert.glsl",
+		"includes": [
+            "res/shaders/common/constants.glsl"
+		]
+	},
+	"fs": {
+		"main": "res/shaders/post_process/ssao_blur.frag.glsl",
+		"includes": [
+            "res/shaders/common/constants.glsl"
+		]
+	},
+	"properties": [
+		{ "name": "occlusion_map", "type": "tex2d" }
+	]
+}

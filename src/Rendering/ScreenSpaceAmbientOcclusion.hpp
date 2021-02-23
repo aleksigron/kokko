@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Array.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
@@ -17,24 +18,33 @@ struct ProjectionParameters;
 
 class ScreenSpaceAmbientOcclusion
 {
+public:
+	struct PassInfo
+	{
+		unsigned int framebufferId;
+		unsigned int textureId;
+		unsigned int uniformBufferId;
+		ShaderId shaderId;
+	};
+
 private:
 	static constexpr size_t KernelSize = 64;
 	static constexpr unsigned int NoiseTextureSize = 4;
 	static constexpr unsigned int UniformBlockBinding = 0;
 
-	struct PassInfo
-	{
-		unsigned int framebufferId;
-		unsigned int textureId;
-	};
 
-	struct UniformBlock
+	struct OcclusionUniformBlock
 	{
 		UniformBlockArray<Vec3f, KernelSize> kernel;
 		alignas(16) Mat4x4f projection;
 		alignas(8) Vec2f halfNearPlane;
 		alignas(8) Vec2f noiseScale;
 		alignas(4) float sampleRadius;
+	};
+
+	struct BlurUniformBlock
+	{
+		alignas(8) Vec2f textureScale;
 	};
 
 	Allocator* allocator;
@@ -45,15 +55,11 @@ private:
 
 	Vec2i framebufferSize;
 
-	ShaderId occlusionShaderId;
-	ShaderId blurShaderId;
-
 	PassInfo occlusionPass;
 	PassInfo blurPass;
-	unsigned int uniformBufferId;
 	unsigned int noiseTextureId;
 
-	void CreatePassResources(PassInfo& passInfoOut);
+	void CreatePassResources(StringRef shaderPath, size_t uniformSize, PassInfo& passInfoOut);
 	void DestroyPassResources(PassInfo& passInfoInOut);
 
 public:
@@ -63,18 +69,12 @@ public:
 	void Initialize(Vec2i framebufferResolution);
 	void Deinitialize();
 
-	unsigned int GetOcclusionFramebufferId() const { return occlusionPass.framebufferId; }
-	unsigned int GetOcclusionTextureId() const { return occlusionPass.textureId; }
+	const PassInfo& GetOcclusionPassInfo() const { return occlusionPass; }
+	void UpdateOcclusionUniformBuffer(const ProjectionParameters& projection) const;
 
-	unsigned int GetBlurFramebufferId() const { return blurPass.framebufferId; }
-	unsigned int GetBlurTextureId() const { return blurPass.textureId; }
+	const PassInfo& GetBlurPassInfo() const { return blurPass; }
+	void UpdateBlurUniformBuffer() const;
 
 	unsigned int GetNoiseTextureId() const { return noiseTextureId; }
 	unsigned int GetUniformBufferBindingPoint() const { return UniformBlockBinding; }
-
-	void UpdateUniformBuffer(const ProjectionParameters& projection) const;
-	unsigned int GetUniformBufferId() const { return uniformBufferId; }
-
-	ShaderId GetOcclusionShaderId() const { return occlusionShaderId; }
-	ShaderId GetBlurShaderId() const { return blurShaderId; }
 };

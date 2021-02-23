@@ -225,6 +225,10 @@ void Renderer::Initialize(Window* window)
 		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
+		// Set depth texture to clamp to edge, because SSAO pass can read beyond the edge
+		device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+
 		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
 			RenderFramebufferTarget::Framebuffer, GL_DEPTH_ATTACHMENT, RenderTextureTarget::Texture2d, depthTexture, 0
 		};
@@ -532,27 +536,45 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 	MeshDrawData* meshDrawData = meshManager->GetDrawData(fullscreenMesh);
 	device->BindVertexArray(meshDrawData->vertexArrayObject);
 
-	// SSAO effect
+	unsigned int ssaoBindingPoint = ssao->GetUniformBufferBindingPoint();
+
+	// SSAO occlusion pass
+
+	ssao->UpdateOcclusionUniformBuffer(projParams);
+
+	const ScreenSpaceAmbientOcclusion::PassInfo& occlusionPass = ssao->GetOcclusionPassInfo();
 
 	RenderCommandData::BindFramebufferData bindFramebufferCommand;
 	bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
-	bindFramebufferCommand.framebuffer = ssao->GetOcclusionFramebufferId();
+	bindFramebufferCommand.framebuffer = occlusionPass.framebufferId;
 	device->BindFramebuffer(&bindFramebufferCommand);
 
-	device->Clear(GL_COLOR_BUFFER_BIT);
-
-	ShaderId ssaoOcclusionShaderId = ssao->GetOcclusionShaderId();
-	const ShaderData& ssaoOcclusionShader = shaderManager->GetShaderData(ssaoOcclusionShaderId);
+	const ShaderData& ssaoOcclusionShader = shaderManager->GetShaderData(occlusionPass.shaderId);
 
 	device->UseShaderProgram(ssaoOcclusionShader.driverId);
-	BindSsaoTextures(ssaoOcclusionShader);
+	BindSsaoOcclusionTextures(ssaoOcclusionShader);
 
-	ssao->UpdateUniformBuffer(projParams);
-	unsigned int ssaoOcclusionUniformBuffer = ssao->GetUniformBufferId();
-	device->BindBuffer(RenderBufferTarget::UniformBuffer, ssaoOcclusionUniformBuffer);
-	device->BindBufferBase(RenderBufferTarget::UniformBuffer, ssao->GetUniformBufferBindingPoint(), ssaoOcclusionUniformBuffer);
+	device->BindBufferBase(RenderBufferTarget::UniformBuffer, ssaoBindingPoint, occlusionPass.uniformBufferId);
 
-	// Draw fullscreen quad
+	device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
+
+	// SSAO blur pass
+
+	ssao->UpdateBlurUniformBuffer();
+
+	const ScreenSpaceAmbientOcclusion::PassInfo& blurPass = ssao->GetBlurPassInfo();
+
+	bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
+	bindFramebufferCommand.framebuffer = blurPass.framebufferId;
+	device->BindFramebuffer(&bindFramebufferCommand);
+
+	const ShaderData& ssaoBlurShader = shaderManager->GetShaderData(blurPass.shaderId);
+
+	device->UseShaderProgram(ssaoBlurShader.driverId);
+	BindSsaoBlurTextures(ssaoBlurShader);
+
+	device->BindBufferBase(RenderBufferTarget::UniformBuffer, ssaoBindingPoint, blurPass.uniformBufferId);
+
 	device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
 
 	// Deferred lighting
@@ -564,7 +586,6 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 
 	device->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	device->DepthTestFunction(GL_ALWAYS);
-
 
 	const ShaderData& shader = shaderManager->GetShaderData(lightingShader);
 
@@ -578,15 +599,13 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 
 	device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
 	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(LightingUniformBlock), &lightingUniforms);
-
-	// Bind uniform buffer to binding point
 	device->BindBufferBase(RenderBufferTarget::UniformBuffer, LightingUniformBlock::BindingPoint, lightingUniformBufferId);
 
 	// Draw fullscreen quad
 	device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
 }
 
-void Renderer::BindSsaoTextures(const ShaderData& shader) const
+void Renderer::BindSsaoOcclusionTextures(const ShaderData& shader) const
 {
 	static const unsigned int textureUniformCount = 3;
 	static const uint32_t uniformNameHashes[textureUniformCount] = {
@@ -613,6 +632,17 @@ void Renderer::BindSsaoTextures(const ShaderData& shader) const
 	}
 }
 
+void Renderer::BindSsaoBlurTextures(const ShaderData& shader) const
+{
+	const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash("occlusion_map"_hash);
+	if (tu != nullptr)
+	{
+		device->SetUniformInt(tu->uniformLocation, 0);
+		device->SetActiveTextureUnit(0);
+		device->BindTexture(RenderTextureTarget::Texture2d, ssao->GetOcclusionPassInfo().textureId);
+	}
+}
+
 void Renderer::BindLightingTextures(const ShaderData& shader) const
 {
 	static const uint32_t uniformNameHashes[] = {
@@ -633,7 +663,7 @@ void Renderer::BindLightingTextures(const ShaderData& shader) const
 		gbuffer.textures[NormalTextureIdx],
 		gbuffer.textures[MaterialTextureIdx],
 		gbuffer.textures[DepthTextureIdx],
-		ssao->GetOcclusionTextureId(),
+		ssao->GetBlurPassInfo().textureId,
 		shadowBuffer.textures[0]
 	};
 

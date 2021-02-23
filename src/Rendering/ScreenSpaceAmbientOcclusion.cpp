@@ -20,11 +20,8 @@ ScreenSpaceAmbientOcclusion::ScreenSpaceAmbientOcclusion(
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
 	kernel(allocator),
-	occlusionShaderId(ShaderId{ 0 }),
-	blurShaderId(ShaderId{ 0 }),
-	uniformBufferId(0),
-	occlusionPass(PassInfo{ 0, 0 }),
-	blurPass(PassInfo{ 0, 0 }),
+	occlusionPass(PassInfo{ }),
+	blurPass(PassInfo{ }),
 	noiseTextureId(0)
 {
 }
@@ -48,7 +45,7 @@ void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
 			randomFloats(generator) * 2.0 - 1.0,
 			randomFloats(generator));
 
-		if (vec.SqrMagnitude() >= 1.0f)
+		if (vec.SqrMagnitude() <= 1.0f)
 		{
 			float scale = i / static_cast<float>(KernelSize);
 			scale = Math::Lerp(0.1f, 1.0f, scale * scale);
@@ -73,7 +70,7 @@ void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
 	renderDevice->BindTexture(RenderTextureTarget::Texture2d, noiseTextureId);
 	renderDevice->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 	renderDevice->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-	renderDevice->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::Repeat); 
+	renderDevice->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::Repeat);
 	renderDevice->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::Repeat);
 
 	RenderCommandData::SetTextureStorage2D noiseStorage{
@@ -86,24 +83,13 @@ void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
 	};
 	renderDevice->SetTextureSubImage2D(&noiseImage);
 
-	// Shaders
+	// Per pass resources
 
-	StringRef path("res/shaders/post_process/ssao_occlusion.shader.json");
-	occlusionShaderId = shaderManager->GetIdByPath(path);
+	StringRef occlusionShaderPath("res/shaders/post_process/ssao_occlusion.shader.json");
+	StringRef blurShaderPath("res/shaders/post_process/ssao_blur.shader.json");
 
-	//StringRef path("res/shaders/post_process/ssao_blur.shader.json");
-	//blurShaderId = shaderManager->GetIdByPath(path);
-
-	// Frame buffers
-
-	CreatePassResources(occlusionPass);
-	CreatePassResources(blurPass);
-
-	// Uniform buffer
-
-	renderDevice->CreateBuffers(1, &uniformBufferId);
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-	renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(UniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
+	CreatePassResources(occlusionShaderPath, sizeof(OcclusionUniformBlock), occlusionPass);
+	CreatePassResources(blurShaderPath, sizeof(BlurUniformBlock), blurPass);
 }
 
 void ScreenSpaceAmbientOcclusion::Deinitialize()
@@ -118,13 +104,13 @@ void ScreenSpaceAmbientOcclusion::Deinitialize()
 	}
 }
 
-void ScreenSpaceAmbientOcclusion::UpdateUniformBuffer(const ProjectionParameters& projection) const
+void ScreenSpaceAmbientOcclusion::UpdateOcclusionUniformBuffer(const ProjectionParameters& projection) const
 {
 	float noiseSizef = static_cast<float>(NoiseTextureSize);
 
 	Mat4x4f projectionMat = projection.GetProjectionMatrix();
 
-	UniformBlock uniforms;
+	OcclusionUniformBlock uniforms;
 	uniforms.projection = projectionMat;
 	uniforms.halfNearPlane.y = std::tan(projection.height * 0.5f);
 	uniforms.halfNearPlane.x = uniforms.halfNearPlane.y * projection.aspect;
@@ -134,12 +120,33 @@ void ScreenSpaceAmbientOcclusion::UpdateUniformBuffer(const ProjectionParameters
 	for (size_t i = 0; i < KernelSize; ++i)
 		uniforms.kernel[i] = kernel[i];
 
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(UniformBlock), &uniforms);
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, occlusionPass.uniformBufferId);
+	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(OcclusionUniformBlock), &uniforms);
 }
 
-void ScreenSpaceAmbientOcclusion::CreatePassResources(PassInfo& passInfoOut)
+void ScreenSpaceAmbientOcclusion::UpdateBlurUniformBuffer() const
 {
+	BlurUniformBlock uniforms;
+	uniforms.textureScale = Vec2f(1.0f / framebufferSize.x, 1.0f / framebufferSize.y);
+
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, blurPass.uniformBufferId);
+	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(BlurUniformBlock), &uniforms);
+}
+
+void ScreenSpaceAmbientOcclusion::CreatePassResources(StringRef shaderPath, size_t uniformSize, PassInfo& passInfoOut)
+{
+	// Shader
+
+	passInfoOut.shaderId = shaderManager->GetIdByPath(shaderPath);
+
+	// Uniform buffer
+
+	renderDevice->CreateBuffers(1, &passInfoOut.uniformBufferId);
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, passInfoOut.uniformBufferId);
+	renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, uniformSize, nullptr, RenderBufferUsage::DynamicDraw);
+
+	// Framebuffer and backing image
+
 	renderDevice->CreateFramebuffers(1, &passInfoOut.framebufferId);
 	renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, passInfoOut.framebufferId);
 
@@ -147,6 +154,8 @@ void ScreenSpaceAmbientOcclusion::CreatePassResources(PassInfo& passInfoOut)
 	renderDevice->BindTexture(RenderTextureTarget::Texture2d, passInfoOut.textureId);
 	renderDevice->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 	renderDevice->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
+	renderDevice->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+	renderDevice->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
 
 	RenderCommandData::SetTextureStorage2D frameStorage{
 		RenderTextureTarget::Texture2d, 1, GL_R8, framebufferSize.x, framebufferSize.y
