@@ -638,7 +638,7 @@ bool ShaderLoader::LoadFromConfiguration(
 
 	if (includeLoadSuccess)
 	{
-		StringRef versionStr("#version 420\n");
+		StringRef versionStr("#version 450\n");
 		StringRef uniformBlock = shaderOut.uniformBlockDefinition;
 
 		const char* vsPath = vsMainItr->value.GetString();

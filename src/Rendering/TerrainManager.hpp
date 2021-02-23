@@ -23,8 +23,6 @@ private:
 
 	MaterialId terrainMaterial;
 
-	unsigned int objectUniformBufferId;
-
 public:
 	TerrainManager(Allocator* allocator, RenderDevice* renderDevice,
 		MeshManager* meshManager, MaterialManager* materialManager);

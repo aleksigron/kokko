@@ -35,8 +35,12 @@ void DebugCulling::UpdateAndDraw(Scene* scene)
 		textRenderer->AddText(StringRef("Culling camera is locked"), guideTextPosition);
 
 		const Mat4x4f& transform = Engine::GetInstance()->GetRenderer()->GetCullingCameraTransform();
+
+		ProjectionParameters params = scene->GetActiveCamera()->parameters;
+		params.far = params.far * 0.25f;
+
 		Color white(1.0f, 1.0f, 1.0f);
 
-		vectorRenderer->DrawWireFrustum(transform, scene->GetActiveCamera()->parameters, white);
+		vectorRenderer->DrawWireFrustum(transform, params, white);
 	}
 }

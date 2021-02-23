@@ -23,7 +23,6 @@ TerrainManager::TerrainManager(
 	terrainInstances(nullptr)
 {
 	terrainMaterial = MaterialId{ 0 };
-	objectUniformBufferId = 0;
 }
 
 TerrainManager::~TerrainManager()
@@ -40,10 +39,6 @@ void TerrainManager::Initialize(Renderer* renderer, ShaderManager* shaderManager
 
 	terrainInstances = allocator->MakeNew<TerrainInstance>(allocator, renderDevice, meshManager, shaderManager);
 	terrainInstances->Initialize();
-
-	renderDevice->CreateBuffers(1, &objectUniformBufferId);
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBufferId);
-	renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(TransformUniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
 }
 
 void TerrainManager::AddRenderCommands(const CustomRenderer::CommandParams& params)
