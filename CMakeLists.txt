@@ -117,6 +117,8 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDeviceOpenGL.cpp
 	src/Rendering/RenderDeviceOpenGL.hpp
 	src/Rendering/RenderViewport.hpp
+	src/Rendering/ScreenSpaceAmbientOcclusion.cpp
+	src/Rendering/ScreenSpaceAmbientOcclusion.hpp
 	src/Rendering/StaticUniformBuffer.hpp
 	src/Rendering/TerrainInstance.cpp
 	src/Rendering/TerrainInstance.hpp

@@ -26,6 +26,7 @@
 #include "Rendering/RenderCommandType.hpp"
 #include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
+#include "Rendering/ScreenSpaceAmbientOcclusion.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
@@ -59,6 +60,7 @@ Renderer::Renderer(
 	MaterialManager* materialManager) :
 	allocator(allocator),
 	device(renderDevice),
+	ssao(nullptr),
 	framebufferData(nullptr),
 	framebufferCount(0),
 	viewportData(nullptr),
@@ -76,7 +78,9 @@ Renderer::Renderer(
 	lightResultArray(allocator),
 	customRenderers(allocator)
 {
-	lightingMesh = MeshId{ 0 };
+	ssao = allocator->MakeNew<ScreenSpaceAmbientOcclusion>(allocator, renderDevice, shaderManager);
+
+	fullscreenMesh = MeshId{ 0 };
 	lightingShader = ShaderId{ 0 };
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
@@ -108,6 +112,8 @@ void Renderer::Initialize(Window* window)
 	objectsPerUniformBuffer = ObjectUniformBufferSize / objectUniformBlockStride;
 
 	Vec2i frameBufferSizei = window->GetFrameBufferSize();
+
+	ssao->Initialize(frameBufferSizei);
 
 	{
 		// Allocate framebuffer data storage
@@ -292,8 +298,8 @@ void Renderer::Initialize(Window* window)
 
 	{
 		// Create screen filling quad
-		lightingMesh = meshManager->CreateMesh();
-		MeshPresets::UploadPlane(meshManager, lightingMesh);
+		fullscreenMesh = meshManager->CreateMesh();
+		MeshPresets::UploadPlane(meshManager, fullscreenMesh);
 	}
 	
 	{
@@ -328,10 +334,10 @@ void Renderer::Initialize(Window* window)
 
 void Renderer::Deinitialize()
 {
-	if (lightingMesh.IsValid())
+	if (fullscreenMesh.IsValid())
 	{
-		meshManager->RemoveMesh(lightingMesh);
-		lightingMesh = MeshId{ 0 };
+		meshManager->RemoveMesh(fullscreenMesh);
+		fullscreenMesh = MeshId{ 0 };
 	}
 
 	if (lightingUniformBufferId != 0)
@@ -516,10 +522,49 @@ void Renderer::BindMaterialTextures(const MaterialData& material) const
 
 void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 {
+	// Both SSAO and deferred lighting passes use these
+
 	Scene* scene = params.scene;
-	Camera* renderCamera = scene->GetActiveCamera();
-	SceneObjectId renderCameraObject = scene->Lookup(renderCamera->GetEntity());
-	Mat4x4f renderCameraTransform = scene->GetWorldTransform(renderCameraObject);
+	ProjectionParameters projParams = scene->GetActiveCamera()->parameters;
+
+	device->DepthTestFunction(GL_ALWAYS);
+
+	MeshDrawData* meshDrawData = meshManager->GetDrawData(fullscreenMesh);
+	device->BindVertexArray(meshDrawData->vertexArrayObject);
+
+	// SSAO effect
+
+	RenderCommandData::BindFramebufferData bindFramebufferCommand;
+	bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
+	bindFramebufferCommand.framebuffer = ssao->GetOcclusionFramebufferId();
+	device->BindFramebuffer(&bindFramebufferCommand);
+
+	device->Clear(GL_COLOR_BUFFER_BIT);
+
+	ShaderId ssaoOcclusionShaderId = ssao->GetOcclusionShaderId();
+	const ShaderData& ssaoOcclusionShader = shaderManager->GetShaderData(ssaoOcclusionShaderId);
+
+	device->UseShaderProgram(ssaoOcclusionShader.driverId);
+	BindSsaoTextures(ssaoOcclusionShader);
+
+	ssao->UpdateUniformBuffer(projParams);
+	unsigned int ssaoOcclusionUniformBuffer = ssao->GetUniformBufferId();
+	device->BindBuffer(RenderBufferTarget::UniformBuffer, ssaoOcclusionUniformBuffer);
+	device->BindBufferBase(RenderBufferTarget::UniformBuffer, ssao->GetUniformBufferBindingPoint(), ssaoOcclusionUniformBuffer);
+
+	// Draw fullscreen quad
+	device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
+
+	// Deferred lighting
+
+	// Bind default framebuffer
+	bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
+	bindFramebufferCommand.framebuffer = 0;
+	device->BindFramebuffer(&bindFramebufferCommand);
+
+	device->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	device->DepthTestFunction(GL_ALWAYS);
+
 
 	const ShaderData& shader = shaderManager->GetShaderData(lightingShader);
 
@@ -529,38 +574,67 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 
 	// Update lightingUniformBuffer data
 	LightingUniformBlock lightingUniforms;
-	UpdateLightingDataToUniformBuffer(renderCamera->parameters, scene, lightingUniforms);
+	UpdateLightingDataToUniformBuffer(projParams, scene, lightingUniforms);
 
 	device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
 	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(LightingUniformBlock), &lightingUniforms);
 
-	// Bind uniform buffer to binding point 0
-	device->BindBufferBase(RenderBufferTarget::UniformBuffer, 0, lightingUniformBufferId);
+	// Bind uniform buffer to binding point
+	device->BindBufferBase(RenderBufferTarget::UniformBuffer, LightingUniformBlock::BindingPoint, lightingUniformBufferId);
 
 	// Draw fullscreen quad
-	MeshDrawData* draw = meshManager->GetDrawData(lightingMesh);
-	device->BindVertexArray(draw->vertexArrayObject);
-	device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+	device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
+}
+
+void Renderer::BindSsaoTextures(const ShaderData& shader) const
+{
+	static const unsigned int textureUniformCount = 3;
+	static const uint32_t uniformNameHashes[textureUniformCount] = {
+		"g_normal"_hash,
+		"g_depth"_hash,
+		"noise_texture"_hash
+	};
+
+	const unsigned int textureObjectNames[textureUniformCount] = {
+		framebufferData[FramebufferIndexGBuffer].textures[NormalTextureIdx],
+		framebufferData[FramebufferIndexGBuffer].textures[DepthTextureIdx],
+		ssao->GetNoiseTextureId()
+	};
+
+	for (unsigned int i = 0; i < textureUniformCount; ++i)
+	{
+		const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(uniformNameHashes[i]);
+		if (tu != nullptr)
+		{
+			device->SetUniformInt(tu->uniformLocation, i);
+			device->SetActiveTextureUnit(i);
+			device->BindTexture(RenderTextureTarget::Texture2d, textureObjectNames[i]);
+		}
+	}
 }
 
 void Renderer::BindLightingTextures(const ShaderData& shader) const
 {
-	static const unsigned int textureUniformCount = 5;
-	static const uint32_t uniformNameHashes[textureUniformCount] = {
+	static const uint32_t uniformNameHashes[] = {
 		"g_albedo"_hash,
 		"g_normal"_hash,
 		"g_material"_hash,
 		"g_depth"_hash,
-		"shd_smp"_hash
+		"ssao_map"_hash,
+		"shadow_map"_hash
 	};
 
+	static const unsigned int textureUniformCount = sizeof(uniformNameHashes) / sizeof(uniformNameHashes[0]);
+
 	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
-	const unsigned int textureObjectNames[textureUniformCount] = {
+	const RendererFramebuffer& shadowBuffer = framebufferData[FramebufferIndexShadow];
+	const unsigned int textureObjectNames[] = {
 		gbuffer.textures[AlbedoTextureIdx],
 		gbuffer.textures[NormalTextureIdx],
 		gbuffer.textures[MaterialTextureIdx],
 		gbuffer.textures[DepthTextureIdx],
-		framebufferData[FramebufferIndexShadow].textures[0]
+		ssao->GetOcclusionTextureId(),
+		shadowBuffer.textures[0]
 	};
 
 	for (unsigned int i = 0; i < textureUniformCount; ++i)
@@ -1175,20 +1249,6 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	commandList.AddControl(fsvp, g_pass, 3, ctrl::Clear, colorAndDepthMask);
 
 	// PASS: OPAQUE LIGHTING
-
-	{
-		// Bind default framebuffer
-		RenderCommandData::BindFramebufferData data;
-		data.target = RenderFramebufferTarget::Framebuffer;
-		data.framebuffer = 0;
-
-		commandList.AddControl(fsvp, l_pass, 0, ctrl::BindFramebuffer, sizeof(data), &data);
-	}
-
-	commandList.AddControl(fsvp, l_pass, 1, ctrl::Clear, colorAndDepthMask);
-
-	// Set depth test to always pass
-	commandList.AddControl(fsvp, l_pass, 2, ctrl::DepthTestFunction, GL_ALWAYS);
 
 	// Draw lighting pass
 	commandList.AddDrawWithCallback(fsvp, l_pass, 0.0f, deferredLightingCallback);

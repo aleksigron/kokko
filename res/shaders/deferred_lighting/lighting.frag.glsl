@@ -11,7 +11,8 @@ uniform sampler2D g_albedo;
 uniform sampler2D g_normal;
 uniform sampler2D g_material;
 uniform sampler2D g_depth;
-uniform sampler2DShadow shd_smp;
+uniform sampler2D ssao_map;
+uniform sampler2DShadow shadow_map;
 
 const int DirLightIndex = 0;
 
@@ -48,13 +49,6 @@ float geometry_smith(float NdotV, float NdotL, float roughness)
     float ggx1  = geo_schlick_ggx(NdotL, roughness);
 	
     return ggx1 * ggx2;
-}
-
-vec3 unpack_normal(vec2 packed_normal)
-{
-	float a = (packed_normal.r - 0.5) * M_TAU;
-	float d = cos((packed_normal.g - 0.5) * M_PI);
-	return vec3(cos(a) * d, sin(a) * d, cos(packed_normal.g * M_PI));
 }
 
 vec3 calc_light(vec3 F0, vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light_col, float metalness, float roughness)
@@ -95,12 +89,8 @@ void main()
 	float roughness = material.g;
 
 	float window_z = texture(g_depth, fs_in.tex_coord).r;
-
-	// Calculate position from window_z, pers_mat and fs_in.eye_dir
-
-	float ndc_z = 2.0 * window_z - 1.0;
-	float view_z = perspective_mat[3][2] / ((perspective_mat[2][3] * ndc_z) - perspective_mat[2][2]);
-	vec3 surface_pos = fs_in.eye_dir * -view_z;
+	vec3 surface_pos = view_pos_from_depth(window_z, perspective_mat, fs_in.eye_dir);
+	float view_z = surface_pos.z;
 	vec3 V = normalize(-surface_pos);
 
 	vec3 F0 = vec3(0.04);
@@ -126,7 +116,7 @@ void main()
 		float shadow_coeff = 0.0;
 		for (float y = -1.5; y <= 1.5; y += 1.0)
 			for (float x = -1.5; x <= 1.5; x += 1.0)
-				shadow_coeff += offset_lookup(shd_smp, shadow_coord, vec2(x, y)); 
+				shadow_coeff += offset_lookup(shadow_map, shadow_coord, vec2(x, y)); 
 				
 		shadow_coeff /= 16.0;
 		
@@ -159,7 +149,7 @@ void main()
 		Lo += calc_light(F0, N, V, L, albedo, light_col[idx], metalness, roughness) * attenuation;
 	}
 
-	float ao = 1.0;
+	float ao = texture(ssao_map, fs_in.tex_coord).r;
 	vec3 ambient = ambient_color * albedo * ao;
 
 	color = ambient + Lo;

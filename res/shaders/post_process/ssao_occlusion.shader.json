@@ -1,0 +1,22 @@
+{
+	"vs": {
+		"main": "res/shaders/post_process/ssao_occlusion.vert.glsl",
+		"includes": [
+            "res/shaders/common/constants.glsl",
+			"res/shaders/post_process/ssao_occlusion_uniform.glsl"
+		]
+	},
+	"fs": {
+		"main": "res/shaders/post_process/ssao_occlusion.frag.glsl",
+		"includes": [
+            "res/shaders/common/constants.glsl",
+			"res/shaders/common/g_buffer_io.glsl",
+            "res/shaders/post_process/ssao_occlusion_uniform.glsl"
+		]
+	},
+	"properties": [
+		{ "name": "noise_texture", "type": "tex2d" },
+		{ "name": "g_normal", "type": "tex2d" },
+		{ "name": "g_depth", "type": "tex2d" }
+	]
+}

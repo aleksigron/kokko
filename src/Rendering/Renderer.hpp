@@ -33,6 +33,7 @@ class Scene;
 class Window;
 class DebugVectorRenderer;
 class CustomRenderer;
+class ScreenSpaceAmbientOcclusion;
 
 struct BoundingBox;
 struct RendererFramebuffer;
@@ -58,8 +59,8 @@ private:
 	static const unsigned int ObjectUniformBufferSize = 512 * 1024;
 
 	Allocator* allocator;
-
 	RenderDevice* device;
+	ScreenSpaceAmbientOcclusion* ssao;
 
 	RendererFramebuffer* framebufferData;
 	unsigned int framebufferCount;
@@ -68,7 +69,7 @@ private:
 	unsigned int viewportCount;
 	unsigned int viewportIndexFullscreen;
 
-	MeshId lightingMesh;
+	MeshId fullscreenMesh;
 	ShaderId lightingShader;
 	MaterialId shadowMaterial;
 	unsigned int lightingUniformBufferId;
@@ -121,6 +122,7 @@ private:
 	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
 
 	void BindMaterialTextures(const MaterialData& material) const;
+	void BindSsaoTextures(const ShaderData& shader) const;
 	void BindLightingTextures(const ShaderData& shader) const;
 	void UpdateLightingDataToUniformBuffer(
 		const ProjectionParameters& projection, const Scene* scene, LightingUniformBlock& uniformsOut);
