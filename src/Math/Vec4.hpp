@@ -19,6 +19,13 @@ struct Vec4
 
 	Vec3<T> xyz() const { return Vec3<T>(x, y, z); }
 
+	template <typename CastType>
+	Vec4<CastType> As() const
+	{
+		return Vec4<CastType>(static_cast<CastType>(x), static_cast<CastType>(y),
+			static_cast<CastType>(z), static_cast<CastType>(w));
+	}
+
 	// Component-wise multiplication (Hadamard product) of two vectors
 	static inline Vec4 Hadamard(const Vec4& lhs, const Vec4& rhs)
 	{

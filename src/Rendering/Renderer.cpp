@@ -107,6 +107,8 @@ void Renderer::Initialize(Window* window)
 	objectUniformBlockStride = (sizeof(TransformUniformBlock) * 2 - 1) / uniformBufferOffsetAlignment * uniformBufferOffsetAlignment;
 	objectsPerUniformBuffer = ObjectUniformBufferSize / objectUniformBlockStride;
 
+	Vec2i frameBufferSizei = window->GetFrameBufferSize();
+
 	{
 		// Allocate framebuffer data storage
 		void* buf = this->allocator->Allocate(sizeof(RendererFramebuffer) * MaxViewportCount);
@@ -133,13 +135,11 @@ void Renderer::Initialize(Window* window)
 	{
 		// Create geometry framebuffer and textures
 
-		Vec2f framebufferSize = window->GetFrameBufferSize();
-
 		framebufferCount += 1;
 
 		RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
-		gbuffer.width = static_cast<int>(framebufferSize.x);
-		gbuffer.height = static_cast<int>(framebufferSize.y);
+		gbuffer.width = frameBufferSizei.x;
+		gbuffer.height = frameBufferSizei.y;
 
 		// Create and bind framebuffer
 

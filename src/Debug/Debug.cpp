@@ -72,7 +72,7 @@ void Debug::Initialize(Window* window, MeshManager* meshManager, ShaderManager* 
 	textRenderer->Initialize(shaderManager);
 	vectorRenderer->Initialize(meshManager, shaderManager);
 
-	Vec2f frameSize = this->window->GetFrameBufferSize();
+	Vec2f frameSize = this->window->GetFrameBufferSize().As<float>();
 	float screenCoordScale = this->window->GetScreenCoordinateScale();
 
 	textRenderer->SetFrameSize(frameSize);

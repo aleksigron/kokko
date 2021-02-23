@@ -84,33 +84,33 @@ void Window::Swap()
 	glfwPollEvents();
 }
 
-Vec2f Window::GetFrameBufferSize()
+Vec2i Window::GetFrameBufferSize()
 {
 	int width, height;
 	glfwGetFramebufferSize(windowHandle, &width, &height);
 
-	return Vec2f(width, height);
+	return Vec2i(width, height);
 }
 
-Vec2f Window::GetWindowSize()
+Vec2i Window::GetWindowSize()
 {
 	int width, height;
 	glfwGetWindowSize(windowHandle, &width, &height);
 
-	return Vec2f(width, height);
+	return Vec2i(width, height);
 }
 
 float Window::GetScreenCoordinateScale()
 {
-	Vec2f pixels = this->GetFrameBufferSize();
-	Vec2f screen = this->GetWindowSize();
+	Vec2i pixels = this->GetFrameBufferSize();
+	Vec2i screen = this->GetWindowSize();
 	
-	return pixels.x / screen.x;
+	return pixels.x / static_cast<float>(screen.x);
 }
 
 Mat4x4f Window::GetScreenSpaceProjectionMatrix()
 {
-	Vec2f frame = this->GetFrameBufferSize();
+	Vec2i frame = this->GetFrameBufferSize();
 
 	const float farClipDistance = 100.0f;
 	const float nearClipDistance = -100.0f;

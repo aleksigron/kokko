@@ -15,6 +15,12 @@ struct Vec2
 
 	inline T& operator[](std::size_t index) { return (&x)[index]; }
 	inline const T& operator[](std::size_t index) const { return (&x)[index]; }
+
+	template <typename CastType>
+	Vec2<CastType> As() const
+	{
+		return Vec2<CastType>(static_cast<CastType>(x), static_cast<CastType>(y));
+	}
 	
 	// Normalize the vector
 	inline void Normalize()

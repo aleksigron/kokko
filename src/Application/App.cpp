@@ -68,7 +68,7 @@ void App::Initialize()
 
 	{
 		Window* window = engine->GetMainWindow();
-		Vec2f frameSize = window->GetFrameBufferSize();
+		Vec2f frameSize = window->GetFrameBufferSize().As<float>();
 		mainCamera.parameters.projection = ProjectionType::Perspective;
 		mainCamera.parameters.near = 0.1f;
 		mainCamera.parameters.far = 500.0f;

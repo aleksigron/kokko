@@ -30,12 +30,12 @@ public:
 	/*
 	Get framebuffer size in pixels
 	*/
-	Vec2f GetFrameBufferSize();
+	Vec2i GetFrameBufferSize();
 
 	/*
 	Get window content area in screen coordinates
 	*/
-	Vec2f GetWindowSize();
+	Vec2i GetWindowSize();
 
 	/*
 	Get screen coordinate scale compared to pixels
