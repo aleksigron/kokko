@@ -69,6 +69,9 @@ void DebugConsole::AddLogEntry(StringRef text, LogLevel level)
 	if (font == nullptr) // Can't do anything reasonable without a font
 		return;
 
+	if (drawArea.size.x <= 0.0f || drawArea.size.y <= 0.0f)
+		return;
+
 	int lineHeight = font->GetLineHeight();
 
 	Vec2f areaSize = this->drawArea.size;

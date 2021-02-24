@@ -5,7 +5,20 @@
 class RenderDeviceOpenGL : public RenderDevice
 {
 public:
+	struct DebugMessageUserData
+	{
+		DebugCallbackFn callback;
+	};
+
+private:
+	DebugMessageUserData debugUserData;
+
+public:
+	RenderDeviceOpenGL();
+
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) override;
+
+	virtual void SetDebugMessageCallback(DebugCallbackFn callback) override;
 
 	virtual void Clear(unsigned int mask) override;
 	virtual void ClearColor(const RenderCommandData::ClearColorData* data) override;

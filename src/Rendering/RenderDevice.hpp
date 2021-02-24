@@ -1,14 +1,29 @@
 #pragma once
 
+#include "Core/StringRef.hpp"
+
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderDeviceEnums.hpp"
 
 class RenderDevice
 {
 public:
+	struct DebugMessage
+	{
+		RenderDebugSource source;
+		RenderDebugType type;
+		unsigned int id;
+		RenderDebugSeverity severity;
+		StringRef message;
+	};
+
+	using DebugCallbackFn = void(*)(const DebugMessage&);
+
 	virtual ~RenderDevice() {}
 
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) = 0;
+
+	virtual void SetDebugMessageCallback(DebugCallbackFn callback) = 0;
 
 	virtual void Clear(unsigned int mask) = 0;
 	virtual void ClearColor(const RenderCommandData::ClearColorData* data) = 0;

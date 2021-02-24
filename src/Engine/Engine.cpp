@@ -161,7 +161,4 @@ void Engine::Update()
 
 	this->mainWindow->UpdateInput();
 	this->mainWindow->Swap();
-
-	static size_t frames = 0;
-	if (frames++ % 100 == 0) Debug::CheckOpenGlErrors();
 }

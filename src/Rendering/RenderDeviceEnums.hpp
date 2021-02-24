@@ -6,6 +6,37 @@ enum class RenderDeviceParameter
 	UniformBufferOffsetAlignment
 };
 
+enum class RenderDebugSource
+{
+	Api,
+	WindowSystem,
+	ShaderCompiler,
+	ThirdParty,
+	Application,
+	Other
+};
+
+enum class RenderDebugType
+{
+	Error,
+	DeprecatedBehavior,
+	UndefinedBehavior,
+	Portability,
+	Performance,
+	Marker,
+	PushGroup,
+	PopGroup,
+	Other
+};
+
+enum class RenderDebugSeverity
+{
+	High,
+	Medium,
+	Low,
+	Notification
+};
+
 enum class RenderBufferUsage
 {
 	StreamDraw,

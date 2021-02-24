@@ -80,9 +80,15 @@ int DebugTextRenderer::GetRowCountForTextLength(unsigned int characterCount) con
 {
 	int glyphWidth = font->GetGlyphWidth();
 	int screenWidth = static_cast<int>(scaledFrameSize.x);
-	int charsPerRow = screenWidth / glyphWidth;
 
-	return (characterCount + charsPerRow - 1) / charsPerRow;
+	if (screenWidth > 0 && glyphWidth > 0)
+	{
+		int charsPerRow = screenWidth / glyphWidth;
+
+		return (characterCount + charsPerRow - 1) / charsPerRow;
+	}
+	else
+		return 0;
 }
 
 bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const char* filePath)

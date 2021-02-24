@@ -19,6 +19,7 @@ class Debug
 {
 private:
 	Allocator* allocator;
+	RenderDevice* renderDevice;
 
 	DebugVectorRenderer* vectorRenderer;
 	DebugTextRenderer* textRenderer;
@@ -51,8 +52,6 @@ public:
 	void Deinitialize();
 	
 	void Render(Scene* scene);
-
-	static void CheckOpenGlErrors();
 
 	DebugLog* GetLog() { return log; }
 	DebugConsole* GetConsole() { return console; }

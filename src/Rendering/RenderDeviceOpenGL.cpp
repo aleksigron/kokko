@@ -217,6 +217,78 @@ static unsigned int ConvertVertexElemType(RenderVertexElemType type)
 	}
 }
 
+static RenderDebugSource ConvertDebugSource(GLenum source)
+{
+	switch (source)
+	{
+	case GL_DEBUG_SOURCE_API: return RenderDebugSource::Api;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return RenderDebugSource::WindowSystem;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER: return RenderDebugSource::ShaderCompiler;
+	case GL_DEBUG_SOURCE_THIRD_PARTY: return RenderDebugSource::ThirdParty;
+	case GL_DEBUG_SOURCE_APPLICATION: return RenderDebugSource::Application;
+	case GL_DEBUG_SOURCE_OTHER: return RenderDebugSource::Other;
+	default: return RenderDebugSource::Other;
+	}
+}
+
+static RenderDebugType ConvertDebugType(GLenum type)
+{
+	switch (type)
+	{
+	case GL_DEBUG_TYPE_ERROR: return RenderDebugType::Error;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return RenderDebugType::DeprecatedBehavior;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return RenderDebugType::UndefinedBehavior;
+	case GL_DEBUG_TYPE_PORTABILITY: return RenderDebugType::Portability;
+	case GL_DEBUG_TYPE_PERFORMANCE: return RenderDebugType::Performance;
+	case GL_DEBUG_TYPE_MARKER: return RenderDebugType::Marker;
+	case GL_DEBUG_TYPE_PUSH_GROUP: return RenderDebugType::PushGroup;
+	case GL_DEBUG_TYPE_POP_GROUP: return RenderDebugType::PopGroup;
+	case GL_DEBUG_TYPE_OTHER: return RenderDebugType::Other;
+	default: return RenderDebugType::Other;
+	}
+}
+
+static RenderDebugSeverity ConvertDebugSeverity(GLenum severity)
+{
+	switch (severity)
+	{
+	case GL_DEBUG_SEVERITY_HIGH: return RenderDebugSeverity::High;
+	case GL_DEBUG_SEVERITY_MEDIUM: return RenderDebugSeverity::Medium;
+	case GL_DEBUG_SEVERITY_LOW: return RenderDebugSeverity::Low;
+	case GL_DEBUG_SEVERITY_NOTIFICATION: return RenderDebugSeverity::Notification;
+	default: return RenderDebugSeverity::Notification;
+	}
+}
+
+static void DebugMessageCallback(
+	GLenum source, GLenum type, GLuint id, GLenum severity,
+	GLsizei length, const GLchar* msg, const void* userData)
+{
+	auto* data = static_cast<const RenderDeviceOpenGL::DebugMessageUserData*>(userData);
+
+	RenderDevice::DebugMessage message{
+		ConvertDebugSource(source),
+		ConvertDebugType(type),
+		id,
+		ConvertDebugSeverity(severity),
+		StringRef(msg, static_cast<unsigned int>(length))
+	};
+
+	if (data->callback)
+		data->callback(message);
+}
+
+RenderDeviceOpenGL::RenderDeviceOpenGL() :
+	debugUserData{ nullptr }
+{
+}
+
+void RenderDeviceOpenGL::SetDebugMessageCallback(DebugCallbackFn callback)
+{
+	debugUserData.callback = callback;
+	glDebugMessageCallback(DebugMessageCallback, &debugUserData);
+}
+
 void RenderDeviceOpenGL::GetIntegerValue(RenderDeviceParameter parameter, int* valueOut)
 {
 	glGetIntegerv(ConvertDeviceParameter(parameter), valueOut);

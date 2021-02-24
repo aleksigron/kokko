@@ -15,22 +15,30 @@
 #include "Debug/LogHelper.hpp"
 
 #include "Rendering/Renderer.hpp"
+#include "Rendering/RenderDevice.hpp"
 
 #include "Resources/BitmapFont.hpp"
 #include "Resources/ShaderManager.hpp"
 
 #include "Scene/Scene.hpp"
 
-#include "System/IncludeOpenGL.hpp"
 #include "System/InputManager.hpp"
 #include "System/KeyboardInputView.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
+static void RenderDebugCallback(const RenderDevice::DebugMessage& message)
+{
+	Log::Log(
+		message.severity == RenderDebugSeverity::Notification ? LogLevel::Info : LogLevel::Warning,
+		message.message.str, message.message.len);
+}
+
 Debug::Debug(
 	Allocator* allocator,
 	RenderDevice* renderDevice) :
 	allocator(allocator),
+	renderDevice(renderDevice),
 	window(nullptr),
 	currentFrameRate(0.0),
 	nextFrameRateUpdate(-1.0),
@@ -67,6 +75,8 @@ Debug::~Debug()
 
 void Debug::Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager)
 {
+	renderDevice->SetDebugMessageCallback(RenderDebugCallback);
+
 	this->window = window;
 
 	textRenderer->Initialize(shaderManager);
@@ -243,33 +253,4 @@ void Debug::Render(Scene* scene)
 
 	vectorRenderer->Render(scene->GetActiveCamera());
 	textRenderer->Render();
-}
-
-void Debug::CheckOpenGlErrors()
-{
-	unsigned int errorCount = 0;
-
-	GLenum error;
-	while ((error = glGetError()) != GL_NO_ERROR)
-	{
-		const char* desc;
-
-		switch (error)
-		{
-			case GL_INVALID_ENUM: desc = "GL_INVALID_ENUM"; break;
-			case GL_INVALID_VALUE: desc = "GL_INVALID_VALUE"; break;
-			case GL_INVALID_OPERATION: desc = "GL_INVALID_OPERATION"; break;
-			case GL_OUT_OF_MEMORY: desc = "GL_OUT_OF_MEMORY"; break;
-			default: desc = "<UNKNOWN>";
-		}
-
-		char buffer[128];
-		int w = std::snprintf(buffer, sizeof(buffer), "glGetError(): 0x%04X, %s", error, desc);
-
-		Engine::GetInstance()->GetDebug()->GetLog()->Log(StringRef(buffer, w));
-
-		++errorCount;
-	}
-
-	assert(errorCount == 0);
 }
