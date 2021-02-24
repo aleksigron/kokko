@@ -77,7 +77,7 @@ private:
 	Array<unsigned int> objectUniformBuffers;
 
 	int uniformBufferOffsetAlignment;
-	unsigned int objectUniformBlockStride;
+	size_t objectUniformBlockStride;
 	unsigned int objectsPerUniformBuffer;
 
 	unsigned int deferredLightingCallback;

@@ -400,6 +400,8 @@ void Renderer::Render(Scene* scene)
 
 	unsigned int lastVpIdx = MaxViewportCount;
 	unsigned int lastShaderProgram = 0;
+	MeshDrawData* draw = nullptr;
+	MeshId lastMeshId = MeshId{ 0 };
 	MaterialId lastMaterialId = MaterialId{ 0 };
 
 	TransformUniformBlock objectUniforms;
@@ -460,11 +462,14 @@ void Renderer::Render(Scene* scene)
 
 				device->BindBufferRange(&bind);
 
-				// Draw mesh
-
 				MeshId mesh = data.mesh[objIdx];
-				MeshDrawData* draw = meshManager->GetDrawData(mesh);
-				device->BindVertexArray(draw->vertexArrayObject);
+
+				if (mesh != lastMeshId)
+				{
+					lastMeshId = mesh;
+					draw = meshManager->GetDrawData(mesh);
+					device->BindVertexArray(draw->vertexArrayObject);
+				}
 				device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 
 				objectDrawsProcessed += 1;
@@ -490,6 +495,8 @@ void Renderer::Render(Scene* scene)
 						// Reset state cache
 						lastVpIdx = MaxViewportCount;
 						lastShaderProgram = 0;
+						draw = nullptr;
+						lastMeshId = MeshId{ 0 };
 						lastMaterialId = MaterialId{ 0 };
 					}
 				}
