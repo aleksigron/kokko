@@ -260,6 +260,25 @@ static RenderDebugSeverity ConvertDebugSeverity(GLenum severity)
 	}
 }
 
+static unsigned int ConvertObjectType(RenderObjectType type)
+{
+	switch (type)
+	{
+	case RenderObjectType::Buffer: return GL_BUFFER;
+	case RenderObjectType::Shader: return GL_SHADER;
+	case RenderObjectType::Program: return GL_PROGRAM;
+	case RenderObjectType::VertexArray: return GL_VERTEX_ARRAY;
+	case RenderObjectType::Query: return GL_QUERY;
+	case RenderObjectType::ProgramPipeline: return GL_PROGRAM_PIPELINE;
+	case RenderObjectType::TransformFeedback: return GL_TRANSFORM_FEEDBACK;
+	case RenderObjectType::Sampler: return GL_SAMPLER;
+	case RenderObjectType::Texture: return GL_TEXTURE;
+	case RenderObjectType::Renderbuffer: return GL_RENDERBUFFER;
+	case RenderObjectType::Framebuffer: return GL_FRAMEBUFFER;
+	default: return 0;
+	}
+}
+
 static void DebugMessageCallback(
 	GLenum source, GLenum type, GLuint id, GLenum severity,
 	GLsizei length, const GLchar* msg, const void* userData)
@@ -289,9 +308,29 @@ void RenderDeviceOpenGL::SetDebugMessageCallback(DebugCallbackFn callback)
 	glDebugMessageCallback(DebugMessageCallback, &debugUserData);
 }
 
+void RenderDeviceOpenGL::SetObjectLabel(RenderObjectType type, unsigned int object, StringRef label)
+{
+	glObjectLabel(ConvertObjectType(type), object, label.len, label.str);
+}
+
+void RenderDeviceOpenGL::SetObjectPtrLabel(void* ptr, StringRef label)
+{
+	glObjectPtrLabel(ptr, label.len, label.str);
+}
+
 void RenderDeviceOpenGL::GetIntegerValue(RenderDeviceParameter parameter, int* valueOut)
 {
 	glGetIntegerv(ConvertDeviceParameter(parameter), valueOut);
+}
+
+void RenderDeviceOpenGL::PushDebugGroup(unsigned int id, StringRef message)
+{
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, message.len, message.str);
+}
+
+void RenderDeviceOpenGL::PopDebugGroup()
+{
+	glPopDebugGroup();
 }
 
 void RenderDeviceOpenGL::Clear(unsigned int mask)

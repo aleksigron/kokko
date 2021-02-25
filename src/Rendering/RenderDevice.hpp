@@ -24,6 +24,10 @@ public:
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) = 0;
 
 	virtual void SetDebugMessageCallback(DebugCallbackFn callback) = 0;
+	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, StringRef label) = 0;
+	virtual void SetObjectPtrLabel(void* ptr, StringRef label) = 0;
+	virtual void PushDebugGroup(unsigned int id, StringRef message) = 0;
+	virtual void PopDebugGroup() = 0;
 
 	virtual void Clear(unsigned int mask) = 0;
 	virtual void ClearColor(const RenderCommandData::ClearColorData* data) = 0;

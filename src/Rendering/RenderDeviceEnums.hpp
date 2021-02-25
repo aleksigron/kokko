@@ -37,6 +37,21 @@ enum class RenderDebugSeverity
 	Notification
 };
 
+enum class RenderObjectType
+{
+	Buffer,
+	Shader,
+	Program,
+	VertexArray,
+	Query,
+	ProgramPipeline,
+	TransformFeedback,
+	Sampler,
+	Texture,
+	Renderbuffer,
+	Framebuffer
+};
+
 enum class RenderBufferUsage
 {
 	StreamDraw,
