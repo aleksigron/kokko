@@ -1,0 +1,11 @@
+{
+	"vs": {
+		"main": "res/shaders/post_process/tonemap.vert.glsl"
+	},
+	"fs": {
+		"main": "res/shaders/post_process/tonemap.frag.glsl"
+	},
+	"properties": [
+		{ "name": "light_acc_map", "type": "tex2d" }
+	]
+}

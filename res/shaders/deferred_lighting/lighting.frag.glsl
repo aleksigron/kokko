@@ -153,7 +153,6 @@ void main()
 	vec3 ambient = ambient_color * albedo * ao;
 
 	color = ambient + Lo;
-	color = color / (color + vec3(1.0));
 
 	gl_FragDepth = window_z;
 }

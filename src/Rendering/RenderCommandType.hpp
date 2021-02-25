@@ -5,7 +5,8 @@ enum class RenderPass
 	OpaqueGeometry = 0, // Opaque + AlphaTest
 	OpaqueLighting = 2,
 	Skybox = 3,
-	Transparent = 4 // TransparentMix + TransparentAdd + TransparentSub
+	Transparent = 4, // TransparentMix + TransparentAdd + TransparentSub
+	PostProcess = 7
 };
 
 enum class RenderCommandType

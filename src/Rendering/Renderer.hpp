@@ -47,14 +47,12 @@ class Renderer : public ITransformUpdateReceiver, public CustomRenderer
 {
 private:
 	static const unsigned int MaxViewportCount = 8;
-
-	static const unsigned int AlbedoTextureIdx = 0;
-	static const unsigned int NormalTextureIdx = 1;
-	static const unsigned int MaterialTextureIdx = 2;
-	static const unsigned int DepthTextureIdx = 3;
+	static const unsigned int MaxFramebufferCount = 4;
+	static const unsigned int MaxFramebufferTextureCount = 16;
 
 	static const unsigned int FramebufferIndexGBuffer = 0;
 	static const unsigned int FramebufferIndexShadow = 1;
+	static const unsigned int FramebufferIndexLightAcc = 2;
 
 	static const unsigned int ObjectUniformBufferSize = 512 * 1024;
 
@@ -65,14 +63,27 @@ private:
 	RendererFramebuffer* framebufferData;
 	unsigned int framebufferCount;
 
+	unsigned int* framebufferTextures;
+	unsigned int framebufferTextureCount;
+
 	RenderViewport* viewportData;
 	unsigned int viewportCount;
 	unsigned int viewportIndexFullscreen;
 
 	MeshId fullscreenMesh;
-	ShaderId lightingShader;
+	ShaderId lightingShaderId;
+	ShaderId tonemappingShaderId;
 	MaterialId shadowMaterial;
 	unsigned int lightingUniformBufferId;
+
+	unsigned int gBufferAlbedoTextureIndex;
+	unsigned int gBufferNormalTextureIndex;
+	unsigned int gBufferMaterialTextureIndex;
+	unsigned int fullscreenDepthTextureIndex;
+	unsigned int shadowDepthTextureIndex;
+	unsigned int lightAccumulationTextureIndex;
+
+	unsigned int tonemapUniformBufferId;
 
 	Array<unsigned int> objectUniformBuffers;
 
@@ -81,6 +92,7 @@ private:
 	unsigned int objectsPerUniformBuffer;
 
 	unsigned int deferredLightingCallback;
+	unsigned int tonemappingCallback;
 
 	struct InstanceData
 	{
@@ -119,12 +131,9 @@ private:
 
 	void ReallocateRenderObjects(unsigned int required);
 
-	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
-
 	void BindMaterialTextures(const MaterialData& material) const;
-	void BindSsaoOcclusionTextures(const ShaderData& shader) const;
-	void BindSsaoBlurTextures(const ShaderData& shader) const;
-	void BindLightingTextures(const ShaderData& shader) const;
+	void BindTextures(const ShaderData& shader, unsigned int count, uint32_t* nameHashes, unsigned int* textures);
+
 	void UpdateLightingDataToUniformBuffer(
 		const ProjectionParameters& projection, const Scene* scene, LightingUniformBlock& uniformsOut);
 
@@ -135,6 +144,9 @@ private:
 
 	bool IsDrawCommand(uint64_t orderKey);
 	bool ParseControlCommand(uint64_t orderKey);
+
+	void RenderDeferredLighting(const CustomRenderer::RenderParams& params);
+	void RenderTonemapping(const CustomRenderer::RenderParams& params);
 
 	void DebugRender(DebugVectorRenderer* vectorRenderer);
 	
@@ -175,6 +187,8 @@ public:
 	{
 		data.order[id.i] = order;
 	}
+
+	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
 
 	// Custom renderer management
 	unsigned int AddCustomRenderer(CustomRenderer* customRenderer);

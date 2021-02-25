@@ -41,14 +41,15 @@
 
 struct RendererFramebuffer
 {
-	static const unsigned int MaxTextureCount = 4;
-
 	unsigned int framebuffer;
-	unsigned int textureCount;
-	unsigned int textures[MaxTextureCount];
 
 	int width;
 	int height;
+};
+
+struct TonemapUniformBlock
+{
+	alignas(16) float exposure;
 };
 
 Renderer::Renderer(
@@ -63,6 +64,8 @@ Renderer::Renderer(
 	ssao(nullptr),
 	framebufferData(nullptr),
 	framebufferCount(0),
+	framebufferTextures(nullptr),
+	framebufferTextureCount(0),
 	viewportData(nullptr),
 	viewportCount(0),
 	viewportIndexFullscreen(0),
@@ -81,15 +84,26 @@ Renderer::Renderer(
 	ssao = allocator->MakeNew<ScreenSpaceAmbientOcclusion>(allocator, renderDevice, shaderManager);
 
 	fullscreenMesh = MeshId{ 0 };
-	lightingShader = ShaderId{ 0 };
+	lightingShaderId = ShaderId{ 0 };
+	tonemappingShaderId = ShaderId{ 0 };
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
+
+	gBufferAlbedoTextureIndex = 0;
+	gBufferNormalTextureIndex = 0;
+	gBufferMaterialTextureIndex = 0;
+	fullscreenDepthTextureIndex = 0;
+	shadowDepthTextureIndex = 0;
+	lightAccumulationTextureIndex = 0;
+
+	tonemapUniformBufferId = 0;
 
 	uniformBufferOffsetAlignment = 0;
 	objectUniformBlockStride = 0;
 	objectsPerUniformBuffer = 0;
 
 	deferredLightingCallback = AddCustomRenderer(this);
+	tonemappingCallback = AddCustomRenderer(this);
 
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
@@ -117,8 +131,14 @@ void Renderer::Initialize(Window* window)
 
 	{
 		// Allocate framebuffer data storage
-		void* buf = this->allocator->Allocate(sizeof(RendererFramebuffer) * MaxViewportCount);
+		void* buf = this->allocator->Allocate(sizeof(RendererFramebuffer) * MaxFramebufferCount);
 		framebufferData = static_cast<RendererFramebuffer*>(buf);
+	}
+
+	{
+		// Allocate framebuffer texture info storage
+		void* buf = this->allocator->Allocate(sizeof(unsigned int) * MaxFramebufferTextureCount);
+		framebufferTextures = static_cast<unsigned int*>(buf);
 	}
 
 	{
@@ -152,13 +172,19 @@ void Renderer::Initialize(Window* window)
 		device->CreateFramebuffers(1, &gbuffer.framebuffer);
 		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, gbuffer.framebuffer);
 
-		gbuffer.textureCount = 4;
-		device->CreateTextures(gbuffer.textureCount, gbuffer.textures);
+		unsigned int gbufferTextureCount = 4;
+		device->CreateTextures(gbufferTextureCount, &framebufferTextures[framebufferTextureCount]);
+
+		gBufferAlbedoTextureIndex = framebufferTextureCount++;
+		gBufferNormalTextureIndex = framebufferTextureCount++;
+		gBufferMaterialTextureIndex = framebufferTextureCount++;
+		fullscreenDepthTextureIndex = framebufferTextureCount++;
+
 		unsigned int colAtt[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
 
 		// Albedo color buffer
 
-		unsigned int albTexture = gbuffer.textures[AlbedoTextureIdx];
+		unsigned int albTexture = framebufferTextures[gBufferAlbedoTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, albTexture);
 
 		RenderCommandData::SetTextureImage2D albTextureImage{
@@ -176,7 +202,7 @@ void Renderer::Initialize(Window* window)
 
 		// Normal buffer
 
-		unsigned int norTexture = gbuffer.textures[NormalTextureIdx];
+		unsigned int norTexture = framebufferTextures[gBufferNormalTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, norTexture);
 
 		RenderCommandData::SetTextureImage2D norTextureImage{
@@ -194,7 +220,7 @@ void Renderer::Initialize(Window* window)
 
 		// Emissivity buffer
 
-		unsigned int matTexture = gbuffer.textures[MaterialTextureIdx];
+		unsigned int matTexture = framebufferTextures[gBufferMaterialTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, matTexture);
 
 		RenderCommandData::SetTextureImage2D matTextureImage{
@@ -214,7 +240,7 @@ void Renderer::Initialize(Window* window)
 		device->SetFramebufferDrawBuffers(sizeof(colAtt) / sizeof(colAtt[0]), colAtt);
 
 		// Create and attach depth buffer
-		unsigned int depthTexture = gbuffer.textures[DepthTextureIdx];
+		unsigned int depthTexture = framebufferTextures[fullscreenDepthTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, depthTexture);
 
 		RenderCommandData::SetTextureImage2D depthTextureImage{
@@ -234,10 +260,7 @@ void Renderer::Initialize(Window* window)
 		};
 		device->AttachFramebufferTexture2D(&depthAttachTexture);
 
-		// Reset active texture and framebuffer
-
-		device->BindTexture(RenderTextureTarget::Texture2d, 0);
-		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
+		framebufferTextureCount += gbufferTextureCount;
 	}
 
 	{
@@ -263,11 +286,12 @@ void Renderer::Initialize(Window* window)
 		device->SetFramebufferDrawBuffers(1, &drawBuffers);
 
 		// Create texture
-		framebuffer.textureCount = 1;
-		device->CreateTextures(framebuffer.textureCount, &framebuffer.textures[0]);
+		device->CreateTextures(1, &framebufferTextures[framebufferTextureCount]);
+		
+		shadowDepthTextureIndex = framebufferTextureCount++;
 
 		// Create and attach depth buffer
-		unsigned int depthTexture = framebuffer.textures[0];
+		unsigned int depthTexture = framebufferTextures[shadowDepthTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, depthTexture);
 
 		RenderCommandData::SetTextureImage2D depthTextureImage{
@@ -293,6 +317,55 @@ void Renderer::Initialize(Window* window)
 	}
 
 	{
+		// HDR light accumulation framebuffer
+
+		framebufferCount += 1;
+
+		RendererFramebuffer& framebuffer = framebufferData[FramebufferIndexLightAcc];
+		framebuffer.width = frameBufferSizei.x;
+		framebuffer.height = frameBufferSizei.y;
+
+		// Create and bind framebuffer
+
+		device->CreateFramebuffers(1, &framebuffer.framebuffer);
+		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebuffer.framebuffer);
+
+		device->CreateTextures(1, &framebufferTextures[framebufferTextureCount]);
+		lightAccumulationTextureIndex = framebufferTextureCount++;
+		unsigned int lightAccTexture = framebufferTextures[lightAccumulationTextureIndex];
+
+		device->BindTexture(RenderTextureTarget::Texture2d, lightAccTexture);
+
+		RenderCommandData::SetTextureStorage2D storage{
+			RenderTextureTarget::Texture2d, 1, GL_RGB16F, framebuffer.width, framebuffer.height
+		};
+		device->SetTextureStorage2D(&storage);
+
+		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
+		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
+
+		RenderCommandData::AttachFramebufferTexture2D colorAttachTexture{
+			RenderFramebufferTarget::Framebuffer, GL_COLOR_ATTACHMENT0, RenderTextureTarget::Texture2d, lightAccTexture, 0
+		};
+		device->AttachFramebufferTexture2D(&colorAttachTexture);
+
+		// Reuse depth texture from gbuffer
+		unsigned int depthTexture = framebufferTextures[fullscreenDepthTextureIndex];
+		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
+			RenderFramebufferTarget::Framebuffer, GL_DEPTH_ATTACHMENT, RenderTextureTarget::Texture2d, depthTexture, 0
+		};
+		device->AttachFramebufferTexture2D(&depthAttachTexture);
+	}
+	
+	{
+		// Set up uniform buffer for tonemapping pass
+
+		device->CreateBuffers(1, &tonemapUniformBufferId);
+		device->BindBuffer(RenderBufferTarget::UniformBuffer, tonemapUniformBufferId);
+		device->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(TonemapUniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
+	}
+
+	{
 		// Create opaque lighting pass uniform buffer
 
 		device->CreateBuffers(1, &lightingUniformBufferId);
@@ -307,15 +380,18 @@ void Renderer::Initialize(Window* window)
 	}
 	
 	{
-		const char* const matPath = "res/materials/deferred_geometry/shadow_depth.material.json";
-		shadowMaterial = materialManager->GetIdByPath(StringRef(matPath));
+		const char* path = "res/materials/deferred_geometry/shadow_depth.material.json";
+		shadowMaterial = materialManager->GetIdByPath(StringRef(path));
 	}
 
 	{
-		static const char* const path = "res/shaders/deferred_lighting/lighting.shader.json";
+		const char* path = "res/shaders/deferred_lighting/lighting.shader.json";
+		lightingShaderId = shaderManager->GetIdByPath(StringRef(path));
+	}
 
-		ShaderId shaderId = shaderManager->GetIdByPath(StringRef(path));
-		lightingShader = shaderId;
+	{
+		const char* path = "res/shaders/post_process/tonemap.shader.json";
+		tonemappingShaderId = shaderManager->GetIdByPath(StringRef(path));
 	}
 
 	// Create skybox entity
@@ -364,7 +440,6 @@ void Renderer::Deinitialize()
 
 			if (fb.framebuffer != 0)
 			{
-				device->DestroyTextures(fb.textureCount, fb.textures);
 				device->DestroyFramebuffers(1, &fb.framebuffer);
 
 				fb.framebuffer = 0;
@@ -373,6 +448,16 @@ void Renderer::Deinitialize()
 
 		this->allocator->Deallocate(framebufferData);
 		framebufferData = nullptr;
+		framebufferCount = 0;
+	}
+
+	if (framebufferTextures != nullptr)
+	{
+		device->DestroyTextures(framebufferTextureCount, framebufferTextures);
+
+		this->allocator->Deallocate(framebufferTextures);
+		framebufferTextures = nullptr;
+		framebufferTextureCount = 0;
 	}
 
 	if (viewportData != nullptr)
@@ -388,6 +473,7 @@ void Renderer::Deinitialize()
 
 		this->allocator->Deallocate(viewportData);
 		viewportData = nullptr;
+		viewportCount = 0;
 	}
 }
 
@@ -531,14 +617,36 @@ void Renderer::BindMaterialTextures(const MaterialData& material) const
 	}
 }
 
+void Renderer::BindTextures(const ShaderData& shader, unsigned int count, uint32_t* nameHashes, unsigned int* textures)
+{
+	for (unsigned int i = 0; i < count; ++i)
+	{
+		const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(nameHashes[i]);
+		if (tu != nullptr)
+		{
+			device->SetUniformInt(tu->uniformLocation, i);
+			device->SetActiveTextureUnit(i);
+			device->BindTexture(RenderTextureTarget::Texture2d, textures[i]);
+		}
+	}
+}
+
 void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
+{
+	if (params.callbackId == deferredLightingCallback)
+		RenderDeferredLighting(params);
+	else if (params.callbackId == tonemappingCallback)
+		RenderTonemapping(params);
+}
+
+void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params)
 {
 	// Both SSAO and deferred lighting passes use these
 
 	Scene* scene = params.scene;
 	ProjectionParameters projParams = scene->GetActiveCamera()->parameters;
 
-	device->DepthTestFunction(GL_ALWAYS);
+	device->DepthTestDisable();
 
 	MeshDrawData* meshDrawData = meshManager->GetDrawData(fullscreenMesh);
 	device->BindVertexArray(meshDrawData->vertexArrayObject);
@@ -559,7 +667,16 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 	const ShaderData& ssaoOcclusionShader = shaderManager->GetShaderData(occlusionPass.shaderId);
 
 	device->UseShaderProgram(ssaoOcclusionShader.driverId);
-	BindSsaoOcclusionTextures(ssaoOcclusionShader);
+
+	{
+		uint32_t textureNameHashes[] = { "g_normal"_hash, "g_depth"_hash, "noise_texture"_hash };
+		unsigned int textureIds[] = {
+			framebufferTextures[gBufferNormalTextureIndex],
+			framebufferTextures[fullscreenDepthTextureIndex],
+			ssao->GetNoiseTextureId()
+		};
+		BindTextures(ssaoOcclusionShader, 3, textureNameHashes, textureIds);
+	}
 
 	device->BindBufferBase(RenderBufferTarget::UniformBuffer, ssaoBindingPoint, occlusionPass.uniformBufferId);
 
@@ -578,7 +695,12 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 	const ShaderData& ssaoBlurShader = shaderManager->GetShaderData(blurPass.shaderId);
 
 	device->UseShaderProgram(ssaoBlurShader.driverId);
-	BindSsaoBlurTextures(ssaoBlurShader);
+	
+	{
+		uint32_t textureNameHashes[] = { "occlusion_map"_hash };
+		unsigned int textureIds[] = { ssao->GetOcclusionPassInfo().textureId };
+		BindTextures(ssaoBlurShader, 1, textureNameHashes, textureIds);
+	}
 
 	device->BindBufferBase(RenderBufferTarget::UniformBuffer, ssaoBindingPoint, blurPass.uniformBufferId);
 
@@ -586,19 +708,34 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 
 	// Deferred lighting
 
-	// Bind default framebuffer
+	// Bind HDR light accumulation framebuffer
 	bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
-	bindFramebufferCommand.framebuffer = 0;
+	bindFramebufferCommand.framebuffer = framebufferData[FramebufferIndexLightAcc].framebuffer;
 	device->BindFramebuffer(&bindFramebufferCommand);
 
-	device->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	device->DepthTestFunction(GL_ALWAYS);
+	device->Clear(GL_COLOR_BUFFER_BIT);
 
-	const ShaderData& shader = shaderManager->GetShaderData(lightingShader);
+	const ShaderData& shader = shaderManager->GetShaderData(lightingShaderId);
 
 	device->UseShaderProgram(shader.driverId);
 
-	BindLightingTextures(shader);
+	{
+		uint32_t textureNameHashes[] = {
+			"g_albedo"_hash, "g_normal"_hash, "g_material"_hash, "g_depth"_hash,
+			"ssao_map"_hash, "shadow_map"_hash
+		};
+
+		unsigned int textureIds[] = {
+			framebufferTextures[gBufferAlbedoTextureIndex],
+			framebufferTextures[gBufferNormalTextureIndex],
+			framebufferTextures[gBufferMaterialTextureIndex],
+			framebufferTextures[fullscreenDepthTextureIndex],
+			ssao->GetBlurPassInfo().textureId,
+			framebufferTextures[shadowDepthTextureIndex]
+		};
+
+		BindTextures(shader, 6, textureNameHashes, textureIds);
+	}
 
 	// Update lightingUniformBuffer data
 	LightingUniformBlock lightingUniforms;
@@ -612,78 +749,38 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 	device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
 }
 
-void Renderer::BindSsaoOcclusionTextures(const ShaderData& shader) const
+void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 {
-	static const unsigned int textureUniformCount = 3;
-	static const uint32_t uniformNameHashes[textureUniformCount] = {
-		"g_normal"_hash,
-		"g_depth"_hash,
-		"noise_texture"_hash
-	};
+	device->BlendingDisable();
+	device->DepthTestDisable();
 
-	const unsigned int textureObjectNames[textureUniformCount] = {
-		framebufferData[FramebufferIndexGBuffer].textures[NormalTextureIdx],
-		framebufferData[FramebufferIndexGBuffer].textures[DepthTextureIdx],
-		ssao->GetNoiseTextureId()
-	};
+	MeshDrawData* meshDrawData = meshManager->GetDrawData(fullscreenMesh);
+	device->BindVertexArray(meshDrawData->vertexArrayObject);
 
-	for (unsigned int i = 0; i < textureUniformCount; ++i)
+	// Bind default framebuffer
+
+	RenderCommandData::BindFramebufferData bindFramebufferCommand;
+	bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
+	bindFramebufferCommand.framebuffer = 0;
+	device->BindFramebuffer(&bindFramebufferCommand);
+
+	const ShaderData& shader = shaderManager->GetShaderData(tonemappingShaderId);
+	device->UseShaderProgram(shader.driverId);
+
+	TonemapUniformBlock uniforms;
+	uniforms.exposure = 1.0f;
+
+	device->BindBuffer(RenderBufferTarget::UniformBuffer, tonemapUniformBufferId);
+	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TonemapUniformBlock), &uniforms);
+	device->BindBufferBase(RenderBufferTarget::UniformBuffer, 0, tonemapUniformBufferId);
+
 	{
-		const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(uniformNameHashes[i]);
-		if (tu != nullptr)
-		{
-			device->SetUniformInt(tu->uniformLocation, i);
-			device->SetActiveTextureUnit(i);
-			device->BindTexture(RenderTextureTarget::Texture2d, textureObjectNames[i]);
-		}
+		uint32_t textureNameHashes[] = { "light_acc_map"_hash };
+		unsigned int textureIds[] = { framebufferTextures[lightAccumulationTextureIndex] };
+		BindTextures(shader, 1, textureNameHashes, textureIds);
 	}
-}
 
-void Renderer::BindSsaoBlurTextures(const ShaderData& shader) const
-{
-	const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash("occlusion_map"_hash);
-	if (tu != nullptr)
-	{
-		device->SetUniformInt(tu->uniformLocation, 0);
-		device->SetActiveTextureUnit(0);
-		device->BindTexture(RenderTextureTarget::Texture2d, ssao->GetOcclusionPassInfo().textureId);
-	}
-}
-
-void Renderer::BindLightingTextures(const ShaderData& shader) const
-{
-	static const uint32_t uniformNameHashes[] = {
-		"g_albedo"_hash,
-		"g_normal"_hash,
-		"g_material"_hash,
-		"g_depth"_hash,
-		"ssao_map"_hash,
-		"shadow_map"_hash
-	};
-
-	static const unsigned int textureUniformCount = sizeof(uniformNameHashes) / sizeof(uniformNameHashes[0]);
-
-	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
-	const RendererFramebuffer& shadowBuffer = framebufferData[FramebufferIndexShadow];
-	const unsigned int textureObjectNames[] = {
-		gbuffer.textures[AlbedoTextureIdx],
-		gbuffer.textures[NormalTextureIdx],
-		gbuffer.textures[MaterialTextureIdx],
-		gbuffer.textures[DepthTextureIdx],
-		ssao->GetBlurPassInfo().textureId,
-		shadowBuffer.textures[0]
-	};
-
-	for (unsigned int i = 0; i < textureUniformCount; ++i)
-	{
-		const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(uniformNameHashes[i]);
-		if (tu != nullptr)
-		{
-			device->SetUniformInt(tu->uniformLocation, i);
-			device->SetActiveTextureUnit(i);
-			device->BindTexture(RenderTextureTarget::Texture2d, textureObjectNames[i]);
-		}
-	}
+	device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
 }
 
 void Renderer::UpdateLightingDataToUniformBuffer(
@@ -1170,6 +1267,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	RenderPass l_pass = RenderPass::OpaqueLighting;
 	RenderPass s_pass = RenderPass::Skybox;
 	RenderPass t_pass = RenderPass::Transparent;
+	RenderPass p_pass = RenderPass::PostProcess;
 
 	using ctrl = RenderControlType;
 
@@ -1253,12 +1351,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	{
 		// Set clear color
-		RenderCommandData::ClearColorData data;
-		data.r = 0.0f;
-		data.g = 0.0f;
-		data.b = 0.0f;
-		data.a = 0.0f;
-
+		RenderCommandData::ClearColorData data{ 0.0f, 0.0f, 0.0f, 0.0f };
 		commandList.AddControl(fsvp, g_pass, 0, ctrl::ClearColor, sizeof(data), &data);
 	}
 
@@ -1292,8 +1385,9 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	// PASS: SKYBOX
 
-	commandList.AddControl(fsvp, s_pass, 0, ctrl::DepthTestFunction, GL_EQUAL);
-	commandList.AddControl(fsvp, s_pass, 1, ctrl::DepthWriteDisable);
+	commandList.AddControl(fsvp, s_pass, 0, ctrl::DepthTestEnable);
+	commandList.AddControl(fsvp, s_pass, 1, ctrl::DepthTestFunction, GL_EQUAL);
+	commandList.AddControl(fsvp, s_pass, 2, ctrl::DepthWriteDisable);
 
 	// PASS: TRANSPARENT
 
@@ -1310,6 +1404,11 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 		commandList.AddControl(fsvp, t_pass, 2, ctrl::BlendFunction, sizeof(data), &data);
 	}
+
+	// PASS: POST PROCESS
+
+	// Draw HDR tonemapping pass
+	commandList.AddDrawWithCallback(fsvp, p_pass, 0.0f, tonemappingCallback);
 
 	// Create draw commands for render objects in scene
 
