@@ -20,6 +20,7 @@ ScreenSpaceAmbientOcclusion::ScreenSpaceAmbientOcclusion(
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
 	kernel(allocator),
+	kernelSize(16),
 	occlusionPass(PassInfo{ }),
 	blurPass(PassInfo{ }),
 	noiseTextureId(0)
@@ -38,8 +39,8 @@ void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
 	std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
 	std::default_random_engine generator;
 
-	kernel.Resize(KernelSize);
-	for (unsigned int i = 0; i < KernelSize;)
+	kernel.Resize(kernelSize);
+	for (unsigned int i = 0; i < kernelSize;)
 	{
 		Vec3f vec(randomFloats(generator) * 2.0 - 1.0,
 			randomFloats(generator) * 2.0 - 1.0,
@@ -47,7 +48,7 @@ void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
 
 		if (vec.SqrMagnitude() <= 1.0f)
 		{
-			float scale = i / static_cast<float>(KernelSize);
+			float scale = i / static_cast<float>(kernelSize);
 			scale = Math::Lerp(0.1f, 1.0f, scale * scale);
 			kernel[i] = vec.GetNormalized() * scale;
 			i += 1;
@@ -115,9 +116,10 @@ void ScreenSpaceAmbientOcclusion::UpdateOcclusionUniformBuffer(const ProjectionP
 	uniforms.halfNearPlane.y = std::tan(projection.height * 0.5f);
 	uniforms.halfNearPlane.x = uniforms.halfNearPlane.y * projection.aspect;
 	uniforms.noiseScale = Vec2f(framebufferSize.x / noiseSizef, framebufferSize.y / noiseSizef);
-	uniforms.sampleRadius = 0.5;
+	uniforms.sampleRadius = 0.5f;
+	uniforms.kernelSize = kernelSize;
 
-	for (size_t i = 0; i < KernelSize; ++i)
+	for (size_t i = 0; i < kernelSize; ++i)
 		uniforms.kernel[i] = kernel[i];
 
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, occlusionPass.uniformBufferId);

@@ -28,18 +28,18 @@ public:
 	};
 
 private:
-	static constexpr size_t KernelSize = 64;
+	static constexpr size_t MaxKernelSize = 64;
 	static constexpr unsigned int NoiseTextureSize = 4;
 	static constexpr unsigned int UniformBlockBinding = 0;
 
-
 	struct OcclusionUniformBlock
 	{
-		UniformBlockArray<Vec3f, KernelSize> kernel;
+		UniformBlockArray<Vec3f, MaxKernelSize> kernel;
 		alignas(16) Mat4x4f projection;
 		alignas(8) Vec2f halfNearPlane;
 		alignas(8) Vec2f noiseScale;
 		alignas(4) float sampleRadius;
+		alignas(4) int kernelSize;
 	};
 
 	struct BlurUniformBlock
@@ -54,6 +54,7 @@ private:
 	Array<Vec3f> kernel;
 
 	Vec2i framebufferSize;
+	int kernelSize;
 
 	PassInfo occlusionPass;
 	PassInfo blurPass;

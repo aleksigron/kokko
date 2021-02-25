@@ -25,14 +25,8 @@ void main()
 	vec3 bitangent = cross(normal, tangent);
 	mat3x3 TBN = mat3x3(tangent, bitangent, normal);
 
-	//float angle = texture(noise_texture, fs_in.tex_coord * noise_scale).r * M_TAU;
-	//mat3x3 rotate = mat3x3(
-	//	vec3(cos(angle), sin(angle), 0.0),
-	//	vec3(-sin(angle), cos(angle), 0.0),
-	//	vec3(0.0, 0.0, 1.0));
-	
 	float occlusion = 0.0;
-	for (int i = 0; i < KernelSize; ++i)
+	for (int i = 0; i < kernel_size; ++i)
 	{
 		vec3 sample_pos = TBN * kernel[i] * sample_radius + surface_pos;
 		
@@ -45,5 +39,5 @@ void main()
 		occlusion += (sample_depth >= sample_pos.z + bias ? 1.0 : 0.0) * range_check;
 	}
 
-	color = 1.0 - (occlusion / KernelSize);
+	color = 1.0 - (occlusion / kernel_size);
 }
