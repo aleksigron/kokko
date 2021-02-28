@@ -71,6 +71,61 @@ static unsigned int ConvertTextureTarget(RenderTextureTarget target)
 	}
 }
 
+static unsigned int ConvertTextureDataType(RenderTextureDataType type)
+{
+	switch (type)
+	{
+	case RenderTextureDataType::UnsignedByte: return GL_UNSIGNED_BYTE;
+	case RenderTextureDataType::SignedByte: return GL_BYTE;
+	case RenderTextureDataType::UnsignedShort: return GL_UNSIGNED_SHORT;
+	case RenderTextureDataType::SignedShort: return GL_SHORT;
+	case RenderTextureDataType::UnsignedInt: return GL_UNSIGNED_INT;
+	case RenderTextureDataType::SignedInt: return GL_INT;
+	case RenderTextureDataType::Float: return GL_FLOAT;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertTextureSizedFormat(RenderTextureSizedFormat format)
+{
+	switch (format)
+	{
+	case RenderTextureSizedFormat::R8: return GL_R8;
+	case RenderTextureSizedFormat::RG8: return GL_RG8;
+	case RenderTextureSizedFormat::RGB8: return GL_RGB8;
+	case RenderTextureSizedFormat::RGBA8: return GL_RGBA8;
+	case RenderTextureSizedFormat::SRGB8: return GL_SRGB8;
+	case RenderTextureSizedFormat::SRGB8_A8: return GL_SRGB8_ALPHA8;
+	case RenderTextureSizedFormat::R16: return GL_R16;
+	case RenderTextureSizedFormat::RG16: return GL_RG16;
+	case RenderTextureSizedFormat::RGB16: return GL_RGB16;
+	case RenderTextureSizedFormat::RGBA16: return GL_RGBA16;
+	case RenderTextureSizedFormat::R16F: return GL_R16F;
+	case RenderTextureSizedFormat::RG16F: return GL_RG16F;
+	case RenderTextureSizedFormat::RGB16F: return GL_RGB16F;
+	case RenderTextureSizedFormat::RGBA16F: return GL_RGBA16F;
+	case RenderTextureSizedFormat::R32F: return GL_R32F;
+	case RenderTextureSizedFormat::RG32F: return GL_RG32F;
+	case RenderTextureSizedFormat::RGB32F: return GL_RGB32F;
+	case RenderTextureSizedFormat::RGBA32F: return GL_RGBA32F;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertTextureBaseFormat(RenderTextureBaseFormat format)
+{
+	switch (format)
+	{
+	case RenderTextureBaseFormat::R: return GL_RED;
+	case RenderTextureBaseFormat::RG: return GL_RG;
+	case RenderTextureBaseFormat::RGB: return GL_RGB;
+	case RenderTextureBaseFormat::RGBA: return GL_RGBA;
+	case RenderTextureBaseFormat::Depth: return GL_DEPTH_COMPONENT;
+	case RenderTextureBaseFormat::DepthStencil: return GL_DEPTH_STENCIL;
+	default: return 0;
+	}
+}
+
 static unsigned int ConvertTextureParameter(RenderTextureParameter parameter)
 {
 	switch (parameter)
@@ -139,6 +194,20 @@ static unsigned int ConvertFramebufferTarget(RenderFramebufferTarget target)
 	switch (target)
 	{
 	case RenderFramebufferTarget::Framebuffer: return GL_FRAMEBUFFER;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertFramebufferAttachment(RenderFramebufferAttachment attachment)
+{
+	switch (attachment)
+	{
+	case RenderFramebufferAttachment::Color0: return GL_COLOR_ATTACHMENT0;
+	case RenderFramebufferAttachment::Color1: return GL_COLOR_ATTACHMENT1;
+	case RenderFramebufferAttachment::Color2: return GL_COLOR_ATTACHMENT2;
+	case RenderFramebufferAttachment::Color3: return GL_COLOR_ATTACHMENT3;
+	case RenderFramebufferAttachment::Depth: return GL_DEPTH_ATTACHMENT;
+	case RenderFramebufferAttachment::DepthStencil: return GL_DEPTH_STENCIL_ATTACHMENT;
 	default: return 0;
 	}
 }
@@ -461,13 +530,18 @@ void RenderDeviceOpenGL::BindFramebuffer(RenderFramebufferTarget target, unsigne
 
 void RenderDeviceOpenGL::AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data)
 {
-	glFramebufferTexture2D(ConvertFramebufferTarget(data->target), data->attachment,
+	glFramebufferTexture2D(ConvertFramebufferTarget(data->target), ConvertFramebufferAttachment(data->attachment),
 		ConvertTextureTarget(data->textureTarget), data->texture, data->mipLevel);
 }
 
-void RenderDeviceOpenGL::SetFramebufferDrawBuffers(unsigned int count, unsigned int* buffers)
+void RenderDeviceOpenGL::SetFramebufferDrawBuffers(unsigned int count, RenderFramebufferAttachment* buffers)
 {
-	glDrawBuffers(count, buffers);
+	unsigned int attachments[16];
+
+	for (unsigned int i = 0; i < count; ++i)
+		attachments[i] = ConvertFramebufferAttachment(buffers[i]);
+
+	glDrawBuffers(count, attachments);
 }
 
 // TEXTURE
@@ -489,7 +563,8 @@ void RenderDeviceOpenGL::BindTexture(RenderTextureTarget target, unsigned int te
 
 void RenderDeviceOpenGL::SetTextureStorage2D(const RenderCommandData::SetTextureStorage2D* data)
 {
-	glTexStorage2D(ConvertTextureTarget(data->target), data->levels, data->internalFormat, data->width, data->height);
+	glTexStorage2D(ConvertTextureTarget(data->target), data->levels,
+		ConvertTextureSizedFormat(data->format), data->width, data->height);
 }
 
 void RenderDeviceOpenGL::SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data)
@@ -501,7 +576,8 @@ void RenderDeviceOpenGL::SetTextureImage2D(const RenderCommandData::SetTextureIm
 void RenderDeviceOpenGL::SetTextureSubImage2D(const RenderCommandData::SetTextureSubImage2D* data)
 {
 	glTexSubImage2D(ConvertTextureTarget(data->target), data->mipLevel, data->xOffset, data->yOffset,
-		data->width, data->height, data->format, data->type, data->data);
+		data->width, data->height, ConvertTextureBaseFormat(data->format),
+		ConvertTextureDataType(data->type), data->data);
 }
 
 void RenderDeviceOpenGL::SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data)

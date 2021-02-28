@@ -75,12 +75,13 @@ void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
 	renderDevice->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::Repeat);
 
 	RenderCommandData::SetTextureStorage2D noiseStorage{
-		RenderTextureTarget::Texture2d, 1, GL_RG16, NoiseTextureSize, NoiseTextureSize
+		RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RG16, NoiseTextureSize, NoiseTextureSize
 	};
 	renderDevice->SetTextureStorage2D(&noiseStorage);
 
 	RenderCommandData::SetTextureSubImage2D noiseImage{
-		RenderTextureTarget::Texture2d, 0, 0, 0, NoiseTextureSize, NoiseTextureSize, GL_RG, GL_UNSIGNED_SHORT, noise.GetData()
+		RenderTextureTarget::Texture2d, 0, 0, 0, NoiseTextureSize, NoiseTextureSize,
+		RenderTextureBaseFormat::RG, RenderTextureDataType::UnsignedShort, noise.GetData()
 	};
 	renderDevice->SetTextureSubImage2D(&noiseImage);
 
@@ -160,12 +161,13 @@ void ScreenSpaceAmbientOcclusion::CreatePassResources(StringRef shaderPath, size
 	renderDevice->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
 
 	RenderCommandData::SetTextureStorage2D frameStorage{
-		RenderTextureTarget::Texture2d, 1, GL_R8, framebufferSize.x, framebufferSize.y
+		RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::R8, framebufferSize.x, framebufferSize.y
 	};
 	renderDevice->SetTextureStorage2D(&frameStorage);
 
 	RenderCommandData::AttachFramebufferTexture2D attachTexture{
-		RenderFramebufferTarget::Framebuffer, GL_COLOR_ATTACHMENT0, RenderTextureTarget::Texture2d, passInfoOut.textureId, 0
+		RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
+		RenderTextureTarget::Texture2d, passInfoOut.textureId, 0
 	};
 	renderDevice->AttachFramebufferTexture2D(&attachTexture);
 }

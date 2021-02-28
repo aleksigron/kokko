@@ -75,12 +75,13 @@ void TerrainInstance::Initialize()
 	renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureId);
 
 	RenderCommandData::SetTextureStorage2D storage{
-		RenderTextureTarget::Texture2d, 1, GL_R16, texSize, texSize
+		RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::R16, texSize, texSize
 	};
 	renderDevice->SetTextureStorage2D(&storage);
 
 	RenderCommandData::SetTextureSubImage2D subimage{
-		RenderTextureTarget::Texture2d, 0, 0, 0, texSize, texSize, GL_RED, GL_UNSIGNED_SHORT, heightData
+		RenderTextureTarget::Texture2d, 0, 0, 0, texSize, texSize, RenderTextureBaseFormat::R,
+		RenderTextureDataType::UnsignedShort, heightData
 	};
 	renderDevice->SetTextureSubImage2D(&subimage);
 

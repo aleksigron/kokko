@@ -37,7 +37,7 @@ namespace RenderCommandData
 	struct AttachFramebufferTexture2D
 	{
 		RenderFramebufferTarget target;
-		unsigned int attachment;
+		RenderFramebufferAttachment attachment;
 		RenderTextureTarget textureTarget;
 		unsigned int texture;
 		int mipLevel;
@@ -53,7 +53,7 @@ namespace RenderCommandData
 	{
 		RenderTextureTarget target;
 		int levels;
-		unsigned int internalFormat;
+		RenderTextureSizedFormat format;
 		int width;
 		int height;
 	};
@@ -78,8 +78,8 @@ namespace RenderCommandData
 		int yOffset;
 		int width;
 		int height;
-		unsigned int format;
-		unsigned int type;
+		RenderTextureBaseFormat format;
+		RenderTextureDataType type;
 		const void* data;
 	};
 

@@ -95,9 +95,63 @@ enum class RenderTextureTarget
 	TextureCubeMap_NegativeZ
 };
 
+enum class RenderTextureDataType
+{
+	UnsignedByte,
+	SignedByte,
+	UnsignedShort,
+	SignedShort,
+	UnsignedInt,
+	SignedInt,
+	Float
+};
+
+enum class RenderTextureBaseFormat
+{
+	R,
+	RG,
+	RGB,
+	RGBA,
+	Depth,
+	DepthStencil
+};
+
+enum class RenderTextureSizedFormat
+{
+	R8,
+	RG8,
+	RGB8,
+	RGBA8,
+	SRGB8,
+	SRGB8_A8,
+	R16,
+	RG16,
+	RGB16,
+	RGBA16,
+	R16F,
+	RG16F,
+	RGB16F,
+	RGBA16F,
+	R32F,
+	RG32F,
+	RGB32F,
+	RGBA32F
+};
+
 enum class RenderFramebufferTarget
 {
 	Framebuffer
+};
+
+enum class RenderFramebufferAttachment
+{
+	None,
+	Color0,
+	Color1,
+	Color2,
+	Color3,
+	Depth,
+	DepthStencil
 };
 
 enum class RenderBlendFactor

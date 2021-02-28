@@ -180,7 +180,11 @@ void Renderer::Initialize(Window* window)
 		gBufferMaterialTextureIndex = framebufferTextureCount++;
 		fullscreenDepthTextureIndex = framebufferTextureCount++;
 
-		unsigned int colAtt[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+		RenderFramebufferAttachment colAtt[3] = {
+			RenderFramebufferAttachment::Color0,
+			RenderFramebufferAttachment::Color1,
+			RenderFramebufferAttachment::Color2
+		};
 
 		// Albedo color buffer
 
@@ -256,7 +260,8 @@ void Renderer::Initialize(Window* window)
 		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
 
 		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
-			RenderFramebufferTarget::Framebuffer, GL_DEPTH_ATTACHMENT, RenderTextureTarget::Texture2d, depthTexture, 0
+			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
+			RenderTextureTarget::Texture2d, depthTexture, 0
 		};
 		device->AttachFramebufferTexture2D(&depthAttachTexture);
 
@@ -282,7 +287,7 @@ void Renderer::Initialize(Window* window)
 		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebuffer.framebuffer);
 
 		// We aren't rendering to any color attachments
-		unsigned int drawBuffers = GL_NONE;
+		RenderFramebufferAttachment drawBuffers = RenderFramebufferAttachment::None;
 		device->SetFramebufferDrawBuffers(1, &drawBuffers);
 
 		// Create texture
@@ -307,7 +312,8 @@ void Renderer::Initialize(Window* window)
 		device->SetTextureCompareFunc(RenderTextureTarget::Texture2d, RenderTextureCompareFunc::LessThanOrEqual);
 
 		RenderCommandData::AttachFramebufferTexture2D depthFramebufferTexture{
-			RenderFramebufferTarget::Framebuffer, GL_DEPTH_ATTACHMENT, RenderTextureTarget::Texture2d, depthTexture, 0
+			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
+			RenderTextureTarget::Texture2d, depthTexture, 0
 		};
 		device->AttachFramebufferTexture2D(&depthFramebufferTexture);
 
@@ -337,7 +343,7 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(RenderTextureTarget::Texture2d, lightAccTexture);
 
 		RenderCommandData::SetTextureStorage2D storage{
-			RenderTextureTarget::Texture2d, 1, GL_RGB16F, framebuffer.width, framebuffer.height
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RGB16F, framebuffer.width, framebuffer.height
 		};
 		device->SetTextureStorage2D(&storage);
 
@@ -345,14 +351,16 @@ void Renderer::Initialize(Window* window)
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
 		RenderCommandData::AttachFramebufferTexture2D colorAttachTexture{
-			RenderFramebufferTarget::Framebuffer, GL_COLOR_ATTACHMENT0, RenderTextureTarget::Texture2d, lightAccTexture, 0
+			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
+			RenderTextureTarget::Texture2d, lightAccTexture, 0
 		};
 		device->AttachFramebufferTexture2D(&colorAttachTexture);
 
 		// Reuse depth texture from gbuffer
 		unsigned int depthTexture = framebufferTextures[fullscreenDepthTextureIndex];
 		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
-			RenderFramebufferTarget::Framebuffer, GL_DEPTH_ATTACHMENT, RenderTextureTarget::Texture2d, depthTexture, 0
+			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
+			RenderTextureTarget::Texture2d, depthTexture, 0
 		};
 		device->AttachFramebufferTexture2D(&depthAttachTexture);
 	}
