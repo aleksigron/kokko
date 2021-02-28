@@ -34,6 +34,9 @@ class Window;
 class DebugVectorRenderer;
 class CustomRenderer;
 class ScreenSpaceAmbientOcclusion;
+class BloomEffect;
+class PostProcessRenderer;
+class RenderTargetContainer;
 
 struct BoundingBox;
 struct RendererFramebuffer;
@@ -42,10 +45,12 @@ struct MaterialData;
 struct ShaderData;
 struct ProjectionParameters;
 struct LightingUniformBlock;
+struct PostProcessRenderPass;
 
 class Renderer : public ITransformUpdateReceiver, public CustomRenderer
 {
 private:
+
 	static const unsigned int MaxViewportCount = 8;
 	static const unsigned int MaxFramebufferCount = 4;
 	static const unsigned int MaxFramebufferTextureCount = 16;
@@ -58,7 +63,11 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* device;
+	RenderTargetContainer* renderTargetContainer;
+	PostProcessRenderer* postProcessRenderer;
+
 	ScreenSpaceAmbientOcclusion* ssao;
+	BloomEffect* bloomEffect;
 
 	RendererFramebuffer* framebufferData;
 	unsigned int framebufferCount;
@@ -75,6 +84,7 @@ private:
 	ShaderId tonemappingShaderId;
 	MaterialId shadowMaterial;
 	unsigned int lightingUniformBufferId;
+	unsigned int tonemapUniformBufferId;
 
 	unsigned int gBufferAlbedoTextureIndex;
 	unsigned int gBufferNormalTextureIndex;
@@ -83,16 +93,13 @@ private:
 	unsigned int shadowDepthTextureIndex;
 	unsigned int lightAccumulationTextureIndex;
 
-	unsigned int tonemapUniformBufferId;
-
 	Array<unsigned int> objectUniformBuffers;
 
-	int uniformBufferOffsetAlignment;
 	size_t objectUniformBlockStride;
 	unsigned int objectsPerUniformBuffer;
 
 	unsigned int deferredLightingCallback;
-	unsigned int tonemappingCallback;
+	unsigned int postProcessCallback;
 
 	struct InstanceData
 	{
@@ -132,7 +139,8 @@ private:
 	void ReallocateRenderObjects(unsigned int required);
 
 	void BindMaterialTextures(const MaterialData& material) const;
-	void BindTextures(const ShaderData& shader, unsigned int count, uint32_t* nameHashes, unsigned int* textures);
+	void BindTextures(const ShaderData& shader, unsigned int count,
+		const uint32_t* nameHashes, const unsigned int* textures);
 
 	void UpdateLightingDataToUniformBuffer(
 		const ProjectionParameters& projection, const Scene* scene, LightingUniformBlock& uniformsOut);
@@ -146,6 +154,8 @@ private:
 	bool ParseControlCommand(uint64_t orderKey);
 
 	void RenderDeferredLighting(const CustomRenderer::RenderParams& params);
+	void RenderPostProcess(const CustomRenderer::RenderParams& params);
+	void RenderBloom(const CustomRenderer::RenderParams& params);
 	void RenderTonemapping(const CustomRenderer::RenderParams& params);
 
 	void DebugRender(DebugVectorRenderer* vectorRenderer);

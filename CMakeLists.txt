@@ -97,6 +97,8 @@ set (KOKKO_SOURCES
 	src/Memory/DefaultAllocator.hpp
 	src/Memory/ProxyAllocator.cpp
 	src/Memory/ProxyAllocator.hpp
+	src/Rendering/BloomEffect.cpp
+	src/Rendering/BloomEffect.hpp
 	src/Rendering/Camera.hpp
 	src/Rendering/CascadedShadowMap.cpp
 	src/Rendering/CascadedShadowMap.hpp
@@ -104,18 +106,23 @@ set (KOKKO_SOURCES
 	src/Rendering/Light.hpp
 	src/Rendering/LightManager.cpp
 	src/Rendering/LightManager.hpp
+	src/Rendering/PostProcessRenderer.cpp
+	src/Rendering/PostProcessRenderer.hpp
+	src/Rendering/PostProcessRenderPass.hpp
 	src/Rendering/RenderCommandData.hpp
 	src/Rendering/RenderCommandList.cpp
 	src/Rendering/RenderCommandList.hpp
 	src/Rendering/RenderCommandType.hpp
-	src/Rendering/Renderer.cpp
-	src/Rendering/Renderer.hpp
-	src/Rendering/RendererData.hpp
-	src/Rendering/RenderOrder.hpp
 	src/Rendering/RenderDevice.hpp
 	src/Rendering/RenderDeviceEnums.hpp
 	src/Rendering/RenderDeviceOpenGL.cpp
 	src/Rendering/RenderDeviceOpenGL.hpp
+	src/Rendering/Renderer.cpp
+	src/Rendering/Renderer.hpp
+	src/Rendering/RendererData.hpp
+	src/Rendering/RenderOrder.hpp
+	src/Rendering/RenderTargetContainer.cpp
+	src/Rendering/RenderTargetContainer.hpp
 	src/Rendering/RenderViewport.hpp
 	src/Rendering/ScreenSpaceAmbientOcclusion.cpp
 	src/Rendering/ScreenSpaceAmbientOcclusion.hpp

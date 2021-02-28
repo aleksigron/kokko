@@ -18,15 +18,19 @@
 
 #include "Memory/Allocator.hpp"
 
+#include "Rendering/BloomEffect.hpp"
 #include "Rendering/Camera.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
 #include "Rendering/LightManager.hpp"
-#include "Rendering/RenderDevice.hpp"
+#include "Rendering/PostProcessRenderer.hpp"
+#include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
+#include "Rendering/RenderDevice.hpp"
+#include "Rendering/RenderTargetContainer.hpp"
 #include "Rendering/RenderViewport.hpp"
-#include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/ScreenSpaceAmbientOcclusion.hpp"
+#include "Rendering/StaticUniformBuffer.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
@@ -61,7 +65,9 @@ Renderer::Renderer(
 	MaterialManager* materialManager) :
 	allocator(allocator),
 	device(renderDevice),
+	renderTargetContainer(nullptr),
 	ssao(nullptr),
+	bloomEffect(nullptr),
 	framebufferData(nullptr),
 	framebufferCount(0),
 	framebufferTextures(nullptr),
@@ -81,13 +87,18 @@ Renderer::Renderer(
 	lightResultArray(allocator),
 	customRenderers(allocator)
 {
+	renderTargetContainer = allocator->MakeNew<RenderTargetContainer>(allocator, renderDevice);
+	postProcessRenderer = allocator->MakeNew<PostProcessRenderer>(renderDevice, meshManager, shaderManager);
 	ssao = allocator->MakeNew<ScreenSpaceAmbientOcclusion>(allocator, renderDevice, shaderManager);
+	bloomEffect = allocator->MakeNew<BloomEffect>(allocator, renderDevice, postProcessRenderer,
+		renderTargetContainer, shaderManager);
 
 	fullscreenMesh = MeshId{ 0 };
 	lightingShaderId = ShaderId{ 0 };
 	tonemappingShaderId = ShaderId{ 0 };
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
+	tonemapUniformBufferId = 0;
 
 	gBufferAlbedoTextureIndex = 0;
 	gBufferNormalTextureIndex = 0;
@@ -96,14 +107,11 @@ Renderer::Renderer(
 	shadowDepthTextureIndex = 0;
 	lightAccumulationTextureIndex = 0;
 
-	tonemapUniformBufferId = 0;
-
-	uniformBufferOffsetAlignment = 0;
 	objectUniformBlockStride = 0;
 	objectsPerUniformBuffer = 0;
 
 	deferredLightingCallback = AddCustomRenderer(this);
-	tonemappingCallback = AddCustomRenderer(this);
+	postProcessCallback = AddCustomRenderer(this);
 
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
@@ -116,18 +124,24 @@ Renderer::~Renderer()
 	this->Deinitialize();
 
 	allocator->Deallocate(data.buffer);
+	allocator->Deallocate(bloomEffect);
+	allocator->Deallocate(ssao);
+	allocator->Deallocate(renderTargetContainer);
 }
 
 void Renderer::Initialize(Window* window)
 {
-	device->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &uniformBufferOffsetAlignment);
+	int aligment = 0;
+	device->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
 
-	objectUniformBlockStride = (sizeof(TransformUniformBlock) * 2 - 1) / uniformBufferOffsetAlignment * uniformBufferOffsetAlignment;
+	objectUniformBlockStride = (sizeof(TransformUniformBlock) + aligment - 1) / aligment * aligment;
 	objectsPerUniformBuffer = ObjectUniformBufferSize / objectUniformBlockStride;
 
 	Vec2i frameBufferSizei = window->GetFrameBufferSize();
 
+	postProcessRenderer->Initialize();
 	ssao->Initialize(frameBufferSizei);
+	bloomEffect->Initialize();
 
 	{
 		// Allocate framebuffer data storage
@@ -625,7 +639,8 @@ void Renderer::BindMaterialTextures(const MaterialData& material) const
 	}
 }
 
-void Renderer::BindTextures(const ShaderData& shader, unsigned int count, uint32_t* nameHashes, unsigned int* textures)
+void Renderer::BindTextures(const ShaderData& shader, unsigned int count,
+	const uint32_t* nameHashes, const unsigned int* textures)
 {
 	for (unsigned int i = 0; i < count; ++i)
 	{
@@ -643,8 +658,8 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 {
 	if (params.callbackId == deferredLightingCallback)
 		RenderDeferredLighting(params);
-	else if (params.callbackId == tonemappingCallback)
-		RenderTonemapping(params);
+	else if (params.callbackId == postProcessCallback)
+		RenderPostProcess(params);
 }
 
 void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params)
@@ -755,6 +770,28 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 
 	// Draw fullscreen quad
 	device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
+}
+
+void Renderer::RenderPostProcess(const CustomRenderer::RenderParams& params)
+{
+	RenderBloom(params);
+	RenderTonemapping(params);
+}
+
+void Renderer::RenderBloom(const CustomRenderer::RenderParams& params)
+{
+	const RendererFramebuffer& fb = framebufferData[FramebufferIndexLightAcc];
+
+	BloomEffect::RenderParams bloomParams;
+	bloomParams.sourceTexture = framebufferTextures[lightAccumulationTextureIndex];
+	bloomParams.destinationFramebuffer = fb.framebuffer;
+	bloomParams.framebufferSize = Vec2i(fb.width, fb.height);
+	bloomParams.iterationCount = 4;
+	bloomParams.bloomThreshold = 1.0f;
+	bloomParams.bloomSoftThreshold = 0.5f;
+	bloomParams.bloomIntensity = 0.75f;
+
+	bloomEffect->Render(bloomParams);
 }
 
 void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
@@ -1416,7 +1453,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	// PASS: POST PROCESS
 
 	// Draw HDR tonemapping pass
-	commandList.AddDrawWithCallback(fsvp, p_pass, 0.0f, tonemappingCallback);
+	commandList.AddDrawWithCallback(fsvp, p_pass, 0.0f, postProcessCallback);
 
 	// Create draw commands for render objects in scene
 
