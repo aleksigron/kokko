@@ -95,7 +95,7 @@ void App::Initialize()
 		const BufferUniform* metalUniform = origMatData.uniforms.FindBufferUniformByNameHash(metalnessHash);
 		const BufferUniform* roughUniform = origMatData.uniforms.FindBufferUniformByNameHash(roughnessHash);
 
-		static const unsigned int roughnessCount = 16;
+		static const unsigned int roughnessCount = 6;
 		static const unsigned int metalnessCount = 4;
 		MaterialId materialIds[roughnessCount * metalnessCount];
 
@@ -107,7 +107,7 @@ void App::Initialize()
 				const MaterialData& materialData = materialManager->GetMaterialData(matId);
 
 				float metalness = m / (metalnessCount - 1.0f);
-				float roughness = 0.1f + r / (roughnessCount - 1.0f) * 0.9f;
+				float roughness = 0.2f + r / (roughnessCount - 1.0f) * 0.8f;
 
 				metalUniform->SetValueFloat(materialData.uniformData, metalness);
 				roughUniform->SetValueFloat(materialData.uniformData, roughness);
@@ -122,12 +122,12 @@ void App::Initialize()
 		renderOrderData.material = origMatId;
 		renderOrderData.transparency = materialManager->GetMaterialData(origMatId).transparency;
 
-		const float dist = 1.2f;
+		const float dist = 1.5f;
 		const float innerRadius = 5.0f;
 		float a = Math::Const::Pi;
 
 		// Add a bunch of objects to the world
-		for (unsigned int i = 0, count = 1000; i < count; ++i)
+		for (unsigned int i = 0, count = 150; i < count; ++i)
 		{
 			float r = innerRadius + a / Math::Const::Tau * dist;
 			a += dist / r;

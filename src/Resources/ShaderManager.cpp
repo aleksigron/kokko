@@ -154,8 +154,6 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 			RemoveShader(id);
 		}
 	}
-	else
-	{
-		return ShaderId{};
-	}
+	
+	return ShaderId{};
 }

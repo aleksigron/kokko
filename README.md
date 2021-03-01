@@ -29,10 +29,13 @@ In Visual Studio, go to project properties > _Configuration Properties_ > _Debug
 
 ### Graphics
 - Deferred renderer
-- Separated command list build, ordering, dispatch
-- Diffuse, specular and emissive shading
+- Physically based rendering
+- HDR rendering rendering
+- Bloom and tonemapping post effects
 - Directional, point and spot lights
 - Cascaded shadow maps for directional lights
+- Screen-space ambient occlusion
+- Separated command list build, ordering, dispatch
 - Simple data-driven material system
 
 ### Resources
