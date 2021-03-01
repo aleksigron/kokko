@@ -636,6 +636,32 @@ void RenderDeviceOpenGL::SetTextureCompareFunc(RenderTextureTarget target, Rende
 	SetTextureParameterInt(target, RenderTextureParameter::CompareFunc, ConvertTextureCompareFunc(func));
 }
 
+void RenderDeviceOpenGL::CreateSamplers(unsigned int count, unsigned int* samplersOut)
+{
+	glGenSamplers(count, samplersOut);
+}
+
+void RenderDeviceOpenGL::DestroySamplers(unsigned int count, unsigned int* samplers)
+{
+	glDeleteSamplers(count, samplers);
+}
+
+void RenderDeviceOpenGL::BindSampler(unsigned int textureUnit, unsigned int sampler)
+{
+	glBindSampler(textureUnit, sampler);
+}
+
+void RenderDeviceOpenGL::SetSamplerParameters(const RenderCommandData::SetSamplerParameters* data)
+{
+	glSamplerParameteri(data->sampler, GL_TEXTURE_MIN_FILTER, ConvertTextureFilterMode(data->minFilter));
+	glSamplerParameteri(data->sampler, GL_TEXTURE_MAG_FILTER, ConvertTextureFilterMode(data->magFilter));
+	glSamplerParameteri(data->sampler, GL_TEXTURE_WRAP_S, ConvertTextureWrapMode(data->wrapModeU));
+	glSamplerParameteri(data->sampler, GL_TEXTURE_WRAP_T, ConvertTextureWrapMode(data->wrapModeV));
+	glSamplerParameteri(data->sampler, GL_TEXTURE_WRAP_R, ConvertTextureWrapMode(data->wrapModeW));
+	glSamplerParameteri(data->sampler, GL_TEXTURE_COMPARE_MODE, ConvertTextureCompareMode(data->compareMode));
+	glSamplerParameteri(data->sampler, GL_TEXTURE_COMPARE_FUNC, ConvertTextureCompareFunc(data->compareFunc));
+}
+
 // SHADER PROGRAM
 
 unsigned int RenderDeviceOpenGL::CreateShaderProgram()

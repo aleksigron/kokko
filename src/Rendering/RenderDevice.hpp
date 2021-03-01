@@ -83,6 +83,11 @@ public:
 	virtual void SetTextureCompareMode(RenderTextureTarget target, RenderTextureCompareMode mode) = 0;
 	virtual void SetTextureCompareFunc(RenderTextureTarget target, RenderTextureCompareFunc func) = 0;
 
+	virtual void CreateSamplers(unsigned int count, unsigned int* samplersOut) = 0;
+	virtual void DestroySamplers(unsigned int count, unsigned int* samplers) = 0;
+	virtual void BindSampler(unsigned int textureUnit, unsigned int sampler) = 0;
+	virtual void SetSamplerParameters(const RenderCommandData::SetSamplerParameters* data) = 0;
+
 	virtual unsigned int CreateShaderProgram() = 0;
 	virtual void DestroyShaderProgram(unsigned int shaderProgram) = 0;
 	virtual void AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage) = 0;

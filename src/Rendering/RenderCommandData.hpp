@@ -94,6 +94,18 @@ namespace RenderCommandData
 		const void* data;
 	};
 
+	struct SetSamplerParameters
+	{
+		unsigned int sampler;
+		RenderTextureFilterMode minFilter;
+		RenderTextureFilterMode magFilter;
+		RenderTextureWrapMode wrapModeU;
+		RenderTextureWrapMode wrapModeV;
+		RenderTextureWrapMode wrapModeW;
+		RenderTextureCompareMode compareMode;
+		RenderTextureCompareFunc compareFunc;
+	};
+
 	struct SetVertexAttributePointer
 	{
 		unsigned int attributeIndex;

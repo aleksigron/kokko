@@ -78,6 +78,11 @@ public:
 	virtual void SetTextureCompareMode(RenderTextureTarget target, RenderTextureCompareMode mode) override;
 	virtual void SetTextureCompareFunc(RenderTextureTarget target, RenderTextureCompareFunc func) override;
 
+	virtual void CreateSamplers(unsigned int count, unsigned int* samplersOut) override;
+	virtual void DestroySamplers(unsigned int count, unsigned int* samplers) override;
+	virtual void BindSampler(unsigned int textureUnit, unsigned int sampler) override;
+	virtual void SetSamplerParameters(const RenderCommandData::SetSamplerParameters* data) override;
+
 	virtual unsigned int CreateShaderProgram() override;
 	virtual void DestroyShaderProgram(unsigned int shaderProgram) override;
 	virtual void AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage) override;
