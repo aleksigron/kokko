@@ -21,7 +21,7 @@ private:
 	MeshId fullscreenMeshId;
 
 	void BindTextures(const ShaderData& shader, unsigned int count,
-		const uint32_t* nameHashes, const unsigned int* textures);
+		const uint32_t* nameHashes, const unsigned int* textures, const unsigned int* samplers);
 
 public:
 	PostProcessRenderer(RenderDevice* renderDevice, MeshManager* meshManager, ShaderManager* shaderManager);

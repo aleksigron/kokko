@@ -107,7 +107,7 @@ void App::Initialize()
 				const MaterialData& materialData = materialManager->GetMaterialData(matId);
 
 				float metalness = m / (metalnessCount - 1.0f);
-				float roughness = 0.01f + r / (roughnessCount - 1.0f) * 0.99f;
+				float roughness = 0.1f + r / (roughnessCount - 1.0f) * 0.9f;
 
 				metalUniform->SetValueFloat(materialData.uniformData, metalness);
 				roughUniform->SetValueFloat(materialData.uniformData, roughness);

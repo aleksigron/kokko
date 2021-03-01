@@ -3,10 +3,7 @@
 		"main": "res/shaders/post_process/post_process.vert.glsl"
 	},
 	"fs": {
-		"main": "res/shaders/post_process/bloom_upsample.frag.glsl",
-		"includes": [
-			"res/shaders/post_process/bloom_common.glsl"
-		]
+		"main": "res/shaders/post_process/bloom_upsample.frag.glsl"
 	},
 	"properties": [
 		{ "name": "source_map", "type": "tex2d" }

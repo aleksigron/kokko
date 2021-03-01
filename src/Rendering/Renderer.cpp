@@ -141,7 +141,15 @@ void Renderer::Initialize(Window* window)
 
 	postProcessRenderer->Initialize();
 	ssao->Initialize(frameBufferSizei);
+
 	bloomEffect->Initialize();
+
+	BloomEffect::Params bloomParams;
+	bloomParams.iterationCount = 4;
+	bloomParams.bloomThreshold = 1.0f;
+	bloomParams.bloomSoftThreshold = 0.5f;
+	bloomParams.bloomIntensity = 0.75f;
+	bloomEffect->SetParams(bloomParams);
 
 	{
 		// Allocate framebuffer data storage
@@ -780,18 +788,10 @@ void Renderer::RenderPostProcess(const CustomRenderer::RenderParams& params)
 
 void Renderer::RenderBloom(const CustomRenderer::RenderParams& params)
 {
+	unsigned int sourceTexture = framebufferTextures[lightAccumulationTextureIndex];
 	const RendererFramebuffer& fb = framebufferData[FramebufferIndexLightAcc];
 
-	BloomEffect::RenderParams bloomParams;
-	bloomParams.sourceTexture = framebufferTextures[lightAccumulationTextureIndex];
-	bloomParams.destinationFramebuffer = fb.framebuffer;
-	bloomParams.framebufferSize = Vec2i(fb.width, fb.height);
-	bloomParams.iterationCount = 4;
-	bloomParams.bloomThreshold = 1.0f;
-	bloomParams.bloomSoftThreshold = 0.5f;
-	bloomParams.bloomIntensity = 0.75f;
-
-	bloomEffect->Render(bloomParams);
+	bloomEffect->Render(sourceTexture, fb.framebuffer, Vec2i(fb.width, fb.height));
 }
 
 void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)

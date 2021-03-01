@@ -16,6 +16,7 @@ struct PostProcessRenderPass
 
 	uint32_t textureNameHashes[MaxTextureCount];
 	unsigned int textureIds[MaxTextureCount];
+	unsigned int samplerIds[MaxTextureCount];
 	unsigned int textureCount;
 
 	unsigned int uniformBufferId;

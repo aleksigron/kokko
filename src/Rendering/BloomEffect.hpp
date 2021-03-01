@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Array.hpp"
+
 #include "Math/Vec2.hpp"
 
 #include "Resources/ShaderId.hpp"
@@ -12,12 +14,23 @@ class ShaderManager;
 
 class BloomEffect
 {
+public:
+	struct Params
+	{
+		unsigned int iterationCount;
+		float bloomThreshold;
+		float bloomSoftThreshold;
+		float bloomIntensity;
+	};
+
 private:
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 	PostProcessRenderer* postProcessRenderer;
 	RenderTargetContainer* renderTargetContainer;
 	ShaderManager* shaderManager;
+
+	Array<float> blurKernel;
 
 	unsigned char* uniformStagingBuffer;
 
@@ -29,28 +42,13 @@ private:
 	unsigned int uniformBlockStride;
 
 	unsigned int uniformBufferId;
+	unsigned int linearSamplerId;
 
-	struct UniformBlock
-	{
-		alignas(8) Vec2f textureScale;
-		alignas(4) float thresholdOrIntensity;
-		alignas(4) float softThreshold;
-	};
+	Params bloomParams;
+
+	void CreateKernel(int kernelExtent);
 
 public:
-	struct RenderParams
-	{
-		unsigned int sourceTexture;
-		unsigned int destinationFramebuffer;
-
-		Vec2i framebufferSize;
-
-		unsigned int iterationCount;
-		float bloomThreshold;
-		float bloomSoftThreshold;
-		float bloomIntensity;
-	};
-
 	BloomEffect(
 		Allocator* allocator,
 		RenderDevice* renderDevice,
@@ -62,5 +60,9 @@ public:
 	void Initialize();
 	void Deinitialize();
 
-	void Render(const RenderParams& params);
+	void SetParams(const Params& params);
+	void Render(
+		unsigned int sourceTexture,
+		unsigned int destinationFramebuffer,
+		const Vec2i& framebufferSize);
 };

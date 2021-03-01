@@ -79,7 +79,7 @@ void PostProcessRenderer::RenderPass(const PostProcessRenderPass& pass)
 	}
 
 	if (pass.textureCount > 0)
-		BindTextures(shader, pass.textureCount, pass.textureNameHashes, pass.textureIds);
+		BindTextures(shader, pass.textureCount, pass.textureNameHashes, pass.textureIds, pass.samplerIds);
 
 	const MeshDrawData* draw = meshManager->GetDrawData(fullscreenMeshId);
 	renderDevice->BindVertexArray(draw->vertexArrayObject);
@@ -87,10 +87,13 @@ void PostProcessRenderer::RenderPass(const PostProcessRenderPass& pass)
 }
 
 void PostProcessRenderer::BindTextures(const ShaderData& shader, unsigned int count,
-	const uint32_t* nameHashes, const unsigned int* textures)
+	const uint32_t* nameHashes, const unsigned int* textures, const unsigned int* samplers)
 {
 	for (unsigned int i = 0; i < count; ++i)
 	{
+		if (samplers[i] != 0)
+			renderDevice->BindSampler(i, samplers[i]);
+
 		const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(nameHashes[i]);
 		if (tu != nullptr)
 		{
