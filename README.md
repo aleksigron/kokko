@@ -30,7 +30,7 @@ In Visual Studio, go to project properties > _Configuration Properties_ > _Debug
 ### Graphics
 - Deferred renderer
 - Physically based rendering
-- HDR rendering rendering
+- HDR rendering pipeline
 - Bloom and tonemapping post effects
 - Directional, point and spot lights
 - Cascaded shadow maps for directional lights

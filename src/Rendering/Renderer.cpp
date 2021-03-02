@@ -919,7 +919,10 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 
 		Vec3f wLightPos = lightManager->GetPosition(lightId);
 		Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
-		uniformsOut.lightPositions[shaderLightIdx] = vLightPos;
+
+		float radius = lightManager->GetRadius(lightId);
+		float inverseSquareRadius = 1.0f / (radius * radius);
+		uniformsOut.lightPositions[shaderLightIdx] = Vec4f(vLightPos, inverseSquareRadius);
 
 		Vec3f lightCol = lightManager->GetColor(lightId);
 		uniformsOut.lightColors[shaderLightIdx] = lightCol;

@@ -30,8 +30,8 @@ struct LightingUniformBlock
 	static const unsigned int BindingPoint = 0;
 
 	UniformBlockArray<Vec3f, MaxLightCount> lightColors;
-	UniformBlockArray<Vec3f, MaxLightCount> lightPositions;
-	UniformBlockArray<Vec4f, MaxLightCount> lightDirections;
+	UniformBlockArray<Vec4f, MaxLightCount> lightPositions; // xyz: position, w: inverse square radius
+	UniformBlockArray<Vec4f, MaxLightCount> lightDirections; // xyz: direction, w: spot light angle
 
 	UniformBlockArray<Mat4x4f, MaxCascadeCount> shadowMatrices;
 	UniformBlockArray<float, MaxCascadeCount + 1> shadowSplits;

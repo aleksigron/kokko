@@ -244,7 +244,7 @@ void SceneLoader::CreateLight(ValueItr itr, Entity entity)
 		shadowCasting = shadowItr->value.GetBool();
 	}
 
-	float radius = 1.0f;
+	float radius = -1.0f;
 	MemberItr radiusItr = itr->FindMember("radius");
 	if (radiusItr != itr->MemberEnd() && radiusItr->value.IsNumber())
 	{
@@ -264,7 +264,12 @@ void SceneLoader::CreateLight(ValueItr itr, Entity entity)
 	lightManager->SetShadowCasting(lightId, shadowCasting);
 
 	if (type != LightType::Directional)
-		lightManager->SetFarDistance(lightId, radius);
+	{
+		if (radius > 0.0f)
+			lightManager->SetRadius(lightId, radius);
+		else
+			lightManager->SetRadiusFromColor(lightId);
+	}
 
 	if (type == LightType::Spot)
 		lightManager->SetSpotAngle(lightId, Math::DegreesToRadians(angle));

@@ -2,6 +2,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
+#include "Core/BitPack.hpp"
 
 #include "Entity/Entity.hpp"
 
@@ -21,6 +22,7 @@ private:
 	Allocator* allocator;
 
 	HashMap<unsigned int, LightId> entityMap;
+	Array<BitPack> intersectResult;
 
 	struct InstanceData
 	{
@@ -33,13 +35,15 @@ private:
 		Mat3x3f* orientation;
 		LightType* type;
 		Vec3f* color;
-		float* far;
+		float* radius;
 		float* angle;
 		bool* shadowCasting;
 	}
 	data;
 
 	void Reallocate(unsigned int required);
+
+	static float CalculateDefaultRadius(Vec3f color);
 
 public:
 	LightManager(Allocator* allocator);
@@ -66,8 +70,9 @@ public:
 	Vec3f GetColor(LightId id) const { return data.color[id.i]; }
 	void SetColor(LightId id, Vec3f color) { data.color[id.i] = color; }
 
-	float GetFarDistance(LightId id) const { return data.far[id.i]; }
-	void SetFarDistance(LightId id, float distance) { data.far[id.i] = distance; }
+	float GetRadius(LightId id) const { return data.radius[id.i]; }
+	void SetRadius(LightId id, float radius) { data.radius[id.i] = radius; }
+	void SetRadiusFromColor(LightId id) { data.radius[id.i] = CalculateDefaultRadius(data.color[id.i]); }
 
 	float GetSpotAngle(LightId id) const { return data.angle[id.i]; }
 	void SetSpotAngle(LightId id, float angle) { data.angle[id.i] = angle; }

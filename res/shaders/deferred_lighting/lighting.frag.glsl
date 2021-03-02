@@ -18,37 +18,37 @@ const int DirLightIndex = 0;
 
 vec3 fresnel_schlick(float cosTheta, vec3 F0)
 {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
 float distribution_ggx(float NdotH, float roughness)
 {
-    float a = roughness * roughness;
-    float a2 = a * a;
+	float a = roughness * roughness;
+	float a2 = a * a;
 	
-    float num = a2;
-    float denom = (NdotH * NdotH * (a2 - 1.0) + 1.0);
-    denom = M_PI * denom * denom;
+	float num = a2;
+	float denom = (NdotH * NdotH * (a2 - 1.0) + 1.0);
+	denom = M_PI * denom * denom;
 	
-    return num / denom;
+	return num / denom;
 }
 
 float geo_schlick_ggx(float NdotV, float roughness)
 {
-    float r = (roughness + 1.0);
-    float k = (r*r) / 8.0;
+	float r = (roughness + 1.0);
+	float k = (r*r) / 8.0;
 
-    float num   = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
+	float num   = NdotV;
+	float denom = NdotV * (1.0 - k) + k;
 	
-    return num / denom;
+	return num / denom;
 }
 float geometry_smith(float NdotV, float NdotL, float roughness)
 {
-    float ggx2  = geo_schlick_ggx(NdotV, roughness);
-    float ggx1  = geo_schlick_ggx(NdotL, roughness);
+	float ggx2  = geo_schlick_ggx(NdotV, roughness);
+	float ggx1  = geo_schlick_ggx(NdotL, roughness);
 	
-    return ggx1 * ggx2;
+	return ggx1 * ggx2;
 }
 
 vec3 calc_light(vec3 F0, vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light_col, float metalness, float roughness)
@@ -73,14 +73,28 @@ vec3 calc_light(vec3 F0, vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light_col, fl
 	return (kD * albedo / M_PI + specular) * light_col * NdotL;
 }
 
+float smooth_distance_att(float sqr_distance, float inv_sqr_att_radius)
+{
+	float factor = sqr_distance * inv_sqr_att_radius;
+	float smooth_factor = clamp(1.0f - factor * factor, 0.0, 1.0);
+	return smooth_factor * smooth_factor;
+}
+
+float get_distance_att(vec3 light_vector, float inv_sqr_att_radius)
+{
+	float sqr_dist = dot(light_vector, light_vector);
+	float attenuation = 1.0 / max(sqr_dist, 0.01*0.01);
+	attenuation *= smooth_distance_att(sqr_dist, inv_sqr_att_radius);
+	return attenuation;
+}
+
 float offset_lookup(sampler2DShadow map, vec4 loc, vec2 offset)
 {
-    return textureProj(map, vec4(loc.xy + offset * shadow_map_scale * loc.w, loc.z, loc.w));
+	return textureProj(map, vec4(loc.xy + offset * shadow_map_scale * loc.w, loc.z, loc.w));
 }
 
 void main()
 {
-	// Read input buffers
 	vec3 albedo = texture(g_albedo, fs_in.tex_coord).rgb;
 	vec3 N = unpack_normal(texture(g_normal, fs_in.tex_coord).rg);
 
@@ -105,7 +119,7 @@ void main()
 			if (shadow_splits[i] <= -view_z && shadow_splits[i + 1] > -view_z)
 				cascade_index = i;
 
-        vec3 L = -light_dir[DirLightIndex].xyz;
+		vec3 L = -light_dir[DirLightIndex].xyz;
 
 		// Get shadow depth
 		vec4 shadow_coord = shadow_mats[cascade_index] * vec4(surface_pos, 1.0);
@@ -126,27 +140,24 @@ void main()
 	int idx = 1;
 	for (int end = point_count + 1; idx < end; ++idx)
 	{
-		vec3 surface_to_light = light_pos[idx] - surface_pos;
-        vec3 L = normalize(surface_to_light);
+		vec3 surface_to_light = light_pos[idx].xyz - surface_pos;
+		float attenuation = get_distance_att(surface_to_light, light_pos[idx].w);
 
-		float distance = length(surface_to_light);
-		float attenuation = 1.0 / (distance * distance);
-
+		vec3 L = normalize(surface_to_light);
 		Lo += calc_light(F0, N, V, L, albedo, light_col[idx], metalness, roughness) * attenuation;
 	}
 	
 	for (; idx < point_count + spot_count + 1; ++idx)
 	{
-		vec3 surface_to_light = light_pos[idx] - surface_pos;
-        vec3 L = normalize(surface_to_light);
+		vec3 surface_to_light = light_pos[idx].xyz - surface_pos;
+		vec3 L = normalize(surface_to_light);
 
-		float distance = length(surface_to_light);
 		float direction_asin = asin(dot(L, light_dir[idx].xyz));
 		float direction_att = clamp((direction_asin - (M_HPI) + light_dir[idx].w) * 20, 0.0, 1.0);
-		float distance_att = 1.0 / (distance * distance);
-		float attenuation = direction_att * distance_att;
+
+		float distance_att = get_distance_att(surface_to_light, light_pos[idx].w);
 		
-		Lo += calc_light(F0, N, V, L, albedo, light_col[idx], metalness, roughness) * attenuation;
+		Lo += calc_light(F0, N, V, L, albedo, light_col[idx], metalness, roughness) * direction_att * distance_att;
 	}
 
 	float ao = texture(ssao_map, fs_in.tex_coord).r;

@@ -3,12 +3,12 @@
 #include "Memory/Allocator.hpp"
 
 #include "Math/Math.hpp"
-#include "Core/BitPack.hpp"
 #include "Math/Intersect3D.hpp"
 
 LightManager::LightManager(Allocator* allocator) :
 	allocator(allocator),
-	entityMap(allocator)
+	entityMap(allocator),
+	intersectResult(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as LightId::Null value
@@ -44,8 +44,8 @@ void LightManager::Reallocate(unsigned int required)
 	newData.orientation = reinterpret_cast<Mat3x3f*>(newData.position + required);
 	newData.type = reinterpret_cast<LightType*>(newData.orientation + required);
 	newData.color = reinterpret_cast<Vec3f*>(newData.type + required);
-	newData.far = reinterpret_cast<float*>(newData.color + required);
-	newData.angle = reinterpret_cast<float*>(newData.far + required);
+	newData.radius = reinterpret_cast<float*>(newData.color + required);
+	newData.angle = reinterpret_cast<float*>(newData.radius + required);
 	newData.shadowCasting = reinterpret_cast<bool*>(newData.angle + required);
 
 	if (data.buffer != nullptr)
@@ -55,7 +55,7 @@ void LightManager::Reallocate(unsigned int required)
 		std::memcpy(newData.orientation, data.orientation, data.count * sizeof(Mat3x3f));
 		std::memcpy(newData.type, data.type, data.count * sizeof(LightType));
 		std::memcpy(newData.color, data.color, data.count * sizeof(Vec3f));
-		std::memcpy(newData.far, data.far, data.count * sizeof(float));
+		std::memcpy(newData.radius, data.radius, data.count * sizeof(float));
 		std::memcpy(newData.angle, data.angle, data.count * sizeof(float));
 		std::memcpy(newData.shadowCasting, data.shadowCasting, data.count * sizeof(bool));
 
@@ -63,6 +63,14 @@ void LightManager::Reallocate(unsigned int required)
 	}
 
 	data = newData;
+}
+
+float LightManager::CalculateDefaultRadius(Vec3f color)
+{
+	const float thresholdInv = 256.0f / 5.0f;
+
+	float lightMax = std::max({ color.x, color.y, color.z });
+	return std::sqrt(lightMax * thresholdInv);
 }
 
 void LightManager::NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms)
@@ -132,7 +140,7 @@ void LightManager::GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& fru
 		intersectResult.Resize(BitPack::CalculateRequired(lights));
 		BitPack* intersected = intersectResult.GetData();
 		Vec3f* positions = data.position + 1;
-		float* radii = data.far + 1;
+		float* radii = data.radius + 1;
 
 		Intersect::FrustumSphere(frustum, lights, positions, radii, intersected);
 

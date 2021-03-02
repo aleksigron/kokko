@@ -4,8 +4,8 @@ const int MaxCascadeCount = 4;
 layout(std140, binding = 0) uniform Lighting
 {
 	vec3 light_col[MaxLightCount];
-	vec3 light_pos[MaxLightCount];
-	vec4 light_dir[MaxLightCount];
+	vec4 light_pos[MaxLightCount]; // xyz: position, w: inverse square radius
+	vec4 light_dir[MaxLightCount]; // xyz: direction, w: spot light angle
 
 	mat4x4 shadow_mats[MaxCascadeCount];
 	float shadow_splits[MaxCascadeCount + 1];
