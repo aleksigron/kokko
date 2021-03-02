@@ -103,11 +103,13 @@ void CalculateCascadeFrusta(
 
 		float diameter = radius * 2.0f;
 
+		const float frontShadowRenderingDistance = 500.0f;
+
 		ProjectionParameters cascProj;
 		cascProj.projection = ProjectionType::Orthographic;
 		cascProj.aspect = 1.0f;
 		cascProj.height = diameter;
-		cascProj.near = 0.0f;
+		cascProj.near = -frontShadowRenderingDistance;
 		cascProj.far = diameter;
 
 		// Calculate rounding in shadow map space to remove edge shimmer
