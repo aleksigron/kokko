@@ -29,7 +29,7 @@ public:
 	virtual void PushDebugGroup(unsigned int id, StringRef message) = 0;
 	virtual void PopDebugGroup() = 0;
 
-	virtual void Clear(unsigned int mask) = 0;
+	virtual void Clear(const RenderCommandData::ClearMask* data) = 0;
 	virtual void ClearColor(const RenderCommandData::ClearColorData* data) = 0;
 	virtual void ClearDepth(float depth) = 0;
 
@@ -44,7 +44,7 @@ public:
 	virtual void DepthTestEnable() = 0;
 	virtual void DepthTestDisable() = 0;
 
-	virtual void DepthTestFunction(unsigned int function) = 0;
+	virtual void DepthTestFunction(RenderDepthCompareFunc function) = 0;
 
 	virtual void DepthWriteEnable() = 0;
 	virtual void DepthWriteDisable() = 0;
@@ -81,7 +81,7 @@ public:
 	virtual void SetTextureWrapModeV(RenderTextureTarget target, RenderTextureWrapMode mode) = 0;
 	virtual void SetTextureWrapModeW(RenderTextureTarget target, RenderTextureWrapMode mode) = 0;
 	virtual void SetTextureCompareMode(RenderTextureTarget target, RenderTextureCompareMode mode) = 0;
-	virtual void SetTextureCompareFunc(RenderTextureTarget target, RenderTextureCompareFunc func) = 0;
+	virtual void SetTextureCompareFunc(RenderTextureTarget target, RenderDepthCompareFunc func) = 0;
 
 	virtual void CreateSamplers(unsigned int count, unsigned int* samplersOut) = 0;
 	virtual void DestroySamplers(unsigned int count, unsigned int* samplers) = 0;

@@ -135,7 +135,13 @@ enum class RenderTextureSizedFormat
 	R32F,
 	RG32F,
 	RGB32F,
-	RGBA32F
+	RGBA32F,
+	D32F,
+	D24,
+	D16,
+	D32F_S8,
+	D24_S8,
+	STENCIL_INDEX8
 };
 
 enum class RenderFramebufferTarget
@@ -234,7 +240,7 @@ enum class RenderTextureCompareMode
 	CompareRefToTexture
 };
 
-enum class RenderTextureCompareFunc
+enum class RenderDepthCompareFunc
 {
 	LessThanOrEqual,
 	GreaterThanOrEqual,

@@ -24,7 +24,7 @@ public:
 	virtual void PushDebugGroup(unsigned int id, StringRef message) override;
 	virtual void PopDebugGroup() override;
 
-	virtual void Clear(unsigned int mask) override;
+	virtual void Clear(const RenderCommandData::ClearMask* data) override;
 	virtual void ClearColor(const RenderCommandData::ClearColorData* data) override;
 	virtual void ClearDepth(float depth) override;
 
@@ -39,7 +39,7 @@ public:
 	virtual void DepthTestEnable() override;
 	virtual void DepthTestDisable() override;
 
-	virtual void DepthTestFunction(unsigned int function) override;
+	virtual void DepthTestFunction(RenderDepthCompareFunc function) override;
 
 	virtual void DepthWriteEnable() override;
 	virtual void DepthWriteDisable() override;
@@ -76,7 +76,7 @@ public:
 	virtual void SetTextureWrapModeV(RenderTextureTarget target, RenderTextureWrapMode mode) override;
 	virtual void SetTextureWrapModeW(RenderTextureTarget target, RenderTextureWrapMode mode) override;
 	virtual void SetTextureCompareMode(RenderTextureTarget target, RenderTextureCompareMode mode) override;
-	virtual void SetTextureCompareFunc(RenderTextureTarget target, RenderTextureCompareFunc func) override;
+	virtual void SetTextureCompareFunc(RenderTextureTarget target, RenderDepthCompareFunc func) override;
 
 	virtual void CreateSamplers(unsigned int count, unsigned int* samplersOut) override;
 	virtual void DestroySamplers(unsigned int count, unsigned int* samplers) override;

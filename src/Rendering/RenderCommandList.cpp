@@ -29,6 +29,9 @@ void RenderCommandList::AddControl(
 	unsigned int byteCount,
 	void* data)
 {
+	static const unsigned int alignment = 8;
+	static const uint8_t padBuffer[alignment - 1] = { 0 };
+
 	uint64_t c = 0;
 
 	renderOrder.viewportIndex.AssignValue(c, viewport);
@@ -37,10 +40,14 @@ void RenderCommandList::AddControl(
 	renderOrder.commandOrder.AssignValue(c, order);
 	renderOrder.commandType.AssignValue(c, static_cast<uint64_t>(type));
 
-	unsigned int offset = commandData.GetCount();
-	commandData.InsertBack(static_cast<uint8_t*>(data), byteCount);
+	// Always insert a multiple of 8 bytes
 
-	// TODO: Align to 4-byte boundary
+	unsigned int offset = commandData.GetCount();
+	unsigned int alignedByteSize = (byteCount + alignment - 1) / alignment * alignment;
+	unsigned int pad = alignedByteSize - byteCount;
+
+	commandData.InsertBack(static_cast<uint8_t*>(data), byteCount);
+	commandData.InsertBack(padBuffer, pad);
 
 	renderOrder.commandData.AssignValue(c, offset);
 

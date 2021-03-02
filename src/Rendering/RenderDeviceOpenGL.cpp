@@ -108,6 +108,12 @@ static unsigned int ConvertTextureSizedFormat(RenderTextureSizedFormat format)
 	case RenderTextureSizedFormat::RG32F: return GL_RG32F;
 	case RenderTextureSizedFormat::RGB32F: return GL_RGB32F;
 	case RenderTextureSizedFormat::RGBA32F: return GL_RGBA32F;
+	case RenderTextureSizedFormat::D32F: return GL_DEPTH_COMPONENT32F;
+	case RenderTextureSizedFormat::D24: return GL_DEPTH_COMPONENT24;
+	case RenderTextureSizedFormat::D16: return GL_DEPTH_COMPONENT16;
+	case RenderTextureSizedFormat::D32F_S8: return GL_DEPTH32F_STENCIL8;
+	case RenderTextureSizedFormat::D24_S8: return GL_DEPTH24_STENCIL8;
+	case RenderTextureSizedFormat::STENCIL_INDEX8: return GL_STENCIL_INDEX8;
 	default: return 0;
 	}
 }
@@ -173,18 +179,18 @@ static unsigned int ConvertTextureCompareMode(RenderTextureCompareMode mode)
 	}
 }
 
-static unsigned int ConvertTextureCompareFunc(RenderTextureCompareFunc func)
+static unsigned int ConvertDepthCompareFunc(RenderDepthCompareFunc func)
 {
 	switch (func)
 	{
-	case RenderTextureCompareFunc::LessThanOrEqual: return GL_LEQUAL;
-	case RenderTextureCompareFunc::GreaterThanOrEqual: return GL_GEQUAL;
-	case RenderTextureCompareFunc::Less: return GL_LESS;
-	case RenderTextureCompareFunc::Greater: return GL_GREATER;
-	case RenderTextureCompareFunc::Equal: return GL_EQUAL;
-	case RenderTextureCompareFunc::NotEqual: return GL_NOTEQUAL;
-	case RenderTextureCompareFunc::Always: return GL_ALWAYS;
-	case RenderTextureCompareFunc::Never: return GL_NEVER;
+	case RenderDepthCompareFunc::LessThanOrEqual: return GL_LEQUAL;
+	case RenderDepthCompareFunc::GreaterThanOrEqual: return GL_GEQUAL;
+	case RenderDepthCompareFunc::Less: return GL_LESS;
+	case RenderDepthCompareFunc::Greater: return GL_GREATER;
+	case RenderDepthCompareFunc::Equal: return GL_EQUAL;
+	case RenderDepthCompareFunc::NotEqual: return GL_NOTEQUAL;
+	case RenderDepthCompareFunc::Always: return GL_ALWAYS;
+	case RenderDepthCompareFunc::Never: return GL_NEVER;
 	default: return 0;
 	}
 }
@@ -402,8 +408,14 @@ void RenderDeviceOpenGL::PopDebugGroup()
 	glPopDebugGroup();
 }
 
-void RenderDeviceOpenGL::Clear(unsigned int mask)
+void RenderDeviceOpenGL::Clear(const RenderCommandData::ClearMask* data)
 {
+	unsigned int mask = 0;
+
+	if (data->color) mask |= GL_COLOR_BUFFER_BIT;
+	if (data->depth) mask |= GL_DEPTH_BUFFER_BIT;
+	if (data->stencil) mask |= GL_STENCIL_BUFFER_BIT;
+
 	glClear(mask);
 }
 
@@ -459,9 +471,9 @@ void RenderDeviceOpenGL::DepthTestDisable()
 	glDisable(GL_DEPTH_TEST);
 }
 
-void RenderDeviceOpenGL::DepthTestFunction(unsigned int function)
+void RenderDeviceOpenGL::DepthTestFunction(RenderDepthCompareFunc function)
 {
-	glDepthFunc(function);
+	glDepthFunc(ConvertDepthCompareFunc(function));
 }
 
 void RenderDeviceOpenGL::DepthWriteEnable()
@@ -631,9 +643,9 @@ void RenderDeviceOpenGL::SetTextureCompareMode(RenderTextureTarget target, Rende
 	SetTextureParameterInt(target, RenderTextureParameter::CompareMode, ConvertTextureCompareMode(mode));
 }
 
-void RenderDeviceOpenGL::SetTextureCompareFunc(RenderTextureTarget target, RenderTextureCompareFunc func)
+void RenderDeviceOpenGL::SetTextureCompareFunc(RenderTextureTarget target, RenderDepthCompareFunc func)
 {
-	SetTextureParameterInt(target, RenderTextureParameter::CompareFunc, ConvertTextureCompareFunc(func));
+	SetTextureParameterInt(target, RenderTextureParameter::CompareFunc, ConvertDepthCompareFunc(func));
 }
 
 void RenderDeviceOpenGL::CreateSamplers(unsigned int count, unsigned int* samplersOut)
@@ -659,7 +671,7 @@ void RenderDeviceOpenGL::SetSamplerParameters(const RenderCommandData::SetSample
 	glSamplerParameteri(data->sampler, GL_TEXTURE_WRAP_T, ConvertTextureWrapMode(data->wrapModeV));
 	glSamplerParameteri(data->sampler, GL_TEXTURE_WRAP_R, ConvertTextureWrapMode(data->wrapModeW));
 	glSamplerParameteri(data->sampler, GL_TEXTURE_COMPARE_MODE, ConvertTextureCompareMode(data->compareMode));
-	glSamplerParameteri(data->sampler, GL_TEXTURE_COMPARE_FUNC, ConvertTextureCompareFunc(data->compareFunc));
+	glSamplerParameteri(data->sampler, GL_TEXTURE_COMPARE_FUNC, ConvertDepthCompareFunc(data->compareFunc));
 }
 
 // SHADER PROGRAM

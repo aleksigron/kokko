@@ -38,7 +38,7 @@ enum class RenderControlType
 	CullFaceFront,
 	CullFaceBack,
 
-	Clear, // Data: mask
+	Clear, // Data: color, depth, stencil
 	ClearColor, // Data: r, g, b, a
 	ClearDepth, // Data: depth
 

@@ -6,6 +6,13 @@
 
 namespace RenderCommandData
 {
+	struct ClearMask
+	{
+		bool color;
+		bool depth;
+		bool stencil;
+	};
+
 	struct ClearColorData
 	{
 		float r;
@@ -103,7 +110,7 @@ namespace RenderCommandData
 		RenderTextureWrapMode wrapModeV;
 		RenderTextureWrapMode wrapModeW;
 		RenderTextureCompareMode compareMode;
-		RenderTextureCompareFunc compareFunc;
+		RenderDepthCompareFunc compareFunc;
 	};
 
 	struct SetVertexAttributePointer

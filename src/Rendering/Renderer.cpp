@@ -40,7 +40,6 @@
 
 #include "Scene/Scene.hpp"
 
-#include "System/IncludeOpenGL.hpp"
 #include "System/Window.hpp"
 
 struct RendererFramebuffer
@@ -213,10 +212,10 @@ void Renderer::Initialize(Window* window)
 		unsigned int albTexture = framebufferTextures[gBufferAlbedoTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, albTexture);
 
-		RenderCommandData::SetTextureImage2D albTextureImage{
-			RenderTextureTarget::Texture2d, 0, GL_SRGB8, gbuffer.width, gbuffer.height, GL_RGB, GL_UNSIGNED_BYTE, nullptr
+		RenderCommandData::SetTextureStorage2D albTextureStorage{
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::SRGB8, gbuffer.width, gbuffer.height
 		};
-		device->SetTextureImage2D(&albTextureImage);
+		device->SetTextureStorage2D(&albTextureStorage);
 
 		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
@@ -231,10 +230,10 @@ void Renderer::Initialize(Window* window)
 		unsigned int norTexture = framebufferTextures[gBufferNormalTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, norTexture);
 
-		RenderCommandData::SetTextureImage2D norTextureImage{
-			RenderTextureTarget::Texture2d, 0, GL_RG16, gbuffer.width, gbuffer.height, GL_RG, GL_UNSIGNED_SHORT, nullptr
+		RenderCommandData::SetTextureStorage2D norTextureStorage{
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RG16, gbuffer.width, gbuffer.height
 		};
-		device->SetTextureImage2D(&norTextureImage);
+		device->SetTextureStorage2D(&norTextureStorage);
 
 		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
@@ -249,10 +248,10 @@ void Renderer::Initialize(Window* window)
 		unsigned int matTexture = framebufferTextures[gBufferMaterialTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, matTexture);
 
-		RenderCommandData::SetTextureImage2D matTextureImage{
-			RenderTextureTarget::Texture2d, 0, GL_RGB8, gbuffer.width, gbuffer.height, GL_RGB, GL_UNSIGNED_BYTE, nullptr
+		RenderCommandData::SetTextureStorage2D matTextureStorage{
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RGB8, gbuffer.width, gbuffer.height
 		};
-		device->SetTextureImage2D(&matTextureImage);
+		device->SetTextureStorage2D(&matTextureStorage);
 
 		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
@@ -269,10 +268,10 @@ void Renderer::Initialize(Window* window)
 		unsigned int depthTexture = framebufferTextures[fullscreenDepthTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, depthTexture);
 
-		RenderCommandData::SetTextureImage2D depthTextureImage{
-			RenderTextureTarget::Texture2d, 0, GL_DEPTH_COMPONENT, gbuffer.width, gbuffer.height, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+		RenderCommandData::SetTextureStorage2D depthTextureStorage{
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D24, gbuffer.width, gbuffer.height
 		};
-		device->SetTextureImage2D(&depthTextureImage);
+		device->SetTextureStorage2D(&depthTextureStorage);
 
 		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
@@ -321,17 +320,17 @@ void Renderer::Initialize(Window* window)
 		unsigned int depthTexture = framebufferTextures[shadowDepthTextureIndex];
 		device->BindTexture(RenderTextureTarget::Texture2d, depthTexture);
 
-		RenderCommandData::SetTextureImage2D depthTextureImage{
-			RenderTextureTarget::Texture2d, 0, GL_DEPTH_COMPONENT, size.x, size.y, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+		RenderCommandData::SetTextureStorage2D depthTextureStorage{
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D24, size.x, size.y
 		};
-		device->SetTextureImage2D(&depthTextureImage);
+		device->SetTextureStorage2D(&depthTextureStorage);
 
 		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
 		device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
 		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
 		device->SetTextureCompareMode(RenderTextureTarget::Texture2d, RenderTextureCompareMode::CompareRefToTexture);
-		device->SetTextureCompareFunc(RenderTextureTarget::Texture2d, RenderTextureCompareFunc::LessThanOrEqual);
+		device->SetTextureCompareFunc(RenderTextureTarget::Texture2d, RenderDepthCompareFunc::LessThanOrEqual);
 
 		RenderCommandData::AttachFramebufferTexture2D depthFramebufferTexture{
 			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
@@ -744,8 +743,6 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	bindFramebufferCommand.framebuffer = framebufferData[FramebufferIndexLightAcc].framebuffer;
 	device->BindFramebuffer(&bindFramebufferCommand);
 
-	device->Clear(GL_COLOR_BUFFER_BIT);
-
 	const ShaderData& shader = shaderManager->GetShaderData(lightingShaderId);
 
 	device->UseShaderProgram(shader.driverId);
@@ -1104,7 +1101,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 		case RenderControlType::DepthTestFunction:
 		{
 			unsigned int fn = renderOrder.commandData.GetValue(orderKey);
-			device->DepthTestFunction(fn);
+			device->DepthTestFunction(static_cast<RenderDepthCompareFunc>(fn));
 		}
 			break;
 
@@ -1134,8 +1131,10 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::Clear:
 		{
-			unsigned int mask = renderOrder.commandData.GetValue(orderKey);
-			device->Clear(mask);
+			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint8_t* data = commandList.commandData.GetData() + offset;
+			auto* clearMask = reinterpret_cast<RenderCommandData::ClearMask*>(data);
+			device->Clear(clearMask);
 		}
 			break;
 
@@ -1309,8 +1308,6 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	const FrustumPlanes& fullscreenFrustum = viewportData[viewportIndexFullscreen].frustum;
 
-	unsigned int colorAndDepthMask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
-
 	RenderPass g_pass = RenderPass::OpaqueGeometry;
 	RenderPass l_pass = RenderPass::OpaqueLighting;
 	RenderPass s_pass = RenderPass::Skybox;
@@ -1325,7 +1322,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	commandList.AddControl(0, g_pass, 0, ctrl::DepthTestEnable);
 
 	// Set depth test function
-	commandList.AddControl(0, g_pass, 1, ctrl::DepthTestFunction, GL_LESS);
+	commandList.AddControl(0, g_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Less));
 
 	// Enable depth writing
 	commandList.AddControl(0, g_pass, 2, ctrl::DepthWriteEnable);
@@ -1370,7 +1367,10 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	}
 
 	// Clear shadow framebuffer RenderFramebufferTarget::Framebuffer
-	commandList.AddControl(0, g_pass, 9, ctrl::Clear, GL_DEPTH_BUFFER_BIT);
+	{
+		RenderCommandData::ClearMask clearMask{ false, true, false };
+		commandList.AddControl(0, g_pass, 9, ctrl::Clear, sizeof(clearMask), &clearMask);
+	}
 
 	// For each shadow viewport
 	for (unsigned int vpIdx = 0; vpIdx < numShadowViewports; ++vpIdx)
@@ -1424,7 +1424,10 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	}
 
 	// Clear currently bound RenderFramebufferTarget::Framebuffer
-	commandList.AddControl(fsvp, g_pass, 3, ctrl::Clear, colorAndDepthMask);
+	{
+		RenderCommandData::ClearMask clearMask{ true, true, false };
+		commandList.AddControl(fsvp, g_pass, 3, ctrl::Clear, sizeof(clearMask), &clearMask);
+	}
 
 	// PASS: OPAQUE LIGHTING
 
@@ -1434,14 +1437,14 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	// PASS: SKYBOX
 
 	commandList.AddControl(fsvp, s_pass, 0, ctrl::DepthTestEnable);
-	commandList.AddControl(fsvp, s_pass, 1, ctrl::DepthTestFunction, GL_EQUAL);
+	commandList.AddControl(fsvp, s_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Equal));
 	commandList.AddControl(fsvp, s_pass, 2, ctrl::DepthWriteDisable);
 
 	// PASS: TRANSPARENT
 
 	// Before transparent objects
 
-	commandList.AddControl(fsvp, t_pass, 0, ctrl::DepthTestFunction, GL_LESS);
+	commandList.AddControl(fsvp, t_pass, 0, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Less));
 	commandList.AddControl(fsvp, t_pass, 1, ctrl::BlendingEnable);
 
 	{
