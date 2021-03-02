@@ -103,7 +103,7 @@ void CalculateCascadeFrusta(
 
 		float diameter = radius * 2.0f;
 
-		const float frontShadowRenderingDistance = 500.0f;
+		const float frontShadowRenderingDistance = 10.0f;
 
 		ProjectionParameters cascProj;
 		cascProj.projection = ProjectionType::Orthographic;
