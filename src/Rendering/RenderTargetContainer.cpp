@@ -3,14 +3,15 @@
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/RenderDevice.hpp"
+#include <cassert>
 
 RenderTargetContainer::RenderTargetContainer(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	renderTargetCount(0)
 {
-	void* buffer = allocator->Allocate(sizeof(RenderTarget) * MaxRenderTargetCount);
-	renderTargets = static_cast<RenderTarget*>(buffer);
+	void* buffer = allocator->Allocate(sizeof(TargetInfo) * MaxRenderTargetCount);
+	renderTargets = static_cast<TargetInfo*>(buffer);
 }
 
 RenderTargetContainer::~RenderTargetContainer()
@@ -18,22 +19,22 @@ RenderTargetContainer::~RenderTargetContainer()
 	allocator->Deallocate(renderTargets);
 }
 
-RenderTarget* RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextureSizedFormat format)
+const RenderTarget& RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextureSizedFormat format)
 {
-	RenderTarget* result = nullptr;
-
 	for (size_t i = 0; i < renderTargetCount; ++i)
 	{
-		RenderTarget* target = &renderTargets[i];
-		if (target->inUse == false && target->colorFormat == format &&
-			target->size.x == size.x && target->size.y == size.y)
+		TargetInfo& targetInfo = renderTargets[i];
+
+		if (targetInfo.inUse == false && targetInfo.target.colorFormat == format &&
+			targetInfo.target.size.x == size.x && targetInfo.target.size.y == size.y)
 		{
-			target->inUse = true;
-			result = target;
+			targetInfo.inUse = true;
+			
+			return targetInfo.target;
 		}
 	}
 
-	if (result == nullptr && renderTargetCount < MaxRenderTargetCount)
+	if (renderTargetCount < MaxRenderTargetCount)
 	{
 		unsigned int framebuffer = 0;
 		renderDevice->CreateFramebuffers(1, &framebuffer);
@@ -58,20 +59,40 @@ RenderTarget* RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextu
 		};
 		renderDevice->AttachFramebufferTexture2D(&attachTexture);
 
-		result = &renderTargets[renderTargetCount];
+		TargetInfo& targetInfo = renderTargets[renderTargetCount];
+
+		targetInfo.target.id = renderTargetCount;
+		targetInfo.target.size = size;
+		targetInfo.target.colorFormat = format;
+		targetInfo.target.colorTexture = texture;
+		targetInfo.target.framebuffer = framebuffer;
+		targetInfo.inUse = true;
+
 		renderTargetCount += 1;
 
-		result->size = size;
-		result->colorFormat = format;
-		result->colorTexture = texture;
-		result->framebuffer = framebuffer;
-		result->inUse = true;
+		return targetInfo.target;
 	}
 
-	return result;
+	return RenderTarget{};
 }
 
-void RenderTargetContainer::ReleaseRenderTarget(RenderTarget* target)
+void RenderTargetContainer::ReleaseRenderTarget(unsigned int renderTargetId)
 {
-	target->inUse = false;
+	if (renderTargetId < renderTargetCount)
+	{
+		renderTargets[renderTargetId].inUse = false;
+	}
+}
+
+bool RenderTargetContainer::ConfirmAllTargetsAreUnused()
+{
+	for (size_t i = 0; i < renderTargetCount; ++i)
+	{
+		assert(renderTargets[i].inUse == false);
+
+		if (renderTargets[i].inUse)
+			return false;
+	}
+
+	return true;
 }

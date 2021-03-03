@@ -6,6 +6,7 @@
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
 #include "Math/Mat4x4.hpp"
+#include "Math/Projection.hpp"
 
 #include "Rendering/StaticUniformBuffer.hpp"
 
@@ -14,17 +15,18 @@
 class Allocator;
 class RenderDevice;
 class ShaderManager;
-struct ProjectionParameters;
+class PostProcessRenderer;
+
+struct RenderTarget;
 
 class ScreenSpaceAmbientOcclusion
 {
 public:
-	struct PassInfo
+	struct RenderParams
 	{
-		unsigned int framebufferId;
-		unsigned int textureId;
-		unsigned int uniformBufferId;
-		ShaderId shaderId;
+		unsigned int normalTexture;
+		unsigned int depthTexture;
+		ProjectionParameters projection;
 	};
 
 private:
@@ -44,38 +46,50 @@ private:
 
 	struct BlurUniformBlock
 	{
-		alignas(8) Vec2f textureScale;
+		alignas(16) Vec2f textureScale;
 	};
 
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 	ShaderManager* shaderManager;
+	PostProcessRenderer* postProcessRenderer;
+
+	unsigned int resultRenderTargetId;
+	unsigned int resultTextureId;
 
 	Array<Vec3f> kernel;
 
 	Vec2i framebufferSize;
 	int kernelSize;
 
-	PassInfo occlusionPass;
-	PassInfo blurPass;
+	static const size_t PassCount = 2;
+	enum { PassIdx_Occlusion = 0, PassIdx_Blur = 1 };
+
+	unsigned int uniformBufferIds[PassCount];
+	ShaderId shaderIds[PassCount];
+
 	unsigned int noiseTextureId;
 
-	void CreatePassResources(StringRef shaderPath, size_t uniformSize, PassInfo& passInfoOut);
-	void DestroyPassResources(PassInfo& passInfoInOut);
+	void CreatePassResources(size_t passCount,
+		const StringRef* shaderPaths,
+		const size_t* uniformSizes);
+
+	void UpdateUniformBuffers(const ProjectionParameters& projection) const;
 
 public:
-	ScreenSpaceAmbientOcclusion(Allocator* allocator, RenderDevice* renderDevice, ShaderManager* shaderManager);
+	ScreenSpaceAmbientOcclusion(
+		Allocator* allocator,
+		RenderDevice* renderDevice,
+		ShaderManager* shaderManager,
+		PostProcessRenderer* postProcessRenderer);
+
 	~ScreenSpaceAmbientOcclusion();
 
 	void Initialize(Vec2i framebufferResolution);
 	void Deinitialize();
 
-	const PassInfo& GetOcclusionPassInfo() const { return occlusionPass; }
-	void UpdateOcclusionUniformBuffer(const ProjectionParameters& projection) const;
+	void Render(const RenderParams& params);
 
-	const PassInfo& GetBlurPassInfo() const { return blurPass; }
-	void UpdateBlurUniformBuffer() const;
-
-	unsigned int GetNoiseTextureId() const { return noiseTextureId; }
-	unsigned int GetUniformBufferBindingPoint() const { return UniformBlockBinding; }
+	unsigned int GetResultTextureId();
+	void ReleaseResult();
 };

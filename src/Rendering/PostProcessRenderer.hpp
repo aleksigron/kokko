@@ -7,6 +7,7 @@
 class RenderDevice;
 class MeshManager;
 class ShaderManager;
+class RenderTargetContainer;
 
 struct ShaderData;
 struct PostProcessRenderPass;
@@ -17,6 +18,7 @@ private:
 	RenderDevice* renderDevice;
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
+	RenderTargetContainer* renderTargetContainer;
 
 	MeshId fullscreenMeshId;
 
@@ -24,11 +26,15 @@ private:
 		const uint32_t* nameHashes, const unsigned int* textures, const unsigned int* samplers);
 
 public:
-	PostProcessRenderer(RenderDevice* renderDevice, MeshManager* meshManager, ShaderManager* shaderManager);
+	PostProcessRenderer(RenderDevice* renderDevice, MeshManager* meshManager,
+		ShaderManager* shaderManager, RenderTargetContainer* renderTargetContainer);
 	~PostProcessRenderer();
 
 	void Initialize();
 	void Deinitialize();
 
+	RenderTargetContainer* GetRenderTargetContainer() { return renderTargetContainer; }
+
 	void RenderPass(const PostProcessRenderPass& pass);
+	void RenderPasses(unsigned int count, const PostProcessRenderPass* passes);
 };

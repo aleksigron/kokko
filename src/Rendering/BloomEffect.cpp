@@ -45,13 +45,11 @@ struct ApplyUniforms
 BloomEffect::BloomEffect(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
-	PostProcessRenderer* postProcessRenderer,
-	RenderTargetContainer* renderTargetContainer,
-	ShaderManager* shaderManager) :
+	ShaderManager* shaderManager,
+	PostProcessRenderer* postProcessRenderer) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	postProcessRenderer(postProcessRenderer),
-	renderTargetContainer(renderTargetContainer),
 	shaderManager(shaderManager),
 	blurKernel(allocator),
 	uniformStagingBuffer(nullptr)
@@ -142,7 +140,7 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 {
 	unsigned int passCount = 0;
 
-	RenderTarget* renderTargets[8];
+	RenderTarget renderTargets[8];
 	PostProcessRenderPass renderPasses[16];
 
 	RenderTarget* currentSource = nullptr;
@@ -164,8 +162,9 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 
 	Vec2i size(framebufferSize.x / 2, framebufferSize.y / 2);
 
-	currentDestination = renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F);
-	renderTargets[0] = currentDestination;
+	RenderTargetContainer* renderTargetContainer = postProcessRenderer->GetRenderTargetContainer();
+	renderTargets[0] = renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F);
+	currentDestination = &renderTargets[0];
 
 	ExtractUniforms* extractBlock = reinterpret_cast<ExtractUniforms*>(&uniformStagingBuffer[uniformBlockStride * passCount]);
 	extractBlock->textureScale = Vec2f(1.0f / framebufferSize.x, 1.0f / framebufferSize.y);
@@ -177,7 +176,7 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 	pass.uniformBufferRangeStart = uniformBlockStride * passCount;
 	pass.uniformBufferRangeSize = sizeof(ExtractUniforms);
 	pass.framebufferId = currentDestination->framebuffer;
-	pass.viewportSize = renderTargets[0]->size;
+	pass.viewportSize = currentDestination->size;
 	pass.shaderId = extractShaderId;
 
 	renderPasses[passCount] = pass;
@@ -196,8 +195,8 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 		if (size.x < 2 || size.y < 2)
 			break;
 
-		currentDestination = renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F);
-		renderTargets[rtIdx] = currentDestination;
+		renderTargets[rtIdx] = renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F);
+		currentDestination = &renderTargets[rtIdx];
 
 		DownsampleUniforms* block = reinterpret_cast<DownsampleUniforms*>(&uniformStagingBuffer[uniformBlockStride * passCount]);
 		block->textureScale = Vec2f(1.0f / currentSource->size.x, 1.0f / currentSource->size.y);
@@ -207,7 +206,7 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 		pass.uniformBufferRangeStart = uniformBlockStride * passCount;
 		pass.uniformBufferRangeSize = sizeof(DownsampleUniforms);
 		pass.framebufferId = currentDestination->framebuffer;
-		pass.viewportSize = renderTargets[rtIdx]->size;
+		pass.viewportSize = currentDestination->size;
 		pass.shaderId = downsampleShaderId;
 
 		renderPasses[passCount] = pass;
@@ -232,14 +231,14 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 		block->textureScale = Vec2f(1.0f / currentSource->size.x, 1.0f / currentSource->size.y);
 		block->kernelExtent = KernelExtent;
 
-		currentDestination = renderTargets[rtIdx];
+		currentDestination = &renderTargets[rtIdx];
 
 		pass.textureIds[0] = currentSource->colorTexture;
 		pass.samplerIds[0] = upsamplePassSampler;
 		pass.uniformBufferRangeStart = uniformBlockStride * passCount;
 		pass.uniformBufferRangeSize = sizeof(UpsampleUniforms);
 		pass.framebufferId = currentDestination->framebuffer;
-		pass.viewportSize = renderTargets[rtIdx]->size;
+		pass.viewportSize = currentDestination->size;
 		pass.shaderId = upsampleShaderId;
 
 		renderPasses[passCount] = pass;
@@ -278,13 +277,12 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 
 	renderDevice->DepthTestDisable();
 
-	for (unsigned int i = 0; i < passCount; ++i)
-		postProcessRenderer->RenderPass(renderPasses[i]);
+	postProcessRenderer->RenderPasses(passCount, renderPasses);
 
 	// Release render targets
 
 	for (unsigned int i = 0; i < bloomParams.iterationCount; ++i)
-		renderTargetContainer->ReleaseRenderTarget(renderTargets[i]);
+		renderTargetContainer->ReleaseRenderTarget(renderTargets[i].id);
 }
 
 void BloomEffect::CreateKernel(int kernelExtent)

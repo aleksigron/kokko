@@ -26,9 +26,8 @@ public:
 private:
 	Allocator* allocator;
 	RenderDevice* renderDevice;
-	PostProcessRenderer* postProcessRenderer;
-	RenderTargetContainer* renderTargetContainer;
 	ShaderManager* shaderManager;
+	PostProcessRenderer* postProcessRenderer;
 
 	Array<float> blurKernel;
 
@@ -52,9 +51,9 @@ public:
 	BloomEffect(
 		Allocator* allocator,
 		RenderDevice* renderDevice,
-		PostProcessRenderer* postProcessRenderer,
-		RenderTargetContainer* renderTargetContainer,
-		ShaderManager* shaderManager);
+		ShaderManager* shaderManager,
+		PostProcessRenderer* postProcessRenderer);
+
 	~BloomEffect();
 
 	void Initialize();
