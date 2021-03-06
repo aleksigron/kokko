@@ -28,15 +28,14 @@ void main()
 	float occlusion = 0.0;
 	for (int i = 0; i < kernel_size; ++i)
 	{
-		vec3 sample_pos = TBN * kernel[i] * sample_radius + surface_pos;
+		vec3 sample_pos_v = TBN * kernel[i] * sample_radius + surface_pos;
+		vec4 sample_pos_c = perspective_mat * vec4(sample_pos_v, 1.0);
+		vec2 sample_uv = sample_pos_c.xy / sample_pos_c.w * 0.5 + 0.5;
 		
-		vec4 offset = perspective_mat * vec4(sample_pos, 1.0);
-		offset.xyz = offset.xyz / offset.w * 0.5 + 0.5;
-		
-		float sample_window_z = texture(g_depth, offset.xy).r;
-		float sample_depth = view_z_from_depth(sample_window_z, perspective_mat);
-		float range_check = smoothstep(0.0, 1.0, sample_radius / abs(surface_pos.z - sample_depth));
-		occlusion += (sample_depth >= sample_pos.z + bias ? 1.0 : 0.0) * range_check;
+		float sample_window_z = texture(g_depth, sample_uv).r;
+		float sample_z = -view_z_from_depth(sample_window_z, perspective_mat);
+		float range_check = smoothstep(0.0, 1.0, sample_radius / abs(surface_pos.z - sample_z));
+		occlusion += (sample_z >= sample_pos_v.z + bias ? 1.0 : 0.0) * range_check;
 	}
 
 	color = 1.0 - (occlusion / kernel_size);
