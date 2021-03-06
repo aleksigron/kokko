@@ -52,6 +52,18 @@ enum class RenderObjectType
 	Framebuffer
 };
 
+enum class RenderClipOriginMode
+{
+	LowerLeft,
+	UpperLeft
+};
+
+enum class RenderClipDepthMode
+{
+	NegativeOneToOne,
+	ZeroToOne
+};
+
 enum class RenderBufferUsage
 {
 	StreamDraw,

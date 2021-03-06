@@ -135,6 +135,8 @@ Renderer::~Renderer()
 
 void Renderer::Initialize(Window* window)
 {
+	device->SetClipBehavior(RenderClipOriginMode::LowerLeft, RenderClipDepthMode::ZeroToOne);
+
 	int aligment = 0;
 	device->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
 
@@ -274,7 +276,7 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(RenderTextureTarget::Texture2d, depthTexture);
 
 		RenderCommandData::SetTextureStorage2D depthTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D24, gbuffer.width, gbuffer.height
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D32F, gbuffer.width, gbuffer.height
 		};
 		device->SetTextureStorage2D(&depthTextureStorage);
 
@@ -326,7 +328,7 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(RenderTextureTarget::Texture2d, depthTexture);
 
 		RenderCommandData::SetTextureStorage2D depthTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D24, size.x, size.y
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D32F, size.x, size.y
 		};
 		device->SetTextureStorage2D(&depthTextureStorage);
 
@@ -335,7 +337,7 @@ void Renderer::Initialize(Window* window)
 		device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
 		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
 		device->SetTextureCompareMode(RenderTextureTarget::Texture2d, RenderTextureCompareMode::CompareRefToTexture);
-		device->SetTextureCompareFunc(RenderTextureTarget::Texture2d, RenderDepthCompareFunc::LessThanOrEqual);
+		device->SetTextureCompareFunc(RenderTextureTarget::Texture2d, RenderDepthCompareFunc::GreaterThanOrEqual);
 
 		RenderCommandData::AttachFramebufferTexture2D depthFramebufferTexture{
 			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
@@ -901,10 +903,10 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	CascadedShadowMap::CalculateSplitDepths(projection, cascadeSplitDepths);
 
 	Mat4x4f bias;
-	bias[0] = 0.5; bias[1] = 0.0; bias[2] = 0.0; bias[3] = 0.0;
-	bias[4] = 0.0; bias[5] = 0.5; bias[6] = 0.0; bias[7] = 0.0;
-	bias[8] = 0.0; bias[9] = 0.0; bias[10] = 0.5; bias[11] = 0.0;
-	bias[12] = 0.5; bias[13] = 0.5; bias[14] = 0.5; bias[15] = 1.0;
+	bias[0] = 0.5f;
+	bias[5] = 0.5f;
+	bias[12] = 0.5f;
+	bias[13] = 0.5f;
 
 	// Update transforms and split depths for each shadow cascade
 	for (size_t vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
@@ -1209,6 +1211,8 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 				unsigned int vpIdx = viewportCount;
 				viewportCount += 1;
 
+				bool reverseDepth = true;
+
 				RenderViewport& vp = viewportData[vpIdx];
 				vp.position = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 				vp.forward = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
@@ -1217,7 +1221,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 				vp.objectMinScreenSizePx = shadowViewportMinObjectSize;
 				vp.viewToWorld = cascadeViewTransforms[cascade];
 				vp.view = vp.viewToWorld.GetInverse();
-				vp.projection = lightProjections[cascade].GetProjectionMatrix();
+				vp.projection = lightProjections[cascade].GetProjectionMatrix(reverseDepth);
 				vp.viewProjection = vp.projection * vp.view;
 				vp.viewportRectangle.size = shadowCascadeSize;
 				vp.viewportRectangle.position = Vec2i(cascade * shadowSide, 0);
@@ -1243,6 +1247,8 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 		unsigned int vpIdx = viewportCount;
 		viewportCount += 1;
 
+		bool reverseDepth = true;
+
 		const RendererFramebuffer& fb = framebufferData[FramebufferIndexGBuffer];
 
 		RenderViewport& vp = viewportData[vpIdx];
@@ -1253,7 +1259,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 		vp.objectMinScreenSizePx = mainViewportMinObjectSize;
 		vp.viewToWorld = cameraTransform;
 		vp.view = Camera::GetViewMatrix(vp.viewToWorld);
-		vp.projection = projectionParams.GetProjectionMatrix();
+		vp.projection = projectionParams.GetProjectionMatrix(reverseDepth);
 		vp.viewProjection = vp.projection * vp.view;
 		vp.viewportRectangle.size = Vec2i(fb.width, fb.height);
 		vp.viewportRectangle.position = Vec2i(0, 0);
@@ -1286,7 +1292,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	commandList.AddControl(0, g_pass, 0, ctrl::DepthTestEnable);
 
 	// Set depth test function
-	commandList.AddControl(0, g_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Less));
+	commandList.AddControl(0, g_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Greater));
 
 	// Enable depth writing
 	commandList.AddControl(0, g_pass, 2, ctrl::DepthWriteEnable);
@@ -1299,7 +1305,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	{
 		// Set clear depth
-		float depth = 1.0f;
+		float depth = 0.0f;
 		unsigned int* intDepthPtr = reinterpret_cast<unsigned int*>(&depth);
 
 		commandList.AddControl(0, g_pass, 5, ctrl::ClearDepth, *intDepthPtr);
@@ -1361,6 +1367,9 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	unsigned int fsvp = viewportIndexFullscreen;
 	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
 
+	// Set depth test function for reverse depth buffer
+	commandList.AddControl(0, g_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Greater));
+
 	{
 		// Set clear color
 		RenderCommandData::ClearColorData data{ 0.0f, 0.0f, 0.0f, 0.0f };
@@ -1408,7 +1417,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	// Before transparent objects
 
-	commandList.AddControl(fsvp, t_pass, 0, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Less));
+	commandList.AddControl(fsvp, t_pass, 0, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Greater));
 	commandList.AddControl(fsvp, t_pass, 1, ctrl::BlendingEnable);
 
 	{

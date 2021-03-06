@@ -33,6 +33,7 @@ public:
 	virtual void BlendFunction(const RenderCommandData::BlendFunctionData* data) override;
 	virtual void BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor) override;
 
+	virtual void SetClipBehavior(RenderClipOriginMode origin, RenderClipDepthMode depth) override;
 	virtual void DepthRange(const RenderCommandData::DepthRangeData* data) override;
 	virtual void Viewport(const RenderCommandData::ViewportData* data) override;
 

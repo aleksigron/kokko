@@ -114,7 +114,8 @@ void CalculateCascadeFrusta(
 
 		// Calculate rounding in shadow map space to remove edge shimmer
 
-		Mat4x4f shadowMatrix = cascProj.GetProjectionMatrix() * lightViewTransform;
+		bool reverseDepth = true;
+		Mat4x4f shadowMatrix = cascProj.GetProjectionMatrix(reverseDepth) * lightViewTransform;
 		Vec4f originShadowSpace = shadowMatrix * Vec4f(0.0f, 0.0f, 0.0f, 1.0f) * resolution * 0.5f;
 		Vec4f roundedOrigin(std::round(originShadowSpace.x), std::round(originShadowSpace.y), 0.0f, 0.0f);
 		Vec4f offsetShadowSpace = (roundedOrigin - originShadowSpace) * (2.0f / resolution);

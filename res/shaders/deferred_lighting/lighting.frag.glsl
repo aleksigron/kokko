@@ -104,15 +104,13 @@ void main()
 
 	float window_z = texture(g_depth, fs_in.tex_coord).r;
 	vec3 surface_pos = view_pos_from_depth(window_z, perspective_mat, fs_in.eye_dir);
-	float view_z = surface_pos.z;
 	vec3 V = normalize(-surface_pos);
-
-	vec3 F0 = vec3(0.04);
-	F0 = mix(F0, albedo, metalness);
-
+	vec3 F0 = mix(vec3(0.04), albedo, metalness);
 	vec3 Lo = vec3(0.0);
 
 	{
+		float view_z = surface_pos.z;
+
 		// Select correct shadow cascade
 		int cascade_index = 0;
 		for (int i = 0; i < shadow_casc_count; ++i)
@@ -125,7 +123,7 @@ void main()
 		vec4 shadow_coord = shadow_mats[cascade_index] * vec4(surface_pos, 1.0);
 		shadow_coord.x = (cascade_index + shadow_coord.x) / shadow_casc_count;
 		float NdotL = max(dot(N, L), 0.0);
-		shadow_coord.z -= shadow_bias_offset + clamp(shadow_bias_factor * tan(acos(NdotL)), 0.0, shadow_bias_clamp);
+		shadow_coord.z += shadow_bias_offset + clamp(shadow_bias_factor * tan(acos(NdotL)), 0.0, shadow_bias_clamp);
 
 		float shadow_coeff = 0.0;
 		for (float y = -1.5; y <= 1.5; y += 1.0)
@@ -164,6 +162,4 @@ void main()
 	vec3 ambient = ambient_color * albedo * ao;
 
 	color = ambient + Lo;
-
-	gl_FragDepth = window_z;
 }

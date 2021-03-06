@@ -470,7 +470,8 @@ void DebugVectorRenderer::Render(Camera* camera)
 		SceneObjectId cameraSceneObject = scene->Lookup(camera->GetEntity());
 		const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
 
-		Mat4x4f proj = camera->parameters.GetProjectionMatrix();
+		bool reverseDepth = false;
+		Mat4x4f proj = camera->parameters.GetProjectionMatrix(reverseDepth);
 		Mat4x4f view = Camera::GetViewMatrix(cameraTransform);
 		Mat4x4f viewProj = proj * view;
 		Mat4x4f screenProj = engine->GetMainWindow()->GetScreenSpaceProjectionMatrix();

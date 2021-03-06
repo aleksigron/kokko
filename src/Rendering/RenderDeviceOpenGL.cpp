@@ -12,6 +12,26 @@ static unsigned int ConvertDeviceParameter(RenderDeviceParameter parameter)
 	}
 }
 
+static unsigned int ConvertClipOriginMode(RenderClipOriginMode origin)
+{
+	switch (origin)
+	{
+	case RenderClipOriginMode::LowerLeft: return GL_LOWER_LEFT;
+	case RenderClipOriginMode::UpperLeft: return GL_UPPER_LEFT;
+	default: return 0;
+	}
+}
+
+static unsigned int ConvertClipDepthMode(RenderClipDepthMode depth)
+{
+	switch (depth)
+	{
+	case RenderClipDepthMode::NegativeOneToOne: return GL_NEGATIVE_ONE_TO_ONE;
+	case RenderClipDepthMode::ZeroToOne: return GL_ZERO_TO_ONE;
+	default: return 0;
+	}
+}
+
 static unsigned int ConvertBufferUsage(RenderBufferUsage usage)
 {
 	switch (usage)
@@ -447,6 +467,11 @@ void RenderDeviceOpenGL::BlendFunction(const RenderCommandData::BlendFunctionDat
 void RenderDeviceOpenGL::BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor)
 {
 	glBlendFunc(ConvertBlendFactor(srcFactor), ConvertBlendFactor(dstFactor));
+}
+
+void RenderDeviceOpenGL::SetClipBehavior(RenderClipOriginMode origin, RenderClipDepthMode depth)
+{
+	glClipControl(ConvertClipOriginMode(origin), ConvertClipDepthMode(depth));
 }
 
 void RenderDeviceOpenGL::DepthRange(const RenderCommandData::DepthRangeData* data)

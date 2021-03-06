@@ -213,7 +213,8 @@ void ScreenSpaceAmbientOcclusion::UpdateUniformBuffers(const ProjectionParameter
 {
 	float noiseSizef = static_cast<float>(NoiseTextureSize);
 
-	Mat4x4f projectionMat = projection.GetProjectionMatrix();
+	bool reverseDepth = true;
+	Mat4x4f projectionMat = projection.GetProjectionMatrix(reverseDepth);
 
 	OcclusionUniformBlock occlusionUniforms;
 	occlusionUniforms.projection = projectionMat;

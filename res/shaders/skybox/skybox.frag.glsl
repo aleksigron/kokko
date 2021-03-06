@@ -6,6 +6,6 @@ uniform samplerCube tex;
 
 void main()
 {
-	gl_FragDepth = 1.0;
+	gl_FragDepth = 0.0;
 	color = texture(tex, fs_w_direction).rgb;
 }
