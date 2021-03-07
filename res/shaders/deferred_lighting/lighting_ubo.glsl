@@ -1,7 +1,7 @@
 const int MaxLightCount = 8;
 const int MaxCascadeCount = 4;
 
-layout(std140, binding = 0) uniform Lighting
+layout(std140, binding = BLOCK_BINDING_OBJECT) uniform Lighting
 {
 	vec3 light_col[MaxLightCount];
 	vec4 light_pos[MaxLightCount]; // xyz: position, w: inverse square radius

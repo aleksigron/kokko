@@ -8,7 +8,7 @@ out float color;
 
 uniform sampler2D occlusion_map;
 
-layout(std140, binding = 0) uniform SsaoBlurBlock
+layout(std140, binding = BLOCK_BINDING_OBJECT) uniform SsaoBlurBlock
 {
 	vec2 texture_scale;
 };

@@ -1,5 +1,5 @@
 
-layout(std140, binding = 2) uniform TerrainBlock
+layout(std140, binding = BLOCK_BINDING_OBJECT) uniform TerrainBlock
 {
 	mat4x4 MVP;
 	mat4x4 MV;

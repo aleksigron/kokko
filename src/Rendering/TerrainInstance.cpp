@@ -171,7 +171,7 @@ void TerrainInstance::RenderTerrain(const MaterialData& material, const RenderVi
 	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(UniformBlock), &uniforms);
 
 	// Bind object transform uniform block to shader
-	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint, uniformBufferId);
+	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId);
 
 	renderDevice->UseShaderProgram(material.cachedShaderDeviceId);
 
@@ -193,7 +193,7 @@ void TerrainInstance::RenderTerrain(const MaterialData& material, const RenderVi
 	}
 
 	// Bind material uniform block to shader
-	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, material.uniformBufferObject);
+	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, material.uniformBufferObject);
 
 	MeshDrawData* draw = meshManager->GetDrawData(meshId);
 	renderDevice->BindVertexArray(draw->vertexArrayObject);

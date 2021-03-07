@@ -8,7 +8,7 @@ out vec3 color;
 
 uniform sampler2D source_map;
 
-layout(std140, binding = 0) uniform BloomUpsampleBlock
+layout(std140, binding = BLOCK_BINDING_OBJECT) uniform BloomUpsampleBlock
 {
     float kernel[25];
 	vec2 texture_scale;

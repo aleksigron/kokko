@@ -159,7 +159,7 @@ void ScreenSpaceAmbientOcclusion::Render(const RenderParams& params)
 	occlusionPass.textureCount = 3;
 
 	occlusionPass.uniformBufferId = uniformBufferIds[PassIdx_Occlusion];
-	occlusionPass.uniformBindingPoint = 0;
+	occlusionPass.uniformBindingPoint = UniformBlockBinding::Object;
 	occlusionPass.uniformBufferRangeStart = 0;
 	occlusionPass.uniformBufferRangeSize = sizeof(OcclusionUniformBlock);
 
@@ -178,7 +178,7 @@ void ScreenSpaceAmbientOcclusion::Render(const RenderParams& params)
 	blurPass.textureCount = 1;
 
 	blurPass.uniformBufferId = uniformBufferIds[PassIdx_Blur];
-	blurPass.uniformBindingPoint = 0;
+	blurPass.uniformBindingPoint = UniformBlockBinding::Object;
 	blurPass.uniformBufferRangeStart = 0;
 	blurPass.uniformBufferRangeSize = sizeof(OcclusionUniformBlock);
 

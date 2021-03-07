@@ -3,7 +3,10 @@
 		"main": "res/shaders/post_process/tonemap.vert.glsl"
 	},
 	"fs": {
-		"main": "res/shaders/post_process/tonemap.frag.glsl"
+		"main": "res/shaders/post_process/tonemap.frag.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl"
+		]
 	},
 	"properties": [
 		{ "name": "light_acc_map", "type": "tex2d" }

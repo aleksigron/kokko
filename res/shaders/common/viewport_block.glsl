@@ -1,4 +1,4 @@
-layout(std140, binding = 1) uniform ViewportBlock
+layout(std140, binding = BLOCK_BINDING_VIEWPORT) uniform ViewportBlock
 {
 	mat4x4 VP;
 	mat4x4 V;

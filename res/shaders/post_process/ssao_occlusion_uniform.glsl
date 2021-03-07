@@ -1,7 +1,7 @@
 
 const int MaxKernelSize = 64;
 
-layout(std140, binding = 0) uniform SsaoOcclusionBlock
+layout(std140, binding = BLOCK_BINDING_OBJECT) uniform SsaoOcclusionBlock
 {
 	vec3 kernel[MaxKernelSize];
 	mat4x4 perspective_mat;

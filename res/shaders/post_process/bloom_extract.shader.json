@@ -5,6 +5,7 @@
 	"fs": {
 		"main": "res/shaders/post_process/bloom_extract.frag.glsl",
 		"includes": [
+			"res/shaders/common/constants.glsl",
 			"res/shaders/post_process/bloom_common.glsl"
 		]
 	},

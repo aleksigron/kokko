@@ -23,11 +23,18 @@ public:
 	const Type& operator[](size_t index) const { return values[index].value; }
 };
 
+namespace UniformBlockBinding
+{
+	static constexpr unsigned int Global = 0;
+	static constexpr unsigned int Viewport = 1;
+	static constexpr unsigned int Material = 2;
+	static constexpr unsigned int Object = 3;
+};
+
 struct LightingUniformBlock
 {
 	static constexpr size_t MaxLightCount = 8;
 	static constexpr size_t MaxCascadeCount = 4;
-	static const unsigned int BindingPoint = 0;
 
 	UniformBlockArray<Vec3f, MaxLightCount> lightColors;
 	UniformBlockArray<Vec4f, MaxLightCount> lightPositions; // xyz: position, w: inverse square radius
@@ -53,8 +60,6 @@ struct LightingUniformBlock
 
 struct ViewportUniformBlock
 {
-	static const unsigned int BindingPoint = 1;
-
 	alignas(16) Mat4x4f VP;
 	alignas(16) Mat4x4f V;
 	alignas(16) Mat4x4f P;
@@ -62,14 +67,7 @@ struct ViewportUniformBlock
 
 struct TransformUniformBlock
 {
-	static const unsigned int BindingPoint = 2;
-
 	alignas(16) Mat4x4f MVP;
 	alignas(16) Mat4x4f MV;
 	alignas(16) Mat4x4f M;
-};
-
-struct MaterialUniformBlock
-{
-	static const unsigned int BindingPoint = 3;
 };

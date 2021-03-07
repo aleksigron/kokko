@@ -12,7 +12,7 @@ vec2 pack_normal(vec3 normal)
 
 float view_z_from_depth(float window_z, mat4x4 projection)
 {
-	return ((window_z * projection[3][3] - projection[3][2]) / (window_z * projection[2][3] - projection[2][2]));
+	return (window_z * projection[3][3] - projection[3][2]) / (window_z * projection[2][3] - projection[2][2]);
 }
 
 vec3 view_pos_from_depth(float window_z, mat4x4 projection, vec3 eye_dir)

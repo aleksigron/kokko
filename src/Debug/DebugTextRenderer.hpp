@@ -41,7 +41,7 @@ private:
 	Array<float> vertexData;
 	Array<unsigned short> indexData;
 
-	unsigned int materialBufferObjectId;
+	unsigned int bufferObjectId;
 
 	void CreateAndUploadData();
 

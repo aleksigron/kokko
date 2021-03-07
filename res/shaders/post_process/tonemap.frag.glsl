@@ -8,7 +8,7 @@ out vec3 color;
 
 uniform sampler2D light_acc_map;
 
-layout(std140, binding = 0) uniform TonemapBlock
+layout(std140, binding = BLOCK_BINDING_OBJECT) uniform TonemapBlock
 {
 	float exposure;
 };

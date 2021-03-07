@@ -155,7 +155,7 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 	pass.textureNameHashes[0] = "source_map"_hash;
 	pass.textureCount = 1;
 	pass.uniformBufferId = uniformBufferId;
-	pass.uniformBindingPoint = 0;
+	pass.uniformBindingPoint = UniformBlockBinding::Object;
 	pass.enableBlending = false;
 
 	// EXTRACT PASS

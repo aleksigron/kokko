@@ -550,7 +550,7 @@ void Renderer::Render(Scene* scene)
 				if (vpIdx != lastVpIdx)
 				{
 					unsigned int ubo = viewportData[vpIdx].uniformBlockObject;
-					device->BindBufferBase(RenderBufferTarget::UniformBuffer, ViewportUniformBlock::BindingPoint, ubo);
+					device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, ubo);
 
 					lastVpIdx = vpIdx;
 				}
@@ -569,7 +569,7 @@ void Renderer::Render(Scene* scene)
 					BindMaterialTextures(matData);
 
 					// Bind material uniform block to shader
-					device->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, matData.uniformBufferObject);
+					device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, matData.uniformBufferObject);
 				}
 
 				// Bind object transform uniform block to shader
@@ -578,7 +578,7 @@ void Renderer::Render(Scene* scene)
 				int objectInBuffer = objectDrawsProcessed % objectsPerUniformBuffer;
 
 				RenderCommandData::BindBufferRange bind{
-					RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint,
+					RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object,
 					objectUniformBuffers[bufferIndex], objectInBuffer * objectUniformBlockStride, objectUniformBlockStride
 				};
 
@@ -729,7 +729,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.textureCount = 6;
 
 	deferredPass.uniformBufferId = lightingUniformBufferId;
-	deferredPass.uniformBindingPoint = 0;
+	deferredPass.uniformBindingPoint = UniformBlockBinding::Object;
 	deferredPass.uniformBufferRangeStart = 0;
 	deferredPass.uniformBufferRangeSize = sizeof(LightingUniformBlock);
 
@@ -780,7 +780,7 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 
 	device->BindBuffer(RenderBufferTarget::UniformBuffer, tonemapUniformBufferId);
 	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TonemapUniformBlock), &uniforms);
-	device->BindBufferBase(RenderBufferTarget::UniformBuffer, 0, tonemapUniformBufferId);
+	device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, tonemapUniformBufferId);
 
 	{
 		uint32_t textureNameHashes[] = { "light_acc_map"_hash };

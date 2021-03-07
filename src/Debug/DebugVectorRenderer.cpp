@@ -501,7 +501,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectBufferId);
 			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TransformUniformBlock), &objectUniforms);
 
-			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, TransformUniformBlock::BindingPoint, objectBufferId);
+			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, objectBufferId);
 
 			// Update color
 
@@ -512,7 +512,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferId);
 			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(MaterialBlock), &materialUniforms);
 
-			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, materialBufferId);
+			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, materialBufferId);
 
 			// Draw
 

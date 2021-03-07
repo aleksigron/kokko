@@ -18,6 +18,7 @@
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/RenderDevice.hpp"
+#include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/Uniform.hpp"
 
 #include "Resources/ShaderManager.hpp"
@@ -170,8 +171,10 @@ static void AddUniforms(
 	BufferRef<const AddUniforms_UniformData> uniforms,
 	Allocator* allocator)
 {
-	const char* blockStart = "layout(std140, binding = 3) uniform MaterialBlock {\n";
-	const size_t blockStartLen = std::strlen(blockStart);
+	static_assert(UniformBlockBinding::Material < 10, "Material uniform block binding point must be less than 10");
+	const char* blockStartFormat = "layout(std140, binding = %d) uniform MaterialBlock {\n";
+	const size_t blockStartPlaceholdersLen = 2;
+	const size_t blockStartLen = std::strlen(blockStartFormat) - blockStartPlaceholdersLen + 1;
 	const char* blockRowFormat = "%s %s;\n";
 	const size_t blockRowPlaceholdersLen = 4;
 	const size_t blockRowFixedMaxLen = std::strlen(blockRowFormat) - blockRowPlaceholdersLen;
@@ -332,9 +335,9 @@ static void AddUniforms(
 	else
 	{
 		shaderOut.uniformBlockDefinition.str = uniformBlockPtr;
-
-		std::strncpy(uniformBlockPtr, blockStart, blockStartLen + 1);
-		uniformBlockPtr += blockStartLen;
+		
+		int written = std::sprintf(uniformBlockPtr, blockStartFormat, UniformBlockBinding::Material);
+		uniformBlockPtr += written;
 
 		for (unsigned int i = 0, count = shaderOut.uniforms.bufferUniformCount; i < count; ++i)
 		{

@@ -20,11 +20,9 @@
 
 #include "System/File.hpp"
 
-struct MaterialBlock
+struct UniformBlock
 {
-	static const std::size_t BufferSize = 16;
-
-	float shadowOffset;
+	alignas(16) Vec2f shadowOffset;
 };
 
 DebugTextRenderer::DebugTextRenderer(
@@ -39,7 +37,7 @@ DebugTextRenderer::DebugTextRenderer(
 	displayData(allocator),
 	scaleFactor(1.0f),
 	meshId(MeshId{}),
-	materialBufferObjectId(0),
+	bufferObjectId(0),
 	vertexData(allocator),
 	indexData(allocator)
 {
@@ -49,9 +47,9 @@ DebugTextRenderer::~DebugTextRenderer()
 {
 	allocator->MakeDelete(font);
 
-	if (materialBufferObjectId != 0)
+	if (bufferObjectId != 0)
 	{
-		renderDevice->DestroyBuffers(1, &materialBufferObjectId);
+		renderDevice->DestroyBuffers(1, &bufferObjectId);
 	}
 }
 
@@ -144,14 +142,14 @@ void DebugTextRenderer::Render()
 			meshId = meshManager->CreateMesh();
 		}
 
-		if (materialBufferObjectId == 0)
+		if (bufferObjectId == 0)
 		{
 			RenderBufferUsage usage = RenderBufferUsage::DynamicDraw;
 
-			renderDevice->CreateBuffers(1, &materialBufferObjectId);
+			renderDevice->CreateBuffers(1, &bufferObjectId);
 
-			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferObjectId);
-			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, MaterialBlock::BufferSize, nullptr, usage);
+			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, bufferObjectId);
+			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(UniformBlock), nullptr, usage);
 		}
 
 		CreateAndUploadData();
@@ -177,14 +175,14 @@ void DebugTextRenderer::Render()
 
 		// Update shadow offset
 
-		MaterialBlock materialUniforms;
+		UniformBlock uniforms;
 		Vec2f texSize = font->GetTextureSize();
-		materialUniforms.shadowOffset = 1.0f / texSize.y;
+		uniforms.shadowOffset = Vec2f(0.0f, 1.0f / texSize.y);
 
-		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferObjectId);
-		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, MaterialBlock::BufferSize, &materialUniforms);
+		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, bufferObjectId);
+		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(UniformBlock), &uniforms);
 
-		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, MaterialUniformBlock::BindingPoint, materialBufferObjectId);
+		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, bufferObjectId);
 
 		// Bind texture
 		if (textureUniform != nullptr)
