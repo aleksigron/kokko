@@ -40,8 +40,12 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+
 		glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
-		
+		glfwWindowHint(GLFW_ALPHA_BITS, 0);
+		glfwWindowHint(GLFW_DEPTH_BITS, 0);
+		glfwWindowHint(GLFW_STENCIL_BITS, 0);
+
 		windowHandle = glfwCreateWindow(width, height, windowTitle, NULL, NULL);
 		
 		if (windowHandle != nullptr)
