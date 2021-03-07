@@ -39,14 +39,19 @@ class CUSTOM_OT_export_format(bpy.types.Operator, ExportHelper):
     save_tex_coord: BoolProperty(
         name = "Save texture coordinates (if available)",
         default = True)
+        
+    flip_tex_coord_y: BoolProperty(
+        name = "Flip texture coordinates vertically",
+        default = True)
 
     def execute(self, context):
         options = {}
         options["save_normal"] = self.save_normal
         options["save_tangent"] = self.save_tangent
         options["save_bitangent"] = self.save_bitangent
-        options["save_tex_coord"] = self.save_tex_coord
         options["save_vert_color"] = self.save_vert_color
+        options["save_tex_coord"] = self.save_tex_coord
+        options["flip_tex_coord_y"] = self.flip_tex_coord_y
         
         from . import export
         export.write(context, self.filepath, options)

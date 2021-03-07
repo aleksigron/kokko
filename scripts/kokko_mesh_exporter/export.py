@@ -95,6 +95,13 @@ def write(context, filepath, options):
     save_bitangent = options['save_bitangent']
     save_vert_color = options['save_vert_color'] and vert_color_count > 0
     save_tex_coord = options['save_tex_coord'] and tex_coord_count > 0
+    flip_tex_coord_y = options['flip_tex_coord_y']
+
+    tex_coord_y_constant = 0
+    tex_coord_y_multiplier = 1
+    if flip_tex_coord_y:
+        tex_coord_y_constant = 1
+        tex_coord_y_multiplier = -1
 
     class Vertex:
         pos = []
@@ -205,7 +212,8 @@ def write(context, filepath, options):
             if save_vert_color:
                 vertex_array.extend(vert.col)
             if save_tex_coord:
-                vertex_array.extend(vert.uv0)
+                vertex_array.append(vert.uv0[0])
+                vertex_array.append(vert.uv0[1] * tex_coord_y_multiplier + tex_coord_y_constant)
 
     final_indices = []
     for vert_index, cell_index in zip(vert_indices, cell_indices):
