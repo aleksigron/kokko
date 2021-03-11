@@ -114,10 +114,13 @@ public:
 	virtual void CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut) override;
 	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) override;
 	virtual void BindVertexArray(unsigned int vertexArrayId) override;
-	virtual void DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType) override;
-	virtual void Draw(RenderPrimitiveMode mode, int offset, int vertexCount) override;
 	virtual void EnableVertexAttribute(unsigned int index) override;
 	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) override;
+
+	virtual void Draw(RenderPrimitiveMode mode, int offset, int vertexCount) override;
+	virtual void DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType) override;
+	virtual void DrawInstanced(RenderPrimitiveMode mode, int offset, int vertexCount, int instanceCount) override;
+	virtual void DrawIndexedInstanced(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType, int instanceCount) override;
 
 	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) override;
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) override;
@@ -130,4 +133,8 @@ public:
 	virtual void* MapBuffer(RenderBufferTarget target, RenderBufferAccess access) override;
 	virtual void* MapBufferRange(const RenderCommandData::MapBufferRange* data) override;
 	virtual void UnmapBuffer(RenderBufferTarget target) override;
+
+	virtual void DispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ) override;
+
+	virtual void MemoryBarrier(const RenderCommandData::MemoryBarrier& barrier) override;
 };

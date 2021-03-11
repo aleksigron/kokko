@@ -56,6 +56,7 @@ static unsigned int ConvertBufferTarget(RenderBufferTarget target)
 	case RenderBufferTarget::VertexBuffer: return GL_ARRAY_BUFFER;
 	case RenderBufferTarget::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
 	case RenderBufferTarget::UniformBuffer: return GL_UNIFORM_BUFFER;
+	case RenderBufferTarget::ShaderStorageBuffer: return GL_SHADER_STORAGE_BUFFER;
 	default: return 0;
 	}
 }
@@ -299,6 +300,7 @@ static unsigned int ConvertShaderStage(RenderShaderStage stage)
 	case RenderShaderStage::VertexShader: return GL_VERTEX_SHADER;
 	case RenderShaderStage::GeometryShader: return GL_GEOMETRY_SHADER;
 	case RenderShaderStage::FragmentShader: return GL_FRAGMENT_SHADER;
+	case RenderShaderStage::ComputeShader: return GL_COMPUTE_SHADER;
 	default: return 0;
 	}
 }
@@ -846,16 +848,6 @@ void RenderDeviceOpenGL::BindVertexArray(unsigned int vertexArrayId)
 	glBindVertexArray(vertexArrayId);
 }
 
-void RenderDeviceOpenGL::DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType)
-{
-	glDrawElements(ConvertPrimitiveMode(mode), indexCount, ConvertIndexType(indexType), nullptr);
-}
-
-void RenderDeviceOpenGL::Draw(RenderPrimitiveMode mode, int offset, int vertexCount)
-{
-	glDrawArrays(ConvertPrimitiveMode(mode), offset, vertexCount);
-}
-
 void RenderDeviceOpenGL::EnableVertexAttribute(unsigned int index)
 {
 	glEnableVertexAttribArray(index);
@@ -865,6 +857,26 @@ void RenderDeviceOpenGL::SetVertexAttributePointer(const RenderCommandData::SetV
 {
 	glVertexAttribPointer(data->attributeIndex, data->elementCount, ConvertVertexElemType(data->elementType),
 		GL_FALSE, data->stride, reinterpret_cast<void*>(data->offset));
+}
+
+void RenderDeviceOpenGL::Draw(RenderPrimitiveMode mode, int offset, int vertexCount)
+{
+	glDrawArrays(ConvertPrimitiveMode(mode), offset, vertexCount);
+}
+
+void RenderDeviceOpenGL::DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType)
+{
+	glDrawElements(ConvertPrimitiveMode(mode), indexCount, ConvertIndexType(indexType), nullptr);
+}
+
+void RenderDeviceOpenGL::DrawInstanced(RenderPrimitiveMode mode, int offset, int vertexCount, int instanceCount)
+{
+	glDrawArraysInstanced(ConvertPrimitiveMode(mode), offset, vertexCount, instanceCount);
+}
+
+void RenderDeviceOpenGL::DrawIndexedInstanced(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType, int instanceCount)
+{
+	glDrawElementsInstanced(ConvertPrimitiveMode(mode), indexCount, ConvertIndexType(indexType), nullptr, instanceCount);
 }
 
 void RenderDeviceOpenGL::CreateBuffers(unsigned int count, unsigned int* buffersOut)
@@ -937,4 +949,31 @@ void* RenderDeviceOpenGL::MapBufferRange(const RenderCommandData::MapBufferRange
 void RenderDeviceOpenGL::UnmapBuffer(RenderBufferTarget target)
 {
 	glUnmapBuffer(ConvertBufferTarget(target));
+}
+
+void RenderDeviceOpenGL::DispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ)
+{
+	glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);
+}
+
+void RenderDeviceOpenGL::MemoryBarrier(const RenderCommandData::MemoryBarrier& barrier)
+{
+	GLbitfield bits = 0;
+	if (barrier.vertexAttribArray) bits |= GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT;
+	if (barrier.elementArray) bits |= GL_ELEMENT_ARRAY_BARRIER_BIT;
+	if (barrier.uniform) bits |= GL_UNIFORM_BARRIER_BIT;
+	if (barrier.textureFetch) bits |= GL_TEXTURE_FETCH_BARRIER_BIT;
+	if (barrier.shaderImageAccess) bits |= GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
+	if (barrier.command) bits |= GL_COMMAND_BARRIER_BIT;
+	if (barrier.pixelBuffer) bits |= GL_PIXEL_BUFFER_BARRIER_BIT;
+	if (barrier.textureUpdate) bits |= GL_TEXTURE_UPDATE_BARRIER_BIT;
+	if (barrier.bufferUpdate) bits |= GL_BUFFER_UPDATE_BARRIER_BIT;
+	if (barrier.clientMappedBuffer) bits |= GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT;
+	if (barrier.framebuffer) bits |= GL_FRAMEBUFFER_BARRIER_BIT;
+	if (barrier.transformFeedback) bits |= GL_TRANSFORM_FEEDBACK_BARRIER_BIT;
+	if (barrier.atomicCounter) bits |= GL_ATOMIC_COUNTER_BARRIER_BIT;
+	if (barrier.shaderStorage) bits |= GL_SHADER_STORAGE_BARRIER_BIT;
+	if (barrier.queryBuffer) bits |= GL_QUERY_BUFFER_BARRIER_BIT;
+
+	glMemoryBarrier(bits);
 }

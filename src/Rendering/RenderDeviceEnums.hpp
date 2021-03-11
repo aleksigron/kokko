@@ -81,7 +81,8 @@ enum class RenderBufferTarget
 {
 	VertexBuffer,
 	IndexBuffer,
-	UniformBuffer
+	UniformBuffer,
+	ShaderStorageBuffer,
 };
 
 enum class RenderBufferAccess
@@ -218,7 +219,8 @@ enum class RenderShaderStage
 {
 	VertexShader,
 	GeometryShader,
-	FragmentShader
+	FragmentShader,
+	ComputeShader
 };
 
 enum class RenderTextureParameter
