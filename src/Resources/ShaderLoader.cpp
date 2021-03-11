@@ -411,43 +411,49 @@ static bool Compile(
 	return false;
 }
 
+struct StageSource
+{
+	RenderShaderStage stage;
+	BufferRef<char> source;
+};
+
 static bool CompileAndLink(
 	ShaderData& shaderOut,
-	BufferRef<char> vertSource,
-	BufferRef<char> fragSource,
+	size_t stageCount,
+	const StageSource* stageSources,
 	Allocator* allocator,
 	RenderDevice* renderDevice)
 {
-	unsigned int vertexShader = 0;
+	static const size_t MaxStageCount = 2;
+	unsigned int stageObjects[MaxStageCount];
 
-	if (Compile(shaderOut, allocator, renderDevice, RenderShaderStage::VertexShader, vertSource, vertexShader) == false)
+	for (size_t i = 0; i < stageCount; ++i)
 	{
-		Log::Error("Compilation of vertex shader failed");
-		return false;
+		const StageSource& stage = stageSources[i];
+		if (Compile(shaderOut, allocator, renderDevice, stage.stage, stage.source, stageObjects[i]) == false)
+		{
+			Log::Error("Compilation of shader stage failed");
+
+			for (size_t j = 0; j < i; ++j)
+				renderDevice->DestroyShaderStage(stageObjects[j]);
+
+			return false;
+		}
 	}
 
-	unsigned int fragmentShader = 0;
-
-	if (Compile(shaderOut, allocator, renderDevice, RenderShaderStage::FragmentShader, fragSource, fragmentShader) == false)
-	{
-		// Release already compiled vertex shader
-		renderDevice->DestroyShaderStage(vertexShader);
-
-		Log::Error("Compilation of fragment shader failed");
-		return false;
-	}
-
-	// At this point we know that both shader compilations were successful
+	// At this point we know that shader compilations were successful
 
 	// Link the program
 	unsigned int programId = renderDevice->CreateShaderProgram();
-	renderDevice->AttachShaderStageToProgram(programId, vertexShader);
-	renderDevice->AttachShaderStageToProgram(programId, fragmentShader);
+
+	for (size_t i = 0; i < stageCount; ++i)
+		renderDevice->AttachShaderStageToProgram(programId, stageObjects[i]);
+
 	renderDevice->LinkShaderProgram(programId);
 
 	// Release shaders
-	renderDevice->DestroyShaderStage(vertexShader);
-	renderDevice->DestroyShaderStage(fragmentShader);
+	for (size_t i = 0; i < stageCount; ++i)
+		renderDevice->DestroyShaderStage(stageObjects[i]);
 
 	// Check link status
 	if (renderDevice->GetShaderProgramLinkStatus(programId))
@@ -598,19 +604,49 @@ bool ShaderLoader::LoadFromConfiguration(
 	BufferRef<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
 	AddUniforms(shaderOut, uniformBufferRef, allocator);
 
+	static const size_t MaxStageCount = 2;
+	size_t stageCount = 0;
+	struct StageInfo
+	{
+		MemberItr stageItr;
+		MemberItr mainItr;
+		MemberItr includeItr;
+		RenderShaderStage stage;
+	}
+	stages[MaxStageCount];
+
 	MemberItr vsItr = config.FindMember("vs");
 	MemberItr fsItr = config.FindMember("fs");
+	MemberItr csItr = config.FindMember("cs");
 
-	if (vsItr == config.MemberEnd() || !vsItr->value.IsObject() ||
-		fsItr == config.MemberEnd() || !fsItr->value.IsObject())
+	if (vsItr != config.MemberEnd() && vsItr->value.IsObject() ||
+		fsItr != config.MemberEnd() && fsItr->value.IsObject())
+	{
+		stages[0].stageItr = vsItr;
+		stages[0].stage = RenderShaderStage::VertexShader;
+
+		stages[1].stageItr = fsItr;
+		stages[1].stage = RenderShaderStage::FragmentShader;
+
+		stageCount = 2;
+	}
+	else if (csItr != config.MemberEnd() && csItr->value.IsObject())
+	{
+		stages[0].stageItr = csItr;
+		stages[0].stage = RenderShaderStage::ComputeShader;
+
+		stageCount = 1;
+	}
+	else
 		return false;
 
-	MemberItr vsMainItr = vsItr->value.FindMember("main");
-	MemberItr fsMainItr = fsItr->value.FindMember("main");
+	for (size_t i = 0; i < stageCount; ++i)
+	{
+		stages[i].mainItr = stages[i].stageItr->value.FindMember("main");
 
-	if (vsMainItr == vsItr->value.MemberEnd() || !vsMainItr->value.IsString() ||
-		fsMainItr == fsItr->value.MemberEnd() || !fsMainItr->value.IsString())
-		return false;
+		if (stages[i].mainItr == stages[i].stageItr->value.MemberEnd() || !stages[i].mainItr->value.IsString())
+			return false;
+	}
 
 	// Load all include files, they can be shared between shader stages
 
@@ -618,47 +654,57 @@ bool ShaderLoader::LoadFromConfiguration(
 
 	bool includeLoadSuccess = true;
 
-	MemberItr vsIncItr = vsItr->value.FindMember("includes");
-	if (vsIncItr != vsItr->value.MemberEnd())
+	for (size_t i = 0; i < stageCount; ++i)
 	{
-		if (LoadIncludes(vsIncItr->value, includeFiles, allocator) == false)
-			includeLoadSuccess = false;
-	}
-
-	MemberItr fsIncItr = fsItr->value.FindMember("includes");
-	if (fsIncItr != fsItr->value.MemberEnd())
-	{
-		if (LoadIncludes(fsIncItr->value, includeFiles, allocator) == false)
-			includeLoadSuccess = false;
+		stages[i].includeItr = stages[i].stageItr->value.FindMember("includes");
+		if (stages[i].includeItr != stages[i].stageItr->value.MemberEnd())
+		{
+			if (LoadIncludes(stages[i].includeItr->value, includeFiles, allocator) == false)
+			{
+				includeLoadSuccess = false;
+			}
+		}
 	}
 
 	// Process included files into complete source
 
 	bool processSuccess = true;
 
-	Buffer<char> vertSrc(allocator);
-	Buffer<char> fragSrc(allocator);
+	// TODO: Make this definition more robust
+	Buffer<char> sourceBuffers[MaxStageCount] = {
+		Buffer<char>(allocator),
+		Buffer<char>(allocator)
+	};
 
 	if (includeLoadSuccess)
 	{
 		StringRef versionStr("#version 450\n");
 		StringRef uniformBlock = shaderOut.uniformBlockDefinition;
 
-		const char* vsPath = vsMainItr->value.GetString();
-		const rapidjson::Value* vsInc = vsIncItr != vsItr->value.MemberEnd() ? &vsIncItr->value : nullptr;
-		if (ProcessSource(vsPath, versionStr, uniformBlock, vsInc, includeFiles, allocator, vertSrc) == false)
-			processSuccess = false;
+		for (size_t i = 0; i < stageCount; ++i)
+		{
+			const char* stagePath = stages[i].mainItr->value.GetString();
 
-		const char* fsPath = fsMainItr->value.GetString();
-		const rapidjson::Value* fsInc = fsIncItr != fsItr->value.MemberEnd() ? &fsIncItr->value : nullptr;
-		if (ProcessSource(fsPath, versionStr, uniformBlock, fsInc, includeFiles, allocator, fragSrc) == false)
-			processSuccess = false;
+			const rapidjson::Value* includeVal = nullptr;
+			if (stages[i].includeItr != stages[i].stageItr->value.MemberEnd())
+				includeVal = &stages[i].includeItr->value;
+
+			if (ProcessSource(stagePath, versionStr, uniformBlock, includeVal, includeFiles, allocator, sourceBuffers[i]) == false)
+				processSuccess = false;
+		}
 	}
 
 	bool success = false;
+	StageSource stageSources[MaxStageCount];
+
+	for (size_t i = 0; i < stageCount; ++i)
+	{
+		stageSources[i].stage = stages[i].stage;
+		stageSources[i].source = sourceBuffers[i].GetRef();
+	}
 
 	if (processSuccess &&
-		CompileAndLink(shaderOut, vertSrc.GetRef(), fragSrc.GetRef(), allocator, renderDevice))
+		CompileAndLink(shaderOut, stageCount, stageSources, allocator, renderDevice))
 	{
 		UpdateTextureUniformLocations(shaderOut, renderDevice);
 

@@ -1,5 +1,6 @@
 #pragma once
 
+class Allocator;
 class AllocatorManager;
 class Window;
 class Time;
@@ -13,6 +14,7 @@ class TextureManager;
 class SceneManager;
 class LightManager;
 class TerrainManager;
+class ParticleSystem;
 
 class Debug;
 
@@ -35,6 +37,7 @@ private:
 	TextureManager* textureManager;
 	SceneManager* sceneManager;
 	TerrainManager* terrainManager;
+	ParticleSystem* particleSystem;
 
 	Debug* debug;
 

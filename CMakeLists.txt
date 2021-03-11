@@ -73,6 +73,8 @@ set (KOKKO_SOURCES
 	src/Engine/Engine.hpp
 	src/Entity/Entity.hpp
 	src/Entity/EntityManager.hpp
+	src/Graphics/ParticleSystem.cpp
+	src/Graphics/ParticleSystem.hpp
 	src/Math/BoundingBox.hpp
 	src/Math/Frustum.hpp
 	src/Math/Intersect3D.cpp

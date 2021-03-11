@@ -11,6 +11,8 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Graphics/ParticleSystem.hpp"
+
 #include "Memory/AllocatorManager.hpp"
 #include "Memory/Memory.hpp"
 #include "Memory/ProxyAllocator.hpp"
@@ -78,6 +80,8 @@ Engine::Engine()
 	this->terrainManager = defaultAllocator->MakeNew<TerrainManager>(
 		terrainManagerAlloc, renderDevice, meshManager, materialManager);
 
+	this->particleSystem = defaultAllocator->MakeNew<ParticleSystem>(renderDevice, shaderManager, meshManager);
+
 	Allocator* rendererAlloc = allocatorManager->CreateAllocatorScope("Renderer", defaultAllocator);
 	this->renderer = defaultAllocator->MakeNew<Renderer>(
 		rendererAlloc, renderDevice, lightManager, shaderManager, meshManager, materialManager);
@@ -91,6 +95,7 @@ Engine::~Engine()
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
 
 	defaultAllocator->MakeDelete(this->renderer);
+	defaultAllocator->MakeDelete(this->particleSystem);
 	defaultAllocator->MakeDelete(this->terrainManager);
 	defaultAllocator->MakeDelete(this->sceneManager);
 	defaultAllocator->MakeDelete(this->lightManager);
@@ -134,6 +139,7 @@ bool Engine::Initialize()
 		textureManager->Initialize();
 		renderer->Initialize(mainWindow);
 		terrainManager->Initialize(renderer, shaderManager);
+		particleSystem->Initialize(renderer);
 
 		return true;
 	}
