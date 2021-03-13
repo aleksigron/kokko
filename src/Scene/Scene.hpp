@@ -61,7 +61,7 @@ public:
 	Scene(Allocator* allocator, unsigned int sceneId);
 	~Scene();
 
-	Scene& operator=(Scene&& other);
+	Scene& operator=(Scene&& other) noexcept;
 
 	Color ambientColor;
 

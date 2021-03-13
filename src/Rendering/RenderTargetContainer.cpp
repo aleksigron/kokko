@@ -19,7 +19,7 @@ RenderTargetContainer::~RenderTargetContainer()
 	allocator->Deallocate(renderTargets);
 }
 
-const RenderTarget& RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextureSizedFormat format)
+RenderTarget RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextureSizedFormat format)
 {
 	for (size_t i = 0; i < renderTargetCount; ++i)
 	{

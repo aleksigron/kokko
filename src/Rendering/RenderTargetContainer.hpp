@@ -39,7 +39,7 @@ public:
 	RenderTargetContainer(Allocator* allocator, RenderDevice* renderDevice);
 	~RenderTargetContainer();
 
-	const RenderTarget& AcquireRenderTarget(Vec2i size, RenderTextureSizedFormat format);
+	RenderTarget AcquireRenderTarget(Vec2i size, RenderTextureSizedFormat format);
 	void ReleaseRenderTarget(unsigned int renderTargetId);
 
 	bool ConfirmAllTargetsAreUnused();

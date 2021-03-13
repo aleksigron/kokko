@@ -27,7 +27,7 @@ Scene::~Scene()
 	allocator->Deallocate(data.buffer);
 }
 
-Scene& Scene::operator=(Scene&& other)
+Scene& Scene::operator=(Scene&& other) noexcept
 {
 	this->sceneId = other.sceneId;
 	this->data = other.data;

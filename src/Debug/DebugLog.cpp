@@ -52,7 +52,7 @@ void DebugLog::Log(const String& text, LogLevel level)
 void DebugLog::Log(StringRef text, LogLevel level)
 {
 	static const size_t levelStringLength = 10;
-	static const char const levelStrings[][levelStringLength] =
+	static const char levelStrings[][levelStringLength] =
 	{
 		"[VERBOSE]",
 		"[INFO   ]",

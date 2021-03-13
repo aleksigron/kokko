@@ -5,8 +5,11 @@
 void* DefaultAllocator::Allocate(std::size_t size)
 {
 	void* ptr = std::malloc(size + PreambleSize);
-	*static_cast<std::size_t*>(ptr) = size; // Save allocated size to preamble
+	
+	if (ptr == nullptr)
+		return nullptr;
 
+	*static_cast<std::size_t*>(ptr) = size; // Save allocated size to preamble
 	return static_cast<char*>(ptr) + PreambleSize;
 }
 

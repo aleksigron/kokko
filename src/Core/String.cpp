@@ -28,7 +28,7 @@ String::String(const String& s)
 		string = nullptr;
 }
 
-String::String(String&& s)
+String::String(String&& s) noexcept
 {
 	allocator = s.allocator;
 	string = s.string;

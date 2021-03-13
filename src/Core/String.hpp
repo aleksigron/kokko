@@ -21,7 +21,7 @@ private:
 public:
 	String(Allocator* allocator);
 	String(const String& s);
-	String(String&& s);
+	String(String&& s) noexcept;
 	String(Allocator* allocator, const char* s);
 	String(Allocator* allocator, StringRef s);
 
