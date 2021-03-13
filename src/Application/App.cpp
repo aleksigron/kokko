@@ -20,9 +20,11 @@
 
 App* App::instance = nullptr;
 
-App::App(Allocator* allocator) :
+App::App(Engine* engine, Allocator* allocator) :
+	engine(engine),
 	allocator(allocator),
 	settings(allocator),
+	cameraController(engine->GetSceneManager(), engine->GetMainWindow()),
 	cameraControllerEnable(true)
 {
 	App::instance = this;
@@ -37,9 +39,7 @@ void App::Initialize()
 	settings.SetFilename(StringRef("global.settings"));
 	settings.LoadFromFile();
 
-	Engine* engine = Engine::GetInstance();
 	EntityManager* entityManager = engine->GetEntityManager();
-	LightManager* lightManager = engine->GetLightManager();
 	MaterialManager* materialManager = engine->GetMaterialManager();
 	MeshManager* meshManager = engine->GetMeshManager();
 	Renderer* renderer = engine->GetRenderer();
@@ -71,78 +71,43 @@ void App::Initialize()
 		Vec2f frameSize = window->GetFrameBufferSize().As<float>();
 		mainCamera.parameters.projection = ProjectionType::Perspective;
 		mainCamera.parameters.near = 0.1f;
-		mainCamera.parameters.far = 500.0f;
+		mainCamera.parameters.far = 10000.0f;
 		mainCamera.parameters.height = Math::DegreesToRadians(60.0f);
 		mainCamera.parameters.SetAspectRatio(frameSize.x, frameSize.y);
 	}
 
 	// Load mesh and material for our additional objects
 
-	StringRef meshPath("res/models/simple_sphere.mesh");
+	StringRef meshPath("res/models/pillar.mesh");
 	MeshId meshId = meshManager->GetIdByPath(meshPath);
 
-	StringRef matPath("res/materials/deferred_geometry/standard_gray_m00_r00.material.json");
-	MaterialId origMatId = materialManager->GetIdByPath(matPath);
-	const MaterialData& origMatData = materialManager->GetMaterialData(origMatId);
+	StringRef matPath("res/materials/deferred_geometry/pillar.material.json");
+	MaterialId matId = materialManager->GetIdByPath(matPath);
+	const MaterialData& origMatData = materialManager->GetMaterialData(matId);
 
-	if (meshId.IsValid() && origMatId.IsNull() == false)
+	if (meshId.IsValid() && matId.IsNull() == false)
 	{
-		const char* metalnessStr = "metalness";
-		const char* roughnessStr = "roughness";
-		uint32_t metalnessHash = Hash::FNV1a_32(metalnessStr, std::strlen(metalnessStr));
-		uint32_t roughnessHash = Hash::FNV1a_32(roughnessStr, std::strlen(roughnessStr));
-
-		const BufferUniform* metalUniform = origMatData.uniforms.FindBufferUniformByNameHash(metalnessHash);
-		const BufferUniform* roughUniform = origMatData.uniforms.FindBufferUniformByNameHash(roughnessHash);
-
-		static const unsigned int roughnessCount = 6;
-		static const unsigned int metalnessCount = 4;
-		MaterialId materialIds[roughnessCount * metalnessCount];
-
-		for (unsigned int m = 0; m < metalnessCount; ++m)
-		{
-			for (unsigned int r = 0; r < roughnessCount; ++r)
-			{
-				MaterialId matId = materialManager->CreateCopy(origMatId);
-				const MaterialData& materialData = materialManager->GetMaterialData(matId);
-
-				float metalness = m / (metalnessCount - 1.0f);
-				float roughness = 0.2f + r / (roughnessCount - 1.0f) * 0.8f;
-
-				metalUniform->SetValueFloat(materialData.uniformData, metalness);
-				roughUniform->SetValueFloat(materialData.uniformData, roughness);
-
-				materialManager->UpdateUniformsToGPU(matId);
-
-				materialIds[m * roughnessCount + r] = matId;
-			}
-		}
-
 		RenderOrderData renderOrderData;
-		renderOrderData.material = origMatId;
-		renderOrderData.transparency = materialManager->GetMaterialData(origMatId).transparency;
+		renderOrderData.material = matId;
+		renderOrderData.transparency = materialManager->GetMaterialData(matId).transparency;
 
-		const float dist = 1.5f;
-		const float innerRadius = 5.0f;
+		const float dist = 3.0f;
+		const float innerRadius = 14.0f;
 		float a = Math::Const::Pi;
 
 		// Add a bunch of objects to the world
-		for (unsigned int i = 0, count = 150; i < count; ++i)
+		for (unsigned int i = 0, count = 200; i < count; ++i)
 		{
 			float r = innerRadius + a / Math::Const::Tau * dist;
 			a += dist / r;
 
-			unsigned int metal = static_cast<unsigned int>(a / Math::Const::Tau * metalnessCount) % metalnessCount;
-			unsigned int rough = static_cast<unsigned int>((r - innerRadius) / dist) % roughnessCount;
-
 			Entity entity = entityManager->Create();
 
 			SceneObjectId sceneObject = scene->AddSceneObject(entity);
-			Mat4x4f transform = Mat4x4f::Translate(Vec3f(std::sin(a) * r, 0.5f, std::cos(a) * r));
+			Mat4x4f transform = Mat4x4f::Translate(Vec3f(std::sin(a) * r, -0.5f, std::cos(a) * r));
 			scene->SetLocalTransform(sceneObject, transform);
 
 			RenderObjectId renderObj = renderer->AddRenderObject(entity);
-			renderOrderData.material = materialIds[metal * roughnessCount + rough];
 			renderer->SetOrderData(renderObj, renderOrderData);
 			renderer->SetMeshId(renderObj, meshId);
 		}

@@ -12,6 +12,7 @@ class Allocator;
 class BitmapFont;
 class RenderDevice;
 class ShaderManager;
+class MeshManager;
 class TextureManager;
 
 class DebugTextRenderer
@@ -27,6 +28,7 @@ private:
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 	ShaderManager* shaderManager;
+	MeshManager* meshManager;
 
 	BitmapFont* font;
 	unsigned int stringCharCount;
@@ -49,7 +51,7 @@ public:
 	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice);
 	~DebugTextRenderer();
 
-	void Initialize(ShaderManager* shaderManager);
+	void Initialize(ShaderManager* shaderManager, MeshManager* meshManager);
 
 	bool LoadBitmapFont(TextureManager* textureManager, const char* filePath);
 	bool HasValidFont() const { return font != nullptr; }

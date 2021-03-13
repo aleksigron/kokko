@@ -25,7 +25,7 @@ DebugCulling::~DebugCulling()
 void DebugCulling::SetLockCullingCamera(bool lockCullingCamera)
 {
 	cullingCameraIsLocked = lockCullingCamera;
-	Engine::GetInstance()->GetRenderer()->SetLockCullingCamera(lockCullingCamera);
+	renderer->SetLockCullingCamera(lockCullingCamera);
 }
 
 void DebugCulling::UpdateAndDraw(Scene* scene)
@@ -34,7 +34,7 @@ void DebugCulling::UpdateAndDraw(Scene* scene)
 	{
 		textRenderer->AddText(StringRef("Culling camera is locked"), guideTextPosition);
 
-		const Mat4x4f& transform = Engine::GetInstance()->GetRenderer()->GetCullingCameraTransform();
+		const Mat4x4f& transform = renderer->GetCullingCameraTransform();
 
 		ProjectionParameters params = scene->GetActiveCamera()->parameters;
 		params.far = params.far * 0.25f;

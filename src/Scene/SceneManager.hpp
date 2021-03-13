@@ -3,6 +3,7 @@
 #include "Core/StringRef.hpp"
 
 class Allocator;
+class Engine;
 class Scene;
 
 /**
@@ -12,6 +13,7 @@ class Scene;
 class SceneManager
 {
 private:
+	Engine* engine;
 	Allocator* allocator;
 
 	Scene* scenes;
@@ -21,7 +23,7 @@ private:
 	unsigned int primarySceneId;
 	
 public:
-	SceneManager(Allocator* allocator);
+	SceneManager(Engine* engine, Allocator* allocator);
 	~SceneManager();
 
 	void SetPrimarySceneId(unsigned int sceneId);

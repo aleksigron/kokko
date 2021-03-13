@@ -14,7 +14,7 @@ int main(void)
 		Allocator* defaultAlloc = Memory::GetDefaultAllocator();
 		Allocator* appAllocator = am->CreateAllocatorScope("Application", defaultAlloc);
 
-		App app(appAllocator);
+		App app(&engine, appAllocator);
 
 		app.Initialize();
 

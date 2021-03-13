@@ -7,12 +7,7 @@
 #include "Math/BoundingBox.hpp"
 #include "Math/Frustum.hpp"
 #include "Math/Mat4x4.hpp"
-
-#include "Engine/Engine.hpp"
-#include "Debug/Debug.hpp"
-#include "Debug/DebugTextRenderer.hpp"
-#include "Debug/DebugVectorRenderer.hpp"
-#include "Core/String.hpp"
+#include "Math/Vec2.hpp"
 
 void Intersect::FrustumAABB(
 	const FrustumPlanes& frustum,
@@ -60,11 +55,6 @@ void Intersect::FrustumAABBMinSize(
 	const BoundingBox* bounds,
 	BitPack* intersectedOut)
 {
-	Debug* debug = Engine::GetInstance()->GetDebug();
-	DebugTextRenderer* tr = debug->GetTextRenderer();
-	DebugVectorRenderer* vr = debug->GetVectorRenderer();
-	char strBuffer[128];
-
 	const Plane* planes = frustum.planes;
 	Vec3f planeNormalAbs[6];
 	Vec3f boxCornerMultipliers[8];

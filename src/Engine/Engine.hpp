@@ -21,25 +21,43 @@ class Debug;
 class Engine
 {
 private:
-	static Engine* instance;
+	template <typename Type>
+	struct InstanceAllocatorPair
+	{
+		void CreateScope(AllocatorManager* manager, const char* name, Allocator* alloc);
+
+		template <typename... Args>
+		void New(Args... args) { instance = allocator->MakeNew<Type>(args...); }
+
+		void Delete()
+		{
+			allocator->MakeDelete(instance);
+			instance = nullptr;
+		}
+
+		Type* instance;
+		Allocator* allocator;
+	};
 
 	AllocatorManager* allocatorManager;
 
-	Window* mainWindow;
+	Allocator* systemAllocator;
+
+	InstanceAllocatorPair<Window> mainWindow;
 	Time* time;
 	RenderDevice* renderDevice;
-	EntityManager* entityManager;
-	LightManager* lightManager;
-	Renderer* renderer;
-	MeshManager* meshManager;
-	ShaderManager* shaderManager;
-	MaterialManager* materialManager;
-	TextureManager* textureManager;
-	SceneManager* sceneManager;
-	TerrainManager* terrainManager;
-	ParticleSystem* particleSystem;
+	InstanceAllocatorPair<Debug> debug;
+	InstanceAllocatorPair<EntityManager> entityManager;
+	InstanceAllocatorPair<MeshManager> meshManager;
+	InstanceAllocatorPair<TextureManager> textureManager;
+	InstanceAllocatorPair<ShaderManager> shaderManager;
+	InstanceAllocatorPair<MaterialManager> materialManager;
+	InstanceAllocatorPair<LightManager> lightManager;
+	InstanceAllocatorPair<SceneManager> sceneManager;
+	InstanceAllocatorPair<TerrainManager> terrainManager;
+	InstanceAllocatorPair<ParticleSystem> particleSystem;
+	InstanceAllocatorPair<Renderer> renderer;
 
-	Debug* debug;
 
 public:
 	Engine();
@@ -48,17 +66,13 @@ public:
 	bool Initialize();
 	void Update();
 
-	static Engine* GetInstance() { return instance; }
-
 	AllocatorManager* GetAllocatorManager() { return allocatorManager; }
-
-	Window* GetMainWindow() { return mainWindow; }
-	EntityManager* GetEntityManager() { return entityManager; }
-	LightManager* GetLightManager() { return lightManager; }
-	Renderer* GetRenderer() { return renderer; }
-	MaterialManager* GetMaterialManager() { return materialManager; }
-	MeshManager* GetMeshManager() { return meshManager; }
-	SceneManager* GetSceneManager() { return sceneManager; }
-
-	Debug* GetDebug() { return debug; }
+	Window* GetMainWindow() { return mainWindow.instance; }
+	EntityManager* GetEntityManager() { return entityManager.instance; }
+	LightManager* GetLightManager() { return lightManager.instance; }
+	Renderer* GetRenderer() { return renderer.instance; }
+	MaterialManager* GetMaterialManager() { return materialManager.instance; }
+	MeshManager* GetMeshManager() { return meshManager.instance; }
+	SceneManager* GetSceneManager() { return sceneManager.instance; }
+	Debug* GetDebug() { return debug.instance; }
 };

@@ -1,11 +1,14 @@
 #pragma once
 
 class Allocator;
+class AllocatorManager;
 class RenderDevice;
 class MeshManager;
 class ShaderManager;
 class Scene;
 class Window;
+class Renderer;
+class SceneManager;
 
 class DebugVectorRenderer;
 class DebugTextRenderer;
@@ -45,10 +48,12 @@ private:
 	mode;
 
 public:
-	Debug(Allocator* allocator, RenderDevice* renderDevice);
+	Debug(Allocator* allocator, AllocatorManager* allocManager,
+		Window* window, RenderDevice* renderDevice);
 	~Debug();
 
-	void Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager);
+	void Initialize(Window* window, Renderer* renderer, MeshManager* meshManager,
+		ShaderManager* shaderManager, SceneManager* sceneManager);
 	void Deinitialize();
 	
 	void Render(Scene* scene);

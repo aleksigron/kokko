@@ -21,7 +21,10 @@
 #include "App.hpp"
 #include "Rendering/Camera.hpp"
 
-CameraController::CameraController()
+CameraController::CameraController(SceneManager* sceneManager, Window* window) :
+	sceneManager(sceneManager),
+	window(window),
+	controlledCamera(nullptr)
 {
 }
 
@@ -62,10 +65,8 @@ void CameraController::Update()
 
 	this->VerifySensitityIsLoaded();
 
-	SceneManager* sm = Engine::GetInstance()->GetSceneManager();
-	Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
-
-	InputManager* inputManager = Engine::GetInstance()->GetMainWindow()->GetInputManager();
+	Scene* scene = sceneManager->GetScene(sceneManager->GetPrimarySceneId());
+	InputManager* inputManager = window->GetInputManager();
 	PointerInput* pi = inputManager->GetPointerInput();
 	KeyboardInputView* kb = inputManager->GetKeyboardInputView();
 

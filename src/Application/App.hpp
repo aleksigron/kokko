@@ -5,14 +5,15 @@
 #include "Rendering/Camera.hpp"
 
 class Allocator;
+class Engine;
 
 class App
 {
 private:
 	static App* instance;
 
+	Engine* engine;
 	Allocator* allocator;
-
 	AppSettings settings;
 
 	Camera mainCamera;
@@ -20,7 +21,7 @@ private:
 	bool cameraControllerEnable;
 	
 public:
-	App(Allocator* allocator);
+	App(Engine* engine, Allocator* allocator);
 	~App();
 	
 	void Initialize();

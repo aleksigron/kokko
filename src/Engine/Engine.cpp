@@ -33,82 +33,82 @@
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
-Engine* Engine::instance = nullptr;
+template <typename Type>
+void Engine::InstanceAllocatorPair<Type>::CreateScope(AllocatorManager* manager, const char* name, Allocator* alloc)
+{
+	allocator = manager->CreateAllocatorScope(name, alloc);
+}
 
 Engine::Engine()
 {
-	Engine::instance = this;
-
 	Memory::InitializeMemorySystem();
-	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
+	Allocator* alloc = Memory::GetDefaultAllocator();
 
-	this->allocatorManager = defaultAllocator->MakeNew<AllocatorManager>(defaultAllocator);
+	allocatorManager = alloc->MakeNew<AllocatorManager>(alloc);
 
-	Allocator* windowAlloc = allocatorManager->CreateAllocatorScope("Window", defaultAllocator);
-	this->mainWindow = defaultAllocator->MakeNew<Window>(windowAlloc);
+	mainWindow.CreateScope(allocatorManager, "Window", alloc);
+	mainWindow.New(mainWindow.allocator);
 
-	this->renderDevice = defaultAllocator->MakeNew<RenderDeviceOpenGL>();
+	systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
+	time = systemAllocator->MakeNew<Time>();
+	renderDevice = systemAllocator->MakeNew<RenderDeviceOpenGL>();
 
-	Allocator* debugAlloc = allocatorManager->CreateAllocatorScope("Debug", defaultAllocator);
-	this->debug = defaultAllocator->MakeNew<Debug>(debugAlloc, renderDevice);
+	debug.CreateScope(allocatorManager, "Debug", alloc);
+	debug.New(debug.allocator, allocatorManager, mainWindow.instance, renderDevice);
 
-	this->time = defaultAllocator->MakeNew<Time>();
+	entityManager.CreateScope(allocatorManager, "EntityManager", alloc);
+	entityManager.New(entityManager.allocator);
 
-	Allocator* entityManagerAlloc = allocatorManager->CreateAllocatorScope("EntityManager", defaultAllocator);
-	this->entityManager = defaultAllocator->MakeNew<EntityManager>(entityManagerAlloc);
+	meshManager.CreateScope(allocatorManager, "MeshManager", alloc);
+	meshManager.New(meshManager.allocator, renderDevice);
 
-	Allocator* meshManagerAlloc = allocatorManager->CreateAllocatorScope("MeshManager", defaultAllocator);
-	this->meshManager = defaultAllocator->MakeNew<MeshManager>(meshManagerAlloc, renderDevice);
+	textureManager.CreateScope(allocatorManager, "TextureManager", alloc);
+	textureManager.New(textureManager.allocator, renderDevice);
 
-	Allocator* textureManagerAlloc = allocatorManager->CreateAllocatorScope("TextureManager", defaultAllocator);
-	this->textureManager = defaultAllocator->MakeNew<TextureManager>(textureManagerAlloc, renderDevice);
+	shaderManager.CreateScope(allocatorManager, "ShaderManager", alloc);
+	shaderManager.New(shaderManager.allocator, renderDevice);
 
-	Allocator* shaderManagerAlloc = allocatorManager->CreateAllocatorScope("ShaderManager", defaultAllocator);
-	this->shaderManager = defaultAllocator->MakeNew<ShaderManager>(shaderManagerAlloc, renderDevice);
+	materialManager.CreateScope(allocatorManager, "MaterialManager", alloc);
+	materialManager.New(materialManager.allocator, renderDevice, shaderManager.instance, textureManager.instance);
 
-	Allocator* materialManagerAlloc = allocatorManager->CreateAllocatorScope("MaterialManager", defaultAllocator);
-	this->materialManager = defaultAllocator->MakeNew<MaterialManager>(
-		materialManagerAlloc, renderDevice, shaderManager, textureManager);
+	lightManager.CreateScope(allocatorManager, "LightManager", alloc);
+	lightManager.New(lightManager.allocator);
 
-	Allocator* lightManagerAlloc = allocatorManager->CreateAllocatorScope("LightManager", defaultAllocator);
-	this->lightManager = defaultAllocator->MakeNew<LightManager>(lightManagerAlloc);
+	sceneManager.CreateScope(allocatorManager, "SceneManager", alloc);
+	sceneManager.New(this, sceneManager.allocator);
 
-	Allocator* sceneManagerAlloc = allocatorManager->CreateAllocatorScope("SceneManager", defaultAllocator);
-	this->sceneManager = defaultAllocator->MakeNew<SceneManager>(sceneManagerAlloc);
+	terrainManager.CreateScope(allocatorManager, "TerrainManager", alloc);
+	terrainManager.New(terrainManager.allocator, renderDevice, meshManager.instance, materialManager.instance);
 
-	Allocator* terrainManagerAlloc = allocatorManager->CreateAllocatorScope("TerrainManager", defaultAllocator);
-	this->terrainManager = defaultAllocator->MakeNew<TerrainManager>(
-		terrainManagerAlloc, renderDevice, meshManager, materialManager);
+	particleSystem.CreateScope(allocatorManager, "ParticleManager", alloc);
+	particleSystem.New(renderDevice, shaderManager.instance, meshManager.instance);
 
-	this->particleSystem = defaultAllocator->MakeNew<ParticleSystem>(renderDevice, shaderManager, meshManager);
-
-	Allocator* rendererAlloc = allocatorManager->CreateAllocatorScope("Renderer", defaultAllocator);
-	this->renderer = defaultAllocator->MakeNew<Renderer>(
-		rendererAlloc, renderDevice, lightManager, shaderManager, meshManager, materialManager);
+	renderer.CreateScope(allocatorManager, "Renderer", alloc);
+	renderer.New(renderer.allocator, renderDevice, lightManager.instance,
+		shaderManager.instance, meshManager.instance, materialManager.instance);
 }
 
 Engine::~Engine()
 {
-	renderer->Deinitialize();
-	debug->Deinitialize();
+	renderer.instance->Deinitialize();
+	debug.instance->Deinitialize();
+
+	renderer.Delete();
+	particleSystem.Delete();
+	terrainManager.Delete();
+	sceneManager.Delete();
+	lightManager.Delete();
+	materialManager.Delete();
+	shaderManager.Delete();
+	textureManager.Delete();
+	meshManager.Delete();
+	entityManager.Delete();
+	debug.Delete();
+	systemAllocator->MakeDelete(this->time);
+	systemAllocator->MakeDelete(this->renderDevice);
+	mainWindow.Delete();
 
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
-
-	defaultAllocator->MakeDelete(this->renderer);
-	defaultAllocator->MakeDelete(this->particleSystem);
-	defaultAllocator->MakeDelete(this->terrainManager);
-	defaultAllocator->MakeDelete(this->sceneManager);
-	defaultAllocator->MakeDelete(this->lightManager);
-	defaultAllocator->MakeDelete(this->materialManager);
-	defaultAllocator->MakeDelete(this->shaderManager);
-	defaultAllocator->MakeDelete(this->textureManager);
-	defaultAllocator->MakeDelete(this->meshManager);
-	defaultAllocator->MakeDelete(this->entityManager);
-	defaultAllocator->MakeDelete(this->time);
-	defaultAllocator->MakeDelete(this->debug);
-	defaultAllocator->MakeDelete(this->renderDevice);
-	defaultAllocator->MakeDelete(this->mainWindow);
-
 	defaultAllocator->MakeDelete(this->allocatorManager);
 
 	Memory::DeinitializeMemorySystem();
@@ -118,16 +118,16 @@ bool Engine::Initialize()
 {
 	Vec2i windowSize(1920, 1080);
 
-	if (this->mainWindow->Initialize(windowSize.x, windowSize.y, "Kokko"))
+	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko"))
 	{
 		const char* const logFilename = "log.txt";
 		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";
 
-		DebugLog* debugLog = this->debug->GetLog();
+		DebugLog* debugLog = debug.instance->GetLog();
 		debugLog->OpenLogFile(logFilename, false);
 
-		DebugTextRenderer* debugTextRenderer = this->debug->GetTextRenderer();
-		bool fontLoaded = debugTextRenderer->LoadBitmapFont(textureManager, debugFontFilename);
+		DebugTextRenderer* debugTextRenderer = debug.instance->GetTextRenderer();
+		bool fontLoaded = debugTextRenderer->LoadBitmapFont(textureManager.instance, debugFontFilename);
 		if (fontLoaded == false)
 		{
 			Allocator* defaultAllocator = Memory::GetDefaultAllocator();
@@ -135,11 +135,13 @@ bool Engine::Initialize()
 			debugLog->Log(logText);
 		}
 
-		debug->Initialize(mainWindow, meshManager, shaderManager);
-		textureManager->Initialize();
-		renderer->Initialize(mainWindow);
-		terrainManager->Initialize(renderer, shaderManager);
-		particleSystem->Initialize(renderer);
+		debug.instance->Initialize(mainWindow.instance, renderer.instance,
+			meshManager.instance, shaderManager.instance, sceneManager.instance);
+
+		textureManager.instance->Initialize();
+		renderer.instance->Initialize(mainWindow.instance, entityManager.instance);
+		terrainManager.instance->Initialize(renderer.instance, shaderManager.instance);
+		particleSystem.instance->Initialize(renderer.instance);
 
 		return true;
 	}
@@ -153,18 +155,18 @@ void Engine::Update()
 {
 	this->time->Update();
 
-	unsigned int primarySceneId = this->sceneManager->GetPrimarySceneId();
-	Scene* primaryScene = this->sceneManager->GetScene(primarySceneId);
+	unsigned int primarySceneId = sceneManager.instance->GetPrimarySceneId();
+	Scene* primaryScene = sceneManager.instance->GetScene(primarySceneId);
 
 	// Propagate transform updates from Scene to other systems that require it
-	ITransformUpdateReceiver* transformUpdateReceivers[] = { this->lightManager, this->renderer };
+	ITransformUpdateReceiver* transformUpdateReceivers[] = { lightManager.instance, renderer.instance };
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	primaryScene->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
-	this->renderer->Render(primaryScene);
+	renderer.instance->Render(primaryScene);
 
-	this->debug->Render(primaryScene);
+	debug.instance->Render(primaryScene);
 
-	this->mainWindow->UpdateInput();
-	this->mainWindow->Swap();
+	mainWindow.instance->UpdateInput();
+	mainWindow.instance->Swap();
 }

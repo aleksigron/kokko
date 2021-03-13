@@ -4,12 +4,14 @@
 #include "Rendering/Camera.hpp"
 #include "Application/CameraController.hpp"
 
+class Renderer;
 class DebugTextRenderer;
 class DebugVectorRenderer;
 
 class DebugCulling
 {
 private:
+	Renderer* renderer;
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
 
@@ -21,6 +23,7 @@ public:
 	DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
 	~DebugCulling();
 
+	void SetRenderer(Renderer* renderer) { this->renderer = renderer; }
 	void UpdateAndDraw(Scene* scene);
 
 	void SetLockCullingCamera(bool lockCullingCamera);

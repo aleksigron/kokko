@@ -33,6 +33,7 @@ DebugVectorRenderer::DebugVectorRenderer(
 	renderDevice(renderDevice),
 	shaderManager(nullptr),
 	meshManager(nullptr),
+	sceneManager(nullptr),
 	dynamicMeshes(nullptr),
 	dynamicMeshCount(0),
 	dynamicMeshAllocated(0),
@@ -51,18 +52,21 @@ DebugVectorRenderer::~DebugVectorRenderer()
 {
 }
 
-void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager)
+void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
+	SceneManager* sceneManager, Window* window)
 {
-	// Initialize shaders
-
+	this->meshManager = meshManager;
 	this->shaderManager = shaderManager;
+	this->sceneManager = sceneManager;
+	this->window = window;
+
+	// Initialize shaders
 
 	const char* shaderPath = "res/shaders/debug/debug_vector.shader.json";
 	shaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
 	// Initialize meshes
 
-	this->meshManager = meshManager;
 
 	VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
 	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
@@ -209,8 +213,6 @@ void DebugVectorRenderer::Deinitialize()
 
 	if (meshesInitialized)
 	{
-		Engine* engine = Engine::GetInstance();
-		MeshManager* meshManager = engine->GetMeshManager();
 		for (unsigned int i = 0; i < 4; ++i)
 			meshManager->RemoveMesh(staticMeshes[i]);
 
@@ -222,13 +224,6 @@ void DebugVectorRenderer::Deinitialize()
 		renderDevice->DestroyBuffers(2, uniformBufferIds);
 		buffersInitialized = false;
 	}
-}
-
-void DebugVectorRenderer::CreateMeshes()
-{
-	Engine* engine = Engine::GetInstance();
-
-	meshesInitialized = true;
 }
 
 DebugVectorRenderer::DynamicMesh* DebugVectorRenderer::GetDynamicMesh(unsigned int byteSize)
@@ -446,9 +441,6 @@ void DebugVectorRenderer::Render(Camera* camera)
 	{
 		const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
-		if (meshesInitialized == false)
-			this->CreateMeshes();
-
 		if (buffersInitialized == false)
 		{
 			RenderBufferUsage usage = RenderBufferUsage::DynamicDraw;
@@ -464,9 +456,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 			buffersInitialized = true;
 		}
 
-		Engine* engine = Engine::GetInstance();
-		SceneManager* sm = engine->GetSceneManager();
-		Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
+		Scene* scene = sceneManager->GetScene(sceneManager->GetPrimarySceneId());
 		SceneObjectId cameraSceneObject = scene->Lookup(camera->GetEntity());
 		const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
 
@@ -474,7 +464,7 @@ void DebugVectorRenderer::Render(Camera* camera)
 		Mat4x4f proj = camera->parameters.GetProjectionMatrix(reverseDepth);
 		Mat4x4f view = Camera::GetViewMatrix(cameraTransform);
 		Mat4x4f viewProj = proj * view;
-		Mat4x4f screenProj = engine->GetMainWindow()->GetScreenSpaceProjectionMatrix();
+		Mat4x4f screenProj = window->GetScreenSpaceProjectionMatrix();
 
 		TransformUniformBlock objectUniforms;
 		MaterialBlock materialUniforms;

@@ -11,7 +11,8 @@
 #include "Core/StringRef.hpp"
 #include "System/File.hpp"
 
-SceneManager::SceneManager(Allocator* allocator) :
+SceneManager::SceneManager(Engine* engine, Allocator* allocator) :
+	engine(engine),
 	allocator(allocator),
 	scenes(nullptr),
 	sceneCount(0),
@@ -53,7 +54,7 @@ unsigned int SceneManager::LoadSceneFromFile(StringRef path)
 		{
 			Scene* scene = this->GetScene(sceneId);
 
-			SceneLoader loader(Engine::GetInstance(), scene);
+			SceneLoader loader(engine, scene);
 			loader.Load(sceneConfig.GetRef());
 		}
 	}

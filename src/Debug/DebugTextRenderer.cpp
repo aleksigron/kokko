@@ -31,6 +31,7 @@ DebugTextRenderer::DebugTextRenderer(
 	allocator(allocator),
 	renderDevice(renderDevice),
 	shaderManager(nullptr),
+	meshManager(nullptr),
 	font(nullptr),
 	stringCharCount(0),
 	stringData(allocator),
@@ -53,9 +54,10 @@ DebugTextRenderer::~DebugTextRenderer()
 	}
 }
 
-void DebugTextRenderer::Initialize(ShaderManager* shaderManager)
+void DebugTextRenderer::Initialize(ShaderManager* shaderManager, MeshManager* meshManager)
 {
 	this->shaderManager = shaderManager;
+	this->meshManager = meshManager;
 }
 
 void DebugTextRenderer::SetFrameSize(const Vec2f& size)
@@ -134,9 +136,6 @@ void DebugTextRenderer::Render()
 {
 	if (displayData.GetCount() > 0 && font != nullptr)
 	{
-		Engine* engine = Engine::GetInstance();
-		MeshManager* meshManager = engine->GetMeshManager();
-
 		if (meshId.IsValid() == false)
 		{
 			meshId = meshManager->CreateMesh();
@@ -325,6 +324,5 @@ void DebugTextRenderer::CreateAndUploadData()
 	data.indexCount = indexData.GetCount();
 	data.usage = RenderBufferUsage::DynamicDraw;
 
-	MeshManager* meshManager = Engine::GetInstance()->GetMeshManager();
 	meshManager->UploadIndexed(meshId, data);
 }

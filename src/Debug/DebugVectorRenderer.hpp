@@ -16,6 +16,8 @@ class Camera;
 class RenderDevice;
 class MeshManager;
 class ShaderManager;
+class SceneManager;
+class Window;
 
 class DebugVectorRenderer
 {
@@ -45,6 +47,8 @@ private:
 	RenderDevice* renderDevice;
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
+	SceneManager* sceneManager;
+	Window* window;
 
 	Primitive* primitives;
 	unsigned int primitiveCount;
@@ -71,15 +75,14 @@ private:
 	bool buffersInitialized;
 	unsigned int uniformBufferIds[2];
 
-	void CreateMeshes();
-
 	DynamicMesh* GetDynamicMesh(unsigned int byteSize);
 
 public:
 	DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice);
 	~DebugVectorRenderer();
 
-	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager);
+	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
+		SceneManager* sceneManager, Window* window);
 	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);

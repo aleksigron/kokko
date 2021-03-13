@@ -36,6 +36,8 @@ static void RenderDebugCallback(const RenderDevice::DebugMessage& message)
 
 Debug::Debug(
 	Allocator* allocator,
+	AllocatorManager* allocManager,
+	Window* window,
 	RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
@@ -48,13 +50,12 @@ Debug::Debug(
 	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator, renderDevice);
 	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
 	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
-	console = allocator->MakeNew<DebugConsole>(allocator, textRenderer, vectorRenderer);
+	console = allocator->MakeNew<DebugConsole>(allocator, window, textRenderer, vectorRenderer);
 	log = allocator->MakeNew<DebugLog>(allocator, console);
 
 	// Set up log instance in LogHelper
 	Log::SetLogInstance(log);
 
-	AllocatorManager* allocManager = Engine::GetInstance()->GetAllocatorManager();
 	memoryStats = allocator->MakeNew<DebugMemoryStats>(allocManager, textRenderer);
 }
 
@@ -73,14 +74,15 @@ Debug::~Debug()
 	allocator->MakeDelete(vectorRenderer);
 }
 
-void Debug::Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager)
+void Debug::Initialize(Window* window, Renderer* renderer,
+	MeshManager* meshManager, ShaderManager* shaderManager, SceneManager* sceneManager)
 {
 	renderDevice->SetDebugMessageCallback(RenderDebugCallback);
 
 	this->window = window;
 
-	textRenderer->Initialize(shaderManager);
-	vectorRenderer->Initialize(meshManager, shaderManager);
+	textRenderer->Initialize(shaderManager, meshManager);
+	vectorRenderer->Initialize(meshManager, shaderManager, sceneManager, window);
 
 	Vec2f frameSize = this->window->GetFrameBufferSize().As<float>();
 	float screenCoordScale = this->window->GetScreenCoordinateScale();
@@ -114,6 +116,7 @@ void Debug::Initialize(Window* window, MeshManager* meshManager, ShaderManager* 
 	graphArea.size.y = frameSize.y - pixelLineHeight;
 	graph->SetDrawArea(graphArea);
 
+	culling->SetRenderer(renderer);
 	culling->SetGuideTextPosition(Vec2f(0.0f, scaledLineHeight));
 }
 

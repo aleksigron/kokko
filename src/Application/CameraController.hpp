@@ -6,11 +6,15 @@
 struct GLFWwindow;
 
 class Camera;
+class SceneManager;
+class Window;
 
 class CameraController
 {
 private:
-	Camera* controlledCamera = nullptr;
+	SceneManager* sceneManager;
+	Window* window;
+	Camera* controlledCamera;
 
 	float cameraYaw = 0.0f;
 	float cameraPitch = 0.0f;
@@ -26,7 +30,7 @@ private:
 	void VerifySensitityIsLoaded();
 
 public:
-	CameraController();
+	CameraController(SceneManager* sceneManager, Window* window);
 	~CameraController();
 
 	void SetControlledCamera(Camera* camera);

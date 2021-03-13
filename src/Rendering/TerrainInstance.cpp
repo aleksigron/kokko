@@ -27,10 +27,10 @@ TerrainInstance::TerrainInstance(
 	meshManager(meshManager),
 	shaderManager(shaderManager),
 	heightValues(allocator),
-	terrainSize(64.0f),
-	terrainResolution(64),
-	minHeight(-2.0f),
-	maxHeight(0.0f),
+	terrainSize(128.0f),
+	terrainResolution(128),
+	minHeight(-0.25f),
+	maxHeight(0.05f),
 	heightData(nullptr),
 	vertexArrayId(0),
 	uniformBufferId(0),
@@ -56,7 +56,7 @@ void TerrainInstance::Initialize()
 
 	size_t texSize = terrainResolution;
 	float texSizeInv = 1.0f / texSize;
-	float scale = 16.0f;
+	float scale = 128.0f;
 	size_t dataSizeBytes = texSize * texSize * sizeof(uint16_t);
 	heightData = static_cast<uint16_t*>(allocator->Allocate(dataSizeBytes));
 

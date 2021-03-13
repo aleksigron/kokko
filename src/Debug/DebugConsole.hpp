@@ -11,7 +11,7 @@
 #include "System/TextInputHandler.hpp"
 
 class Allocator;
-
+class Window;
 class DebugTextRenderer;
 class DebugVectorRenderer;
 
@@ -27,7 +27,7 @@ private:
 	};
 
 	Allocator* allocator;
-
+	Window* window;
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
 
@@ -49,6 +49,7 @@ private:
 public:
 	DebugConsole(
 		Allocator* allocator,
+		Window* window,
 		DebugTextRenderer* textRenderer,
 		DebugVectorRenderer* vectorRenderer);
 	virtual ~DebugConsole();

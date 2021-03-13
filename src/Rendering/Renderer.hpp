@@ -28,6 +28,7 @@ class LightManager;
 class ShaderManager;
 class MeshManager;
 class MaterialManager;
+class EntityManager;
 class RenderDevice;
 class Scene;
 class Window;
@@ -166,7 +167,7 @@ public:
 		MeshManager* meshManager, MaterialManager* materialManager);
 	~Renderer();
 
-	void Initialize(Window* window);
+	void Initialize(Window* window, EntityManager* entityManager);
 	void Deinitialize();
 
 	void SetLockCullingCamera(bool lockEnable) { lockCullingCamera = lockEnable; }

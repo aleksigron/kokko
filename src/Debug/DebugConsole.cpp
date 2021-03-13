@@ -19,9 +19,11 @@
 
 DebugConsole::DebugConsole(
 	Allocator* allocator,
+	Window* window,
 	DebugTextRenderer* textRenderer,
 	DebugVectorRenderer* vectorRenderer) :
 	allocator(allocator),
+	window(window),
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
 	entries(allocator),
@@ -49,12 +51,12 @@ void DebugConsole::OnTextInput(StringRef text)
 
 void DebugConsole::RequestFocus()
 {
-	Engine::GetInstance()->GetMainWindow()->GetInputManager()->GetTextInput()->RequestFocus(this);
+	window->GetInputManager()->GetTextInput()->RequestFocus(this);
 }
 
 void DebugConsole::ReleaseFocus()
 {
-	Engine::GetInstance()->GetMainWindow()->GetInputManager()->GetTextInput()->ReleaseFocus(this);
+	window->GetInputManager()->GetTextInput()->ReleaseFocus(this);
 }
 
 void DebugConsole::SetDrawArea(const Rectanglef& area)
@@ -158,7 +160,7 @@ void DebugConsole::UpdateAndDraw()
 {
 	/* *** Update *** */
 
-	KeyboardInputView* kiv = Engine::GetInstance()->GetMainWindow()->GetInputManager()->GetKeyboardInputView();
+	KeyboardInputView* kiv = window->GetInputManager()->GetKeyboardInputView();
 
 	if (kiv->GetKeyDown(Key::Enter))
 	{

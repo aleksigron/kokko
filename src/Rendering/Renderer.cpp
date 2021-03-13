@@ -133,7 +133,7 @@ Renderer::~Renderer()
 	allocator->Deallocate(renderTargetContainer);
 }
 
-void Renderer::Initialize(Window* window)
+void Renderer::Initialize(Window* window, EntityManager* entityManager)
 {
 	device->SetClipBehavior(RenderClipOriginMode::LowerLeft, RenderClipDepthMode::ZeroToOne);
 
@@ -432,8 +432,7 @@ void Renderer::Initialize(Window* window)
 
 	// Create skybox entity
 	{
-		EntityManager* em = Engine::GetInstance()->GetEntityManager();
-		skyboxEntity = em->Create();
+		skyboxEntity = entityManager->Create();
 
 		RenderObjectId skyboxRenderObj = AddRenderObject(skyboxEntity);
 
@@ -620,6 +619,9 @@ void Renderer::Render(Scene* scene)
 						draw = nullptr;
 						lastMeshId = MeshId{ 0 };
 						lastMaterialId = MaterialId{ 0 };
+
+						// TODO: manage sampler state more robustly
+						device->BindSampler(0, 0);
 					}
 				}
 			}
