@@ -15,6 +15,7 @@ int main(void)
 		Allocator* appAllocator = am->CreateAllocatorScope("Application", defaultAlloc);
 
 		App app(&engine, appAllocator);
+		engine.SetAppPointer(&app);
 
 		app.Initialize();
 

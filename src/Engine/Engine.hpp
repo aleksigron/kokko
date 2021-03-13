@@ -15,6 +15,7 @@ class SceneManager;
 class LightManager;
 class TerrainManager;
 class ParticleSystem;
+class ScriptSystem;
 
 class Debug;
 
@@ -57,6 +58,7 @@ private:
 	InstanceAllocatorPair<TerrainManager> terrainManager;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
 	InstanceAllocatorPair<Renderer> renderer;
+	InstanceAllocatorPair<ScriptSystem> scriptSystem;
 
 
 public:
@@ -66,6 +68,8 @@ public:
 	bool Initialize();
 	void Update();
 
+	void SetAppPointer(void* app);
+
 	AllocatorManager* GetAllocatorManager() { return allocatorManager; }
 	Window* GetMainWindow() { return mainWindow.instance; }
 	EntityManager* GetEntityManager() { return entityManager.instance; }
@@ -74,5 +78,5 @@ public:
 	MaterialManager* GetMaterialManager() { return materialManager.instance; }
 	MeshManager* GetMeshManager() { return meshManager.instance; }
 	SceneManager* GetSceneManager() { return sceneManager.instance; }
-	Debug* GetDebug() { return debug.instance; }
+	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
 };

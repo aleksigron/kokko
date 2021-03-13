@@ -169,6 +169,10 @@ set (KOKKO_SOURCES
 	src/Scene/SceneLoader.hpp
 	src/Scene/SceneManager.cpp
 	src/Scene/SceneManager.hpp
+	src/Scripting/NativeScriptComponent.hpp
+	src/Scripting/ScriptContext.hpp
+	src/Scripting/ScriptSystem.cpp
+	src/Scripting/ScriptSystem.hpp
 	src/System/File.cpp
 	src/System/File.hpp
 	src/System/IncludeOpenGL.hpp

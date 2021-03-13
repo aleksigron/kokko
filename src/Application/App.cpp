@@ -15,6 +15,8 @@
 #include "Scene/Scene.hpp"
 #include "Scene/SceneManager.hpp"
 
+#include "Scripting/ScriptSystem.hpp"
+
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
@@ -22,7 +24,6 @@ App::App(Engine* engine, Allocator* allocator) :
 	engine(engine),
 	allocator(allocator),
 	settings(allocator),
-	cameraController(this, engine->GetSceneManager(), engine->GetMainWindow()),
 	cameraControllerEnable(true)
 {
 }
@@ -61,6 +62,10 @@ void App::Initialize()
 		SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);
 		Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 1.6f, 4.0f));
 		scene->SetLocalTransform(cameraSceneObject, cameraTransform);
+
+		ScriptSystem* scriptSystem = engine->GetScriptSystem();
+		CameraController* controller = scriptSystem->AddScript<CameraController>(mainCameraEntity);
+		controller->SetControlledCamera(&this->mainCamera);
 	}
 
 	{
@@ -113,6 +118,4 @@ void App::Initialize()
 
 void App::Update()
 {
-	if (this->cameraControllerEnable)
-		this->cameraController.Update();
 }

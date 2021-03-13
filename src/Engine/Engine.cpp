@@ -30,6 +30,8 @@
 #include "Scene/SceneManager.hpp"
 #include "Scene/Scene.hpp"
 
+#include "Scripting/ScriptSystem.hpp"
+
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
@@ -86,6 +88,9 @@ Engine::Engine()
 	renderer.CreateScope(allocatorManager, "Renderer", alloc);
 	renderer.New(renderer.allocator, renderDevice, lightManager.instance,
 		shaderManager.instance, meshManager.instance, materialManager.instance);
+
+	scriptSystem.CreateScope(allocatorManager, "ScriptSystem", alloc);
+	scriptSystem.New(this, scriptSystem.allocator);
 }
 
 Engine::~Engine()
@@ -93,6 +98,7 @@ Engine::~Engine()
 	renderer.instance->Deinitialize();
 	debug.instance->Deinitialize();
 
+	scriptSystem.Delete();
 	renderer.Delete();
 	particleSystem.Delete();
 	terrainManager.Delete();
@@ -155,6 +161,8 @@ void Engine::Update()
 {
 	this->time->Update();
 
+	scriptSystem.instance->UpdateScripts();
+
 	unsigned int primarySceneId = sceneManager.instance->GetPrimarySceneId();
 	Scene* primaryScene = sceneManager.instance->GetScene(primarySceneId);
 
@@ -169,4 +177,9 @@ void Engine::Update()
 
 	mainWindow.instance->UpdateInput();
 	mainWindow.instance->Swap();
+}
+
+void Engine::SetAppPointer(void* app)
+{
+	scriptSystem.instance->SetAppPointer(app);
 }

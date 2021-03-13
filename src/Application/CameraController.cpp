@@ -9,9 +9,7 @@
 #include "Math/Mat3x3.hpp"
 #include "Math/Mat4x4.hpp"
 
-#include "Engine/Engine.hpp"
 #include "System/Time.hpp"
-#include "System/Window.hpp"
 #include "System/InputManager.hpp"
 #include "System/PointerInput.hpp"
 #include "System/KeyboardInputView.hpp"
@@ -22,31 +20,20 @@
 #include "App.hpp"
 #include "Rendering/Camera.hpp"
 
-CameraController::CameraController(App* app, SceneManager* sceneManager, Window* window) :
-	app(app),
-	sceneManager(sceneManager),
-	window(window),
-	controlledCamera(nullptr)
-{
-}
-
-CameraController::~CameraController()
-{
-}
-
 void CameraController::SetControlledCamera(Camera* camera)
 {
 	controlledCamera = camera;
 }
 
-void CameraController::VerifySensitityIsLoaded()
+void CameraController::VerifySensitityIsLoaded(const ScriptContext& context)
 {
 	if (cameraAimSensitivity < 0.0f)
 	{
-		AppSettings* settings = app->GetSettings();
+		App* app = static_cast<App*>(context.app);
+		AppSettings* appSettings = app->GetSettings();
 
 		double sensitivity = 0.0;
-		if (settings->TryGetDouble("camera_aim_sensitivity", sensitivity))
+		if (appSettings->TryGetDouble("camera_aim_sensitivity", sensitivity))
 		{
 			this->cameraAimSensitivity = static_cast<float>(sensitivity);
 		}
@@ -54,23 +41,23 @@ void CameraController::VerifySensitityIsLoaded()
 		{
 			this->cameraAimSensitivity = 1.0f;
 
-			settings->SetDouble("camera_aim_sensitivity", this->cameraAimSensitivity);
-			settings->SaveToFile();
+			appSettings->SetDouble("camera_aim_sensitivity", this->cameraAimSensitivity);
+			appSettings->SaveToFile();
 		}
 	}
 }
 
-void CameraController::Update()
+void CameraController::OnUpdate(const ScriptContext& context)
 {
 	static const int MouseButtonGrab = 0;
 	static const int MouseButtonLook = 1;
 
-	this->VerifySensitityIsLoaded();
+	this->VerifySensitityIsLoaded(context);
 
-	Scene* scene = sceneManager->GetScene(sceneManager->GetPrimarySceneId());
-	InputManager* inputManager = window->GetInputManager();
-	PointerInput* pi = inputManager->GetPointerInput();
-	KeyboardInputView* kb = inputManager->GetKeyboardInputView();
+	SceneManager* sm = context.sceneManager;
+	Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
+	PointerInput* pi = context.inputManager->GetPointerInput();
+	KeyboardInputView* kb = context.inputManager->GetKeyboardInputView();
 
 	// Update mouseLookActive state
 	if (mouseLookActive == false && pi->GetMouseButtonDown(MouseButtonLook))
@@ -142,14 +129,15 @@ void CameraController::Update()
 	if (dir.SqrMagnitude() > 1.0f)
 		dir.Normalize();
 
-	float targetSpeed = cameraSpeed;
+	float targetSpeed = 4.0f;
 
 	if (kb->GetKey(Key::LeftShift))
 		targetSpeed *= 4.0f;
 
 	if (kb->GetKey(Key::LeftControl))
-		targetSpeed *= 0.25f;
+		targetSpeed *= 0.125f;
 
+	// TODO: Fix acceleration to be delta time independent
 	cameraVelocity += (dir * targetSpeed - cameraVelocity) * 0.15f;
 	position += cameraVelocity * Time::GetDeltaTime();
 
