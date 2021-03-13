@@ -10,8 +10,6 @@ class Engine;
 class App
 {
 private:
-	static App* instance;
-
 	Engine* engine;
 	Allocator* allocator;
 	AppSettings settings;
@@ -33,6 +31,4 @@ public:
 	}
 
 	AppSettings* GetSettings() { return &settings; }
-
-	static App* GetInstance() { return App::instance; }
 };

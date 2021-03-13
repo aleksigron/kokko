@@ -5,6 +5,7 @@
 
 #include "Core/String.hpp"
 
+#include "Math/Vec2.hpp"
 #include "Math/Mat3x3.hpp"
 #include "Math/Mat4x4.hpp"
 
@@ -21,7 +22,8 @@
 #include "App.hpp"
 #include "Rendering/Camera.hpp"
 
-CameraController::CameraController(SceneManager* sceneManager, Window* window) :
+CameraController::CameraController(App* app, SceneManager* sceneManager, Window* window) :
+	app(app),
 	sceneManager(sceneManager),
 	window(window),
 	controlledCamera(nullptr)
@@ -41,7 +43,7 @@ void CameraController::VerifySensitityIsLoaded()
 {
 	if (cameraAimSensitivity < 0.0f)
 	{
-		AppSettings* settings = App::GetInstance()->GetSettings();
+		AppSettings* settings = app->GetSettings();
 
 		double sensitivity = 0.0;
 		if (settings->TryGetDouble("camera_aim_sensitivity", sensitivity))

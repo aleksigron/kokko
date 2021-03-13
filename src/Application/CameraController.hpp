@@ -1,10 +1,8 @@
 #pragma once
 
-#include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
 
-struct GLFWwindow;
-
+class App;
 class Camera;
 class SceneManager;
 class Window;
@@ -12,6 +10,7 @@ class Window;
 class CameraController
 {
 private:
+	App* app;
 	SceneManager* sceneManager;
 	Window* window;
 	Camera* controlledCamera;
@@ -30,7 +29,7 @@ private:
 	void VerifySensitityIsLoaded();
 
 public:
-	CameraController(SceneManager* sceneManager, Window* window);
+	CameraController(App* app, SceneManager* sceneManager, Window* window);
 	~CameraController();
 
 	void SetControlledCamera(Camera* camera);

@@ -18,16 +18,13 @@
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
-App* App::instance = nullptr;
-
 App::App(Engine* engine, Allocator* allocator) :
 	engine(engine),
 	allocator(allocator),
 	settings(allocator),
-	cameraController(engine->GetSceneManager(), engine->GetMainWindow()),
+	cameraController(this, engine->GetSceneManager(), engine->GetMainWindow()),
 	cameraControllerEnable(true)
 {
-	App::instance = this;
 }
 
 App::~App()
