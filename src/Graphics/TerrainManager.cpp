@@ -1,4 +1,6 @@
-#include "Rendering/TerrainManager.hpp"
+#include "Graphics/TerrainManager.hpp"
+
+#include "Graphics/TerrainInstance.hpp"
 
 #include "Memory/Allocator.hpp"
 
@@ -7,7 +9,6 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
-#include "Rendering/TerrainInstance.hpp"
 
 #include "Resources/MaterialManager.hpp"
 

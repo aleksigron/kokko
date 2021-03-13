@@ -73,8 +73,16 @@ set (KOKKO_SOURCES
 	src/Engine/Engine.hpp
 	src/Entity/Entity.hpp
 	src/Entity/EntityManager.hpp
+	src/Graphics/BloomEffect.cpp
+	src/Graphics/BloomEffect.hpp
 	src/Graphics/ParticleSystem.cpp
 	src/Graphics/ParticleSystem.hpp
+	src/Graphics/ScreenSpaceAmbientOcclusion.cpp
+	src/Graphics/ScreenSpaceAmbientOcclusion.hpp
+	src/Graphics/TerrainInstance.cpp
+	src/Graphics/TerrainInstance.hpp
+	src/Graphics/TerrainManager.cpp
+	src/Graphics/TerrainManager.hpp
 	src/Math/BoundingBox.hpp
 	src/Math/Frustum.hpp
 	src/Math/Intersect3D.cpp
@@ -99,8 +107,6 @@ set (KOKKO_SOURCES
 	src/Memory/DefaultAllocator.hpp
 	src/Memory/ProxyAllocator.cpp
 	src/Memory/ProxyAllocator.hpp
-	src/Rendering/BloomEffect.cpp
-	src/Rendering/BloomEffect.hpp
 	src/Rendering/Camera.hpp
 	src/Rendering/CascadedShadowMap.cpp
 	src/Rendering/CascadedShadowMap.hpp
@@ -126,13 +132,7 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderTargetContainer.cpp
 	src/Rendering/RenderTargetContainer.hpp
 	src/Rendering/RenderViewport.hpp
-	src/Rendering/ScreenSpaceAmbientOcclusion.cpp
-	src/Rendering/ScreenSpaceAmbientOcclusion.hpp
 	src/Rendering/StaticUniformBuffer.hpp
-	src/Rendering/TerrainInstance.cpp
-	src/Rendering/TerrainInstance.hpp
-	src/Rendering/TerrainManager.cpp
-	src/Rendering/TerrainManager.hpp
 	src/Rendering/TransparencyType.hpp
 	src/Rendering/Uniform.cpp
 	src/Rendering/Uniform.hpp

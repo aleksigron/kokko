@@ -12,13 +12,15 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Graphics/BloomEffect.hpp"
+#include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
+
 #include "Math/Rectangle.hpp"
 #include "Math/BoundingBox.hpp"
 #include "Math/Intersect3D.hpp"
 
 #include "Memory/Allocator.hpp"
 
-#include "Rendering/BloomEffect.hpp"
 #include "Rendering/Camera.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
 #include "Rendering/LightManager.hpp"
@@ -29,7 +31,6 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderTargetContainer.hpp"
 #include "Rendering/RenderViewport.hpp"
-#include "Rendering/ScreenSpaceAmbientOcclusion.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 
 #include "Resources/MaterialManager.hpp"

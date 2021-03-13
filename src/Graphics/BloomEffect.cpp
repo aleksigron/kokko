@@ -1,4 +1,4 @@
-#include "Rendering/BloomEffect.hpp"
+#include "Graphics/BloomEffect.hpp"
 
 #include "Memory/Allocator.hpp"
 

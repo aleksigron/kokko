@@ -1,4 +1,4 @@
-#include "Rendering/TerrainInstance.hpp"
+#include "Graphics/TerrainInstance.hpp"
 
 #include <cmath>
 

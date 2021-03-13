@@ -1,4 +1,4 @@
-#include "Rendering/ScreenSpaceAmbientOcclusion.hpp"
+#include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
 
 #include <random>
 

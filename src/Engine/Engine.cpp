@@ -12,6 +12,7 @@
 #include "Entity/EntityManager.hpp"
 
 #include "Graphics/ParticleSystem.hpp"
+#include "Graphics/TerrainManager.hpp"
 
 #include "Memory/AllocatorManager.hpp"
 #include "Memory/Memory.hpp"
@@ -20,7 +21,6 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/RenderDeviceOpenGL.hpp"
 #include "Rendering/Renderer.hpp"
-#include "Rendering/TerrainManager.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
