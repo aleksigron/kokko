@@ -83,6 +83,8 @@ enum class RenderBufferTarget
 	IndexBuffer,
 	UniformBuffer,
 	ShaderStorageBuffer,
+	DrawIndirectBuffer,
+	DispatchIndirectBuffer
 };
 
 enum class RenderBufferAccess

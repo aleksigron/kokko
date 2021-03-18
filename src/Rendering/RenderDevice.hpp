@@ -126,6 +126,8 @@ public:
 	virtual void DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType) = 0;
 	virtual void DrawInstanced(RenderPrimitiveMode mode, int offset, int vertexCount, int instanceCount) = 0;
 	virtual void DrawIndexedInstanced(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType, int instanceCount) = 0;
+	virtual void DrawIndirect(RenderPrimitiveMode mode, intptr_t offset) = 0;
+	virtual void DrawIndexedIndirect(RenderPrimitiveMode mode, RenderIndexType indexType, intptr_t offset) = 0;
 
 	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) = 0;
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) = 0;
@@ -140,6 +142,7 @@ public:
 	virtual void UnmapBuffer(RenderBufferTarget target) = 0;
 
 	virtual void DispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ) = 0;
+	virtual void DispatchComputeIndirect(intptr_t offset) = 0;
 
 	virtual void MemoryBarrier(const RenderCommandData::MemoryBarrier& barrier) = 0;
 };

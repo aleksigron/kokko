@@ -121,6 +121,8 @@ public:
 	virtual void DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType) override;
 	virtual void DrawInstanced(RenderPrimitiveMode mode, int offset, int vertexCount, int instanceCount) override;
 	virtual void DrawIndexedInstanced(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType, int instanceCount) override;
+	virtual void DrawIndirect(RenderPrimitiveMode mode, intptr_t offset) override;
+	virtual void DrawIndexedIndirect(RenderPrimitiveMode mode, RenderIndexType indexType, intptr_t offset) override;
 
 	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) override;
 	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) override;
@@ -135,6 +137,7 @@ public:
 	virtual void UnmapBuffer(RenderBufferTarget target) override;
 
 	virtual void DispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ) override;
+	virtual void DispatchComputeIndirect(intptr_t offset) override;
 
 	virtual void MemoryBarrier(const RenderCommandData::MemoryBarrier& barrier) override;
 };

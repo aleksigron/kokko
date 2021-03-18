@@ -57,6 +57,8 @@ static unsigned int ConvertBufferTarget(RenderBufferTarget target)
 	case RenderBufferTarget::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
 	case RenderBufferTarget::UniformBuffer: return GL_UNIFORM_BUFFER;
 	case RenderBufferTarget::ShaderStorageBuffer: return GL_SHADER_STORAGE_BUFFER;
+	case RenderBufferTarget::DrawIndirectBuffer: return GL_DRAW_INDIRECT_BUFFER;
+	case RenderBufferTarget::DispatchIndirectBuffer: return GL_DISPATCH_INDIRECT_BUFFER;
 	default: return 0;
 	}
 }
@@ -879,6 +881,16 @@ void RenderDeviceOpenGL::DrawIndexedInstanced(RenderPrimitiveMode mode, int inde
 	glDrawElementsInstanced(ConvertPrimitiveMode(mode), indexCount, ConvertIndexType(indexType), nullptr, instanceCount);
 }
 
+void RenderDeviceOpenGL::DrawIndirect(RenderPrimitiveMode mode, intptr_t offset)
+{
+	glDrawArraysIndirect(ConvertPrimitiveMode(mode), reinterpret_cast<const void*>(offset));
+}
+
+void RenderDeviceOpenGL::DrawIndexedIndirect(RenderPrimitiveMode mode, RenderIndexType indexType, intptr_t offset)
+{
+	glDrawElementsIndirect(ConvertPrimitiveMode(mode), ConvertIndexType(indexType), reinterpret_cast<const void*>(offset));
+}
+
 void RenderDeviceOpenGL::CreateBuffers(unsigned int count, unsigned int* buffersOut)
 {
 	glGenBuffers(count, buffersOut);
@@ -954,6 +966,11 @@ void RenderDeviceOpenGL::UnmapBuffer(RenderBufferTarget target)
 void RenderDeviceOpenGL::DispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ)
 {
 	glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);
+}
+
+void RenderDeviceOpenGL::DispatchComputeIndirect(intptr_t offset)
+{
+	glDispatchComputeIndirect(offset);
 }
 
 void RenderDeviceOpenGL::MemoryBarrier(const RenderCommandData::MemoryBarrier& barrier)
