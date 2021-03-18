@@ -1,0 +1,12 @@
+{
+	"cs": {
+		"main": "res/shaders/particles/particle_emit.comp.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/particles/compute_common.glsl"
+		]
+	},
+	"properties": [
+		{ "name": "noise_texture", "type": "tex2d" }
+	]
+}

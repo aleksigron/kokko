@@ -14,32 +14,53 @@ class Renderer;
 class ParticleSystem : public CustomRenderer
 {
 private:
-	static const size_t MaxParticleCount = 4 * 1024;
-	static const size_t ParticlesPerWorkgroup = 256;
+	static const size_t MaxParticleCount = 16 * 1024;
+	static const unsigned int NoiseTextureSize = 64;
 
+	static const intptr_t IndirectOffsetEmit = 0;
+	static const intptr_t IndirectOffsetSimulate = 16;
+	static const intptr_t IndirectOffsetRender = 32;
+
+	Allocator* allocator;
 	RenderDevice* renderDevice;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
 
 	MeshId quadMeshId;
-	ShaderId updateShaderId;
+	ShaderId initUpdateShaderId;
+	ShaderId emitShaderId;
+	ShaderId simulateShaderId;
+	ShaderId finishUpdateShaderId;
 	ShaderId renderShaderId;
 
 	unsigned int customRenderCallback;
 
-	unsigned int particleCount;
+	unsigned int noiseTextureId;
 
-	static const unsigned int BufferCount = 4;
+	static const unsigned int BufferCount = 10;
 	enum Buffer {
 		Buffer_Position,
 		Buffer_Velocity,
+		Buffer_Lifetime,
+		Buffer_DeadList,
+		Buffer_AliveList0,
+		Buffer_AliveList1,
+		Buffer_Counter,
+		Buffer_Indirect,
 		Buffer_UpdateUniforms,
 		Buffer_RenderTransform
 	};
 	unsigned int bufferIds[BufferCount];
 
+	unsigned int aliveListCurrent;
+	unsigned int aliveListNext;
+
+	float emitAccumulation;
+	float emitRate;
+
 public:
-	ParticleSystem(RenderDevice* renderDevice, ShaderManager* shaderManager, MeshManager* meshManager);
+	ParticleSystem(Allocator* allocator, RenderDevice* renderDevice,
+		ShaderManager* shaderManager, MeshManager* meshManager);
 	ParticleSystem(const ParticleSystem&) = delete;
 	ParticleSystem(ParticleSystem&&) = delete;
 	~ParticleSystem();

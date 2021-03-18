@@ -4,8 +4,7 @@
 		"includes": [
 			"res/shaders/common/constants.glsl",
 			"res/shaders/common/transform_block.glsl",
-			"res/shaders/common/viewport_block.glsl",
-            "res/shaders/particles/particle_buffer.glsl"
+			"res/shaders/common/viewport_block.glsl"
 		]
 	},
 	"fs": {

@@ -82,8 +82,8 @@ Engine::Engine()
 	terrainManager.CreateScope(allocatorManager, "TerrainManager", alloc);
 	terrainManager.New(terrainManager.allocator, renderDevice, meshManager.instance, materialManager.instance);
 
-	particleSystem.CreateScope(allocatorManager, "ParticleManager", alloc);
-	particleSystem.New(renderDevice, shaderManager.instance, meshManager.instance);
+	particleSystem.CreateScope(allocatorManager, "ParticleEffects", alloc);
+	particleSystem.New(particleSystem.allocator, renderDevice, shaderManager.instance, meshManager.instance);
 
 	renderer.CreateScope(allocatorManager, "Renderer", alloc);
 	renderer.New(renderer.allocator, renderDevice, lightManager.instance,
