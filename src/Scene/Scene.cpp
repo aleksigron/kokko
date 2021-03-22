@@ -14,6 +14,7 @@ Scene::Scene(Allocator* allocator, unsigned int sceneId):
 	updatedEntities(allocator),
 	updatedTransforms(allocator),
 	sceneId(sceneId),
+	environmentId(-1),
 	activeCamera(nullptr)
 {
 	data = InstanceData{};

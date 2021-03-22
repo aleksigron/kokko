@@ -8,6 +8,8 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Graphics/EnvironmentManager.hpp"
+
 #include "Rendering/Renderer.hpp"
 #include "Rendering/LightManager.hpp"
 
@@ -21,7 +23,8 @@ SceneLoader::SceneLoader(Engine* engine, Scene* scene):
 	meshManager(engine->GetMeshManager()),
 	materialManager(engine->GetMaterialManager()),
 	entityManager(engine->GetEntityManager()),
-	lightManager(engine->GetLightManager())
+	lightManager(engine->GetLightManager()),
+	environmentManager(engine->GetEnvironmentManager())
 {
 }
 
@@ -40,6 +43,16 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 		ValueItr end = objectsItr->value.End();
 
 		CreateObjects(itr, end);
+	}
+
+	MemberItr envItr = doc.FindMember("environment");
+	if (envItr != doc.MemberEnd() && envItr->value.IsString())
+	{
+		int envId = environmentManager->LoadHdrEnvironmentMap(envItr->value.GetString());
+
+		assert(envId >= 0);
+
+		scene->SetEnvironmentId(envId);
 	}
 
 	MemberItr colorItr = doc.FindMember("ambient-color");

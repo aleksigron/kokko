@@ -10,20 +10,15 @@
 
 #include "Rendering/RenderDeviceEnums.hpp"
 
+#include "Resources/TextureId.hpp"
+
 class Allocator;
 class RenderDevice;
 struct ImageData;
 
-struct TextureId
-{
-	unsigned int i;
-
-	bool IsNull() const { return i == 0; }
-};
-
 struct TextureData
 {
-	Vec2f textureSize;
+	Vec2i textureSize;
 	unsigned int textureObjectId;
 	RenderTextureTarget textureTarget;
 };
@@ -97,4 +92,7 @@ public:
 
 	void Upload_2D(TextureId id, const ImageData& image, const TextureOptions& options);
 	void Upload_Cube(TextureId id, const ImageData* images, const TextureOptions& options);
+
+	void AllocateTextureStorage(TextureId id,
+		RenderTextureTarget target, RenderTextureSizedFormat format, int levels, Vec2i size);
 };

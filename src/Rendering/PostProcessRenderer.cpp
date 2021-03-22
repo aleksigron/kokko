@@ -112,7 +112,7 @@ void PostProcessRenderer::BindTextures(const ShaderData& shader, unsigned int co
 		{
 			renderDevice->SetUniformInt(tu->uniformLocation, i);
 			renderDevice->SetActiveTextureUnit(i);
-			renderDevice->BindTexture(RenderTextureTarget::Texture2d, textures[i]);
+			renderDevice->BindTexture(tu->textureTarget, textures[i]);
 		}
 	}
 }

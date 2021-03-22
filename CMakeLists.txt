@@ -15,10 +15,14 @@ include_directories(
 	include
 	deps/glfw/include
 	deps/glad/include
+	deps/stb_image/include
 )
 
 set (DEPS_SOURCES
+	deps/glad/include/glad/glad.h
 	deps/glad/src/glad.c
+	deps/stb_image/include/stb_image/stb_image.h
+	deps/stb_image/src/stb_image.cpp
 )
 
 set (KOKKO_SOURCES
@@ -75,6 +79,8 @@ set (KOKKO_SOURCES
 	src/Entity/EntityManager.hpp
 	src/Graphics/BloomEffect.cpp
 	src/Graphics/BloomEffect.hpp
+	src/Graphics/EnvironmentManager.cpp
+	src/Graphics/EnvironmentManager.hpp
 	src/Graphics/ParticleSystem.cpp
 	src/Graphics/ParticleSystem.hpp
 	src/Graphics/ScreenSpaceAmbientOcclusion.cpp
@@ -157,6 +163,7 @@ set (KOKKO_SOURCES
 	src/Resources/ShaderLoader.hpp
 	src/Resources/ShaderManager.cpp
 	src/Resources/ShaderManager.hpp
+	src/Resources/TextureId.hpp
 	src/Resources/TextureManager.cpp
 	src/Resources/TextureManager.hpp
 	src/Resources/ValueSerialization.cpp

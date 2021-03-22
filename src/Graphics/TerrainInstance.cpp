@@ -189,7 +189,7 @@ void TerrainInstance::RenderTerrain(const MaterialData& material, const RenderVi
 	{
 		renderDevice->SetUniformInt(albedoMap->uniformLocation, 1);
 		renderDevice->SetActiveTextureUnit(1);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, albedoMap->textureName);
+		renderDevice->BindTexture(RenderTextureTarget::Texture2d, albedoMap->textureObject);
 	}
 
 	// Bind material uniform block to shader

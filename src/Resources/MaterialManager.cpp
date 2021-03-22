@@ -126,7 +126,7 @@ MaterialId MaterialManager::CreateCopy(MaterialId copyFrom)
 
 	// Copy texture object names
 	for (unsigned int uniformIdx = 0; uniformIdx < origMaterial.uniforms.textureUniformCount; ++uniformIdx)
-		newTextures[uniformIdx].textureName = origTextures[uniformIdx].textureName;
+		newTextures[uniformIdx].textureObject = origTextures[uniformIdx].textureObject;
 
 	return id;
 }
@@ -584,7 +584,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 			textureId = textureManager->GetIdByPath(path);
 		}
 
-		if (textureId.IsNull())
+		if (textureId == TextureId::Null)
 		{
 			// TODO: Find a more robust solution to find default values for textures
 			if (shaderUniform.name.StartsWith(StringRef("normal")))
@@ -593,8 +593,10 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 				textureId = textureManager->GetId_White2D();
 		}
 
+		materialUniform.textureId = textureId;
+
 		const TextureData& texture = textureManager->GetTextureData(textureId);
-		materialUniform.textureName = texture.textureObjectId;
+		materialUniform.textureObject = texture.textureObjectId;
 	}
 
 	UpdateUniformsToGPU(id);

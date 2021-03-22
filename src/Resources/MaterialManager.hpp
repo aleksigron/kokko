@@ -79,10 +79,8 @@ public:
 		return pair != nullptr ? pair->second : MaterialId{};
 	}
 
-	const MaterialData& GetMaterialData(MaterialId id) const
-	{
-		return data.material[id.i];
-	}
+	const MaterialData& GetMaterialData(MaterialId id) const { return data.material[id.i]; }
+	MaterialData& GetMaterialData(MaterialId id) { return data.material[id.i]; }
 
 	void UpdateUniformsToGPU(MaterialId id);
 };

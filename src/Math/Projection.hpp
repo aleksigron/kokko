@@ -75,5 +75,17 @@ struct ProjectionParameters
 		return result;
 	}
 
+	void SetPerspective(float fovVerticalRadians)
+	{
+		projection = ProjectionType::Perspective;
+		height = fovVerticalRadians;
+	}
+
+	void SetOrthographic(float height)
+	{
+		projection = ProjectionType::Orthographic;
+		height = height;
+	}
+
 	void SetAspectRatio(float width, float height) { aspect = width / height; }
 };

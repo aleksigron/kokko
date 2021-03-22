@@ -14,6 +14,7 @@
 
 #include "Graphics/BloomEffect.hpp"
 #include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
+#include "Graphics/EnvironmentManager.hpp"
 
 #include "Math/Rectangle.hpp"
 #include "Math/BoundingBox.hpp"
@@ -62,7 +63,8 @@ Renderer::Renderer(
 	LightManager* lightManager,
 	ShaderManager* shaderManager,
 	MeshManager* meshManager,
-	MaterialManager* materialManager) :
+	MaterialManager* materialManager,
+	TextureManager* textureManager) :
 	allocator(allocator),
 	device(renderDevice),
 	renderTargetContainer(nullptr),
@@ -81,11 +83,14 @@ Renderer::Renderer(
 	shaderManager(shaderManager),
 	meshManager(meshManager),
 	materialManager(materialManager),
+	textureManager(textureManager),
+	environmentManager(nullptr),
 	lockCullingCamera(false),
 	commandList(allocator),
 	objectVisibility(allocator),
 	lightResultArray(allocator),
-	customRenderers(allocator)
+	customRenderers(allocator),
+	skyboxMaterialId{0}
 {
 	renderTargetContainer = allocator->MakeNew<RenderTargetContainer>(allocator, renderDevice);
 
@@ -134,8 +139,10 @@ Renderer::~Renderer()
 	allocator->Deallocate(renderTargetContainer);
 }
 
-void Renderer::Initialize(Window* window, EntityManager* entityManager)
+void Renderer::Initialize(Window* window, EntityManager* entityManager, EnvironmentManager* environmentManager)
 {
+	this->environmentManager = environmentManager;
+
 	device->SetClipBehavior(RenderClipOriginMode::LowerLeft, RenderClipDepthMode::ZeroToOne);
 
 	int aligment = 0;
@@ -445,6 +452,9 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager)
 		BoundingBox skyboxBounds;
 		skyboxBounds.extents = Vec3f(1e9, 1e9, 1e9);
 		data.bounds[skyboxRenderObj.i] = skyboxBounds;
+
+		const char* materialPath = "res/materials/skybox/skybox.material.json";
+		skyboxMaterialId = materialManager->GetIdByPath(StringRef(materialPath));
 	}
 }
 
@@ -647,7 +657,7 @@ void Renderer::BindMaterialTextures(const MaterialData& material) const
 		case UniformDataType::Tex2D:
 		case UniformDataType::TexCube:
 			device->SetActiveTextureUnit(usedTextures);
-			device->BindTexture(u.textureTarget, u.textureName);
+			device->BindTexture(u.textureTarget, u.textureObject);
 			device->SetUniformInt(u.uniformLocation, usedTextures);
 			++usedTextures;
 			break;
@@ -668,7 +678,7 @@ void Renderer::BindTextures(const ShaderData& shader, unsigned int count,
 		{
 			device->SetUniformInt(tu->uniformLocation, i);
 			device->SetActiveTextureUnit(i);
-			device->BindTexture(RenderTextureTarget::Texture2d, textures[i]);
+			device->BindTexture(tu->textureTarget, textures[i]);
 		}
 	}
 }
@@ -704,6 +714,9 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	ssaoRenderParams.projection = projParams;
 	ssao->Render(ssaoRenderParams);
 
+	EnvironmentTextures envMap = environmentManager->GetEnvironmentMap(scene->GetEnvironmentId());
+	const TextureData& irrTexture = textureManager->GetTextureData(envMap.diffuseIrradianceTexture);
+
 	// Deferred lighting
 
 	PostProcessRenderPass deferredPass;
@@ -714,6 +727,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.textureNameHashes[3] = "g_depth"_hash;
 	deferredPass.textureNameHashes[4] = "ssao_map"_hash;
 	deferredPass.textureNameHashes[5] = "shadow_map"_hash;
+	deferredPass.textureNameHashes[6] = "irradiance_map"_hash;
 
 	deferredPass.textureIds[0] = framebufferTextures[gBufferAlbedoTextureIndex];
 	deferredPass.textureIds[1] = framebufferTextures[gBufferNormalTextureIndex];
@@ -721,6 +735,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.textureIds[3] = framebufferTextures[fullscreenDepthTextureIndex];
 	deferredPass.textureIds[4] = ssao->GetResultTextureId();
 	deferredPass.textureIds[5] = framebufferTextures[shadowDepthTextureIndex];
+	deferredPass.textureIds[6] = irrTexture.textureObjectId;
 
 	deferredPass.samplerIds[0] = 0;
 	deferredPass.samplerIds[1] = 0;
@@ -728,8 +743,9 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.samplerIds[3] = 0;
 	deferredPass.samplerIds[4] = 0;
 	deferredPass.samplerIds[5] = 0;
+	deferredPass.samplerIds[6] = 0;
 
-	deferredPass.textureCount = 6;
+	deferredPass.textureCount = 7;
 
 	deferredPass.uniformBufferId = lightingUniformBufferId;
 	deferredPass.uniformBindingPoint = UniformBlockBinding::Object;
@@ -1178,10 +1194,19 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	// Update skybox parameters
 	{
+		EnvironmentTextures envMap = environmentManager->GetEnvironmentMap(scene->GetEnvironmentId());
+		const TextureData& envTexture = textureManager->GetTextureData(envMap.environmentTexture);
+
+		MaterialData& skyboxMaterial = materialManager->GetMaterialData(skyboxMaterialId);
+
+		TextureUniform* tu = skyboxMaterial.uniforms.FindTextureUniformByNameHash("environment_map"_hash);
+		tu->textureId = envMap.environmentTexture;
+		tu->textureObject = envTexture.textureObjectId;
+
 		RenderObjectId skyboxRenderObj = Lookup(skyboxEntity);
 
 		RenderOrderData order;
-		order.material = scene->GetSkyboxMaterial();
+		order.material = skyboxMaterialId;
 		order.transparency = TransparencyType::Skybox;
 		SetOrderData(skyboxRenderObj, order);
 

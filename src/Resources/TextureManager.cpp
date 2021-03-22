@@ -8,12 +8,16 @@
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
 
+#include "Debug/LogHelper.hpp"
+
 #include "Rendering/RenderDevice.hpp"
 
 #include "Resources/ImageData.hpp"
 
 #include "System/File.hpp"
 #include "System/IncludeOpenGL.hpp"
+
+TextureId TextureId::Null = TextureId{ 0 };
 
 TextureManager::TextureManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
@@ -238,13 +242,11 @@ bool TextureManager::LoadFromKtxFile(TextureId id, const char* ktxFilePath)
 	return true;
 }
 
-
 void TextureManager::Upload_2D(TextureId id, const ImageData& image, const TextureOptions& options)
 {
 	TextureData& texture = data.texture[id.i];
 
-	texture.textureSize.x = static_cast<float>(image.imageSize.x);
-	texture.textureSize.y = static_cast<float>(image.imageSize.y);
+	texture.textureSize = image.imageSize;
 
 	texture.textureTarget = RenderTextureTarget::Texture2d;
 
@@ -297,8 +299,7 @@ void TextureManager::Upload_Cube(TextureId id, const ImageData* images, const Te
 
 	// There's really no reason to use different size faces
 	// We can simply use the size of the first image
-	texture.textureSize.x = static_cast<float>(images[0].imageSize.x);
-	texture.textureSize.y = static_cast<float>(images[0].imageSize.y);
+	texture.textureSize = images[0].imageSize;
 
 	texture.textureTarget = RenderTextureTarget::TextureCubeMap;
 
@@ -339,5 +340,33 @@ void TextureManager::Upload_Cube(TextureId id, const ImageData* images, const Te
 
 		renderDevice->SetTextureWrapModeU(texture.textureTarget, options.wrapModeU);
 		renderDevice->SetTextureWrapModeV(texture.textureTarget, options.wrapModeV);
+	}
+}
+
+void TextureManager::AllocateTextureStorage(TextureId id, RenderTextureTarget target, RenderTextureSizedFormat format, int levels, Vec2i size)
+{
+	TextureData& texture = data.texture[id.i];
+
+	if (texture.textureObjectId == 0)
+	{
+		texture.textureSize = size;
+		texture.textureTarget = target;
+
+		renderDevice->CreateTextures(1, &texture.textureObjectId);
+		renderDevice->BindTexture(target, texture.textureObjectId);
+
+		RenderCommandData::SetTextureStorage2D textureStorage{ target, 1, format, size.x, size.y };
+		renderDevice->SetTextureStorage2D(&textureStorage);
+
+		if (target == RenderTextureTarget::TextureCubeMap)
+		{
+			renderDevice->SetTextureWrapModeU(target, RenderTextureWrapMode::ClampToEdge);
+			renderDevice->SetTextureWrapModeV(target, RenderTextureWrapMode::ClampToEdge);
+			renderDevice->SetTextureWrapModeW(target, RenderTextureWrapMode::ClampToEdge);
+		}
+	}
+	else
+	{
+		Log::Error("Can't allocate texture storage again");
 	}
 }

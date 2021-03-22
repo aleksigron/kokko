@@ -244,7 +244,7 @@ static void AddUniforms(
 
 			// Since shader is not compiled at this point, we can't know the uniform location
 			uniform.uniformLocation = -1;
-			uniform.textureName = 0;
+			uniform.textureObject = 0;
 
 			switch (dataType)
 			{

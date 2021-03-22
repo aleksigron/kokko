@@ -1,7 +1,0 @@
-{
-	"shader": "res/shaders/skybox/skybox.shader.json",
-	"variables":
-	[
-		{ "name": "tex", "value": "res/textures/skybox.texture.json" }
-	]
-}

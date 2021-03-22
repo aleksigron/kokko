@@ -13,12 +13,18 @@ uniform sampler2D g_material;
 uniform sampler2D g_depth;
 uniform sampler2D ssao_map;
 uniform sampler2DShadow shadow_map;
+uniform samplerCube irradiance_map;
 
 const int DirLightIndex = 0;
 
 vec3 fresnel_schlick(float cosTheta, vec3 F0)
 {
 	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+vec3 fresnel_schlick_roughness(float cosTheta, vec3 F0, float roughness)
+{
+	return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
 }
 
 float distribution_ggx(float NdotH, float roughness)
@@ -159,7 +165,8 @@ void main()
 	}
 
 	float ao = texture(ssao_map, fs_in.tex_coord).r;
-	vec3 ambient = ambient_color * albedo * ao;
+	vec3 irradiance = texture(irradiance_map, N).rgb;
+	vec3 ambient = irradiance * albedo * ao; 
 
 	color = ambient + Lo;
 }

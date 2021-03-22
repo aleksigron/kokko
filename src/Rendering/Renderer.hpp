@@ -28,6 +28,7 @@ class LightManager;
 class ShaderManager;
 class MeshManager;
 class MaterialManager;
+class TextureManager;
 class EntityManager;
 class RenderDevice;
 class Scene;
@@ -36,6 +37,7 @@ class DebugVectorRenderer;
 class CustomRenderer;
 class ScreenSpaceAmbientOcclusion;
 class BloomEffect;
+class EnvironmentManager;
 class PostProcessRenderer;
 class RenderTargetContainer;
 
@@ -124,6 +126,8 @@ private:
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
 	MaterialManager* materialManager;
+	TextureManager* textureManager;
+	EnvironmentManager* environmentManager;
 
 	bool lockCullingCamera;
 	Mat4x4f lockCullingCameraTransform;
@@ -136,6 +140,7 @@ private:
 	Array<CustomRenderer*> customRenderers;
 
 	Entity skyboxEntity;
+	MaterialId skyboxMaterialId;
 
 	void ReallocateRenderObjects(unsigned int required);
 
@@ -164,10 +169,11 @@ private:
 public:
 	Renderer(Allocator* allocator, RenderDevice* renderDevice,
 		LightManager* lightManager, ShaderManager* shaderManager,
-		MeshManager* meshManager, MaterialManager* materialManager);
+		MeshManager* meshManager, MaterialManager* materialManager,
+		TextureManager* textureManager);
 	~Renderer();
 
-	void Initialize(Window* window, EntityManager* entityManager);
+	void Initialize(Window* window, EntityManager* entityManager, EnvironmentManager* environmentManager);
 	void Deinitialize();
 
 	void SetLockCullingCamera(bool lockEnable) { lockCullingCamera = lockEnable; }

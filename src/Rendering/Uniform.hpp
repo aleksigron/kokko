@@ -12,6 +12,8 @@
 
 #include "Rendering/RenderDeviceEnums.hpp"
 
+#include "Resources/TextureId.hpp"
+
 enum class UniformDataType
 {
 	Tex2D,
@@ -88,7 +90,8 @@ struct TextureUniform : ShaderUniform
 {
 	int uniformLocation;
 	RenderTextureTarget textureTarget;
-	unsigned int textureName;
+	TextureId textureId;
+	unsigned int textureObject;
 };
 
 struct UniformList

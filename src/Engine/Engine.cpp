@@ -11,6 +11,7 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/ParticleSystem.hpp"
 #include "Graphics/TerrainManager.hpp"
 
@@ -85,9 +86,13 @@ Engine::Engine()
 	particleSystem.CreateScope(allocatorManager, "ParticleEffects", alloc);
 	particleSystem.New(particleSystem.allocator, renderDevice, shaderManager.instance, meshManager.instance);
 
+	environmentManager.CreateScope(allocatorManager, "EnvironmentManager", alloc);
+	environmentManager.New(environmentManager.allocator, renderDevice,
+		shaderManager.instance, meshManager.instance, textureManager.instance);
+
 	renderer.CreateScope(allocatorManager, "Renderer", alloc);
 	renderer.New(renderer.allocator, renderDevice, lightManager.instance,
-		shaderManager.instance, meshManager.instance, materialManager.instance);
+		shaderManager.instance, meshManager.instance, materialManager.instance, textureManager.instance);
 
 	scriptSystem.CreateScope(allocatorManager, "ScriptSystem", alloc);
 	scriptSystem.New(this, scriptSystem.allocator);
@@ -100,6 +105,7 @@ Engine::~Engine()
 
 	scriptSystem.Delete();
 	renderer.Delete();
+	environmentManager.Delete();
 	particleSystem.Delete();
 	terrainManager.Delete();
 	sceneManager.Delete();
@@ -145,7 +151,7 @@ bool Engine::Initialize()
 			meshManager.instance, shaderManager.instance, sceneManager.instance);
 
 		textureManager.instance->Initialize();
-		renderer.instance->Initialize(mainWindow.instance, entityManager.instance);
+		renderer.instance->Initialize(mainWindow.instance, entityManager.instance, environmentManager.instance);
 		terrainManager.instance->Initialize(renderer.instance, shaderManager.instance);
 		particleSystem.instance->Initialize(renderer.instance);
 

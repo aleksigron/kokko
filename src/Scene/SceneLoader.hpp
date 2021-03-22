@@ -3,6 +3,7 @@
 #include "rapidjson/document.h"
 
 #include "Core/BufferRef.hpp"
+
 #include "Scene/Scene.hpp"
 
 class Engine;
@@ -12,6 +13,7 @@ class MaterialManager;
 class EntityManager;
 class ResourceManager;
 class LightManager;
+class EnvironmentManager;
 
 class SceneLoader
 {
@@ -25,6 +27,7 @@ private:
 	MaterialManager* materialManager;
 	EntityManager* entityManager;
 	LightManager* lightManager;
+	EnvironmentManager* environmentManager;
 
 	void CreateObjects(ValueItr begin, ValueItr end);
 	void CreateChildObjects(ValueItr begin, ValueItr end, SceneObjectId parent);

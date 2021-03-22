@@ -50,6 +50,7 @@ private:
 	unsigned int sceneId;
 
 	MaterialId skyboxMaterial;
+	int environmentId;
 
 	Camera* activeCamera;
 
@@ -95,6 +96,9 @@ public:
 
 	void SetSkyboxMaterial(MaterialId materialId) { skyboxMaterial = materialId; }
 	MaterialId GetSkyboxMaterial() const { return skyboxMaterial; }
+
+	void SetEnvironmentId(int environmentId) { this->environmentId = environmentId; }
+	int GetEnvironmentId() const { return this->environmentId; }
 
 	void SetActiveCamera(Camera* camera) { activeCamera = camera; }
 	Camera* GetActiveCamera() { return activeCamera; }

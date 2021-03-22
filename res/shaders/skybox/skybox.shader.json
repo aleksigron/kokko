@@ -11,6 +11,6 @@
 	},
 	"transparencyType": "skybox",
 	"properties": [
-		{ "name": "tex", "type": "texCube" }
+		{ "name": "environment_map", "type": "texCube" }
 	]
 }

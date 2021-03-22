@@ -20,6 +20,7 @@
 		{ "name": "g_material", "type": "tex2d" },
 		{ "name": "g_depth", "type": "tex2d" },
 		{ "name": "ssao_map", "type": "tex2d" },
-		{ "name": "shadow_map", "type": "tex2d" }
+		{ "name": "shadow_map", "type": "tex2d" },
+		{ "name": "irradiance_map", "type": "texCube" }
 	]
 }
