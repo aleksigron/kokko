@@ -83,7 +83,7 @@ void App::Initialize()
 	StringRef meshPath("res/models/simple_sphere.mesh");
 	MeshId meshId = meshManager->GetIdByPath(meshPath);
 
-	StringRef matPath("res/materials/deferred_geometry/standard_gray_m00_r00.material.json");
+	StringRef matPath("res/materials/deferred_geometry/standard_red_m00_r05.material.json");
 	MaterialId origMatId = materialManager->GetIdByPath(matPath);
 	const MaterialData& origMatData = materialManager->GetMaterialData(origMatId);
 
@@ -97,8 +97,8 @@ void App::Initialize()
 		const BufferUniform* metalUniform = origMatData.uniforms.FindBufferUniformByNameHash(metalnessHash);
 		const BufferUniform* roughUniform = origMatData.uniforms.FindBufferUniformByNameHash(roughnessHash);
 
-		static const unsigned int roughnessCount = 6;
-		static const unsigned int metalnessCount = 6;
+		static const unsigned int roughnessCount = 9;
+		static const unsigned int metalnessCount = 9;
 
 		RenderOrderData renderOrderData;
 		renderOrderData.material = origMatId;
@@ -122,7 +122,7 @@ void App::Initialize()
 				Entity entity = entityManager->Create();
 
 				SceneObjectId sceneObject = scene->AddSceneObject(entity);
-				Vec3f position(m * 2.0f - metalnessCount + 1.0f, 0.6f, r * 2.0f - roughnessCount + 1.0f);
+				Vec3f position(m * 1.4f - metalnessCount * 0.7f + 1.0f, 0.6f, r * 1.4f - roughnessCount * 0.7f + 1.0f);
 				Mat4x4f transform = Mat4x4f::Translate(position);
 				scene->SetLocalTransform(sceneObject, transform);
 

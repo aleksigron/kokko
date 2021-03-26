@@ -49,6 +49,7 @@ float geo_schlick_ggx(float NdotV, float roughness)
 	
 	return num / denom;
 }
+
 float geometry_smith(float NdotV, float NdotL, float roughness)
 {
 	float ggx2  = geo_schlick_ggx(NdotV, roughness);
@@ -61,7 +62,6 @@ vec3 calc_light(vec3 F0, vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 light_col, fl
 {
 	vec3 H = normalize(V + L);
 	float NdotV = abs(dot(N, V)) + 1e-5; // avoid artifact
-	float LdotH = clamp(dot(L, H), 0.0, 1.0);
 	float NdotH = clamp(dot(N, H), 0.0, 1.0);
 	float NdotL = clamp(dot(N, L), 0.0, 1.0);
 	float HdotV = clamp(dot(H, V), 0.0, 1.0);
@@ -163,10 +163,13 @@ void main()
 		
 		Lo += calc_light(F0, N, V, L, albedo, light_col[idx], metalness, roughness) * direction_att * distance_att;
 	}
+	
+    vec3 F = fresnel_schlick_roughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 kD = (1.0 - F) * (1.0 - metalness);
 
-	float ao = texture(ssao_map, fs_in.tex_coord).r;
 	vec3 irradiance = texture(irradiance_map, N).rgb;
-	vec3 ambient = irradiance * albedo * ao; 
+	float ao = texture(ssao_map, fs_in.tex_coord).r;
+	vec3 ambient = kD * irradiance * albedo * ao; 
 
 	color = ambient + Lo;
 }

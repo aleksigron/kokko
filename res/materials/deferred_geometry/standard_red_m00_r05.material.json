@@ -1,0 +1,9 @@
+{
+	"shader": "res/shaders/deferred_geometry/standard_opaque.shader.json",
+	"variables":
+	[
+		{ "name": "metalness", "value": 0.0 },
+		{ "name": "roughness", "value": 0.5 },
+		{ "name": "albedo_map", "value": "res/textures/red32.ktx" }
+	]
+}
