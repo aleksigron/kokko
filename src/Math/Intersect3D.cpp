@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "Core/Core.hpp"
 #include "Core/BitPack.hpp"
 
 #include "Math/BoundingBox.hpp"
@@ -15,6 +16,8 @@ void Intersect::FrustumAABB(
 	const BoundingBox* bounds,
 	BitPack* intersectedOut)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	const Plane* planes = frustum.planes;
 	Vec3f planeNormalAbs[6];
 
@@ -55,6 +58,8 @@ void Intersect::FrustumAABBMinSize(
 	const BoundingBox* bounds,
 	BitPack* intersectedOut)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	const Plane* planes = frustum.planes;
 	Vec3f planeNormalAbs[6];
 	Vec3f boxCornerMultipliers[8];
@@ -133,6 +138,8 @@ void Intersect::FrustumSphere(
 	const float* radii,
 	BitPack* intersectedOut)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	const Plane* planes = frustum.planes;
 	Vec3f planeNormalAbs[6];
 

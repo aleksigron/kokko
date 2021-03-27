@@ -40,6 +40,7 @@ set (KOKKO_SOURCES
 	src/Core/BufferRef.hpp
 	src/Core/Color.hpp
 	src/Core/ColorSrgb.hpp
+	src/Core/Core.hpp
 	src/Core/EncodingUtf8.cpp
 	src/Core/EncodingUtf8.hpp
 	src/Core/Hash.hpp
@@ -69,6 +70,9 @@ set (KOKKO_SOURCES
 	src/Debug/DebugUtil.hpp
 	src/Debug/DebugVectorRenderer.cpp
 	src/Debug/DebugVectorRenderer.hpp
+	src/Debug/Instrumentation.cpp
+	src/Debug/Instrumentation.hpp
+	src/Debug/InstrumentationTimer.hpp
 	src/Debug/LogHelper.cpp
 	src/Debug/LogHelper.hpp
 	src/Debug/LogLevel.hpp

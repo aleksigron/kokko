@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "Core/Core.hpp"
+
 #include "Memory/Allocator.hpp"
 #include "Math/Math.hpp"
 #include "ITransformUpdateReceiver.hpp"
@@ -298,6 +300,8 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 
 void Scene::NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	unsigned int updateCount = updatedEntities.GetCount();
 	updatedTransforms.Resize(updateCount);
 

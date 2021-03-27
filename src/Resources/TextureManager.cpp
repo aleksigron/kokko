@@ -5,6 +5,7 @@
 #include "rapidjson/document.h"
 #include "ktx.h"
 
+#include "Core/Core.hpp"
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
 
@@ -46,6 +47,8 @@ TextureManager::~TextureManager()
 
 void TextureManager::Initialize()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	static const unsigned int size = 16;
 	static const unsigned int bytesPerPixel = 3;
 	unsigned char buffer[size * size * bytesPerPixel];

@@ -1,5 +1,7 @@
 #include "Graphics/TerrainManager.hpp"
 
+#include "Core/Core.hpp"
+
 #include "Graphics/TerrainInstance.hpp"
 
 #include "Memory/Allocator.hpp"
@@ -33,6 +35,8 @@ TerrainManager::~TerrainManager()
 
 void TerrainManager::Initialize(Renderer* renderer, ShaderManager* shaderManager)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	renderer->AddCustomRenderer(this);
 	
 	StringRef path("res/materials/deferred_geometry/terrain.material.json");
@@ -49,6 +53,8 @@ void TerrainManager::AddRenderCommands(const CustomRenderer::CommandParams& para
 
 void TerrainManager::RenderCustom(const CustomRenderer::RenderParams& params)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	const MaterialData& material = materialManager->GetMaterialData(terrainMaterial);
 
 	terrainInstances->RenderTerrain(material, *params.viewport);

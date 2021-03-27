@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include "Core/Core.hpp"
 #include "Core/String.hpp"
 
 #include "Debug/Debug.hpp"
@@ -44,6 +45,8 @@ void Engine::InstanceAllocatorPair<Type>::CreateScope(AllocatorManager* manager,
 
 Engine::Engine()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	Memory::InitializeMemorySystem();
 	Allocator* alloc = Memory::GetDefaultAllocator();
 
@@ -128,6 +131,8 @@ Engine::~Engine()
 
 bool Engine::Initialize()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	Vec2i windowSize(1920, 1080);
 
 	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko"))
@@ -165,6 +170,8 @@ bool Engine::Initialize()
 
 void Engine::Update()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	this->time->Update();
 
 	scriptSystem.instance->UpdateScripts();

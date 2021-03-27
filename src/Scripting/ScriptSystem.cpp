@@ -1,5 +1,7 @@
 #include "Scripting/ScriptSystem.hpp"
 
+#include "Core/Core.hpp"
+
 #include "Engine/Engine.hpp"
 
 #include "Scripting/NativeScriptComponent.hpp"
@@ -35,6 +37,8 @@ void ScriptSystem::AddScriptInternal(Entity entity, NativeScriptComponent* scrip
 
 void ScriptSystem::UpdateScripts()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	ScriptContext scriptContext;
 	scriptContext.app = app;
 	scriptContext.inputManager = engine->GetMainWindow()->GetInputManager();

@@ -1,5 +1,6 @@
 #include "Rendering/RenderCommandList.hpp"
 
+#include "Core/Core.hpp"
 #include "Core/Sort.hpp"
 
 void RenderCommandList::AddControl(
@@ -119,6 +120,8 @@ void RenderCommandList::AddDrawWithCallback(unsigned int viewport, RenderPass pa
 
 void RenderCommandList::Sort()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	ShellSortAsc(commands.GetData(), commands.GetCount());
 }
 

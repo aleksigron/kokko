@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdio>
 
+#include "Core/Core.hpp"
 #include "Core/Sort.hpp"
 
 #include "Debug/Debug.hpp"
@@ -141,6 +142,8 @@ Renderer::~Renderer()
 
 void Renderer::Initialize(Window* window, EntityManager* entityManager, EnvironmentManager* environmentManager)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	this->environmentManager = environmentManager;
 
 	device->SetClipBehavior(RenderClipOriginMode::LowerLeft, RenderClipDepthMode::ZeroToOne);
@@ -525,6 +528,8 @@ void Renderer::Deinitialize()
 
 void Renderer::Render(Scene* scene)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	unsigned int objectDrawCount = PopulateCommandList(scene);
 	UpdateUniformBuffers(objectDrawCount);
 
@@ -693,6 +698,8 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 
 void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	// Both SSAO and deferred lighting passes use these
 
 	Scene* scene = params.scene;
@@ -764,12 +771,16 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 
 void Renderer::RenderPostProcess(const CustomRenderer::RenderParams& params)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	RenderBloom(params);
 	RenderTonemapping(params);
 }
 
 void Renderer::RenderBloom(const CustomRenderer::RenderParams& params)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	unsigned int sourceTexture = framebufferTextures[lightAccumulationTextureIndex];
 	const RendererFramebuffer& fb = framebufferData[FramebufferIndexLightAcc];
 
@@ -778,6 +789,8 @@ void Renderer::RenderBloom(const CustomRenderer::RenderParams& params)
 
 void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	device->BlendingDisable();
 	device->DepthTestDisable();
 
@@ -813,6 +826,8 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 void Renderer::UpdateLightingDataToUniformBuffer(
 	const ProjectionParameters& projection, const Scene* scene, LightingUniformBlock& uniformsOut)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	const RenderViewport& fsvp = viewportData[viewportIndexFullscreen];
 
 	// Update directional light viewports
@@ -947,6 +962,8 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 
 void Renderer::UpdateUniformBuffers(unsigned int objectDrawCount)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	unsigned int buffersRequired = (objectDrawCount + objectsPerUniformBuffer - 1) / objectsPerUniformBuffer;
 
 	// Create new object transform uniform buffers if needed
@@ -1168,6 +1185,8 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 
 unsigned int Renderer::PopulateCommandList(Scene* scene)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	const float mainViewportMinObjectSize = 50.0f;
 	const float shadowViewportMinObjectSize = 30.0f;
 
@@ -1658,6 +1677,8 @@ void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entitie
 
 void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	Color color(1.0f, 1.0f, 1.0f, 1.0f);
 
 	for (unsigned int idx = 1; idx < data.count; ++idx)

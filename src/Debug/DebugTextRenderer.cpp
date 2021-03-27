@@ -5,6 +5,7 @@
 
 #include "Application/App.hpp"
 
+#include "Core/Core.hpp"
 #include "Core/EncodingUtf8.hpp"
 
 #include "Engine/Engine.hpp"
@@ -93,6 +94,8 @@ int DebugTextRenderer::GetRowCountForTextLength(unsigned int characterCount) con
 
 bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const char* filePath)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	Buffer<char> content(allocator);
 
 	if (File::ReadText(filePath, content))

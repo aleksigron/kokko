@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdio>
 
+#include "Core/Core.hpp"
+
 #include "Engine/Engine.hpp"
 
 #include "Debug/DebugVectorRenderer.hpp"
@@ -77,6 +79,8 @@ Debug::~Debug()
 void Debug::Initialize(Window* window, Renderer* renderer,
 	MeshManager* meshManager, ShaderManager* shaderManager, SceneManager* sceneManager)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	renderDevice->SetDebugMessageCallback(RenderDebugCallback);
 
 	this->window = window;
@@ -127,6 +131,8 @@ void Debug::Deinitialize()
 
 void Debug::Render(Scene* scene)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	bool vsync = false;
 
 	if (window != nullptr)

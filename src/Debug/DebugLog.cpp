@@ -2,7 +2,9 @@
 
 #include <cstdio>
 
+#include "Core/Core.hpp"
 #include "Core/String.hpp"
+
 #include "Debug/DebugConsole.hpp"
 
 DebugLog::DebugLog(Allocator* allocator, DebugConsole* console) :
@@ -24,6 +26,8 @@ DebugLog::~DebugLog()
 
 bool DebugLog::OpenLogFile(const char* filePath, bool append)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (fileHandle == nullptr)
 	{
 		const char* mode = append ? "ab" : "wb";

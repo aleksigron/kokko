@@ -1,5 +1,7 @@
 #include "System/Window.hpp"
 
+#include "Core/Core.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "System/IncludeOpenGL.hpp"
@@ -77,6 +79,8 @@ bool Window::ShouldClose()
 
 void Window::UpdateInput()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (inputManager != nullptr)
 	{
 		inputManager->Update();
@@ -85,6 +89,8 @@ void Window::UpdateInput()
 
 void Window::Swap()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	glfwSwapBuffers(windowHandle);
 	glfwPollEvents();
 }

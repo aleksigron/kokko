@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "Core/Core.hpp"
+
 #include "Math/Vec3.hpp"
 #include "Math/Random.hpp"
 
@@ -77,6 +79,8 @@ ParticleSystem::~ParticleSystem()
 
 void ParticleSystem::Initialize(Renderer* renderer)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	customRenderCallback = renderer->AddCustomRenderer(this);
 
 	float vertexBuffer[] = {
@@ -249,6 +253,8 @@ void ParticleSystem::AddRenderCommands(const CommandParams& params)
 
 void ParticleSystem::RenderCustom(const RenderParams& params)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	double currentTime = Time::GetRunningTime();
 	float deltaTime = Time::GetDeltaTime();
 
