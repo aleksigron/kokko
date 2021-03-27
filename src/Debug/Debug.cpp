@@ -14,6 +14,7 @@
 #include "Debug/DebugConsole.hpp"
 #include "Debug/DebugLog.hpp"
 #include "Debug/DebugMemoryStats.hpp"
+#include "Debug/Instrumentation.hpp"
 #include "Debug/LogHelper.hpp"
 
 #include "Rendering/Renderer.hpp"
@@ -44,6 +45,9 @@ Debug::Debug(
 	allocator(allocator),
 	renderDevice(renderDevice),
 	window(nullptr),
+	profileInProgress(false),
+	profileStarted(false),
+	endProfileOnFrame(0),
 	currentFrameRate(0.0),
 	nextFrameRateUpdate(-1.0),
 	mode(DebugMode::None)
@@ -163,6 +167,13 @@ void Debug::Render(Scene* scene)
 			this->mode = DebugMode::MemoryStats;
 		}
 
+		if (keyboard->GetKeyDown(Key::F7) && profileInProgress == false)
+		{
+			profileInProgress = true;
+			profileStarted = false;
+			endProfileOnFrame = Time::GetFrameNumber() + 20;
+		}
+
 		// Check vsync switching
 
 		vsync = window->GetSwapInterval() != 0;
@@ -240,7 +251,7 @@ void Debug::Render(Scene* scene)
 
 	// Draw debug mode guide
 	char buffer[128];
-	const char* format = "E: %-3u W: %-3u [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F8]Vsync: %c, %.1f fps";
+	const char* format = "E: %-3u W: %-3u [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile  [F8]Vsync: %c, %.1f fps";
 	std::snprintf(buffer, sizeof(buffer), format, errs, wrns, logChar, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
 	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f));
 
@@ -262,4 +273,22 @@ void Debug::Render(Scene* scene)
 
 	vectorRenderer->Render(scene->GetActiveCamera());
 	textRenderer->Render();
+}
+
+bool Debug::ShouldBeginProfileSession() const
+{
+	return profileInProgress && profileStarted == false;
+}
+
+bool Debug::ShouldEndProfileSession()
+{
+	bool ended = profileInProgress && Time::GetFrameNumber() >= endProfileOnFrame;
+
+	if (ended)
+	{
+		profileInProgress = false;
+		endProfileOnFrame = 0;
+	}
+
+	return ended;
 }

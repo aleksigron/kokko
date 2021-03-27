@@ -34,6 +34,10 @@ private:
 
 	Window* window;
 
+	bool profileInProgress;
+	bool profileStarted;
+	unsigned int endProfileOnFrame;
+
 	double currentFrameRate;
 	double nextFrameRateUpdate;
 
@@ -62,4 +66,7 @@ public:
 	DebugConsole* GetConsole() { return console; }
 	DebugTextRenderer* GetTextRenderer() { return textRenderer; }
 	DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer; }
+
+	bool ShouldBeginProfileSession() const;
+	bool ShouldEndProfileSession();
 };

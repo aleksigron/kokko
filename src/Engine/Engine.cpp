@@ -9,6 +9,7 @@
 #include "Debug/DebugLog.hpp"
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
+#include "Debug/Instrumentation.hpp"
 
 #include "Entity/EntityManager.hpp"
 
@@ -166,6 +167,15 @@ bool Engine::Initialize()
 	{
 		return false;
 	}
+}
+
+void Engine::FrameStart()
+{
+	if (debug.instance->ShouldBeginProfileSession())
+		Instrumentation::Get().BeginSession("runtime_trace.json");
+
+	if (debug.instance->ShouldEndProfileSession())
+		Instrumentation::Get().EndSession();
 }
 
 void Engine::Update()

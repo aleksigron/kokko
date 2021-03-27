@@ -68,6 +68,7 @@ public:
 	~Engine();
 
 	bool Initialize();
+	void FrameStart();
 	void Update();
 
 	void SetAppPointer(void* app);

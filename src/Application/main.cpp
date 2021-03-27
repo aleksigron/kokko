@@ -28,18 +28,19 @@ int main(void)
 		app.Initialize();
 
 		instr.EndSession();
-		instr.BeginSession("runtime_trace.json");
 
 		while (engine.GetMainWindow()->ShouldClose() == false)
 		{
+			engine.FrameStart();
 			engine.Update();
 			app.Update();
 		}
-
-		instr.EndSession();
 	}
 	else
+	{
+		instr.EndSession();
 		return -1;
+	}
 
 	return 0;
 }
