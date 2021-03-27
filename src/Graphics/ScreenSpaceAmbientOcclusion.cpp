@@ -1,9 +1,8 @@
 #include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
 
-#include <random>
-
 #include "Math/Math.hpp"
 #include "Math/Projection.hpp"
+#include "Math/Random.hpp"
 
 #include "Rendering/PostProcessRenderer.hpp"
 #include "Rendering/PostProcessRenderPass.hpp"
@@ -47,15 +46,12 @@ void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
 {
 	framebufferSize = framebufferResolution;
 
-	std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
-	std::default_random_engine generator;
-
 	kernel.Resize(kernelSize);
 	for (unsigned int i = 0; i < kernelSize;)
 	{
-		Vec3f vec(randomFloats(generator) * 2.0 - 1.0,
-			randomFloats(generator) * 2.0 - 1.0,
-			randomFloats(generator));
+		Vec3f vec(Random::Float(-1.0f, 1.0f),
+			Random::Float(-1.0f, 1.0f),
+			Random::Float01());
 
 		if (vec.SqrMagnitude() <= 1.0f)
 		{
@@ -74,8 +70,8 @@ void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
 	noise.Resize(noisePixels * 2);
 	for (unsigned int i = 0; i < noisePixels; i++)
 	{
-		noise[i * 2 + 0] = static_cast<uint16_t>(randomFloats(generator) * UINT16_MAX);
-		noise[i * 2 + 1] = static_cast<uint16_t>(randomFloats(generator) * UINT16_MAX);
+		noise[i * 2 + 0] = static_cast<uint16_t>(Random::Uint(0, UINT16_MAX));
+		noise[i * 2 + 1] = static_cast<uint16_t>(Random::Uint(0, UINT16_MAX));
 	}
 
 	renderDevice->CreateTextures(1, &noiseTextureId);

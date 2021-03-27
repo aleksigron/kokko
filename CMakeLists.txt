@@ -100,6 +100,8 @@ set (KOKKO_SOURCES
 	src/Math/Math.hpp
 	src/Math/Plane.hpp
 	src/Math/Projection.hpp
+	src/Math/Random.cpp
+	src/Math/Random.hpp
 	src/Math/Rectangle.hpp
 	src/Math/Vec2.hpp
 	src/Math/Vec3.hpp

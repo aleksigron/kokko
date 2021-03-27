@@ -1,9 +1,9 @@
 #include "ParticleSystem.hpp"
 
 #include <cstring>
-#include <random>
 
 #include "Math/Vec3.hpp"
+#include "Math/Random.hpp"
 
 #include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RenderDevice.hpp"
@@ -104,15 +104,12 @@ void ParticleSystem::Initialize(Renderer* renderer)
 
 	// Create noise texture
 
-	std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
-	std::default_random_engine generator;
-
 	unsigned int valueCount = NoiseTextureSize * NoiseTextureSize * 4;
 	Array<float> imageData(allocator);
 	imageData.Resize(valueCount);
 
 	for (unsigned int i = 0; i < valueCount; ++i)
-		imageData[i] = distribution(generator);
+		imageData[i] = Random::Float01();
 
 	renderDevice->CreateTextures(1, &noiseTextureId);
 	renderDevice->BindTexture(RenderTextureTarget::Texture2d, noiseTextureId);
@@ -259,10 +256,7 @@ void ParticleSystem::RenderCustom(const RenderParams& params)
 	int emitCount = static_cast<int>(emitAccumulation);
 	emitAccumulation -= emitCount;
 
-	std::uniform_int_distribution<int> distribution(0, NoiseTextureSize * NoiseTextureSize - 1);
-	std::default_random_engine generator(static_cast<unsigned int>(currentTime * 1000000.0));
-
-	int noiseSeed = distribution(generator);
+	int noiseSeed = Random::Int(0, NoiseTextureSize * NoiseTextureSize - 1);
 
 	UpdateParticleBlock updateUniforms;
 	updateUniforms.emitPosition = Vec3f(0.0f, 1.5f, 0.0f);
