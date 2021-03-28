@@ -2,7 +2,7 @@
 
 This is a personal project that lets me test out new ideas and learn some OpenGL programming in the process. I hope that little by little, this will become a good, small game engine that might offer some new ways to solve old problems.
 
-![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20201118.jpg)
+![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20210329.jpg)
 
 ## Prerequisites
 - OpenGL 4.5
@@ -29,7 +29,7 @@ In Visual Studio, go to project properties > _Configuration Properties_ > _Debug
 
 ### Graphics
 - Deferred renderer
-- Physically based rendering
+- Physically based rendering with image-based lighting
 - HDR rendering pipeline
 - Bloom and tonemapping post effects
 - Directional, point and spot lights
@@ -48,6 +48,7 @@ In Visual Studio, go to project properties > _Configuration Properties_ > _Debug
 
 ### Debugging
 - Logging
+- Profiling using Chrome tracing output
 - Memory statistics
 - Vector rendering
 - Frametime visualization
