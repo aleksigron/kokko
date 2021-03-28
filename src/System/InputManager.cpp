@@ -1,5 +1,7 @@
 #include "System/InputManager.hpp"
 
+#include "Core/Core.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "System/KeyboardInput.hpp"
@@ -26,6 +28,8 @@ InputManager::~InputManager()
 
 void InputManager::Initialize(GLFWwindow* windowHandle)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	keyboardInput = allocator->MakeNew<KeyboardInput>();
 	keyboardInput->Initialize(windowHandle);
 
@@ -41,6 +45,8 @@ void InputManager::Initialize(GLFWwindow* windowHandle)
 
 void InputManager::Update()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	keyboardInput->Update();
 	pointerInput->Update();
 }

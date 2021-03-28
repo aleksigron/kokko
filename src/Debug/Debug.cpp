@@ -85,7 +85,10 @@ void Debug::Initialize(Window* window, Renderer* renderer,
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	renderDevice->SetDebugMessageCallback(RenderDebugCallback);
+	{
+		KOKKO_PROFILE_SCOPE("void RenderDevice::SetDebugMessageCallback()");
+		renderDevice->SetDebugMessageCallback(RenderDebugCallback);
+	}
 
 	this->window = window;
 

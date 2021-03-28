@@ -1,5 +1,7 @@
 #include "App.hpp"
 
+#include "Core/Core.hpp"
+
 #include "Engine/Engine.hpp"
 
 #include "Entity/EntityManager.hpp"
@@ -34,6 +36,8 @@ App::~App()
 
 void App::Initialize()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	settings.SetFilename(StringRef("global.settings"));
 	settings.LoadFromFile();
 

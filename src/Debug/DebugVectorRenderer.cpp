@@ -3,6 +3,8 @@
 #include <cstring>
 #include <cmath>
 
+#include "Core/Core.hpp"
+
 #include "Engine/Engine.hpp"
 
 #include "Math/Math.hpp"
@@ -55,6 +57,8 @@ DebugVectorRenderer::~DebugVectorRenderer()
 void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
 	SceneManager* sceneManager, Window* window)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	this->meshManager = meshManager;
 	this->shaderManager = shaderManager;
 	this->sceneManager = sceneManager;
@@ -66,7 +70,6 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 	shaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
 	// Initialize meshes
-
 
 	VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
 	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
@@ -437,6 +440,8 @@ void DebugVectorRenderer::DrawWireFrustum(const Mat4x4f& transform, const Projec
 
 void DebugVectorRenderer::Render(Camera* camera)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (primitiveCount > 0)
 	{
 		const ShaderData& shader = shaderManager->GetShaderData(shaderId);

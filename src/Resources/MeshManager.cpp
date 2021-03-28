@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "Core/Core.hpp"
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
 
@@ -38,6 +39,8 @@ MeshManager::~MeshManager()
 
 void MeshManager::Reallocate(unsigned int required)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (required <= data.allocated)
 		return;
 
@@ -111,6 +114,8 @@ void MeshManager::RemoveMesh(MeshId id)
 
 MeshId MeshManager::GetIdByPath(StringRef path)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
 
 	HashMap<uint32_t, MeshId>::KeyValuePair* pair = nameHashMap.Lookup(hash);
@@ -299,6 +304,8 @@ void MeshManager::SetVertexAttribPointers(const VertexFormat& vertexFormat)
 
 void MeshManager::Upload(MeshId id, const VertexData& vdata)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	assert(vdata.vertexFormat.attributes != nullptr && vdata.vertexFormat.attributeCount > 0);
 
 	unsigned int vsize = vdata.vertexFormat.vertexSize * vdata.vertexCount;
@@ -310,6 +317,8 @@ void MeshManager::Upload(MeshId id, const VertexData& vdata)
 
 void MeshManager::UploadIndexed(MeshId id, const IndexedVertexData& vdata)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	assert(vdata.vertexFormat.attributes != nullptr && vdata.vertexFormat.attributeCount > 0);
 
 	unsigned int vsize = vdata.vertexFormat.vertexSize * vdata.vertexCount;

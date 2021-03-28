@@ -4,8 +4,9 @@
 
 #include "rapidjson/document.h"
 
-#include "Core/String.hpp"
+#include "Core/Core.hpp"
 #include "Core/Hash.hpp"
+#include "Core/String.hpp"
 
 #include "Memory/Allocator.hpp"
 
@@ -36,6 +37,8 @@ ShaderManager::~ShaderManager()
 
 void ShaderManager::Reallocate(unsigned int required)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (required <= data.allocated)
 		return;
 
@@ -125,6 +128,8 @@ void ShaderManager::RemoveShader(ShaderId id)
 
 ShaderId ShaderManager::GetIdByPath(StringRef path)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
 
 	HashMap<uint32_t, ShaderId>::KeyValuePair* pair = nameHashMap.Lookup(hash);

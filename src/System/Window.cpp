@@ -33,9 +33,18 @@ Window::~Window()
 
 bool Window::Initialize(int width, int height, const char* windowTitle)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	glfwSetErrorCallback(OnGlfwError);
 
-	if (glfwInit() == GLFW_TRUE)
+	int initResult;
+
+	{
+		KOKKO_PROFILE_SCOPE("int glfwInit()");
+		initResult = glfwInit();
+	}
+
+	if (initResult == GLFW_TRUE)
 	{
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -48,7 +57,10 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 		glfwWindowHint(GLFW_DEPTH_BITS, 0);
 		glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
-		windowHandle = glfwCreateWindow(width, height, windowTitle, NULL, NULL);
+		{
+			KOKKO_PROFILE_SCOPE("GLFWwindow* glfwCreateWindow()");
+			windowHandle = glfwCreateWindow(width, height, windowTitle, NULL, NULL);
+		}
 		
 		if (windowHandle != nullptr)
 		{
@@ -56,10 +68,17 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 			inputManager->Initialize(windowHandle);
 
 			glfwSetWindowUserPointer(windowHandle, this);
-			glfwMakeContextCurrent(windowHandle);
 
-			// Tell glad how it can load the OpenGL functions it needs
-			gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+			{
+				KOKKO_PROFILE_SCOPE("void glfwMakeContextCurrent()");
+				glfwMakeContextCurrent(windowHandle);
+			}
+
+			{
+				KOKKO_PROFILE_SCOPE("void gladLoadGLLoader()");
+				// Tell glad how it can load the OpenGL functions it needs
+				gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+			}
 
 			this->SetSwapInterval(1);
 

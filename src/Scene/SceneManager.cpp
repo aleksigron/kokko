@@ -3,12 +3,17 @@
 #include <cstring>
 #include <new>
 
-#include "Memory/Allocator.hpp"
-#include "Engine/Engine.hpp"
-#include "Scene/Scene.hpp"
-#include "Scene/SceneLoader.hpp"
+#include "Core/Core.hpp"
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
+
+#include "Engine/Engine.hpp"
+
+#include "Memory/Allocator.hpp"
+
+#include "Scene/Scene.hpp"
+#include "Scene/SceneLoader.hpp"
+
 #include "System/File.hpp"
 
 SceneManager::SceneManager(Engine* engine, Allocator* allocator) :
@@ -41,6 +46,8 @@ unsigned int SceneManager::GetPrimarySceneId() const
 
 unsigned int SceneManager::LoadSceneFromFile(StringRef path)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	unsigned int sceneId = 0;
 
 	Buffer<char> sceneConfig(allocator);
@@ -64,6 +71,8 @@ unsigned int SceneManager::LoadSceneFromFile(StringRef path)
 
 unsigned int SceneManager::CreateScene()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (sceneCount == sceneAllocated)
 	{
 		unsigned int newAllocatedCount;

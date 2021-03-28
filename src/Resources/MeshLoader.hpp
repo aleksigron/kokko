@@ -1,10 +1,11 @@
 #pragma once
 
+#include "Core/Core.hpp"
+
 #include "Rendering/RenderDeviceEnums.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/MeshManager.hpp"
-
 
 class MeshLoader
 {
@@ -28,6 +29,8 @@ public:
 
 	Status LoadFromBuffer(MeshId meshId, BufferRef<unsigned char> buffer)
 	{
+		KOKKO_PROFILE_FUNCTION();
+
 		using uint = unsigned int;
 		using ushort = unsigned short;
 		using ubyte = unsigned char;

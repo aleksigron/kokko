@@ -93,6 +93,8 @@ Renderer::Renderer(
 	customRenderers(allocator),
 	skyboxMaterialId{0}
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	renderTargetContainer = allocator->MakeNew<RenderTargetContainer>(allocator, renderDevice);
 
 	postProcessRenderer = allocator->MakeNew<PostProcessRenderer>(
@@ -169,18 +171,24 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 	bloomEffect->SetParams(bloomParams);
 
 	{
+		KOKKO_PROFILE_SCOPE("Allocate framebuffer data");
+
 		// Allocate framebuffer data storage
 		void* buf = this->allocator->Allocate(sizeof(RendererFramebuffer) * MaxFramebufferCount);
 		framebufferData = static_cast<RendererFramebuffer*>(buf);
 	}
 
 	{
+		KOKKO_PROFILE_SCOPE("Allocate framebuffer texture data");
+
 		// Allocate framebuffer texture info storage
 		void* buf = this->allocator->Allocate(sizeof(unsigned int) * MaxFramebufferTextureCount);
 		framebufferTextures = static_cast<unsigned int*>(buf);
 	}
 
 	{
+		KOKKO_PROFILE_SCOPE("Allocate viewport data");
+
 		// Allocate viewport data storage
 		void* buf = this->allocator->Allocate(sizeof(RenderViewport) * MaxViewportCount);
 		viewportData = static_cast<RenderViewport*>(buf);
@@ -198,6 +206,8 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 	}
 
 	{
+		KOKKO_PROFILE_SCOPE("Create geometry framebuffer");
+
 		// Create geometry framebuffer and textures
 
 		framebufferCount += 1;
@@ -308,6 +318,8 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 	}
 
 	{
+		KOKKO_PROFILE_SCOPE("Create shadow framebuffer");
+
 		// Create shadow framebuffer
 
 		int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
@@ -362,6 +374,8 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 	}
 
 	{
+		KOKKO_PROFILE_SCOPE("Create HDR light accumulation framebuffer");
+
 		// HDR light accumulation framebuffer
 
 		framebufferCount += 1;
@@ -405,6 +419,8 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 	}
 	
 	{
+		KOKKO_PROFILE_SCOPE("Create tonemap uniform buffer");
+
 		// Set up uniform buffer for tonemapping pass
 
 		device->CreateBuffers(1, &tonemapUniformBufferId);
@@ -413,6 +429,8 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 	}
 
 	{
+		KOKKO_PROFILE_SCOPE("Create lighting uniform buffer");
+
 		// Create opaque lighting pass uniform buffer
 
 		device->CreateBuffers(1, &lightingUniformBufferId);

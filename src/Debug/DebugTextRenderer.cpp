@@ -137,6 +137,8 @@ void DebugTextRenderer::AddText(StringRef str, const Rectanglef& area)
 
 void DebugTextRenderer::Render()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (displayData.GetCount() > 0 && font != nullptr)
 	{
 		if (meshId.IsValid() == false)
@@ -210,6 +212,8 @@ void DebugTextRenderer::Render()
 
 void DebugTextRenderer::CreateAndUploadData()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	// Make sure vertex indices fit in unsigned short type
 	assert(stringCharCount * 4 < (1 << 16));
 

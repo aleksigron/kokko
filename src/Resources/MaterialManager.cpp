@@ -5,6 +5,7 @@
 #include "rapidjson/document.h"
 
 #include "Core/Array.hpp"
+#include "Core/Core.hpp"
 #include "Core/String.hpp"
 #include "Core/Hash.hpp"
 
@@ -112,6 +113,8 @@ MaterialId MaterialManager::CreateMaterial()
 
 MaterialId MaterialManager::CreateCopy(MaterialId copyFrom)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	const MaterialData& origMaterial = data.material[copyFrom.i];
 
 	MaterialId id = CreateMaterial();
@@ -151,6 +154,8 @@ void MaterialManager::RemoveMaterial(MaterialId id)
 
 MaterialId MaterialManager::GetIdByPath(StringRef path)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
 
 	HashMap<uint32_t, MaterialId>::KeyValuePair* pair = nameHashMap.Lookup(hash);
@@ -185,6 +190,8 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 
 void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	MaterialData& material = data.material[id.i];
 
 	if (material.buffer != nullptr) // Release old uniform data
@@ -311,6 +318,8 @@ static void SetBufferUniformValue(
 	const rapidjson::Value* jsonValue,
 	Array<unsigned char>& cacheBuffer)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	using ValueItr = rapidjson::Value::ConstValueIterator;
 
 	switch (uniform.type)
@@ -525,6 +534,8 @@ static void SetBufferUniformValue(
 
 bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	using ValueItr = rapidjson::Value::ConstValueIterator;
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 
@@ -606,6 +617,8 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 
 void MaterialManager::UpdateUniformsToGPU(MaterialId id)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	MaterialData& material = data.material[id.i];
 
 	// Update uniform buffer object on the GPU

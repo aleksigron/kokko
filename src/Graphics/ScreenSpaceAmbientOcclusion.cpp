@@ -1,5 +1,7 @@
 #include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
 
+#include "Core/Core.hpp"
+
 #include "Math/Math.hpp"
 #include "Math/Projection.hpp"
 #include "Math/Random.hpp"
@@ -44,6 +46,8 @@ ScreenSpaceAmbientOcclusion::~ScreenSpaceAmbientOcclusion()
 
 void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	framebufferSize = framebufferResolution;
 
 	kernel.Resize(kernelSize);
@@ -125,6 +129,8 @@ void ScreenSpaceAmbientOcclusion::Deinitialize()
 
 void ScreenSpaceAmbientOcclusion::Render(const RenderParams& params)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	// Update uniforms
 
 	UpdateUniformBuffers(params.projection);
@@ -207,6 +213,8 @@ void ScreenSpaceAmbientOcclusion::ReleaseResult()
 
 void ScreenSpaceAmbientOcclusion::UpdateUniformBuffers(const ProjectionParameters& projection) const
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	float noiseSizef = static_cast<float>(NoiseTextureSize);
 
 	bool reverseDepth = true;

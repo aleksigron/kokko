@@ -95,6 +95,8 @@ void TextureManager::Initialize()
 
 void TextureManager::Reallocate(unsigned int required)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (required <= data.allocated)
 		return;
 
@@ -198,6 +200,8 @@ TextureId TextureManager::GetIdByPath(StringRef path)
 
 bool TextureManager::LoadFromKtxFile(TextureId id, const char* ktxFilePath)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	TextureData& textureData = data.texture[id.i];
 
 	ktxTexture* kTexture;
@@ -247,6 +251,8 @@ bool TextureManager::LoadFromKtxFile(TextureId id, const char* ktxFilePath)
 
 void TextureManager::Upload_2D(TextureId id, const ImageData& image, const TextureOptions& options)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	TextureData& texture = data.texture[id.i];
 
 	texture.textureSize = image.imageSize;
@@ -289,6 +295,8 @@ void TextureManager::Upload_2D(TextureId id, const ImageData& image, const Textu
 
 void TextureManager::Upload_Cube(TextureId id, const ImageData* images, const TextureOptions& options)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	static const RenderTextureTarget cubemapFaceValues[] = {
 		RenderTextureTarget::TextureCubeMap_PositiveX,
 		RenderTextureTarget::TextureCubeMap_NegativeX,
@@ -348,6 +356,8 @@ void TextureManager::Upload_Cube(TextureId id, const ImageData* images, const Te
 
 void TextureManager::AllocateTextureStorage(TextureId id, RenderTextureTarget target, RenderTextureSizedFormat format, int levels, Vec2i size)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	TextureData& texture = data.texture[id.i];
 
 	if (texture.textureObjectId == 0)

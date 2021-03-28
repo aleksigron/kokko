@@ -3,8 +3,12 @@
 #include <cstdio>
 #include <cstring>
 
+#include "Core/Core.hpp"
+
 bool File::ReadBinary(const char* path, Buffer<unsigned char>& output)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	FILE* fileHandle = fopen(path, "rb");
 
 	if (fileHandle != nullptr)
@@ -27,6 +31,8 @@ bool File::ReadBinary(const char* path, Buffer<unsigned char>& output)
 
 bool File::ReadText(const char* path, Buffer<char>& output)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	FILE* fileHandle = std::fopen(path, "rb");
 
 	if (fileHandle != nullptr)
@@ -53,6 +59,8 @@ bool File::ReadText(const char* path, Buffer<char>& output)
 
 bool File::ReadText(const char* path, Allocator* allocator, char*& strOut, size_t& lenOut)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	FILE* fileHandle = std::fopen(path, "rb");
 
 	if (fileHandle != nullptr)
@@ -81,6 +89,8 @@ bool File::ReadText(const char* path, Allocator* allocator, char*& strOut, size_
 
 bool File::Write(const char* path, BufferRef<char> content, bool append)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	FILE* fileHandle = fopen(path, append ? "ab" : "wb");
 
 	if (fileHandle != nullptr)

@@ -2,6 +2,8 @@
 
 #include "rapidjson/document.h"
 
+#include "Core/Core.hpp"
+
 #include "Debug/LogHelper.hpp"
 
 #include "Engine/Engine.hpp"
@@ -30,6 +32,8 @@ SceneLoader::SceneLoader(Engine* engine, Scene* scene):
 
 void SceneLoader::Load(BufferRef<char> sceneConfig)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	rapidjson::Document doc;
 	doc.Parse(sceneConfig.data, sceneConfig.count);
 

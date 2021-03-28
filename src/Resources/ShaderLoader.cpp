@@ -7,6 +7,7 @@
 #include "rapidjson/document.h"
 
 #include "Core/BufferRef.hpp"
+#include "Core/Core.hpp"
 #include "Core/Hash.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/Sort.hpp"
@@ -36,6 +37,8 @@ static bool LoadIncludes(
 	HashMap<uint32_t, FileString>& includeFiles,
 	Allocator* allocator)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (value.IsArray() == false)
 	{
 		Log::Error("LoadIncludes: value is not an array");
@@ -85,6 +88,8 @@ static bool ProcessSource(
 	Allocator* allocator,
 	Buffer<char>& output)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	// Count include files length
 	std::size_t totalLength = versionStr.len + uniformBlock.len;
 
@@ -171,6 +176,8 @@ static void AddUniforms(
 	BufferRef<const AddUniforms_UniformData> uniforms,
 	Allocator* allocator)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	static_assert(UniformBlockBinding::Material < 10, "Material uniform block binding point must be less than 10");
 	const char* blockStartFormat = "layout(std140, binding = %d) uniform MaterialBlock {\n";
 	const size_t blockStartPlaceholdersLen = 2;
@@ -359,6 +366,8 @@ static void UpdateTextureUniformLocations(
 	ShaderData& shaderInOut,
 	RenderDevice* renderDevice)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	for (unsigned idx = 0, count = shaderInOut.uniforms.textureUniformCount; idx < count; ++idx)
 	{
 		TextureUniform& u = shaderInOut.uniforms.textureUniforms[idx];
@@ -374,6 +383,8 @@ static bool Compile(
 	BufferRef<char> source,
 	unsigned int& shaderIdOut)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (source.IsValid())
 	{
 		const char* data = source.data;
@@ -424,6 +435,8 @@ static bool CompileAndLink(
 	Allocator* allocator,
 	RenderDevice* renderDevice)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	static const size_t MaxStageCount = 2;
 	unsigned int stageObjects[MaxStageCount];
 
@@ -443,20 +456,30 @@ static bool CompileAndLink(
 
 	// At this point we know that shader compilations were successful
 
-	// Link the program
-	unsigned int programId = renderDevice->CreateShaderProgram();
+	unsigned int programId;
+	bool linkSucceeded;
 
-	for (size_t i = 0; i < stageCount; ++i)
-		renderDevice->AttachShaderStageToProgram(programId, stageObjects[i]);
+	{
+		KOKKO_PROFILE_SCOPE("Link program");
 
-	renderDevice->LinkShaderProgram(programId);
+		// Link the program
+		programId = renderDevice->CreateShaderProgram();
 
-	// Release shaders
-	for (size_t i = 0; i < stageCount; ++i)
-		renderDevice->DestroyShaderStage(stageObjects[i]);
+		for (size_t i = 0; i < stageCount; ++i)
+			renderDevice->AttachShaderStageToProgram(programId, stageObjects[i]);
+
+
+		renderDevice->LinkShaderProgram(programId);
+
+		// Release shaders
+		for (size_t i = 0; i < stageCount; ++i)
+			renderDevice->DestroyShaderStage(stageObjects[i]);
+
+		linkSucceeded = renderDevice->GetShaderProgramLinkStatus(programId);
+	}
 
 	// Check link status
-	if (renderDevice->GetShaderProgramLinkStatus(programId))
+	if (linkSucceeded)
 	{
 		shaderOut.driverId = programId;
 
@@ -490,6 +513,8 @@ bool ShaderLoader::LoadFromConfiguration(
 	Allocator* allocator,
 	RenderDevice* renderDevice)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 	using ValueItr = rapidjson::Value::ConstValueIterator;
 

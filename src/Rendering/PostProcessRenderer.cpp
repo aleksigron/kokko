@@ -1,5 +1,7 @@
 #include "Rendering/PostProcessRenderer.hpp"
 
+#include "Core/Core.hpp"
+
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderDevice.hpp"
@@ -28,6 +30,8 @@ PostProcessRenderer::~PostProcessRenderer()
 
 void PostProcessRenderer::Initialize()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	fullscreenMeshId = meshManager->CreateMesh();
 	MeshPresets::UploadPlane(meshManager, fullscreenMeshId);
 }
@@ -48,6 +52,8 @@ void PostProcessRenderer::RenderPass(const PostProcessRenderPass& pass)
 
 void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRenderPass* passes)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	const MeshDrawData* draw = meshManager->GetDrawData(fullscreenMeshId);
 	renderDevice->BindVertexArray(draw->vertexArrayObject);
 

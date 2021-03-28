@@ -1,5 +1,7 @@
 #include "Graphics/BloomEffect.hpp"
 
+#include "Core/Core.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/PostProcessRenderer.hpp"
@@ -72,6 +74,8 @@ BloomEffect::~BloomEffect()
 
 void BloomEffect::Initialize()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	StringRef extractPath("res/shaders/post_process/bloom_extract.shader.json");
 	StringRef downsamplePath("res/shaders/post_process/bloom_downsample.shader.json");
 	StringRef upsamplePath("res/shaders/post_process/bloom_upsample.shader.json");
@@ -138,6 +142,8 @@ void BloomEffect::SetParams(const Params& params)
 
 void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFramebuffer, const Vec2i& framebufferSize)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	unsigned int passCount = 0;
 
 	RenderTarget renderTargets[8];
@@ -287,6 +293,8 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 
 void BloomEffect::CreateKernel(int kernelExtent)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	int kernelWidth = (2 * kernelExtent + 1);
 	blurKernel.Resize(kernelWidth * kernelWidth);
 

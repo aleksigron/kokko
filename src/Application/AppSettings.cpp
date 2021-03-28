@@ -3,9 +3,11 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "System/File.hpp"
-#include "Core/String.hpp"
 #include "Core/BufferRef.hpp"
+#include "Core/Core.hpp"
+#include "Core/String.hpp"
+
+#include "System/File.hpp"
 
 AppSettings::AppSettings(Allocator* allocator) :
 	allocator(allocator),
@@ -31,6 +33,8 @@ void AppSettings::SetFilename(StringRef path)
 
 void AppSettings::LoadFromFile()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (settingsFilename.GetLength() > 0)
 	{
 		Buffer<char> content(allocator);
@@ -75,6 +79,8 @@ void AppSettings::LoadFromFile()
 
 void AppSettings::SaveToFile()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	unsigned int totalLength = 0;
 
 	for (unsigned int i = 0, count = settings.GetCount(); i < count; ++i)
