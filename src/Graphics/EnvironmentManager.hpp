@@ -19,6 +19,8 @@ struct EnvironmentTextures
 class EnvironmentManager
 {
 private:
+	static const size_t CubemapSideCount = 6;
+
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 	ShaderManager* shaderManager;
@@ -26,6 +28,12 @@ private:
 	TextureManager* textureManager;
 
 	Array<EnvironmentTextures> environmentMaps;
+
+	size_t blockStride;
+
+	unsigned int framebufferId;
+	unsigned int viewportUniformBufferId;
+	unsigned int samplerId;
 
 public:
 	EnvironmentManager(Allocator* allocator, RenderDevice* renderDevice,
@@ -36,6 +44,9 @@ public:
 
 	EnvironmentManager& operator=(const EnvironmentManager&) = delete;
 	EnvironmentManager& operator=(EnvironmentManager&&) = delete;
+
+	void Initialize();
+	void Deinitialize();
 
 	int LoadHdrEnvironmentMap(const char* equirectMapPath);
 

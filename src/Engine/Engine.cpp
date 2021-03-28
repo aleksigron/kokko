@@ -157,6 +157,7 @@ bool Engine::Initialize()
 			meshManager.instance, shaderManager.instance, sceneManager.instance);
 
 		textureManager.instance->Initialize();
+		environmentManager.instance->Initialize();
 		renderer.instance->Initialize(mainWindow.instance, entityManager.instance, environmentManager.instance);
 		terrainManager.instance->Initialize(renderer.instance, shaderManager.instance);
 		particleSystem.instance->Initialize(renderer.instance);

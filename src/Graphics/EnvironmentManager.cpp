@@ -3,6 +3,7 @@
 #include "stb_image/stb_image.h"
 
 #include "Core/Buffer.hpp"
+#include "Core/Core.hpp"
 
 #include "Debug/LogHelper.hpp"
 
@@ -21,6 +22,21 @@
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
+static RenderTextureTarget GetCubeTextureTarget(unsigned int index)
+{
+	// TODO: Refactor into a reusable function
+	static RenderTextureTarget cubeTextureTargets[] = {
+		RenderTextureTarget::TextureCubeMap_PositiveX,
+		RenderTextureTarget::TextureCubeMap_NegativeX,
+		RenderTextureTarget::TextureCubeMap_PositiveY,
+		RenderTextureTarget::TextureCubeMap_NegativeY,
+		RenderTextureTarget::TextureCubeMap_PositiveZ,
+		RenderTextureTarget::TextureCubeMap_NegativeZ
+	};
+
+	return cubeTextureTargets[index];
+}
+
 EnvironmentManager::EnvironmentManager(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
@@ -32,80 +48,26 @@ EnvironmentManager::EnvironmentManager(
 	shaderManager(shaderManager),
 	meshManager(meshManager),
 	textureManager(textureManager),
-	environmentMaps(allocator)
+	environmentMaps(allocator),
+	blockStride(0),
+	framebufferId(0),
+	viewportUniformBufferId(0),
+	samplerId(0)
 {
 }
 
 EnvironmentManager::~EnvironmentManager()
 {
+	Deinitialize();
 }
 
-int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
+void EnvironmentManager::Initialize()
 {
-	static const int EnvironmentTextureSize = 1024;
-	static const int IrradianceTextureSize = 64;
-	static const size_t CubemapSides = 6;
-
-	RenderTextureSizedFormat sizedFormat = RenderTextureSizedFormat::RGB16F;
-
-	// Load equirectangular image and create texture
-
-	stbi_set_flip_vertically_on_load(true);
-	int equirectWidth, equirectHeight, nrComponents;
-	float* equirectData = stbi_loadf(equirectMapPath, &equirectWidth, &equirectHeight, &nrComponents, 0);
-
-	unsigned int equirectTextureId = 0;
-
-	if (equirectData)
-	{
-		renderDevice->CreateTextures(1, &equirectTextureId);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, equirectTextureId);
-
-		RenderCommandData::SetTextureStorage2D textureStorage{
-			RenderTextureTarget::Texture2d, 1, sizedFormat, equirectWidth, equirectHeight,
-		};
-		renderDevice->SetTextureStorage2D(&textureStorage);
-
-		RenderCommandData::SetTextureSubImage2D textureImage{
-			RenderTextureTarget::Texture2d, 0, 0, 0, equirectWidth, equirectHeight,
-			RenderTextureBaseFormat::RGB, RenderTextureDataType::Float, equirectData
-		};
-		renderDevice->SetTextureSubImage2D(&textureImage);
-
-		stbi_image_free(equirectData);
-	}
-	else
-	{
-		Log::Error("Couldn't load HDR texture file");
-
-		return -1;
-	}
+	KOKKO_PROFILE_FUNCTION();
 
 	// Create framebuffer
 
-	unsigned int framebuffer;
-	renderDevice->CreateFramebuffers(1, &framebuffer);
-
-	// Create result cubemap texture
-
-	Vec2i envMapSize(EnvironmentTextureSize, EnvironmentTextureSize);
-	TextureId envMapTextureId = textureManager->CreateTexture();
-	textureManager->AllocateTextureStorage(envMapTextureId, RenderTextureTarget::TextureCubeMap, sizedFormat, 1, envMapSize);
-	const TextureData& envMapTexture = textureManager->GetTextureData(envMapTextureId);
-
-	// Create sampler object
-
-	unsigned int sampler;
-	renderDevice->CreateSamplers(1, &sampler);
-
-	RenderCommandData::SetSamplerParameters samplerParams{
-		sampler, RenderTextureFilterMode::Linear, RenderTextureFilterMode::Linear,
-		RenderTextureWrapMode::ClampToEdge, RenderTextureWrapMode::ClampToEdge, RenderTextureWrapMode::ClampToEdge,
-		RenderTextureCompareMode::None
-	};
-	renderDevice->SetSamplerParameters(&samplerParams);
-
-	renderDevice->BindSampler(0, sampler);
+	renderDevice->CreateFramebuffers(1, &framebufferId);
 
 	// Create viewport uniform buffer
 
@@ -117,7 +79,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	Mat4x4f projectionMatrix = projection.GetProjectionMatrix(false);
 
 	Vec3f zero3(0.0f, 0.0f, 0.0f);
-	Mat4x4f viewTransforms[CubemapSides] = {
+	Mat4x4f viewTransforms[CubemapSideCount] = {
 		Camera::GetViewMatrix(Mat4x4f::LookAt(zero3, Vec3f(1.0f, 0.0f, 0.0f), Vec3f(0.0f, -1.0f, 0.0f))),
 		Camera::GetViewMatrix(Mat4x4f::LookAt(zero3, Vec3f(-1.0f, 0.0f, 0.0f), Vec3f(0.0f, -1.0f, 0.0f))),
 		Camera::GetViewMatrix(Mat4x4f::LookAt(zero3, Vec3f(0.0f, 1.0f, 0.0f), Vec3f(0.0f, 0.0f, 1.0f))),
@@ -126,30 +88,16 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 		Camera::GetViewMatrix(Mat4x4f::LookAt(zero3, Vec3f(0.0f, 0.0f, -1.0f), Vec3f(0.0f, -1.0f, 0.0f))),
 	};
 
-	// TODO: Refactor into a reusable function
-	RenderTextureTarget cubeTextureTargets[CubemapSides] = {
-		RenderTextureTarget::TextureCubeMap_PositiveX,
-		RenderTextureTarget::TextureCubeMap_NegativeX,
-		RenderTextureTarget::TextureCubeMap_PositiveY,
-		RenderTextureTarget::TextureCubeMap_NegativeY,
-		RenderTextureTarget::TextureCubeMap_PositiveZ,
-		RenderTextureTarget::TextureCubeMap_NegativeZ
-	};
-
-	unsigned int viewportUniformBuffer;
-	renderDevice->CreateBuffers(1, &viewportUniformBuffer);
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, viewportUniformBuffer);
-
 	int alignment;
 	renderDevice->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &alignment);
 
-	size_t blockStride = (sizeof(TransformUniformBlock) + alignment - 1) / alignment * alignment;
-	unsigned int viewportBufferSize = static_cast<unsigned int>(blockStride * CubemapSides);
+	blockStride = (sizeof(TransformUniformBlock) + alignment - 1) / alignment * alignment;
+	unsigned int viewportBufferSize = static_cast<unsigned int>(blockStride * CubemapSideCount);
 
 	Buffer<unsigned char> uniformBuffer(allocator);
 	uniformBuffer.Allocate(viewportBufferSize);
 
-	for (size_t i = 0; i < CubemapSides; ++i)
+	for (size_t i = 0; i < CubemapSideCount; ++i)
 	{
 		ViewportUniformBlock* uniforms = reinterpret_cast<ViewportUniformBlock*>(&uniformBuffer[blockStride * i]);
 
@@ -158,12 +106,109 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 		uniforms->VP = projectionMatrix * viewTransforms[i];
 	}
 
+	renderDevice->CreateBuffers(1, &viewportUniformBufferId);
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, viewportUniformBufferId);
+
 	RenderCommandData::SetBufferStorage bufferStorage{
 		RenderBufferTarget::UniformBuffer, viewportBufferSize, uniformBuffer.Data()
 	};
 	renderDevice->SetBufferStorage(&bufferStorage);
 
 	uniformBuffer.Deallocate();
+
+	// Create sampler object
+
+	renderDevice->CreateSamplers(1, &samplerId);
+	RenderCommandData::SetSamplerParameters samplerParams{
+		samplerId, RenderTextureFilterMode::Linear, RenderTextureFilterMode::Linear,
+		RenderTextureWrapMode::ClampToEdge, RenderTextureWrapMode::ClampToEdge, RenderTextureWrapMode::ClampToEdge,
+		RenderTextureCompareMode::None
+	};
+	renderDevice->SetSamplerParameters(&samplerParams);
+}
+
+void EnvironmentManager::Deinitialize()
+{
+	if (samplerId != 0)
+	{
+		renderDevice->DestroySamplers(1, &samplerId);
+		samplerId = 0;
+	}
+
+	if (viewportUniformBufferId != 0)
+	{
+		renderDevice->DestroyBuffers(1, &viewportUniformBufferId);
+		viewportUniformBufferId = 0;
+	}
+
+	if (framebufferId != 0)
+	{
+		renderDevice->DestroyFramebuffers(1, &framebufferId);
+		framebufferId = 0;
+	}
+}
+
+int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	static const int EnvironmentTextureSize = 1024;
+	static const int IrradianceTextureSize = 32;
+
+	RenderTextureSizedFormat sizedFormat = RenderTextureSizedFormat::RGB16F;
+
+	// Load equirectangular image and create texture
+
+	stbi_set_flip_vertically_on_load(true);
+	int equirectWidth, equirectHeight, nrComponents;
+	float* equirectData;
+	{
+		KOKKO_PROFILE_SCOPE("void* stbi_loadf()");
+		equirectData = stbi_loadf(equirectMapPath, &equirectWidth, &equirectHeight, &nrComponents, 0);
+	}
+
+	unsigned int equirectTextureId = 0;
+
+	if (equirectData)
+	{
+		{
+			KOKKO_PROFILE_SCOPE("Upload equirectangular environment map");
+
+			renderDevice->CreateTextures(1, &equirectTextureId);
+			renderDevice->BindTexture(RenderTextureTarget::Texture2d, equirectTextureId);
+
+			RenderCommandData::SetTextureStorage2D textureStorage{
+				RenderTextureTarget::Texture2d, 1, sizedFormat, equirectWidth, equirectHeight,
+			};
+			renderDevice->SetTextureStorage2D(&textureStorage);
+
+			RenderCommandData::SetTextureSubImage2D textureImage{
+				RenderTextureTarget::Texture2d, 0, 0, 0, equirectWidth, equirectHeight,
+				RenderTextureBaseFormat::RGB, RenderTextureDataType::Float, equirectData
+			};
+			renderDevice->SetTextureSubImage2D(&textureImage);
+		}
+
+		{
+			KOKKO_PROFILE_SCOPE("void stbi_image_free()");
+			stbi_image_free(equirectData);
+		}
+	}
+	else
+	{
+		Log::Error("Couldn't load HDR texture file");
+
+		return -1;
+	}
+
+	// Create result cubemap texture
+
+	Vec2i envMapSize(EnvironmentTextureSize, EnvironmentTextureSize);
+	TextureId envMapTextureId = textureManager->CreateTexture();
+	textureManager->AllocateTextureStorage(envMapTextureId, RenderTextureTarget::TextureCubeMap, sizedFormat, 1, envMapSize);
+	const TextureData& envMapTexture = textureManager->GetTextureData(envMapTextureId);
+
+	renderDevice->BindSampler(0, samplerId);
 
 	// Load cube mesh
 
@@ -189,37 +234,41 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	}
 
 	// Render
-
-	RenderCommandData::ViewportData envViewport{
-		0, 0, EnvironmentTextureSize, EnvironmentTextureSize
-	};
-	renderDevice->Viewport(&envViewport);
-
-	RenderCommandData::BindFramebufferData bindFramebuffer{
-		RenderFramebufferTarget::Framebuffer, framebuffer
-	};
-	renderDevice->BindFramebuffer(&bindFramebuffer);
-
-	renderDevice->BindVertexArray(cubeMeshDraw->vertexArrayObject);
-
-	RenderCommandData::ClearMask clearMask{ true, false, false };
-
-	for (unsigned int i = 0; i < CubemapSides; ++i)
 	{
-		RenderCommandData::BindBufferRange bindBufferRange{
-			RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, viewportUniformBuffer,
-			blockStride * i, sizeof(ViewportUniformBlock)
-		};
-		renderDevice->BindBufferRange(&bindBufferRange);
+		KOKKO_PROFILE_SCOPE("Render equirect to cubemap");
 
-		RenderCommandData::AttachFramebufferTexture2D attachFramebufferTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
-			cubeTextureTargets[i], envMapTexture.textureObjectId, 0
+		RenderCommandData::ViewportData envViewport{
+			0, 0, EnvironmentTextureSize, EnvironmentTextureSize
 		};
-		renderDevice->AttachFramebufferTexture2D(&attachFramebufferTexture);
+		renderDevice->Viewport(&envViewport);
 
-		renderDevice->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
+		RenderCommandData::BindFramebufferData bindFramebuffer{ RenderFramebufferTarget::Framebuffer, framebufferId };
+		renderDevice->BindFramebuffer(&bindFramebuffer);
+
+		renderDevice->BindVertexArray(cubeMeshDraw->vertexArrayObject);
+
+		RenderCommandData::ClearMask clearMask{ true, false, false };
+
+		for (unsigned int i = 0; i < CubemapSideCount; ++i)
+		{
+			RenderCommandData::BindBufferRange bindBufferRange{
+				RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, viewportUniformBufferId,
+				blockStride * i, sizeof(ViewportUniformBlock)
+			};
+			renderDevice->BindBufferRange(&bindBufferRange);
+
+			RenderCommandData::AttachFramebufferTexture2D attachFramebufferTexture{
+				RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
+				GetCubeTextureTarget(i), envMapTexture.textureObjectId, 0
+			};
+			renderDevice->AttachFramebufferTexture2D(&attachFramebufferTexture);
+
+			renderDevice->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
+		}
 	}
+
+	renderDevice->DestroyTextures(1, &equirectTextureId);
+	equirectTextureId = 0;
 
 	// Now we have the environment map in a cubemap format
 	// Next we need to calculate the diffuse irradiance in each direction
@@ -248,34 +297,34 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 		renderDevice->BindTexture(RenderTextureTarget::TextureCubeMap, envMapTexture.textureObjectId);
 	}
 
-	RenderCommandData::ViewportData irrViewport{
-		0, 0, IrradianceTextureSize, IrradianceTextureSize
-	};
-	renderDevice->Viewport(&irrViewport);
-
-	for (unsigned int i = 0; i < CubemapSides; ++i)
 	{
-		RenderCommandData::BindBufferRange bindBufferRange{
-			RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, viewportUniformBuffer,
-			blockStride * i, sizeof(ViewportUniformBlock)
-		};
-		renderDevice->BindBufferRange(&bindBufferRange);
 
-		RenderCommandData::AttachFramebufferTexture2D attachFramebufferTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
-			cubeTextureTargets[i], irrMapTexture.textureObjectId, 0
-		};
-		renderDevice->AttachFramebufferTexture2D(&attachFramebufferTexture);
+		KOKKO_PROFILE_SCOPE("Convolute to diffuse irradiance map");
 
-		renderDevice->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
+		RenderCommandData::ViewportData irrViewport{
+			0, 0, IrradianceTextureSize, IrradianceTextureSize
+		};
+		renderDevice->Viewport(&irrViewport);
+
+		for (unsigned int i = 0; i < CubemapSideCount; ++i)
+		{
+			RenderCommandData::BindBufferRange bindBufferRange{
+				RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, viewportUniformBufferId,
+				blockStride * i, sizeof(ViewportUniformBlock)
+			};
+			renderDevice->BindBufferRange(&bindBufferRange);
+
+			RenderCommandData::AttachFramebufferTexture2D attachFramebufferTexture{
+				RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
+				GetCubeTextureTarget(i), irrMapTexture.textureObjectId, 0
+			};
+			renderDevice->AttachFramebufferTexture2D(&attachFramebufferTexture);
+
+			renderDevice->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
+		}
 	}
 
 	renderDevice->BindSampler(0, 0);
-
-	renderDevice->DestroyTextures(1, &equirectTextureId);
-	renderDevice->DestroyBuffers(1, &viewportUniformBuffer);
-	renderDevice->DestroySamplers(1, &sampler);
-	renderDevice->DestroyFramebuffers(1, &framebuffer);
 
 	unsigned int envIndex = environmentMaps.GetCount();
 	environmentMaps.PushBack(EnvironmentTextures{ envMapTextureId, irrMapTextureId });
