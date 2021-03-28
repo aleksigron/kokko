@@ -38,6 +38,8 @@ public:
 	virtual void BlendFunction(const RenderCommandData::BlendFunctionData* data) = 0;
 	virtual void BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor) = 0;
 
+	virtual void CubemapSeamlessEnable() = 0;
+	virtual void CubemapSeamlessDisable() = 0;
 	virtual void SetClipBehavior(RenderClipOriginMode origin, RenderClipDepthMode depth) = 0;
 	virtual void DepthRange(const RenderCommandData::DepthRangeData* data) = 0;
 	virtual void Viewport(const RenderCommandData::ViewportData* data) = 0;

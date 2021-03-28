@@ -473,6 +473,16 @@ void RenderDeviceOpenGL::BlendFunction(RenderBlendFactor srcFactor, RenderBlendF
 	glBlendFunc(ConvertBlendFactor(srcFactor), ConvertBlendFactor(dstFactor));
 }
 
+void RenderDeviceOpenGL::CubemapSeamlessEnable()
+{
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+}
+
+void RenderDeviceOpenGL::CubemapSeamlessDisable()
+{
+	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+}
+
 void RenderDeviceOpenGL::SetClipBehavior(RenderClipOriginMode origin, RenderClipDepthMode depth)
 {
 	glClipControl(ConvertClipOriginMode(origin), ConvertClipDepthMode(depth));

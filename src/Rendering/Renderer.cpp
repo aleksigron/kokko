@@ -178,6 +178,7 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 
 	this->environmentManager = environmentManager;
 
+	device->CubemapSeamlessEnable();
 	device->SetClipBehavior(RenderClipOriginMode::LowerLeft, RenderClipDepthMode::ZeroToOne);
 
 	int aligment = 0;
