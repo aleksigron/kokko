@@ -1,0 +1,15 @@
+{
+	"vs": {
+		"main": "res/shaders/preprocess/equirect_to_cube.vert.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/common/viewport_block.glsl"
+		]
+	},
+	"fs": {
+		"main": "res/shaders/preprocess/equirect_to_cube.frag.glsl"
+	},
+	"properties": [
+		{ "name": "equirectangular_map", "type": "tex2d" }
+	]
+}

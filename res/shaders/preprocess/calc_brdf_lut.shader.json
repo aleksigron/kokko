@@ -1,0 +1,19 @@
+{
+	"vs": {
+		"main": "res/shaders/preprocess/calc_brdf_lut.vert.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/common/viewport_block.glsl"
+		]
+	},
+	"fs": {
+		"main": "res/shaders/preprocess/calc_brdf_lut.frag.glsl",
+		"includes": [
+			"res/shaders/common/constants.glsl",
+			"res/shaders/preprocess/importance_sample.glsl"
+		]
+	},
+	"properties": [
+		{ "name": "environment_map", "type": "texCube" }
+	]
+}

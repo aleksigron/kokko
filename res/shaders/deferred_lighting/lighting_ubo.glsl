@@ -11,6 +11,7 @@ layout(std140, binding = BLOCK_BINDING_OBJECT) uniform Lighting
 	float shadow_splits[MaxCascadeCount + 1];
 
 	mat4x4 perspective_mat;
+	mat4x4 view_to_world;
     vec3 ambient_color;
     vec2 half_near_plane;
 	vec2 shadow_map_scale;

@@ -13,7 +13,9 @@ uniform sampler2D g_material;
 uniform sampler2D g_depth;
 uniform sampler2D ssao_map;
 uniform sampler2DShadow shadow_map;
-uniform samplerCube irradiance_map;
+uniform samplerCube diff_irradiance_map;
+uniform samplerCube spec_irradiance_map;
+uniform sampler2D brdf_lut;
 
 const int DirLightIndex = 0;
 
@@ -163,13 +165,24 @@ void main()
 		
 		Lo += calc_light(F0, N, V, L, albedo, light_col[idx], metalness, roughness) * direction_att * distance_att;
 	}
-	
+
     vec3 F = fresnel_schlick_roughness(max(dot(N, V), 0.0), F0, roughness);
     vec3 kD = (1.0 - F) * (1.0 - metalness);
+	
+	vec3 v_reflect = reflect(-V, N);
+	vec3 w_reflect = (view_to_world * vec4(v_reflect, 0.0)).xyz;
 
-	vec3 irradiance = texture(irradiance_map, N).rgb;
+    const float MAX_REFLECTION_LOD = 5.0;
+    vec3 spec_color = textureLod(spec_irradiance_map, w_reflect, roughness * MAX_REFLECTION_LOD).rgb;
+	vec2 env_brdf = texture(brdf_lut, vec2(max(dot(N, V), 0.0), roughness)).rg;
+	vec3 spec_irr = spec_color * (F * env_brdf.x + env_brdf.y);
+
+	vec3 w_normal = (view_to_world * vec4(N, 0.0)).xyz;
+	vec3 diff_irr = texture(diff_irradiance_map, w_normal).rgb * kD;
+
 	float ao = texture(ssao_map, fs_in.tex_coord).r;
-	vec3 ambient = kD * irradiance * albedo * ao; 
+
+	vec3 ambient = (diff_irr + spec_irr) * albedo * ao;
 
 	color = ambient + Lo;
 }

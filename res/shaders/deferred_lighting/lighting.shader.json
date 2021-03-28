@@ -21,6 +21,8 @@
 		{ "name": "g_depth", "type": "tex2d" },
 		{ "name": "ssao_map", "type": "tex2d" },
 		{ "name": "shadow_map", "type": "tex2d" },
-		{ "name": "irradiance_map", "type": "texCube" }
+		{ "name": "diff_irradiance_map", "type": "texCube" },
+		{ "name": "spec_irradiance_map", "type": "texCube" },
+		{ "name": "brdf_lut", "type": "tex2d" }
 	]
 }

@@ -368,7 +368,7 @@ void TextureManager::AllocateTextureStorage(TextureId id, RenderTextureTarget ta
 		renderDevice->CreateTextures(1, &texture.textureObjectId);
 		renderDevice->BindTexture(target, texture.textureObjectId);
 
-		RenderCommandData::SetTextureStorage2D textureStorage{ target, 1, format, size.x, size.y };
+		RenderCommandData::SetTextureStorage2D textureStorage{ target, levels, format, size.x, size.y };
 		renderDevice->SetTextureStorage2D(&textureStorage);
 
 		if (target == RenderTextureTarget::TextureCubeMap)

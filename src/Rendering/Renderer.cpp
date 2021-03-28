@@ -45,6 +45,34 @@
 
 #include "System/Window.hpp"
 
+struct LightingUniformBlock
+{
+	static constexpr size_t MaxLightCount = 8;
+	static constexpr size_t MaxCascadeCount = 4;
+
+	UniformBlockArray<Vec3f, MaxLightCount> lightColors;
+	UniformBlockArray<Vec4f, MaxLightCount> lightPositions; // xyz: position, w: inverse square radius
+	UniformBlockArray<Vec4f, MaxLightCount> lightDirections; // xyz: direction, w: spot light angle
+
+	UniformBlockArray<Mat4x4f, MaxCascadeCount> shadowMatrices;
+	UniformBlockArray<float, MaxCascadeCount + 1> shadowSplits;
+
+	alignas(16) Mat4x4f perspectiveMatrix;
+	alignas(16) Mat4x4f viewToWorld;
+	alignas(16) Vec3f ambientColor;
+	alignas(8) Vec2f halfNearPlane;
+	alignas(8) Vec2f shadowMapScale;
+	alignas(8) Vec2f frameResolution;
+
+	alignas(4) int pointLightCount;
+	alignas(4) int spotLightCount;
+	alignas(4) int cascadeCount;
+
+	alignas(4) float shadowBiasOffset;
+	alignas(4) float shadowBiasFactor;
+	alignas(4) float shadowBiasClamp;
+};
+
 struct RendererFramebuffer
 {
 	unsigned int framebuffer;
@@ -112,6 +140,8 @@ Renderer::Renderer(
 	shadowMaterial = MaterialId{ 0 };
 	lightingUniformBufferId = 0;
 	tonemapUniformBufferId = 0;
+
+	brdfLutTextureId = 0;
 
 	gBufferAlbedoTextureIndex = 0;
 	gBufferNormalTextureIndex = 0;
@@ -459,6 +489,53 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 		tonemappingShaderId = shaderManager->GetIdByPath(StringRef(path));
 	}
 
+	{
+		KOKKO_PROFILE_SCOPE("Calculate BRDF LUT");
+
+		// Calculate the BRDF LUT
+
+		static const int LutSize = 512;
+
+		device->CreateTextures(1, &brdfLutTextureId);
+		device->BindTexture(RenderTextureTarget::Texture2d, brdfLutTextureId);
+
+		RenderCommandData::SetTextureStorage2D storage{
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RG16F, LutSize, LutSize
+		};
+		device->SetTextureStorage2D(&storage);
+
+		device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
+		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
+
+		unsigned int framebuffer;
+		device->CreateFramebuffers(1, &framebuffer);
+
+		RenderCommandData::BindFramebufferData bindFramebuffer{ RenderFramebufferTarget::Framebuffer, framebuffer };
+		device->BindFramebuffer(&bindFramebuffer);
+
+		RenderCommandData::AttachFramebufferTexture2D attachTexture{
+			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
+			RenderTextureTarget::Texture2d, brdfLutTextureId, 0
+		};
+		device->AttachFramebufferTexture2D(&attachTexture);
+
+		RenderCommandData::ViewportData viewport{ 0, 0, LutSize, LutSize };
+		device->Viewport(&viewport);
+
+		const char* path = "res/shaders/preprocess/calc_brdf_lut.shader.json";
+		ShaderId calcBrdfShaderId = shaderManager->GetIdByPath(StringRef(path));
+		const ShaderData& calcBrdfShader = shaderManager->GetShaderData(calcBrdfShaderId);
+		device->UseShaderProgram(calcBrdfShader.driverId);
+
+		const MeshDrawData* meshDraw = meshManager->GetDrawData(fullscreenMesh);
+		device->BindVertexArray(meshDraw->vertexArrayObject);
+		device->DrawIndexed(meshDraw->primitiveMode, meshDraw->count, meshDraw->indexType);
+
+		device->DestroyFramebuffers(1, &framebuffer);
+	}
+
 	// Create skybox entity
 	{
 		skyboxEntity = entityManager->Create();
@@ -740,7 +817,8 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	ssao->Render(ssaoRenderParams);
 
 	EnvironmentTextures envMap = environmentManager->GetEnvironmentMap(scene->GetEnvironmentId());
-	const TextureData& irrTexture = textureManager->GetTextureData(envMap.diffuseIrradianceTexture);
+	const TextureData& diffIrrTexture = textureManager->GetTextureData(envMap.diffuseIrradianceTexture);
+	const TextureData& specIrrTexture = textureManager->GetTextureData(envMap.specularIrradianceTexture);
 
 	// Deferred lighting
 
@@ -752,7 +830,9 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.textureNameHashes[3] = "g_depth"_hash;
 	deferredPass.textureNameHashes[4] = "ssao_map"_hash;
 	deferredPass.textureNameHashes[5] = "shadow_map"_hash;
-	deferredPass.textureNameHashes[6] = "irradiance_map"_hash;
+	deferredPass.textureNameHashes[6] = "diff_irradiance_map"_hash;
+	deferredPass.textureNameHashes[7] = "spec_irradiance_map"_hash;
+	deferredPass.textureNameHashes[8] = "brdf_lut"_hash;
 
 	deferredPass.textureIds[0] = framebufferTextures[gBufferAlbedoTextureIndex];
 	deferredPass.textureIds[1] = framebufferTextures[gBufferNormalTextureIndex];
@@ -760,7 +840,9 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.textureIds[3] = framebufferTextures[fullscreenDepthTextureIndex];
 	deferredPass.textureIds[4] = ssao->GetResultTextureId();
 	deferredPass.textureIds[5] = framebufferTextures[shadowDepthTextureIndex];
-	deferredPass.textureIds[6] = irrTexture.textureObjectId;
+	deferredPass.textureIds[6] = diffIrrTexture.textureObjectId;
+	deferredPass.textureIds[7] = specIrrTexture.textureObjectId;
+	deferredPass.textureIds[8] = brdfLutTextureId;
 
 	deferredPass.samplerIds[0] = 0;
 	deferredPass.samplerIds[1] = 0;
@@ -769,8 +851,10 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.samplerIds[4] = 0;
 	deferredPass.samplerIds[5] = 0;
 	deferredPass.samplerIds[6] = 0;
+	deferredPass.samplerIds[7] = 0;
+	deferredPass.samplerIds[8] = 0;
 
-	deferredPass.textureCount = 7;
+	deferredPass.textureCount = 9;
 
 	deferredPass.uniformBufferId = lightingUniformBufferId;
 	deferredPass.uniformBindingPoint = UniformBlockBinding::Object;
@@ -864,8 +948,9 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
 	uniformsOut.frameResolution = Vec2f(gbuffer.width, gbuffer.height);
 
-	// Set the perspective matrix
+	// Set viewport transform matrices
 	uniformsOut.perspectiveMatrix = fsvp.projection;
+	uniformsOut.viewToWorld = fsvp.viewToWorld;
 
 	// Directional light
 	if (directionalLights.GetCount() > 0)

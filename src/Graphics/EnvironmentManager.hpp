@@ -14,12 +14,14 @@ struct EnvironmentTextures
 {
 	TextureId environmentTexture;
 	TextureId diffuseIrradianceTexture;
+	TextureId specularIrradianceTexture;
 };
 
 class EnvironmentManager
 {
 private:
 	static const size_t CubemapSideCount = 6;
+	static const size_t SpecularMipmapLevelCount = 6;
 
 	Allocator* allocator;
 	RenderDevice* renderDevice;
@@ -29,10 +31,12 @@ private:
 
 	Array<EnvironmentTextures> environmentMaps;
 
-	size_t blockStride;
+	size_t viewportBlockStride;
+	size_t specularBlockStride;
 
 	unsigned int framebufferId;
 	unsigned int viewportUniformBufferId;
+	unsigned int specularUniformBufferId;
 	unsigned int samplerId;
 
 public:

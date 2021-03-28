@@ -12,7 +12,7 @@ struct MeshDrawData;
 
 struct PostProcessRenderPass
 {
-	static const size_t MaxTextureCount = 8;
+	static const size_t MaxTextureCount = 10;
 
 	uint32_t textureNameHashes[MaxTextureCount];
 	unsigned int textureIds[MaxTextureCount];

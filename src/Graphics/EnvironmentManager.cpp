@@ -2,7 +2,7 @@
 
 #include "stb_image/stb_image.h"
 
-#include "Core/Buffer.hpp"
+#include "Core/Array.hpp"
 #include "Core/Core.hpp"
 
 #include "Debug/LogHelper.hpp"
@@ -21,6 +21,11 @@
 #include "Resources/MeshPresets.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
+
+struct CalcSpecularUniforms
+{
+	alignas(16) float roughness;
+};
 
 static RenderTextureTarget GetCubeTextureTarget(unsigned int index)
 {
@@ -49,9 +54,11 @@ EnvironmentManager::EnvironmentManager(
 	meshManager(meshManager),
 	textureManager(textureManager),
 	environmentMaps(allocator),
-	blockStride(0),
+	viewportBlockStride(0),
+	specularBlockStride(0),
 	framebufferId(0),
 	viewportUniformBufferId(0),
+	specularUniformBufferId(0),
 	samplerId(0)
 {
 }
@@ -91,15 +98,18 @@ void EnvironmentManager::Initialize()
 	int alignment;
 	renderDevice->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &alignment);
 
-	blockStride = (sizeof(TransformUniformBlock) + alignment - 1) / alignment * alignment;
-	unsigned int viewportBufferSize = static_cast<unsigned int>(blockStride * CubemapSideCount);
+	Array<unsigned char> uniformBuffer(allocator);
 
-	Buffer<unsigned char> uniformBuffer(allocator);
-	uniformBuffer.Allocate(viewportBufferSize);
+	// Viewport uniforms
+
+	viewportBlockStride = (sizeof(TransformUniformBlock) + alignment - 1) / alignment * alignment;
+	unsigned int viewportBufferSize = static_cast<unsigned int>(viewportBlockStride * CubemapSideCount);
+
+	uniformBuffer.Resize(viewportBufferSize);
 
 	for (size_t i = 0; i < CubemapSideCount; ++i)
 	{
-		ViewportUniformBlock* uniforms = reinterpret_cast<ViewportUniformBlock*>(&uniformBuffer[blockStride * i]);
+		ViewportUniformBlock* uniforms = reinterpret_cast<ViewportUniformBlock*>(&uniformBuffer[viewportBlockStride * i]);
 
 		uniforms->V = viewTransforms[i];
 		uniforms->P = projectionMatrix;
@@ -109,12 +119,32 @@ void EnvironmentManager::Initialize()
 	renderDevice->CreateBuffers(1, &viewportUniformBufferId);
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, viewportUniformBufferId);
 
-	RenderCommandData::SetBufferStorage bufferStorage{
-		RenderBufferTarget::UniformBuffer, viewportBufferSize, uniformBuffer.Data()
+	RenderCommandData::SetBufferStorage viewportBufferStorage{
+		RenderBufferTarget::UniformBuffer, viewportBufferSize, uniformBuffer.GetData()
 	};
-	renderDevice->SetBufferStorage(&bufferStorage);
+	renderDevice->SetBufferStorage(&viewportBufferStorage);
 
-	uniformBuffer.Deallocate();
+	// Calculate specular uniforms
+
+	specularBlockStride = (sizeof(CalcSpecularUniforms) + alignment - 1) / alignment * alignment;
+	unsigned int specularBufferSize = static_cast<unsigned int>(specularBlockStride * SpecularMipmapLevelCount);
+
+	uniformBuffer.Resize(specularBufferSize);
+
+	for (size_t mip = 0; mip < SpecularMipmapLevelCount; ++mip)
+	{
+		CalcSpecularUniforms* uniforms = reinterpret_cast<CalcSpecularUniforms*>(&uniformBuffer[specularBlockStride * mip]);
+
+		uniforms->roughness = mip / static_cast<float>(SpecularMipmapLevelCount - 1);
+	}
+
+	renderDevice->CreateBuffers(1, &specularUniformBufferId);
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, specularUniformBufferId);
+
+	RenderCommandData::SetBufferStorage specularBufferStorage{
+		RenderBufferTarget::UniformBuffer, specularBufferSize, uniformBuffer.GetData()
+	};
+	renderDevice->SetBufferStorage(&specularBufferStorage);
 
 	// Create sampler object
 
@@ -125,6 +155,7 @@ void EnvironmentManager::Initialize()
 		RenderTextureCompareMode::None
 	};
 	renderDevice->SetSamplerParameters(&samplerParams);
+
 }
 
 void EnvironmentManager::Deinitialize()
@@ -133,6 +164,12 @@ void EnvironmentManager::Deinitialize()
 	{
 		renderDevice->DestroySamplers(1, &samplerId);
 		samplerId = 0;
+	}
+
+	if (specularUniformBufferId != 0)
+	{
+		renderDevice->DestroyBuffers(1, &specularUniformBufferId);
+		specularUniformBufferId = 0;
 	}
 
 	if (viewportUniformBufferId != 0)
@@ -148,12 +185,46 @@ void EnvironmentManager::Deinitialize()
 	}
 }
 
+static void BindTexture(RenderDevice* renderDevice, const ShaderData& shader,
+	uint32_t uniformHash, RenderTextureTarget target, unsigned int textureId)
+{
+	const TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash(uniformHash);
+	if (uniform != nullptr)
+	{
+		renderDevice->SetUniformInt(uniform->uniformLocation, 0);
+		renderDevice->SetActiveTextureUnit(0);
+		renderDevice->BindTexture(target, textureId);
+	}
+}
+
+static void SetViewport(RenderDevice* renderDevice, unsigned int size)
+{
+	RenderCommandData::ViewportData viewport{ 0, 0, size, size };
+	renderDevice->Viewport(&viewport);
+}
+
+static void BindBufferRange(RenderDevice* renderDevice, unsigned int binding, unsigned int buffer, size_t offset, size_t size)
+{
+	RenderCommandData::BindBufferRange bindBufferRange{ RenderBufferTarget::UniformBuffer, binding, buffer, offset, size };
+	renderDevice->BindBufferRange(&bindBufferRange);
+}
+
+static void AttachFramebufferTexture(RenderDevice* renderDevice, unsigned int faceIndex, unsigned int textureId, int mip)
+{
+	RenderCommandData::AttachFramebufferTexture2D attachFramebufferTexture{
+		RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
+		GetCubeTextureTarget(faceIndex), textureId, mip
+	};
+	renderDevice->AttachFramebufferTexture2D(&attachFramebufferTexture);
+}
+
 int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	static const int EnvironmentTextureSize = 1024;
-	static const int IrradianceTextureSize = 32;
+	static const int SpecularTextureSize = 256;
+	static const int DiffuseTextureSize = 32;
 
 	RenderTextureSizedFormat sizedFormat = RenderTextureSizedFormat::RGB16F;
 
@@ -221,47 +292,33 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	ShaderId equirectShaderId = shaderManager->GetIdByPath(StringRef("res/shaders/preprocess/equirect_to_cube.shader.json"));
 	const ShaderData& equirectShader = shaderManager->GetShaderData(equirectShaderId);
 
+	// Bind common resources
+
+	renderDevice->BindVertexArray(cubeMeshDraw->vertexArrayObject);
+
+	RenderCommandData::BindFramebufferData bindFramebuffer{ RenderFramebufferTarget::Framebuffer, framebufferId };
+	renderDevice->BindFramebuffer(&bindFramebuffer);
+
+	// Bind shader
+
 	renderDevice->UseShaderProgram(equirectShader.driverId);
 
-	// Apply texture
-
-	const TextureUniform* eqTU = equirectShader.uniforms.FindTextureUniformByNameHash("equirectangular_map"_hash);
-	if (eqTU != nullptr)
-	{
-		renderDevice->SetUniformInt(eqTU->uniformLocation, 0);
-		renderDevice->SetActiveTextureUnit(0);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, equirectTextureId);
-	}
+	BindTexture(renderDevice, equirectShader, "equirectangular_map"_hash, RenderTextureTarget::Texture2d, equirectTextureId);
 
 	// Render
 	{
 		KOKKO_PROFILE_SCOPE("Render equirect to cubemap");
 
-		RenderCommandData::ViewportData envViewport{
-			0, 0, EnvironmentTextureSize, EnvironmentTextureSize
-		};
-		renderDevice->Viewport(&envViewport);
-
-		RenderCommandData::BindFramebufferData bindFramebuffer{ RenderFramebufferTarget::Framebuffer, framebufferId };
-		renderDevice->BindFramebuffer(&bindFramebuffer);
-
-		renderDevice->BindVertexArray(cubeMeshDraw->vertexArrayObject);
+		SetViewport(renderDevice, EnvironmentTextureSize);
 
 		RenderCommandData::ClearMask clearMask{ true, false, false };
 
 		for (unsigned int i = 0; i < CubemapSideCount; ++i)
 		{
-			RenderCommandData::BindBufferRange bindBufferRange{
-				RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, viewportUniformBufferId,
-				blockStride * i, sizeof(ViewportUniformBlock)
-			};
-			renderDevice->BindBufferRange(&bindBufferRange);
+			BindBufferRange(renderDevice, UniformBlockBinding::Viewport,
+				viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-			RenderCommandData::AttachFramebufferTexture2D attachFramebufferTexture{
-				RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
-				GetCubeTextureTarget(i), envMapTexture.textureObjectId, 0
-			};
-			renderDevice->AttachFramebufferTexture2D(&attachFramebufferTexture);
+			AttachFramebufferTexture(renderDevice, i, envMapTexture.textureObjectId, 0);
 
 			renderDevice->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
 		}
@@ -270,64 +327,97 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	renderDevice->DestroyTextures(1, &equirectTextureId);
 	equirectTextureId = 0;
 
-	// Now we have the environment map in a cubemap format
-	// Next we need to calculate the diffuse irradiance in each direction
+	// Calculate diffuse irradiance
 
 	// Create texture
 
-	Vec2i irrMapSize(IrradianceTextureSize, IrradianceTextureSize);
-	TextureId irrMapTextureId = textureManager->CreateTexture();
-	textureManager->AllocateTextureStorage(irrMapTextureId, RenderTextureTarget::TextureCubeMap, sizedFormat, 1, irrMapSize);
-	const TextureData& irrMapTexture = textureManager->GetTextureData(irrMapTextureId);
+	Vec2i diffuseMapSize(DiffuseTextureSize, DiffuseTextureSize);
+	TextureId diffuseMapTextureId = textureManager->CreateTexture();
+	textureManager->AllocateTextureStorage(diffuseMapTextureId, RenderTextureTarget::TextureCubeMap, sizedFormat, 1, diffuseMapSize);
+	const TextureData& diffuseMapTexture = textureManager->GetTextureData(diffuseMapTextureId);
 
 	// Load shader
 
-	ShaderId calcIrradianceShaderId = shaderManager->GetIdByPath(StringRef("res/shaders/preprocess/calc_diffuse_irradiance.shader.json"));
-	const ShaderData& calcIrradianceShader = shaderManager->GetShaderData(calcIrradianceShaderId);
+	ShaderId calcDiffuseShaderId = shaderManager->GetIdByPath(StringRef("res/shaders/preprocess/calc_diffuse_irradiance.shader.json"));
+	const ShaderData& calcDiffuseShader = shaderManager->GetShaderData(calcDiffuseShaderId);
 
-	renderDevice->UseShaderProgram(calcIrradianceShader.driverId);
+	renderDevice->UseShaderProgram(calcDiffuseShader.driverId);
 
 	// Apply texture
 
-	const TextureUniform* envTU = calcIrradianceShader.uniforms.FindTextureUniformByNameHash("environment_map"_hash);
-	if (envTU != nullptr)
-	{
-		renderDevice->SetUniformInt(envTU->uniformLocation, 0);
-		renderDevice->SetActiveTextureUnit(0);
-		renderDevice->BindTexture(RenderTextureTarget::TextureCubeMap, envMapTexture.textureObjectId);
-	}
+	BindTexture(renderDevice, calcDiffuseShader, "environment_map"_hash, RenderTextureTarget::TextureCubeMap, envMapTexture.textureObjectId);
 
 	{
-
 		KOKKO_PROFILE_SCOPE("Convolute to diffuse irradiance map");
 
-		RenderCommandData::ViewportData irrViewport{
-			0, 0, IrradianceTextureSize, IrradianceTextureSize
-		};
-		renderDevice->Viewport(&irrViewport);
+		SetViewport(renderDevice, DiffuseTextureSize);
 
 		for (unsigned int i = 0; i < CubemapSideCount; ++i)
 		{
-			RenderCommandData::BindBufferRange bindBufferRange{
-				RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, viewportUniformBufferId,
-				blockStride * i, sizeof(ViewportUniformBlock)
-			};
-			renderDevice->BindBufferRange(&bindBufferRange);
+			BindBufferRange(renderDevice, UniformBlockBinding::Viewport,
+				viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-			RenderCommandData::AttachFramebufferTexture2D attachFramebufferTexture{
-				RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
-				GetCubeTextureTarget(i), irrMapTexture.textureObjectId, 0
-			};
-			renderDevice->AttachFramebufferTexture2D(&attachFramebufferTexture);
+			AttachFramebufferTexture(renderDevice, i, diffuseMapTexture.textureObjectId, 0);
 
 			renderDevice->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
+		}
+	}
+
+	// Calculate specular irradiance
+
+	// Create texture
+
+	Vec2i specMapSize(SpecularTextureSize, SpecularTextureSize);
+	TextureId specMapTextureId = textureManager->CreateTexture();
+	textureManager->AllocateTextureStorage(specMapTextureId, RenderTextureTarget::TextureCubeMap,
+		sizedFormat, SpecularMipmapLevelCount, specMapSize);
+
+	const TextureData& specMapTexture = textureManager->GetTextureData(specMapTextureId);
+
+	renderDevice->BindTexture(RenderTextureTarget::TextureCubeMap, specMapTexture.textureObjectId);
+	renderDevice->SetTextureMinFilter(RenderTextureTarget::TextureCubeMap, RenderTextureFilterMode::LinearMipmap);
+	renderDevice->SetTextureMagFilter(RenderTextureTarget::TextureCubeMap, RenderTextureFilterMode::Linear);
+
+	// Load shader
+
+	ShaderId calcSpecularShaderId = shaderManager->GetIdByPath(StringRef("res/shaders/preprocess/calc_specular_irradiance.shader.json"));
+	const ShaderData& calcSpecularShader = shaderManager->GetShaderData(calcSpecularShaderId);
+
+	renderDevice->UseShaderProgram(calcSpecularShader.driverId);
+
+	// Apply texture
+
+	BindTexture(renderDevice, calcSpecularShader, "environment_map"_hash, RenderTextureTarget::TextureCubeMap, envMapTexture.textureObjectId);
+
+	{
+		KOKKO_PROFILE_SCOPE("Prefilter specular map");
+
+		for (unsigned int mip = 0; mip < SpecularMipmapLevelCount; ++mip)
+		{
+			BindBufferRange(renderDevice, UniformBlockBinding::Object,
+				specularUniformBufferId, specularBlockStride * mip, sizeof(CalcSpecularUniforms));
+
+			// reisze framebuffer according to mip-level size.
+			unsigned int mipSize = static_cast<unsigned int>(SpecularTextureSize) >> mip;
+
+			SetViewport(renderDevice, mipSize);
+
+			for (unsigned int i = 0; i < CubemapSideCount; ++i)
+			{
+				BindBufferRange(renderDevice, UniformBlockBinding::Viewport,
+					viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
+
+				AttachFramebufferTexture(renderDevice, i, specMapTexture.textureObjectId, mip);
+
+				renderDevice->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
+			}
 		}
 	}
 
 	renderDevice->BindSampler(0, 0);
 
 	unsigned int envIndex = environmentMaps.GetCount();
-	environmentMaps.PushBack(EnvironmentTextures{ envMapTextureId, irrMapTextureId });
+	environmentMaps.PushBack(EnvironmentTextures{ envMapTextureId, diffuseMapTextureId, specMapTextureId });
 
 	return static_cast<int>(envIndex);
 }

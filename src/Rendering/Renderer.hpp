@@ -89,6 +89,8 @@ private:
 	unsigned int lightingUniformBufferId;
 	unsigned int tonemapUniformBufferId;
 
+	unsigned int brdfLutTextureId;
+
 	unsigned int gBufferAlbedoTextureIndex;
 	unsigned int gBufferNormalTextureIndex;
 	unsigned int gBufferMaterialTextureIndex;
