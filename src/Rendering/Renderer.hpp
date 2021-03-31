@@ -53,7 +53,7 @@ struct PostProcessRenderPass;
 class Renderer : public ITransformUpdateReceiver, public CustomRenderer
 {
 private:
-
+	static const unsigned int FramesInFlightCount = 1;
 	static const unsigned int MaxViewportCount = 8;
 	static const unsigned int MaxFramebufferCount = 4;
 	static const unsigned int MaxFramebufferTextureCount = 16;
@@ -98,7 +98,9 @@ private:
 	unsigned int shadowDepthTextureIndex;
 	unsigned int lightAccumulationTextureIndex;
 
-	Array<unsigned int> objectUniformBuffers;
+	Array<unsigned char> uniformStagingBuffer;
+	Array<unsigned int> objectUniformBufferLists[FramesInFlightCount];
+	unsigned int currentFrameIndex;
 
 	size_t objectUniformBlockStride;
 	unsigned int objectsPerUniformBuffer;

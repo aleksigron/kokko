@@ -106,7 +106,9 @@ Renderer::Renderer(
 	viewportData(nullptr),
 	viewportCount(0),
 	viewportIndexFullscreen(0),
-	objectUniformBuffers(allocator),
+	uniformStagingBuffer(allocator),
+	objectUniformBufferLists{ Array<unsigned int>(allocator) },
+	currentFrameIndex(0),
 	entityMap(allocator),
 	lightManager(lightManager),
 	shaderManager(shaderManager),
@@ -571,10 +573,13 @@ void Renderer::Deinitialize()
 		lightingUniformBufferId = 0;
 	}
 
-	if (objectUniformBuffers.GetCount() > 0)
+	for (unsigned int i = 0; i < FramesInFlightCount; ++i)
 	{
-		device->DestroyBuffers(objectUniformBuffers.GetCount(), objectUniformBuffers.GetData());
-		objectUniformBuffers.Clear();
+		if (objectUniformBufferLists[i].GetCount() > 0)
+		{
+			device->DestroyBuffers(objectUniformBufferLists[i].GetCount(), objectUniformBufferLists[i].GetData());
+			objectUniformBufferLists[i].Clear();
+		}
 	}
 
 	if (framebufferData != nullptr)
@@ -637,6 +642,8 @@ void Renderer::Render(Scene* scene)
 	MeshId lastMeshId = MeshId{ 0 };
 	MaterialId lastMaterialId = MaterialId{ 0 };
 
+	Array<unsigned int>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
+
 	TransformUniformBlock objectUniforms;
 
 	uint64_t* itr = commandList.commands.GetData();
@@ -690,7 +697,7 @@ void Renderer::Render(Scene* scene)
 
 				RenderCommandData::BindBufferRange bind{
 					RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object,
-					objectUniformBuffers[bufferIndex], objectInBuffer * objectUniformBlockStride, objectUniformBlockStride
+					objUniformBuffers[bufferIndex], objectInBuffer * objectUniformBlockStride, objectUniformBlockStride
 				};
 
 				device->BindBufferRange(&bind);
@@ -743,6 +750,8 @@ void Renderer::Render(Scene* scene)
 	commandList.Clear();
 
 	renderTargetContainer->ConfirmAllTargetsAreUnused();
+
+	currentFrameIndex = (currentFrameIndex + 1) % FramesInFlightCount;
 }
 
 void Renderer::BindMaterialTextures(const MaterialData& material) const
@@ -1070,32 +1079,36 @@ void Renderer::UpdateUniformBuffers(unsigned int objectDrawCount)
 
 	unsigned int buffersRequired = (objectDrawCount + objectsPerUniformBuffer - 1) / objectsPerUniformBuffer;
 
+	Array<unsigned int>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
+
 	// Create new object transform uniform buffers if needed
-	if (buffersRequired > objectUniformBuffers.GetCount())
+	if (buffersRequired > objUniformBuffers.GetCount())
 	{
-		unsigned int currentCount = objectUniformBuffers.GetCount();
-		objectUniformBuffers.Resize(buffersRequired);
+		unsigned int currentCount = objUniformBuffers.GetCount();
+		objUniformBuffers.Resize(buffersRequired);
 
 		unsigned int addCount = buffersRequired - currentCount;
-		device->CreateBuffers(addCount, objectUniformBuffers.GetData() + currentCount);
+		device->CreateBuffers(addCount, objUniformBuffers.GetData() + currentCount);
 
 		for (unsigned int i = currentCount; i < buffersRequired; ++i)
 		{
-			device->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBuffers[i]);
+			device->BindBuffer(RenderBufferTarget::UniformBuffer, objUniformBuffers[i]);
 
 			RenderCommandData::SetBufferStorage setStorage{};
 			setStorage.target = RenderBufferTarget::UniformBuffer;
 			setStorage.size = ObjectUniformBufferSize;
 			setStorage.dynamicStorage = true;
-			setStorage.mapWriteAccess = true;
 
 			device->SetBufferStorage(&setStorage);
 		}
 	}
 
-	int mappedBufferIndex = -1;
-	char* mappedBuffer = nullptr;
-	int objectDrawsProcessed = 0;
+	int prevBufferIndex = -1;
+
+	uniformStagingBuffer.Resize(ObjectUniformBufferSize);
+	unsigned char* stagingBuffer = uniformStagingBuffer.GetData();
+
+	unsigned int objectDrawsProcessed = 0;
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -1112,25 +1125,20 @@ void Renderer::UpdateUniformBuffers(unsigned int objectDrawCount)
 			int bufferIndex = objectDrawsProcessed / objectsPerUniformBuffer;
 			int objectInBuffer = objectDrawsProcessed % objectsPerUniformBuffer;
 
-			if (bufferIndex != mappedBufferIndex)
+			if (bufferIndex != prevBufferIndex)
 			{
-				if (mappedBufferIndex >= 0)
-					device->UnmapBuffer(RenderBufferTarget::UniformBuffer);
+				if (prevBufferIndex >= 0)
+				{
+					KOKKO_PROFILE_SCOPE("Update buffer data");
 
-				device->BindBuffer(RenderBufferTarget::UniformBuffer, objectUniformBuffers[bufferIndex]);
+					device->BindBuffer(RenderBufferTarget::UniformBuffer, objUniformBuffers[prevBufferIndex]);
+					device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, ObjectUniformBufferSize, stagingBuffer);
+				}
 
-				RenderCommandData::MapBufferRange map{};
-				map.target = RenderBufferTarget::UniformBuffer;
-				map.offset = 0;
-				map.length = ObjectUniformBufferSize;
-				map.writeAccess = true;
-				map.invalidateBuffer = true;
-
-				mappedBuffer = static_cast<char*>(device->MapBufferRange(&map));
-				mappedBufferIndex = bufferIndex;
+				prevBufferIndex = bufferIndex;
 			}
 
-			TransformUniformBlock* tu = reinterpret_cast<TransformUniformBlock*>(mappedBuffer + objectUniformBlockStride * objectInBuffer);
+			TransformUniformBlock* tu = reinterpret_cast<TransformUniformBlock*>(stagingBuffer + objectUniformBlockStride * objectInBuffer);
 
 			const Mat4x4f& model = data.transform[objIdx];
 			tu->MVP = viewportData[vpIdx].viewProjection * model;
@@ -1141,8 +1149,14 @@ void Renderer::UpdateUniformBuffers(unsigned int objectDrawCount)
 		}
 	}
 
-	if (mappedBufferIndex >= 0)
-		device->UnmapBuffer(RenderBufferTarget::UniformBuffer);
+	if (prevBufferIndex >= 0)
+	{
+		KOKKO_PROFILE_SCOPE("Update buffer data");
+
+		unsigned int updateSize = (objectDrawsProcessed % objectsPerUniformBuffer) * objectUniformBlockStride;
+		device->BindBuffer(RenderBufferTarget::UniformBuffer, objUniformBuffers[prevBufferIndex]);
+		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, updateSize, stagingBuffer);
+	}
 }
 
 bool Renderer::IsDrawCommand(uint64_t orderKey)
