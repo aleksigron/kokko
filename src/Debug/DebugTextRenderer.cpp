@@ -153,7 +153,13 @@ void DebugTextRenderer::Render()
 			renderDevice->CreateBuffers(1, &bufferObjectId);
 
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, bufferObjectId);
-			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(UniformBlock), nullptr, usage);
+
+			RenderCommandData::SetBufferStorage storage{};
+			storage.target = RenderBufferTarget::UniformBuffer;
+			storage.size = sizeof(UniformBlock);
+			storage.data = nullptr;
+			storage.dynamicStorage = true;
+			renderDevice->SetBufferStorage(&storage);
 		}
 
 		CreateAndUploadData();

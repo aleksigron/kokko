@@ -100,7 +100,13 @@ void BloomEffect::Initialize()
 
 	renderDevice->CreateBuffers(1, &uniformBufferId);
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-	renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, bufferSize, nullptr, RenderBufferUsage::DynamicDraw);
+
+	RenderCommandData::SetBufferStorage storage{};
+	storage.target = RenderBufferTarget::UniformBuffer;
+	storage.size = bufferSize;
+	storage.data = nullptr;
+	storage.dynamicStorage = true;
+	renderDevice->SetBufferStorage(&storage);
 
 	renderDevice->CreateSamplers(1, &linearSamplerId);
 

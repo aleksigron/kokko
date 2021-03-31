@@ -234,7 +234,13 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 		{
 			viewportData[i].uniformBlockObject = buffers[i];
 			device->BindBuffer(RenderBufferTarget::UniformBuffer, viewportData[i].uniformBlockObject);
-			device->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(ViewportUniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
+
+			RenderCommandData::SetBufferStorage storage{};
+			storage.target = RenderBufferTarget::UniformBuffer;
+			storage.size = sizeof(ViewportUniformBlock);
+			storage.data = nullptr;
+			storage.dynamicStorage = true;
+			device->SetBufferStorage(&storage);
 		}
 	}
 
@@ -458,7 +464,13 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 
 		device->CreateBuffers(1, &tonemapUniformBufferId);
 		device->BindBuffer(RenderBufferTarget::UniformBuffer, tonemapUniformBufferId);
-		device->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(TonemapUniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
+
+		RenderCommandData::SetBufferStorage storage{};
+		storage.target = RenderBufferTarget::UniformBuffer;
+		storage.size = sizeof(TonemapUniformBlock);
+		storage.data = nullptr;
+		storage.dynamicStorage = true;
+		device->SetBufferStorage(&storage);
 	}
 
 	{
@@ -468,7 +480,13 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 
 		device->CreateBuffers(1, &lightingUniformBufferId);
 		device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
-		device->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(LightingUniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
+
+		RenderCommandData::SetBufferStorage storage{};
+		storage.target = RenderBufferTarget::UniformBuffer;
+		storage.size = sizeof(LightingUniformBlock);
+		storage.data = nullptr;
+		storage.dynamicStorage = true;
+		device->SetBufferStorage(&storage);
 	}
 
 	{

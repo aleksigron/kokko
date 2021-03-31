@@ -216,7 +216,7 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 	unsigned int uboSize = material.uniforms.uniformDataSize;
 	
 	if (material.uniforms.bufferUniformCount > 0 ||
-		material.uniforms.textureUniformCount)
+		material.uniforms.textureUniformCount > 0)
 	{
 		size_t bufferSize = material.uniforms.bufferUniformCount * sizeof(BufferUniform) +
 			material.uniforms.textureUniformCount * sizeof(TextureUniform) +
@@ -237,14 +237,6 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 
 		for (unsigned int i = 0, count = shader.uniforms.textureUniformCount; i < count; ++i)
 			material.uniforms.textureUniforms[i] = shader.uniforms.textureUniforms[i];
-
-		// Create GPU uniform buffer and allocate storage
-
-		if (material.uniformBufferObject == 0)
-			renderDevice->CreateBuffers(1, &material.uniformBufferObject);
-
-		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
-		renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, material.uniforms.uniformBufferSize, nullptr, RenderBufferUsage::StaticDraw);
 	}
 	else
 	{
@@ -252,12 +244,25 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 		material.uniforms.bufferUniforms = nullptr;
 		material.uniforms.textureUniforms = nullptr;
 		material.uniformData = nullptr;
+	}
 
-		if (material.uniformBufferObject != 0)
-		{
-			renderDevice->DestroyBuffers(1, &material.uniformBufferObject);
-			material.uniformBufferObject = 0;
-		}
+	if (material.uniformBufferObject != 0)
+		renderDevice->DestroyBuffers(1, &material.uniformBufferObject);
+
+	if (material.uniforms.bufferUniformCount > 0)
+	{
+		// Create GPU uniform buffer and allocate storage
+
+		renderDevice->CreateBuffers(1, &material.uniformBufferObject);
+
+		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
+
+		RenderCommandData::SetBufferStorage bufferStorage{};
+		bufferStorage.target = RenderBufferTarget::UniformBuffer;
+		bufferStorage.size = material.uniforms.uniformBufferSize;
+		bufferStorage.data = nullptr;
+		bufferStorage.dynamicStorage = true;
+		renderDevice->SetBufferStorage(&bufferStorage);
 	}
 }
 

@@ -453,10 +453,22 @@ void DebugVectorRenderer::Render(Camera* camera)
 			renderDevice->CreateBuffers(2, uniformBufferIds);
 
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[ObjectBuffer]);
-			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(TransformUniformBlock), nullptr, usage);
+
+			RenderCommandData::SetBufferStorage transformStorage{};
+			transformStorage.target = RenderBufferTarget::UniformBuffer;
+			transformStorage.size = sizeof(TransformUniformBlock);
+			transformStorage.data = nullptr;
+			transformStorage.dynamicStorage = true;
+			renderDevice->SetBufferStorage(&transformStorage);
 
 			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[MaterialBuffer]);
-			renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(MaterialBlock), nullptr, usage);
+
+			RenderCommandData::SetBufferStorage materialStorage{};
+			materialStorage.target = RenderBufferTarget::UniformBuffer;
+			materialStorage.size = sizeof(MaterialBlock);
+			materialStorage.data = nullptr;
+			materialStorage.dynamicStorage = true;
+			renderDevice->SetBufferStorage(&materialStorage);
 
 			buffersInitialized = true;
 		}

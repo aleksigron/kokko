@@ -74,10 +74,10 @@ void TerrainInstance::Initialize()
 	renderDevice->CreateTextures(1, &textureId);
 	renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureId);
 
-	RenderCommandData::SetTextureStorage2D storage{
+	RenderCommandData::SetTextureStorage2D textureStorage{
 		RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::R16, texSize, texSize
 	};
-	renderDevice->SetTextureStorage2D(&storage);
+	renderDevice->SetTextureStorage2D(&textureStorage);
 
 	RenderCommandData::SetTextureSubImage2D subimage{
 		RenderTextureTarget::Texture2d, 0, 0, 0, texSize, texSize, RenderTextureBaseFormat::R,
@@ -153,7 +153,13 @@ void TerrainInstance::Initialize()
 
 	renderDevice->CreateBuffers(1, &uniformBufferId);
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-	renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, sizeof(UniformBlock), nullptr, RenderBufferUsage::DynamicDraw);
+
+	RenderCommandData::SetBufferStorage bufferStorage{};
+	bufferStorage.target = RenderBufferTarget::UniformBuffer;
+	bufferStorage.size = sizeof(UniformBlock);
+	bufferStorage.data = nullptr;
+	bufferStorage.dynamicStorage = true;
+	renderDevice->SetBufferStorage(&bufferStorage);
 }
 
 void TerrainInstance::RenderTerrain(const MaterialData& material, const RenderViewport& viewport)

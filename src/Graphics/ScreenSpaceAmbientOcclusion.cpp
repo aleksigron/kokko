@@ -250,7 +250,13 @@ void ScreenSpaceAmbientOcclusion::CreatePassResources(size_t passCount, const St
 		// Uniform buffer
 
 		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[i]);
-		renderDevice->SetBufferData(RenderBufferTarget::UniformBuffer, uniformSizes[i], nullptr, RenderBufferUsage::DynamicDraw);
+
+		RenderCommandData::SetBufferStorage storage{};
+		storage.target = RenderBufferTarget::UniformBuffer;
+		storage.size = uniformSizes[i];
+		storage.data = nullptr;
+		storage.dynamicStorage = true;
+		renderDevice->SetBufferStorage(&storage);
 
 		// Shader
 
