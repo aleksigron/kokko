@@ -27,7 +27,6 @@ namespace EditorUI
 
     void Render()
     {
-        ImGui::ShowDemoWindow();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }

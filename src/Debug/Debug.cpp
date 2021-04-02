@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdio>
 
+#include "imgui.h"
+
 #include "Core/Core.hpp"
 
 #include "Engine/Engine.hpp"
@@ -48,7 +50,7 @@ Debug::Debug(
 	profileInProgress(false),
 	profileStarted(false),
 	endProfileOnFrame(0),
-	currentFrameRate(0.0),
+	currentFrameTime(0.0),
 	nextFrameRateUpdate(-1.0),
 	mode(DebugMode::None)
 {
@@ -217,8 +219,8 @@ void Debug::Render(Scene* scene)
 	double now = Time::GetRunningTime();
 	if (now > nextFrameRateUpdate)
 	{
-		currentFrameRate = 1.0 / graph->GetAverageOverLastSeconds(0.15);
-		nextFrameRateUpdate = now + 0.15;
+		currentFrameTime = graph->GetAverageOverLastSeconds(0.15);
+		nextFrameRateUpdate += 0.15;
 	}
 
 	unsigned int errs = console->GetTotalErrorCount();
@@ -252,6 +254,8 @@ void Debug::Render(Scene* scene)
 		vectorRenderer->DrawRectangleScreen(rect, yellow);
 	}
 
+	double currentFrameRate = 1.0 / currentFrameTime;
+
 	// Draw debug mode guide
 	char buffer[128];
 	const char* format = "E: %-3u W: %-3u [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile  [F8]Vsync: %c, %.1f fps";
@@ -276,6 +280,14 @@ void Debug::Render(Scene* scene)
 
 	vectorRenderer->Render(scene->GetActiveCamera());
 	textRenderer->Render();
+
+	ImGui::Begin("Performance stats");
+
+	const char* timingFormat = "Frametime: %.3f ms";
+	std::snprintf(buffer, sizeof(buffer), timingFormat, currentFrameTime * 1000.0);
+	ImGui::Text(buffer);
+
+	ImGui::End();
 }
 
 bool Debug::ShouldBeginProfileSession() const

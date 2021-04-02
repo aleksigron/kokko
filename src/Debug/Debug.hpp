@@ -38,7 +38,7 @@ private:
 	bool profileStarted;
 	unsigned int endProfileOnFrame;
 
-	double currentFrameRate;
+	double currentFrameTime;
 	double nextFrameRateUpdate;
 
 	enum class DebugMode
