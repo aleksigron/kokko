@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 project("Kokko Engine")
 
@@ -8,7 +8,8 @@ set(CMAKE_CXX_STANDARD 14)
 # Don't use language extensions
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set (EXECUTABLE_NAME kokko)
+set(IMGUI_LIB imgui)
+set(EXECUTABLE_NAME kokko)
 
 include_directories(
 	src
@@ -16,13 +17,40 @@ include_directories(
 	deps/glfw/include
 	deps/glad/include
 	deps/stb_image/include
+	deps/imgui
+)
+
+set (IMGUI_SOURCES
+	deps/imgui/imconfig.h
+	deps/imgui/imgui.cpp
+	deps/imgui/imgui.h
+	deps/imgui/imgui_demo.cpp
+	deps/imgui/imgui_draw.cpp
+	deps/imgui/imgui_tables.cpp
+	deps/imgui/imgui_widgets.cpp
+	deps/imgui/backends/imgui_impl_glfw.cpp
+	deps/imgui/backends/imgui_impl_glfw.h
+	deps/imgui/backends/imgui_impl_opengl3.cpp
+	deps/imgui/backends/imgui_impl_opengl3.h
+)
+
+add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+add_library(${IMGUI_LIB} STATIC
+             ${IMGUI_SOURCES})
+
+set (GLAD_SOURCES
+	deps/glad/include/glad/glad.h
+	deps/glad/src/glad.c
+)
+
+set (STB_IMAGE_SOURCES
+	deps/stb_image/include/stb_image/stb_image.h
+	deps/stb_image/src/stb_image.cpp
 )
 
 set (DEPS_SOURCES
-	deps/glad/include/glad/glad.h
-	deps/glad/src/glad.c
-	deps/stb_image/include/stb_image/stb_image.h
-	deps/stb_image/src/stb_image.cpp
+	${GLAD_SOURCES}
+	${STB_IMAGE_SOURCES}
 )
 
 set (KOKKO_SOURCES
@@ -77,6 +105,8 @@ set (KOKKO_SOURCES
 	src/Debug/LogHelper.hpp
 	src/Debug/LogLevel.hpp
 	src/Debug/PerformanceTimer.hpp
+	src/Editor/EditorUI.cpp
+	src/Editor/EditorUI.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
 	src/Entity/Entity.hpp
@@ -207,7 +237,8 @@ set (KOKKO_SOURCES
 	src/System/Window.hpp
 )
 
-source_group(Dependencies FILES ${DEPS_SOURCES})
+source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
+source_group(Dependencies\\stb_image FILES ${STB_IMAGE_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})
 
 add_executable(${EXECUTABLE_NAME} ${DEPS_SOURCES} ${KOKKO_SOURCES})
@@ -228,6 +259,7 @@ add_subdirectory(deps/ktx)
 
 find_package(OpenGL REQUIRED)
 
+target_link_libraries(${EXECUTABLE_NAME} ${IMGUI_LIB})
 target_link_libraries(${EXECUTABLE_NAME} glfw)
 target_link_libraries(${EXECUTABLE_NAME} ktx_read)
 target_link_libraries(${EXECUTABLE_NAME} OpenGL::GL)

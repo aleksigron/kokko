@@ -55,6 +55,7 @@ public:
 	int GetSwapInterval() const { return currentSwapInterval; }
 
 	InputManager* GetInputManager() { return inputManager; }
+	GLFWwindow* GetGlfwWindow() { return windowHandle; }
 	
 	static Window* GetWindowObject(GLFWwindow* windowHandle);
 };

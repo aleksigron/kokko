@@ -11,6 +11,8 @@
 #include "Debug/DebugVectorRenderer.hpp"
 #include "Debug/Instrumentation.hpp"
 
+#include "Editor/EditorUI.hpp"
+
 #include "Entity/EntityManager.hpp"
 
 #include "Graphics/EnvironmentManager.hpp"
@@ -105,6 +107,9 @@ Engine::Engine()
 Engine::~Engine()
 {
 	renderer.instance->Deinitialize();
+
+	EditorUI::Deinitialize();
+
 	debug.instance->Deinitialize();
 
 	scriptSystem.Delete();
@@ -156,6 +161,8 @@ bool Engine::Initialize()
 		debug.instance->Initialize(mainWindow.instance, renderer.instance,
 			meshManager.instance, shaderManager.instance, sceneManager.instance);
 
+		EditorUI::Initialize(mainWindow.instance->GetGlfwWindow());
+
 		textureManager.instance->Initialize();
 		environmentManager.instance->Initialize();
 		renderer.instance->Initialize(mainWindow.instance, entityManager.instance, environmentManager.instance);
@@ -177,6 +184,8 @@ void Engine::FrameStart()
 
 	if (debug.instance->ShouldEndProfileSession())
 		Instrumentation::Get().EndSession();
+
+	EditorUI::StartFrame();
 }
 
 void Engine::Update()
@@ -198,6 +207,8 @@ void Engine::Update()
 	renderer.instance->Render(primaryScene);
 
 	debug.instance->Render(primaryScene);
+
+	EditorUI::Render();
 
 	mainWindow.instance->UpdateInput();
 	mainWindow.instance->Swap();
