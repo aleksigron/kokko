@@ -44,6 +44,9 @@ public:
 	virtual void DepthRange(const RenderCommandData::DepthRangeData* data) = 0;
 	virtual void Viewport(const RenderCommandData::ViewportData* data) = 0;
 
+	virtual void ScissorTestEnable() = 0;
+	virtual void ScissorTestDisable() = 0;
+
 	virtual void DepthTestEnable() = 0;
 	virtual void DepthTestDisable() = 0;
 

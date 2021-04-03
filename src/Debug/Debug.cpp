@@ -220,7 +220,7 @@ void Debug::Render(Scene* scene)
 	if (now > nextFrameRateUpdate)
 	{
 		currentFrameTime = graph->GetAverageOverLastSeconds(0.15);
-		nextFrameRateUpdate += 0.15;
+		nextFrameRateUpdate = now + 0.15;
 	}
 
 	unsigned int errs = console->GetTotalErrorCount();

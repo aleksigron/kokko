@@ -39,6 +39,9 @@ public:
 	virtual void DepthRange(const RenderCommandData::DepthRangeData* data) override;
 	virtual void Viewport(const RenderCommandData::ViewportData* data) override;
 
+	virtual void ScissorTestEnable() override;
+	virtual void ScissorTestDisable() override;
+
 	virtual void DepthTestEnable() override;
 	virtual void DepthTestDisable() override;
 

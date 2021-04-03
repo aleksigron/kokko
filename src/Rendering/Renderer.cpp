@@ -1219,6 +1219,14 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 		}
 			break;
 
+		case RenderControlType::ScissorTestEnable:
+			device->ScissorTestEnable();
+			break;
+
+		case RenderControlType::ScissorTestDisable:
+			device->ScissorTestDisable();
+			break;
+
 		case RenderControlType::DepthRange:
 		{
 			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
@@ -1486,16 +1494,18 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 	// Set face culling to cull back faces
 	commandList.AddControl(0, g_pass, 4, ctrl::CullFaceBack);
 
+	commandList.AddControl(0, g_pass, 5, ctrl::ScissorTestDisable);
+
 	{
 		// Set clear depth
 		float depth = 0.0f;
 		unsigned int* intDepthPtr = reinterpret_cast<unsigned int*>(&depth);
 
-		commandList.AddControl(0, g_pass, 5, ctrl::ClearDepth, *intDepthPtr);
+		commandList.AddControl(0, g_pass, 6, ctrl::ClearDepth, *intDepthPtr);
 	}
 
 	// Disable blending
-	commandList.AddControl(0, g_pass, 6, ctrl::BlendingDisable);
+	commandList.AddControl(0, g_pass, 7, ctrl::BlendingDisable);
 
 	{
 		// Bind shadow framebuffer before any shadow cascade draws
@@ -1503,7 +1513,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 		data.target = RenderFramebufferTarget::Framebuffer;
 		data.framebuffer = framebufferData[FramebufferIndexShadow].framebuffer;
 
-		commandList.AddControl(0, g_pass, 7, ctrl::BindFramebuffer, sizeof(data), &data);
+		commandList.AddControl(0, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
 	}
 
 	{
@@ -1516,14 +1526,17 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 		data.w = fb.width;
 		data.h = fb.height;
 
-		commandList.AddControl(0, g_pass, 8, ctrl::Viewport, sizeof(data), &data);
+		commandList.AddControl(0, g_pass, 9, ctrl::Viewport, sizeof(data), &data);
 	}
 
 	// Clear shadow framebuffer RenderFramebufferTarget::Framebuffer
 	{
 		RenderCommandData::ClearMask clearMask{ false, true, false };
-		commandList.AddControl(0, g_pass, 9, ctrl::Clear, sizeof(clearMask), &clearMask);
+		commandList.AddControl(0, g_pass, 10, ctrl::Clear, sizeof(clearMask), &clearMask);
 	}
+
+	// Enable sRGB conversion for framebuffer
+	commandList.AddControl(0, g_pass, 11, ctrl::FramebufferSrgbEnable);
 
 	// For each shadow viewport
 	for (unsigned int vpIdx = 0; vpIdx < numShadowViewports; ++vpIdx)
@@ -1537,11 +1550,8 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 		data.w = viewport.viewportRectangle.size.x;
 		data.h = viewport.viewportRectangle.size.y;
 
-		commandList.AddControl(vpIdx, g_pass, 10, ctrl::Viewport, sizeof(data), &data);
+		commandList.AddControl(vpIdx, g_pass, 12, ctrl::Viewport, sizeof(data), &data);
 	}
-
-	// Enable sRGB conversion for framebuffer
-	commandList.AddControl(0, g_pass, 11, ctrl::FramebufferSrgbEnable);
 
 	// Before fullscreen viewport
 

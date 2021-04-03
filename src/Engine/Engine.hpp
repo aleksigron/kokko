@@ -3,6 +3,7 @@
 class Allocator;
 class AllocatorManager;
 class Window;
+class EditorUI;
 class Time;
 class RenderDevice;
 class EntityManager;
@@ -46,6 +47,7 @@ private:
 	Allocator* systemAllocator;
 
 	InstanceAllocatorPair<Window> mainWindow;
+	InstanceAllocatorPair<EditorUI> editorUI;
 	Time* time;
 	RenderDevice* renderDevice;
 	InstanceAllocatorPair<Debug> debug;

@@ -498,7 +498,15 @@ void RenderDeviceOpenGL::Viewport(const RenderCommandData::ViewportData* data)
 	glViewport(data->x, data->y, data->w, data->h);
 }
 
-// DEPTH TEST / WRITE
+void RenderDeviceOpenGL::ScissorTestEnable()
+{
+	glEnable(GL_SCISSOR_TEST);
+}
+
+void RenderDeviceOpenGL::ScissorTestDisable()
+{
+	glDisable(GL_SCISSOR_TEST);
+}
 
 void RenderDeviceOpenGL::DepthTestEnable()
 {

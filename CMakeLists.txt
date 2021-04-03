@@ -28,10 +28,6 @@ set (IMGUI_SOURCES
 	deps/imgui/imgui_draw.cpp
 	deps/imgui/imgui_tables.cpp
 	deps/imgui/imgui_widgets.cpp
-	deps/imgui/backends/imgui_impl_glfw.cpp
-	deps/imgui/backends/imgui_impl_glfw.h
-	deps/imgui/backends/imgui_impl_opengl3.cpp
-	deps/imgui/backends/imgui_impl_opengl3.h
 )
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
@@ -218,6 +214,10 @@ set (KOKKO_SOURCES
 	src/Scripting/ScriptSystem.hpp
 	src/System/File.cpp
 	src/System/File.hpp
+	src/System/ImGuiPlatformBackend.cpp
+	src/System/ImGuiPlatformBackend.hpp
+	src/System/ImGuiRenderBackend.cpp
+	src/System/ImGuiRenderBackend.hpp
 	src/System/IncludeOpenGL.hpp
 	src/System/IncludeGLFW.hpp
 	src/System/InputManager.cpp

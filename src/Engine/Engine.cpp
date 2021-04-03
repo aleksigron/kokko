@@ -58,6 +58,9 @@ Engine::Engine()
 	mainWindow.CreateScope(allocatorManager, "Window", alloc);
 	mainWindow.New(mainWindow.allocator);
 
+	editorUI.CreateScope(allocatorManager, "EditorUI", alloc);
+	editorUI.New(editorUI.allocator);
+
 	systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 	time = systemAllocator->MakeNew<Time>();
 	renderDevice = systemAllocator->MakeNew<RenderDeviceOpenGL>();
@@ -107,10 +110,8 @@ Engine::Engine()
 Engine::~Engine()
 {
 	renderer.instance->Deinitialize();
-
-	EditorUI::Deinitialize();
-
 	debug.instance->Deinitialize();
+	editorUI.instance->Deinitialize();
 
 	scriptSystem.Delete();
 	renderer.Delete();
@@ -127,6 +128,7 @@ Engine::~Engine()
 	debug.Delete();
 	systemAllocator->MakeDelete(this->time);
 	systemAllocator->MakeDelete(this->renderDevice);
+	editorUI.Delete();
 	mainWindow.Delete();
 
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
@@ -143,6 +145,8 @@ bool Engine::Initialize()
 
 	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko"))
 	{
+		editorUI.instance->Initialize(mainWindow.instance->GetGlfwWindow());
+
 		const char* const logFilename = "log.txt";
 		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";
 
@@ -160,8 +164,6 @@ bool Engine::Initialize()
 
 		debug.instance->Initialize(mainWindow.instance, renderer.instance,
 			meshManager.instance, shaderManager.instance, sceneManager.instance);
-
-		EditorUI::Initialize(mainWindow.instance->GetGlfwWindow());
 
 		textureManager.instance->Initialize();
 		environmentManager.instance->Initialize();
@@ -185,7 +187,7 @@ void Engine::FrameStart()
 	if (debug.instance->ShouldEndProfileSession())
 		Instrumentation::Get().EndSession();
 
-	EditorUI::StartFrame();
+	editorUI.instance->StartFrame();
 }
 
 void Engine::Update()
@@ -208,7 +210,7 @@ void Engine::Update()
 
 	debug.instance->Render(primaryScene);
 
-	EditorUI::Render();
+	editorUI.instance->Render();
 
 	mainWindow.instance->UpdateInput();
 	mainWindow.instance->Swap();

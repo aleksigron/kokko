@@ -24,6 +24,10 @@ enum class RenderControlType
 	BlendFunction,
 
 	Viewport, // Data: x, y, w, h
+
+	ScissorTestEnable,
+	ScissorTestDisable,
+
 	DepthRange, // Data: near, far
 
 	DepthTestEnable,
