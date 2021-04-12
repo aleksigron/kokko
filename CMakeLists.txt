@@ -214,6 +214,8 @@ set (KOKKO_SOURCES
 	src/Scripting/ScriptSystem.hpp
 	src/System/File.cpp
 	src/System/File.hpp
+	src/System/ImGuiInputView.cpp
+	src/System/ImGuiInputView.hpp
 	src/System/ImGuiPlatformBackend.cpp
 	src/System/ImGuiPlatformBackend.hpp
 	src/System/ImGuiRenderBackend.cpp
@@ -222,10 +224,15 @@ set (KOKKO_SOURCES
 	src/System/IncludeGLFW.hpp
 	src/System/InputManager.cpp
 	src/System/InputManager.hpp
+	src/System/InputSource.cpp
+	src/System/InputSource.hpp
+	src/System/InputView.cpp
+	src/System/InputView.hpp
 	src/System/KeyboardInput.cpp
 	src/System/KeyboardInput.hpp
 	src/System/KeyboardInputView.cpp
 	src/System/KeyboardInputView.hpp
+	src/System/KeyCode.hpp
 	src/System/PointerInput.cpp
 	src/System/PointerInput.hpp
 	src/System/TextInputHandler.hpp
@@ -235,6 +242,10 @@ set (KOKKO_SOURCES
 	src/System/Time.hpp
 	src/System/Window.cpp
 	src/System/Window.hpp
+	src/System/WindowEvent.cpp
+	src/System/WindowEvent.hpp
+	src/System/WindowEventListener.cpp
+	src/System/WindowEventListener.hpp
 )
 
 source_group(Dependencies\\glad FILES ${GLAD_SOURCES})

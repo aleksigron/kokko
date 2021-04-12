@@ -37,6 +37,7 @@
 
 #include "Scripting/ScriptSystem.hpp"
 
+#include "System/InputManager.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
@@ -145,7 +146,9 @@ bool Engine::Initialize()
 
 	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko"))
 	{
-		editorUI.instance->Initialize(mainWindow.instance->GetGlfwWindow());
+		editorUI.instance->Initialize(
+			mainWindow.instance->GetGlfwWindow(),
+			mainWindow.instance->GetInputManager()->GetImGuiInputView());
 
 		const char* const logFilename = "log.txt";
 		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";

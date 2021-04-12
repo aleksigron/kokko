@@ -20,7 +20,7 @@ EditorUI::~EditorUI()
 
 }
 
-void EditorUI::Initialize(GLFWwindow* window)
+void EditorUI::Initialize(GLFWwindow* window, InputView* imguiInputView)
 {
 	renderBackend = allocator->MakeNew<ImGuiRenderBackend>();
 	platformBackend = allocator->MakeNew<ImGuiPlatformBackend>();
@@ -32,7 +32,7 @@ void EditorUI::Initialize(GLFWwindow* window)
 	ImGui::StyleColorsDark();
 
 	renderBackend->Initialize();
-	platformBackend->Initialize(window);
+	platformBackend->Initialize(window, imguiInputView);
 }
 
 void EditorUI::Deinitialize()

@@ -7,6 +7,9 @@ class KeyboardInputView;
 class TextInput;
 class PointerInput;
 
+class InputSource;
+class InputView;
+
 class Allocator;
 
 class InputManager
@@ -14,12 +17,18 @@ class InputManager
 private:
 	Allocator* allocator;
 
+	InputSource* inputSource;
+	InputView* imguiInputView;
+	InputView* gameInputView;
+
 	KeyboardInput* keyboardInput;
 	KeyboardInputView* keyboardInputView;
 
 	TextInput* textInput;
 
 	PointerInput* pointerInput;
+
+	void UpdateInputViews();
 
 public:
 	InputManager(Allocator* allocator);
@@ -29,6 +38,10 @@ public:
 	void Update();
 
 	void OnTextInputEnableChanged(bool textInputEnabled);
+
+	InputSource* GetInputSource() { return inputSource; }
+	InputView* GetImGuiInputView() { return imguiInputView; }
+	InputView* GetGameInputView() { return gameInputView; }
 
 	KeyboardInput* GetKeyboardInput() { return keyboardInput; }
 	KeyboardInputView* GetKeyboardInputView() { return keyboardInputView; }

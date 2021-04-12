@@ -11,8 +11,8 @@
 
 #include "System/Time.hpp"
 #include "System/InputManager.hpp"
+#include "System/InputView.hpp"
 #include "System/PointerInput.hpp"
-#include "System/KeyboardInputView.hpp"
 
 #include "Scene/SceneManager.hpp"
 #include "Scene/Scene.hpp"
@@ -56,16 +56,17 @@ void CameraController::OnUpdate(const ScriptContext& context)
 
 	SceneManager* sm = context.sceneManager;
 	Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
+
+	InputView* input = context.inputManager->GetGameInputView();
 	PointerInput* pi = context.inputManager->GetPointerInput();
-	KeyboardInputView* kb = context.inputManager->GetKeyboardInputView();
 
 	// Update mouseLookActive state
-	if (mouseLookActive == false && pi->GetMouseButtonDown(MouseButtonLook))
+	if (mouseLookActive == false && input->GetMouseButtonDown(MouseButtonLook))
 	{
 		mouseLookActive = true;
 		pi->SetCursorMode(PointerInput::CursorMode::Disabled);
 	}
-	else if (mouseLookActive == true && pi->GetMouseButtonUp(MouseButtonLook))
+	else if (mouseLookActive == true && input->GetMouseButtonUp(MouseButtonLook))
 	{
 		mouseLookActive = false;
 		pi->SetCursorMode(PointerInput::CursorMode::Normal);
@@ -74,7 +75,7 @@ void CameraController::OnUpdate(const ScriptContext& context)
 	// Update mouse look
 	if (mouseLookActive == true)
 	{
-		Vec2f movement = pi->GetCursorMovement() * 0.003f * this->cameraAimSensitivity;
+		Vec2f movement = input->GetCursorMovement() * 0.003f * this->cameraAimSensitivity;
 
 		cameraYaw += movement.x;
 
@@ -85,10 +86,10 @@ void CameraController::OnUpdate(const ScriptContext& context)
 
 		cameraPitch += movement.y;
 
-		if (cameraPitch < Math::DegreesToRadians(-80.0f))
-			cameraPitch = Math::DegreesToRadians(-80.0f);
-		else if (cameraPitch > Math::DegreesToRadians(80.0f))
-			cameraPitch = Math::DegreesToRadians(80.0f);
+		if (cameraPitch < Math::DegreesToRadians(-89.0f))
+			cameraPitch = Math::DegreesToRadians(-89.0f);
+		else if (cameraPitch > Math::DegreesToRadians(89.0f))
+			cameraPitch = Math::DegreesToRadians(89.0f);
 	}
 
 	Mat3x3f rotation = Mat3x3f::RotateAroundAxis(Vec3f(0.0f, 1.0f, 0.0f), -cameraYaw) *
@@ -105,36 +106,36 @@ void CameraController::OnUpdate(const ScriptContext& context)
 
 	if (mouseLookActive == false)
 	{
-		if (pi->GetMouseButtonDown(MouseButtonGrab))
+		if (input->GetMouseButtonDown(MouseButtonGrab))
 			mouseGrabActive = true;
-		else if (pi->GetMouseButtonUp(MouseButtonGrab))
+		else if (input->GetMouseButtonUp(MouseButtonGrab))
 			mouseGrabActive = false;
 
 		if (mouseGrabActive)
 		{
-			Vec2f movement = pi->GetCursorMovement() * 0.015f;
+			Vec2f movement = input->GetCursorMovement() * 0.015f;
 			position += right * -movement.x + up * movement.y;
 		}
 	}
 
 	Vec3f dir;
 
-	dir -= float(int(kb->GetKey(Key::Q))) * up;
-	dir += float(int(kb->GetKey(Key::W))) * forward;
-	dir += float(int(kb->GetKey(Key::E))) * up;
-	dir -= float(int(kb->GetKey(Key::A))) * right;
-	dir -= float(int(kb->GetKey(Key::S))) * forward;
-	dir += float(int(kb->GetKey(Key::D))) * right;
+	dir -= float(int(input->GetKey(KeyCode::Q))) * up;
+	dir += float(int(input->GetKey(KeyCode::W))) * forward;
+	dir += float(int(input->GetKey(KeyCode::E))) * up;
+	dir -= float(int(input->GetKey(KeyCode::A))) * right;
+	dir -= float(int(input->GetKey(KeyCode::S))) * forward;
+	dir += float(int(input->GetKey(KeyCode::D))) * right;
 
 	if (dir.SqrMagnitude() > 1.0f)
 		dir.Normalize();
 
 	float targetSpeed = 4.0f;
 
-	if (kb->GetKey(Key::LeftShift))
+	if (input->GetKey(KeyCode::LeftShift))
 		targetSpeed *= 4.0f;
 
-	if (kb->GetKey(Key::LeftControl))
+	if (input->GetKey(KeyCode::LeftControl))
 		targetSpeed *= 0.125f;
 
 	// TODO: Fix acceleration to be delta time independent
