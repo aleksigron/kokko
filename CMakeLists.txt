@@ -242,10 +242,6 @@ set (KOKKO_SOURCES
 	src/System/Time.hpp
 	src/System/Window.cpp
 	src/System/Window.hpp
-	src/System/WindowEvent.cpp
-	src/System/WindowEvent.hpp
-	src/System/WindowEventListener.cpp
-	src/System/WindowEventListener.hpp
 )
 
 source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
