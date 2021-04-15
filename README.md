@@ -4,27 +4,6 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 
 ![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20210329.jpg)
 
-## Prerequisites
-- OpenGL 4.5
-- CMake for building the project
-- C++14 compliant compiler
-- Blender for exporting mesh files
-- KTX for encoding textures
-
-### Creating a x64 Visual Studio solution on Windows
-```
-mkdir build
-cd build
-cmake -G "Visual Studio 16 2019" -A x64 ../
-```
-
-You can find a list of the available generators in the [CMake documentation](https://cmake.org/documentation/). 
-
-### Working directory
-You need to set a custom working directory in the IDE when running the project.
-
-In Visual Studio, go to project properties > _Configuration Properties_ > _Debugging_ and set _Working Directory_ to the repository root or some other directory where you store the resource files.
-
 ## Features
 
 ### Graphics
@@ -54,7 +33,28 @@ In Visual Studio, go to project properties > _Configuration Properties_ > _Debug
 - Frametime visualization
 - Culling visualization
 
-### Mesh format
+## Prerequisites
+- OpenGL 4.5
+- CMake for building the project
+- C++14 compliant compiler
+- Blender for exporting mesh files
+- KTX for encoding textures
+
+### Creating a x64 Visual Studio solution on Windows
+```
+mkdir build
+cd build
+cmake -G "Visual Studio 16 2019" -A x64 ../
+```
+
+You can find a list of the available generators in the [CMake documentation](https://cmake.org/documentation/). 
+
+### Working directory
+You need to set a custom working directory in the IDE when running the project.
+
+In Visual Studio, go to project properties > _Configuration Properties_ > _Debugging_ and set _Working Directory_ to the repository root or some other directory where you store the resource files.
+
+## Mesh format
 I'm using a proprietary model export script for Blender. More information in docs/mesh_file_format.md.
 
 The motivation behind using a custom format is to better understand the content pipeline. Also, I'm not aware of a simple format for meshes that is optimized for runtime load speed. Pretty much all simple formats I could find were text-based and that's not good for efficiency. I'm hoping to develop the format and export enough to release it as a separate repository with proper documentation and examples.

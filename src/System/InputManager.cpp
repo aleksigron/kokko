@@ -7,29 +7,20 @@
 #include "System/ImGuiInputView.hpp"
 #include "System/InputSource.hpp"
 #include "System/InputView.hpp"
-#include "System/KeyboardInput.hpp"
-#include "System/KeyboardInputView.hpp"
-#include "System/TextInput.hpp"
-#include "System/PointerInput.hpp"
+
+#include "System/IncludeGLFW.hpp"
 
 InputManager::InputManager(Allocator* allocator):
+	windowHandle(nullptr),
 	allocator(allocator),
 	inputSource(nullptr),
 	imguiInputView(nullptr),
-	gameInputView(nullptr),
-	keyboardInput(nullptr),
-	keyboardInputView(nullptr),
-	textInput(nullptr),
-	pointerInput(nullptr)
+	gameInputView(nullptr)
 {
 }
 
 InputManager::~InputManager()
 {
-	allocator->MakeDelete(pointerInput);
-	allocator->MakeDelete(textInput);
-	allocator->MakeDelete(keyboardInputView);
-	allocator->MakeDelete(keyboardInput);
 	allocator->MakeDelete(gameInputView);
 	allocator->MakeDelete(imguiInputView);
 	allocator->MakeDelete(inputSource);
@@ -39,23 +30,13 @@ void InputManager::Initialize(GLFWwindow* windowHandle)
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	this->windowHandle = windowHandle;
+
 	inputSource = allocator->MakeNew<InputSource>();
 	inputSource->Initialize(windowHandle);
 
 	imguiInputView = allocator->MakeNew<ImGuiInputView>(inputSource);
 	gameInputView = allocator->MakeNew<FilterInputView>(inputSource, "GameInputView");
-
-	keyboardInput = allocator->MakeNew<KeyboardInput>();
-	keyboardInput->Initialize(windowHandle);
-
-	keyboardInputView = allocator->MakeNew<KeyboardInputView>();
-	keyboardInputView->Initialize(keyboardInput);
-
-	textInput = allocator->MakeNew<TextInput>();
-	textInput->Initialize(windowHandle, this);
-
-	pointerInput = allocator->MakeNew<PointerInput>();
-	pointerInput->Initialize(windowHandle);
 }
 
 void InputManager::Update()
@@ -64,9 +45,6 @@ void InputManager::Update()
 
 	inputSource->UpdateInput();
 	UpdateInputViews();
-
-	keyboardInput->Update();
-	pointerInput->Update();
 }
 
 void InputManager::UpdateInputViews()
@@ -82,5 +60,30 @@ void InputManager::UpdateInputViews()
 
 void InputManager::OnTextInputEnableChanged(bool textInputEnabled)
 {
-	keyboardInputView->SetPrintableKeysEnabled(textInputEnabled == false);
+}
+
+void InputManager::SetCursorMode(CursorMode mode)
+{
+	int cursorModeValue = GLFW_CURSOR_NORMAL;
+
+	if (mode == CursorMode::Hidden)
+		cursorModeValue = GLFW_CURSOR_HIDDEN;
+	else if (mode == CursorMode::Disabled)
+		cursorModeValue = GLFW_CURSOR_DISABLED;
+
+	glfwSetInputMode(windowHandle, GLFW_CURSOR, cursorModeValue);
+}
+
+InputManager::CursorMode InputManager::GetCursorMode() const
+{
+	int cursorModeValue = glfwGetInputMode(windowHandle, GLFW_CURSOR);
+
+	CursorMode mode = CursorMode::Normal;
+
+	if (cursorModeValue == GLFW_CURSOR_HIDDEN)
+		mode = CursorMode::Hidden;
+	else if (cursorModeValue == GLFW_CURSOR_DISABLED)
+		mode = CursorMode::Disabled;
+
+	return mode;
 }

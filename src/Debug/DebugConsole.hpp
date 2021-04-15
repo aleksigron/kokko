@@ -8,14 +8,12 @@
 
 #include "Math/Rectangle.hpp"
 
-#include "System/TextInputHandler.hpp"
-
 class Allocator;
 class Window;
 class DebugTextRenderer;
 class DebugVectorRenderer;
 
-class DebugConsole : public TextInputHandler
+class DebugConsole
 {
 private:
 	struct LogEntry
@@ -54,7 +52,6 @@ public:
 		DebugVectorRenderer* vectorRenderer);
 	virtual ~DebugConsole();
 
-	virtual void OnTextInput(StringRef text);
 	void RequestFocus();
 	void ReleaseFocus();
 

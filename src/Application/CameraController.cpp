@@ -12,7 +12,6 @@
 #include "System/Time.hpp"
 #include "System/InputManager.hpp"
 #include "System/InputView.hpp"
-#include "System/PointerInput.hpp"
 
 #include "Scene/SceneManager.hpp"
 #include "Scene/Scene.hpp"
@@ -57,19 +56,19 @@ void CameraController::OnUpdate(const ScriptContext& context)
 	SceneManager* sm = context.sceneManager;
 	Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
 
-	InputView* input = context.inputManager->GetGameInputView();
-	PointerInput* pi = context.inputManager->GetPointerInput();
+	InputManager* inputManager = context.inputManager;
+	InputView* input = inputManager->GetGameInputView();
 
 	// Update mouseLookActive state
 	if (mouseLookActive == false && input->GetMouseButtonDown(MouseButtonLook))
 	{
 		mouseLookActive = true;
-		pi->SetCursorMode(PointerInput::CursorMode::Disabled);
+		inputManager->SetCursorMode(InputManager::CursorMode::Disabled);
 	}
 	else if (mouseLookActive == true && input->GetMouseButtonUp(MouseButtonLook))
 	{
 		mouseLookActive = false;
-		pi->SetCursorMode(PointerInput::CursorMode::Normal);
+		inputManager->SetCursorMode(InputManager::CursorMode::Normal);
 	}
 
 	// Update mouse look

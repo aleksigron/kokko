@@ -14,19 +14,22 @@ class Allocator;
 
 class InputManager
 {
+public:
+	enum class CursorMode
+	{
+		Normal,
+		Hidden,
+		Disabled
+	};
+
 private:
+	GLFWwindow* windowHandle;
+
 	Allocator* allocator;
 
 	InputSource* inputSource;
 	InputView* imguiInputView;
 	InputView* gameInputView;
-
-	KeyboardInput* keyboardInput;
-	KeyboardInputView* keyboardInputView;
-
-	TextInput* textInput;
-
-	PointerInput* pointerInput;
 
 	void UpdateInputViews();
 
@@ -39,12 +42,10 @@ public:
 
 	void OnTextInputEnableChanged(bool textInputEnabled);
 
+	void SetCursorMode(CursorMode mode);
+	CursorMode GetCursorMode() const;
+
 	InputSource* GetInputSource() { return inputSource; }
 	InputView* GetImGuiInputView() { return imguiInputView; }
 	InputView* GetGameInputView() { return gameInputView; }
-
-	KeyboardInput* GetKeyboardInput() { return keyboardInput; }
-	KeyboardInputView* GetKeyboardInputView() { return keyboardInputView; }
-	TextInput* GetTextInput() { return textInput; }
-	PointerInput* GetPointerInput() { return pointerInput; }
 };

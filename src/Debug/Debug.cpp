@@ -28,7 +28,7 @@
 #include "Scene/Scene.hpp"
 
 #include "System/InputManager.hpp"
-#include "System/KeyboardInputView.hpp"
+#include "System/InputView.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
@@ -148,31 +148,31 @@ void Debug::Render(Scene* scene)
 	{
 		DebugMode oldMode = this->mode;
 
-		KeyboardInputView* keyboard = window->GetInputManager()->GetKeyboardInputView();
+		InputView* input = window->GetInputManager()->GetGameInputView();
 
 		// Update mode
-		if (keyboard->GetKeyDown(Key::Escape))
+		if (input->GetKeyDown(KeyCode::Escape))
 		{
 			this->mode = DebugMode::None;
 		}
-		else if (keyboard->GetKeyDown(Key::F1))
+		else if (input->GetKeyDown(KeyCode::F1))
 		{
 			this->mode = DebugMode::Console;
 		}
-		else if (keyboard->GetKeyDown(Key::F2))
+		else if (input->GetKeyDown(KeyCode::F2))
 		{
 			this->mode = DebugMode::FrameTime;
 		}
-		else if (keyboard->GetKeyDown(Key::F3))
+		else if (input->GetKeyDown(KeyCode::F3))
 		{
 			this->mode = DebugMode::Culling;
 		}
-		else if (keyboard->GetKeyDown(Key::F4))
+		else if (input->GetKeyDown(KeyCode::F4))
 		{
 			this->mode = DebugMode::MemoryStats;
 		}
 
-		if (keyboard->GetKeyDown(Key::F7) && profileInProgress == false)
+		if (input->GetKeyDown(KeyCode::F7) && profileInProgress == false)
 		{
 			profileInProgress = true;
 			profileStarted = false;
@@ -182,7 +182,7 @@ void Debug::Render(Scene* scene)
 		// Check vsync switching
 
 		vsync = window->GetSwapInterval() != 0;
-		if (keyboard->GetKeyDown(Key::F8))
+		if (input->GetKeyDown(KeyCode::F8))
 		{
 			vsync = !vsync;
 			window->SetSwapInterval(vsync ? 1 : 0);

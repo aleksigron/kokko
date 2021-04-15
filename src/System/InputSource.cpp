@@ -15,11 +15,15 @@ InputSource::InputSource() :
 
 InputSource::~InputSource()
 {
+	if (windowHandle != nullptr)
+		glfwSetKeyCallback(windowHandle, nullptr);
 }
 
 void InputSource::Initialize(GLFWwindow* windowHandle)
 {
 	this->windowHandle = windowHandle;
+
+	glfwSetKeyCallback(windowHandle, _KeyCallback);
 }
 
 void InputSource::UpdateInput()

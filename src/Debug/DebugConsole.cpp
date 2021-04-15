@@ -12,8 +12,7 @@
 #include "Resources/BitmapFont.hpp"
 
 #include "System/InputManager.hpp"
-#include "System/KeyboardInputView.hpp"
-#include "System/TextInput.hpp"
+#include "System/InputView.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
@@ -43,20 +42,12 @@ DebugConsole::~DebugConsole()
 	allocator->Deallocate(stringData);
 }
 
-void DebugConsole::OnTextInput(StringRef text)
-{
-	inputValue.Append(text);
-	lastTextInputTime = Time::GetRunningTime();
-}
-
 void DebugConsole::RequestFocus()
 {
-	window->GetInputManager()->GetTextInput()->RequestFocus(this);
 }
 
 void DebugConsole::ReleaseFocus()
 {
-	window->GetInputManager()->GetTextInput()->ReleaseFocus(this);
 }
 
 void DebugConsole::SetDrawArea(const Rectanglef& area)
@@ -160,15 +151,15 @@ void DebugConsole::UpdateAndDraw()
 {
 	/* *** Update *** */
 
-	KeyboardInputView* kiv = window->GetInputManager()->GetKeyboardInputView();
+	InputView* input = window->GetInputManager()->GetGameInputView();
 
-	if (kiv->GetKeyDown(Key::Enter))
+	if (input->GetKeyDown(KeyCode::Enter))
 	{
 		this->AddLogEntry(this->inputValue.GetRef());
 		this->inputValue.Clear();
 	}
 
-	if (kiv->GetKeyDown(Key::Backspace))
+	if (input->GetKeyDown(KeyCode::Backspace))
 	{
 		unsigned currentLength = this->inputValue.GetLength();
 

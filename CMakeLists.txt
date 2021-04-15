@@ -228,16 +228,7 @@ set (KOKKO_SOURCES
 	src/System/InputSource.hpp
 	src/System/InputView.cpp
 	src/System/InputView.hpp
-	src/System/KeyboardInput.cpp
-	src/System/KeyboardInput.hpp
-	src/System/KeyboardInputView.cpp
-	src/System/KeyboardInputView.hpp
 	src/System/KeyCode.hpp
-	src/System/PointerInput.cpp
-	src/System/PointerInput.hpp
-	src/System/TextInputHandler.hpp
-	src/System/TextInput.cpp
-	src/System/TextInput.hpp
 	src/System/Time.cpp
 	src/System/Time.hpp
 	src/System/Window.cpp
