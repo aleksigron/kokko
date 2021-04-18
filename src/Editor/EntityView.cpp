@@ -4,28 +4,43 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Scene/Scene.hpp"
+
 EntityView::EntityView() :
 	selectedEntity(Entity::Null)
 {
-
 }
 
-void EntityView::Draw(EntityManager* entityManager)
+void EntityView::Draw(EntityManager* entityManager, Scene* scene)
 {
 	ImGui::Begin("Entities");
 
 	for (Entity entity : *entityManager)
 	{
-		// TODO: Check that this entity doesn't have a parent in the hierarchy
-		DrawEntityNode(entity);
+		SceneObjectId sceneObj = scene->Lookup(entity);
+
+		// Only draw root level objects, or entities that don't exist in the scene hierarchy
+		if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
+			DrawEntityNode(scene, entity, sceneObj);
 	}
 
 	ImGui::End();
 }
 
-void EntityView::DrawEntityNode(Entity entity)
+void EntityView::DrawEntityNode(Scene* scene, Entity entity, SceneObjectId sceneObj)
 {
+	SceneObjectId firstChild = SceneObjectId::Null;
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+	
+	if (sceneObj == SceneObjectId::Null)
+		flags = flags | ImGuiTreeNodeFlags_Leaf;
+	else
+	{
+		firstChild = scene->GetFirstChild(sceneObj);
+
+		if (firstChild == SceneObjectId::Null)
+			flags = flags | ImGuiTreeNodeFlags_Leaf;
+	}
 
 	if (entity == selectedEntity)
 		flags = flags | ImGuiTreeNodeFlags_Selected;
@@ -39,7 +54,17 @@ void EntityView::DrawEntityNode(Entity entity)
 
 	if (opened)
 	{
-		// TODO: Draw children
+		SceneObjectId child = firstChild;
+
+		while (child != SceneObjectId::Null)
+		{
+			Entity childEntity = scene->GetEntity(child);
+
+			DrawEntityNode(scene, childEntity, child);
+
+			child = scene->GetNextSibling(child);
+		}
+
 		ImGui::TreePop();
 	}
 }

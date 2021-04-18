@@ -5,6 +5,7 @@ struct GLFWwindow;
 class Allocator;
 class InputView;
 class EntityManager;
+class Scene;
 
 class ImGuiRenderBackend;
 class ImGuiPlatformBackend;
@@ -33,5 +34,5 @@ public:
 	void Deinitialize();
 
 	void StartFrame();
-	void Render(EntityManager* entityManager);
+	void Render(EntityManager* entityManager, Scene* scene);
 };

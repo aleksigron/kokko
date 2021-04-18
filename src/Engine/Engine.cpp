@@ -213,7 +213,9 @@ void Engine::Update()
 
 	debug.instance->Render(primaryScene);
 
-	editorUI.instance->Render(entityManager.instance);
+	unsigned int sceneId = sceneManager.instance->GetPrimarySceneId();
+	Scene* scene = sceneManager.instance->GetScene(sceneId);
+	editorUI.instance->Render(entityManager.instance, scene);
 
 	mainWindow.instance->UpdateInput();
 	mainWindow.instance->Swap();

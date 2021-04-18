@@ -4,9 +4,8 @@
 
 #include "Core/BufferRef.hpp"
 
-#include "Scene/Scene.hpp"
-
 class Engine;
+class Scene;
 class Renderer;
 class MeshManager;
 class MaterialManager;
@@ -14,6 +13,9 @@ class EntityManager;
 class ResourceManager;
 class LightManager;
 class EnvironmentManager;
+
+struct Entity;
+struct SceneObjectId;
 
 class SceneLoader
 {

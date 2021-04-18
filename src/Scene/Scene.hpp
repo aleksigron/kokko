@@ -19,6 +19,9 @@ struct SceneObjectId
 {
 	unsigned int i;
 
+	bool operator==(SceneObjectId other) { return i == other.i; }
+	bool operator!=(SceneObjectId other) { return !operator==(other); }
+
 	static const SceneObjectId Null;
 };
 
@@ -84,6 +87,11 @@ public:
 	void AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* idsOut);
 
 	void RemoveSceneObject(SceneObjectId id);
+
+	Entity GetEntity(SceneObjectId id) const { return data.entity[id.i]; }
+	SceneObjectId GetParent(SceneObjectId id) const { return data.parent[id.i]; }
+	SceneObjectId GetFirstChild(SceneObjectId id) const { return data.firstChild[id.i]; }
+	SceneObjectId GetNextSibling(SceneObjectId id) const { return data.nextSibling[id.i]; }
 
 	void SetParent(SceneObjectId id, SceneObjectId parent);
 

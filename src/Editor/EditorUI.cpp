@@ -64,11 +64,13 @@ void EditorUI::StartFrame()
 	ImGui::NewFrame();
 }
 
-void EditorUI::Render(EntityManager* entityManager)
+void EditorUI::Render(EntityManager* entityManager, Scene* scene)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	views->entityView.Draw(entityManager);
+	views->entityView.Draw(entityManager, scene);
+
+	ImGui::ShowDemoWindow();
 
 	ImGui::Render();
 	renderBackend->RenderDrawData(ImGui::GetDrawData());

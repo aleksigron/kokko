@@ -1,6 +1,6 @@
 #include "Entity/EntityManager.hpp"
 
-Entity Entity::Null = Entity(0);
+const Entity Entity::Null = Entity(0);
 
 EntityManager::Iterator::Iterator(EntityManager& entityManager) :
 	manager(entityManager),
