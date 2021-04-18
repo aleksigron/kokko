@@ -103,9 +103,13 @@ set (KOKKO_SOURCES
 	src/Debug/PerformanceTimer.hpp
 	src/Editor/EditorUI.cpp
 	src/Editor/EditorUI.hpp
+	src/Editor/EditorViews.hpp
+	src/Editor/EntityView.cpp
+	src/Editor/EntityView.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
 	src/Entity/Entity.hpp
+	src/Entity/EntityManager.cpp
 	src/Entity/EntityManager.hpp
 	src/Graphics/BloomEffect.cpp
 	src/Graphics/BloomEffect.hpp

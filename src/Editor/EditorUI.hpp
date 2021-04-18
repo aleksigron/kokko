@@ -4,8 +4,12 @@ struct GLFWwindow;
 
 class Allocator;
 class InputView;
+class EntityManager;
+
 class ImGuiRenderBackend;
 class ImGuiPlatformBackend;
+
+class EditorViews;
 
 class EditorUI
 {
@@ -13,6 +17,8 @@ private:
 	Allocator* allocator;
 	ImGuiRenderBackend* renderBackend;
 	ImGuiPlatformBackend* platformBackend;
+
+	EditorViews* views;
 
 public:
 	EditorUI(Allocator* allocator);
@@ -27,5 +33,5 @@ public:
 	void Deinitialize();
 
 	void StartFrame();
-	void Render();
+	void Render(EntityManager* entityManager);
 };

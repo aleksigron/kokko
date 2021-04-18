@@ -2,54 +2,50 @@
 
 #include "Core/Array.hpp"
 #include "Core/Queue.hpp"
+#include "Core/SortedArray.hpp"
+
 #include "Entity/Entity.hpp"
+
 #include "Memory/Allocator.hpp"
 
 class EntityManager
 {
-private:
-	static const unsigned int MinimumFreeIndices = 1024;
+public:
+	class Iterator
+	{
+	private:
+		EntityManager& manager;
+		size_t entityIndex;
+		size_t freelistIndex;
 
-	Allocator* allocator;
-	Array<unsigned char> generation;
-	Queue<unsigned> freeIndices;
+		friend class EntityManager;
+
+		explicit Iterator(EntityManager& entityManager);
+		Iterator(EntityManager& entityManager, size_t entityCount, size_t freelistCount);
+
+	public:
+		Iterator& operator++();
+
+		Entity operator*() { return Entity(entityIndex); }
+		Entity operator->() { return operator*(); }
+
+		bool operator!=(const Iterator& other) { return entityIndex != other.entityIndex; }
+	};
+
+private:
+	uint32_t entityRangeEnd;
+	SortedArray<uint32_t> freeIndices;
+
+	friend class Iterator;
 
 public:
-	EntityManager(Allocator* allocator) :
-		allocator(allocator),
-		generation(allocator),
-		freeIndices(allocator)
-	{
-		// Reserve index 0 as invalid value
-		generation.PushBack(0);
-	}
+	EntityManager(Allocator* allocator);
+	~EntityManager();
 
-	~EntityManager()
-	{
-	}
+	Entity Create();
+	bool IsAlive(Entity e) const;
+	void Destroy(Entity e);
 
-	Entity Create()
-	{
-		unsigned int idx;
-		if (freeIndices.GetCount() > MinimumFreeIndices)
-		{
-			idx = freeIndices.Peek();
-			freeIndices.Pop();
-		}
-		else
-		{
-			generation.PushBack(0);
-			idx = generation.GetCount() - 1;
-		}
-		return Entity::Make(idx, generation[idx]);
-	}
-
-	bool IsAlive(Entity e) const { return generation[e.Index()] == e.Generation(); }
-
-	void Destroy(Entity e)
-	{
-		const unsigned idx = e.Index();
-		++generation[idx];
-		freeIndices.Push(idx);
-	}
+	Iterator begin() { return Iterator(*this); }
+	Iterator end() { return Iterator(*this, entityRangeEnd, freeIndices.GetCount()); }
 };

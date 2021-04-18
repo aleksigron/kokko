@@ -213,7 +213,7 @@ void Engine::Update()
 
 	debug.instance->Render(primaryScene);
 
-	editorUI.instance->Render();
+	editorUI.instance->Render(entityManager.instance);
 
 	mainWindow.instance->UpdateInput();
 	mainWindow.instance->Swap();

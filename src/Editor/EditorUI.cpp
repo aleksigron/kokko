@@ -2,6 +2,10 @@
 
 #include "imgui.h"
 
+#include "Core/Core.hpp"
+
+#include "Editor/EditorViews.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "System/ImGuiRenderBackend.hpp"
@@ -12,16 +16,18 @@ EditorUI::EditorUI(Allocator* allocator) :
 	renderBackend(nullptr),
 	platformBackend(nullptr)
 {
-
+	views = allocator->MakeNew<EditorViews>();
 }
 
 EditorUI::~EditorUI()
 {
-
+	allocator->MakeDelete(views);
 }
 
 void EditorUI::Initialize(GLFWwindow* window, InputView* imguiInputView)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	renderBackend = allocator->MakeNew<ImGuiRenderBackend>();
 	platformBackend = allocator->MakeNew<ImGuiPlatformBackend>();
 
@@ -37,6 +43,8 @@ void EditorUI::Initialize(GLFWwindow* window, InputView* imguiInputView)
 
 void EditorUI::Deinitialize()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	platformBackend->Deinitialize();
 	renderBackend->Deinitialize();
 
@@ -48,14 +56,20 @@ void EditorUI::Deinitialize()
 
 void EditorUI::StartFrame()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	renderBackend->NewFrame();
 	platformBackend->NewFrame();
 
 	ImGui::NewFrame();
 }
 
-void EditorUI::Render()
+void EditorUI::Render(EntityManager* entityManager)
 {
+	KOKKO_PROFILE_FUNCTION();
+
+	views->entityView.Draw(entityManager);
+
 	ImGui::Render();
 	renderBackend->RenderDrawData(ImGui::GetDrawData());
 }
