@@ -8,8 +8,8 @@ struct Entity
 
 	Entity() = default;
 	explicit Entity(uint32_t id) : id(id) {}
-	bool operator==(Entity& other) { id = other.id; }
-	bool operator!=(Entity& other) { id != other.id; }
+	bool operator==(Entity& other) { return id == other.id; }
+	bool operator!=(Entity& other) { return !operator==(other); }
 
 	static Entity Null;
 };
