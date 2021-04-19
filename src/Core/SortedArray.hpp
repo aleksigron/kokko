@@ -94,7 +94,7 @@ public:
 		{
 			SizeType index = FindInternal(val);
 
-			if (!(a[index] == val))
+			if (index >= a.GetCount() || !(a[index] == val))
 				a.Insert(index, val);
 		}
 		else

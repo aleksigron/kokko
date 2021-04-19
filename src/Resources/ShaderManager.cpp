@@ -56,12 +56,18 @@ void ShaderManager::Reallocate(unsigned int required)
 
 	if (data.buffer != nullptr)
 	{
-		// Since the whole freelist needs to be copied, combine copies of freeList and material
 		// Aligment of MaterialData is 8 bytes, allocated needs to be an even number
-		size_t copyBytes = data.allocated * sizeof(unsigned int) + data.count * sizeof(ShaderData);
-		std::memcpy(newData.buffer, data.buffer, copyBytes);
+
+		std::memcpy(newData.freeList, data.freeList, data.allocated * sizeof(unsigned int));
+		std::memset(newData.freeList + data.allocated, 0, (newData.allocated - data.allocated) * sizeof(unsigned int));
+		std::memcpy(newData.shader, data.shader, data.count * sizeof(ShaderData));
+		std::memset(newData.shader + data.count, 0, (newData.allocated - data.count) * sizeof(ShaderData));
 
 		allocator->Deallocate(data.buffer);
+	}
+	else
+	{
+		std::memset(newData.buffer, 0, bytes);
 	}
 
 	data = newData;

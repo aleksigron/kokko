@@ -19,7 +19,8 @@ private:
 	static SizeType CalculateAllocationSize(SizeType currentAllocated, SizeType requiredSize);
 
 public:
-	String(Allocator* allocator);
+	String();
+	explicit String(Allocator* allocator);
 	String(const String& s);
 	String(String&& s) noexcept;
 	String(Allocator* allocator, const char* s);
@@ -28,7 +29,9 @@ public:
 	~String();
 
 	String& operator=(const String& s);
-	String& operator=(String&& s);
+	String& operator=(String&& s) noexcept;
+
+	void SetAllocator(Allocator* allocator);
 
 	const char* GetCStr() const
 	{
@@ -40,6 +43,9 @@ public:
 			return reinterpret_cast<const char*>(&length);
 		}
 	}
+
+	char* GetData() { return string; }
+	const char* GetData() const { return string; }
 
 	char* Begin() { return string; }
 	const char* Begin() const { return string; }

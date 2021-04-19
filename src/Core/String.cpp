@@ -1,8 +1,17 @@
 #include "Core/String.hpp"
 
+#include <cassert>
 #include <cstring>
 
 #include "Memory/Allocator.hpp"
+
+String::String() :
+	allocator(nullptr),
+	string(nullptr),
+	length(0),
+	allocated(0)
+{
+}
 
 String::String(Allocator* allocator) :
 	allocator(allocator),
@@ -73,7 +82,8 @@ String::String(Allocator* allocator, StringRef s) :
 
 String::~String()
 {
-	allocator->Deallocate(string);
+	if (allocator != nullptr)
+		allocator->Deallocate(string);
 }
 
 String& String::operator=(const String& s)
@@ -82,21 +92,32 @@ String& String::operator=(const String& s)
 
 	if (newLength > allocated)
 	{
-		allocator->Deallocate(string);
+		if (allocator != nullptr)
+			allocator->Deallocate(string);
+
+		allocator = s.allocator;
 
 		allocated = CalculateAllocationSize(allocated, newLength);
 		string = static_cast<char*>(allocator->Allocate(allocated + 1));
 	}
+	else
+		allocator = s.allocator;
 
-	std::strcpy(string, s.GetCStr());
+	if (newLength > 0)
+	{
+		std::memcpy(string, s.GetCStr(), newLength);
+		string[newLength] = '\0';
+	}
+
 	length = newLength;
 
 	return *this;
 }
 
-String& String::operator=(String&& s)
+String& String::operator=(String&& s) noexcept
 {
-	allocator->Deallocate(string);
+	if (allocator != nullptr)
+		allocator->Deallocate(string);
 
 	allocator = s.allocator;
 	string = s.string;
@@ -108,6 +129,13 @@ String& String::operator=(String&& s)
 	s.allocated = 0;
 
 	return *this;
+}
+
+void String::SetAllocator(Allocator* allocator)
+{
+	assert(this->allocator == nullptr);
+
+	this->allocator = allocator;
 }
 
 String& String::operator+=(const String& append)

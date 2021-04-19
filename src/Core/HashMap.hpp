@@ -187,11 +187,11 @@ public:
 
 	KeyValuePair* Insert(KeyType key)
 	{
+		if (data == nullptr)
+			ReserveInternal(16);
+
 		if (key)
 		{
-			if (data == nullptr)
-				ReserveInternal(16);
-
 			for (;;)
 			for (unsigned int i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
 			{

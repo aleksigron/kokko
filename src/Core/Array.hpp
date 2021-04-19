@@ -28,6 +28,9 @@ public:
 
 	~Array()
 	{
+		for (SizeType i = 0; i < count; ++i)
+			data[i].~ValueType();
+
 		allocator->Deallocate(this->data);
 	}
 
@@ -97,7 +100,10 @@ public:
 	void PushBack(const ValueType& value)
 	{
 		this->Reserve(this->count + 1);
-		this->data[this->count] = value;
+
+		ValueType* ptr = new (this->data + this->count) ValueType;
+		*ptr = value;
+
 		++(this->count);
 	}
 
