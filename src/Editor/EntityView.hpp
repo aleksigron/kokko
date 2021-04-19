@@ -19,6 +19,7 @@ private:
 	char textInputBuffer[TextInputBufferSize];
 
 	void DrawEntityNode(Entity entity, SceneObjectId sceneObj);
+	void DrawEntityProperties();
 
 public:
 	EntityView();

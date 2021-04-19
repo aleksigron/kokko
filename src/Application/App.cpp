@@ -128,7 +128,7 @@ void App::Initialize()
 				SceneObjectId sceneObject = scene->AddSceneObject(entity);
 				Vec3f position(m * 1.4f - metalnessCount * 0.7f + 0.7f, 0.6f, r * 1.4f - roughnessCount * 0.7f + 0.7f);
 				Mat4x4f transform = Mat4x4f::Translate(position);
-				scene->SetLocalTransform(sceneObject, transform);
+				scene->SetEditTransform(sceneObject, SceneEditTransform(position));
 
 				RenderObjectId renderObj = renderer->AddRenderObject(entity);
 				renderOrderData.material = matId;

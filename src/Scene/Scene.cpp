@@ -4,9 +4,11 @@
 
 #include "Core/Core.hpp"
 
-#include "Memory/Allocator.hpp"
 #include "Math/Math.hpp"
-#include "ITransformUpdateReceiver.hpp"
+
+#include "Memory/Allocator.hpp"
+
+#include "Scene/ITransformUpdateReceiver.hpp"
 
 const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
@@ -53,8 +55,10 @@ void Scene::Reallocate(unsigned int required)
 	// Reserve same amount in entity map
 	entityMap.Reserve(required);
 
+	size_t objectBytes = sizeof(Entity) + 2 * sizeof(Mat4x4f) +
+		4 * sizeof(SceneObjectId) + sizeof(SceneEditTransform);
+
 	InstanceData newData;
-	const unsigned objectBytes = sizeof(Entity) + 2 * sizeof(Mat4x4f) + 4 * sizeof(SceneObjectId);
 	newData.buffer = allocator->Allocate(required * objectBytes);
 	newData.count = data.count;
 	newData.allocated = required;
@@ -66,6 +70,7 @@ void Scene::Reallocate(unsigned int required)
 	newData.firstChild = newData.parent + required;
 	newData.nextSibling = newData.firstChild + required;
 	newData.prevSibling = newData.nextSibling + required;
+	newData.editTransform = reinterpret_cast<SceneEditTransform*>(newData.prevSibling + required);
 
 	if (data.buffer != nullptr)
 	{
@@ -76,6 +81,7 @@ void Scene::Reallocate(unsigned int required)
 		std::memcpy(newData.firstChild, data.firstChild, data.count * sizeof(SceneObjectId));
 		std::memcpy(newData.nextSibling, data.nextSibling, data.count * sizeof(SceneObjectId));
 		std::memcpy(newData.prevSibling, data.prevSibling, data.count * sizeof(SceneObjectId));
+		std::memcpy(newData.editTransform, data.editTransform, data.count * sizeof(SceneEditTransform));
 
 		allocator->Deallocate(data.buffer);
 	}
@@ -88,6 +94,7 @@ void Scene::Reallocate(unsigned int required)
 		newData.firstChild[SceneObjectId::Null.i] = SceneObjectId::Null;
 		newData.nextSibling[SceneObjectId::Null.i] = SceneObjectId::Null;
 		newData.prevSibling[SceneObjectId::Null.i] = SceneObjectId::Null;
+		newData.editTransform[SceneObjectId::Null.i] = SceneEditTransform();
 	}
 
 	data = newData;
@@ -114,6 +121,7 @@ void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* 
 		data.firstChild[id] = SceneObjectId::Null;
 		data.nextSibling[id] = SceneObjectId::Null;
 		data.prevSibling[id] = SceneObjectId::Null;
+		data.editTransform[id] = SceneEditTransform();
 
 		idsOut[i].i = id;
 	}
@@ -192,6 +200,7 @@ void Scene::RemoveSceneObject(SceneObjectId id)
 		data.firstChild[id.i] = firstChild;
 		data.prevSibling[id.i] = prevSibling;
 		data.nextSibling[id.i] = nextSibling;
+		data.editTransform[id.i] = data.editTransform[swap.i];
 
 		--data.count;
 	}
@@ -254,13 +263,11 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 
 	data.local[id.i] = transform;
 
-	SceneObjectId parent = data.parent[id.i];
-
-	// No check needed for invalid parent, because root index has valid transforms
-	Mat4x4f parentTransform = data.world[parent.i];
-
 	// Set world transform for specified object
-	data.world[id.i] = data.local[id.i] * parentTransform;
+	if (IsValidId(data.parent[id.i]))
+		data.world[id.i] = data.world[data.parent[id.i].i] * data.local[id.i];
+	else
+		data.world[id.i] = data.local[id.i];
 
 	// Set the entity as updated
 	updatedEntities.InsertUnique(data.entity[id.i].id);
@@ -272,10 +279,10 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 
 	while (IsValidId(current))
 	{
-		data.world[id.i] = data.local[id.i] * parentTransform;
+		data.world[current.i] = data.world[data.parent[current.i].i] * data.local[current.i];
 
 		// Set the entity as updated
-		updatedEntities.InsertUnique(data.entity[id.i].id);
+		updatedEntities.InsertUnique(data.entity[current.i].id);
 
 		// Move to child
 		lastValid = current;
@@ -296,6 +303,22 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 			}
 		}
 	}
+}
+
+const SceneEditTransform& Scene::GetEditTransform(SceneObjectId id)
+{
+	return data.editTransform[id.i];
+}
+
+void Scene::SetEditTransform(SceneObjectId id, const SceneEditTransform& editTransform)
+{
+	data.editTransform[id.i] = editTransform;
+
+	Mat4x4f transform = Mat4x4f::Translate(editTransform.translation) * 
+		Mat4x4f::RotateEuler(editTransform.rotation) *
+		Mat4x4f::Scale(editTransform.scale);
+
+	SetLocalTransform(id, transform);
 }
 
 void Scene::NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers)

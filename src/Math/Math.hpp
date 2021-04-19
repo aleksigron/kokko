@@ -38,6 +38,11 @@ namespace Math
 		return radians * Const::RadToDeg;
 	}
 
+	inline Vec3f RadiansToDegrees(const Vec3f& degrees)
+	{
+		return degrees * Const::RadToDeg;
+	}
+
 	inline float Lerp(float a, float b, float t)
 	{
 		// Based on https://github.com/emsr/cxx_linear/blob/master/lerp.h

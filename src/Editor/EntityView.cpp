@@ -37,19 +37,7 @@ void EntityView::Draw(EntityManager* entityManager, Scene* scene)
 	ImGui::SameLine();
 
 	ImGui::BeginChild("EntityProps", ImVec2(0.0f, 0.0f));
-
-	if (selectedEntity != Entity::Null)
-	{
-		const char* entityName = entityManager->GetDebugName(selectedEntity);
-		std::strncpy(textInputBuffer, entityName, TextInputBufferSize);
-		if (ImGui::InputText("Name", textInputBuffer, TextInputBufferSize))
-		{
-			if (std::strlen(textInputBuffer) > 0)
-				entityManager->SetDebugName(selectedEntity, textInputBuffer);
-			else
-				entityManager->ClearDebugName(selectedEntity);
-		}
-	}
+	DrawEntityProperties();
 	ImGui::EndChild();
 
 	ImGui::End();
@@ -95,5 +83,58 @@ void EntityView::DrawEntityNode(Entity entity, SceneObjectId sceneObj)
 		}
 
 		ImGui::TreePop();
+	}
+}
+
+void EntityView::DrawEntityProperties()
+{
+	if (selectedEntity != Entity::Null)
+	{
+		// Name
+
+		const char* entityName = entityManager->GetDebugName(selectedEntity);
+		std::strncpy(textInputBuffer, entityName, TextInputBufferSize);
+		if (ImGui::InputText("Name", textInputBuffer, TextInputBufferSize))
+		{
+			if (std::strlen(textInputBuffer) > 0)
+				entityManager->SetDebugName(selectedEntity, textInputBuffer);
+			else
+				entityManager->ClearDebugName(selectedEntity);
+		}
+
+		// Scene object
+
+		SceneObjectId sceneObj = scene->Lookup(selectedEntity);
+		if (sceneObj != SceneObjectId::Null)
+		{
+			if (ImGui::TreeNodeEx("Scene object"))
+			{
+				bool edited = false;
+				SceneEditTransform transform = scene->GetEditTransform(sceneObj);
+
+				if (ImGui::DragFloat3("Translation", transform.translation.ValuePointer(), 0.01f))
+				{
+					edited = true;
+				}
+
+				Vec3f rotationDegrees = Math::RadiansToDegrees(transform.rotation);
+				if (ImGui::DragFloat3("Rotation", rotationDegrees.ValuePointer(), 1.0f))
+				{
+					transform.rotation = Math::DegreesToRadians(rotationDegrees);
+					edited = true;
+				}
+
+				if (ImGui::DragFloat3("Scale", transform.scale.ValuePointer(), 0.01f))
+				{
+					edited = true;
+				}
+
+				if (edited)
+					scene->SetEditTransform(sceneObj, transform);
+
+				ImGui::TreePop();
+			}
+		}
+
 	}
 }

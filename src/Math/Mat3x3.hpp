@@ -97,7 +97,7 @@ struct Mat3x3f
 		z[7] = 0.0f;
 		z[8] = 1.0f;
 
-		return z * y * x;
+		return y * x * z;
 	}
 
 	static Mat3x3f RotateAroundAxis(Vec3f axis, float angle)

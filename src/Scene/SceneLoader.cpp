@@ -121,30 +121,23 @@ void SceneLoader::CreateChildObjects(ValueItr itr, ValueItr end, SceneObjectId p
 
 void SceneLoader::CreateSceneObject(ValueItr itr, SceneObjectId sceneObject)
 {
-	Mat4x4f transform;
-
-	rapidjson::Value::ConstMemberIterator scaleItr = itr->FindMember("scale");
-	if (scaleItr != itr->MemberEnd())
-	{
-		Vec3f scale = ValueSerialization::Deserialize_Vec3f(scaleItr->value);
-		transform = Mat4x4f::Scale(scale) * transform;
-	}
-
-	rapidjson::Value::ConstMemberIterator rotItr = itr->FindMember("rotation");
-	if (rotItr != itr->MemberEnd())
-	{
-		Vec3f rot = ValueSerialization::Deserialize_Vec3f(rotItr->value);
-		transform = Mat4x4f::RotateEuler(Math::DegreesToRadians(rot)) * transform;
-	}
+	SceneEditTransform transform;
 
 	rapidjson::Value::ConstMemberIterator positionItr = itr->FindMember("position");
 	if (positionItr != itr->MemberEnd())
-	{
-		Vec3f pos = ValueSerialization::Deserialize_Vec3f(positionItr->value);
-		transform = Mat4x4f::Translate(pos) * transform;
-	}
+		transform.translation = ValueSerialization::Deserialize_Vec3f(positionItr->value);
 
-	scene->SetLocalTransform(sceneObject, transform);
+	rapidjson::Value::ConstMemberIterator rotItr = itr->FindMember("rotation");
+	if (rotItr != itr->MemberEnd())
+		transform.rotation = Math::DegreesToRadians(ValueSerialization::Deserialize_Vec3f(rotItr->value));
+
+	rapidjson::Value::ConstMemberIterator scaleItr = itr->FindMember("scale");
+	if (scaleItr != itr->MemberEnd())
+		transform.scale = ValueSerialization::Deserialize_Vec3f(scaleItr->value);
+	else
+		transform.scale = Vec3f(1.0f, 1.0f, 1.0f);
+
+	scene->SetEditTransform(sceneObject, transform);
 
 	rapidjson::Value::ConstMemberIterator childrenItr = itr->FindMember("children");
 	if (childrenItr != itr->MemberEnd() && childrenItr->value.IsArray())

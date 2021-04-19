@@ -25,6 +25,23 @@ struct SceneObjectId
 	static const SceneObjectId Null;
 };
 
+struct SceneEditTransform
+{
+	Vec3f translation;
+	Vec3f rotation;
+	Vec3f scale;
+
+	SceneEditTransform() : scale(1.0f, 1.0f, 1.0f)
+	{
+	}
+
+	SceneEditTransform(const Vec3f& pos) :
+		translation(pos),
+		scale(1.0f, 1.0f, 1.0f)
+	{
+	}
+};
+
 class Scene
 {
 private:
@@ -43,6 +60,7 @@ private:
 		SceneObjectId* firstChild;
 		SceneObjectId* nextSibling;
 		SceneObjectId* prevSibling;
+		SceneEditTransform* editTransform;
 	}
 	data;
 
@@ -99,6 +117,9 @@ public:
 
 	const Mat4x4f& GetWorldTransform(SceneObjectId id) { return data.world[id.i]; }
 	const Mat4x4f& GetLocalTransform(SceneObjectId id) { return data.local[id.i]; }
+
+	const SceneEditTransform& GetEditTransform(SceneObjectId id);
+	void SetEditTransform(SceneObjectId id, const SceneEditTransform& editTransform);
 
 	void NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers);
 
