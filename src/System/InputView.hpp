@@ -33,6 +33,9 @@ public:
 	virtual Vec2f GetCursorPosition() = 0;
 	virtual Vec2f GetCursorMovement() = 0;
 
+	virtual Vec2f GetScrollPosition() = 0;
+	virtual Vec2f GetScrollMovement() = 0;
+
 	virtual bool GetMouseButton(int buttonIndex) = 0;
 	virtual bool GetMouseButtonDown(int buttonIndex) = 0;
 	virtual bool GetMouseButtonUp(int buttonIndex) = 0;
@@ -40,6 +43,12 @@ public:
 	virtual bool GetKey(KeyCode key) = 0;
 	virtual bool GetKeyDown(KeyCode key) = 0;
 	virtual bool GetKeyUp(KeyCode key) = 0;
+
+	virtual int GetActiveKeyCount() = 0;
+	virtual KeyCode GetActiveKeyCode(int index) = 0;
+
+	virtual int GetInputCharCount() = 0;
+	virtual unsigned int GetInputChar(int index) = 0;
 
 	virtual bool WantsMouseInput() { return false; }
 	virtual bool WantsKeyboardInput() { return false; }
@@ -64,6 +73,9 @@ public:
 
 	virtual Vec2f GetCursorPosition() override { return source->GetCursorPosition(); }
 	virtual Vec2f GetCursorMovement() override { return source->GetCursorMovement(); }
+
+	virtual Vec2f GetScrollPosition() override { return source->GetScrollPosition(); }
+	virtual Vec2f GetScrollMovement() override { return source->GetScrollMovement(); }
 
 	virtual bool GetMouseButton(int buttonIndex) override
 	{
@@ -93,5 +105,25 @@ public:
 	virtual bool GetKeyUp(KeyCode key) override
 	{
 		return !GetBlockKeyboardInput() && source->GetKeyUp(key);
+	}
+
+	virtual int GetActiveKeyCount() override
+	{
+		return GetBlockKeyboardInput() ? 0 : source->GetActiveKeyCount();
+	}
+
+	virtual KeyCode GetActiveKeyCode(int index) override
+	{
+		return GetBlockKeyboardInput() ? KeyCode::Unknown : source->GetActiveKeyCode(index);
+	}
+
+	virtual int GetInputCharCount() override
+	{
+		return GetBlockTextInput() ? 0 : source->GetInputCharCount();
+	}
+
+	virtual unsigned int GetInputChar(int index) override
+	{
+		return GetBlockTextInput() ? 0 : source->GetInputChar(index);
 	}
 };

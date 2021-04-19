@@ -7,7 +7,9 @@
 InputSource::InputSource() :
 	InputView("InputSource"),
 	windowHandle(nullptr),
-	keyStateCount(0)
+	keyStateCount(0),
+	eventCharInputCount(0),
+	charInputCount(0)
 {
 	for (unsigned int i = 0; i < MouseButtonCount; ++i)
 		mouseButtonState[i] = ButtonState_Down;
@@ -16,7 +18,11 @@ InputSource::InputSource() :
 InputSource::~InputSource()
 {
 	if (windowHandle != nullptr)
+	{
+		glfwSetCharCallback(windowHandle, nullptr);
+		glfwSetScrollCallback(windowHandle, nullptr);
 		glfwSetKeyCallback(windowHandle, nullptr);
+	}
 }
 
 void InputSource::Initialize(GLFWwindow* windowHandle)
@@ -24,6 +30,8 @@ void InputSource::Initialize(GLFWwindow* windowHandle)
 	this->windowHandle = windowHandle;
 
 	glfwSetKeyCallback(windowHandle, _KeyCallback);
+	glfwSetScrollCallback(windowHandle, _ScrollCallback);
+	glfwSetCharCallback(windowHandle, _CharCallback);
 }
 
 void InputSource::UpdateInput()
@@ -37,6 +45,12 @@ void InputSource::UpdateInput()
 
 	cursorMovement = posf - cursorPosition;
 	cursorPosition = posf;
+
+	// Mouse scroll wheel
+
+	scrollMovement = eventScrollOffset.As<float>();
+	scrollPosition += scrollMovement;
+	eventScrollOffset = Vec2d(0.0, 0.0);
 
 	int i = 0;
 	do
@@ -84,6 +98,14 @@ void InputSource::UpdateInput()
 
 	// Set new size to keyStateCount
 	keyStateCount = static_cast<unsigned int>(end - keyState);
+
+	// Char input
+
+	for (unsigned int i = 0; i < eventCharInputCount; ++i)
+		charInput[i] = eventCharInput[i];
+
+	charInputCount = eventCharInputCount;
+	eventCharInputCount = 0;
 }
 
 Vec2f InputSource::GetCursorPosition()
@@ -94,6 +116,16 @@ Vec2f InputSource::GetCursorPosition()
 Vec2f InputSource::GetCursorMovement()
 {
 	return cursorMovement;
+}
+
+Vec2f InputSource::GetScrollPosition()
+{
+	return scrollPosition;
+}
+
+Vec2f InputSource::GetScrollMovement()
+{
+	return scrollMovement;
 }
 
 bool InputSource::GetMouseButton(int buttonIndex)
@@ -136,6 +168,26 @@ bool InputSource::GetKeyUp(KeyCode key)
 		return stateOut == ButtonState_UpFirst;
 
 	return false;
+}
+
+int InputSource::GetActiveKeyCount()
+{
+	return keyStateCount;
+}
+
+KeyCode InputSource::GetActiveKeyCode(int index)
+{
+	return keyState[index].code;
+}
+
+int InputSource::GetInputCharCount()
+{
+	return charInputCount;
+}
+
+unsigned int InputSource::GetInputChar(int index)
+{
+	return charInput[index];
 }
 
 bool InputSource::FindKeyState(KeyCode key, ButtonState& stateOut)
@@ -195,5 +247,31 @@ void InputSource::KeyCallback(int key, int scancode, int action, int mods)
 			else if (action == GLFW_RELEASE)
 				found->state = ButtonState_UpFirst;
 		}
+	}
+}
+
+void InputSource::_ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+{
+	InputSource* self = Window::GetWindowObject(window)->GetInputManager()->GetInputSource();
+	self->ScrollCallback(xOffset, yOffset);
+}
+
+void InputSource::ScrollCallback(double xOffset, double yOffset)
+{
+	eventScrollOffset += Vec2d(xOffset, yOffset);
+}
+
+void InputSource::_CharCallback(GLFWwindow* window, unsigned int codepoint)
+{
+	InputSource* self = Window::GetWindowObject(window)->GetInputManager()->GetInputSource();
+	self->CharCallback(codepoint);
+}
+
+void InputSource::CharCallback(unsigned int codepoint)
+{
+	if (eventCharInputCount < CharInputBufferSize)
+	{
+		eventCharInput[eventCharInputCount] = codepoint;
+		eventCharInputCount += 1;
 	}
 }

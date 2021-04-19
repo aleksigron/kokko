@@ -131,45 +131,32 @@ void ImGuiPlatformBackend::NewFrame()
 
 	// Update game controllers (if enabled and available)
 	ImGuiPlatformBackend::UpdateGamepads();
+
+	for (int i = 0, count = inputView->GetInputCharCount(); i < count; ++i)
+		io.AddInputCharacter(inputView->GetInputChar(i));
+
+	// Clear key state
+	for (size_t i = 0, count = sizeof(io.KeysDown); i < count; ++i)
+		io.KeysDown[i] = false;
+
+	// Set keys down
+	for (int i = 0, count = inputView->GetActiveKeyCount(); i < count; ++i)
+	{
+		KeyCode key = inputView->GetActiveKeyCode(i);
+		if (inputView->GetKey(key) == true)
+			io.KeysDown[static_cast<size_t>(key)] = true;
+	}
+
+	// Set modifier keys
+	io.KeyCtrl = io.KeysDown[static_cast<int>(KeyCode::LeftControl)] || io.KeysDown[static_cast<int>(KeyCode::RightControl)];
+	io.KeyShift = io.KeysDown[static_cast<int>(KeyCode::LeftShift)] || io.KeysDown[static_cast<int>(KeyCode::RightShift)];
+	io.KeyAlt = io.KeysDown[static_cast<int>(KeyCode::LeftAlt)] || io.KeysDown[static_cast<int>(KeyCode::RightAlt)];
+#ifdef _WIN32
+	io.KeySuper = false;
+#else
+	io.KeySuper = io.KeysDown[static_cast<int>(KeyCode::LeftSuper)] || io.KeysDown[static_cast<int>(KeyCode::RightSuper)];
+#endif
 }
-//
-//void ImGuiPlatformBackend::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
-//{
-//	if (action == GLFW_PRESS && button >= 0 && button < IM_ARRAYSIZE(mouseButtonJustPressed))
-//		mouseButtonJustPressed[button] = true;
-//}
-//
-//void ImGuiPlatformBackend::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
-//{
-//	ImGuiIO& io = ImGui::GetIO();
-//	io.MouseWheelH += (float)xoffset;
-//	io.MouseWheel += (float)yoffset;
-//}
-//
-//void ImGuiPlatformBackend::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-//{
-//	ImGuiIO& io = ImGui::GetIO();
-//	if (action == GLFW_PRESS)
-//		io.KeysDown[key] = true;
-//	if (action == GLFW_RELEASE)
-//		io.KeysDown[key] = false;
-//
-//	// Modifiers are not reliable across systems
-//	io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
-//	io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
-//	io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
-//#ifdef _WIN32
-//	io.KeySuper = false;
-//#else
-//	io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
-//#endif
-//}
-//
-//void ImGuiPlatformBackend::CharCallback(GLFWwindow* window, unsigned int c)
-//{
-//	ImGuiIO& io = ImGui::GetIO();
-//	io.AddInputCharacter(c);
-//}
 
 void ImGuiPlatformBackend::UpdateMousePosAndButtons()
 {
@@ -179,6 +166,10 @@ void ImGuiPlatformBackend::UpdateMousePosAndButtons()
 	{
 		io.MouseDown[i] = inputView->GetMouseButton(i);
 	}
+
+	Vec2f scroll = inputView->GetScrollMovement();
+	io.MouseWheelH = scroll.x;
+	io.MouseWheel = scroll.y;
 
 	// Update mouse position
 	const ImVec2 mouse_pos_backup = io.MousePos;
