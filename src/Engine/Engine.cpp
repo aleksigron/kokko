@@ -69,8 +69,10 @@ Engine::Engine()
 	debug.CreateScope(allocatorManager, "Debug", alloc);
 	debug.New(debug.allocator, allocatorManager, mainWindow.instance, renderDevice);
 
+	debugNameAllocator = allocatorManager->CreateAllocatorScope("EntityDebugNames", alloc);
+
 	entityManager.CreateScope(allocatorManager, "EntityManager", alloc);
-	entityManager.New(entityManager.allocator);
+	entityManager.New(entityManager.allocator, debugNameAllocator);
 
 	meshManager.CreateScope(allocatorManager, "MeshManager", alloc);
 	meshManager.New(meshManager.allocator, renderDevice);

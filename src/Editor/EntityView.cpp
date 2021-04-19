@@ -7,13 +7,21 @@
 #include "Scene/Scene.hpp"
 
 EntityView::EntityView() :
+	entityManager(nullptr),
+	scene(nullptr),
 	selectedEntity(Entity::Null)
 {
 }
 
 void EntityView::Draw(EntityManager* entityManager, Scene* scene)
 {
+	this->entityManager = entityManager;
+	this->scene = scene;
+
 	ImGui::Begin("Entities");
+
+	float fontSize = ImGui::GetFontSize();
+	ImGui::BeginChild("EntityList", ImVec2(fontSize * 16.0f, 0.0f));
 
 	for (Entity entity : *entityManager)
 	{
@@ -21,13 +29,33 @@ void EntityView::Draw(EntityManager* entityManager, Scene* scene)
 
 		// Only draw root level objects, or entities that don't exist in the scene hierarchy
 		if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
-			DrawEntityNode(scene, entity, sceneObj);
+			DrawEntityNode(entity, sceneObj);
 	}
+
+	ImGui::EndChild();
+
+	ImGui::SameLine();
+
+	ImGui::BeginChild("EntityProps", ImVec2(0.0f, 0.0f));
+
+	if (selectedEntity != Entity::Null)
+	{
+		const char* entityName = entityManager->GetDebugName(selectedEntity);
+		std::strncpy(textInputBuffer, entityName, TextInputBufferSize);
+		if (ImGui::InputText("Name", textInputBuffer, TextInputBufferSize))
+		{
+			if (std::strlen(textInputBuffer) > 0)
+				entityManager->SetDebugName(selectedEntity, textInputBuffer);
+			else
+				entityManager->ClearDebugName(selectedEntity);
+		}
+	}
+	ImGui::EndChild();
 
 	ImGui::End();
 }
 
-void EntityView::DrawEntityNode(Scene* scene, Entity entity, SceneObjectId sceneObj)
+void EntityView::DrawEntityNode(Entity entity, SceneObjectId sceneObj)
 {
 	SceneObjectId firstChild = SceneObjectId::Null;
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
@@ -45,7 +73,8 @@ void EntityView::DrawEntityNode(Scene* scene, Entity entity, SceneObjectId scene
 	if (entity == selectedEntity)
 		flags = flags | ImGuiTreeNodeFlags_Selected;
 
-	bool opened = ImGui::TreeNodeEx((void*)entity.id, flags, "Entity %u", entity.id);
+	const char* entityName = entityManager->GetDebugName(entity);
+	bool opened = ImGui::TreeNodeEx((void*)entity.id, flags, entityName);
 
 	if (ImGui::IsItemClicked())
 	{
@@ -60,7 +89,7 @@ void EntityView::DrawEntityNode(Scene* scene, Entity entity, SceneObjectId scene
 		{
 			Entity childEntity = scene->GetEntity(child);
 
-			DrawEntityNode(scene, childEntity, child);
+			DrawEntityNode(childEntity, child);
 
 			child = scene->GetNextSibling(child);
 		}

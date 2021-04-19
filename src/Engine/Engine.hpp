@@ -45,6 +45,7 @@ private:
 	AllocatorManager* allocatorManager;
 
 	Allocator* systemAllocator;
+	Allocator* debugNameAllocator;
 
 	InstanceAllocatorPair<Window> mainWindow;
 	InstanceAllocatorPair<EditorUI> editorUI;

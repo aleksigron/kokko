@@ -10,9 +10,15 @@ struct SceneObjectId;
 class EntityView
 {
 private:
+	EntityManager* entityManager;
+	Scene* scene;
+
 	Entity selectedEntity;
 
-	void DrawEntityNode(Scene* scene, Entity entity, SceneObjectId sceneObj);
+	static const size_t TextInputBufferSize = 256;
+	char textInputBuffer[TextInputBufferSize];
+
+	void DrawEntityNode(Entity entity, SceneObjectId sceneObj);
 
 public:
 	EntityView();

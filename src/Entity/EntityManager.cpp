@@ -1,10 +1,108 @@
 #include "Entity/EntityManager.hpp"
 
+#include <cstdio>
+
 const Entity Entity::Null = Entity(0);
+
+EntityManager::EntityManager(Allocator* mainAllocator, Allocator* debugNameAllocator) :
+	debugNameAllocator(debugNameAllocator),
+	freeIndices(mainAllocator),
+	debugNameMap(debugNameAllocator),
+	debugNameFreelist(debugNameAllocator),
+	debugNames(debugNameAllocator)
+{
+	// Reserve index 0 as invalid value
+	entityRangeEnd = 1;
+}
+
+EntityManager::~EntityManager()
+{
+}
+
+Entity EntityManager::Create()
+{
+	unsigned int idx;
+	if (freeIndices.GetCount() > 0)
+	{
+		idx = freeIndices[freeIndices.GetCount() - 1];
+		freeIndices.PopBack();
+	}
+	else
+	{
+		idx = entityRangeEnd;
+		entityRangeEnd += 1;
+	}
+	return Entity(idx);
+}
+
+bool EntityManager::IsAlive(Entity e) const
+{
+	return e.id > 0 && e.id < entityRangeEnd && freeIndices.Contains(e.id) == false;
+}
+
+void EntityManager::Destroy(Entity e)
+{
+	freeIndices.InsertUnique(e.id);
+}
+
+const char* EntityManager::GetDebugName(Entity entity)
+{
+	HashMap<unsigned int, unsigned int>::KeyValuePair* pair = debugNameMap.Lookup(entity.id);
+
+	if (pair != nullptr)
+		return debugNames[pair->second].GetCStr();
+	else
+	{
+		std::snprintf(unnamedEntityBuffer, UnnamedEntityBufferLength, "Entity %u", entity.id);
+		return unnamedEntityBuffer;
+	}
+}
+
+void EntityManager::SetDebugName(Entity entity, const char* name)
+{
+	HashMap<unsigned int, unsigned int>::KeyValuePair* pair = debugNameMap.Lookup(entity.id);
+
+	if (pair == nullptr)
+	{
+		unsigned int nameIndex;
+
+		if (debugNameFreelist.GetCount() > 0)
+		{
+			nameIndex = debugNameFreelist.GetBack();
+			debugNameFreelist.PopBack();
+		}
+		else
+		{
+			nameIndex = debugNames.GetCount();
+			debugNames.PushBack(String(debugNameAllocator));
+		}
+
+		pair = debugNameMap.Insert(entity.id);
+		pair->second = nameIndex;
+	}
+
+	String& nameString = debugNames.At(pair->second);
+	nameString.Clear();
+	nameString.Append(name);
+}
+
+void EntityManager::ClearDebugName(Entity entity)
+{
+	HashMap<unsigned int, unsigned int>::KeyValuePair* pair = debugNameMap.Lookup(entity.id);
+
+	if (pair != nullptr)
+	{
+		unsigned int nameIndex = pair->second;
+		debugNames[nameIndex].Clear();
+		debugNameFreelist.PushBack(nameIndex);
+
+		debugNameMap.Remove(pair);
+	}
+}
 
 EntityManager::Iterator::Iterator(EntityManager& entityManager) :
 	manager(entityManager),
-	entityIndex(0),
+	entityIndex(1),
 	freelistIndex(0)
 {
 	while (freelistIndex < manager.freeIndices.GetCount() &&
@@ -35,41 +133,4 @@ EntityManager::Iterator& EntityManager::Iterator::operator++()
 	}
 
 	return *this;
-}
-
-EntityManager::EntityManager(Allocator* allocator) :
-	freeIndices(allocator)
-{
-	// Reserve index 0 as invalid value
-	entityRangeEnd = 1;
-}
-
-EntityManager::~EntityManager()
-{
-}
-
-Entity EntityManager::Create()
-{
-	unsigned int idx;
-	if (freeIndices.GetCount() > 0)
-	{
-		idx = freeIndices[freeIndices.GetCount() - 1];
-		freeIndices.PopBack();
-	}
-	else
-	{
-		idx = entityRangeEnd;
-		entityRangeEnd += 1;
-	}
-	return Entity(idx);
-}
-
-bool EntityManager::IsAlive(Entity e) const
-{
-	return e.id > 0 && e.id < entityRangeEnd&& freeIndices.Contains(e.id) == false;
-}
-
-void EntityManager::Destroy(Entity e)
-{
-	freeIndices.InsertUnique(e.id);
 }
