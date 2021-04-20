@@ -4,12 +4,12 @@
 
 #include "Scripting/NativeScriptComponent.hpp"
 
-class Camera;
+#include "Rendering/CameraId.hpp"
 
 class CameraController : public NativeScriptComponent
 {
 private:
-	Camera* controlledCamera = nullptr;
+	Entity controlledCamera = Entity::Null;
 
 	float cameraYaw = 0.0f;
 	float cameraPitch = 0.0f;
@@ -24,7 +24,7 @@ private:
 	void VerifySensitityIsLoaded(const ScriptContext& context);
 
 public:
-	void SetControlledCamera(Camera* camera);
+	void SetControlledCamera(Entity cameraEntity);
 	
 	virtual void OnUpdate(const ScriptContext& context) override;
 };

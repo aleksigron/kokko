@@ -8,8 +8,9 @@
 #include "Engine/Engine.hpp"
 
 #include "Math/Math.hpp"
+#include "Math/Frustum.hpp"
 
-#include "Rendering/Camera.hpp"
+#include "Rendering/CameraSystem.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 
@@ -33,6 +34,7 @@ DebugVectorRenderer::DebugVectorRenderer(
 	RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
+	cameraSystem(nullptr),
 	shaderManager(nullptr),
 	meshManager(nullptr),
 	sceneManager(nullptr),
@@ -55,10 +57,11 @@ DebugVectorRenderer::~DebugVectorRenderer()
 }
 
 void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-	SceneManager* sceneManager, Window* window)
+	SceneManager* sceneManager, Window* window, CameraSystem* cameraSystem)
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	this->cameraSystem = cameraSystem;
 	this->meshManager = meshManager;
 	this->shaderManager = shaderManager;
 	this->sceneManager = sceneManager;
@@ -438,7 +441,7 @@ void DebugVectorRenderer::DrawWireFrustum(const Mat4x4f& transform, const Projec
 	this->DrawLine(frustum.points[6], frustum.points[7], color);
 }
 
-void DebugVectorRenderer::Render(Camera* camera)
+void DebugVectorRenderer::Render(Entity cameraEntity)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -474,12 +477,16 @@ void DebugVectorRenderer::Render(Camera* camera)
 		}
 
 		Scene* scene = sceneManager->GetScene(sceneManager->GetPrimarySceneId());
-		SceneObjectId cameraSceneObject = scene->Lookup(camera->GetEntity());
+		SceneObjectId cameraSceneObject = scene->Lookup(cameraEntity);
 		const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
 
 		bool reverseDepth = false;
-		Mat4x4f proj = camera->parameters.GetProjectionMatrix(reverseDepth);
-		Mat4x4f view = Camera::GetViewMatrix(cameraTransform);
+
+		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
+		const ProjectionParameters& projectionParams = cameraSystem->GetProjectionParameters(cameraId);
+
+		Mat4x4f proj = projectionParams.GetProjectionMatrix(reverseDepth);
+		Mat4x4f view = cameraTransform.GetInverse();
 		Mat4x4f viewProj = proj * view;
 		Mat4x4f screenProj = window->GetScreenSpaceProjectionMatrix();
 

@@ -1,5 +1,7 @@
 #include "App.hpp"
 
+#include "Application/CameraController.hpp"
+
 #include "Core/Core.hpp"
 
 #include "Engine/Engine.hpp"
@@ -8,6 +10,7 @@
 
 #include "Math/Math.hpp"
 
+#include "Rendering/CameraSystem.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Rendering/LightManager.hpp"
 
@@ -26,6 +29,7 @@ App::App(Engine* engine, Allocator* allocator) :
 	engine(engine),
 	allocator(allocator),
 	settings(allocator),
+	mainCameraEntity(Entity::Null),
 	cameraControllerEnable(true)
 {
 }
@@ -46,8 +50,6 @@ void App::Initialize()
 	MeshManager* meshManager = engine->GetMeshManager();
 	Renderer* renderer = engine->GetRenderer();
 
-	this->cameraController.SetControlledCamera(&this->mainCamera);
-
 	SceneManager* sceneManager = engine->GetSceneManager();
 	unsigned int sceneId = sceneManager->LoadSceneFromFile(StringRef("res/scenes/test.scene.json"));
 
@@ -56,31 +58,32 @@ void App::Initialize()
 		sceneId = sceneManager->CreateScene();
 
 	Scene* scene = sceneManager->GetScene(sceneId);
-	scene->SetActiveCamera(&this->mainCamera);
 	sceneManager->SetPrimarySceneId(sceneId);
 
-	{
-		// Create camera entity and components
-		Entity mainCameraEntity = entityManager->Create();
-		mainCamera.SetEntity(mainCameraEntity);
-		SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);
-		Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 1.6f, 4.0f));
-		scene->SetLocalTransform(cameraSceneObject, cameraTransform);
+	// Create camera entity and components
 
-		ScriptSystem* scriptSystem = engine->GetScriptSystem();
-		CameraController* controller = scriptSystem->AddScript<CameraController>(mainCameraEntity);
-		controller->SetControlledCamera(&this->mainCamera);
-	}
+	mainCameraEntity = entityManager->Create();
 
-	{
-		Window* window = engine->GetMainWindow();
-		Vec2f frameSize = window->GetFrameBufferSize().As<float>();
-		mainCamera.parameters.projection = ProjectionType::Perspective;
-		mainCamera.parameters.near = 0.1f;
-		mainCamera.parameters.far = 10000.0f;
-		mainCamera.parameters.height = Math::DegreesToRadians(60.0f);
-		mainCamera.parameters.SetAspectRatio(frameSize.x, frameSize.y);
-	}
+	CameraSystem* cameraSystem = engine->GetCameraSystem();
+	CameraId mainCameraId = cameraSystem->AddCameraComponent(mainCameraEntity);
+
+	Vec2f frameSize = engine->GetMainWindow()->GetFrameBufferSize().As<float>();
+	ProjectionParameters projection;
+	projection.SetPerspective(Math::DegreesToRadians(60.0f));
+	projection.near = 0.1f;
+	projection.far = 10000.0f;
+	projection.SetAspectRatio(frameSize.x, frameSize.y);
+	cameraSystem->SetProjectionParameters(mainCameraId, projection);
+		
+	SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);
+	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 1.6f, 4.0f));
+	scene->SetLocalTransform(cameraSceneObject, cameraTransform);
+
+	scene->SetActiveCameraEntity(mainCameraEntity);
+
+	ScriptSystem* scriptSystem = engine->GetScriptSystem();
+	CameraController* controller = scriptSystem->AddScript<CameraController>(mainCameraEntity);
+	controller->SetControlledCamera(mainCameraEntity);
 
 	// Load mesh and material for our additional objects
 

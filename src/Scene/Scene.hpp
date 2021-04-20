@@ -73,7 +73,7 @@ private:
 	MaterialId skyboxMaterial;
 	int environmentId;
 
-	Camera* activeCamera;
+	Entity activeCamera;
 
 	void Reallocate(unsigned int required);
 
@@ -129,6 +129,6 @@ public:
 	void SetEnvironmentId(int environmentId) { this->environmentId = environmentId; }
 	int GetEnvironmentId() const { return this->environmentId; }
 
-	void SetActiveCamera(Camera* camera) { activeCamera = camera; }
-	Camera* GetActiveCamera() { return activeCamera; }
+	void SetActiveCameraEntity(Entity camera) { activeCamera = camera; }
+	Entity GetActiveCameraEntity() const { return activeCamera; }
 };

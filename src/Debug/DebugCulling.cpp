@@ -1,17 +1,16 @@
 #include "Debug/DebugCulling.hpp"
 
-#include "Application/App.hpp"
-#include "Engine/Engine.hpp"
-#include "Entity/EntityManager.hpp"
-#include "System/Window.hpp"
-#include "Rendering/Renderer.hpp"
-#include "Scene/Scene.hpp"
-#include "Math/Frustum.hpp"
-
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
-DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer):
+#include "Rendering/CameraSystem.hpp"
+#include "Rendering/Renderer.hpp"
+
+#include "Scene/Scene.hpp"
+
+DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
+	renderer(nullptr),
+	cameraSystem(nullptr),
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
 	cullingCameraIsLocked(false)
@@ -20,6 +19,12 @@ DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer*
 
 DebugCulling::~DebugCulling()
 {
+}
+
+void DebugCulling::Initialize(Renderer* renderer, CameraSystem* cameraSystem)
+{
+	this->renderer = renderer;
+	this->cameraSystem = cameraSystem;
 }
 
 void DebugCulling::SetLockCullingCamera(bool lockCullingCamera)
@@ -36,8 +41,10 @@ void DebugCulling::UpdateAndDraw(Scene* scene)
 
 		const Mat4x4f& transform = renderer->GetCullingCameraTransform();
 
-		ProjectionParameters params = scene->GetActiveCamera()->parameters;
-		params.far = params.far * 0.25f;
+		Entity cameraEntity = scene->GetActiveCameraEntity();
+		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
+		ProjectionParameters params = cameraSystem->GetProjectionParameters(cameraId);
+		params.far = params.far < 10.0f ? params.far : 10.0f;
 
 		Color white(1.0f, 1.0f, 1.0f);
 

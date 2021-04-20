@@ -11,9 +11,10 @@
 #include "Resources/MeshData.hpp"
 #include "Resources/ShaderId.hpp"
 
+struct Entity;
 class Allocator;
-class Camera;
 class RenderDevice;
+class CameraSystem;
 class MeshManager;
 class ShaderManager;
 class SceneManager;
@@ -45,6 +46,7 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* renderDevice;
+	CameraSystem* cameraSystem;
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
 	SceneManager* sceneManager;
@@ -82,7 +84,7 @@ public:
 	~DebugVectorRenderer();
 
 	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-		SceneManager* sceneManager, Window* window);
+		SceneManager* sceneManager, Window* window, CameraSystem* cameraSystem);
 	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
@@ -97,5 +99,5 @@ public:
 
 	void DrawWireFrustum(const Mat4x4f& transform, const ProjectionParameters& projection, const Color& color);
 
-	void Render(Camera* camera);
+	void Render(Entity cameraEntity);
 };

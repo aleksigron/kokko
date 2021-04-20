@@ -23,7 +23,7 @@
 #include "Scene/ITransformUpdateReceiver.hpp"
 
 class Allocator;
-class Camera;
+class CameraSystem;
 class LightManager;
 class ShaderManager;
 class MeshManager;
@@ -126,6 +126,7 @@ private:
 
 	RenderOrderConfiguration renderOrder;
 
+	CameraSystem* cameraSystem;
 	LightManager* lightManager;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
@@ -171,9 +172,13 @@ private:
 	void DebugRender(DebugVectorRenderer* vectorRenderer);
 	
 public:
-	Renderer(Allocator* allocator, RenderDevice* renderDevice,
-		LightManager* lightManager, ShaderManager* shaderManager,
-		MeshManager* meshManager, MaterialManager* materialManager,
+	Renderer(Allocator* allocator,
+		RenderDevice* renderDevice,
+		CameraSystem* cameraSystem,
+		LightManager* lightManager,
+		ShaderManager* shaderManager,
+		MeshManager* meshManager,
+		MaterialManager* materialManager,
 		TextureManager* textureManager);
 	~Renderer();
 

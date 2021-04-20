@@ -149,7 +149,9 @@ set (KOKKO_SOURCES
 	src/Memory/DefaultAllocator.hpp
 	src/Memory/ProxyAllocator.cpp
 	src/Memory/ProxyAllocator.hpp
-	src/Rendering/Camera.hpp
+	src/Rendering/CameraId.hpp
+	src/Rendering/CameraSystem.cpp
+	src/Rendering/CameraSystem.hpp
 	src/Rendering/CascadedShadowMap.cpp
 	src/Rendering/CascadedShadowMap.hpp
 	src/Rendering/CustomRenderer.hpp

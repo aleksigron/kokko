@@ -23,7 +23,7 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "Rendering/Camera.hpp"
+#include "Rendering/CameraSystem.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/PostProcessRenderer.hpp"
@@ -89,6 +89,7 @@ struct TonemapUniformBlock
 Renderer::Renderer(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
+	CameraSystem* cameraSystem,
 	LightManager* lightManager,
 	ShaderManager* shaderManager,
 	MeshManager* meshManager,
@@ -110,6 +111,7 @@ Renderer::Renderer(
 	objectUniformBufferLists{ Array<unsigned int>(allocator) },
 	currentFrameIndex(0),
 	entityMap(allocator),
+	cameraSystem(cameraSystem),
 	lightManager(lightManager),
 	shaderManager(shaderManager),
 	meshManager(meshManager),
@@ -198,9 +200,9 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 
 	BloomEffect::Params bloomParams;
 	bloomParams.iterationCount = 4;
-	bloomParams.bloomThreshold = 1.0f;
-	bloomParams.bloomSoftThreshold = 0.5f;
-	bloomParams.bloomIntensity = 0.75f;
+	bloomParams.bloomThreshold = 1.2f;
+	bloomParams.bloomSoftThreshold = 0.8f;
+	bloomParams.bloomIntensity = 0.6f;
 	bloomEffect->SetParams(bloomParams);
 
 	{
@@ -826,7 +828,10 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	// Both SSAO and deferred lighting passes use these
 
 	Scene* scene = params.scene;
-	ProjectionParameters projParams = scene->GetActiveCamera()->parameters;
+	Entity renderCameraEntity = scene->GetActiveCameraEntity();
+
+	CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
+	const ProjectionParameters& projParams = cameraSystem->GetProjectionParameters(renderCameraId);
 
 	const RendererFramebuffer& lightAccFramebuffer = framebufferData[FramebufferIndexLightAcc];
 	Vec2i framebufferSize(lightAccFramebuffer.width, lightAccFramebuffer.height);
@@ -1336,9 +1341,12 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	// Get camera transforms
 
-	Camera* renderCamera = scene->GetActiveCamera();
-	const ProjectionParameters& projectionParams = renderCamera->parameters;
-	SceneObjectId cameraObject = scene->Lookup(renderCamera->GetEntity());
+	Entity renderCameraEntity = scene->GetActiveCameraEntity();
+
+	CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
+	const ProjectionParameters& projectionParams = cameraSystem->GetProjectionParameters(renderCameraId);
+
+	SceneObjectId cameraObject = scene->Lookup(renderCameraEntity);
 	Mat4x4f cameraTransform = scene->GetWorldTransform(cameraObject);
 
 	Mat4x4f cullingCameraTransform = lockCullingCamera ? lockCullingCameraTransform : cameraTransform;
@@ -1445,16 +1453,16 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 		RenderViewport& vp = viewportData[vpIdx];
 		vp.position = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 		vp.forward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
-		vp.farMinusNear = renderCamera->parameters.far - renderCamera->parameters.near;
-		vp.minusNear = -renderCamera->parameters.near;
+		vp.farMinusNear = projectionParams.far - projectionParams.near;
+		vp.minusNear = -projectionParams.near;
 		vp.objectMinScreenSizePx = mainViewportMinObjectSize;
 		vp.viewToWorld = cameraTransform;
-		vp.view = Camera::GetViewMatrix(vp.viewToWorld);
+		vp.view = cameraTransform.GetInverse();
 		vp.projection = projectionParams.GetProjectionMatrix(reverseDepth);
 		vp.viewProjection = vp.projection * vp.view;
 		vp.viewportRectangle.size = Vec2i(fb.width, fb.height);
 		vp.viewportRectangle.position = Vec2i(0, 0);
-		vp.frustum.Update(renderCamera->parameters, cullingCameraTransform);
+		vp.frustum.Update(projectionParams, cullingCameraTransform);
 		vp.framebufferIndex = FramebufferIndexGBuffer;
 
 		viewportUniforms.VP = vp.viewProjection;

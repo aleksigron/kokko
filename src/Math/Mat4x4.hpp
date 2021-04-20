@@ -81,7 +81,7 @@ struct alignas(16) Mat4x4f
 	/*
 	Get the inverse of a non-scaled transform
 	*/
-	Mat4x4f GetInverse()
+	Mat4x4f GetInverse() const
 	{
 		Mat3x3f inverseRotation = Get3x3().GetTransposed();
 		Vec3f translation = -(inverseRotation * Vec3f(m[12], m[13], m[14]));

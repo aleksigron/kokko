@@ -2,6 +2,7 @@
 
 class Allocator;
 class AllocatorManager;
+class CameraSystem;
 class RenderDevice;
 class MeshManager;
 class ShaderManager;
@@ -56,8 +57,8 @@ public:
 		Window* window, RenderDevice* renderDevice);
 	~Debug();
 
-	void Initialize(Window* window, Renderer* renderer, MeshManager* meshManager,
-		ShaderManager* shaderManager, SceneManager* sceneManager);
+	void Initialize(Window* window, Renderer* renderer, CameraSystem* cameraSystem,
+		MeshManager* meshManager, ShaderManager* shaderManager, SceneManager* sceneManager);
 	void Deinitialize();
 	
 	void Render(Scene* scene);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Math/Mat4x4.hpp"
+
 enum class ProjectionType
 {
 	Perspective,

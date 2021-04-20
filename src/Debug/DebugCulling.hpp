@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Math/Vec2.hpp"
-#include "Rendering/Camera.hpp"
-#include "Application/CameraController.hpp"
 
+class Scene;
 class Renderer;
+class CameraSystem;
 class DebugTextRenderer;
 class DebugVectorRenderer;
 
@@ -12,6 +12,7 @@ class DebugCulling
 {
 private:
 	Renderer* renderer;
+	CameraSystem* cameraSystem;
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
 
@@ -23,7 +24,8 @@ public:
 	DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
 	~DebugCulling();
 
-	void SetRenderer(Renderer* renderer) { this->renderer = renderer; }
+	void Initialize(Renderer* renderer, CameraSystem* cameraSystem);
+
 	void UpdateAndDraw(Scene* scene);
 
 	void SetLockCullingCamera(bool lockCullingCamera);

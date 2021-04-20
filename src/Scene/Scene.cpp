@@ -19,7 +19,7 @@ Scene::Scene(Allocator* allocator, unsigned int sceneId):
 	updatedTransforms(allocator),
 	sceneId(sceneId),
 	environmentId(-1),
-	activeCamera(nullptr)
+	activeCamera(Entity::Null)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as SceneObjectId::Null value
@@ -40,7 +40,7 @@ Scene& Scene::operator=(Scene&& other) noexcept
 
 	other.sceneId = 0;
 	other.data = InstanceData{}; // Zero-initialize
-	other.activeCamera = nullptr;
+	other.activeCamera = Entity::Null;
 
 	return *this;
 }

@@ -14,6 +14,7 @@ class MaterialManager;
 class TextureManager;
 class SceneManager;
 class LightManager;
+class CameraSystem;
 class TerrainManager;
 class ParticleSystem;
 class EnvironmentManager;
@@ -58,6 +59,7 @@ private:
 	InstanceAllocatorPair<ShaderManager> shaderManager;
 	InstanceAllocatorPair<MaterialManager> materialManager;
 	InstanceAllocatorPair<LightManager> lightManager;
+	InstanceAllocatorPair<CameraSystem> cameraSystem;
 	InstanceAllocatorPair<SceneManager> sceneManager;
 	InstanceAllocatorPair<TerrainManager> terrainManager;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
@@ -80,6 +82,7 @@ public:
 	Window* GetMainWindow() { return mainWindow.instance; }
 	EntityManager* GetEntityManager() { return entityManager.instance; }
 	LightManager* GetLightManager() { return lightManager.instance; }
+	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
 	Renderer* GetRenderer() { return renderer.instance; }
 	MaterialManager* GetMaterialManager() { return materialManager.instance; }
 	MeshManager* GetMeshManager() { return meshManager.instance; }

@@ -23,6 +23,7 @@
 #include "Memory/Memory.hpp"
 #include "Memory/ProxyAllocator.hpp"
 
+#include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/RenderDeviceOpenGL.hpp"
 #include "Rendering/Renderer.hpp"
@@ -89,6 +90,9 @@ Engine::Engine()
 	lightManager.CreateScope(allocatorManager, "LightManager", alloc);
 	lightManager.New(lightManager.allocator);
 
+	cameraSystem.CreateScope(allocatorManager, "CameraSystem", alloc);
+	cameraSystem.New(cameraSystem.allocator);
+
 	sceneManager.CreateScope(allocatorManager, "SceneManager", alloc);
 	sceneManager.New(this, sceneManager.allocator);
 
@@ -103,7 +107,7 @@ Engine::Engine()
 		shaderManager.instance, meshManager.instance, textureManager.instance);
 
 	renderer.CreateScope(allocatorManager, "Renderer", alloc);
-	renderer.New(renderer.allocator, renderDevice, lightManager.instance,
+	renderer.New(renderer.allocator, renderDevice, cameraSystem.instance, lightManager.instance,
 		shaderManager.instance, meshManager.instance, materialManager.instance, textureManager.instance);
 
 	scriptSystem.CreateScope(allocatorManager, "ScriptSystem", alloc);
@@ -122,6 +126,7 @@ Engine::~Engine()
 	particleSystem.Delete();
 	terrainManager.Delete();
 	sceneManager.Delete();
+	cameraSystem.Delete();
 	lightManager.Delete();
 	materialManager.Delete();
 	shaderManager.Delete();
@@ -167,7 +172,7 @@ bool Engine::Initialize()
 			debugLog->Log(logText);
 		}
 
-		debug.instance->Initialize(mainWindow.instance, renderer.instance,
+		debug.instance->Initialize(mainWindow.instance, renderer.instance, cameraSystem.instance,
 			meshManager.instance, shaderManager.instance, sceneManager.instance);
 
 		textureManager.instance->Initialize();

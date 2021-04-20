@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Application/AppSettings.hpp"
-#include "Application/CameraController.hpp"
-#include "Rendering/Camera.hpp"
+
+#include "Entity/Entity.hpp"
 
 class Allocator;
 class Engine;
@@ -14,8 +14,7 @@ private:
 	Allocator* allocator;
 	AppSettings settings;
 
-	Camera mainCamera;
-	CameraController cameraController;
+	Entity mainCameraEntity;
 	bool cameraControllerEnable;
 	
 public:

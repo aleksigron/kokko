@@ -46,7 +46,7 @@ void EntityView::Draw(EntityManager* entityManager, Scene* scene)
 void EntityView::DrawEntityNode(Entity entity, SceneObjectId sceneObj)
 {
 	SceneObjectId firstChild = SceneObjectId::Null;
-	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 	
 	if (sceneObj == SceneObjectId::Null)
 		flags = flags | ImGuiTreeNodeFlags_Leaf;
@@ -107,7 +107,7 @@ void EntityView::DrawEntityProperties()
 		SceneObjectId sceneObj = scene->Lookup(selectedEntity);
 		if (sceneObj != SceneObjectId::Null)
 		{
-			if (ImGui::TreeNodeEx("Scene object"))
+			if (ImGui::TreeNodeEx("Scene object", ImGuiTreeNodeFlags_SpanAvailWidth))
 			{
 				bool edited = false;
 				SceneEditTransform transform = scene->GetEditTransform(sceneObj);

@@ -17,11 +17,10 @@
 #include "Scene/Scene.hpp"
 
 #include "App.hpp"
-#include "Rendering/Camera.hpp"
 
-void CameraController::SetControlledCamera(Camera* camera)
+void CameraController::SetControlledCamera(Entity cameraEntity)
 {
-	controlledCamera = camera;
+	controlledCamera = cameraEntity;
 }
 
 void CameraController::VerifySensitityIsLoaded(const ScriptContext& context)
@@ -98,8 +97,7 @@ void CameraController::OnUpdate(const ScriptContext& context)
 	Vec3f right = rotation.Right();
 	Vec3f forward = rotation.Forward();
 
-	Entity cameraEntity = controlledCamera->GetEntity();
-	SceneObjectId cameraSceneObject = scene->Lookup(cameraEntity);
+	SceneObjectId cameraSceneObject = scene->Lookup(controlledCamera);
 	Mat4x4f currentTransform = scene->GetLocalTransform(cameraSceneObject);
 	Vec3f position = (currentTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
@@ -137,8 +135,7 @@ void CameraController::OnUpdate(const ScriptContext& context)
 	if (input->GetKey(KeyCode::LeftControl))
 		targetSpeed *= 0.125f;
 
-	// TODO: Fix acceleration to be delta time independent
-	cameraVelocity += (dir * targetSpeed - cameraVelocity) * 0.15f;
+	cameraVelocity += (dir * targetSpeed - cameraVelocity) * Time::GetDeltaTime() * 10.0f;
 	position += cameraVelocity * Time::GetDeltaTime();
 
 	Mat4x4f newTransform = Mat4x4f::Translate(position) * Mat4x4f(rotation);
