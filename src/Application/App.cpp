@@ -70,9 +70,10 @@ void App::Initialize()
 	Vec2f frameSize = engine->GetMainWindow()->GetFrameBufferSize().As<float>();
 	ProjectionParameters projection;
 	projection.SetPerspective(Math::DegreesToRadians(60.0f));
-	projection.near = 0.1f;
-	projection.far = 10000.0f;
+	projection.perspectiveNear = 0.1f;
+	projection.perspectiveFar = 10000.0f;
 	projection.SetAspectRatio(frameSize.x, frameSize.y);
+
 	cameraSystem->SetProjectionParameters(mainCameraId, projection);
 		
 	SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);

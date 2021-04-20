@@ -970,7 +970,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	lightManager->GetDirectionalLights(directionalLights);
 
 	Vec2f halfNearPlane;
-	halfNearPlane.y = std::tan(projection.height * 0.5f);
+	halfNearPlane.y = std::tan(projection.perspectiveFieldOfView * 0.5f);
 	halfNearPlane.x = halfNearPlane.y * projection.aspect;
 	uniformsOut.halfNearPlane = halfNearPlane;
 
@@ -1064,7 +1064,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	lightResultArray.Clear();
 
 	// shadow_params.splits[0] is the near depth
-	uniformsOut.shadowSplits[0] = projection.near;
+	uniformsOut.shadowSplits[0] = projection.perspectiveNear;
 
 	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 	uniformsOut.cascadeCount = shadowCascadeCount;
@@ -1415,8 +1415,8 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 				RenderViewport& vp = viewportData[vpIdx];
 				vp.position = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 				vp.forward = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
-				vp.farMinusNear = lightProjections[cascade].far - lightProjections[cascade].near;
-				vp.minusNear = -lightProjections[cascade].near;
+				vp.farMinusNear = lightProjections[cascade].orthographicFar - lightProjections[cascade].orthographicNear;
+				vp.minusNear = -lightProjections[cascade].orthographicNear;
 				vp.objectMinScreenSizePx = shadowViewportMinObjectSize;
 				vp.viewToWorld = cascadeViewTransforms[cascade];
 				vp.view = vp.viewToWorld.GetInverse();
@@ -1453,8 +1453,8 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 		RenderViewport& vp = viewportData[vpIdx];
 		vp.position = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 		vp.forward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
-		vp.farMinusNear = projectionParams.far - projectionParams.near;
-		vp.minusNear = -projectionParams.near;
+		vp.farMinusNear = projectionParams.perspectiveFar - projectionParams.perspectiveNear;
+		vp.minusNear = -projectionParams.perspectiveNear;
 		vp.objectMinScreenSizePx = mainViewportMinObjectSize;
 		vp.viewToWorld = cameraTransform;
 		vp.view = cameraTransform.GetInverse();

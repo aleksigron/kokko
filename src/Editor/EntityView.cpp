@@ -4,18 +4,22 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Rendering/CameraSystem.hpp"
+
 #include "Scene/Scene.hpp"
 
 EntityView::EntityView() :
 	entityManager(nullptr),
+	cameraSystem(nullptr),
 	scene(nullptr),
 	selectedEntity(Entity::Null)
 {
 }
 
-void EntityView::Draw(EntityManager* entityManager, Scene* scene)
+void EntityView::Draw(EntityManager* entityManager, CameraSystem* cameraSystem, Scene* scene)
 {
 	this->entityManager = entityManager;
+	this->cameraSystem = cameraSystem;
 	this->scene = scene;
 
 	ImGui::Begin("Entities");
@@ -136,5 +140,64 @@ void EntityView::DrawEntityProperties()
 			}
 		}
 
+		CameraId cameraId = cameraSystem->Lookup(selectedEntity);
+		if (cameraId != CameraId::Null)
+		{
+			if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_SpanAvailWidth))
+			{
+				static const char* projectionNames[] = { "Perspective", "Orthographic" };
+
+				bool edited = false;
+				ProjectionParameters params = cameraSystem->GetProjectionParameters(cameraId);
+
+				if (ImGui::BeginCombo("Projection", projectionNames[static_cast<int>(params.projection)]))
+				{
+					for (int i = 0; i < 2; ++i)
+					{
+						bool isSelected = params.projection == static_cast<ProjectionType>(i);
+						if (ImGui::Selectable(projectionNames[i], &isSelected))
+						{
+							params.projection = static_cast<ProjectionType>(i);
+							edited = true;
+						}
+					}
+
+					ImGui::EndCombo();
+				}
+
+				if (params.projection == ProjectionType::Perspective)
+				{
+					float maxFovDegrees = std::round(160.0f / params.aspect);
+					float fovDegrees = Math::RadiansToDegrees(params.perspectiveFieldOfView);
+					if (ImGui::DragFloat("Field of view", &fovDegrees, 0.1f, 0.1f, maxFovDegrees))
+					{
+						params.perspectiveFieldOfView = Math::DegreesToRadians(fovDegrees);
+						edited = true;
+					}
+
+					if (ImGui::DragFloat("Near distance", &params.perspectiveNear, 0.001f, 0.001f, 0.0f))
+						edited = true;
+
+					if (ImGui::DragFloat("Far distance", &params.perspectiveFar, 0.1f, 0.1f, 0.0f))
+						edited = true;
+				}
+				else
+				{
+					if (ImGui::DragFloat("Height", &params.orthographicHeight, 0.01f, 0.0f, 0.0f))
+						edited = true;
+
+					if (ImGui::DragFloat("Near distance", &params.orthographicNear, 0.01f, 0.0f, 0.0f))
+						edited = true;
+
+					if (ImGui::DragFloat("Far distance", &params.orthographicFar, 0.01f, 0.0f, 0.0f))
+						edited = true;
+				}
+
+				if (edited)
+					cameraSystem->SetProjectionParameters(cameraId, params);
+
+				ImGui::TreePop();
+			}
+		}
 	}
 }

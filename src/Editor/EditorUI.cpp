@@ -6,6 +6,8 @@
 
 #include "Editor/EditorViews.hpp"
 
+#include "Engine/Engine.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "System/ImGuiRenderBackend.hpp"
@@ -64,11 +66,11 @@ void EditorUI::StartFrame()
 	ImGui::NewFrame();
 }
 
-void EditorUI::Render(EntityManager* entityManager, Scene* scene)
+void EditorUI::Render(Engine* engine, Scene* scene)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	views->entityView.Draw(entityManager, scene);
+	views->entityView.Draw(engine->GetEntityManager(), engine->GetCameraSystem(), scene);
 
 	ImGui::ShowDemoWindow();
 

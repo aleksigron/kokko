@@ -32,8 +32,6 @@ public:
 	CameraId AddCameraComponent(Entity e);
 	void RemoveCameraComponent(CameraId id);
 
-	Entity GetCameraEntity(CameraId id) const;
-
 	const ProjectionParameters& GetProjectionParameters(CameraId id) const;
 	void SetProjectionParameters(CameraId id, const ProjectionParameters& params);
 };

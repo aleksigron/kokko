@@ -222,7 +222,7 @@ void ScreenSpaceAmbientOcclusion::UpdateUniformBuffers(const ProjectionParameter
 
 	OcclusionUniformBlock occlusionUniforms;
 	occlusionUniforms.projection = projectionMat;
-	occlusionUniforms.halfNearPlane.y = std::tan(projection.height * 0.5f);
+	occlusionUniforms.halfNearPlane.y = std::tan(projection.perspectiveFieldOfView * 0.5f);
 	occlusionUniforms.halfNearPlane.x = occlusionUniforms.halfNearPlane.y * projection.aspect;
 	occlusionUniforms.noiseScale = Vec2f(framebufferSize.x / noiseSizef, framebufferSize.y / noiseSizef);
 	occlusionUniforms.sampleRadius = 0.5f;

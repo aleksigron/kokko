@@ -40,7 +40,7 @@ void CalculateCascadeFrusta(
 	Vec3f lightDirY = (placeholderLightTransform * Vec4f(0.0f, 1.0f, 0.0f, 0.0f)).xyz();
 
 	Vec2f halfFovTan;
-	halfFovTan.y = std::tan(projection.height * 0.5f);
+	halfFovTan.y = std::tan(projection.perspectiveFieldOfView * 0.5f);
 	halfFovTan.x = halfFovTan.y * projection.aspect;
 	float crossHalfFovTan = halfFovTan.Magnitude();
 
@@ -50,9 +50,9 @@ void CalculateCascadeFrusta(
 		ProjectionParameters cascadeCameraFrustum;
 		cascadeCameraFrustum.projection = projection.projection;
 		cascadeCameraFrustum.aspect = projection.aspect;
-		cascadeCameraFrustum.height = projection.height;
-		cascadeCameraFrustum.near = cascIdx > 0 ? splits[cascIdx - 1] : projection.near;
-		cascadeCameraFrustum.far = splits[cascIdx];
+		cascadeCameraFrustum.perspectiveFieldOfView = projection.perspectiveFieldOfView;
+		cascadeCameraFrustum.perspectiveNear = cascIdx > 0 ? splits[cascIdx - 1] : projection.perspectiveNear;
+		cascadeCameraFrustum.perspectiveFar = splits[cascIdx];
 
 		FrustumPoints fp;
 		fp.Update(cascadeCameraFrustum, cameraTransform);
@@ -81,7 +81,7 @@ void CalculateCascadeFrusta(
 			// Consider as a 2D corner to corner cross-section of frustum
 
 			// Average of near and far depths
-			float cascadeHalfDepth = (cascadeCameraFrustum.far + cascadeCameraFrustum.near) * 0.5f;
+			float cascadeHalfDepth = (cascadeCameraFrustum.perspectiveFar + cascadeCameraFrustum.perspectiveNear) * 0.5f;
 
 			// Distance from center axis to frustum corner line at halfway depth
 			float midHalfWidth = cascadeHalfDepth * crossHalfFovTan;
@@ -108,9 +108,9 @@ void CalculateCascadeFrusta(
 		ProjectionParameters cascProj;
 		cascProj.projection = ProjectionType::Orthographic;
 		cascProj.aspect = 1.0f;
-		cascProj.height = diameter;
-		cascProj.near = -frontShadowRenderingDistance;
-		cascProj.far = diameter;
+		cascProj.orthographicHeight = diameter;
+		cascProj.orthographicNear = -frontShadowRenderingDistance;
+		cascProj.orthographicFar = diameter;
 
 		// Calculate rounding in shadow map space to remove edge shimmer
 
@@ -130,7 +130,7 @@ void CalculateCascadeFrusta(
 
 void CalculateSplitDepths(const ProjectionParameters& projection, float* depthsOut)
 {
-	CalculateSplitDepths(projection.near, projection.far, depthsOut);
+	CalculateSplitDepths(projection.perspectiveNear, projection.perspectiveFar, depthsOut);
 }
 
 void CalculateSplitDepths(float near, float far, float* depthsOut)

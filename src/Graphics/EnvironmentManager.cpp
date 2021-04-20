@@ -78,8 +78,8 @@ void EnvironmentManager::Initialize()
 	// Create viewport uniform buffer
 
 	ProjectionParameters projection;
-	projection.near = 0.1f;
-	projection.far = 1.0f;
+	projection.perspectiveNear = 0.1f;
+	projection.perspectiveFar = 1.0f;
 	projection.aspect = 1.0f;
 	projection.SetPerspective(Math::DegreesToRadians(90.0f));
 	Mat4x4f projectionMatrix = projection.GetProjectionMatrix(false);

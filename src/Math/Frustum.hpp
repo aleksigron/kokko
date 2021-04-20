@@ -17,15 +17,15 @@ struct FrustumPlanes
 		const Vec3f right = (transform * Vec4f(1.0f, 0.0f, 0.0f, 0.0f)).xyz();
 		const Vec3f up = (transform * Vec4f(0.0f, 1.0f, 0.0f, 0.0f)).xyz();
 
-		const Vec3f farForward = forward * params.far;
-
-		const Vec3f nearCenter = position + forward * params.near;
-		const Vec3f farCenter = position + farForward;
-
 		if (params.projection == ProjectionType::Perspective)
 		{
-			const float halfFovTan = std::tan(params.height * 0.5f);
-			const float halfFarHeight = halfFovTan * params.far;
+			const Vec3f farForward = forward * params.perspectiveFar;
+
+			const Vec3f nearCenter = position + forward * params.perspectiveNear;
+			const Vec3f farCenter = position + farForward;
+
+			const float halfFovTan = std::tan(params.perspectiveFieldOfView * 0.5f);
+			const float halfFarHeight = halfFovTan * params.perspectiveFar;
 			const float halfFarWidth = halfFarHeight * params.aspect;
 
 			const Vec3f halfFarRight = right * halfFarWidth;
@@ -43,7 +43,10 @@ struct FrustumPlanes
 		}
 		else if (params.projection == ProjectionType::Orthographic)
 		{
-			const float halfHeight = params.height * 0.5f;
+			const Vec3f nearCenter = position + forward * params.orthographicNear;
+			const Vec3f farCenter = position + forward * params.orthographicFar;
+
+			const float halfHeight = params.orthographicHeight * 0.5f;
 			const float halfWidth = halfHeight * params.aspect;
 
 			planes[0].SetPointAndNormal(nearCenter, forward);
@@ -70,28 +73,35 @@ struct FrustumPoints
 		float halfNearHeight;
 		float halfFarHeight;
 
+		Vec3f farForward;
+		Vec3f nearCenter;
+
 		if (params.projection == ProjectionType::Perspective)
 		{
-			const float halfFovTan = std::tan(params.height * 0.5f);
+			const float halfFovTan = std::tan(params.perspectiveFieldOfView * 0.5f);
 
-			halfNearHeight = halfFovTan * params.near;
-			halfFarHeight = halfFovTan * params.far;
+			farForward = forward * params.perspectiveFar;
+			nearCenter = position + forward * params.perspectiveNear;
+
+			halfNearHeight = halfFovTan * params.perspectiveNear;
+			halfFarHeight = halfFovTan * params.perspectiveFar;
 		}
 		else // if (params.projection == ProjectionType::Orthographic)
 		{
-			halfNearHeight = params.height;
-			halfFarHeight = params.height;
+			farForward = forward * params.orthographicFar;
+			nearCenter = position + forward * params.orthographicNear;
+
+			halfNearHeight = params.orthographicHeight;
+			halfFarHeight = params.orthographicHeight;
 		}
+
+		const Vec3f farCenter = position + farForward;
 
 		const float halfNearWidth = halfNearHeight * params.aspect;
 		const float halfFarWidth = halfFarHeight * params.aspect;
 
-		const Vec3f farForward = forward * params.far;
 		const Vec3f halfFarRight = right * halfFarWidth;
 		const Vec3f halfFarUp = up * halfFarHeight;
-
-		const Vec3f nearCenter = position + forward * params.near;
-		const Vec3f farCenter = position + farForward;
 
 		const Vec3f halfNearRight = right * halfNearWidth;
 		const Vec3f halfNearUp = up * halfNearHeight;

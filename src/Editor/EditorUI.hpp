@@ -4,13 +4,13 @@ struct GLFWwindow;
 
 class Allocator;
 class InputView;
-class EntityManager;
+class Engine;
 class Scene;
 
 class ImGuiRenderBackend;
 class ImGuiPlatformBackend;
 
-class EditorViews;
+struct EditorViews;
 
 class EditorUI
 {
@@ -34,5 +34,5 @@ public:
 	void Deinitialize();
 
 	void StartFrame();
-	void Render(EntityManager* entityManager, Scene* scene);
+	void Render(Engine* engine, Scene* scene);
 };

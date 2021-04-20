@@ -3,6 +3,7 @@
 #include "Entity/Entity.hpp"
 
 class Scene;
+class CameraSystem;
 class EntityManager;
 
 struct SceneObjectId;
@@ -11,6 +12,7 @@ class EntityView
 {
 private:
 	EntityManager* entityManager;
+	CameraSystem* cameraSystem;
 	Scene* scene;
 
 	Entity selectedEntity;
@@ -24,5 +26,5 @@ private:
 public:
 	EntityView();
 
-	void Draw(EntityManager* entityManager, Scene* scene);
+	void Draw(EntityManager* entityManager, CameraSystem* cameraSystem, Scene* scene);
 };

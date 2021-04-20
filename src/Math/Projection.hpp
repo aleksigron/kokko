@@ -11,20 +11,20 @@ enum class ProjectionType
 struct ProjectionParameters
 {
 	// Type of projection to use
-	ProjectionType projection;
-
-	// ProjectionType::Perspective: vertical field of view in radians
-	// ProjectionType::Orthogonal: height of the frustum
-	float height;
+	ProjectionType projection = ProjectionType::Perspective;
 
 	// The ratio of the viewport's width to its height (x / y)
-	float aspect;
+	float aspect = 1.0f;
 
-	// The near plane distance
-	float near;
+	// Perspective: vertical field of view in radians
+	float perspectiveFieldOfView = 1.0f;
+	float perspectiveNear = 0.1f;
+	float perspectiveFar = 100.0f;
 
-	// The far plane distance
-	float far;
+	// Orthographic: height of the frustum
+	float orthographicHeight = 2.0f;
+	float orthographicNear = 0.0f;
+	float orthographicFar = 1.0f;
 
 	Mat4x4f GetProjectionMatrix(bool reverseDepth) const
 	{
@@ -32,45 +32,45 @@ struct ProjectionParameters
 
 		if (projection == ProjectionType::Perspective)
 		{
-			float tanHalfFovy = std::tan(height * 0.5f);
+			float tanHalfFovy = std::tan(perspectiveFieldOfView * 0.5f);
 
 			if (reverseDepth)
 			{
 				result[0] = 1.0f / (aspect * tanHalfFovy);
 				result[5] = 1.0f / tanHalfFovy;
-				result[10] = -far / (near - far) - 1.0f;
+				result[10] = -perspectiveFar / (perspectiveNear - perspectiveFar) - 1.0f;
 				result[11] = -1.0f;
-				result[14] = -(near * far) / (near - far);
+				result[14] = -(perspectiveNear * perspectiveFar) / (perspectiveNear - perspectiveFar);
 				result[15] = 0.0f;
 			}
 			else
 			{
 				result[0] = 1.0f / (aspect * tanHalfFovy);
 				result[5] = 1.0f / tanHalfFovy;
-				result[10] = -(far + near) / (far - near);
+				result[10] = -(perspectiveFar + perspectiveNear) / (perspectiveFar - perspectiveNear);
 				result[11] = -1.0f;
-				result[14] = (-2.0f * far * near) / (far - near);
+				result[14] = (-2.0f * perspectiveFar * perspectiveNear) / (perspectiveFar - perspectiveNear);
 				result[15] = 0.0f;
 			}
 		}
 		else if (projection == ProjectionType::Orthographic)
 		{
-			float w = 2.0f / (height * aspect);
-			float h = 2.0f / height;
+			float w = 2.0f / (orthographicHeight * aspect);
+			float h = 2.0f / orthographicHeight;
 
 			if (reverseDepth)
 			{
 				result[0] = w;
 				result[5] = h;
-				result[10] = -1.0f / (near - far);
-				result[14] = -far / (near - far);
+				result[10] = -1.0f / (orthographicNear - orthographicFar);
+				result[14] = -orthographicFar / (orthographicNear - orthographicFar);
 			}
 			else
 			{
 				result[0] = w;
 				result[5] = h;
-				result[10] = -1.0f / (far - near);
-				result[14] = -near / (far - near);
+				result[10] = -1.0f / (orthographicFar - orthographicNear);
+				result[14] = -orthographicNear / (orthographicFar - orthographicNear);
 			}
 		}
 
@@ -80,13 +80,13 @@ struct ProjectionParameters
 	void SetPerspective(float fovVerticalRadians)
 	{
 		projection = ProjectionType::Perspective;
-		height = fovVerticalRadians;
+		perspectiveFieldOfView = fovVerticalRadians;
 	}
 
 	void SetOrthographic(float height)
 	{
 		projection = ProjectionType::Orthographic;
-		height = height;
+		orthographicHeight = height;
 	}
 
 	void SetAspectRatio(float width, float height) { aspect = width / height; }
