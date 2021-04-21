@@ -70,7 +70,8 @@ void EditorUI::Render(Engine* engine, Scene* scene)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	views->entityView.Draw(engine->GetEntityManager(), engine->GetCameraSystem(), scene);
+	views->entityView.Draw(engine->GetEntityManager(), engine->GetCameraSystem(),
+		engine->GetLightManager(), scene);
 
 	ImGui::ShowDemoWindow();
 

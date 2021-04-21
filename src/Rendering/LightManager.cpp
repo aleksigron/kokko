@@ -5,6 +5,8 @@
 #include "Math/Math.hpp"
 #include "Math/Intersect3D.hpp"
 
+const LightId LightId::Null = LightId{ 0 };
+
 LightManager::LightManager(Allocator* allocator) :
 	allocator(allocator),
 	entityMap(allocator),
@@ -81,7 +83,7 @@ void LightManager::NotifyUpdatedTransforms(unsigned int count, const Entity* ent
 	{
 		LightId id = this->Lookup(entities[entityIdx]);
 
-		if (id.IsNull() == false)
+		if (id != LightId::Null)
 		{
 			const Mat4x4f& t = transforms[entityIdx];
 			data.position[id.i] = (t * origin).xyz();
@@ -112,6 +114,13 @@ void LightManager::AddLight(unsigned int count, const Entity* entities, LightId*
 		mapPair->second.i = id;
 
 		data.entity[id] = e;
+		data.position[id] = Vec3f();
+		data.orientation[id] = Mat3x3f();
+		data.type[id] = LightType::Point;
+		data.color[id] = Vec3f(1.0f, 1.0f, 1.0f);
+		data.radius[id] = 1.0f;
+		data.angle[id] = Math::DegreesToRadians(60.0f);
+		data.shadowCasting[id] = false;
 
 		lightIdsOut[i].i = id;
 	}
