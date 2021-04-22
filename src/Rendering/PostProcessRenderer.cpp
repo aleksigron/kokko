@@ -38,7 +38,7 @@ void PostProcessRenderer::Initialize()
 
 void PostProcessRenderer::Deinitialize()
 {
-	if (fullscreenMeshId.IsValid())
+	if (fullscreenMeshId != MeshId::Null)
 	{
 		meshManager->RemoveMesh(fullscreenMeshId);
 		fullscreenMeshId = MeshId{ 0 };

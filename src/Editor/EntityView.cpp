@@ -6,6 +6,9 @@
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
+#include "Rendering/Renderer.hpp"
+
+#include "Resources/MeshManager.hpp"
 
 #include "Scene/Scene.hpp"
 
@@ -13,17 +16,21 @@ EntityView::EntityView() :
 	entityManager(nullptr),
 	cameraSystem(nullptr),
 	lightManager(nullptr),
+	renderer(nullptr),
+	meshManager(nullptr),
 	scene(nullptr),
 	selectedEntity(Entity::Null)
 {
 }
 
 void EntityView::Draw(EntityManager* entityManager, CameraSystem* cameraSystem,
-	LightManager* lightManager, Scene* scene)
+	LightManager* lightManager, Renderer* renderer, MeshManager* meshManager, Scene* scene)
 {
 	this->entityManager = entityManager;
 	this->cameraSystem = cameraSystem;
 	this->lightManager = lightManager;
+	this->renderer = renderer;
+	this->meshManager = meshManager;
 	this->scene = scene;
 
 	ImGui::Begin("Entities");
@@ -111,6 +118,7 @@ void EntityView::DrawEntityProperties()
 		}
 
 		DrawSceneComponent();
+		DrawRenderComponent();
 		DrawCameraComponent();
 		DrawLightComponent();
 	}
@@ -145,6 +153,55 @@ void EntityView::DrawSceneComponent()
 
 			if (edited)
 				scene->SetEditTransform(sceneObj, transform);
+
+			ImGui::TreePop();
+		}
+	}
+}
+
+void EntityView::DrawRenderComponent()
+{
+	RenderObjectId renderObj = renderer->Lookup(selectedEntity);
+	if (renderObj != RenderObjectId::Null)
+	{
+		if (ImGui::TreeNodeEx("Render object", ImGuiTreeNodeFlags_SpanAvailWidth))
+		{
+			MeshId meshId = renderer->GetMeshId(renderObj);
+			const char* meshPath = meshManager->GetPath(meshId);
+
+			if (meshPath != nullptr)
+			{
+				std::strncpy(textInputBuffer, meshPath, TextInputBufferSize);
+				if (ImGui::InputText("Mesh path", textInputBuffer, TextInputBufferSize))
+				{
+					MeshId newMeshId = meshManager->GetIdByPath(StringRef(textInputBuffer));
+
+					if (newMeshId != MeshId::Null)
+					{
+						if (newMeshId != meshId)
+						{
+							renderer->SetMeshId(renderObj, newMeshId);
+							
+							SceneObjectId sceneObj = scene->Lookup(selectedEntity);
+							if (sceneObj != SceneObjectId::Null)
+								scene->MarkUpdated(sceneObj);
+						}
+					}
+					else
+					{
+						ImVec4 warningColor(1.0f, 0.6f, 0.0f, 1.0f);
+						ImGui::TextColored(warningColor, "Mesh not found");
+					}
+				}
+			}
+			else // We currently only support editing meshes that have been loaded from file
+			{
+				ImGui::Text("Mesh %u", meshId.i);
+			}
+
+			RenderOrderData order = renderer->GetOrderData(renderObj);
+
+			ImGui::Text("Material %u", order.material.i);
 
 			ImGui::TreePop();
 		}

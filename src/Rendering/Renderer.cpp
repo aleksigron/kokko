@@ -45,6 +45,8 @@
 
 #include "System/Window.hpp"
 
+const RenderObjectId RenderObjectId::Null = RenderObjectId{ 0 };
+
 struct LightingUniformBlock
 {
 	static constexpr size_t MaxLightCount = 8;
@@ -581,7 +583,7 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 
 void Renderer::Deinitialize()
 {
-	if (fullscreenMesh.IsValid())
+	if (fullscreenMesh != MeshId::Null)
 	{
 		meshManager->RemoveMesh(fullscreenMesh);
 		fullscreenMesh = MeshId{ 0 };
@@ -1814,7 +1816,7 @@ void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entitie
 		Entity entity = entities[entityIdx];
 		RenderObjectId obj = this->Lookup(entity);
 
-		if (obj.IsNull() == false)
+		if (obj != RenderObjectId::Null)
 		{
 			unsigned int dataIdx = obj.i;
 

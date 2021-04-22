@@ -90,11 +90,12 @@ private:
 		MeshDrawData* drawData;
 		MeshBufferData* bufferData;
 		BoundingBox* bounds;
+		char** pathString;
 	}
 	data;
 
 	unsigned int freeListFirst;
-	HashMap<uint32_t, MeshId> nameHashMap;
+	HashMap<uint32_t, MeshId> pathHashMap;
 
 	void Reallocate(unsigned int required);
 
@@ -117,11 +118,9 @@ public:
 	void RemoveMesh(MeshId id);
 	
 	MeshId GetIdByPath(StringRef path);
-	MeshId GetIdByPathHash(uint32_t pathHash)
-	{
-		auto pair = nameHashMap.Lookup(pathHash);
-		return pair != nullptr ? pair->second : MeshId{};
-	}
+	MeshId GetIdByPathHash(uint32_t pathHash);
+
+	const char* GetPath(MeshId id);
 
 	BoundingBox* GetBoundingBox(MeshId id) { return data.bounds + id.i; }
 	void SetBoundingBox(MeshId id, const BoundingBox& bounds) { data.bounds[id.i] = bounds; }

@@ -321,6 +321,11 @@ void Scene::SetEditTransform(SceneObjectId id, const SceneEditTransform& editTra
 	SetLocalTransform(id, transform);
 }
 
+void Scene::MarkUpdated(SceneObjectId id)
+{
+	updatedEntities.InsertUnique(data.entity[id.i].id);
+}
+
 void Scene::NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers)
 {
 	KOKKO_PROFILE_FUNCTION();

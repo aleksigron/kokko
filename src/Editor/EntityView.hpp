@@ -5,6 +5,8 @@
 class EntityManager;
 class CameraSystem;
 class LightManager;
+class Renderer;
+class MeshManager;
 class Scene;
 
 struct SceneObjectId;
@@ -15,6 +17,8 @@ private:
 	EntityManager* entityManager;
 	CameraSystem* cameraSystem;
 	LightManager* lightManager;
+	Renderer* renderer;
+	MeshManager* meshManager;
 	Scene* scene;
 
 	Entity selectedEntity;
@@ -27,10 +31,11 @@ private:
 	void DrawSceneComponent();
 	void DrawCameraComponent();
 	void DrawLightComponent();
+	void DrawRenderComponent();
 
 public:
 	EntityView();
 
 	void Draw(EntityManager* entityManager, CameraSystem* cameraSystem,
-		LightManager* lightManager, Scene* scene);
+		LightManager* lightManager, Renderer* renderer, MeshManager* meshManager, Scene* scene);
 };

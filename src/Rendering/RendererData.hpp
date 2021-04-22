@@ -7,7 +7,10 @@ struct RenderObjectId
 {
 	unsigned int i;
 
-	bool IsNull() const { return i == 0; }
+	bool operator==(RenderObjectId other) { return i == other.i; }
+	bool operator!=(RenderObjectId other) { return !operator==(other); }
+
+	static const RenderObjectId Null;
 };
 
 struct RenderOrderData

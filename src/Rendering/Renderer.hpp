@@ -207,12 +207,10 @@ public:
 	// Render object property management
 
 	void SetMeshId(RenderObjectId id, MeshId meshId) { data.mesh[id.i] = meshId; }
-	MeshId GetMeshId(RenderObjectId id) { return data.mesh[id.i]; }
+	MeshId GetMeshId(RenderObjectId id) const { return data.mesh[id.i]; }
 
-	void SetOrderData(RenderObjectId id, const RenderOrderData& order)
-	{
-		data.order[id.i] = order;
-	}
+	void SetOrderData(RenderObjectId id, const RenderOrderData& order) { data.order[id.i] = order; }
+	const RenderOrderData& GetOrderData(RenderObjectId id) const { return data.order[id.i]; }
 
 	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
 

@@ -121,6 +121,11 @@ public:
 	const SceneEditTransform& GetEditTransform(SceneObjectId id);
 	void SetEditTransform(SceneObjectId id, const SceneEditTransform& editTransform);
 
+	// This can be used to manually add the entity to the updated transforms queue.
+	// This is useful when the transform hasn't changed but other relevant info,
+	// such as the bounding box has changed.
+	void MarkUpdated(SceneObjectId id);
+
 	void NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers);
 
 	void SetSkyboxMaterial(MaterialId materialId) { skyboxMaterial = materialId; }

@@ -141,7 +141,7 @@ void DebugTextRenderer::Render()
 
 	if (displayData.GetCount() > 0 && font != nullptr)
 	{
-		if (meshId.IsValid() == false)
+		if (meshId == MeshId::Null)
 		{
 			meshId = meshManager->CreateMesh();
 		}

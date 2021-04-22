@@ -12,23 +12,27 @@
 
 #include "System/File.hpp"
 
+const MeshId MeshId::Null = MeshId{ 0 };
+
 MeshManager::MeshManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
-	nameHashMap(allocator)
+	pathHashMap(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as Null instance
 
 	freeListFirst = 0;
 
-	this->Reallocate(8);
+	this->Reallocate(16);
 }
 
 MeshManager::~MeshManager()
 {
 	for (unsigned int i = 1; i < data.count; ++i)
 	{
+		allocator->Deallocate(data.pathString[i]);
+
 		// DeleteBuffers will not double-delete,
 		// so it's safe to call for every element
 		DeleteBuffers(data.bufferData[i]);
@@ -46,8 +50,8 @@ void MeshManager::Reallocate(unsigned int required)
 
 	required = Math::UpperPowerOfTwo(required);
 
-	unsigned int objectBytes = sizeof(unsigned int) + sizeof(MeshDrawData) +
-		sizeof(MeshBufferData) + sizeof(BoundingBox);
+	size_t objectBytes = sizeof(unsigned int) + sizeof(MeshDrawData) +
+		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(char*);
 
 	InstanceData newData;
 	newData.buffer = allocator->Allocate(required * objectBytes);
@@ -58,13 +62,22 @@ void MeshManager::Reallocate(unsigned int required)
 	newData.drawData = reinterpret_cast<MeshDrawData*>(newData.freeList + required);
 	newData.bufferData = reinterpret_cast<MeshBufferData*>(newData.drawData + required);
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.bufferData + required);
+	newData.pathString = reinterpret_cast<char**>(newData.bounds + required);
 
 	if (data.buffer != nullptr)
 	{
+		// FIXME: This will not copy everything if you have holes in the buffer
+		// This will happen if you remove meshes: count goes down, but the data spans the same area
+		// This needs some real refactoring
+		// I don't want to add levels of indirection because getting mesh information in
+		// the render loop can be a bottleneck. I don't know that for sure, so I should probably
+		// try it before making assumptions
+
 		std::memcpy(newData.freeList, data.freeList, data.allocated * sizeof(unsigned int));
 		std::memcpy(newData.drawData, data.drawData, data.count * sizeof(MeshDrawData));
 		std::memcpy(newData.bufferData, data.bufferData, data.count * sizeof(MeshBufferData));
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
+		std::memcpy(newData.pathString, data.pathString, data.count * sizeof(char*));
 
 		allocator->Deallocate(data.buffer);
 	}
@@ -90,8 +103,8 @@ MeshId MeshManager::CreateMesh()
 		freeListFirst = data.freeList[freeListFirst];
 	}
 
-	// Clear buffer data
 	data.bufferData[id.i] = MeshBufferData{};
+	data.pathString[id.i] = nullptr;
 
 	++data.count;
 
@@ -107,6 +120,9 @@ void MeshManager::RemoveMesh(MeshId id)
 		freeListFirst = id.i;
 	}
 
+	allocator->Deallocate(data.pathString[id.i]);
+	data.pathString[id.i] = nullptr;
+
 	DeleteBuffers(data.bufferData[id.i]);
 
 	--data.count;
@@ -118,7 +134,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 
 	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
 
-	HashMap<uint32_t, MeshId>::KeyValuePair* pair = nameHashMap.Lookup(hash);
+	HashMap<uint32_t, MeshId>::KeyValuePair* pair = pathHashMap.Lookup(hash);
 	if (pair != nullptr)
 		return pair->second;
 
@@ -136,8 +152,13 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 		MeshLoader::Status status = loader.LoadFromBuffer(id, file.GetRef());
 		if (status == MeshLoader::Status::Success)
 		{
-			pair = nameHashMap.Insert(hash);
+			pair = pathHashMap.Insert(hash);
 			pair->second = id;
+
+			// Copy path string
+			data.pathString[id.i] = static_cast<char*>(allocator->Allocate(path.len + 1));
+			std::memcpy(data.pathString[id.i], path.str, path.len);
+			data.pathString[id.i][path.len] = '\0';
 
 			return id;
 		}
@@ -148,6 +169,17 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	}
 
 	return MeshId{};
+}
+
+MeshId MeshManager::GetIdByPathHash(uint32_t pathHash)
+{
+	auto pair = pathHashMap.Lookup(pathHash);
+	return pair != nullptr ? pair->second : MeshId{};
+}
+
+const char* MeshManager::GetPath(MeshId id)
+{
+	return data.pathString[id.i];
 }
 
 void MeshManager::UpdateBuffers(MeshId id, const void* vertBuf, unsigned int vertBytes, RenderBufferUsage usage)
