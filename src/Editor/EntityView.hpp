@@ -2,11 +2,13 @@
 
 #include "Entity/Entity.hpp"
 
-class EntityManager;
 class CameraSystem;
+class Engine;
+class EntityManager;
 class LightManager;
-class Renderer;
+class MaterialManager;
 class MeshManager;
+class Renderer;
 class Scene;
 
 struct SceneObjectId;
@@ -15,27 +17,33 @@ class EntityView
 {
 private:
 	EntityManager* entityManager;
-	CameraSystem* cameraSystem;
-	LightManager* lightManager;
+
+	// Component systems
 	Renderer* renderer;
+	LightManager* lightManager;
+	CameraSystem* cameraSystem;
+
+	// Resource managers
+	MaterialManager* materialManager;
 	MeshManager* meshManager;
-	Scene* scene;
 
 	Entity selectedEntity;
 
 	static const size_t TextInputBufferSize = 256;
 	char textInputBuffer[TextInputBufferSize];
 
-	void DrawEntityNode(Entity entity, SceneObjectId sceneObj);
-	void DrawEntityProperties();
-	void DrawSceneComponent();
+	void DrawEntityNode(Scene* scene, Entity entity, SceneObjectId sceneObj);
+
+	void DrawEntityProperties(Scene* scene);
+	void DrawSceneComponent(Scene* scene);
+	void DrawRenderComponent(Scene* scene);
 	void DrawCameraComponent();
 	void DrawLightComponent();
-	void DrawRenderComponent();
 
 public:
 	EntityView();
 
-	void Draw(EntityManager* entityManager, CameraSystem* cameraSystem,
-		LightManager* lightManager, Renderer* renderer, MeshManager* meshManager, Scene* scene);
+	void Initialize(Engine* engine);
+
+	void Draw(Scene* scene);
 };

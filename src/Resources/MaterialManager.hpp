@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/StringRef.hpp"
 
@@ -28,6 +29,8 @@ struct MaterialData
 	unsigned char* uniformData;
 
 	UniformList uniforms;
+
+	char* materialPath;
 };
 
 class MaterialManager
@@ -37,6 +40,8 @@ private:
 	RenderDevice* renderDevice;
 	ShaderManager* shaderManager;
 	TextureManager* textureManager;
+
+	Array<unsigned char> uniformScratchBuffer;
 
 	struct InstanceData
 	{
@@ -50,7 +55,7 @@ private:
 	data;
 
 	unsigned int freeListFirst;
-	HashMap<uint32_t, MaterialId> nameHashMap;
+	HashMap<uint32_t, MaterialId> pathHashMap;
 
 	void Reallocate(unsigned int required);
 
@@ -73,11 +78,7 @@ public:
 	MaterialId CreateCopy(MaterialId copyFrom);
 
 	MaterialId GetIdByPath(StringRef path);
-	MaterialId GetIdByPathHash(uint32_t pathHash)
-	{
-		auto pair = nameHashMap.Lookup(pathHash);
-		return pair != nullptr ? pair->second : MaterialId{};
-	}
+	MaterialId GetIdByPathHash(uint32_t pathHash);
 
 	const MaterialData& GetMaterialData(MaterialId id) const { return data.material[id.i]; }
 	MaterialData& GetMaterialData(MaterialId id) { return data.material[id.i]; }

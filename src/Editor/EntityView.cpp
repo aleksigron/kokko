@@ -2,37 +2,42 @@
 
 #include "imgui.h"
 
+#include "Engine/Engine.hpp"
+
 #include "Entity/EntityManager.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 
+#include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 
 #include "Scene/Scene.hpp"
 
 EntityView::EntityView() :
 	entityManager(nullptr),
-	cameraSystem(nullptr),
-	lightManager(nullptr),
 	renderer(nullptr),
+	lightManager(nullptr),
+	cameraSystem(nullptr),
+	materialManager(nullptr),
 	meshManager(nullptr),
-	scene(nullptr),
 	selectedEntity(Entity::Null)
 {
 }
 
-void EntityView::Draw(EntityManager* entityManager, CameraSystem* cameraSystem,
-	LightManager* lightManager, Renderer* renderer, MeshManager* meshManager, Scene* scene)
+void EntityView::Initialize(Engine* engine)
 {
-	this->entityManager = entityManager;
-	this->cameraSystem = cameraSystem;
-	this->lightManager = lightManager;
-	this->renderer = renderer;
-	this->meshManager = meshManager;
-	this->scene = scene;
+	entityManager = engine->GetEntityManager();
+	renderer = engine->GetRenderer();
+	lightManager = engine->GetLightManager();
+	cameraSystem = engine->GetCameraSystem();
+	materialManager = engine->GetMaterialManager();
+	meshManager = engine->GetMeshManager();
+}
 
+void EntityView::Draw(Scene* scene)
+{
 	ImGui::Begin("Entities");
 
 	float fontSize = ImGui::GetFontSize();
@@ -44,7 +49,7 @@ void EntityView::Draw(EntityManager* entityManager, CameraSystem* cameraSystem,
 
 		// Only draw root level objects, or entities that don't exist in the scene hierarchy
 		if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
-			DrawEntityNode(entity, sceneObj);
+			DrawEntityNode(scene, entity, sceneObj);
 	}
 
 	ImGui::EndChild();
@@ -52,13 +57,13 @@ void EntityView::Draw(EntityManager* entityManager, CameraSystem* cameraSystem,
 	ImGui::SameLine();
 
 	ImGui::BeginChild("EntityProps", ImVec2(0.0f, 0.0f));
-	DrawEntityProperties();
+	DrawEntityProperties(scene);
 	ImGui::EndChild();
 
 	ImGui::End();
 }
 
-void EntityView::DrawEntityNode(Entity entity, SceneObjectId sceneObj)
+void EntityView::DrawEntityNode(Scene* scene, Entity entity, SceneObjectId sceneObj)
 {
 	SceneObjectId firstChild = SceneObjectId::Null;
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -92,7 +97,7 @@ void EntityView::DrawEntityNode(Entity entity, SceneObjectId sceneObj)
 		{
 			Entity childEntity = scene->GetEntity(child);
 
-			DrawEntityNode(childEntity, child);
+			DrawEntityNode(scene, childEntity, child);
 
 			child = scene->GetNextSibling(child);
 		}
@@ -101,7 +106,7 @@ void EntityView::DrawEntityNode(Entity entity, SceneObjectId sceneObj)
 	}
 }
 
-void EntityView::DrawEntityProperties()
+void EntityView::DrawEntityProperties(Scene* scene)
 {
 	if (selectedEntity != Entity::Null)
 	{
@@ -117,14 +122,14 @@ void EntityView::DrawEntityProperties()
 				entityManager->ClearDebugName(selectedEntity);
 		}
 
-		DrawSceneComponent();
-		DrawRenderComponent();
+		DrawSceneComponent(scene);
+		DrawRenderComponent(scene);
 		DrawCameraComponent();
 		DrawLightComponent();
 	}
 }
 
-void EntityView::DrawSceneComponent()
+void EntityView::DrawSceneComponent(Scene* scene)
 {
 	SceneObjectId sceneObj = scene->Lookup(selectedEntity);
 	if (sceneObj != SceneObjectId::Null)
@@ -159,11 +164,13 @@ void EntityView::DrawSceneComponent()
 	}
 }
 
-void EntityView::DrawRenderComponent()
+void EntityView::DrawRenderComponent(Scene* scene)
 {
 	RenderObjectId renderObj = renderer->Lookup(selectedEntity);
 	if (renderObj != RenderObjectId::Null)
 	{
+		ImVec4 warningColor(1.0f, 0.6f, 0.0f, 1.0f);
+
 		if (ImGui::TreeNodeEx("Render object", ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
 			MeshId meshId = renderer->GetMeshId(renderObj);
@@ -188,10 +195,7 @@ void EntityView::DrawRenderComponent()
 						}
 					}
 					else
-					{
-						ImVec4 warningColor(1.0f, 0.6f, 0.0f, 1.0f);
 						ImGui::TextColored(warningColor, "Mesh not found");
-					}
 				}
 			}
 			else // We currently only support editing meshes that have been loaded from file
@@ -199,9 +203,35 @@ void EntityView::DrawRenderComponent()
 				ImGui::Text("Mesh %u", meshId.i);
 			}
 
-			RenderOrderData order = renderer->GetOrderData(renderObj);
+			MaterialId materialId = renderer->GetOrderData(renderObj).material;
+			const MaterialData& material = materialManager->GetMaterialData(materialId);
 
-			ImGui::Text("Material %u", order.material.i);
+			if (material.materialPath != nullptr)
+			{
+				std::strncpy(textInputBuffer, material.materialPath, TextInputBufferSize);
+				if (ImGui::InputText("Material path", textInputBuffer, TextInputBufferSize))
+				{
+					MaterialId newMatId = materialManager->GetIdByPath(StringRef(textInputBuffer));
+
+					if (newMatId != MaterialId::Null)
+					{
+						if (newMatId != materialId)
+						{
+							RenderOrderData order;
+							order.material = newMatId;
+							order.transparency = material.transparency;
+
+							renderer->SetOrderData(renderObj, order);
+						}
+					}
+					else
+						ImGui::TextColored(warningColor, "Material not found");
+				}
+			}
+			else // We currently only support editing materials that have been loaded from file
+			{
+				ImGui::Text("Material %u", materialId.i);
+			}
 
 			ImGui::TreePop();
 		}

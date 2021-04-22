@@ -95,7 +95,7 @@ void App::Initialize()
 	MaterialId origMatId = materialManager->GetIdByPath(matPath);
 	const MaterialData& origMatData = materialManager->GetMaterialData(origMatId);
 
-	if (meshId != MeshId::Null && origMatId.IsNull() == false)
+	if (meshId != MeshId::Null && origMatId != MaterialId::Null)
 	{
 		const char* metalnessStr = "metalness";
 		const char* roughnessStr = "roughness";

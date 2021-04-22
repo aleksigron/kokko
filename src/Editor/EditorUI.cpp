@@ -26,7 +26,7 @@ EditorUI::~EditorUI()
 	allocator->MakeDelete(views);
 }
 
-void EditorUI::Initialize(GLFWwindow* window, InputView* imguiInputView)
+void EditorUI::Initialize(Engine* engine, GLFWwindow* window, InputView* imguiInputView)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -41,6 +41,8 @@ void EditorUI::Initialize(GLFWwindow* window, InputView* imguiInputView)
 
 	renderBackend->Initialize();
 	platformBackend->Initialize(window, imguiInputView);
+
+	views->entityView.Initialize(engine);
 }
 
 void EditorUI::Deinitialize()
@@ -66,12 +68,11 @@ void EditorUI::StartFrame()
 	ImGui::NewFrame();
 }
 
-void EditorUI::Render(Engine* engine, Scene* scene)
+void EditorUI::Render(Scene* scene)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	views->entityView.Draw(engine->GetEntityManager(), engine->GetCameraSystem(),
-		engine->GetLightManager(), engine->GetRenderer(), engine->GetMeshManager(), scene);
+	views->entityView.Draw(scene);
 
 	ImGui::ShowDemoWindow();
 

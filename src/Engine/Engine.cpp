@@ -153,7 +153,7 @@ bool Engine::Initialize()
 
 	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko"))
 	{
-		editorUI.instance->Initialize(
+		editorUI.instance->Initialize(this,
 			mainWindow.instance->GetGlfwWindow(),
 			mainWindow.instance->GetInputManager()->GetImGuiInputView());
 
@@ -222,7 +222,7 @@ void Engine::Update()
 
 	unsigned int sceneId = sceneManager.instance->GetPrimarySceneId();
 	Scene* scene = sceneManager.instance->GetScene(sceneId);
-	editorUI.instance->Render(this, scene);
+	editorUI.instance->Render(scene);
 
 	mainWindow.instance->UpdateInput();
 	mainWindow.instance->Swap();

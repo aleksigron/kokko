@@ -24,6 +24,8 @@
 #include "System/File.hpp"
 #include "System/IncludeOpenGL.hpp"
 
+const MaterialId MaterialId::Null = MaterialId{ 0 };
+
 MaterialManager::MaterialManager(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
@@ -33,7 +35,8 @@ MaterialManager::MaterialManager(
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
 	textureManager(textureManager),
-	nameHashMap(allocator)
+	uniformScratchBuffer(allocator),
+	pathHashMap(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as Null instance
@@ -46,8 +49,13 @@ MaterialManager::MaterialManager(
 MaterialManager::~MaterialManager()
 {
 	for (unsigned int i = 1; i < data.count; ++i)
+	{
 		if (data.material[i].buffer != nullptr)
 			allocator->Deallocate(data.material[i].buffer);
+
+		if (data.material[i].materialPath != nullptr)
+			allocator->Deallocate(data.material[i].materialPath);
+	}
 
 	allocator->Deallocate(data.buffer);
 }
@@ -102,9 +110,10 @@ MaterialId MaterialManager::CreateMaterial()
 	data.material[id.i].shaderId = ShaderId{};
 	data.material[id.i].cachedShaderDeviceId = 0;
 	data.material[id.i].uniformBufferObject = 0;
-	data.material[id.i].uniforms = UniformList();
+	data.material[id.i].uniforms = UniformList{};
 	data.material[id.i].buffer = nullptr;
 	data.material[id.i].uniformData = nullptr;
+	data.material[id.i].materialPath = nullptr;
 
 	++data.count;
 
@@ -136,10 +145,16 @@ MaterialId MaterialManager::CreateCopy(MaterialId copyFrom)
 
 void MaterialManager::RemoveMaterial(MaterialId id)
 {
-	if (data.material[id.i].uniformData != nullptr)
+	if (data.material[id.i].buffer != nullptr)
 	{
-		allocator->Deallocate(data.material[id.i].uniformData);
-		data.material[id.i].uniformData = nullptr;
+		allocator->Deallocate(data.material[id.i].buffer);
+		data.material[id.i].buffer = nullptr;
+	}
+
+	if (data.material[id.i].materialPath != nullptr)
+	{
+		allocator->Deallocate(data.material[id.i].materialPath);
+		data.material[id.i].materialPath = nullptr;
 	}
 
 	// Material isn't the last one
@@ -158,7 +173,7 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 
 	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
 
-	HashMap<uint32_t, MaterialId>::KeyValuePair* pair = nameHashMap.Lookup(hash);
+	HashMap<uint32_t, MaterialId>::KeyValuePair* pair = pathHashMap.Lookup(hash);
 	if (pair != nullptr)
 		return pair->second;
 
@@ -174,8 +189,13 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 
 		if (LoadFromConfiguration(id, file.Data()))
 		{
-			pair = nameHashMap.Insert(hash);
+			pair = pathHashMap.Insert(hash);
 			pair->second = id;
+
+			// Copy path string
+			data.material[id.i].materialPath = static_cast<char*>(allocator->Allocate(path.len + 1));
+			std::memcpy(data.material[id.i].materialPath, path.str, path.len);
+			data.material[id.i].materialPath[path.len] = '\0';
 
 			return id;
 		}
@@ -186,6 +206,12 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 	}
 
 	return MaterialId{};
+}
+
+MaterialId MaterialManager::GetIdByPathHash(uint32_t pathHash)
+{
+	auto pair = pathHashMap.Lookup(pathHash);
+	return pair != nullptr ? pair->second : MaterialId{};
 }
 
 void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
@@ -567,9 +593,6 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 	const rapidjson::Value* varValue = nullptr;
 	bool variablesArrayIsValid = variablesItr != doc.MemberEnd() && variablesItr->value.IsArray();
 
-	// For reusing memory when setting values to material dataBuffer
-	Array<unsigned char> cacheBuffer(allocator);
-
 	for (unsigned int uniformIdx = 0; uniformIdx < shader.uniforms.bufferUniformCount; ++uniformIdx)
 	{
 		const BufferUniform& shaderUniform = shader.uniforms.bufferUniforms[uniformIdx];
@@ -580,7 +603,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 		else
 			varValue = nullptr;
 
-		SetBufferUniformValue(materialUniform, material.uniformData, varValue, cacheBuffer);
+		SetBufferUniformValue(materialUniform, material.uniformData, varValue, uniformScratchBuffer);
 	}
 
 	// TEXTURE UNIFORMS

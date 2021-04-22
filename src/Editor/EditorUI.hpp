@@ -30,9 +30,9 @@ public:
 	EditorUI& operator=(const EditorUI&) = delete;
 	EditorUI& operator=(EditorUI&&) = delete;
 
-	void Initialize(GLFWwindow* window, InputView* imguiInputView);
+	void Initialize(Engine* engine, GLFWwindow* window, InputView* imguiInputView);
 	void Deinitialize();
 
 	void StartFrame();
-	void Render(Engine* engine, Scene* scene);
+	void Render(Scene* scene);
 };
