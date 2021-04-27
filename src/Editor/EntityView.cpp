@@ -15,6 +15,13 @@
 
 #include "Scene/Scene.hpp"
 
+const char* const EntityView::ComponentNames[] = {
+	"Scene object",
+	"Render object",
+	"Camera",
+	"Light"
+};
+
 EntityView::EntityView() :
 	entityManager(nullptr),
 	renderer(nullptr),
@@ -122,10 +129,30 @@ void EntityView::DrawEntityProperties(Scene* scene)
 				entityManager->ClearDebugName(selectedEntity);
 		}
 
+		bool addComponent = false;
+		ComponentType addComponentType;
+
+		if (ImGui::BeginCombo("##AddComponentCombo", "Add component", ImGuiComboFlags_NoArrowButton))
+		{
+			for (unsigned int i = 0; i < ComponentTypeCount; ++i)
+			{
+				if (ImGui::Selectable(ComponentNames[i], false))
+				{
+					addComponent = true;
+					addComponentType = static_cast<ComponentType>(i);
+				}
+			}
+
+			ImGui::EndCombo();
+		}
+
 		DrawSceneComponent(scene);
 		DrawRenderComponent(scene);
 		DrawCameraComponent();
 		DrawLightComponent();
+
+		if (addComponent)
+			AddComponent(scene, addComponentType);
 	}
 }
 
@@ -134,7 +161,8 @@ void EntityView::DrawSceneComponent(Scene* scene)
 	SceneObjectId sceneObj = scene->Lookup(selectedEntity);
 	if (sceneObj != SceneObjectId::Null)
 	{
-		if (ImGui::TreeNodeEx("Scene object", ImGuiTreeNodeFlags_SpanAvailWidth))
+		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
+		if (ImGui::TreeNodeEx("Scene object", nodeFlags))
 		{
 			bool edited = false;
 			SceneEditTransform transform = scene->GetEditTransform(sceneObj);
@@ -171,7 +199,8 @@ void EntityView::DrawRenderComponent(Scene* scene)
 	{
 		ImVec4 warningColor(1.0f, 0.6f, 0.0f, 1.0f);
 
-		if (ImGui::TreeNodeEx("Render object", ImGuiTreeNodeFlags_SpanAvailWidth))
+		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
+		if (ImGui::TreeNodeEx("Render object", nodeFlags))
 		{
 			MeshId meshId = renderer->GetMeshId(renderObj);
 			const char* meshPath = meshManager->GetPath(meshId);
@@ -243,7 +272,8 @@ void EntityView::DrawCameraComponent()
 	CameraId cameraId = cameraSystem->Lookup(selectedEntity);
 	if (cameraId != CameraId::Null)
 	{
-		if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_SpanAvailWidth))
+		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
+		if (ImGui::TreeNodeEx("Camera", nodeFlags))
 		{
 			static const char* projectionNames[] = { "Perspective", "Orthographic" };
 
@@ -306,7 +336,8 @@ void EntityView::DrawLightComponent()
 	LightId lightId = lightManager->Lookup(selectedEntity);
 	if (lightId != LightId::Null)
 	{
-		if (ImGui::TreeNodeEx("Light", ImGuiTreeNodeFlags_SpanAvailWidth))
+		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
+		if (ImGui::TreeNodeEx("Light", nodeFlags))
 		{
 			bool edited = false;
 			LightType lightType = lightManager->GetLightType(lightId);
@@ -361,5 +392,42 @@ void EntityView::DrawLightComponent()
 
 			ImGui::TreePop();
 		}
+	}
+}
+
+void EntityView::AddComponent(Scene* scene, ComponentType componentType)
+{
+	switch (componentType)
+	{
+	case EntityView::ComponentType::Scene:
+	{
+		SceneObjectId sceneObj = scene->Lookup(selectedEntity);
+		if (sceneObj == SceneObjectId::Null)
+			scene->AddSceneObject(selectedEntity);
+		break;
+	}
+	case EntityView::ComponentType::Render:
+	{
+		RenderObjectId renderObj = renderer->Lookup(selectedEntity);
+		if (renderObj == RenderObjectId::Null)
+			renderer->AddRenderObject(selectedEntity);
+		break;
+	}
+	case EntityView::ComponentType::Camera:
+	{
+		CameraId cameraId = cameraSystem->Lookup(selectedEntity);
+		if (cameraId == CameraId::Null)
+			cameraSystem->AddCameraComponent(selectedEntity);
+		break;
+	}
+	case EntityView::ComponentType::Light:
+	{
+		LightId lightId = lightManager->Lookup(selectedEntity);
+		if (lightId == LightId::Null)
+			lightManager->AddLight(selectedEntity);
+		break;
+	}
+	default:
+		break;
 	}
 }

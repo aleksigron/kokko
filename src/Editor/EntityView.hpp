@@ -32,6 +32,16 @@ private:
 	static const size_t TextInputBufferSize = 256;
 	char textInputBuffer[TextInputBufferSize];
 
+	enum class ComponentType
+	{
+		Scene,
+		Render,
+		Camera,
+		Light
+	};
+	static const size_t ComponentTypeCount = 4;
+	static const char* const ComponentNames[ComponentTypeCount];
+
 	void DrawEntityNode(Scene* scene, Entity entity, SceneObjectId sceneObj);
 
 	void DrawEntityProperties(Scene* scene);
@@ -39,6 +49,8 @@ private:
 	void DrawRenderComponent(Scene* scene);
 	void DrawCameraComponent();
 	void DrawLightComponent();
+
+	void AddComponent(Scene* scene, ComponentType componentType);
 
 public:
 	EntityView();
