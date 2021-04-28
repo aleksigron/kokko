@@ -1,5 +1,6 @@
 #include "Rendering/Renderer.hpp"
 
+#include <cassert>
 #include <cstring>
 #include <cstdio>
 
@@ -1774,11 +1775,40 @@ void Renderer::AddRenderObject(unsigned int count, const Entity* entities, Rende
 		mapPair->second.i = id;
 
 		data.entity[id] = e;
+		data.mesh[id] = MeshId::Null;
+		data.order[id] = RenderOrderData{};
+		data.bounds[id] = BoundingBox();
+		data.transform[id] = Mat4x4f();
 
 		renderObjectIdsOut[i].i = id;
 	}
 
 	data.count += count;
+}
+
+void Renderer::RemoveRenderObject(RenderObjectId id)
+{
+	assert(id != RenderObjectId::Null);
+	assert(id.i < data.count);
+
+	// Remove from entity map
+	Entity entity = data.entity[id.i];
+	HashMap<unsigned int, RenderObjectId>::KeyValuePair* pair = entityMap.Lookup(entity.id);
+	if (pair != nullptr)
+		entityMap.Remove(pair);
+
+	if (data.count > 2 && id.i + 1 < data.count) // We need to swap another object
+	{
+		unsigned int swapIdx = data.count - 1;
+
+		data.entity[id.i] = data.entity[swapIdx];
+		data.mesh[id.i] = data.mesh[swapIdx];
+		data.order[id.i] = data.order[swapIdx];
+		data.bounds[id.i] = data.bounds[swapIdx];
+		data.transform[id.i] = data.transform[swapIdx];
+	}
+
+	--data.count;
 }
 
 unsigned int Renderer::AddCustomRenderer(CustomRenderer* customRenderer)

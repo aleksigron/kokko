@@ -135,8 +135,16 @@ void Scene::RemoveSceneObject(SceneObjectId id)
 {
 	assert(IsValidId(id));
 
+	// Remove from entity map
+	Entity entity = data.entity[id.i];
+	HashMap<unsigned int, SceneObjectId>::KeyValuePair* pair = entityMap.Lookup(entity.id);
+	if (pair != nullptr)
+		entityMap.Remove(pair);
+
 	// Remove references
 	{
+		// TODO: Handle situation where object has children
+
 		SceneObjectId parent = data.parent[id.i];
 		SceneObjectId prevSibling = data.prevSibling[id.i];
 		SceneObjectId nextSibling = data.nextSibling[id.i];
@@ -162,7 +170,7 @@ void Scene::RemoveSceneObject(SceneObjectId id)
 
 	// Swap last item in the removed object's place
 
-	if (data.count > 1) // We still have objects other than the root
+	if (data.count > 2 && id.i + 1 < data.count) // We still have objects other than the root
 	{
 		SceneObjectId swap;
 		swap.i = data.count - 1;
@@ -201,9 +209,9 @@ void Scene::RemoveSceneObject(SceneObjectId id)
 		data.prevSibling[id.i] = prevSibling;
 		data.nextSibling[id.i] = nextSibling;
 		data.editTransform[id.i] = data.editTransform[swap.i];
-
-		--data.count;
 	}
+
+	--data.count;
 }
 
 void Scene::SetParent(SceneObjectId id, SceneObjectId parent)

@@ -28,6 +28,7 @@ private:
 	MeshManager* meshManager;
 
 	Entity selectedEntity;
+	Entity requestScrollToEntity;
 
 	static const size_t TextInputBufferSize = 256;
 	char textInputBuffer[TextInputBufferSize];
@@ -50,7 +51,8 @@ private:
 	void DrawCameraComponent();
 	void DrawLightComponent();
 
-	void AddComponent(Scene* scene, ComponentType componentType);
+	void CreateEntity(Scene* scene, ComponentType* components, unsigned int componentCount);
+	void AddComponent(Scene* scene, Entity entity, ComponentType componentType);
 
 public:
 	EntityView();

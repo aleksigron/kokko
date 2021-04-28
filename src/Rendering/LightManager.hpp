@@ -60,6 +60,8 @@ public:
 	LightId AddLight(Entity entity);
 	void AddLight(unsigned int count, const Entity* entities, LightId* lightIdsOut);
 
+	void RemoveLight(LightId id);
+
 	Entity GetEntity(LightId id) const { return data.entity[id.i]; }
 	Vec3f GetPosition(LightId id) const { return data.position[id.i]; }
 	Mat3x3f GetOrientation(LightId id) const { return data.orientation[id.i]; }

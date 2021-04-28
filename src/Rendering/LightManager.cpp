@@ -1,5 +1,9 @@
 #include "Rendering/LightManager.hpp"
 
+#include <cassert>
+
+#include "Core/Core.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "Math/Math.hpp"
@@ -128,6 +132,34 @@ void LightManager::AddLight(unsigned int count, const Entity* entities, LightId*
 	data.count += count;
 }
 
+void LightManager::RemoveLight(LightId id)
+{
+	assert(id != LightId::Null);
+	assert(id.i < data.count);
+
+	// Remove from entity map
+	Entity entity = data.entity[id.i];
+	HashMap<unsigned int, LightId>::KeyValuePair* pair = entityMap.Lookup(entity.id);
+	if (pair != nullptr)
+		entityMap.Remove(pair);
+
+	if (data.count > 2 && id.i + 1 < data.count) // We need to swap another object
+	{
+		unsigned int swapIdx = data.count - 1;
+
+		data.entity[id.i] = data.entity[swapIdx];
+		data.position[id.i] = data.position[swapIdx];
+		data.orientation[id.i] = data.orientation[swapIdx];
+		data.type[id.i] = data.type[swapIdx];
+		data.color[id.i] = data.color[swapIdx];
+		data.radius[id.i] = data.radius[swapIdx];
+		data.angle[id.i] = data.angle[swapIdx];
+		data.shadowCasting[id.i] = data.shadowCasting[swapIdx];
+	}
+
+	--data.count;
+}
+
 void LightManager::GetDirectionalLights(Array<LightId>& output)
 {
 	output.Clear();
@@ -139,6 +171,8 @@ void LightManager::GetDirectionalLights(Array<LightId>& output)
 
 void LightManager::GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& frustum, Array<LightId>& output)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	output.Clear();
 
 	unsigned int lights = data.count - 1;

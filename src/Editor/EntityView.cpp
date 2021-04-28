@@ -29,8 +29,10 @@ EntityView::EntityView() :
 	cameraSystem(nullptr),
 	materialManager(nullptr),
 	meshManager(nullptr),
-	selectedEntity(Entity::Null)
+	selectedEntity(Entity::Null),
+	requestScrollToEntity(Entity::Null)
 {
+	std::memset(textInputBuffer, 0, TextInputBufferSize);
 }
 
 void EntityView::Initialize(Engine* engine)
@@ -45,27 +47,75 @@ void EntityView::Initialize(Engine* engine)
 
 void EntityView::Draw(Scene* scene)
 {
-	ImGui::Begin("Entities");
+	ImGui::Begin("Entities", nullptr, ImGuiWindowFlags_NoScrollbar);
 
 	float fontSize = ImGui::GetFontSize();
-	ImGui::BeginChild("EntityList", ImVec2(fontSize * 16.0f, 0.0f));
 
-	for (Entity entity : *entityManager)
+	ImGuiTableFlags tableFlags =
+		ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchSame |
+		ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip;
+
+	if (ImGui::BeginTable("EntityLayout", 2, tableFlags))
 	{
-		SceneObjectId sceneObj = scene->Lookup(entity);
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
 
-		// Only draw root level objects, or entities that don't exist in the scene hierarchy
-		if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
-			DrawEntityNode(scene, entity, sceneObj);
+		ImGui::PushItemWidth(ImGui::GetFontSize() * 10.0f);
+		if (ImGui::BeginCombo("##CreateEntityCombo", "Create new", ImGuiComboFlags_NoArrowButton))
+		{
+			if (ImGui::Selectable("Empty"))
+			{
+				CreateEntity(scene, nullptr, 0);
+			}
+			if (ImGui::Selectable("Scene object"))
+			{
+				ComponentType component = ComponentType::Scene;
+				CreateEntity(scene, &component, 1);
+			}
+			if (ImGui::Selectable("Render object"))
+			{
+				ComponentType components[] = { ComponentType::Scene, ComponentType::Render };
+				CreateEntity(scene, components, sizeof(components) / sizeof(components[0]));
+			}
+			if (ImGui::Selectable("Camera"))
+			{
+				ComponentType components[] = { ComponentType::Scene, ComponentType::Camera };
+				CreateEntity(scene, components, sizeof(components) / sizeof(components[0]));
+			}
+			if (ImGui::Selectable("Light"))
+			{
+				ComponentType components[] = { ComponentType::Scene, ComponentType::Light };
+				CreateEntity(scene, components, sizeof(components) / sizeof(components[0]));
+			}
+
+			ImGui::EndCombo();
+		}
+		ImGui::PopItemWidth();
+
+		if (ImGui::BeginChild("EntityList"))
+		{
+			for (Entity entity : *entityManager)
+			{
+				SceneObjectId sceneObj = scene->Lookup(entity);
+
+				// Only draw root level objects, or entities that don't exist in the scene hierarchy
+				if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
+					DrawEntityNode(scene, entity, sceneObj);
+			}
+
+			ImGui::EndChild();
+		}
+
+		ImGui::TableNextColumn();
+
+		{
+			ImGui::BeginChild("EntityProps", ImVec2(0.0f, 0.0f));
+			DrawEntityProperties(scene);
+			ImGui::EndChild();
+		}
+
+		ImGui::EndTable();
 	}
-
-	ImGui::EndChild();
-
-	ImGui::SameLine();
-
-	ImGui::BeginChild("EntityProps", ImVec2(0.0f, 0.0f));
-	DrawEntityProperties(scene);
-	ImGui::EndChild();
 
 	ImGui::End();
 }
@@ -90,6 +140,12 @@ void EntityView::DrawEntityNode(Scene* scene, Entity entity, SceneObjectId scene
 
 	const char* entityName = entityManager->GetDebugName(entity);
 	bool opened = ImGui::TreeNodeEx((void*)entity.id, flags, entityName);
+
+	if (entity == requestScrollToEntity)
+	{
+		ImGui::SetScrollHereY();
+		requestScrollToEntity = Entity::Null;
+	}
 
 	if (ImGui::IsItemClicked())
 	{
@@ -132,6 +188,7 @@ void EntityView::DrawEntityProperties(Scene* scene)
 		bool addComponent = false;
 		ComponentType addComponentType;
 
+		ImGui::PushItemWidth(ImGui::GetFontSize() * 9.0f);
 		if (ImGui::BeginCombo("##AddComponentCombo", "Add component", ImGuiComboFlags_NoArrowButton))
 		{
 			for (unsigned int i = 0; i < ComponentTypeCount; ++i)
@@ -145,6 +202,7 @@ void EntityView::DrawEntityProperties(Scene* scene)
 
 			ImGui::EndCombo();
 		}
+		ImGui::PopItemWidth();
 
 		DrawSceneComponent(scene);
 		DrawRenderComponent(scene);
@@ -152,7 +210,7 @@ void EntityView::DrawEntityProperties(Scene* scene)
 		DrawLightComponent();
 
 		if (addComponent)
-			AddComponent(scene, addComponentType);
+			AddComponent(scene, selectedEntity, addComponentType);
 	}
 }
 
@@ -161,8 +219,10 @@ void EntityView::DrawSceneComponent(Scene* scene)
 	SceneObjectId sceneObj = scene->Lookup(selectedEntity);
 	if (sceneObj != SceneObjectId::Null)
 	{
-		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
-		if (ImGui::TreeNodeEx("Scene object", nodeFlags))
+		ImGui::Spacing();
+
+		bool componentVisible = true;
+		if (ImGui::CollapsingHeader("Scene object", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
 			SceneEditTransform transform = scene->GetEditTransform(sceneObj);
@@ -186,9 +246,10 @@ void EntityView::DrawSceneComponent(Scene* scene)
 
 			if (edited)
 				scene->SetEditTransform(sceneObj, transform);
-
-			ImGui::TreePop();
 		}
+
+		if (componentVisible == false)
+			scene->RemoveSceneObject(sceneObj);
 	}
 }
 
@@ -197,16 +258,27 @@ void EntityView::DrawRenderComponent(Scene* scene)
 	RenderObjectId renderObj = renderer->Lookup(selectedEntity);
 	if (renderObj != RenderObjectId::Null)
 	{
+		ImGui::Spacing();
+
 		ImVec4 warningColor(1.0f, 0.6f, 0.0f, 1.0f);
 
-		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
-		if (ImGui::TreeNodeEx("Render object", nodeFlags))
+		bool componentVisible = true;
+		if (ImGui::CollapsingHeader("Render object", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			MeshId meshId = renderer->GetMeshId(renderObj);
-			const char* meshPath = meshManager->GetPath(meshId);
-
-			if (meshPath != nullptr)
+			const char* meshPath = nullptr;
+			
+			if (meshId != MeshId::Null)
 			{
+				meshPath = meshManager->GetPath(meshId);
+			}
+
+			// Allow editing if mesh is loaded from a file, or if there is no mesh set
+			if (meshPath != nullptr || meshId == MeshId::Null)
+			{
+				if (meshPath == nullptr)
+					meshPath = "";
+
 				std::strncpy(textInputBuffer, meshPath, TextInputBufferSize);
 				if (ImGui::InputText("Mesh path", textInputBuffer, TextInputBufferSize))
 				{
@@ -227,17 +299,26 @@ void EntityView::DrawRenderComponent(Scene* scene)
 						ImGui::TextColored(warningColor, "Mesh not found");
 				}
 			}
-			else // We currently only support editing meshes that have been loaded from file
+			else // We currently don't support editing meshes that have been created directly from code
 			{
-				ImGui::Text("Mesh %u", meshId.i);
+				ImGui::Text("Code-generated mesh %u", meshId.i);
 			}
 
+			const char* materialPath = nullptr;
 			MaterialId materialId = renderer->GetOrderData(renderObj).material;
-			const MaterialData& material = materialManager->GetMaterialData(materialId);
-
-			if (material.materialPath != nullptr)
+			if (materialId != MaterialId::Null)
 			{
-				std::strncpy(textInputBuffer, material.materialPath, TextInputBufferSize);
+				const MaterialData& material = materialManager->GetMaterialData(materialId);
+				materialPath = material.materialPath;
+			}
+
+			// Allow editing if material is loaded from a file, or if there is no material set
+			if (materialPath != nullptr || materialId == MaterialId::Null)
+			{
+				if (materialPath == nullptr)
+					materialPath = "";
+
+				std::strncpy(textInputBuffer, materialPath, TextInputBufferSize);
 				if (ImGui::InputText("Material path", textInputBuffer, TextInputBufferSize))
 				{
 					MaterialId newMatId = materialManager->GetIdByPath(StringRef(textInputBuffer));
@@ -246,6 +327,8 @@ void EntityView::DrawRenderComponent(Scene* scene)
 					{
 						if (newMatId != materialId)
 						{
+							const MaterialData& material = materialManager->GetMaterialData(newMatId);
+
 							RenderOrderData order;
 							order.material = newMatId;
 							order.transparency = material.transparency;
@@ -257,12 +340,13 @@ void EntityView::DrawRenderComponent(Scene* scene)
 						ImGui::TextColored(warningColor, "Material not found");
 				}
 			}
-			else // We currently only support editing materials that have been loaded from file
+			else // We currently don't support editing materials that have created as a copy from another material
 			{
-				ImGui::Text("Material %u", materialId.i);
+				ImGui::Text("Copied material %u", materialId.i);
 			}
 
-			ImGui::TreePop();
+			if (componentVisible == false)
+				renderer->RemoveRenderObject(renderObj);
 		}
 	}
 }
@@ -272,8 +356,10 @@ void EntityView::DrawCameraComponent()
 	CameraId cameraId = cameraSystem->Lookup(selectedEntity);
 	if (cameraId != CameraId::Null)
 	{
-		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
-		if (ImGui::TreeNodeEx("Camera", nodeFlags))
+		ImGui::Spacing();
+
+		bool componentVisible = true;
+		if (ImGui::CollapsingHeader("Camera", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			static const char* projectionNames[] = { "Perspective", "Orthographic" };
 
@@ -326,7 +412,8 @@ void EntityView::DrawCameraComponent()
 			if (edited)
 				cameraSystem->SetProjectionParameters(cameraId, params);
 
-			ImGui::TreePop();
+			if (componentVisible == false)
+				cameraSystem->RemoveCameraComponent(cameraId);
 		}
 	}
 }
@@ -336,8 +423,10 @@ void EntityView::DrawLightComponent()
 	LightId lightId = lightManager->Lookup(selectedEntity);
 	if (lightId != LightId::Null)
 	{
-		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
-		if (ImGui::TreeNodeEx("Light", nodeFlags))
+		ImGui::Spacing();
+
+		bool componentVisible = true;
+		if (ImGui::CollapsingHeader("Light", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
 			LightType lightType = lightManager->GetLightType(lightId);
@@ -378,7 +467,7 @@ void EntityView::DrawLightComponent()
 				if (ImGui::DragFloat("Spot angle", &angleDegrees, 0.1f, 0.1f, 180.0f))
 				{
 					spotAngle = Math::DegreesToRadians(angleDegrees);
-					lightManager->SetRadius(lightId, spotAngle);
+					lightManager->SetSpotAngle(lightId, spotAngle);
 				}
 			}
 
@@ -390,41 +479,53 @@ void EntityView::DrawLightComponent()
 					lightManager->SetShadowCasting(lightId, shadowCasting);
 			}
 
-			ImGui::TreePop();
+			if (componentVisible == false)
+				lightManager->RemoveLight(lightId);
 		}
 	}
 }
 
-void EntityView::AddComponent(Scene* scene, ComponentType componentType)
+void EntityView::CreateEntity(Scene* scene, ComponentType* components, unsigned int componentCount)
+{
+	Entity entity = entityManager->Create();
+
+	for (unsigned int i = 0; i < componentCount; ++i)
+		AddComponent(scene, entity, components[i]);
+
+	selectedEntity = entity;
+	requestScrollToEntity = entity;
+}
+
+void EntityView::AddComponent(Scene* scene, Entity entity, ComponentType componentType)
 {
 	switch (componentType)
 	{
 	case EntityView::ComponentType::Scene:
 	{
-		SceneObjectId sceneObj = scene->Lookup(selectedEntity);
+		SceneObjectId sceneObj = scene->Lookup(entity);
 		if (sceneObj == SceneObjectId::Null)
-			scene->AddSceneObject(selectedEntity);
+			scene->AddSceneObject(entity);
 		break;
 	}
 	case EntityView::ComponentType::Render:
 	{
-		RenderObjectId renderObj = renderer->Lookup(selectedEntity);
+		RenderObjectId renderObj = renderer->Lookup(entity);
 		if (renderObj == RenderObjectId::Null)
-			renderer->AddRenderObject(selectedEntity);
+			renderer->AddRenderObject(entity);
 		break;
 	}
 	case EntityView::ComponentType::Camera:
 	{
-		CameraId cameraId = cameraSystem->Lookup(selectedEntity);
+		CameraId cameraId = cameraSystem->Lookup(entity);
 		if (cameraId == CameraId::Null)
-			cameraSystem->AddCameraComponent(selectedEntity);
+			cameraSystem->AddCameraComponent(entity);
 		break;
 	}
 	case EntityView::ComponentType::Light:
 	{
-		LightId lightId = lightManager->Lookup(selectedEntity);
+		LightId lightId = lightManager->Lookup(entity);
 		if (lightId == LightId::Null)
-			lightManager->AddLight(selectedEntity);
+			lightManager->AddLight(entity);
 		break;
 	}
 	default:

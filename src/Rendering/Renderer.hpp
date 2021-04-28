@@ -204,6 +204,8 @@ public:
 	RenderObjectId AddRenderObject(Entity entity);
 	void AddRenderObject(unsigned int count, const Entity* entities, RenderObjectId* renderObjectIdsOut);
 
+	void RemoveRenderObject(RenderObjectId id);
+
 	// Render object property management
 
 	void SetMeshId(RenderObjectId id, MeshId meshId) { data.mesh[id.i] = meshId; }
