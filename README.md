@@ -2,7 +2,7 @@
 
 This is a personal project that lets me test out new ideas and learn some OpenGL programming in the process. I hope that little by little, this will become a good, small game engine that might offer some new ways to solve old problems.
 
-![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20210329.jpg)
+![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20210429.jpg)
 
 ## Features
 
@@ -16,6 +16,10 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 - Screen-space ambient occlusion
 - Separated command list build, ordering, dispatch
 - Simple data-driven material system
+
+### Engine
+- Entity component system (ECS)
+- Editor UI implemented using Dear ImGui
 
 ### Resources
 - Resource configuration files are JSON for human-readability
