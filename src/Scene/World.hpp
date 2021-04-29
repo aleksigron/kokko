@@ -45,7 +45,7 @@ struct SceneEditTransform
 	}
 };
 
-class Scene
+class World
 {
 private:
 	Allocator* allocator;
@@ -82,13 +82,13 @@ private:
 	static bool IsValidId(SceneObjectId id) { return id.i != 0; }
 
 public:
-	Scene(Allocator* allocator, Engine* engine);
-	Scene(const Scene& other) = delete;
-	Scene(Scene&& other) = delete;
-	~Scene();
+	World(Allocator* allocator, Engine* engine);
+	World(const World& other) = delete;
+	World(World&& other) = delete;
+	~World();
 
-	Scene& operator=(const Scene& other) = delete;
-	Scene& operator=(Scene&& other) = delete;
+	World& operator=(const World& other) = delete;
+	World& operator=(World&& other) = delete;
 
 	bool LoadFromFile(StringRef path);
 

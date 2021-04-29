@@ -51,7 +51,7 @@ void CameraController::OnUpdate(const ScriptContext& context)
 
 	this->VerifySensitityIsLoaded(context);
 
-	Scene* world = context.world;
+	World* world = context.world;
 
 	InputManager* inputManager = context.inputManager;
 	InputView* input = inputManager->GetGameInputView();

@@ -17,7 +17,7 @@ class RenderDevice;
 class CameraSystem;
 class MeshManager;
 class ShaderManager;
-class Scene;
+class World;
 class Window;
 
 class DebugVectorRenderer
@@ -49,7 +49,7 @@ private:
 	CameraSystem* cameraSystem;
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
-	Scene* world;
+	World* world;
 	Window* window;
 
 	Primitive* primitives;
@@ -84,7 +84,7 @@ public:
 	~DebugVectorRenderer();
 
 	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-		Scene* world, Window* window, CameraSystem* cameraSystem);
+		World* world, Window* window, CameraSystem* cameraSystem);
 	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);

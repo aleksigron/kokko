@@ -17,7 +17,7 @@
 
 const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
-Scene::Scene(Allocator* allocator, Engine* engine):
+World::World(Allocator* allocator, Engine* engine):
 	allocator(allocator),
 	engine(engine),
 	entityMap(allocator),
@@ -32,12 +32,12 @@ Scene::Scene(Allocator* allocator, Engine* engine):
 	this->Reallocate(512);
 }
 
-Scene::~Scene()
+World::~World()
 {
 	allocator->Deallocate(data.buffer);
 }
 
-bool Scene::LoadFromFile(StringRef path)
+bool World::LoadFromFile(StringRef path)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -57,7 +57,7 @@ bool Scene::LoadFromFile(StringRef path)
 	return false;
 }
 
-void Scene::Reallocate(unsigned int required)
+void World::Reallocate(unsigned int required)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -114,7 +114,7 @@ void Scene::Reallocate(unsigned int required)
 	data = newData;
 }
 
-void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* idsOut)
+void World::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* idsOut)
 {
 	if (data.count + count > data.allocated)
 		this->Reallocate(data.count + count);
@@ -145,7 +145,7 @@ void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* 
 	updatedEntities.InsertUnique(reinterpret_cast<unsigned int*>(entities), count);
 }
 
-void Scene::RemoveSceneObject(SceneObjectId id)
+void World::RemoveSceneObject(SceneObjectId id)
 {
 	assert(IsValidId(id));
 
@@ -236,7 +236,7 @@ void Scene::RemoveSceneObject(SceneObjectId id)
 	--data.count;
 }
 
-void Scene::SetParent(SceneObjectId id, SceneObjectId parent)
+void World::SetParent(SceneObjectId id, SceneObjectId parent)
 {
 	assert(IsValidId(id));
 
@@ -287,7 +287,7 @@ void Scene::SetParent(SceneObjectId id, SceneObjectId parent)
 	}
 }
 
-void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
+void World::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 {
 	assert(IsValidId(id));
 
@@ -335,12 +335,12 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 	}
 }
 
-const SceneEditTransform& Scene::GetEditTransform(SceneObjectId id)
+const SceneEditTransform& World::GetEditTransform(SceneObjectId id)
 {
 	return data.editTransform[id.i];
 }
 
-void Scene::SetEditTransform(SceneObjectId id, const SceneEditTransform& editTransform)
+void World::SetEditTransform(SceneObjectId id, const SceneEditTransform& editTransform)
 {
 	data.editTransform[id.i] = editTransform;
 
@@ -351,12 +351,12 @@ void Scene::SetEditTransform(SceneObjectId id, const SceneEditTransform& editTra
 	SetLocalTransform(id, transform);
 }
 
-void Scene::MarkUpdated(SceneObjectId id)
+void World::MarkUpdated(SceneObjectId id)
 {
 	updatedEntities.InsertUnique(data.entity[id.i].id);
 }
 
-void Scene::NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers)
+void World::NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers)
 {
 	KOKKO_PROFILE_FUNCTION();
 

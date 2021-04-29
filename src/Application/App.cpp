@@ -48,7 +48,7 @@ void App::Initialize()
 	MaterialManager* materialManager = engine->GetMaterialManager();
 	MeshManager* meshManager = engine->GetMeshManager();
 	Renderer* renderer = engine->GetRenderer();
-	Scene* world = engine->GetWorld();
+	World* world = engine->GetWorld();
 	
 	world->LoadFromFile(StringRef("res/scenes/test.scene.json"));
 

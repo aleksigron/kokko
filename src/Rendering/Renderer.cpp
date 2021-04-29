@@ -92,7 +92,7 @@ struct TonemapUniformBlock
 Renderer::Renderer(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
-	Scene* world,
+	World* world,
 	CameraSystem* cameraSystem,
 	LightManager* lightManager,
 	ShaderManager* shaderManager,
@@ -832,7 +832,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 
 	// Both SSAO and deferred lighting passes use these
 
-	Scene* world = params.world;
+	World* world = params.world;
 	Entity renderCameraEntity = world->GetActiveCameraEntity();
 
 	CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);

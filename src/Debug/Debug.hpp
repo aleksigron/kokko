@@ -6,7 +6,7 @@ class CameraSystem;
 class RenderDevice;
 class MeshManager;
 class ShaderManager;
-class Scene;
+class World;
 class Window;
 class Renderer;
 class SceneManager;
@@ -58,7 +58,7 @@ public:
 	~Debug();
 
 	void Initialize(Window* window, Renderer* renderer, CameraSystem* cameraSystem,
-		MeshManager* meshManager, ShaderManager* shaderManager, Scene* world);
+		MeshManager* meshManager, ShaderManager* shaderManager, World* world);
 	void Deinitialize();
 	
 	void Render();

@@ -82,7 +82,7 @@ Debug::~Debug()
 }
 
 void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraSystem,
-	MeshManager* meshManager, ShaderManager* shaderManager, Scene* world)
+	MeshManager* meshManager, ShaderManager* shaderManager, World* world)
 {
 	KOKKO_PROFILE_FUNCTION();
 

@@ -56,7 +56,7 @@ DebugVectorRenderer::~DebugVectorRenderer()
 }
 
 void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-	Scene* world, Window* window, CameraSystem* cameraSystem)
+	World* world, Window* window, CameraSystem* cameraSystem)
 {
 	KOKKO_PROFILE_FUNCTION();
 

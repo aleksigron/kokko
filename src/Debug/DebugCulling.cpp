@@ -22,7 +22,7 @@ DebugCulling::~DebugCulling()
 {
 }
 
-void DebugCulling::Initialize(Renderer* renderer, Scene* world, CameraSystem* cameraSystem)
+void DebugCulling::Initialize(Renderer* renderer, World* world, CameraSystem* cameraSystem)
 {
 	this->renderer = renderer;
 	this->world = world;

@@ -31,7 +31,7 @@ class MaterialManager;
 class TextureManager;
 class EntityManager;
 class RenderDevice;
-class Scene;
+class World;
 class Window;
 class DebugVectorRenderer;
 class CustomRenderer;
@@ -126,7 +126,7 @@ private:
 
 	RenderOrderConfiguration renderOrder;
 
-	Scene* world;
+	World* world;
 	CameraSystem* cameraSystem;
 	LightManager* lightManager;
 	ShaderManager* shaderManager;
@@ -175,7 +175,7 @@ private:
 public:
 	Renderer(Allocator* allocator,
 		RenderDevice* renderDevice,
-		Scene* world,
+		World* world,
 		CameraSystem* cameraSystem,
 		LightManager* lightManager,
 		ShaderManager* shaderManager,

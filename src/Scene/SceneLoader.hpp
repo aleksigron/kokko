@@ -5,7 +5,7 @@
 #include "Core/BufferRef.hpp"
 
 class Engine;
-class Scene;
+class World;
 class Renderer;
 class MeshManager;
 class MaterialManager;
@@ -23,7 +23,7 @@ private:
 	using ValueItr = rapidjson::Value::ConstValueIterator;
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 
-	Scene* scene;
+	World* world;
 	Renderer* renderer;
 	MeshManager* meshManager;
 	MaterialManager* materialManager;
@@ -40,7 +40,7 @@ private:
 	void CreateLight(ValueItr itr, Entity entity);
 
 public:
-	SceneLoader(Engine* engine, Scene* scene);
+	SceneLoader(Engine* engine, World* world);
 
 	void Load(BufferRef<char> sceneConfig);
 };

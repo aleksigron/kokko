@@ -21,8 +21,8 @@
 
 #include "Scene/World.hpp"
 
-SceneLoader::SceneLoader(Engine* engine, Scene* scene):
-	scene(scene),
+SceneLoader::SceneLoader(Engine* engine, World* world):
+	world(world),
 	renderer(engine->GetRenderer()),
 	meshManager(engine->GetMeshManager()),
 	materialManager(engine->GetMaterialManager()),
@@ -58,13 +58,13 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 
 		assert(envId >= 0);
 
-		scene->SetEnvironmentId(envId);
+		world->SetEnvironmentId(envId);
 	}
 
 	MemberItr colorItr = doc.FindMember("ambient-color");
 	if (colorItr != doc.MemberEnd())
 	{
-		scene->ambientColor = ValueSerialization::Deserialize_Color(colorItr->value);
+		world->ambientColor = ValueSerialization::Deserialize_Color(colorItr->value);
 	}
 
 	MemberItr skyboxItr = doc.FindMember("skybox-material");
@@ -76,7 +76,7 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 		
 		assert(matId != MaterialId::Null);
 
-		scene->SetSkyboxMaterial(matId);
+		world->SetSkyboxMaterial(matId);
 	}
 }
 
@@ -87,7 +87,7 @@ void SceneLoader::CreateObjects(ValueItr itr, ValueItr end)
 		if (itr->IsObject())
 		{
 			Entity entity = entityManager->Create();
-			SceneObjectId sceneObj = scene->AddSceneObject(entity);
+			SceneObjectId sceneObj = world->AddSceneObject(entity);
 			CreateSceneObject(itr, sceneObj);
 
 			MemberItr componentsItr = itr->FindMember("components");
@@ -106,8 +106,8 @@ void SceneLoader::CreateChildObjects(ValueItr itr, ValueItr end, SceneObjectId p
 		if (itr->IsObject())
 		{
 			Entity entity = entityManager->Create();
-			SceneObjectId sceneObj = scene->AddSceneObject(entity);
-			scene->SetParent(sceneObj, parent);
+			SceneObjectId sceneObj = world->AddSceneObject(entity);
+			world->SetParent(sceneObj, parent);
 			CreateSceneObject(itr, sceneObj);
 
 			MemberItr componentsItr = itr->FindMember("components");
@@ -137,7 +137,7 @@ void SceneLoader::CreateSceneObject(ValueItr itr, SceneObjectId sceneObject)
 	else
 		transform.scale = Vec3f(1.0f, 1.0f, 1.0f);
 
-	scene->SetEditTransform(sceneObject, transform);
+	world->SetEditTransform(sceneObject, transform);
 
 	rapidjson::Value::ConstMemberIterator childrenItr = itr->FindMember("children");
 	if (childrenItr != itr->MemberEnd() && childrenItr->value.IsArray())
