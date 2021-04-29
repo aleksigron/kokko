@@ -17,7 +17,7 @@ class RenderDevice;
 class CameraSystem;
 class MeshManager;
 class ShaderManager;
-class SceneManager;
+class Scene;
 class Window;
 
 class DebugVectorRenderer
@@ -49,7 +49,7 @@ private:
 	CameraSystem* cameraSystem;
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
-	SceneManager* sceneManager;
+	Scene* world;
 	Window* window;
 
 	Primitive* primitives;
@@ -84,7 +84,7 @@ public:
 	~DebugVectorRenderer();
 
 	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-		SceneManager* sceneManager, Window* window, CameraSystem* cameraSystem);
+		Scene* world, Window* window, CameraSystem* cameraSystem);
 	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
@@ -99,5 +99,5 @@ public:
 
 	void DrawWireFrustum(const Mat4x4f& transform, const ProjectionParameters& projection, const Color& color);
 
-	void Render(Entity cameraEntity);
+	void Render();
 };

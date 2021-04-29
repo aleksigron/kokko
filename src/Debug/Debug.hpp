@@ -58,10 +58,10 @@ public:
 	~Debug();
 
 	void Initialize(Window* window, Renderer* renderer, CameraSystem* cameraSystem,
-		MeshManager* meshManager, ShaderManager* shaderManager, SceneManager* sceneManager);
+		MeshManager* meshManager, ShaderManager* shaderManager, Scene* world);
 	void Deinitialize();
 	
-	void Render(Scene* scene);
+	void Render();
 
 	DebugLog* GetLog() { return log; }
 	DebugConsole* GetConsole() { return console; }

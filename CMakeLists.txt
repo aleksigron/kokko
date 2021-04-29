@@ -207,13 +207,11 @@ set (KOKKO_SOURCES
 	src/Resources/ValueSerialization.cpp
 	src/Resources/ValueSerialization.hpp
 	src/Scene/ITransformUpdateReceiver.hpp
-	src/Scene/Scene.cpp
-	src/Scene/Scene.hpp
 	src/Scene/SceneLayer.hpp
 	src/Scene/SceneLoader.cpp
 	src/Scene/SceneLoader.hpp
-	src/Scene/SceneManager.cpp
-	src/Scene/SceneManager.hpp
+	src/Scene/World.cpp
+	src/Scene/World.hpp
 	src/Scripting/NativeScriptComponent.hpp
 	src/Scripting/ScriptContext.hpp
 	src/Scripting/ScriptSystem.cpp

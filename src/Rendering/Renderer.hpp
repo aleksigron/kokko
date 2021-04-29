@@ -126,6 +126,7 @@ private:
 
 	RenderOrderConfiguration renderOrder;
 
+	Scene* world;
 	CameraSystem* cameraSystem;
 	LightManager* lightManager;
 	ShaderManager* shaderManager;
@@ -154,10 +155,10 @@ private:
 		const uint32_t* nameHashes, const unsigned int* textures);
 
 	void UpdateLightingDataToUniformBuffer(
-		const ProjectionParameters& projection, const Scene* scene, LightingUniformBlock& uniformsOut);
+		const ProjectionParameters& projection, LightingUniformBlock& uniformsOut);
 
 	// Returns the number of object draw commands added
-	unsigned int PopulateCommandList(Scene* scene);
+	unsigned int PopulateCommandList();
 
 	void UpdateUniformBuffers(unsigned int objectDrawCount);
 
@@ -174,6 +175,7 @@ private:
 public:
 	Renderer(Allocator* allocator,
 		RenderDevice* renderDevice,
+		Scene* world,
 		CameraSystem* cameraSystem,
 		LightManager* lightManager,
 		ShaderManager* shaderManager,
@@ -189,7 +191,7 @@ public:
 	const Mat4x4f& GetCullingCameraTransform() { return lockCullingCameraTransform; }
 
 	// Render the specified scene to the active OpenGL context
-	void Render(Scene* scene);
+	void Render();
 
 	virtual void NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms);
 

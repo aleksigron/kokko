@@ -19,7 +19,7 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/ValueSerialization.hpp"
 
-#include "Scene/Scene.hpp"
+#include "Scene/World.hpp"
 
 SceneLoader::SceneLoader(Engine* engine, Scene* scene):
 	scene(scene),

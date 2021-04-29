@@ -1,23 +1,28 @@
-#include "Scene/Scene.hpp"
+#include "Scene/World.hpp"
 
 #include <cassert>
 
+#include "Core/Buffer.hpp"
 #include "Core/Core.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Math/Math.hpp"
 
 #include "Memory/Allocator.hpp"
 
 #include "Scene/ITransformUpdateReceiver.hpp"
+#include "Scene/SceneLoader.hpp"
+
+#include "System/File.hpp"
 
 const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
-Scene::Scene(Allocator* allocator, unsigned int sceneId):
+Scene::Scene(Allocator* allocator, Engine* engine):
 	allocator(allocator),
+	engine(engine),
 	entityMap(allocator),
 	updatedEntities(allocator),
 	updatedTransforms(allocator),
-	sceneId(sceneId),
 	environmentId(-1),
 	activeCamera(Entity::Null)
 {
@@ -32,21 +37,30 @@ Scene::~Scene()
 	allocator->Deallocate(data.buffer);
 }
 
-Scene& Scene::operator=(Scene&& other) noexcept
+bool Scene::LoadFromFile(StringRef path)
 {
-	this->sceneId = other.sceneId;
-	this->data = other.data;
-	this->activeCamera = other.activeCamera;
+	KOKKO_PROFILE_FUNCTION();
 
-	other.sceneId = 0;
-	other.data = InstanceData{}; // Zero-initialize
-	other.activeCamera = Entity::Null;
+	unsigned int sceneId = 0;
 
-	return *this;
+	Buffer<char> sceneConfig(allocator);
+	String pathStr(allocator, path);
+
+	if (File::ReadText(pathStr.GetCStr(), sceneConfig))
+	{
+		SceneLoader loader(engine, this);
+		loader.Load(sceneConfig.GetRef());
+
+		return true;
+	}
+
+	return false;
 }
 
 void Scene::Reallocate(unsigned int required)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (required <= data.allocated)
 		return;
 

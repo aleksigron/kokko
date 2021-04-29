@@ -12,6 +12,7 @@ class DebugCulling
 {
 private:
 	Renderer* renderer;
+	Scene* world;
 	CameraSystem* cameraSystem;
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
@@ -24,9 +25,9 @@ public:
 	DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
 	~DebugCulling();
 
-	void Initialize(Renderer* renderer, CameraSystem* cameraSystem);
+	void Initialize(Renderer* renderer, Scene* world, CameraSystem* cameraSystem);
 
-	void UpdateAndDraw(Scene* scene);
+	void UpdateAndDraw();
 
 	void SetLockCullingCamera(bool lockCullingCamera);
 	void SetGuideTextPosition(const Vec2f& pos) { guideTextPosition = pos; }

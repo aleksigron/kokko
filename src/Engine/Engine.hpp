@@ -7,12 +7,12 @@ class EditorUI;
 class Time;
 class RenderDevice;
 class EntityManager;
+class Scene;
 class Renderer;
 class MeshManager;
 class ShaderManager;
 class MaterialManager;
 class TextureManager;
-class SceneManager;
 class LightManager;
 class CameraSystem;
 class TerrainManager;
@@ -60,10 +60,10 @@ private:
 	InstanceAllocatorPair<MaterialManager> materialManager;
 	InstanceAllocatorPair<LightManager> lightManager;
 	InstanceAllocatorPair<CameraSystem> cameraSystem;
-	InstanceAllocatorPair<SceneManager> sceneManager;
 	InstanceAllocatorPair<TerrainManager> terrainManager;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
 	InstanceAllocatorPair<EnvironmentManager> environmentManager;
+	InstanceAllocatorPair<Scene> world;
 	InstanceAllocatorPair<Renderer> renderer;
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
 
@@ -81,12 +81,12 @@ public:
 	AllocatorManager* GetAllocatorManager() { return allocatorManager; }
 	Window* GetMainWindow() { return mainWindow.instance; }
 	EntityManager* GetEntityManager() { return entityManager.instance; }
+	MeshManager* GetMeshManager() { return meshManager.instance; }
+	MaterialManager* GetMaterialManager() { return materialManager.instance; }
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
-	Renderer* GetRenderer() { return renderer.instance; }
-	MaterialManager* GetMaterialManager() { return materialManager.instance; }
-	MeshManager* GetMeshManager() { return meshManager.instance; }
-	SceneManager* GetSceneManager() { return sceneManager.instance; }
 	EnvironmentManager* GetEnvironmentManager() { return environmentManager.instance; }
+	Scene* GetWorld() { return world.instance; }
+	Renderer* GetRenderer() { return renderer.instance; }
 	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
 };

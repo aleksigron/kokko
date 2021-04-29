@@ -5,7 +5,6 @@ struct GLFWwindow;
 class Allocator;
 class InputView;
 class Engine;
-class Scene;
 
 class ImGuiRenderBackend;
 class ImGuiPlatformBackend;
@@ -30,9 +29,9 @@ public:
 	EditorUI& operator=(const EditorUI&) = delete;
 	EditorUI& operator=(EditorUI&&) = delete;
 
-	void Initialize(Engine* engine, GLFWwindow* window, InputView* imguiInputView);
+	void Initialize(Engine* engine);
 	void Deinitialize();
 
 	void StartFrame();
-	void Render(Scene* scene);
+	void Render();
 };

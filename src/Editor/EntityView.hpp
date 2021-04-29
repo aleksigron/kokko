@@ -17,6 +17,7 @@ class EntityView
 {
 private:
 	EntityManager* entityManager;
+	Scene* world;
 
 	// Component systems
 	Renderer* renderer;
@@ -45,27 +46,27 @@ private:
 	static const size_t ComponentTypeCount = 4;
 	static const char* const ComponentNames[ComponentTypeCount];
 
-	void DrawEntityListButtons(Scene* scene);
-	void DrawEntityNode(Scene* scene, Entity entity, SceneObjectId sceneObj);
+	void DrawEntityListButtons();
+	void DrawEntityNode(Entity entity, SceneObjectId sceneObj);
 
-	void DrawEntityProperties(Scene* scene);
-	void DrawEntityPropertyButtons(Scene* scene);
+	void DrawEntityProperties();
+	void DrawEntityPropertyButtons();
 
-	void DrawSceneComponent(Scene* scene);
-	void DrawRenderComponent(Scene* scene);
+	void DrawSceneComponent();
+	void DrawRenderComponent();
 	void DrawCameraComponent();
 	void DrawLightComponent();
 
-	void CreateEntity(Scene* scene, ComponentType* components, unsigned int componentCount);
-	void DestroyEntity(Scene* scene, Entity entity);
+	void CreateEntity(ComponentType* components, unsigned int componentCount);
+	void DestroyEntity(Entity entity);
 
-	void AddComponent(Scene* scene, Entity entity, ComponentType componentType);
-	void RemoveComponentIfExists(Scene* scene, Entity entity, ComponentType componentType);
+	void AddComponent(Entity entity, ComponentType componentType);
+	void RemoveComponentIfExists(Entity entity, ComponentType componentType);
 
 public:
 	EntityView();
 
 	void Initialize(Engine* engine);
 
-	void Draw(Scene* scene);
+	void Draw();
 };

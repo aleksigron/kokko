@@ -13,8 +13,7 @@
 #include "System/InputManager.hpp"
 #include "System/InputView.hpp"
 
-#include "Scene/SceneManager.hpp"
-#include "Scene/Scene.hpp"
+#include "Scene/World.hpp"
 
 #include "App.hpp"
 
@@ -52,8 +51,7 @@ void CameraController::OnUpdate(const ScriptContext& context)
 
 	this->VerifySensitityIsLoaded(context);
 
-	SceneManager* sm = context.sceneManager;
-	Scene* scene = sm->GetScene(sm->GetPrimarySceneId());
+	Scene* world = context.world;
 
 	InputManager* inputManager = context.inputManager;
 	InputView* input = inputManager->GetGameInputView();
@@ -97,8 +95,8 @@ void CameraController::OnUpdate(const ScriptContext& context)
 	Vec3f right = rotation.Right();
 	Vec3f forward = rotation.Forward();
 
-	SceneObjectId cameraSceneObject = scene->Lookup(controlledCamera);
-	Mat4x4f currentTransform = scene->GetLocalTransform(cameraSceneObject);
+	SceneObjectId cameraSceneObject = world->Lookup(controlledCamera);
+	Mat4x4f currentTransform = world->GetLocalTransform(cameraSceneObject);
 	Vec3f position = (currentTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 	if (mouseLookActive == false)
@@ -139,5 +137,5 @@ void CameraController::OnUpdate(const ScriptContext& context)
 	position += cameraVelocity * Time::GetDeltaTime();
 
 	Mat4x4f newTransform = Mat4x4f::Translate(position) * Mat4x4f(rotation);
-	scene->SetLocalTransform(cameraSceneObject, newTransform);
+	world->SetLocalTransform(cameraSceneObject, newTransform);
 }

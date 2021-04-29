@@ -11,9 +11,12 @@
 
 #include "Resources/MaterialData.hpp"
 
+class Engine;
 class Camera;
 class Allocator;
 class ITransformUpdateReceiver;
+
+struct StringRef;
 
 struct SceneObjectId
 {
@@ -46,6 +49,7 @@ class Scene
 {
 private:
 	Allocator* allocator;
+	Engine* engine;
 
 	struct InstanceData
 	{
@@ -68,8 +72,6 @@ private:
 	SortedArray<unsigned int> updatedEntities;
 	Array<Mat4x4f> updatedTransforms;
 
-	unsigned int sceneId;
-
 	MaterialId skyboxMaterial;
 	int environmentId;
 
@@ -80,14 +82,17 @@ private:
 	static bool IsValidId(SceneObjectId id) { return id.i != 0; }
 
 public:
-	Scene(Allocator* allocator, unsigned int sceneId);
+	Scene(Allocator* allocator, Engine* engine);
+	Scene(const Scene& other) = delete;
+	Scene(Scene&& other) = delete;
 	~Scene();
 
-	Scene& operator=(Scene&& other) noexcept;
+	Scene& operator=(const Scene& other) = delete;
+	Scene& operator=(Scene&& other) = delete;
+
+	bool LoadFromFile(StringRef path);
 
 	Color ambientColor;
-
-	unsigned int GetSceneId() const { return sceneId; }
 
 	SceneObjectId Lookup(Entity e)
 	{

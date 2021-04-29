@@ -33,8 +33,7 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/TextureManager.hpp"
 
-#include "Scene/SceneManager.hpp"
-#include "Scene/Scene.hpp"
+#include "Scene/World.hpp"
 
 #include "Scripting/ScriptSystem.hpp"
 
@@ -93,9 +92,6 @@ Engine::Engine()
 	cameraSystem.CreateScope(allocatorManager, "CameraSystem", alloc);
 	cameraSystem.New(cameraSystem.allocator);
 
-	sceneManager.CreateScope(allocatorManager, "SceneManager", alloc);
-	sceneManager.New(this, sceneManager.allocator);
-
 	terrainManager.CreateScope(allocatorManager, "TerrainManager", alloc);
 	terrainManager.New(terrainManager.allocator, renderDevice, meshManager.instance, materialManager.instance);
 
@@ -106,8 +102,11 @@ Engine::Engine()
 	environmentManager.New(environmentManager.allocator, renderDevice,
 		shaderManager.instance, meshManager.instance, textureManager.instance);
 
+	world.CreateScope(allocatorManager, "World", alloc);
+	world.New(world.allocator, this);
+
 	renderer.CreateScope(allocatorManager, "Renderer", alloc);
-	renderer.New(renderer.allocator, renderDevice, cameraSystem.instance, lightManager.instance,
+	renderer.New(renderer.allocator, renderDevice, world.instance, cameraSystem.instance, lightManager.instance,
 		shaderManager.instance, meshManager.instance, materialManager.instance, textureManager.instance);
 
 	scriptSystem.CreateScope(allocatorManager, "ScriptSystem", alloc);
@@ -122,10 +121,10 @@ Engine::~Engine()
 
 	scriptSystem.Delete();
 	renderer.Delete();
+	world.Delete();
 	environmentManager.Delete();
 	particleSystem.Delete();
 	terrainManager.Delete();
-	sceneManager.Delete();
 	cameraSystem.Delete();
 	lightManager.Delete();
 	materialManager.Delete();
@@ -153,9 +152,7 @@ bool Engine::Initialize()
 
 	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko"))
 	{
-		editorUI.instance->Initialize(this,
-			mainWindow.instance->GetGlfwWindow(),
-			mainWindow.instance->GetInputManager()->GetImGuiInputView());
+		editorUI.instance->Initialize(this);
 
 		const char* const logFilename = "log.txt";
 		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";
@@ -173,7 +170,7 @@ bool Engine::Initialize()
 		}
 
 		debug.instance->Initialize(mainWindow.instance, renderer.instance, cameraSystem.instance,
-			meshManager.instance, shaderManager.instance, sceneManager.instance);
+			meshManager.instance, shaderManager.instance, world.instance);
 
 		textureManager.instance->Initialize();
 		environmentManager.instance->Initialize();
@@ -208,21 +205,16 @@ void Engine::Update()
 
 	scriptSystem.instance->UpdateScripts();
 
-	unsigned int primarySceneId = sceneManager.instance->GetPrimarySceneId();
-	Scene* primaryScene = sceneManager.instance->GetScene(primarySceneId);
-
 	// Propagate transform updates from Scene to other systems that require it
 	ITransformUpdateReceiver* transformUpdateReceivers[] = { lightManager.instance, renderer.instance };
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
-	primaryScene->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
+	world.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
-	renderer.instance->Render(primaryScene);
+	renderer.instance->Render();
 
-	debug.instance->Render(primaryScene);
+	debug.instance->Render();
 
-	unsigned int sceneId = sceneManager.instance->GetPrimarySceneId();
-	Scene* scene = sceneManager.instance->GetScene(sceneId);
-	editorUI.instance->Render(scene);
+	editorUI.instance->Render();
 
 	mainWindow.instance->UpdateInput();
 	mainWindow.instance->Swap();

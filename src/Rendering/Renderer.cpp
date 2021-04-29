@@ -42,7 +42,7 @@
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
-#include "Scene/Scene.hpp"
+#include "Scene/World.hpp"
 
 #include "System/Window.hpp"
 
@@ -92,6 +92,7 @@ struct TonemapUniformBlock
 Renderer::Renderer(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
+	Scene* world,
 	CameraSystem* cameraSystem,
 	LightManager* lightManager,
 	ShaderManager* shaderManager,
@@ -114,6 +115,7 @@ Renderer::Renderer(
 	objectUniformBufferLists{ Array<unsigned int>(allocator) },
 	currentFrameIndex(0),
 	entityMap(allocator),
+	world(world),
 	cameraSystem(cameraSystem),
 	lightManager(lightManager),
 	shaderManager(shaderManager),
@@ -650,11 +652,11 @@ void Renderer::Deinitialize()
 	}
 }
 
-void Renderer::Render(Scene* scene)
+void Renderer::Render()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	unsigned int objectDrawCount = PopulateCommandList(scene);
+	unsigned int objectDrawCount = PopulateCommandList();
 	UpdateUniformBuffers(objectDrawCount);
 
 	int objectDrawsProcessed = 0;
@@ -751,7 +753,7 @@ void Renderer::Render(Scene* scene)
 						params.viewport = &viewport;
 						params.callbackId = callbackId;
 						params.command = command;
-						params.scene = scene;
+						params.world = world;
 
 						customRenderer->RenderCustom(params);
 
@@ -830,8 +832,8 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 
 	// Both SSAO and deferred lighting passes use these
 
-	Scene* scene = params.scene;
-	Entity renderCameraEntity = scene->GetActiveCameraEntity();
+	Scene* world = params.world;
+	Entity renderCameraEntity = world->GetActiveCameraEntity();
 
 	CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
 	const ProjectionParameters& projParams = cameraSystem->GetProjectionParameters(renderCameraId);
@@ -840,7 +842,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	Vec2i framebufferSize(lightAccFramebuffer.width, lightAccFramebuffer.height);
 
 	LightingUniformBlock lightingUniforms;
-	UpdateLightingDataToUniformBuffer(projParams, scene, lightingUniforms);
+	UpdateLightingDataToUniformBuffer(projParams, lightingUniforms);
 	device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
 	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(LightingUniformBlock), &lightingUniforms);
 
@@ -852,7 +854,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	ssaoRenderParams.projection = projParams;
 	ssao->Render(ssaoRenderParams);
 
-	EnvironmentTextures envMap = environmentManager->GetEnvironmentMap(scene->GetEnvironmentId());
+	EnvironmentTextures envMap = environmentManager->GetEnvironmentMap(world->GetEnvironmentId());
 	const TextureData& diffIrrTexture = textureManager->GetTextureData(envMap.diffuseIrradianceTexture);
 	const TextureData& specIrrTexture = textureManager->GetTextureData(envMap.specularIrradianceTexture);
 
@@ -962,7 +964,7 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 }
 
 void Renderer::UpdateLightingDataToUniformBuffer(
-	const ProjectionParameters& projection, const Scene* scene, LightingUniformBlock& uniformsOut)
+	const ProjectionParameters& projection, LightingUniformBlock& uniformsOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -1091,7 +1093,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 		uniformsOut.shadowSplits[vpIdx + 1] = cascadeSplitDepths[vpIdx];
 	}
 
-	Vec3f ambientColor(scene->ambientColor.r, scene->ambientColor.g, scene->ambientColor.b);
+	Vec3f ambientColor(world->ambientColor.r, world->ambientColor.g, world->ambientColor.b);
 	uniformsOut.ambientColor = ambientColor;
 
 	uniformsOut.shadowBiasOffset = 0.001f;
@@ -1335,7 +1337,7 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 	return (Vec3f::Dot(objPos - eyePos, eyeForward) - minusNear) / farMinusNear;
 }
 
-unsigned int Renderer::PopulateCommandList(Scene* scene)
+unsigned int Renderer::PopulateCommandList()
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -1344,13 +1346,13 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	// Get camera transforms
 
-	Entity renderCameraEntity = scene->GetActiveCameraEntity();
+	Entity renderCameraEntity = world->GetActiveCameraEntity();
 
 	CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
 	const ProjectionParameters& projectionParams = cameraSystem->GetProjectionParameters(renderCameraId);
 
-	SceneObjectId cameraObject = scene->Lookup(renderCameraEntity);
-	Mat4x4f cameraTransform = scene->GetWorldTransform(cameraObject);
+	SceneObjectId cameraObject = world->Lookup(renderCameraEntity);
+	Mat4x4f cameraTransform = world->GetWorldTransform(cameraObject);
 
 	Mat4x4f cullingCameraTransform = lockCullingCamera ? lockCullingCameraTransform : cameraTransform;
 
@@ -1368,7 +1370,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 
 	// Update skybox parameters
 	{
-		EnvironmentTextures envMap = environmentManager->GetEnvironmentMap(scene->GetEnvironmentId());
+		EnvironmentTextures envMap = environmentManager->GetEnvironmentMap(world->GetEnvironmentId());
 		const TextureData& envTexture = textureManager->GetTextureData(envMap.environmentTexture);
 
 		MaterialData& skyboxMaterial = materialManager->GetMaterialData(skyboxMaterialId);
@@ -1704,7 +1706,7 @@ unsigned int Renderer::PopulateCommandList(Scene* scene)
 			params.fullscreenViewport = this->viewportIndexFullscreen;
 			params.commandList = &commandList;
 			params.callbackId = i + 1;
-			params.scene = scene;
+			params.world = world;
 
 			customRenderers[i]->AddRenderCommands(params);
 		}

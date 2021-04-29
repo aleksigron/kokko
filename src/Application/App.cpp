@@ -17,8 +17,7 @@
 #include "Resources/MeshManager.hpp"
 #include "Resources/MaterialManager.hpp"
 
-#include "Scene/Scene.hpp"
-#include "Scene/SceneManager.hpp"
+#include "Scene/World.hpp"
 
 #include "Scripting/ScriptSystem.hpp"
 
@@ -49,16 +48,9 @@ void App::Initialize()
 	MaterialManager* materialManager = engine->GetMaterialManager();
 	MeshManager* meshManager = engine->GetMeshManager();
 	Renderer* renderer = engine->GetRenderer();
-
-	SceneManager* sceneManager = engine->GetSceneManager();
-	unsigned int sceneId = sceneManager->LoadSceneFromFile(StringRef("res/scenes/test.scene.json"));
-
-	// Create an empty scene if one couldn't be loaded from file
-	if (sceneId == 0)
-		sceneId = sceneManager->CreateScene();
-
-	Scene* scene = sceneManager->GetScene(sceneId);
-	sceneManager->SetPrimarySceneId(sceneId);
+	Scene* world = engine->GetWorld();
+	
+	world->LoadFromFile(StringRef("res/scenes/test.scene.json"));
 
 	// Create camera entity and components
 
@@ -76,11 +68,11 @@ void App::Initialize()
 
 	cameraSystem->SetProjectionParameters(mainCameraId, projection);
 		
-	SceneObjectId cameraSceneObject = scene->AddSceneObject(mainCameraEntity);
+	SceneObjectId cameraSceneObject = world->AddSceneObject(mainCameraEntity);
 	Mat4x4f cameraTransform = Mat4x4f::Translate(Vec3f(0.0f, 1.6f, 4.0f));
-	scene->SetLocalTransform(cameraSceneObject, cameraTransform);
+	world->SetLocalTransform(cameraSceneObject, cameraTransform);
 
-	scene->SetActiveCameraEntity(mainCameraEntity);
+	world->SetActiveCameraEntity(mainCameraEntity);
 
 	ScriptSystem* scriptSystem = engine->GetScriptSystem();
 	CameraController* controller = scriptSystem->AddScript<CameraController>(mainCameraEntity);
@@ -129,10 +121,10 @@ void App::Initialize()
 
 				Entity entity = entityManager->Create();
 
-				SceneObjectId sceneObject = scene->AddSceneObject(entity);
+				SceneObjectId sceneObject = world->AddSceneObject(entity);
 				Vec3f position(m * 1.4f - metalnessCount * 0.7f + 0.7f, 0.6f, r * 1.4f - roughnessCount * 0.7f + 0.7f);
 				Mat4x4f transform = Mat4x4f::Translate(position);
-				scene->SetEditTransform(sceneObject, SceneEditTransform(position));
+				world->SetEditTransform(sceneObject, SceneEditTransform(position));
 
 				RenderObjectId renderObj = renderer->AddRenderObject(entity);
 				renderOrderData.material = matId;

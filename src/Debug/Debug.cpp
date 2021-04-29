@@ -25,7 +25,7 @@
 #include "Resources/BitmapFont.hpp"
 #include "Resources/ShaderManager.hpp"
 
-#include "Scene/Scene.hpp"
+#include "Scene/World.hpp"
 
 #include "System/InputManager.hpp"
 #include "System/InputView.hpp"
@@ -82,7 +82,7 @@ Debug::~Debug()
 }
 
 void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraSystem,
-	MeshManager* meshManager, ShaderManager* shaderManager, SceneManager* sceneManager)
+	MeshManager* meshManager, ShaderManager* shaderManager, Scene* world)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -94,7 +94,7 @@ void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraS
 	this->window = window;
 
 	textRenderer->Initialize(shaderManager, meshManager);
-	vectorRenderer->Initialize(meshManager, shaderManager, sceneManager, window, cameraSystem);
+	vectorRenderer->Initialize(meshManager, shaderManager, world, window, cameraSystem);
 
 	Vec2f frameSize = this->window->GetFrameBufferSize().As<float>();
 	float screenCoordScale = this->window->GetScreenCoordinateScale();
@@ -128,7 +128,7 @@ void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraS
 	graphArea.size.y = frameSize.y - pixelLineHeight;
 	graph->SetDrawArea(graphArea);
 
-	culling->Initialize(renderer, cameraSystem);
+	culling->Initialize(renderer, world, cameraSystem);
 	culling->SetGuideTextPosition(Vec2f(0.0f, scaledLineHeight));
 }
 
@@ -137,7 +137,7 @@ void Debug::Deinitialize()
 	vectorRenderer->Deinitialize();
 }
 
-void Debug::Render(Scene* scene)
+void Debug::Render()
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -272,12 +272,12 @@ void Debug::Render(Scene* scene)
 		graph->DrawToVectorRenderer();
 
 	if (mode == DebugMode::Culling)
-		culling->UpdateAndDraw(scene);
+		culling->UpdateAndDraw();
 
 	if (mode == DebugMode::MemoryStats)
 		memoryStats->UpdateAndDraw();
 
-	vectorRenderer->Render(scene->GetActiveCameraEntity());
+	vectorRenderer->Render();
 	textRenderer->Render();
 
 	ImGui::Begin("Performance stats");

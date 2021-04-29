@@ -6,10 +6,11 @@
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/Renderer.hpp"
 
-#include "Scene/Scene.hpp"
+#include "Scene/World.hpp"
 
 DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
 	renderer(nullptr),
+	world(nullptr),
 	cameraSystem(nullptr),
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
@@ -21,9 +22,10 @@ DebugCulling::~DebugCulling()
 {
 }
 
-void DebugCulling::Initialize(Renderer* renderer, CameraSystem* cameraSystem)
+void DebugCulling::Initialize(Renderer* renderer, Scene* world, CameraSystem* cameraSystem)
 {
 	this->renderer = renderer;
+	this->world = world;
 	this->cameraSystem = cameraSystem;
 }
 
@@ -33,7 +35,7 @@ void DebugCulling::SetLockCullingCamera(bool lockCullingCamera)
 	renderer->SetLockCullingCamera(lockCullingCamera);
 }
 
-void DebugCulling::UpdateAndDraw(Scene* scene)
+void DebugCulling::UpdateAndDraw()
 {
 	if (cullingCameraIsLocked)
 	{
@@ -41,7 +43,7 @@ void DebugCulling::UpdateAndDraw(Scene* scene)
 
 		const Mat4x4f& transform = renderer->GetCullingCameraTransform();
 
-		Entity cameraEntity = scene->GetActiveCameraEntity();
+		Entity cameraEntity = world->GetActiveCameraEntity();
 		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
 		ProjectionParameters params = cameraSystem->GetProjectionParameters(cameraId);
 		params.perspectiveFar = params.perspectiveFar < 10.0f ? params.perspectiveFar : 10.0f;

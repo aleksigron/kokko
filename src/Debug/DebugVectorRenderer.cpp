@@ -17,8 +17,7 @@
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
 
-#include "Scene/Scene.hpp"
-#include "Scene/SceneManager.hpp"
+#include "Scene/World.hpp"
 
 #include "System/Window.hpp"
 
@@ -37,7 +36,7 @@ DebugVectorRenderer::DebugVectorRenderer(
 	cameraSystem(nullptr),
 	shaderManager(nullptr),
 	meshManager(nullptr),
-	sceneManager(nullptr),
+	world(nullptr),
 	dynamicMeshes(nullptr),
 	dynamicMeshCount(0),
 	dynamicMeshAllocated(0),
@@ -57,14 +56,14 @@ DebugVectorRenderer::~DebugVectorRenderer()
 }
 
 void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-	SceneManager* sceneManager, Window* window, CameraSystem* cameraSystem)
+	Scene* world, Window* window, CameraSystem* cameraSystem)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	this->cameraSystem = cameraSystem;
 	this->meshManager = meshManager;
 	this->shaderManager = shaderManager;
-	this->sceneManager = sceneManager;
+	this->world = world;
 	this->window = window;
 
 	// Initialize shaders
@@ -441,7 +440,7 @@ void DebugVectorRenderer::DrawWireFrustum(const Mat4x4f& transform, const Projec
 	this->DrawLine(frustum.points[6], frustum.points[7], color);
 }
 
-void DebugVectorRenderer::Render(Entity cameraEntity)
+void DebugVectorRenderer::Render()
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -476,9 +475,9 @@ void DebugVectorRenderer::Render(Entity cameraEntity)
 			buffersInitialized = true;
 		}
 
-		Scene* scene = sceneManager->GetScene(sceneManager->GetPrimarySceneId());
-		SceneObjectId cameraSceneObject = scene->Lookup(cameraEntity);
-		const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
+		Entity cameraEntity = world->GetActiveCameraEntity();
+		SceneObjectId cameraSceneObject = world->Lookup(cameraEntity);
+		const Mat4x4f& cameraTransform = world->GetWorldTransform(cameraSceneObject);
 
 		bool reverseDepth = false;
 

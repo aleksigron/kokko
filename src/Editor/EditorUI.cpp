@@ -12,6 +12,8 @@
 
 #include "System/ImGuiRenderBackend.hpp"
 #include "System/ImGuiPlatformBackend.hpp"
+#include "System/InputManager.hpp"
+#include "System/Window.hpp"
 
 EditorUI::EditorUI(Allocator* allocator) :
 	allocator(allocator),
@@ -26,7 +28,7 @@ EditorUI::~EditorUI()
 	allocator->MakeDelete(views);
 }
 
-void EditorUI::Initialize(Engine* engine, GLFWwindow* window, InputView* imguiInputView)
+void EditorUI::Initialize(Engine* engine)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -40,7 +42,9 @@ void EditorUI::Initialize(Engine* engine, GLFWwindow* window, InputView* imguiIn
 	ImGui::StyleColorsDark();
 
 	renderBackend->Initialize();
-	platformBackend->Initialize(window, imguiInputView);
+
+	Window* window = engine->GetMainWindow();
+	platformBackend->Initialize(window->GetGlfwWindow(), window->GetInputManager()->GetImGuiInputView());
 
 	views->entityView.Initialize(engine);
 }
@@ -68,11 +72,11 @@ void EditorUI::StartFrame()
 	ImGui::NewFrame();
 }
 
-void EditorUI::Render(Scene* scene)
+void EditorUI::Render()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	views->entityView.Draw(scene);
+	views->entityView.Draw();
 
 	ImGui::ShowDemoWindow();
 
