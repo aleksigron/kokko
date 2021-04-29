@@ -74,7 +74,7 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 
 		MaterialId matId = materialManager->GetIdByPath(materialPath);
 		
-		assert(matId.IsNull() == false);
+		assert(matId != MaterialId::Null);
 
 		scene->SetSkyboxMaterial(matId);
 	}
@@ -199,7 +199,7 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 		StringRef matPath(materialItr->value.GetString(), materialItr->value.GetStringLength());
 		MaterialId matId = materialManager->GetIdByPath(matPath);
 
-		assert(matId.IsNull() == false);
+		assert(matId != MaterialId::Null);
 
 		RenderOrderData data;
 		data.material = matId;

@@ -43,7 +43,7 @@ void CameraSystem::RemoveCameraComponent(CameraId id)
 
 	Entity entity = cameraData[id.i].entity;
 
-	HashMap<unsigned int, CameraId>::KeyValuePair* pair = entityMap.Lookup(entity.id);
+	auto* pair = entityMap.Lookup(entity.id);
 	if (pair != nullptr)
 		entityMap.Remove(pair);
 
@@ -51,9 +51,9 @@ void CameraSystem::RemoveCameraComponent(CameraId id)
 	{
 		const CameraData& swap = cameraData.GetBack();
 
-		HashMap<unsigned int, CameraId>::KeyValuePair* swapKv = entityMap.Lookup(swap.entity.id);
+		auto* swapKv = entityMap.Lookup(swap.entity.id);
 		if (swapKv != nullptr)
-			swapKv->second = CameraId{ id.i };
+			swapKv->second = id;
 
 		cameraData[id.i] = swap;
 	}

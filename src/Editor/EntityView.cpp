@@ -30,7 +30,8 @@ EntityView::EntityView() :
 	materialManager(nullptr),
 	meshManager(nullptr),
 	selectedEntity(Entity::Null),
-	requestScrollToEntity(Entity::Null)
+	requestScrollToEntity(Entity::Null),
+	requestDestroyEntity(Entity::Null)
 {
 	std::memset(textInputBuffer, 0, TextInputBufferSize);
 }
@@ -47,7 +48,9 @@ void EntityView::Initialize(Engine* engine)
 
 void EntityView::Draw(Scene* scene)
 {
-	ImGui::Begin("Entities", nullptr, ImGuiWindowFlags_NoScrollbar);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+	ImGui::Begin("Entities", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+	ImGui::PopStyleVar();
 
 	float fontSize = ImGui::GetFontSize();
 
@@ -60,37 +63,7 @@ void EntityView::Draw(Scene* scene)
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
 
-		ImGui::PushItemWidth(ImGui::GetFontSize() * 10.0f);
-		if (ImGui::BeginCombo("##CreateEntityCombo", "Create new", ImGuiComboFlags_NoArrowButton))
-		{
-			if (ImGui::Selectable("Empty"))
-			{
-				CreateEntity(scene, nullptr, 0);
-			}
-			if (ImGui::Selectable("Scene object"))
-			{
-				ComponentType component = ComponentType::Scene;
-				CreateEntity(scene, &component, 1);
-			}
-			if (ImGui::Selectable("Render object"))
-			{
-				ComponentType components[] = { ComponentType::Scene, ComponentType::Render };
-				CreateEntity(scene, components, sizeof(components) / sizeof(components[0]));
-			}
-			if (ImGui::Selectable("Camera"))
-			{
-				ComponentType components[] = { ComponentType::Scene, ComponentType::Camera };
-				CreateEntity(scene, components, sizeof(components) / sizeof(components[0]));
-			}
-			if (ImGui::Selectable("Light"))
-			{
-				ComponentType components[] = { ComponentType::Scene, ComponentType::Light };
-				CreateEntity(scene, components, sizeof(components) / sizeof(components[0]));
-			}
-
-			ImGui::EndCombo();
-		}
-		ImGui::PopItemWidth();
+		DrawEntityListButtons(scene);
 
 		if (ImGui::BeginChild("EntityList"))
 		{
@@ -102,7 +75,7 @@ void EntityView::Draw(Scene* scene)
 				if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
 					DrawEntityNode(scene, entity, sceneObj);
 			}
-
+			ImGui::Spacing();
 			ImGui::EndChild();
 		}
 
@@ -118,6 +91,41 @@ void EntityView::Draw(Scene* scene)
 	}
 
 	ImGui::End();
+}
+
+void EntityView::DrawEntityListButtons(Scene* scene)
+{
+	ImGui::PushItemWidth(ImGui::GetFontSize() * 10.0f);
+	if (ImGui::BeginCombo("##CreateEntityCombo", "Create new...", ImGuiComboFlags_NoArrowButton))
+	{
+		if (ImGui::Selectable("Empty"))
+		{
+			CreateEntity(scene, nullptr, 0);
+		}
+		if (ImGui::Selectable("Scene object"))
+		{
+			ComponentType component = ComponentType::Scene;
+			CreateEntity(scene, &component, 1);
+		}
+		if (ImGui::Selectable("Render object"))
+		{
+			ComponentType components[] = { ComponentType::Scene, ComponentType::Render };
+			CreateEntity(scene, components, sizeof(components) / sizeof(components[0]));
+		}
+		if (ImGui::Selectable("Camera"))
+		{
+			ComponentType components[] = { ComponentType::Scene, ComponentType::Camera };
+			CreateEntity(scene, components, sizeof(components) / sizeof(components[0]));
+		}
+		if (ImGui::Selectable("Light"))
+		{
+			ComponentType components[] = { ComponentType::Scene, ComponentType::Light };
+			CreateEntity(scene, components, sizeof(components) / sizeof(components[0]));
+		}
+
+		ImGui::EndCombo();
+	}
+	ImGui::PopItemWidth();
 }
 
 void EntityView::DrawEntityNode(Scene* scene, Entity entity, SceneObjectId sceneObj)
@@ -173,6 +181,8 @@ void EntityView::DrawEntityProperties(Scene* scene)
 {
 	if (selectedEntity != Entity::Null)
 	{
+		ImGui::Spacing();
+
 		// Name
 
 		const char* entityName = entityManager->GetDebugName(selectedEntity);
@@ -185,32 +195,55 @@ void EntityView::DrawEntityProperties(Scene* scene)
 				entityManager->ClearDebugName(selectedEntity);
 		}
 
-		bool addComponent = false;
-		ComponentType addComponentType;
-
-		ImGui::PushItemWidth(ImGui::GetFontSize() * 9.0f);
-		if (ImGui::BeginCombo("##AddComponentCombo", "Add component", ImGuiComboFlags_NoArrowButton))
-		{
-			for (unsigned int i = 0; i < ComponentTypeCount; ++i)
-			{
-				if (ImGui::Selectable(ComponentNames[i], false))
-				{
-					addComponent = true;
-					addComponentType = static_cast<ComponentType>(i);
-				}
-			}
-
-			ImGui::EndCombo();
-		}
-		ImGui::PopItemWidth();
+		DrawEntityPropertyButtons(scene);
 
 		DrawSceneComponent(scene);
 		DrawRenderComponent(scene);
 		DrawCameraComponent();
 		DrawLightComponent();
 
-		if (addComponent)
-			AddComponent(scene, selectedEntity, addComponentType);
+		ImGui::Spacing();
+	}
+
+	if (requestDestroyEntity != Entity::Null)
+	{
+		if (selectedEntity == requestDestroyEntity)
+			selectedEntity = Entity::Null;
+
+		DestroyEntity(scene, requestDestroyEntity);
+		requestDestroyEntity = Entity::Null;
+	}
+}
+
+void EntityView::DrawEntityPropertyButtons(Scene* scene)
+{
+	bool addComponent = false;
+	ComponentType addComponentType;
+
+	ImGui::PushItemWidth(ImGui::GetFontSize() * 9.0f);
+	if (ImGui::BeginCombo("##AddComponentCombo", "Add component...", ImGuiComboFlags_NoArrowButton))
+	{
+		for (unsigned int i = 0; i < ComponentTypeCount; ++i)
+		{
+			if (ImGui::Selectable(ComponentNames[i], false))
+			{
+				addComponent = true;
+				addComponentType = static_cast<ComponentType>(i);
+			}
+		}
+
+		ImGui::EndCombo();
+	}
+	ImGui::PopItemWidth();
+
+	if (addComponent)
+		AddComponent(scene, selectedEntity, addComponentType);
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Destroy entity"))
+	{
+		requestDestroyEntity = selectedEntity;
 	}
 }
 
@@ -496,6 +529,14 @@ void EntityView::CreateEntity(Scene* scene, ComponentType* components, unsigned 
 	requestScrollToEntity = entity;
 }
 
+void EntityView::DestroyEntity(Scene* scene, Entity entity)
+{
+	for (size_t i = 0; i < ComponentTypeCount; ++i)
+		RemoveComponentIfExists(scene, entity, static_cast<ComponentType>(i));
+
+	entityManager->Destroy(entity);
+}
+
 void EntityView::AddComponent(Scene* scene, Entity entity, ComponentType componentType)
 {
 	switch (componentType)
@@ -526,6 +567,43 @@ void EntityView::AddComponent(Scene* scene, Entity entity, ComponentType compone
 		LightId lightId = lightManager->Lookup(entity);
 		if (lightId == LightId::Null)
 			lightManager->AddLight(entity);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+void EntityView::RemoveComponentIfExists(Scene* scene, Entity entity, ComponentType componentType)
+{
+	switch (componentType)
+	{
+	case EntityView::ComponentType::Scene:
+	{
+		SceneObjectId sceneObj = scene->Lookup(entity);
+		if (sceneObj != SceneObjectId::Null)
+			scene->RemoveSceneObject(sceneObj);
+		break;
+	}
+	case EntityView::ComponentType::Render:
+	{
+		RenderObjectId renderObj = renderer->Lookup(entity);
+		if (renderObj != RenderObjectId::Null)
+			renderer->RemoveRenderObject(renderObj);
+		break;
+	}
+	case EntityView::ComponentType::Camera:
+	{
+		CameraId cameraId = cameraSystem->Lookup(entity);
+		if (cameraId != CameraId::Null)
+			cameraSystem->RemoveCameraComponent(cameraId);
+		break;
+	}
+	case EntityView::ComponentType::Light:
+	{
+		LightId lightId = lightManager->Lookup(entity);
+		if (lightId != LightId::Null)
+			lightManager->RemoveLight(lightId);
 		break;
 	}
 	default:

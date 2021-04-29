@@ -139,13 +139,18 @@ void LightManager::RemoveLight(LightId id)
 
 	// Remove from entity map
 	Entity entity = data.entity[id.i];
-	HashMap<unsigned int, LightId>::KeyValuePair* pair = entityMap.Lookup(entity.id);
+	auto* pair = entityMap.Lookup(entity.id);
 	if (pair != nullptr)
 		entityMap.Remove(pair);
 
 	if (data.count > 2 && id.i + 1 < data.count) // We need to swap another object
 	{
 		unsigned int swapIdx = data.count - 1;
+
+		// Update the swapped objects id in the entity map
+		auto* swapKv = entityMap.Lookup(data.entity[swapIdx].id);
+		if (swapKv != nullptr)
+			swapKv->second = id;
 
 		data.entity[id.i] = data.entity[swapIdx];
 		data.position[id.i] = data.position[swapIdx];

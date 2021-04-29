@@ -135,17 +135,15 @@ void Scene::RemoveSceneObject(SceneObjectId id)
 {
 	assert(IsValidId(id));
 
-	// Remove from entity map
-	Entity entity = data.entity[id.i];
-	HashMap<unsigned int, SceneObjectId>::KeyValuePair* pair = entityMap.Lookup(entity.id);
-	if (pair != nullptr)
-		entityMap.Remove(pair);
-
 	// Remove references
 	{
-		// TODO: Handle situation where object has children
+		// Remove from entity map
+		auto* entityKv = entityMap.Lookup(data.entity[id.i].id);
+		if (entityKv != nullptr)
+			entityMap.Remove(entityKv);
 
 		SceneObjectId parent = data.parent[id.i];
+		SceneObjectId firstChild = data.firstChild[id.i];
 		SceneObjectId prevSibling = data.prevSibling[id.i];
 		SceneObjectId nextSibling = data.nextSibling[id.i];
 
@@ -166,19 +164,29 @@ void Scene::RemoveSceneObject(SceneObjectId id)
 			// prevSibling can be Null, no need to check
 			data.prevSibling[nextSibling.i] = prevSibling;
 		}
+
+		// Object has children, their parent must be updated
+		for (SceneObjectId child = firstChild; IsValidId(child); child = data.nextSibling[child.i])
+			data.parent[child.i] = id;
 	}
 
 	// Swap last item in the removed object's place
 
 	if (data.count > 2 && id.i + 1 < data.count) // We still have objects other than the root
 	{
-		SceneObjectId swap;
-		swap.i = data.count - 1;
+		unsigned int swapIdx = data.count - 1;
 
-		SceneObjectId parent = data.parent[swap.i];
-		SceneObjectId firstChild = data.firstChild[swap.i];
-		SceneObjectId prevSibling = data.prevSibling[swap.i];
-		SceneObjectId nextSibling = data.nextSibling[swap.i];
+		// Update the swapped objects id in the entity map
+		auto* swapKv = entityMap.Lookup(data.entity[swapIdx].id);
+		if (swapKv != nullptr)
+			swapKv->second = id;
+
+		SceneObjectId swap{ swapIdx };
+
+		SceneObjectId parent = data.parent[swapIdx];
+		SceneObjectId firstChild = data.firstChild[swapIdx];
+		SceneObjectId prevSibling = data.prevSibling[swapIdx];
+		SceneObjectId nextSibling = data.nextSibling[swapIdx];
 
 		// Update references pointing to the swap object
 
@@ -201,14 +209,14 @@ void Scene::RemoveSceneObject(SceneObjectId id)
 
 		// Update swap objects data to the removed objects place
 
-		data.entity[id.i] = data.entity[swap.i];
-		data.local[id.i] = data.local[swap.i];
-		data.world[id.i] = data.world[swap.i];
+		data.entity[id.i] = data.entity[swapIdx];
+		data.local[id.i] = data.local[swapIdx];
+		data.world[id.i] = data.world[swapIdx];
 		data.parent[id.i] = parent;
 		data.firstChild[id.i] = firstChild;
 		data.prevSibling[id.i] = prevSibling;
 		data.nextSibling[id.i] = nextSibling;
-		data.editTransform[id.i] = data.editTransform[swap.i];
+		data.editTransform[id.i] = data.editTransform[swapIdx];
 	}
 
 	--data.count;

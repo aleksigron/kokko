@@ -1801,6 +1801,11 @@ void Renderer::RemoveRenderObject(RenderObjectId id)
 	{
 		unsigned int swapIdx = data.count - 1;
 
+		// Update the swapped objects id in the entity map
+		auto* swapKv = entityMap.Lookup(data.entity[swapIdx].id);
+		if (swapKv != nullptr)
+			swapKv->second = id;
+
 		data.entity[id.i] = data.entity[swapIdx];
 		data.mesh[id.i] = data.mesh[swapIdx];
 		data.order[id.i] = data.order[swapIdx];
