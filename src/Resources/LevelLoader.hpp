@@ -17,7 +17,7 @@ class EnvironmentManager;
 struct Entity;
 struct SceneObjectId;
 
-class SceneLoader
+class LevelLoader
 {
 private:
 	using ValueItr = rapidjson::Value::ConstValueIterator;
@@ -40,7 +40,7 @@ private:
 	void CreateLight(ValueItr itr, Entity entity);
 
 public:
-	SceneLoader(Engine* engine, World* world);
+	LevelLoader(Engine* engine);
 
 	void Load(BufferRef<char> sceneConfig);
 };

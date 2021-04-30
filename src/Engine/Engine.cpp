@@ -18,6 +18,7 @@
 #include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/ParticleSystem.hpp"
 #include "Graphics/TerrainManager.hpp"
+#include "Graphics/World.hpp"
 
 #include "Memory/AllocatorManager.hpp"
 #include "Memory/Memory.hpp"
@@ -32,8 +33,6 @@
 #include "Resources/ShaderManager.hpp"
 #include "Resources/MaterialManager.hpp"
 #include "Resources/TextureManager.hpp"
-
-#include "Scene/World.hpp"
 
 #include "Scripting/ScriptSystem.hpp"
 
@@ -206,7 +205,7 @@ void Engine::Update()
 	scriptSystem.instance->UpdateScripts();
 
 	// Propagate transform updates from Scene to other systems that require it
-	ITransformUpdateReceiver* transformUpdateReceivers[] = { lightManager.instance, renderer.instance };
+	TransformUpdateReceiver* transformUpdateReceivers[] = { lightManager.instance, renderer.instance };
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	world.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 

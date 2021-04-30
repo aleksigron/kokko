@@ -17,6 +17,7 @@
 #include "Graphics/BloomEffect.hpp"
 #include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
 #include "Graphics/EnvironmentManager.hpp"
+#include "Graphics/World.hpp"
 
 #include "Math/Rectangle.hpp"
 #include "Math/BoundingBox.hpp"
@@ -41,8 +42,6 @@
 #include "Resources/MeshPresets.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
-
-#include "Scene/World.hpp"
 
 #include "System/Window.hpp"
 

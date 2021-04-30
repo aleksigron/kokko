@@ -123,6 +123,9 @@ set (KOKKO_SOURCES
 	src/Graphics/TerrainInstance.hpp
 	src/Graphics/TerrainManager.cpp
 	src/Graphics/TerrainManager.hpp
+	src/Graphics/TransformUpdateReceiver.hpp
+	src/Graphics/World.cpp
+	src/Graphics/World.hpp
 	src/Math/BoundingBox.hpp
 	src/Math/Frustum.hpp
 	src/Math/Intersect3D.cpp
@@ -187,6 +190,8 @@ set (KOKKO_SOURCES
 	src/Resources/BitmapFont.hpp
 	src/Resources/ImageData.cpp
 	src/Resources/ImageData.hpp
+	src/Resources/LevelLoader.cpp
+	src/Resources/LevelLoader.hpp
 	src/Resources/MaterialManager.cpp
 	src/Resources/MaterialManager.hpp
 	src/Resources/MaterialData.hpp
@@ -206,12 +211,6 @@ set (KOKKO_SOURCES
 	src/Resources/TextureManager.hpp
 	src/Resources/ValueSerialization.cpp
 	src/Resources/ValueSerialization.hpp
-	src/Scene/ITransformUpdateReceiver.hpp
-	src/Scene/SceneLayer.hpp
-	src/Scene/SceneLoader.cpp
-	src/Scene/SceneLoader.hpp
-	src/Scene/World.cpp
-	src/Scene/World.hpp
 	src/Scripting/NativeScriptComponent.hpp
 	src/Scripting/ScriptContext.hpp
 	src/Scripting/ScriptSystem.cpp

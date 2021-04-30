@@ -6,6 +6,8 @@
 
 #include "Entity/Entity.hpp"
 
+#include "Graphics/TransformUpdateReceiver.hpp"
+
 #include "Math/Mat4x4.hpp"
 #include "Math/Vec3.hpp"
 #include "Math/Vec2.hpp"
@@ -19,8 +21,6 @@
 #include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RendererData.hpp"
 #include "Rendering/RenderOrder.hpp"
-
-#include "Scene/ITransformUpdateReceiver.hpp"
 
 class Allocator;
 class CameraSystem;
@@ -50,7 +50,7 @@ struct ProjectionParameters;
 struct LightingUniformBlock;
 struct PostProcessRenderPass;
 
-class Renderer : public ITransformUpdateReceiver, public CustomRenderer
+class Renderer : public TransformUpdateReceiver, public CustomRenderer
 {
 private:
 	static const unsigned int FramesInFlightCount = 1;

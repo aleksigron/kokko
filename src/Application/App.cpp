@@ -8,6 +8,8 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Graphics/World.hpp"
+
 #include "Math/Math.hpp"
 
 #include "Rendering/CameraSystem.hpp"
@@ -16,8 +18,6 @@
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/MaterialManager.hpp"
-
-#include "Scene/World.hpp"
 
 #include "Scripting/ScriptSystem.hpp"
 

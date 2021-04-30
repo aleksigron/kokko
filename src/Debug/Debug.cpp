@@ -7,8 +7,6 @@
 
 #include "Core/Core.hpp"
 
-#include "Engine/Engine.hpp"
-
 #include "Debug/DebugVectorRenderer.hpp"
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugGraph.hpp"
@@ -19,13 +17,15 @@
 #include "Debug/Instrumentation.hpp"
 #include "Debug/LogHelper.hpp"
 
+#include "Engine/Engine.hpp"
+
+#include "Graphics/World.hpp"
+
 #include "Rendering/Renderer.hpp"
 #include "Rendering/RenderDevice.hpp"
 
 #include "Resources/BitmapFont.hpp"
 #include "Resources/ShaderManager.hpp"
-
-#include "Scene/World.hpp"
 
 #include "System/InputManager.hpp"
 #include "System/InputView.hpp"

@@ -5,6 +5,8 @@
 
 #include "Core/String.hpp"
 
+#include "Graphics/World.hpp"
+
 #include "Math/Vec2.hpp"
 #include "Math/Mat3x3.hpp"
 #include "Math/Mat4x4.hpp"
@@ -12,8 +14,6 @@
 #include "System/Time.hpp"
 #include "System/InputManager.hpp"
 #include "System/InputView.hpp"
-
-#include "Scene/World.hpp"
 
 #include "App.hpp"
 

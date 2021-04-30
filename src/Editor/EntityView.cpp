@@ -6,14 +6,14 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Graphics/World.hpp"
+
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
-
-#include "Scene/World.hpp"
 
 const char* const EntityView::ComponentNames[] = {
 	"Scene object",

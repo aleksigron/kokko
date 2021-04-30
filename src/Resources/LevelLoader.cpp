@@ -1,4 +1,4 @@
-#include "Scene/SceneLoader.hpp"
+#include "Resources/LevelLoader.hpp"
 
 #include "rapidjson/document.h"
 
@@ -11,6 +11,7 @@
 #include "Entity/EntityManager.hpp"
 
 #include "Graphics/EnvironmentManager.hpp"
+#include "Graphics/World.hpp"
 
 #include "Rendering/Renderer.hpp"
 #include "Rendering/LightManager.hpp"
@@ -19,10 +20,8 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/ValueSerialization.hpp"
 
-#include "Scene/World.hpp"
-
-SceneLoader::SceneLoader(Engine* engine, World* world):
-	world(world),
+LevelLoader::LevelLoader(Engine* engine):
+	world(engine->GetWorld()),
 	renderer(engine->GetRenderer()),
 	meshManager(engine->GetMeshManager()),
 	materialManager(engine->GetMaterialManager()),
@@ -32,7 +31,7 @@ SceneLoader::SceneLoader(Engine* engine, World* world):
 {
 }
 
-void SceneLoader::Load(BufferRef<char> sceneConfig)
+void LevelLoader::Load(BufferRef<char> sceneConfig)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -80,7 +79,7 @@ void SceneLoader::Load(BufferRef<char> sceneConfig)
 	}
 }
 
-void SceneLoader::CreateObjects(ValueItr itr, ValueItr end)
+void LevelLoader::CreateObjects(ValueItr itr, ValueItr end)
 {
 	for (; itr != end; ++itr)
 	{
@@ -99,7 +98,7 @@ void SceneLoader::CreateObjects(ValueItr itr, ValueItr end)
 	}
 }
 
-void SceneLoader::CreateChildObjects(ValueItr itr, ValueItr end, SceneObjectId parent)
+void LevelLoader::CreateChildObjects(ValueItr itr, ValueItr end, SceneObjectId parent)
 {
 	for (; itr != end; ++itr)
 	{
@@ -119,7 +118,7 @@ void SceneLoader::CreateChildObjects(ValueItr itr, ValueItr end, SceneObjectId p
 	}
 }
 
-void SceneLoader::CreateSceneObject(ValueItr itr, SceneObjectId sceneObject)
+void LevelLoader::CreateSceneObject(ValueItr itr, SceneObjectId sceneObject)
 {
 	SceneEditTransform transform;
 
@@ -149,7 +148,7 @@ void SceneLoader::CreateSceneObject(ValueItr itr, SceneObjectId sceneObject)
 	}
 }
 
-void SceneLoader::CreateComponents(ValueItr itr, ValueItr end, Entity entity)
+void LevelLoader::CreateComponents(ValueItr itr, ValueItr end, Entity entity)
 {
 	for (; itr != end; ++itr)
 	{
@@ -172,17 +171,17 @@ void SceneLoader::CreateComponents(ValueItr itr, ValueItr end, Entity entity)
 					break;
 
 				default:
-					Log::Error("SceneLoader: Unknown component type");
+					Log::Error("LevelLoader: Unknown component type");
 					break;
 				}
 			}
 			else
-				Log::Error("SceneLoader: Invalid component type");
+				Log::Error("LevelLoader: Invalid component type");
 		}
 	}
 }
 
-void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
+void LevelLoader::CreateRenderObject(ValueItr itr, Entity entity)
 {
 	MemberItr meshItr = itr->FindMember("mesh");
 	MemberItr materialItr = itr->FindMember("material");
@@ -209,14 +208,14 @@ void SceneLoader::CreateRenderObject(ValueItr itr, Entity entity)
 	}
 }
 
-void SceneLoader::CreateLight(ValueItr itr, Entity entity)
+void LevelLoader::CreateLight(ValueItr itr, Entity entity)
 {
 	LightType type;
 
 	MemberItr typeItr = itr->FindMember("lightType");
 	if (typeItr == itr->MemberEnd() || typeItr->value.IsString() == false)
 	{
-		Log::Error("SceneLoader: Invalid light type");
+		Log::Error("LevelLoader: Invalid light type");
 		return;	
 	}
 
@@ -238,7 +237,7 @@ void SceneLoader::CreateLight(ValueItr itr, Entity entity)
 		break;
 
 	default:
-		Log::Error("SceneLoader: Unknown light type");
+		Log::Error("LevelLoader: Unknown light type");
 		return;
 	}
 

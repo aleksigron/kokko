@@ -14,7 +14,7 @@
 class Engine;
 class Camera;
 class Allocator;
-class ITransformUpdateReceiver;
+class TransformUpdateReceiver;
 
 struct StringRef;
 
@@ -131,7 +131,7 @@ public:
 	// such as the bounding box has changed.
 	void MarkUpdated(SceneObjectId id);
 
-	void NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers);
+	void NotifyUpdatedTransforms(unsigned int receiverCount, TransformUpdateReceiver** updateReceivers);
 
 	void SetSkyboxMaterial(MaterialId materialId) { skyboxMaterial = materialId; }
 	MaterialId GetSkyboxMaterial() const { return skyboxMaterial; }

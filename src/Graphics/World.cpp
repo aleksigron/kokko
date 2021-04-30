@@ -1,4 +1,4 @@
-#include "Scene/World.hpp"
+#include "Graphics/World.hpp"
 
 #include <cassert>
 
@@ -6,12 +6,13 @@
 #include "Core/Core.hpp"
 #include "Core/StringRef.hpp"
 
+#include "Graphics/TransformUpdateReceiver.hpp"
+
 #include "Math/Math.hpp"
 
 #include "Memory/Allocator.hpp"
 
-#include "Scene/ITransformUpdateReceiver.hpp"
-#include "Scene/SceneLoader.hpp"
+#include "Resources/LevelLoader.hpp"
 
 #include "System/File.hpp"
 
@@ -48,7 +49,7 @@ bool World::LoadFromFile(StringRef path)
 
 	if (File::ReadText(pathStr.GetCStr(), sceneConfig))
 	{
-		SceneLoader loader(engine, this);
+		LevelLoader loader(engine);
 		loader.Load(sceneConfig.GetRef());
 
 		return true;
@@ -356,7 +357,7 @@ void World::MarkUpdated(SceneObjectId id)
 	updatedEntities.InsertUnique(data.entity[id.i].id);
 }
 
-void World::NotifyUpdatedTransforms(unsigned int receiverCount, ITransformUpdateReceiver** updateReceivers)
+void World::NotifyUpdatedTransforms(unsigned int receiverCount, TransformUpdateReceiver** updateReceivers)
 {
 	KOKKO_PROFILE_FUNCTION();
 

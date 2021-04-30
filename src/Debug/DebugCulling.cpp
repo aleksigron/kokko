@@ -3,10 +3,10 @@
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
+#include "Graphics/World.hpp"
+
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/Renderer.hpp"
-
-#include "Scene/World.hpp"
 
 DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
 	renderer(nullptr),

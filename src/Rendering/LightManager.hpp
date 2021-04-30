@@ -6,17 +6,17 @@
 
 #include "Entity/Entity.hpp"
 
+#include "Graphics/TransformUpdateReceiver.hpp"
+
 #include "Math/Frustum.hpp"
 #include "Math/Mat3x3.hpp"
 #include "Math/Vec3.hpp"
 
 #include "Rendering/Light.hpp"
 
-#include "Scene/ITransformUpdateReceiver.hpp"
-
 class Allocator;
 
-class LightManager : public ITransformUpdateReceiver
+class LightManager : public TransformUpdateReceiver
 {
 private:
 	Allocator* allocator;

@@ -7,6 +7,8 @@
 
 #include "Engine/Engine.hpp"
 
+#include "Graphics/World.hpp"
+
 #include "Math/Math.hpp"
 #include "Math/Frustum.hpp"
 
@@ -16,8 +18,6 @@
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
-
-#include "Scene/World.hpp"
 
 #include "System/Window.hpp"
 
