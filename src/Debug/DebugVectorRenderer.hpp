@@ -50,7 +50,6 @@ private:
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
 	World* world;
-	Window* window;
 
 	Primitive* primitives;
 	unsigned int primitiveCount;
@@ -84,7 +83,7 @@ public:
 	~DebugVectorRenderer();
 
 	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-		World* world, Window* window, CameraSystem* cameraSystem);
+		World* world, CameraSystem* cameraSystem);
 	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
@@ -99,5 +98,5 @@ public:
 
 	void DrawWireFrustum(const Mat4x4f& transform, const ProjectionParameters& projection, const Color& color);
 
-	void Render();
+	void Render(const ViewRectangle& viewportRectangle);
 };

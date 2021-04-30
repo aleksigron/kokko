@@ -197,6 +197,11 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 
 	Vec2i frameBufferSizei = window->GetFrameBufferSize();
 
+	// Set default viewport rectangle, this might be overridden later
+	ViewRectangle viewportRectangle;
+	viewportRectangle.size = frameBufferSizei;
+	fullscreenViewportRectangle = viewportRectangle;
+
 	postProcessRenderer->Initialize();
 	ssao->Initialize(frameBufferSizei);
 
@@ -765,6 +770,8 @@ void Renderer::Render()
 
 						// TODO: manage sampler state more robustly
 						device->BindSampler(0, 0);
+
+						// TODO: Figure how to restore viewport and other relevant state
 					}
 				}
 			}
@@ -823,6 +830,21 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 		RenderDeferredLighting(params);
 	else if (params.callbackId == postProcessCallback)
 		RenderPostProcess(params);
+}
+
+void Renderer::SetFullscreenViewportRectangle(const ViewRectangle& rectangle)
+{
+	fullscreenViewportRectangle = rectangle;
+}
+
+void Renderer::SetLockCullingCamera(bool lockEnable)
+{
+	lockCullingCamera = lockEnable;
+}
+
+const Mat4x4f& Renderer::GetCullingCameraTransform() const
+{
+	return lockCullingCameraTransform;
 }
 
 void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params)
@@ -1348,7 +1370,8 @@ unsigned int Renderer::PopulateCommandList()
 	Entity renderCameraEntity = world->GetActiveCameraEntity();
 
 	CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
-	const ProjectionParameters& projectionParams = cameraSystem->GetProjectionParameters(renderCameraId);
+	ProjectionParameters projectionParams = cameraSystem->GetProjectionParameters(renderCameraId);
+	projectionParams.SetAspectRatio(fullscreenViewportRectangle.size.x, fullscreenViewportRectangle.size.y);
 
 	SceneObjectId cameraObject = world->Lookup(renderCameraEntity);
 	Mat4x4f cameraTransform = world->GetWorldTransform(cameraObject);
@@ -1464,8 +1487,7 @@ unsigned int Renderer::PopulateCommandList()
 		vp.view = cameraTransform.GetInverse();
 		vp.projection = projectionParams.GetProjectionMatrix(reverseDepth);
 		vp.viewProjection = vp.projection * vp.view;
-		vp.viewportRectangle.size = Vec2i(fb.width, fb.height);
-		vp.viewportRectangle.position = Vec2i(0, 0);
+		vp.viewportRectangle = fullscreenViewportRectangle;
 		vp.frustum.Update(projectionParams, cullingCameraTransform);
 		vp.framebufferIndex = FramebufferIndexGBuffer;
 
@@ -1582,12 +1604,14 @@ unsigned int Renderer::PopulateCommandList()
 	}
 
 	{
+		const RenderViewport& viewport = viewportData[viewportIndexFullscreen];
+
 		// Set viewport size
 		RenderCommandData::ViewportData data;
-		data.x = 0;
-		data.y = 0;
-		data.w = gbuffer.width;
-		data.h = gbuffer.height;
+		data.x = viewport.viewportRectangle.position.x;
+		data.y = viewport.viewportRectangle.position.y;
+		data.w = viewport.viewportRectangle.size.x;
+		data.h = viewport.viewportRectangle.size.y;
 
 		commandList.AddControl(fsvp, g_pass, 1, ctrl::Viewport, sizeof(data), &data);
 	}
@@ -1617,6 +1641,19 @@ unsigned int Renderer::PopulateCommandList()
 	commandList.AddControl(fsvp, s_pass, 0, ctrl::DepthTestEnable);
 	commandList.AddControl(fsvp, s_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Equal));
 	commandList.AddControl(fsvp, s_pass, 2, ctrl::DepthWriteDisable);
+
+	{
+		const RenderViewport& viewport = viewportData[viewportIndexFullscreen];
+
+		// Set viewport size
+		RenderCommandData::ViewportData data;
+		data.x = viewport.viewportRectangle.position.x;
+		data.y = viewport.viewportRectangle.position.y;
+		data.w = viewport.viewportRectangle.size.x;
+		data.h = viewport.viewportRectangle.size.y;
+
+		commandList.AddControl(fsvp, s_pass, 3, ctrl::Viewport, sizeof(data), &data);
+	}
 
 	// PASS: TRANSPARENT
 
@@ -1875,9 +1912,9 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer)
 
 	for (unsigned int idx = 1; idx < data.count; ++idx)
 	{
-		Vec3f pos = (data.transform[idx] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+		Vec3f pos = data.bounds[idx].center;
 		Vec3f scale = data.bounds[idx].extents * 2.0f;
-		Mat4x4f transform = Mat4x4f::Scale(scale) * Mat4x4f::Translate(pos);
+		Mat4x4f transform = Mat4x4f::Translate(pos) * Mat4x4f::Scale(scale);
 		vectorRenderer->DrawWireCube(transform, color);
 	}
 }

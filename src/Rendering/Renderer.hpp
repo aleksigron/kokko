@@ -9,6 +9,7 @@
 #include "Graphics/TransformUpdateReceiver.hpp"
 
 #include "Math/Mat4x4.hpp"
+#include "Math/Rectangle.hpp"
 #include "Math/Vec3.hpp"
 #include "Math/Vec2.hpp"
 
@@ -135,6 +136,7 @@ private:
 	TextureManager* textureManager;
 	EnvironmentManager* environmentManager;
 
+	ViewRectangle fullscreenViewportRectangle;
 	bool lockCullingCamera;
 	Mat4x4f lockCullingCameraTransform;
 
@@ -169,8 +171,6 @@ private:
 	void RenderPostProcess(const CustomRenderer::RenderParams& params);
 	void RenderBloom(const CustomRenderer::RenderParams& params);
 	void RenderTonemapping(const CustomRenderer::RenderParams& params);
-
-	void DebugRender(DebugVectorRenderer* vectorRenderer);
 	
 public:
 	Renderer(Allocator* allocator,
@@ -187,11 +187,13 @@ public:
 	void Initialize(Window* window, EntityManager* entityManager, EnvironmentManager* environmentManager);
 	void Deinitialize();
 
-	void SetLockCullingCamera(bool lockEnable) { lockCullingCamera = lockEnable; }
-	const Mat4x4f& GetCullingCameraTransform() { return lockCullingCameraTransform; }
+	void SetFullscreenViewportRectangle(const ViewRectangle& rectangle);
+	void SetLockCullingCamera(bool lockEnable);
+	const Mat4x4f& GetCullingCameraTransform() const;
 
-	// Render the specified scene to the active OpenGL context
 	void Render();
+
+	void DebugRender(DebugVectorRenderer* vectorRenderer);
 
 	virtual void NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms);
 

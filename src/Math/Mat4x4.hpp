@@ -3,6 +3,9 @@
 #include "Math/Vec4.hpp"
 #include "Math/Mat3x3.hpp"
 
+template <typename T>
+struct Vec2;
+
 struct alignas(16) Mat4x4f
 {
 	float m[16];
@@ -202,6 +205,8 @@ struct alignas(16) Mat4x4f
 
 		return result;
 	}
+
+	static Mat4x4f ScreenSpaceProjection(const Vec2<int>& screenSize);
 
 	static void MultiplyMany(unsigned int count, const Mat4x4f* a, const Mat4x4f* b, Mat4x4f* out);
 	static void MultiplyOneByMany(const Mat4x4f& a, unsigned int count, const Mat4x4f* b, Mat4x4f* out);

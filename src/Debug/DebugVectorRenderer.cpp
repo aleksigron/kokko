@@ -56,7 +56,7 @@ DebugVectorRenderer::~DebugVectorRenderer()
 }
 
 void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-	World* world, Window* window, CameraSystem* cameraSystem)
+	World* world, CameraSystem* cameraSystem)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -64,7 +64,6 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 	this->meshManager = meshManager;
 	this->shaderManager = shaderManager;
 	this->world = world;
-	this->window = window;
 
 	// Initialize shaders
 
@@ -440,7 +439,7 @@ void DebugVectorRenderer::DrawWireFrustum(const Mat4x4f& transform, const Projec
 	this->DrawLine(frustum.points[6], frustum.points[7], color);
 }
 
-void DebugVectorRenderer::Render()
+void DebugVectorRenderer::Render(const ViewRectangle& viewportRectangle)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -482,18 +481,26 @@ void DebugVectorRenderer::Render()
 		bool reverseDepth = false;
 
 		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
-		const ProjectionParameters& projectionParams = cameraSystem->GetProjectionParameters(cameraId);
+		ProjectionParameters projectionParams = cameraSystem->GetProjectionParameters(cameraId);
+		projectionParams.SetAspectRatio(viewportRectangle.size.x, viewportRectangle.size.y);
 
 		Mat4x4f proj = projectionParams.GetProjectionMatrix(reverseDepth);
 		Mat4x4f view = cameraTransform.GetInverse();
 		Mat4x4f viewProj = proj * view;
-		Mat4x4f screenProj = window->GetScreenSpaceProjectionMatrix();
+		Mat4x4f screenProj = Mat4x4f::ScreenSpaceProjection(viewportRectangle.size);
 
 		TransformUniformBlock objectUniforms;
 		MaterialBlock materialUniforms;
 
 		renderDevice->DepthTestDisable();
 		renderDevice->BlendingDisable();
+
+		RenderCommandData::ViewportData viewportCommand;
+		viewportCommand.x = viewportRectangle.position.x;
+		viewportCommand.y = viewportRectangle.position.y;
+		viewportCommand.w = viewportRectangle.size.x;
+		viewportCommand.h = viewportRectangle.size.y;
+		renderDevice->Viewport(&viewportCommand);
 
 		renderDevice->UseShaderProgram(shader.driverId);
 

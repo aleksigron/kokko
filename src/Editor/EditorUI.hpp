@@ -11,6 +11,8 @@ class ImGuiPlatformBackend;
 
 struct EditorViews;
 
+struct ViewRectangle;
+
 class EditorUI
 {
 private:
@@ -34,4 +36,6 @@ public:
 
 	void StartFrame();
 	void Render();
+
+	ViewRectangle GetWorldViewport();
 };

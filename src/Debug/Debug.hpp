@@ -19,6 +19,8 @@ class DebugConsole;
 class DebugLog;
 class DebugMemoryStats;
 
+struct ViewRectangle;
+
 class Debug
 {
 private:
@@ -61,7 +63,7 @@ public:
 		MeshManager* meshManager, ShaderManager* shaderManager, World* world);
 	void Deinitialize();
 	
-	void Render();
+	void Render(const ViewRectangle& viewportRectangle);
 
 	DebugLog* GetLog() { return log; }
 	DebugConsole* GetConsole() { return console; }

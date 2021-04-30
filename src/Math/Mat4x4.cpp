@@ -3,7 +3,25 @@
 #include <cstdint>
 #include <immintrin.h>
 
+#include "Math/Vec2.hpp"
+
 #define KOKKO_USE_SSE
+
+Mat4x4f Mat4x4f::ScreenSpaceProjection(const Vec2<int>& screenSize)
+{
+	const float far = 100.0f;
+	const float near = -100.0f;
+
+	Mat4x4f result;
+	result[0] = 2.0f / screenSize.x;
+	result[5] = 2.0f / -screenSize.y;
+	result[10] = -2.0f / (far - near);
+	result[12] = -1.0f;
+	result[13] = 1.0f;
+	result[14] = -(far + near) / (far - near);
+
+	return result;
+}
 
 void Mat4x4f::MultiplyMany(unsigned int count, const Mat4x4f* a, const Mat4x4f* b, Mat4x4f* out)
 {

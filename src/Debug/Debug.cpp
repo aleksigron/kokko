@@ -21,6 +21,8 @@
 
 #include "Graphics/World.hpp"
 
+#include "Math/Rectangle.hpp"
+
 #include "Rendering/Renderer.hpp"
 #include "Rendering/RenderDevice.hpp"
 
@@ -94,9 +96,21 @@ void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraS
 	this->window = window;
 
 	textRenderer->Initialize(shaderManager, meshManager);
-	vectorRenderer->Initialize(meshManager, shaderManager, world, window, cameraSystem);
+	vectorRenderer->Initialize(meshManager, shaderManager, world, cameraSystem);
+	culling->Initialize(renderer, world, cameraSystem);
+}
+
+void Debug::Deinitialize()
+{
+	vectorRenderer->Deinitialize();
+}
+
+void Debug::Render(const ViewRectangle& viewportRectangle)
+{
+	KOKKO_PROFILE_FUNCTION();
 
 	Vec2f frameSize = this->window->GetFrameBufferSize().As<float>();
+	Vec2f viewportSize = viewportRectangle.size.As<float>();
 	float screenCoordScale = this->window->GetScreenCoordinateScale();
 
 	textRenderer->SetFrameSize(frameSize);
@@ -128,18 +142,7 @@ void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraS
 	graphArea.size.y = frameSize.y - pixelLineHeight;
 	graph->SetDrawArea(graphArea);
 
-	culling->Initialize(renderer, world, cameraSystem);
 	culling->SetGuideTextPosition(Vec2f(0.0f, scaledLineHeight));
-}
-
-void Debug::Deinitialize()
-{
-	vectorRenderer->Deinitialize();
-}
-
-void Debug::Render()
-{
-	KOKKO_PROFILE_FUNCTION();
 
 	bool vsync = false;
 
@@ -225,7 +228,6 @@ void Debug::Render()
 	unsigned int errs = console->GetTotalErrorCount();
 	unsigned int wrns = console->GetTotalWarningCount();
 
-	const BitmapFont* font = textRenderer->GetFont();
 	int glyphWidth = font->GetGlyphWidth();
 	int lineHeight = font->GetLineHeight();
 
@@ -277,7 +279,7 @@ void Debug::Render()
 	if (mode == DebugMode::MemoryStats)
 		memoryStats->UpdateAndDraw();
 
-	vectorRenderer->Render();
+	vectorRenderer->Render(viewportRectangle);
 	textRenderer->Render();
 
 	ImGui::Begin("Performance stats");

@@ -209,9 +209,13 @@ void Engine::Update()
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	world.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
+	ViewRectangle viewport = editorUI.instance->GetWorldViewport();
+	renderer.instance->SetFullscreenViewportRectangle(viewport);
 	renderer.instance->Render();
 
-	debug.instance->Render();
+	renderer.instance->DebugRender(debug.instance->GetVectorRenderer());
+
+	debug.instance->Render(viewport);
 
 	editorUI.instance->Render();
 
