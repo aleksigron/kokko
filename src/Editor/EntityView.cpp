@@ -17,7 +17,7 @@
 
 const char* const EntityView::ComponentNames[] = {
 	"Scene object",
-	"Render object",
+	"Update object",
 	"Camera",
 	"Light"
 };
@@ -109,7 +109,7 @@ void EntityView::DrawEntityListButtons()
 			ComponentType component = ComponentType::Scene;
 			CreateEntity(&component, 1);
 		}
-		if (ImGui::Selectable("Render object"))
+		if (ImGui::Selectable("Update object"))
 		{
 			ComponentType components[] = { ComponentType::Scene, ComponentType::Render };
 			CreateEntity(components, sizeof(components) / sizeof(components[0]));
@@ -298,7 +298,7 @@ void EntityView::DrawRenderComponent()
 		ImVec4 warningColor(1.0f, 0.6f, 0.0f, 1.0f);
 
 		bool componentVisible = true;
-		if (ImGui::CollapsingHeader("Render object", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader("Update object", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			MeshId meshId = renderer->GetMeshId(renderObj);
 			const char* meshPath = nullptr;

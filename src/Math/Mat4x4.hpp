@@ -254,3 +254,9 @@ inline Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
 
 	return result;
 }
+
+struct Mat4x4fBijection
+{
+	Mat4x4f forward;
+	Mat4x4f inverse;
+};

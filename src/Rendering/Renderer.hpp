@@ -12,6 +12,7 @@
 #include "Math/Rectangle.hpp"
 #include "Math/Vec3.hpp"
 #include "Math/Vec2.hpp"
+#include "Math/Projection.hpp"
 
 #include "Resources/MeshData.hpp"
 #include "Resources/MaterialData.hpp"
@@ -138,7 +139,11 @@ private:
 
 	ViewRectangle fullscreenViewportRectangle;
 	bool lockCullingCamera;
-	Mat4x4f lockCullingCameraTransform;
+	Mat4x4fBijection lockCullingCameraTransform;
+
+	bool useEditorCamera;
+	Mat4x4fBijection editorCameraTransform;
+	ProjectionParameters editorCameraParameters;
 
 	RenderCommandList commandList;
 	Array<BitPack> objectVisibility;
@@ -158,6 +163,9 @@ private:
 
 	void UpdateLightingDataToUniformBuffer(
 		const ProjectionParameters& projection, LightingUniformBlock& uniformsOut);
+
+	Mat4x4fBijection GetCameraTransform();
+	ProjectionParameters GetCameraProjection();
 
 	// Returns the number of object draw commands added
 	unsigned int PopulateCommandList();
@@ -188,8 +196,12 @@ public:
 	void Deinitialize();
 
 	void SetFullscreenViewportRectangle(const ViewRectangle& rectangle);
+
 	void SetLockCullingCamera(bool lockEnable);
 	const Mat4x4f& GetCullingCameraTransform() const;
+
+	void SetUseEditorCamera(bool use);
+	void SetEditorCameraInfo(const Mat4x4fBijection& transform, const ProjectionParameters& projection);
 
 	void Render();
 

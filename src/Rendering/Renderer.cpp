@@ -123,6 +123,7 @@ Renderer::Renderer(
 	textureManager(textureManager),
 	environmentManager(nullptr),
 	lockCullingCamera(false),
+	useEditorCamera(false),
 	commandList(allocator),
 	objectVisibility(allocator),
 	lightResultArray(allocator),
@@ -842,9 +843,20 @@ void Renderer::SetLockCullingCamera(bool lockEnable)
 	lockCullingCamera = lockEnable;
 }
 
+void Renderer::SetUseEditorCamera(bool use)
+{
+	useEditorCamera = use;
+}
+
+void Renderer::SetEditorCameraInfo(const Mat4x4fBijection& transform, const ProjectionParameters& projection)
+{
+	editorCameraTransform = transform;
+	editorCameraParameters = projection;
+}
+
 const Mat4x4f& Renderer::GetCullingCameraTransform() const
 {
-	return lockCullingCameraTransform;
+	return lockCullingCameraTransform.forward;
 }
 
 void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params)
@@ -853,11 +865,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 
 	// Both SSAO and deferred lighting passes use these
 
-	World* world = params.world;
-	Entity renderCameraEntity = world->GetActiveCameraEntity();
-
-	CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
-	const ProjectionParameters& projParams = cameraSystem->GetProjectionParameters(renderCameraId);
+	ProjectionParameters projParams = GetCameraProjection();
 
 	const RendererFramebuffer& lightAccFramebuffer = framebufferData[FramebufferIndexLightAcc];
 	Vec2i framebufferSize(lightAccFramebuffer.width, lightAccFramebuffer.height);
@@ -1358,6 +1366,45 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 	return (Vec3f::Dot(objPos - eyePos, eyeForward) - minusNear) / farMinusNear;
 }
 
+Mat4x4fBijection Renderer::GetCameraTransform()
+{
+	if (useEditorCamera)
+	{
+		return editorCameraTransform;
+	}
+	else
+	{
+		Entity renderCameraEntity = world->GetActiveCameraEntity();
+
+		SceneObjectId cameraObject = world->Lookup(renderCameraEntity);
+
+		Mat4x4fBijection result;
+		result.forward = world->GetWorldTransform(cameraObject);
+		result.inverse = result.forward.GetInverse();
+
+		return result;
+	}
+}
+
+ProjectionParameters Renderer::GetCameraProjection()
+{
+	if (useEditorCamera)
+	{
+		return editorCameraParameters;
+	}
+	else
+	{
+		Entity renderCameraEntity = world->GetActiveCameraEntity();
+
+		CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
+
+		ProjectionParameters projectionParams = cameraSystem->GetProjectionParameters(renderCameraId);
+		projectionParams.SetAspectRatio(fullscreenViewportRectangle.size.x, fullscreenViewportRectangle.size.y);
+
+		return projectionParams;
+	}
+}
+
 unsigned int Renderer::PopulateCommandList()
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -1367,27 +1414,26 @@ unsigned int Renderer::PopulateCommandList()
 
 	// Get camera transforms
 
-	Entity renderCameraEntity = world->GetActiveCameraEntity();
+	Mat4x4fBijection cameraTransforms = GetCameraTransform();
+	ProjectionParameters projectionParams = GetCameraProjection();
 
-	CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
-	ProjectionParameters projectionParams = cameraSystem->GetProjectionParameters(renderCameraId);
-	projectionParams.SetAspectRatio(fullscreenViewportRectangle.size.x, fullscreenViewportRectangle.size.y);
+	Mat4x4fBijection cullingTransform;
+	
+	if (lockCullingCamera)
+		cullingTransform = lockCullingCameraTransform;
+	else
+	{
+		cullingTransform = cameraTransforms;
+		lockCullingCameraTransform = cameraTransforms;
+	}
 
-	SceneObjectId cameraObject = world->Lookup(renderCameraEntity);
-	Mat4x4f cameraTransform = world->GetWorldTransform(cameraObject);
-
-	Mat4x4f cullingCameraTransform = lockCullingCamera ? lockCullingCameraTransform : cameraTransform;
-
-	if (lockCullingCamera == false)
-		lockCullingCameraTransform = cullingCameraTransform;
-
-	Vec3f cameraPos = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+	Vec3f cameraPos = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 	int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
 	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 	Vec2i shadowCascadeSize(shadowSide, shadowSide);
 	Vec2i shadowTextureSize(shadowSide * shadowCascadeCount, shadowSide);
-	Mat4x4f cascadeViewTransforms[CascadedShadowMap::MaxCascadeCount];
+	Mat4x4fBijection cascadeViewTransforms[CascadedShadowMap::MaxCascadeCount];
 	ProjectionParameters lightProjections[CascadedShadowMap::MaxCascadeCount];
 
 	// Update skybox parameters
@@ -1430,7 +1476,7 @@ unsigned int Renderer::PopulateCommandList()
 			Mat3x3f orientation = lightManager->GetOrientation(id);
 			Vec3f lightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 
-			CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransform, projectionParams, cascadeViewTransforms, lightProjections);
+			CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransforms.forward, projectionParams, cascadeViewTransforms, lightProjections);
 
 			for (unsigned int cascade = 0; cascade < shadowCascadeCount; ++cascade)
 			{
@@ -1439,19 +1485,22 @@ unsigned int Renderer::PopulateCommandList()
 
 				bool reverseDepth = true;
 
+				const Mat4x4f& forwardTransform = cascadeViewTransforms[cascade].forward;
+				const Mat4x4f& inverseTransform = cascadeViewTransforms[cascade].inverse;
+
 				RenderViewport& vp = viewportData[vpIdx];
-				vp.position = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-				vp.forward = (cascadeViewTransforms[cascade] * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+				vp.position = (forwardTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+				vp.forward = (forwardTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 				vp.farMinusNear = lightProjections[cascade].orthographicFar - lightProjections[cascade].orthographicNear;
 				vp.minusNear = -lightProjections[cascade].orthographicNear;
 				vp.objectMinScreenSizePx = shadowViewportMinObjectSize;
-				vp.viewToWorld = cascadeViewTransforms[cascade];
-				vp.view = vp.viewToWorld.GetInverse();
+				vp.viewToWorld = forwardTransform;
+				vp.view = inverseTransform;
 				vp.projection = lightProjections[cascade].GetProjectionMatrix(reverseDepth);
 				vp.viewProjection = vp.projection * vp.view;
 				vp.viewportRectangle.size = shadowCascadeSize;
 				vp.viewportRectangle.position = Vec2i(cascade * shadowSide, 0);
-				vp.frustum.Update(lightProjections[cascade], cascadeViewTransforms[cascade]);
+				vp.frustum.Update(lightProjections[cascade], forwardTransform);
 				vp.framebufferIndex = FramebufferIndexShadow;
 
 				viewportUniforms.VP = vp.viewProjection;
@@ -1478,17 +1527,17 @@ unsigned int Renderer::PopulateCommandList()
 		const RendererFramebuffer& fb = framebufferData[FramebufferIndexGBuffer];
 
 		RenderViewport& vp = viewportData[vpIdx];
-		vp.position = (cameraTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-		vp.forward = (cameraTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+		vp.position = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+		vp.forward = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
 		vp.farMinusNear = projectionParams.perspectiveFar - projectionParams.perspectiveNear;
 		vp.minusNear = -projectionParams.perspectiveNear;
 		vp.objectMinScreenSizePx = mainViewportMinObjectSize;
-		vp.viewToWorld = cameraTransform;
-		vp.view = cameraTransform.GetInverse();
+		vp.viewToWorld = cameraTransforms.forward;
+		vp.view = cameraTransforms.inverse;
 		vp.projection = projectionParams.GetProjectionMatrix(reverseDepth);
 		vp.viewProjection = vp.projection * vp.view;
 		vp.viewportRectangle = fullscreenViewportRectangle;
-		vp.frustum.Update(projectionParams, cullingCameraTransform);
+		vp.frustum.Update(projectionParams, cullingTransform.forward);
 		vp.framebufferIndex = FramebufferIndexGBuffer;
 
 		viewportUniforms.VP = vp.viewProjection;

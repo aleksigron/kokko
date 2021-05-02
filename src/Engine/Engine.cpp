@@ -204,20 +204,32 @@ void Engine::Update()
 
 	scriptSystem.instance->UpdateScripts();
 
+	// Because editor can change the state of the world and systems,
+	// let's run those updates at the same part of the frame as other updates
+	editorUI.instance->Update();
+
+	Mat4x4fBijection editorCameraTransform = editorUI.instance->GetEditorCameraTransform();
+	ProjectionParameters editorCameraProjection = editorUI.instance->GetEditorCameraProjection();
+
 	// Propagate transform updates from Scene to other systems that require it
 	TransformUpdateReceiver* transformUpdateReceivers[] = { lightManager.instance, renderer.instance };
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	world.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
 	ViewRectangle viewport = editorUI.instance->GetWorldViewport();
+	editorCameraProjection.SetAspectRatio(viewport.size.x, viewport.size.y);
+
 	renderer.instance->SetFullscreenViewportRectangle(viewport);
+	renderer.instance->SetUseEditorCamera(true);
+	renderer.instance->SetEditorCameraInfo(editorCameraTransform, editorCameraProjection);
+
 	renderer.instance->Render();
 
 	renderer.instance->DebugRender(debug.instance->GetVectorRenderer());
 
 	debug.instance->Render(viewport);
 
-	editorUI.instance->Render();
+	editorUI.instance->EndFrame();
 
 	mainWindow.instance->UpdateInput();
 	mainWindow.instance->Swap();

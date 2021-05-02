@@ -24,7 +24,7 @@ void CalculateCascadeFrusta(
 	const Vec3f& lightDirection,
 	const Mat4x4f& cameraTransform,
 	const ProjectionParameters& projection,
-	Mat4x4f* transformsOut,
+	Mat4x4fBijection* transformsOut,
 	ProjectionParameters* projectionsOut)
 {
 	float splits[MaxCascadeCount];
@@ -122,8 +122,9 @@ void CalculateCascadeFrusta(
 		Vec3f offsetWs = (lightDirX * offsetShadowSpace.x + lightDirY * offsetShadowSpace.y) * radius;
 
 		// Because we don't return projection as a matrix, we have to add the offset to the view transform
-
-		transformsOut[cascIdx] = Mat4x4f::LookAt(from - offsetWs, sphereCenter - offsetWs, up);
+		Mat4x4f cascadeTransform = Mat4x4f::LookAt(from - offsetWs, sphereCenter - offsetWs, up);
+		transformsOut[cascIdx].forward = cascadeTransform;
+		transformsOut[cascIdx].inverse = cascadeTransform.GetInverse();
 		projectionsOut[cascIdx] = cascProj;
 	}
 }

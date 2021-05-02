@@ -8,6 +8,8 @@
 
 #include "Engine/Engine.hpp"
 
+#include "Graphics/World.hpp"
+
 #include "Math/Rectangle.hpp"
 
 #include "Memory/Allocator.hpp"
@@ -20,7 +22,8 @@
 EditorUI::EditorUI(Allocator* allocator) :
 	allocator(allocator),
 	renderBackend(nullptr),
-	platformBackend(nullptr)
+	platformBackend(nullptr),
+	world(nullptr)
 {
 	views = allocator->MakeNew<EditorViews>();
 }
@@ -37,6 +40,13 @@ void EditorUI::Initialize(Engine* engine)
 	renderBackend = allocator->MakeNew<ImGuiRenderBackend>();
 	platformBackend = allocator->MakeNew<ImGuiPlatformBackend>();
 
+	this->world = engine->GetWorld();
+
+	Window* window = engine->GetMainWindow();
+	InputManager* inputManager = window->GetInputManager();
+
+	editorCamera.SetInputManager(inputManager);
+
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -45,8 +55,7 @@ void EditorUI::Initialize(Engine* engine)
 
 	renderBackend->Initialize();
 
-	Window* window = engine->GetMainWindow();
-	platformBackend->Initialize(window->GetGlfwWindow(), window->GetInputManager()->GetImGuiInputView());
+	platformBackend->Initialize(window->GetGlfwWindow(), inputManager->GetImGuiInputView());
 
 	views->entityView.Initialize(engine);
 }
@@ -74,10 +83,54 @@ void EditorUI::StartFrame()
 	ImGui::NewFrame();
 }
 
-void EditorUI::Render()
+void EditorUI::Update()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	editorCamera.Update();
+
+	DrawMainMenuBar();
+
+	views->entityView.Draw();
+
+	ImGui::ShowDemoWindow();
+}
+
+void EditorUI::EndFrame()
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	ImGui::Render();
+	renderBackend->RenderDrawData(ImGui::GetDrawData());
+}
+
+ViewRectangle EditorUI::GetWorldViewport()
+{
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+	Vec2i pos = Vec2f(viewport->WorkPos.x, viewport->WorkPos.y).As<int>();
+	Vec2i size = Vec2f(viewport->WorkSize.x, viewport->WorkSize.y).As<int>();
+	Vec2i fullSize = Vec2f(viewport->Size.x, viewport->Size.y).As<int>();
+
+	ViewRectangle rect;
+	rect.position = fullSize - size - pos;
+	rect.size = size;
+
+	return rect;
+}
+
+Mat4x4fBijection EditorUI::GetEditorCameraTransform() const
+{
+	return editorCamera.GetCameraTransform();
+}
+
+ProjectionParameters EditorUI::GetEditorCameraProjection() const
+{
+	return editorCamera.GetProjectionParameters();
+}
+
+void EditorUI::DrawMainMenuBar()
+{
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -102,26 +155,4 @@ void EditorUI::Render()
 		}
 		ImGui::EndMainMenuBar();
 	}
-
-	views->entityView.Draw();
-
-	ImGui::ShowDemoWindow();
-
-	ImGui::Render();
-	renderBackend->RenderDrawData(ImGui::GetDrawData());
-}
-
-ViewRectangle EditorUI::GetWorldViewport()
-{
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-
-	Vec2i pos = Vec2f(viewport->WorkPos.x, viewport->WorkPos.y).As<int>();
-	Vec2i size = Vec2f(viewport->WorkSize.x, viewport->WorkSize.y).As<int>();
-	Vec2i fullSize = Vec2f(viewport->Size.x, viewport->Size.y).As<int>();
-
-	ViewRectangle rect;
-	rect.position = fullSize - size - pos;
-	rect.size = size;
-
-	return rect;
 }

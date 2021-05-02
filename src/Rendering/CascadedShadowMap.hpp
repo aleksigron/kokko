@@ -15,7 +15,7 @@ namespace CascadedShadowMap
 		const Vec3f& lightDirection,
 		const Mat4x4f& cameraTransform,
 		const ProjectionParameters& projection,
-		Mat4x4f* transformsOut,
+		Mat4x4fBijection* transformsOut,
 		ProjectionParameters* projectionsOut);
 
 	void CalculateSplitDepths(const ProjectionParameters& projection, float* depthsOut);
