@@ -38,10 +38,16 @@ public:
 	void Destroy(Entity e);
 
 	/*
-	Returned name is only valid until the
-	next call to GetDebugName, SetDebugName or ClearDebugName
+	* Will return nullptr if no debug name is set for the entity.
 	*/
 	const char* GetDebugName(Entity entity);
+
+	/*
+	* Will never return nullptr. If no debug name is set, a fallback
+	* name is generated, such as "Entity 1". The returned name is only valid
+	* until the next call to GetDebugNameWithFallback, SetDebugName or ClearDebugName.
+	*/
+	const char* GetDebugNameWithFallback(Entity entity);
 
 	void SetDebugName(Entity entity, const char* name);
 	void ClearDebugName(Entity entity);

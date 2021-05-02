@@ -91,6 +91,7 @@ public:
 	World& operator=(World&& other) = delete;
 
 	bool LoadFromFile(StringRef path);
+	bool WriteToFile(const char* path);
 
 	Color ambientColor;
 

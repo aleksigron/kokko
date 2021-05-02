@@ -13,6 +13,7 @@
 #include "Memory/Allocator.hpp"
 
 #include "Resources/LevelLoader.hpp"
+#include "Resources/LevelWriter.hpp"
 
 #include "System/File.hpp"
 
@@ -56,6 +57,12 @@ bool World::LoadFromFile(StringRef path)
 	}
 
 	return false;
+}
+
+bool World::WriteToFile(const char* path)
+{
+	LevelWriter writer(engine);
+	return writer.WriteToFile(path);
 }
 
 void World::Reallocate(unsigned int required)

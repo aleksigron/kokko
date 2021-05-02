@@ -52,6 +52,16 @@ const char* EntityManager::GetDebugName(Entity entity)
 	if (pair != nullptr)
 		return debugNames[pair->second].GetCStr();
 	else
+		return nullptr;
+}
+
+const char* EntityManager::GetDebugNameWithFallback(Entity entity)
+{
+	const char* setName = GetDebugName(entity);
+
+	if (setName != nullptr)
+		return setName;
+	else
 	{
 		std::snprintf(unnamedEntityBuffer, UnnamedEntityBufferLength, "Entity %u", entity.id);
 		return unnamedEntityBuffer;

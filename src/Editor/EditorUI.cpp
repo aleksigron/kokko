@@ -146,6 +146,7 @@ void EditorUI::DrawMainMenuBar()
 
 			if (ImGui::MenuItem("Save", "Ctrl+S"))
 			{
+				world->WriteToFile("res/scenes/yaml_test.level");
 			}
 
 			if (ImGui::MenuItem("Save As.."))

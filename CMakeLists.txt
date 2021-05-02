@@ -18,6 +18,7 @@ include_directories(
 	deps/glad/include
 	deps/stb_image/include
 	deps/imgui
+	deps/yaml-cpp/include
 )
 
 set (IMGUI_SOURCES
@@ -194,6 +195,8 @@ set (KOKKO_SOURCES
 	src/Resources/ImageData.hpp
 	src/Resources/LevelLoader.cpp
 	src/Resources/LevelLoader.hpp
+	src/Resources/LevelWriter.cpp
+	src/Resources/LevelWriter.hpp
 	src/Resources/MaterialManager.cpp
 	src/Resources/MaterialManager.hpp
 	src/Resources/MaterialData.hpp
@@ -213,6 +216,7 @@ set (KOKKO_SOURCES
 	src/Resources/TextureManager.hpp
 	src/Resources/ValueSerialization.cpp
 	src/Resources/ValueSerialization.hpp
+	src/Resources/YamlCustomTypes.hpp
 	src/Scripting/NativeScriptComponent.hpp
 	src/Scripting/ScriptContext.hpp
 	src/Scripting/ScriptSystem.cpp
@@ -246,8 +250,6 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})
 
 add_executable(${EXECUTABLE_NAME} ${DEPS_SOURCES} ${KOKKO_SOURCES})
 
-# Build GLFW with the project
-
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -260,9 +262,15 @@ set(KTX_FEATURE_TOOLS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(deps/ktx)
 
+set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(deps/yaml-cpp)
+
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${EXECUTABLE_NAME} ${IMGUI_LIB})
 target_link_libraries(${EXECUTABLE_NAME} glfw)
 target_link_libraries(${EXECUTABLE_NAME} ktx_read)
+target_link_libraries(${EXECUTABLE_NAME} yaml-cpp)
 target_link_libraries(${EXECUTABLE_NAME} OpenGL::GL)

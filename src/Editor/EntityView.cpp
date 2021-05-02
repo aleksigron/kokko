@@ -148,7 +148,7 @@ void EntityView::DrawEntityNode(Entity entity, SceneObjectId sceneObj)
 	if (entity == selectedEntity)
 		flags = flags | ImGuiTreeNodeFlags_Selected;
 
-	const char* entityName = entityManager->GetDebugName(entity);
+	const char* entityName = entityManager->GetDebugNameWithFallback(entity);
 	bool opened = ImGui::TreeNodeEx((void*)entity.id, flags, entityName);
 
 	if (entity == requestScrollToEntity)
@@ -187,7 +187,7 @@ void EntityView::DrawEntityProperties()
 
 		// Name
 
-		const char* entityName = entityManager->GetDebugName(selectedEntity);
+		const char* entityName = entityManager->GetDebugNameWithFallback(selectedEntity);
 		std::strncpy(textInputBuffer, entityName, TextInputBufferSize);
 		if (ImGui::InputText("Name", textInputBuffer, TextInputBufferSize))
 		{
@@ -298,7 +298,7 @@ void EntityView::DrawRenderComponent()
 		ImVec4 warningColor(1.0f, 0.6f, 0.0f, 1.0f);
 
 		bool componentVisible = true;
-		if (ImGui::CollapsingHeader("Update object", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader("Render object", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			MeshId meshId = renderer->GetMeshId(renderObj);
 			const char* meshPath = nullptr;
