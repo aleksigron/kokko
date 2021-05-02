@@ -2,6 +2,7 @@
 
 #include "Core/Array.hpp"
 
+#include "Resources/MeshData.hpp"
 #include "Resources/TextureId.hpp"
 
 class Allocator;
@@ -31,6 +32,8 @@ private:
 
 	Array<EnvironmentTextures> environmentMaps;
 
+	EnvironmentTextures emptyEnvironmentMap;
+
 	size_t viewportBlockStride;
 	size_t specularBlockStride;
 
@@ -38,6 +41,9 @@ private:
 	unsigned int viewportUniformBufferId;
 	unsigned int specularUniformBufferId;
 	unsigned int samplerId;
+	MeshId cubeMeshId;
+
+	void LoadEmptyEnvironmentMap();
 
 public:
 	EnvironmentManager(Allocator* allocator, RenderDevice* renderDevice,
@@ -55,4 +61,5 @@ public:
 	int LoadHdrEnvironmentMap(const char* equirectMapPath);
 
 	EnvironmentTextures GetEnvironmentMap(int environmentId) const { return environmentMaps[environmentId]; }
+	EnvironmentTextures GetEmptyEnvironmentMap() const { return emptyEnvironmentMap; }
 };

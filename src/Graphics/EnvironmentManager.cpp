@@ -53,12 +53,14 @@ EnvironmentManager::EnvironmentManager(
 	meshManager(meshManager),
 	textureManager(textureManager),
 	environmentMaps(allocator),
+	emptyEnvironmentMap{ TextureId::Null, TextureId::Null, TextureId::Null },
 	viewportBlockStride(0),
 	specularBlockStride(0),
 	framebufferId(0),
 	viewportUniformBufferId(0),
 	specularUniformBufferId(0),
-	samplerId(0)
+	samplerId(0),
+	cubeMeshId(MeshId::Null)
 {
 }
 
@@ -70,6 +72,11 @@ EnvironmentManager::~EnvironmentManager()
 void EnvironmentManager::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	// Create cube mesh
+
+	cubeMeshId = meshManager->CreateMesh();
+	MeshPresets::UploadCube(meshManager, cubeMeshId);
 
 	// Create framebuffer
 
@@ -155,6 +162,7 @@ void EnvironmentManager::Initialize()
 	};
 	renderDevice->SetSamplerParameters(&samplerParams);
 
+	LoadEmptyEnvironmentMap();
 }
 
 void EnvironmentManager::Deinitialize()
@@ -181,6 +189,12 @@ void EnvironmentManager::Deinitialize()
 	{
 		renderDevice->DestroyFramebuffers(1, &framebufferId);
 		framebufferId = 0;
+	}
+
+	if (cubeMeshId != MeshId::Null)
+	{
+		meshManager->RemoveMesh(cubeMeshId);
+		cubeMeshId = MeshId::Null;
 	}
 }
 
@@ -278,13 +292,11 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	textureManager->AllocateTextureStorage(envMapTextureId, RenderTextureTarget::TextureCubeMap, sizedFormat, 1, envMapSize);
 	const TextureData& envMapTexture = textureManager->GetTextureData(envMapTextureId);
 
+	renderDevice->BlendingDisable();
+	renderDevice->ScissorTestDisable();
 	renderDevice->BindSampler(0, samplerId);
 
-	// Load cube mesh
-
-	MeshId cubeMesh = meshManager->CreateMesh();
-	MeshPresets::UploadCube(meshManager, cubeMesh);
-	const MeshDrawData* cubeMeshDraw = meshManager->GetDrawData(cubeMesh);
+	const MeshDrawData* cubeMeshDraw = meshManager->GetDrawData(cubeMeshId);
 
 	// Load shader
 
@@ -419,4 +431,76 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	environmentMaps.PushBack(EnvironmentTextures{ envMapTextureId, diffuseMapTextureId, specMapTextureId });
 
 	return static_cast<int>(envIndex);
+}
+
+void EnvironmentManager::LoadEmptyEnvironmentMap()
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	static const int EmptyTextureSize = 1 << SpecularMipmapLevelCount;
+	static const unsigned char EmptyTextureBytes[EmptyTextureSize * EmptyTextureSize * 3] = { 0 };
+
+	RenderTextureSizedFormat sizedFormat = RenderTextureSizedFormat::RGB8;
+
+	// Create environment texture
+
+	Vec2i envMapSize(EmptyTextureSize, EmptyTextureSize);
+	TextureId envMapTextureId = textureManager->CreateTexture();
+	textureManager->AllocateTextureStorage(envMapTextureId, RenderTextureTarget::TextureCubeMap, sizedFormat, 1, envMapSize);
+	const TextureData& envMapTexture = textureManager->GetTextureData(envMapTextureId);
+	renderDevice->BindTexture(RenderTextureTarget::TextureCubeMap, envMapTexture.textureObjectId);
+
+	for (unsigned int i = 0; i < CubemapSideCount; ++i)
+	{
+		RenderTextureTarget target = GetCubeTextureTarget(i);
+		RenderCommandData::SetTextureSubImage2D subImageCommand{
+			target, 0, 0, 0, EmptyTextureSize, EmptyTextureSize,
+			RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, EmptyTextureBytes
+		};
+		renderDevice->SetTextureSubImage2D(&subImageCommand);
+	}
+
+	// Create diffuse irradiance texture
+
+	Vec2i diffuseMapSize(EmptyTextureSize, EmptyTextureSize);
+	TextureId diffuseMapTextureId = textureManager->CreateTexture();
+	textureManager->AllocateTextureStorage(diffuseMapTextureId, RenderTextureTarget::TextureCubeMap, sizedFormat, 1, diffuseMapSize);
+	const TextureData& diffuseMapTexture = textureManager->GetTextureData(diffuseMapTextureId);
+	renderDevice->BindTexture(RenderTextureTarget::TextureCubeMap, diffuseMapTexture.textureObjectId);
+
+	for (unsigned int i = 0; i < CubemapSideCount; ++i)
+	{
+		RenderTextureTarget target = GetCubeTextureTarget(i);
+		RenderCommandData::SetTextureSubImage2D subImageCommand{
+			target, 0, 0, 0, EmptyTextureSize, EmptyTextureSize,
+			RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, EmptyTextureBytes
+		};
+		renderDevice->SetTextureSubImage2D(&subImageCommand);
+	}
+
+	// Create specular irradiance texture
+
+	Vec2i specMapSize(EmptyTextureSize, EmptyTextureSize);
+	TextureId specMapTextureId = textureManager->CreateTexture();
+	textureManager->AllocateTextureStorage(specMapTextureId, RenderTextureTarget::TextureCubeMap,
+		sizedFormat, SpecularMipmapLevelCount, specMapSize);
+	const TextureData& specMapTexture = textureManager->GetTextureData(specMapTextureId);
+	renderDevice->BindTexture(RenderTextureTarget::TextureCubeMap, specMapTexture.textureObjectId);
+
+	for (unsigned int mip = 0; mip < SpecularMipmapLevelCount; ++mip)
+	{
+		int mipSize = EmptyTextureSize >> mip;
+
+		for (unsigned int i = 0; i < CubemapSideCount; ++i)
+		{
+			RenderTextureTarget target = GetCubeTextureTarget(i);
+			RenderCommandData::SetTextureSubImage2D subImageCommand{
+				target, mip, 0, 0, mipSize, mipSize,
+				RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, EmptyTextureBytes
+			};
+			renderDevice->SetTextureSubImage2D(&subImageCommand);
+		}
+	}
+
+	emptyEnvironmentMap = EnvironmentTextures{ envMapTextureId, diffuseMapTextureId, specMapTextureId };
 }

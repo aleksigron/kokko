@@ -141,6 +141,7 @@ void EditorUI::DrawMainMenuBar()
 
 			if (ImGui::MenuItem("Open", "Ctrl+O"))
 			{
+				world->LoadFromFile(StringRef("res/scenes/test.scene.json"));
 			}
 
 			if (ImGui::MenuItem("Save", "Ctrl+S"))

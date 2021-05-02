@@ -883,7 +883,13 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	ssaoRenderParams.projection = projParams;
 	ssao->Render(ssaoRenderParams);
 
-	EnvironmentTextures envMap = environmentManager->GetEnvironmentMap(world->GetEnvironmentId());
+	EnvironmentTextures envMap;
+	int environmentId = world->GetEnvironmentId();
+	if (environmentId >= 0)
+		envMap = environmentManager->GetEnvironmentMap(environmentId);
+	else
+		envMap = environmentManager->GetEmptyEnvironmentMap();
+
 	const TextureData& diffIrrTexture = textureManager->GetTextureData(envMap.diffuseIrradianceTexture);
 	const TextureData& specIrrTexture = textureManager->GetTextureData(envMap.specularIrradianceTexture);
 
@@ -1438,7 +1444,13 @@ unsigned int Renderer::PopulateCommandList()
 
 	// Update skybox parameters
 	{
-		EnvironmentTextures envMap = environmentManager->GetEnvironmentMap(world->GetEnvironmentId());
+		EnvironmentTextures envMap;
+		int environmentId = world->GetEnvironmentId();
+		if (environmentId >= 0)
+			envMap = environmentManager->GetEnvironmentMap(environmentId);
+		else
+			envMap = environmentManager->GetEmptyEnvironmentMap();
+
 		const TextureData& envTexture = textureManager->GetTextureData(envMap.environmentTexture);
 
 		MaterialData& skyboxMaterial = materialManager->GetMaterialData(skyboxMaterialId);
