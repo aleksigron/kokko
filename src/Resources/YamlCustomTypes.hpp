@@ -33,8 +33,4 @@ struct convert<Vec3<float>>
 };
 }
 
-YAML::Emitter& operator<<(YAML::Emitter& out, const Vec3f& v)
-{
-    out << YAML::Flow << YAML::BeginSeq << v.x << v.y << v.y << YAML::EndSeq;
-    return out;
-}
+YAML::Emitter& operator<<(YAML::Emitter& out, const Vec3f& v);

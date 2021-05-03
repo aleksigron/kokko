@@ -43,12 +43,27 @@ bool World::LoadFromFile(StringRef path)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	unsigned int sceneId = 0;
-
 	Buffer<char> sceneConfig(allocator);
 	String pathStr(allocator, path);
 
 	if (File::ReadText(pathStr.GetCStr(), sceneConfig))
+	{
+		LevelLoader loader(engine);
+		loader.LoadJson(sceneConfig.GetRef());
+
+		return true;
+	}
+
+	return false;
+}
+
+bool World::LoadFromFile(const char* path)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	Buffer<char> sceneConfig(allocator);
+
+	if (File::ReadText(path, sceneConfig))
 	{
 		LevelLoader loader(engine);
 		loader.Load(sceneConfig.GetRef());
@@ -58,7 +73,6 @@ bool World::LoadFromFile(StringRef path)
 
 	return false;
 }
-
 bool World::WriteToFile(const char* path)
 {
 	LevelWriter writer(engine);

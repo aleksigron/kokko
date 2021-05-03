@@ -239,6 +239,10 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	static const int SpecularTextureSize = 256;
 	static const int DiffuseTextureSize = 32;
 
+	for (unsigned int i = 0; i < environmentMaps.GetCount(); ++i)
+		if (environmentMaps[i].sourcePath == equirectMapPath)
+			return i;
+
 	RenderTextureSizedFormat sizedFormat = RenderTextureSizedFormat::RGB16F;
 
 	// Load equirectangular image and create texture
@@ -428,9 +432,27 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	renderDevice->BindSampler(0, 0);
 
 	unsigned int envIndex = environmentMaps.GetCount();
-	environmentMaps.PushBack(EnvironmentTextures{ envMapTextureId, diffuseMapTextureId, specMapTextureId });
+	
+	Environment& environment = environmentMaps.PushBack();
+
+	environment.sourcePath.SetAllocator(allocator);
+	environment.sourcePath.Append(equirectMapPath);
+
+	environment.textures.environmentTexture = envMapTextureId;
+	environment.textures.diffuseIrradianceTexture = diffuseMapTextureId;
+	environment.textures.specularIrradianceTexture = specMapTextureId;
 
 	return static_cast<int>(envIndex);
+}
+
+EnvironmentTextures EnvironmentManager::GetEnvironmentMap(int environmentId) const
+{
+	return environmentMaps[environmentId].textures;
+}
+
+EnvironmentTextures EnvironmentManager::GetEmptyEnvironmentMap() const
+{
+	return emptyEnvironmentMap;
 }
 
 void EnvironmentManager::LoadEmptyEnvironmentMap()

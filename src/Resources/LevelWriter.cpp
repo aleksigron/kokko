@@ -18,6 +18,8 @@
 #include "Resources/MeshManager.hpp"
 #include "Resources/YamlCustomTypes.hpp"
 
+static const char* const ComponentTypeKey = "component_type";
+
 LevelWriter::LevelWriter(Engine* engine) :
 	entityManager(engine->GetEntityManager()),
 	world(engine->GetWorld()),
@@ -38,8 +40,10 @@ bool LevelWriter::WriteToFile(const char* filePath)
 		return false;
 
 	YAML::Emitter out(outStream);
+
 	out << YAML::BeginMap;
 	out << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
+
 	for (Entity entity : *entityManager)
 	{
 		SceneObjectId sceneObj = world->Lookup(entity);
@@ -48,7 +52,6 @@ bool LevelWriter::WriteToFile(const char* filePath)
 	}
 
 	out << YAML::EndSeq; // objects
-
 	out << YAML::EndMap;
 
 	return true;
@@ -60,12 +63,16 @@ void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId s
 
 	const char* name = entityManager->GetDebugName(entity);
 	if (name != nullptr)
-		out << YAML::Key << "debug_name" << YAML::Value << name;
+		out << YAML::Key << "entity_name" << YAML::Value << name;
+
+	out << YAML::Key << "components" << YAML::Value << YAML::BeginSeq;
 
 	WriteTransformComponent(out, entity, sceneObj);
 	WriteRenderComponent(out, entity);
 	WriteLightComponent(out, entity);
 	WriteCameraComponent(out, entity);
+
+	out << YAML::EndSeq; // components
 
 	SceneObjectId firstChild = world->GetFirstChild(sceneObj);
 	if (firstChild != SceneObjectId::Null)
@@ -91,7 +98,9 @@ void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId s
 void LevelWriter::WriteTransformComponent(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
 {
 	const SceneEditTransform& transform = world->GetEditTransform(sceneObj);
-	out << YAML::Key << "transform_component" << YAML::Value << YAML::BeginMap;
+
+	out << YAML::BeginMap;
+	out << YAML::Key << ComponentTypeKey << YAML::Value << "transform";
 	out << YAML::Key << "position" << YAML::Value << transform.translation;
 	out << YAML::Key << "rotation" << YAML::Value << transform.rotation;
 	out << YAML::Key << "scale" << YAML::Value << transform.scale;
@@ -113,7 +122,8 @@ void LevelWriter::WriteRenderComponent(YAML::Emitter& out, Entity entity)
 		// We can't reference resources that have been created at runtime
 		if (meshPath != nullptr && materialPath != nullptr)
 		{
-			out << YAML::Key << "render_component" << YAML::Value << YAML::BeginMap;
+			out << YAML::BeginMap;
+			out << YAML::Key << ComponentTypeKey << YAML::Value << "render";
 			out << YAML::Key << "mesh" << YAML::Value << meshPath;
 			out << YAML::Key << "material" << YAML::Value << materialPath;
 			out << YAML::EndMap;
@@ -126,7 +136,8 @@ void LevelWriter::WriteLightComponent(YAML::Emitter& out, Entity entity)
 	LightId lightId = lightManager->Lookup(entity);
 	if (lightId != LightId::Null)
 	{
-		out << YAML::Key << "light_component" << YAML::Value << YAML::BeginMap;
+		out << YAML::BeginMap;
+		out << YAML::Key << ComponentTypeKey << YAML::Value << "light";
 
 		LightType lightType = lightManager->GetLightType(lightId);
 		out << YAML::Key << "type" << YAML::Value << LightManager::GetLightTypeName(lightType);
@@ -158,7 +169,8 @@ void LevelWriter::WriteCameraComponent(YAML::Emitter& out, Entity entity)
 	CameraId cameraId = cameraSystem->Lookup(entity);
 	if (cameraId != CameraId::Null)
 	{
-		out << YAML::Key << "camera_component" << YAML::Value << YAML::BeginMap;
+		out << YAML::BeginMap;
+		out << YAML::Key << ComponentTypeKey << YAML::Value << "camera";
 
 		ProjectionParameters params = cameraSystem->GetProjectionParameters(cameraId);
 

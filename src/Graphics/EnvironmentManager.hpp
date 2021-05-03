@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Array.hpp"
+#include "Core/String.hpp"
 
 #include "Resources/MeshData.hpp"
 #include "Resources/TextureId.hpp"
@@ -21,6 +22,12 @@ struct EnvironmentTextures
 class EnvironmentManager
 {
 private:
+	struct Environment
+	{
+		String sourcePath;
+		EnvironmentTextures textures;
+	};
+
 	static const size_t CubemapSideCount = 6;
 	static const size_t SpecularMipmapLevelCount = 6;
 
@@ -30,7 +37,7 @@ private:
 	MeshManager* meshManager;
 	TextureManager* textureManager;
 
-	Array<EnvironmentTextures> environmentMaps;
+	Array<Environment> environmentMaps;
 
 	EnvironmentTextures emptyEnvironmentMap;
 
@@ -60,6 +67,6 @@ public:
 
 	int LoadHdrEnvironmentMap(const char* equirectMapPath);
 
-	EnvironmentTextures GetEnvironmentMap(int environmentId) const { return environmentMaps[environmentId]; }
-	EnvironmentTextures GetEmptyEnvironmentMap() const { return emptyEnvironmentMap; }
+	EnvironmentTextures GetEnvironmentMap(int environmentId) const;
+	EnvironmentTextures GetEmptyEnvironmentMap() const;
 };
