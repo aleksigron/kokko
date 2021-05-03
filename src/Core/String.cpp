@@ -305,3 +305,42 @@ String operator+(const char* lhs, const String& rhs)
 	// Call with reversed arguments
 	return operator+(rhs, StringRef(lhs));
 }
+
+bool operator==(const String& lhs, const String& rhs)
+{
+	if (lhs.GetLength() == rhs.GetLength())
+		for (unsigned int i = 0, len = lhs.GetLength(); i < len; ++i)
+			if (lhs[i] != rhs[i])
+				return false;
+
+	return true;
+}
+
+bool operator==(const String& lhs, const char* rhs)
+{
+	for (unsigned int i = 0, len = lhs.GetLength(); i < len; ++i)
+		if (lhs[i] != rhs[i] || lhs[i] == '\0')
+			return false;
+
+	return true;
+}
+
+bool operator==(const char* lhs, const String& rhs)
+{
+	return operator==(rhs, lhs); // Swap arguments
+}
+
+bool operator!=(const String& lhs, const String& rhs)
+{
+	return operator==(lhs, rhs) == false;
+}
+
+bool operator!=(const String& lhs, const char* rhs)
+{
+	return operator==(lhs, rhs) == false;
+}
+
+bool operator!=(const char* lhs, const String& rhs)
+{
+	return operator==(lhs, rhs) == false;
+}
