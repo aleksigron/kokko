@@ -10,6 +10,8 @@
 #include "Math/Intersect3D.hpp"
 
 const LightId LightId::Null = LightId{ 0 };
+const char* LightManager::LightTypeNames[] = { "directional", "point", "spot" };
+const char* LightManager::LightTypeDisplayNames[] = { "Directional", "Point", "Spot" };
 
 LightManager::LightManager(Allocator* allocator) :
 	allocator(allocator),
@@ -25,6 +27,18 @@ LightManager::LightManager(Allocator* allocator) :
 LightManager::~LightManager()
 {
 	allocator->Deallocate(data.buffer);
+}
+
+const char* LightManager::GetLightTypeName(LightType type)
+{
+	size_t index = static_cast<size_t>(type);
+	return LightTypeNames[index];
+}
+
+const char* LightManager::GetLightTypeDisplayName(LightType type)
+{
+	size_t index = static_cast<size_t>(type);
+	return LightTypeDisplayNames[index];
 }
 
 void LightManager::Reallocate(unsigned int required)

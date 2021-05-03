@@ -41,6 +41,10 @@ private:
 	}
 	data;
 
+	static const size_t LightTypeCount = 3;
+	static const char* LightTypeNames[LightTypeCount];
+	static const char* LightTypeDisplayNames[LightTypeCount];
+
 	void Reallocate(unsigned int required);
 
 	static float CalculateDefaultRadius(Vec3f color);
@@ -48,6 +52,9 @@ private:
 public:
 	LightManager(Allocator* allocator);
 	~LightManager();
+
+	static const char* GetLightTypeName(LightType type);
+	static const char* GetLightTypeDisplayName(LightType type);
 
 	virtual void NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms);
 

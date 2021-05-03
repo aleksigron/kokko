@@ -3,6 +3,8 @@
 #include <cassert>
 
 const CameraId CameraId::Null = CameraId{ 0 };
+const char* CameraSystem::ProjectionTypeNames[] = { "perspective", "orthographic" };
+const char* CameraSystem::ProjectionTypeDisplayNames[] = { "Perspective", "Orthographic" };
 
 CameraSystem::CameraSystem(Allocator* allocator) :
 	cameraData(allocator),
@@ -16,6 +18,18 @@ CameraSystem::CameraSystem(Allocator* allocator) :
 
 CameraSystem::~CameraSystem()
 {
+}
+
+const char* CameraSystem::GetProjectionTypeName(ProjectionType type)
+{
+	size_t index = static_cast<size_t>(type);
+	return ProjectionTypeNames[index];
+}
+
+const char* CameraSystem::GetProjectionTypeDisplayName(ProjectionType type)
+{
+	size_t index = static_cast<size_t>(type);
+	return ProjectionTypeDisplayNames[index];
 }
 
 CameraId CameraSystem::Lookup(Entity e)

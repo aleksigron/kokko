@@ -109,7 +109,7 @@ void EntityView::DrawEntityListButtons()
 			ComponentType component = ComponentType::Scene;
 			CreateEntity(&component, 1);
 		}
-		if (ImGui::Selectable("Update object"))
+		if (ImGui::Selectable("Render object"))
 		{
 			ComponentType components[] = { ComponentType::Scene, ComponentType::Render };
 			CreateEntity(components, sizeof(components) / sizeof(components[0]));
@@ -396,17 +396,16 @@ void EntityView::DrawCameraComponent()
 		bool componentVisible = true;
 		if (ImGui::CollapsingHeader("Camera", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			static const char* projectionNames[] = { "Perspective", "Orthographic" };
-
 			bool edited = false;
 			ProjectionParameters params = cameraSystem->GetProjectionParameters(cameraId);
 
-			if (ImGui::BeginCombo("Projection", projectionNames[static_cast<int>(params.projection)]))
+			if (ImGui::BeginCombo("Projection", CameraSystem::GetProjectionTypeDisplayName(params.projection)))
 			{
 				for (int i = 0; i < 2; ++i)
 				{
-					bool isSelected = params.projection == static_cast<ProjectionType>(i);
-					if (ImGui::Selectable(projectionNames[i], &isSelected))
+					ProjectionType typeItr = static_cast<ProjectionType>(i);
+					bool isSelected = (params.projection == typeItr);
+					if (ImGui::Selectable(CameraSystem::GetProjectionTypeDisplayName(typeItr), &isSelected))
 					{
 						params.projection = static_cast<ProjectionType>(i);
 						edited = true;
@@ -466,13 +465,13 @@ void EntityView::DrawLightComponent()
 			bool edited = false;
 			LightType lightType = lightManager->GetLightType(lightId);
 
-			static const char* typeNames[] = { "Directional", "Point", "Spot" };
-			if (ImGui::BeginCombo("Type", typeNames[static_cast<int>(lightType)]))
+			if (ImGui::BeginCombo("Type", LightManager::GetLightTypeDisplayName(lightType)))
 			{
 				for (int i = 0; i < 3; ++i)
 				{
-					bool isSelected = lightType == static_cast<LightType>(i);
-					if (ImGui::Selectable(typeNames[i], &isSelected))
+					LightType typeItr = static_cast<LightType>(i);
+					bool isSelected = (lightType == typeItr);
+					if (ImGui::Selectable(LightManager::GetLightTypeDisplayName(typeItr), &isSelected))
 					{
 						lightType = static_cast<LightType>(i);
 						lightManager->SetLightType(lightId, lightType);

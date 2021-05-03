@@ -10,6 +10,8 @@
 
 #include "Graphics/World.hpp"
 
+#include "Rendering/CameraSystem.hpp"
+#include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 
 #include "Resources/MaterialManager.hpp"
@@ -17,12 +19,13 @@
 #include "Resources/YamlCustomTypes.hpp"
 
 LevelWriter::LevelWriter(Engine* engine) :
+	entityManager(engine->GetEntityManager()),
 	world(engine->GetWorld()),
 	renderer(engine->GetRenderer()),
+	lightManager(engine->GetLightManager()),
+	cameraSystem(engine->GetCameraSystem()),
 	meshManager(engine->GetMeshManager()),
 	materialManager(engine->GetMaterialManager()),
-	entityManager(engine->GetEntityManager()),
-	lightManager(engine->GetLightManager()),
 	environmentManager(engine->GetEnvironmentManager())
 {
 }
@@ -41,7 +44,7 @@ bool LevelWriter::WriteToFile(const char* filePath)
 	{
 		SceneObjectId sceneObj = world->Lookup(entity);
 		if (sceneObj != SceneObjectId::Null && world->GetParent(sceneObj) == SceneObjectId::Null)
-			SerializeEntity(out, entity, sceneObj);
+			WriteEntity(out, entity, sceneObj);
 	}
 
 	out << YAML::EndSeq; // objects
@@ -51,7 +54,7 @@ bool LevelWriter::WriteToFile(const char* filePath)
 	return true;
 }
 
-void LevelWriter::SerializeEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
+void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
 {
 	out << YAML::BeginMap;
 
@@ -59,13 +62,44 @@ void LevelWriter::SerializeEntity(YAML::Emitter& out, Entity entity, SceneObject
 	if (name != nullptr)
 		out << YAML::Key << "debug_name" << YAML::Value << name;
 
+	WriteTransformComponent(out, entity, sceneObj);
+	WriteRenderComponent(out, entity);
+	WriteLightComponent(out, entity);
+	WriteCameraComponent(out, entity);
+
+	SceneObjectId firstChild = world->GetFirstChild(sceneObj);
+	if (firstChild != SceneObjectId::Null)
+	{
+		out << YAML::Key << "children" << YAML::Value << YAML::BeginSeq;
+
+		SceneObjectId child = firstChild;
+		while (child != SceneObjectId::Null)
+		{
+			Entity childEntity = world->GetEntity(child);
+
+			WriteEntity(out, childEntity, child);
+
+			child = world->GetNextSibling(child);
+		}
+
+		out << YAML::EndSeq;
+	}
+
+	out << YAML::EndMap;
+}
+
+void LevelWriter::WriteTransformComponent(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
+{
 	const SceneEditTransform& transform = world->GetEditTransform(sceneObj);
 	out << YAML::Key << "transform_component" << YAML::Value << YAML::BeginMap;
 	out << YAML::Key << "position" << YAML::Value << transform.translation;
 	out << YAML::Key << "rotation" << YAML::Value << transform.rotation;
 	out << YAML::Key << "scale" << YAML::Value << transform.scale;
-	out << YAML::EndMap; // transform_component
+	out << YAML::EndMap;
+}
 
+void LevelWriter::WriteRenderComponent(YAML::Emitter& out, Entity entity)
+{
 	RenderObjectId renderObj = renderer->Lookup(entity);
 	if (renderObj != RenderObjectId::Null)
 	{
@@ -82,28 +116,67 @@ void LevelWriter::SerializeEntity(YAML::Emitter& out, Entity entity, SceneObject
 			out << YAML::Key << "render_component" << YAML::Value << YAML::BeginMap;
 			out << YAML::Key << "mesh" << YAML::Value << meshPath;
 			out << YAML::Key << "material" << YAML::Value << materialPath;
-			out << YAML::EndMap; // render_component
+			out << YAML::EndMap;
 		}
 	}
+}
 
-	SceneObjectId firstChild = world->GetFirstChild(sceneObj);
-	if (firstChild != SceneObjectId::Null)
+void LevelWriter::WriteLightComponent(YAML::Emitter& out, Entity entity)
+{
+	LightId lightId = lightManager->Lookup(entity);
+	if (lightId != LightId::Null)
 	{
-		SceneObjectId child = firstChild;
+		out << YAML::Key << "light_component" << YAML::Value << YAML::BeginMap;
 
-		out << YAML::Key << "children" << YAML::Value << YAML::BeginSeq;
+		LightType lightType = lightManager->GetLightType(lightId);
+		out << YAML::Key << "type" << YAML::Value << LightManager::GetLightTypeName(lightType);
 
-		while (child != SceneObjectId::Null)
+		Vec3f lightColor = lightManager->GetColor(lightId);
+		out << YAML::Key << "color" << YAML::Value << lightColor;
+
+		if (lightType != LightType::Directional)
 		{
-			Entity childEntity = world->GetEntity(child);
-
-			SerializeEntity(out, childEntity, child);
-
-			child = world->GetNextSibling(child);
+			float radius = lightManager->GetRadius(lightId);
+			out << YAML::Key << "radius" << YAML::Value << radius;
 		}
 
-		out << YAML::EndSeq;
-	}
+		if (lightType == LightType::Spot)
+		{
+			float spotAngle = lightManager->GetSpotAngle(lightId);
+			out << YAML::Key << "spot_angle" << YAML::Value << spotAngle;
+		}
 
-	out << YAML::EndMap;
+		bool shadowCasting = lightManager->GetShadowCasting(lightId);
+		out << YAML::Key << "cast_shadow" << YAML::Value << shadowCasting;
+
+		out << YAML::EndMap;
+	}
+}
+
+void LevelWriter::WriteCameraComponent(YAML::Emitter& out, Entity entity)
+{
+	CameraId cameraId = cameraSystem->Lookup(entity);
+	if (cameraId != CameraId::Null)
+	{
+		out << YAML::Key << "camera_component" << YAML::Value << YAML::BeginMap;
+
+		ProjectionParameters params = cameraSystem->GetProjectionParameters(cameraId);
+
+		out << YAML::Key << "projection_type" << YAML::Value << CameraSystem::GetProjectionTypeName(params.projection);
+
+		if (params.projection == ProjectionType::Perspective)
+		{
+			out << YAML::Key << "field_of_view" << YAML::Value << params.perspectiveFieldOfView;
+			out << YAML::Key << "near" << YAML::Value << params.perspectiveNear;
+			out << YAML::Key << "far" << YAML::Value << params.perspectiveFar;
+		}
+		else
+		{
+			out << YAML::Key << "orthographic_height" << YAML::Value << params.orthographicHeight;
+			out << YAML::Key << "near" << YAML::Value << params.orthographicNear;
+			out << YAML::Key << "far" << YAML::Value << params.orthographicFar;
+		}
+
+		out << YAML::EndMap;
+	}
 }

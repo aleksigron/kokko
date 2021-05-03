@@ -23,9 +23,16 @@ private:
 	Array<CameraData> cameraData;
 	HashMap<unsigned int, CameraId> entityMap;
 
+	static const size_t ProjectionTypeCount = 2;
+	static const char* ProjectionTypeNames[ProjectionTypeCount];
+	static const char* ProjectionTypeDisplayNames[ProjectionTypeCount];
+
 public:
 	CameraSystem(Allocator* allocator);
 	~CameraSystem();
+
+	static const char* GetProjectionTypeName(ProjectionType type);
+	static const char* GetProjectionTypeDisplayName(ProjectionType type);
 
 	CameraId Lookup(Entity e);
 
