@@ -8,6 +8,7 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/World.hpp"
 
 #include "Rendering/CameraSystem.hpp"
@@ -42,16 +43,24 @@ bool LevelWriter::WriteToFile(const char* filePath)
 	YAML::Emitter out(outStream);
 
 	out << YAML::BeginMap;
-	out << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
 
+	int environmentId = world->GetEnvironmentId();
+	if (environmentId >= 0)
+	{
+		const char* sourcePath = environmentManager->GetEnvironmentSourcePath(environmentId);
+		out << YAML::Key << "environment" << YAML::Value << sourcePath;
+	}
+
+	out << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
 	for (Entity entity : *entityManager)
 	{
 		SceneObjectId sceneObj = world->Lookup(entity);
 		if (sceneObj != SceneObjectId::Null && world->GetParent(sceneObj) == SceneObjectId::Null)
 			WriteEntity(out, entity, sceneObj);
 	}
-
 	out << YAML::EndSeq; // objects
+
+
 	out << YAML::EndMap;
 
 	return true;

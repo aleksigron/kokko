@@ -68,5 +68,6 @@ public:
 	int LoadHdrEnvironmentMap(const char* equirectMapPath);
 
 	EnvironmentTextures GetEnvironmentMap(int environmentId) const;
+	const char* GetEnvironmentSourcePath(int environmentId) const;
 	EnvironmentTextures GetEmptyEnvironmentMap() const;
 };

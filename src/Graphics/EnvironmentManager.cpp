@@ -450,6 +450,11 @@ EnvironmentTextures EnvironmentManager::GetEnvironmentMap(int environmentId) con
 	return environmentMaps[environmentId].textures;
 }
 
+const char* EnvironmentManager::GetEnvironmentSourcePath(int environmentId) const
+{
+	return environmentMaps[environmentId].sourcePath.GetCStr();
+}
+
 EnvironmentTextures EnvironmentManager::GetEmptyEnvironmentMap() const
 {
 	return emptyEnvironmentMap;
