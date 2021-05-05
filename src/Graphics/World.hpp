@@ -90,8 +90,7 @@ public:
 	World& operator=(const World& other) = delete;
 	World& operator=(World&& other) = delete;
 
-	bool LoadFromFile(StringRef path); // JSON
-	bool LoadFromFile(const char* path); // YAML
+	bool LoadFromFile(const char* path);
 	bool WriteToFile(const char* path);
 
 	Color ambientColor;

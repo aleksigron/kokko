@@ -135,27 +135,14 @@ void EditorUI::DrawMainMenuBar()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("New"))
-			{
-			}
-
-			if (ImGui::MenuItem("Open JSON"))
-			{
-				world->LoadFromFile(StringRef("res/scenes/test.scene.json"));
-			}
-
-			if (ImGui::MenuItem("Open YAML"))
+			if (ImGui::MenuItem("Open level"))
 			{
 				world->LoadFromFile("res/scenes/yaml_test.level");
 			}
 
-			if (ImGui::MenuItem("Save YAML"))
+			if (ImGui::MenuItem("Save level"))
 			{
 				world->WriteToFile("res/scenes/yaml_test.level");
-			}
-
-			if (ImGui::MenuItem("Save As.."))
-			{
 			}
 
 			ImGui::EndMenu();
