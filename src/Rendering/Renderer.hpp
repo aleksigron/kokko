@@ -108,6 +108,7 @@ private:
 	unsigned int objectsPerUniformBuffer;
 
 	unsigned int deferredLightingCallback;
+	unsigned int skyboxRenderCallback;
 	unsigned int postProcessCallback;
 
 	struct InstanceData
@@ -152,8 +153,9 @@ private:
 
 	Array<CustomRenderer*> customRenderers;
 
-	Entity skyboxEntity;
-	MaterialId skyboxMaterialId;
+	ShaderId skyboxShaderId;
+	MeshId skyboxMeshId;
+	unsigned int skyboxUniformBufferId;
 
 	void ReallocateRenderObjects(unsigned int required);
 
@@ -176,6 +178,7 @@ private:
 	bool ParseControlCommand(uint64_t orderKey);
 
 	void RenderDeferredLighting(const CustomRenderer::RenderParams& params);
+	void RenderSkybox(const CustomRenderer::RenderParams& params);
 	void RenderPostProcess(const CustomRenderer::RenderParams& params);
 	void RenderBloom(const CustomRenderer::RenderParams& params);
 	void RenderTonemapping(const CustomRenderer::RenderParams& params);

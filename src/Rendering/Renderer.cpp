@@ -75,6 +75,11 @@ struct LightingUniformBlock
 	alignas(4) float shadowBiasClamp;
 };
 
+struct SkyboxUniformBlock
+{
+	alignas(16) Mat4x4f transform;
+};
+
 struct RendererFramebuffer
 {
 	unsigned int framebuffer;
@@ -128,7 +133,9 @@ Renderer::Renderer(
 	objectVisibility(allocator),
 	lightResultArray(allocator),
 	customRenderers(allocator),
-	skyboxMaterialId{0}
+	skyboxShaderId(ShaderId::Null),
+	skyboxMeshId(MeshId::Null),
+	skyboxUniformBufferId(0)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -163,6 +170,7 @@ Renderer::Renderer(
 	objectsPerUniformBuffer = 0;
 
 	deferredLightingCallback = AddCustomRenderer(this);
+	skyboxRenderCallback = AddCustomRenderer(this);
 	postProcessCallback = AddCustomRenderer(this);
 
 	data = InstanceData{};
@@ -569,28 +577,34 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 		device->DestroyFramebuffers(1, &framebuffer);
 	}
 
-	// Create skybox entity
+	// Inialize skybox resources
 	{
-		skyboxEntity = entityManager->Create();
+		skyboxMeshId = meshManager->CreateMesh();
+		MeshPresets::UploadCube(meshManager, skyboxMeshId);
 
-		RenderObjectId skyboxRenderObj = AddRenderObject(skyboxEntity);
+		const char* shaderPath = "res/shaders/skybox/skybox.shader.json";
+		skyboxShaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
-		MeshId skyboxMesh = meshManager->CreateMesh();
-		MeshPresets::UploadCube(meshManager, skyboxMesh);
-		SetMeshId(skyboxRenderObj, skyboxMesh);
+		device->CreateBuffers(1, &skyboxUniformBufferId);
+		device->BindBuffer(RenderBufferTarget::UniformBuffer, skyboxUniformBufferId);
 
-		// Expand skybox extents to make sure it is always rendered
-		BoundingBox skyboxBounds;
-		skyboxBounds.extents = Vec3f(1e9, 1e9, 1e9);
-		data.bounds[skyboxRenderObj.i] = skyboxBounds;
-
-		const char* materialPath = "res/materials/skybox/skybox.material.json";
-		skyboxMaterialId = materialManager->GetIdByPath(StringRef(materialPath));
+		RenderCommandData::SetBufferStorage storage{};
+		storage.target = RenderBufferTarget::UniformBuffer;
+		storage.size = sizeof(SkyboxUniformBlock);
+		storage.data = nullptr;
+		storage.dynamicStorage = true;
+		device->SetBufferStorage(&storage);
 	}
 }
 
 void Renderer::Deinitialize()
 {
+	if (skyboxUniformBufferId != 0)
+	{
+		device->DestroyBuffers(1, &skyboxUniformBufferId);
+		skyboxUniformBufferId = 0;
+	}
+
 	if (fullscreenMesh != MeshId::Null)
 	{
 		meshManager->RemoveMesh(fullscreenMesh);
@@ -829,6 +843,8 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 {
 	if (params.callbackId == deferredLightingCallback)
 		RenderDeferredLighting(params);
+	else if (params.callbackId == skyboxRenderCallback)
+		RenderSkybox(params);
 	else if (params.callbackId == postProcessCallback)
 		RenderPostProcess(params);
 }
@@ -942,6 +958,36 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	postProcessRenderer->RenderPass(deferredPass);
 
 	ssao->ReleaseResult();
+}
+
+void Renderer::RenderSkybox(const CustomRenderer::RenderParams& params)
+{
+	EnvironmentTextures envMap;
+	int environmentId = world->GetEnvironmentId();
+	if (environmentId >= 0)
+		envMap = environmentManager->GetEnvironmentMap(environmentId);
+	else
+		envMap = environmentManager->GetEmptyEnvironmentMap();
+
+	const TextureData& envTexture = textureManager->GetTextureData(envMap.environmentTexture);
+
+	const ShaderData& shader = shaderManager->GetShaderData(skyboxShaderId);
+	device->UseShaderProgram(shader.driverId);
+
+	const TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash("environment_map"_hash);
+	if (uniform != nullptr)
+	{
+		device->SetActiveTextureUnit(0);
+		device->BindTexture(envTexture.textureTarget, envTexture.textureObjectId);
+		device->SetUniformInt(uniform->uniformLocation, 0);
+	}
+
+	device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, skyboxUniformBufferId);
+
+	const MeshDrawData* draw = meshManager->GetDrawData(skyboxMeshId);
+	device->BindVertexArray(draw->vertexArrayObject);
+
+	device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 }
 
 void Renderer::RenderPostProcess(const CustomRenderer::RenderParams& params)
@@ -1422,6 +1468,7 @@ unsigned int Renderer::PopulateCommandList()
 
 	Mat4x4fBijection cameraTransforms = GetCameraTransform();
 	ProjectionParameters projectionParams = GetCameraProjection();
+	Mat4x4f cameraProjection = projectionParams.GetProjectionMatrix(true);
 
 	Mat4x4fBijection cullingTransform;
 	
@@ -1444,30 +1491,11 @@ unsigned int Renderer::PopulateCommandList()
 
 	// Update skybox parameters
 	{
-		EnvironmentTextures envMap;
-		int environmentId = world->GetEnvironmentId();
-		if (environmentId >= 0)
-			envMap = environmentManager->GetEnvironmentMap(environmentId);
-		else
-			envMap = environmentManager->GetEmptyEnvironmentMap();
+		SkyboxUniformBlock skyboxUniforms;
+		skyboxUniforms.transform = cameraProjection * cameraTransforms.inverse * Mat4x4f::Translate(cameraPos);
 
-		const TextureData& envTexture = textureManager->GetTextureData(envMap.environmentTexture);
-
-		MaterialData& skyboxMaterial = materialManager->GetMaterialData(skyboxMaterialId);
-
-		TextureUniform* tu = skyboxMaterial.uniforms.FindTextureUniformByNameHash("environment_map"_hash);
-		tu->textureId = envMap.environmentTexture;
-		tu->textureObject = envTexture.textureObjectId;
-
-		RenderObjectId skyboxRenderObj = Lookup(skyboxEntity);
-
-		RenderOrderData order;
-		order.material = skyboxMaterialId;
-		order.transparency = TransparencyType::Skybox;
-		SetOrderData(skyboxRenderObj, order);
-
-		Mat4x4f skyboxTransform = Mat4x4f::Translate(cameraPos);
-		data.transform[skyboxRenderObj.i] = skyboxTransform;
+		device->BindBuffer(RenderBufferTarget::UniformBuffer, skyboxUniformBufferId);
+		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(SkyboxUniformBlock), &skyboxUniforms);
 	}
 
 	// Reset the used viewport count
@@ -1546,7 +1574,7 @@ unsigned int Renderer::PopulateCommandList()
 		vp.objectMinScreenSizePx = mainViewportMinObjectSize;
 		vp.viewToWorld = cameraTransforms.forward;
 		vp.view = cameraTransforms.inverse;
-		vp.projection = projectionParams.GetProjectionMatrix(reverseDepth);
+		vp.projection = cameraProjection;
 		vp.viewProjection = vp.projection * vp.view;
 		vp.viewportRectangle = fullscreenViewportRectangle;
 		vp.frustum.Update(projectionParams, cullingTransform.forward);
@@ -1715,6 +1743,8 @@ unsigned int Renderer::PopulateCommandList()
 
 		commandList.AddControl(fsvp, s_pass, 3, ctrl::Viewport, sizeof(data), &data);
 	}
+
+	commandList.AddDrawWithCallback(fsvp, s_pass, 0.0f, skyboxRenderCallback);
 
 	// PASS: TRANSPARENT
 

@@ -167,7 +167,7 @@ void DebugTextRenderer::Render()
 		const char* shaderPath = "res/shaders/debug/debug_text.shader.json";
 		ShaderId shaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
-		if (shaderId.IsNull())
+		if (shaderId == ShaderId::Null)
 			return;
 
 		const ShaderData& shader = shaderManager->GetShaderData(shaderId);

@@ -580,7 +580,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 	StringRef path(shaderItr->value.GetString(), shaderItr->value.GetStringLength());
 	ShaderId shaderId = shaderManager->GetIdByPath(path);
 
-	if (shaderId.IsNull())
+	if (shaderId == ShaderId::Null)
 		return false;
 
 	// This initializes material uniforms from the shader's data

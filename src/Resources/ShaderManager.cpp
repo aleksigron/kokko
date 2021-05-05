@@ -15,6 +15,8 @@
 
 #include "System/File.hpp"
 
+const ShaderId ShaderId::Null = ShaderId{ 0 };
+
 ShaderManager::ShaderManager(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
