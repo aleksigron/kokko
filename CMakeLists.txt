@@ -109,6 +109,8 @@ set (KOKKO_SOURCES
 	src/Editor/EditorViews.hpp
 	src/Editor/EntityView.cpp
 	src/Editor/EntityView.hpp
+	src/Editor/FilePickerDialog.cpp
+	src/Editor/FilePickerDialog.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
 	src/Entity/Entity.hpp

@@ -5,6 +5,7 @@
 #include "Core/Core.hpp"
 
 #include "Editor/EditorViews.hpp"
+#include "Editor/FilePickerDialog.hpp"
 
 #include "Engine/Engine.hpp"
 
@@ -131,6 +132,8 @@ ProjectionParameters EditorUI::GetEditorCameraProjection() const
 
 void EditorUI::DrawMainMenuBar()
 {
+	bool saveLevel = false;
+
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -143,10 +146,17 @@ void EditorUI::DrawMainMenuBar()
 			if (ImGui::MenuItem("Save level"))
 			{
 				world->WriteToFile("res/scenes/yaml_test.level");
-			}
 
+				// Level is saved to file, but still open dummy dialog
+				saveLevel = true;
+			}
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
 	}
+
+	if (saveLevel)
+		ImGui::OpenPopup("Save level as");
+
+	FilePickerDialog::FileOpen("Save level as");
 }
