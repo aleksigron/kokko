@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 project("Kokko Engine")
 
-# Use C++14 standard
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 # Don't use language extensions
 set(CMAKE_CXX_EXTENSIONS OFF)

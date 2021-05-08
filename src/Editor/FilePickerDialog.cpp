@@ -1,39 +1,179 @@
 #include "Editor/FilePickerDialog.hpp"
 
-#include <cstdio>
-
 #include "imgui.h"
 
-void FilePickerDialog::FileOpen(const char* popupTitle)
+#include "Core/String.hpp"
+
+FilePickerDialog::FilePickerDialog() :
+	dialogType(DialogType::Unknown),
+	currentTitle(nullptr),
+	currentActionText(nullptr)
 {
+}
+
+void FilePickerDialog::StartDialogFileOpen(const char* popupTitle, const char* actionText)
+{
+	currentPath = std::filesystem::current_path();
+	selectedFilePath = std::filesystem::path();
+
+	dialogType = DialogType::FileOpen;
+
+	currentTitle = popupTitle;
+	currentActionText = actionText;
+
+	ImGui::OpenPopup(currentTitle);
+}
+
+void FilePickerDialog::StartDialogFileSave(const char* popupTitle, const char* actionText)
+{
+	currentPath = std::filesystem::current_path();
+	selectedFilePath = std::filesystem::path();
+
+	dialogType = DialogType::FileSave;
+
+	currentTitle = popupTitle;
+	currentActionText = actionText;
+
+	ImGui::OpenPopup(currentTitle);
+}
+
+bool FilePickerDialog::Update(String& pathOut)
+{
+	namespace fs = std::filesystem;
+
+	if (currentTitle == nullptr)
+		return false;
+
+	bool dialogClosed = false;
+
 	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-	if (ImGui::BeginPopupModal(popupTitle, nullptr, flags))
+	if (ImGui::BeginPopupModal(currentTitle, nullptr, flags))
 	{
-		char* path = "res/example/path";
-		ImGui::Text("Select where to save the level");
-		ImGui::InputText("##FilePickerDialogPath", path, strlen(path), ImGuiInputTextFlags_ReadOnly);
+		bool existingFileIsSelected = false;
 
-		ImVec2 listSize(0.0f, -ImGui::GetFrameHeightWithSpacing());
+		ImGui::Text("Select where to save the level");
+
+		std::string currentPathStr = currentPath.u8string();
+
+		// Directory path text
+
+		ImGuiInputTextFlags dirTextFlags = ImGuiInputTextFlags_ReadOnly;
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		ImGui::InputText("##FilePickerDialogDir", currentPathStr.data(), currentPathStr.length(), dirTextFlags);
+
+		// Directory entries
+
+		ImVec2 listSize(0.0f, -2.0f * ImGui::GetFrameHeightWithSpacing());
 		if (ImGui::BeginChild("FilePickerDialogList", listSize, true))
 		{
-			ImGui::Selectable("..");
-
-			for (int row = 0; row < 30; row++)
+			if (ImGui::Selectable(".."))
 			{
-				char buf[32];
-				sprintf(buf, "File %d", row);
+				// Move up a directory
+				currentPath = currentPath.parent_path();
+				selectedFilePath = fs::path();
+			}
 
-				ImGui::Selectable(buf);
+			for (fs::directory_iterator itr(currentPath), end; itr != end; ++itr)
+			{
+				bool isDir = itr->is_directory();
+				bool isFile = itr->is_regular_file();
+
+				fs::path path = itr->path();
+				std::string pathStr = path.filename().u8string();
+
+				ImGuiSelectableFlags entryFlags = ImGuiSelectableFlags_AllowDoubleClick;
+				if (isDir == false && isFile == false)
+					entryFlags |= ImGuiSelectableFlags_Disabled;
+
+				bool selected = false;
+				if (path == selectedFilePath)
+				{
+					existingFileIsSelected = true;
+					selected = true;
+				}
+
+				if (ImGui::Selectable(pathStr.c_str(), selected, entryFlags))
+				{
+					if (isDir)
+					{
+						// Move into directory
+						currentPath = path;
+						selectedFilePath = fs::path();
+					}
+					else if (isFile)
+					{
+						// Select file
+						selectedFilePath = path;
+					}
+				}
 			}
 		}
 		ImGui::EndChild();
-		if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+
+		// Selected file name input
+
+		if (selectedFilePath.has_filename())
+		{
+			std::string fileName = selectedFilePath.filename().u8string();
+			std::strncpy(textInputBuffer, fileName.c_str(), TextInputBufferSize);
+		}
+		else
+			textInputBuffer[0] = '\0';
+
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		if (ImGui::InputText("Name", textInputBuffer, TextInputBufferSize))
+		{
+			selectedFilePath.replace_filename(fs::path(textInputBuffer));
+		}
+
+		// Buttons
+
+		float fontSize = ImGui::GetFontSize();
+		ImVec2 buttonSize(fontSize * 6.0f, 0.0f);
+
+		if (ImGui::Button(currentActionText, buttonSize))
+		{
+			if (existingFileIsSelected || dialogType == DialogType::FileSave)
+			{
+				dialogClosed = true;
+
+				std::string confirmedPathStr = selectedFilePath.u8string();
+				
+				pathOut.Clear();
+				pathOut.Append(confirmedPathStr.c_str());
+
+				CloseDialog();
+			}
+			// TODO: Should make the button look disabled when there's no valid selection
+		}
+
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+
+		if (ImGui::Button("Cancel", buttonSize))
+		{
+			dialogClosed = true;
+
+			CloseDialog();
+		}
+
 		ImGui::EndPopup();
 	}
+
+	return dialogClosed;
+}
+
+FilePickerDialog::DialogType FilePickerDialog::GetLastDialogType()
+{
+	return dialogType;
+}
+
+void FilePickerDialog::CloseDialog()
+{
+	currentTitle = nullptr;
+	currentActionText = nullptr;
+	ImGui::CloseCurrentPopup();
 }

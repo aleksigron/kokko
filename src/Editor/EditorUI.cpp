@@ -132,7 +132,7 @@ ProjectionParameters EditorUI::GetEditorCameraProjection() const
 
 void EditorUI::DrawMainMenuBar()
 {
-	bool saveLevel = false;
+	bool openLevel = false, saveLevel = false;
 
 	if (ImGui::BeginMainMenuBar())
 	{
@@ -140,14 +140,11 @@ void EditorUI::DrawMainMenuBar()
 		{
 			if (ImGui::MenuItem("Open level"))
 			{
-				world->LoadFromFile("res/scenes/yaml_test.level");
+				openLevel = true;
 			}
 
 			if (ImGui::MenuItem("Save level"))
 			{
-				world->WriteToFile("res/scenes/yaml_test.level");
-
-				// Level is saved to file, but still open dummy dialog
 				saveLevel = true;
 			}
 			ImGui::EndMenu();
@@ -155,8 +152,26 @@ void EditorUI::DrawMainMenuBar()
 		ImGui::EndMainMenuBar();
 	}
 
-	if (saveLevel)
-		ImGui::OpenPopup("Save level as");
+	if (openLevel)
+		views->filePicker.StartDialogFileOpen("Open level", "Open");
 
-	FilePickerDialog::FileOpen("Save level as");
+	if (saveLevel)
+		views->filePicker.StartDialogFileSave("Save level as", "Save");
+
+	String filePickerPathOut(allocator);
+	bool filePickerClosed = views->filePicker.Update(filePickerPathOut);
+
+	if (filePickerClosed && filePickerPathOut.GetLength() > 0)
+	{
+		FilePickerDialog::DialogType type = views->filePicker.GetLastDialogType();
+		if (type == FilePickerDialog::DialogType::FileOpen)
+		{
+			// TODO: Clear world before loading new
+			world->LoadFromFile(filePickerPathOut.GetCStr());
+		}
+		else if (type == FilePickerDialog::DialogType::FileSave)
+		{
+			world->WriteToFile(filePickerPathOut.GetCStr());
+		}
+	}
 }
