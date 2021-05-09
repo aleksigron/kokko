@@ -346,6 +346,6 @@ void LevelLoader::CreateCameraComponent(const YAML::Node& map, Entity entity)
 			params.orthographicFar = far;
 	}
 
-	CameraId cameraId = cameraSystem->AddCameraComponent(entity);
-	cameraSystem->SetProjectionParameters(cameraId, params);
+	CameraId cameraId = cameraSystem->AddComponentToEntity(entity);
+	cameraSystem->SetData(cameraId, params);
 }

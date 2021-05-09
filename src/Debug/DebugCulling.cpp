@@ -45,7 +45,7 @@ void DebugCulling::UpdateAndDraw()
 
 		Entity cameraEntity = world->GetActiveCameraEntity();
 		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
-		ProjectionParameters params = cameraSystem->GetProjectionParameters(cameraId);
+		ProjectionParameters params = cameraSystem->GetData(cameraId);
 		params.perspectiveFar = params.perspectiveFar < 10.0f ? params.perspectiveFar : 10.0f;
 
 		Color white(1.0f, 1.0f, 1.0f);

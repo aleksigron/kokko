@@ -181,7 +181,7 @@ void LevelWriter::WriteCameraComponent(YAML::Emitter& out, Entity entity)
 		out << YAML::BeginMap;
 		out << YAML::Key << ComponentTypeKey << YAML::Value << "camera";
 
-		ProjectionParameters params = cameraSystem->GetProjectionParameters(cameraId);
+		ProjectionParameters params = cameraSystem->GetData(cameraId);
 
 		out << YAML::Key << "projection_type" << YAML::Value << CameraSystem::GetProjectionTypeName(params.projection);
 

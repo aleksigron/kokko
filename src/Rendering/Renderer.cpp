@@ -1450,7 +1450,7 @@ ProjectionParameters Renderer::GetCameraProjection()
 
 		CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
 
-		ProjectionParameters projectionParams = cameraSystem->GetProjectionParameters(renderCameraId);
+		ProjectionParameters projectionParams = cameraSystem->GetData(renderCameraId);
 		projectionParams.SetAspectRatio(fullscreenViewportRectangle.size.x, fullscreenViewportRectangle.size.y);
 
 		return projectionParams;

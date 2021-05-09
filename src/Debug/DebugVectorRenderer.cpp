@@ -481,7 +481,7 @@ void DebugVectorRenderer::Render(const ViewRectangle& viewportRectangle)
 		bool reverseDepth = false;
 
 		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
-		ProjectionParameters projectionParams = cameraSystem->GetProjectionParameters(cameraId);
+		ProjectionParameters projectionParams = cameraSystem->GetData(cameraId);
 		projectionParams.SetAspectRatio(viewportRectangle.size.x, viewportRectangle.size.y);
 
 		Mat4x4f proj = projectionParams.GetProjectionMatrix(reverseDepth);

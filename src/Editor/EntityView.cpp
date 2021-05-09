@@ -397,7 +397,7 @@ void EntityView::DrawCameraComponent()
 		if (ImGui::CollapsingHeader("Camera", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
-			ProjectionParameters params = cameraSystem->GetProjectionParameters(cameraId);
+			ProjectionParameters params = cameraSystem->GetData(cameraId);
 
 			if (ImGui::BeginCombo("Projection", CameraSystem::GetProjectionTypeDisplayName(params.projection)))
 			{
@@ -444,10 +444,10 @@ void EntityView::DrawCameraComponent()
 			}
 
 			if (edited)
-				cameraSystem->SetProjectionParameters(cameraId, params);
+				cameraSystem->SetData(cameraId, params);
 
 			if (componentVisible == false)
-				cameraSystem->RemoveCameraComponent(cameraId);
+				cameraSystem->RemoveComponent(cameraId);
 		}
 	}
 }
@@ -560,7 +560,7 @@ void EntityView::AddComponent(Entity entity, ComponentType componentType)
 	{
 		CameraId cameraId = cameraSystem->Lookup(entity);
 		if (cameraId == CameraId::Null)
-			cameraSystem->AddCameraComponent(entity);
+			cameraSystem->AddComponentToEntity(entity);
 		break;
 	}
 	case EntityView::ComponentType::Light:
@@ -597,7 +597,7 @@ void EntityView::RemoveComponentIfExists(Entity entity, ComponentType componentT
 	{
 		CameraId cameraId = cameraSystem->Lookup(entity);
 		if (cameraId != CameraId::Null)
-			cameraSystem->RemoveCameraComponent(cameraId);
+			cameraSystem->RemoveComponent(cameraId);
 		break;
 	}
 	case EntityView::ComponentType::Light:
