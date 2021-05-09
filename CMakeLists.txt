@@ -67,6 +67,7 @@ set (KOKKO_SOURCES
 	src/Core/Core.hpp
 	src/Core/EncodingUtf8.cpp
 	src/Core/EncodingUtf8.hpp
+	src/Core/FixedArray.hpp
 	src/Core/Hash.hpp
 	src/Core/HashMap.hpp
 	src/Core/Pair.hpp

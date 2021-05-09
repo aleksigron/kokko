@@ -34,7 +34,6 @@ EntityView::EntityView() :
 	requestScrollToEntity(Entity::Null),
 	requestDestroyEntity(Entity::Null)
 {
-	std::memset(textInputBuffer, 0, TextInputBufferSize);
 }
 
 void EntityView::Initialize(Engine* engine)
@@ -188,11 +187,11 @@ void EntityView::DrawEntityProperties()
 		// Name
 
 		const char* entityName = entityManager->GetDebugNameWithFallback(selectedEntity);
-		std::strncpy(textInputBuffer, entityName, TextInputBufferSize);
-		if (ImGui::InputText("Name", textInputBuffer, TextInputBufferSize))
+		std::strncpy(textInputBuffer.GetData(), entityName, textInputBuffer.GetCapacity());
+		if (ImGui::InputText("Name", textInputBuffer.GetData(), textInputBuffer.GetCapacity()))
 		{
-			if (std::strlen(textInputBuffer) > 0)
-				entityManager->SetDebugName(selectedEntity, textInputBuffer);
+			if (std::strlen(textInputBuffer.GetData()) > 0)
+				entityManager->SetDebugName(selectedEntity, textInputBuffer.GetData());
 			else
 				entityManager->ClearDebugName(selectedEntity);
 		}
@@ -314,10 +313,10 @@ void EntityView::DrawRenderComponent()
 				if (meshPath == nullptr)
 					meshPath = "";
 
-				std::strncpy(textInputBuffer, meshPath, TextInputBufferSize);
-				if (ImGui::InputText("Mesh path", textInputBuffer, TextInputBufferSize))
+				std::strncpy(textInputBuffer.GetData(), meshPath, textInputBuffer.GetCapacity());
+				if (ImGui::InputText("Mesh path", textInputBuffer.GetData(), textInputBuffer.GetCapacity()))
 				{
-					MeshId newMeshId = meshManager->GetIdByPath(StringRef(textInputBuffer));
+					MeshId newMeshId = meshManager->GetIdByPath(StringRef(textInputBuffer.GetData()));
 
 					if (newMeshId != MeshId::Null)
 					{
@@ -353,10 +352,10 @@ void EntityView::DrawRenderComponent()
 				if (materialPath == nullptr)
 					materialPath = "";
 
-				std::strncpy(textInputBuffer, materialPath, TextInputBufferSize);
-				if (ImGui::InputText("Material path", textInputBuffer, TextInputBufferSize))
+				std::strncpy(textInputBuffer.GetData(), materialPath, textInputBuffer.GetCapacity());
+				if (ImGui::InputText("Material path", textInputBuffer.GetData(), textInputBuffer.GetCapacity()))
 				{
-					MaterialId newMatId = materialManager->GetIdByPath(StringRef(textInputBuffer));
+					MaterialId newMatId = materialManager->GetIdByPath(StringRef(textInputBuffer.GetData()));
 
 					if (newMatId != MaterialId::Null)
 					{

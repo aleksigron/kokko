@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Array.hpp"
+#include "Core/FixedArray.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/SortedArray.hpp"
 #include "Core/String.hpp"
@@ -26,8 +27,7 @@ private:
 
 	Array<String> debugNames;
 
-	static const size_t UnnamedEntityBufferLength = 32;
-	char unnamedEntityBuffer[UnnamedEntityBufferLength];
+	FixedArray<char, 32> unnamedEntityBuffer;
 
 public:
 	EntityManager(Allocator* mainAllocator, Allocator* debugNameAllocator);

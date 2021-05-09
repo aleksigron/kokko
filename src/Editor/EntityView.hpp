@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/FixedArray.hpp"
+
 #include "Entity/Entity.hpp"
 
 class CameraSystem;
@@ -32,8 +34,7 @@ private:
 	Entity requestScrollToEntity;
 	Entity requestDestroyEntity;
 
-	static const size_t TextInputBufferSize = 256;
-	char textInputBuffer[TextInputBufferSize];
+	FixedArray<char, 256> textInputBuffer;
 
 	// TODO: Make reusable system to do operations on components
 	enum class ComponentType
