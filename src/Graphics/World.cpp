@@ -240,6 +240,12 @@ void World::RemoveSceneObject(SceneObjectId id)
 	--data.count;
 }
 
+void World::RemoveAll()
+{
+	entityMap.Clear();
+	data.count = 1;
+}
+
 void World::SetParent(SceneObjectId id, SceneObjectId parent)
 {
 	assert(IsValidId(id));

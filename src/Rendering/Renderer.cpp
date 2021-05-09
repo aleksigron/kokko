@@ -1945,6 +1945,12 @@ void Renderer::RemoveRenderObject(RenderObjectId id)
 	--data.count;
 }
 
+void Renderer::RemoveAll()
+{
+	entityMap.Clear();
+	data.count = 1;
+}
+
 unsigned int Renderer::AddCustomRenderer(CustomRenderer* customRenderer)
 {
 	for (unsigned int i = 0, count = customRenderers.GetCount(); i < count; ++i)

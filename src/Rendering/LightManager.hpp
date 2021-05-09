@@ -69,6 +69,8 @@ public:
 
 	void RemoveLight(LightId id);
 
+	void RemoveAll();
+
 	Entity GetEntity(LightId id) const { return data.entity[id.i]; }
 	Vec3f GetPosition(LightId id) const { return data.position[id.i]; }
 	Mat3x3f GetOrientation(LightId id) const { return data.orientation[id.i]; }

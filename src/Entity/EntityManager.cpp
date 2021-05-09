@@ -35,14 +35,22 @@ Entity EntityManager::Create()
 	return Entity(idx);
 }
 
-bool EntityManager::IsAlive(Entity e) const
-{
-	return e.id > 0 && e.id < entityRangeEnd && freeIndices.Contains(e.id) == false;
-}
-
 void EntityManager::Destroy(Entity e)
 {
 	freeIndices.InsertUnique(e.id);
+}
+
+void EntityManager::ClearAll()
+{
+	debugNameMap.Clear();
+
+	// Set all allocated debug name strings to be free to use
+	debugNameFreelist.Resize(debugNames.GetCount());
+	for (unsigned int i = 0; i < debugNames.GetCount(); ++i)
+		debugNameFreelist[i] = i;
+
+	entityRangeEnd = 1;
+	freeIndices.Clear();
 }
 
 const char* EntityManager::GetDebugName(Entity entity)

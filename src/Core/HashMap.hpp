@@ -130,7 +130,32 @@ public:
 				if (itr->first)
 					itr->second.~ValueType();
 
+			if (zeroUsed)
+				zeroPair.second.~ValueType();
+
 			allocator->Deallocate(data);
+		}
+	}
+
+	void Clear()
+	{
+		KeyValuePair* itr = data;
+		KeyValuePair* end = data + allocated;
+		for (; itr != end; ++itr)
+		{
+			if (itr->first)
+			{
+				itr->second.~ValueType();
+				itr->first = 0;
+			}
+		}
+
+		population = 0;
+
+		if (zeroUsed)
+		{
+			zeroPair.second.~ValueType();
+			zeroUsed = false;
 		}
 	}
 

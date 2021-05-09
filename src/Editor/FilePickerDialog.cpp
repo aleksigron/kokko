@@ -126,13 +126,13 @@ bool FilePickerDialog::Update(String& pathOut)
 		ImGui::SetNextItemWidth(-FLT_MIN);
 		if (ImGui::InputText("Name", textInputBuffer, TextInputBufferSize))
 		{
-			selectedFilePath.replace_filename(fs::path(textInputBuffer));
+			selectedFilePath = currentPath / fs::path(textInputBuffer);
 		}
 
 		// Buttons
 
 		float fontSize = ImGui::GetFontSize();
-		ImVec2 buttonSize(fontSize * 6.0f, 0.0f);
+		ImVec2 buttonSize(fontSize * 7.0f, 0.0f);
 
 		if (ImGui::Button(currentActionText, buttonSize))
 		{

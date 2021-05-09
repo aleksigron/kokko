@@ -225,6 +225,8 @@ public:
 
 	void RemoveRenderObject(RenderObjectId id);
 
+	void RemoveAll();
+
 	// Render object property management
 
 	void SetMeshId(RenderObjectId id, MeshId meshId) { data.mesh[id.i] = meshId; }

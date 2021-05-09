@@ -34,8 +34,9 @@ public:
 	~EntityManager();
 
 	Entity Create();
-	bool IsAlive(Entity e) const;
 	void Destroy(Entity e);
+
+	void ClearAll();
 
 	/*
 	* Will return nullptr if no debug name is set for the entity.

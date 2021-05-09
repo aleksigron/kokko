@@ -9,11 +9,17 @@
 
 #include "Engine/Engine.hpp"
 
+#include "Entity/EntityManager.hpp"
+
 #include "Graphics/World.hpp"
 
 #include "Math/Rectangle.hpp"
 
 #include "Memory/Allocator.hpp"
+
+#include "Rendering/CameraSystem.hpp"
+#include "Rendering/LightManager.hpp"
+#include "Rendering/Renderer.hpp"
 
 #include "System/ImGuiRenderBackend.hpp"
 #include "System/ImGuiPlatformBackend.hpp"
@@ -24,7 +30,11 @@ EditorUI::EditorUI(Allocator* allocator) :
 	allocator(allocator),
 	renderBackend(nullptr),
 	platformBackend(nullptr),
-	world(nullptr)
+	entityManager(nullptr),
+	world(nullptr),
+	renderer(nullptr),
+	lightManager(nullptr),
+	cameraSystem(nullptr)
 {
 	views = allocator->MakeNew<EditorViews>();
 }
@@ -41,7 +51,11 @@ void EditorUI::Initialize(Engine* engine)
 	renderBackend = allocator->MakeNew<ImGuiRenderBackend>();
 	platformBackend = allocator->MakeNew<ImGuiPlatformBackend>();
 
-	this->world = engine->GetWorld();
+	entityManager = engine->GetEntityManager();
+	world = engine->GetWorld();
+	renderer = engine->GetRenderer();
+	lightManager = engine->GetLightManager();
+	cameraSystem = engine->GetCameraSystem();
 
 	Window* window = engine->GetMainWindow();
 	InputManager* inputManager = window->GetInputManager();
@@ -138,15 +152,28 @@ void EditorUI::DrawMainMenuBar()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Open level"))
+			if (ImGui::MenuItem("New"))
+			{
+				ClearAllEntities();
+			}
+
+			if (ImGui::MenuItem("Open..."))
 			{
 				openLevel = true;
 			}
 
-			if (ImGui::MenuItem("Save level"))
+			if (ImGui::MenuItem("Save as..."))
 			{
 				saveLevel = true;
 			}
+
+			ImGui::Separator();
+
+			if (ImGui::MenuItem("Exit"))
+			{
+
+			}
+
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
@@ -166,7 +193,7 @@ void EditorUI::DrawMainMenuBar()
 		FilePickerDialog::DialogType type = views->filePicker.GetLastDialogType();
 		if (type == FilePickerDialog::DialogType::FileOpen)
 		{
-			// TODO: Clear world before loading new
+			ClearAllEntities();
 			world->LoadFromFile(filePickerPathOut.GetCStr());
 		}
 		else if (type == FilePickerDialog::DialogType::FileSave)
@@ -174,4 +201,13 @@ void EditorUI::DrawMainMenuBar()
 			world->WriteToFile(filePickerPathOut.GetCStr());
 		}
 	}
+}
+
+void EditorUI::ClearAllEntities()
+{
+	cameraSystem->RemoveAll();
+	lightManager->RemoveAll();
+	renderer->RemoveAll();
+	world->RemoveAll();
+	entityManager->ClearAll();
 }

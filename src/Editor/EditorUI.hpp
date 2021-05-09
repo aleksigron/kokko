@@ -6,8 +6,13 @@ struct GLFWwindow;
 
 class Allocator;
 class InputView;
+
 class Engine;
+class EntityManager;
 class World;
+class Renderer;
+class LightManager;
+class CameraSystem;
 
 class ImGuiRenderBackend;
 class ImGuiPlatformBackend;
@@ -23,13 +28,19 @@ private:
 	ImGuiRenderBackend* renderBackend;
 	ImGuiPlatformBackend* platformBackend;
 
+	EntityManager* entityManager;
 	World* world;
+	Renderer* renderer;
+	LightManager* lightManager;
+	CameraSystem* cameraSystem;
 
 	EditorViews* views;
 
 	EditorCamera editorCamera;
 
 	void DrawMainMenuBar();
+
+	void ClearAllEntities();
 
 public:
 	EditorUI(Allocator* allocator);

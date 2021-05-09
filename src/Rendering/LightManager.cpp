@@ -179,6 +179,12 @@ void LightManager::RemoveLight(LightId id)
 	--data.count;
 }
 
+void LightManager::RemoveAll()
+{
+	entityMap.Clear();
+	data.count = 1;
+}
+
 void LightManager::GetDirectionalLights(Array<LightId>& output)
 {
 	output.Clear();

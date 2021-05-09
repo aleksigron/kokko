@@ -112,6 +112,8 @@ public:
 
 	void RemoveSceneObject(SceneObjectId id);
 
+	void RemoveAll();
+
 	Entity GetEntity(SceneObjectId id) const { return data.entity[id.i]; }
 	SceneObjectId GetParent(SceneObjectId id) const { return data.parent[id.i]; }
 	SceneObjectId GetFirstChild(SceneObjectId id) const { return data.firstChild[id.i]; }

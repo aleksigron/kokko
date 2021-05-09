@@ -75,6 +75,12 @@ void CameraSystem::RemoveCameraComponent(CameraId id)
 	cameraData.PopBack();
 }
 
+void CameraSystem::RemoveAll()
+{
+	entityMap.Clear();
+	cameraData.Resize(1);
+}
+
 const ProjectionParameters& CameraSystem::GetProjectionParameters(CameraId id) const
 {
 	return cameraData[id.i].projectionParams;
