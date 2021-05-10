@@ -37,6 +37,10 @@ EditorUI::EditorUI(Allocator* allocator) :
 	cameraSystem(nullptr)
 {
 	views = allocator->MakeNew<EditorViews>();
+
+	Vec3f position(-3.0f, 2.0f, 6.0f);
+	Vec3f target(0.0f, 1.0f, 0.0f);
+	editorCamera.LookAt(position, target);
 }
 
 EditorUI::~EditorUI()

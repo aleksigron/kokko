@@ -2,19 +2,24 @@
 
 #include <cmath>
 
+#include "Math/Vec2.hpp"
+
 template <typename T>
 struct Vec3
 {
 	T x, y, z;
 	
-	inline Vec3(): x(0), y(0), z(0) {}
-	inline Vec3(T x, T y, T z): x(x), y(y), z(z) {}
+	Vec3(): x(0), y(0), z(0) {}
+	Vec3(T x, T y, T z): x(x), y(y), z(z) {}
 
-	inline T* ValuePointer() { return &x; }
-	inline const T* ValuePointer() const { return &x; }
+	T* ValuePointer() { return &x; }
+	const T* ValuePointer() const { return &x; }
 
-	inline T& operator[](std::size_t index) { return (&x)[index]; }
-	inline const T& operator[](std::size_t index) const { return (&x)[index]; }
+	T& operator[](size_t index) { return (&x)[index]; }
+	const T& operator[](size_t index) const { return (&x)[index]; }
+
+	Vec2<T> xy() const { return Vec2<T>(x, y); }
+	Vec2<T> xz() const { return Vec2<T>(x, z); }
 
 	template <typename CastType>
 	Vec3<CastType> As() const

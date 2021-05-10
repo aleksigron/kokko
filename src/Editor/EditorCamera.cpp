@@ -27,6 +27,17 @@ void EditorCamera::SetInputManager(InputManager* inputManager)
 	this->inputManager = inputManager;
 }
 
+void EditorCamera::LookAt(const Vec3f& position, const Vec3f& lookAtTarget)
+{
+	cameraPosition = position;
+
+	Vec3f diff = lookAtTarget - position;
+	float xzDistance = diff.xz().Magnitude();
+
+	cameraYaw = std::atan2(diff.x, -diff.z);
+	cameraPitch = std::atan2(-diff.y, xzDistance);
+}
+
 void EditorCamera::Update()
 {
 	static const int MouseButtonGrab = 0;
