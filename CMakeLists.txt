@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(IMGUI_LIB imgui)
-set(EXECUTABLE_NAME kokko)
+set(KOKKO_LIB kokko)
 
 include_directories(
 	src
@@ -31,8 +31,7 @@ set (IMGUI_SOURCES
 )
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-add_library(${IMGUI_LIB} STATIC
-             ${IMGUI_SOURCES})
+add_library(${IMGUI_LIB} STATIC ${IMGUI_SOURCES})
 
 set (GLAD_SOURCES
 	deps/glad/include/glad/glad.h
@@ -50,13 +49,6 @@ set (DEPS_SOURCES
 )
 
 set (KOKKO_SOURCES
-	src/Application/main.cpp
-	src/Application/App.cpp
-	src/Application/App.hpp
-	src/Application/AppSettings.cpp
-	src/Application/AppSettings.hpp
-	src/Application/CameraController.cpp
-	src/Application/CameraController.hpp
 	src/Core/Array.hpp
 	src/Core/BitfieldVariable.hpp
 	src/Core/BitPack.hpp
@@ -252,7 +244,7 @@ source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
 source_group(Dependencies\\stb_image FILES ${STB_IMAGE_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})
 
-add_executable(${EXECUTABLE_NAME} ${DEPS_SOURCES} ${KOKKO_SOURCES})
+add_library(${KOKKO_LIB} STATIC ${DEPS_SOURCES} ${KOKKO_SOURCES})
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -273,8 +265,8 @@ add_subdirectory(deps/yaml-cpp)
 
 find_package(OpenGL REQUIRED)
 
-target_link_libraries(${EXECUTABLE_NAME} ${IMGUI_LIB})
-target_link_libraries(${EXECUTABLE_NAME} glfw)
-target_link_libraries(${EXECUTABLE_NAME} ktx_read)
-target_link_libraries(${EXECUTABLE_NAME} yaml-cpp)
-target_link_libraries(${EXECUTABLE_NAME} OpenGL::GL)
+target_link_libraries(${KOKKO_LIB} ${IMGUI_LIB})
+target_link_libraries(${KOKKO_LIB} glfw)
+target_link_libraries(${KOKKO_LIB} ktx_read)
+target_link_libraries(${KOKKO_LIB} yaml-cpp)
+target_link_libraries(${KOKKO_LIB} OpenGL::GL)

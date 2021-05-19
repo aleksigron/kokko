@@ -3,8 +3,6 @@
 #include <cstring>
 #include <cassert>
 
-#include "Application/App.hpp"
-
 #include "Core/Core.hpp"
 #include "Core/EncodingUtf8.hpp"
 

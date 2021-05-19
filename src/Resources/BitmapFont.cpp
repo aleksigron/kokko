@@ -3,8 +3,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "Application/App.hpp"
-
 #include "Core/Hash.hpp"
 #include "Core/Sort.hpp"
 

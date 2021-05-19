@@ -1,4 +1,4 @@
-#include "Application/App.hpp"
+#include "App.hpp"
 
 #include "Debug/Instrumentation.hpp"
 

@@ -1,12 +1,10 @@
 #include "App.hpp"
 
 #include "Engine/Engine.hpp"
-#include "Graphics/World.hpp"
 
 App::App(Engine* engine, Allocator* allocator) :
 	engine(engine),
-	allocator(allocator),
-	settings(allocator)
+	allocator(allocator)
 {
 }
 
