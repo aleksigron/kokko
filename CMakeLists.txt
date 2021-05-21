@@ -12,11 +12,11 @@ set(KOKKO_LIB kokko)
 
 include_directories(
 	src
-	include
-	deps/glfw/include
 	deps/glad/include
-	deps/stb_image/include
+	deps/glfw/include
 	deps/imgui
+	deps/rapidjson/include
+	deps/stb_image/include
 	deps/yaml-cpp/include
 )
 
