@@ -24,6 +24,6 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${SOURCES})
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
-add_subdirectory(${KOKKO_ENGINE_PATH} build)
+add_subdirectory(${KOKKO_ENGINE_PATH} kokko-build)
 
 target_link_libraries(${EXECUTABLE_NAME} ${KOKKO_LIB})
