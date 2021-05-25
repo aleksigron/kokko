@@ -50,6 +50,9 @@ bool ImGuiPlatformBackend::Initialize(GLFWwindow* window, InputView* inputView)
 	// We can honor io.WantSetMousePos requests (optional, rarely used)
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
+	float fontSize = 15.0f;
+	io.Fonts->AddFontFromFileTTF("res/fonts/roboto/Roboto-Regular.ttf", fontSize);
+
 	// Keyboard mapping. Dear ImGui will use those indices to peek into the io.KeysDown[] array.
 	io.KeyMap[ImGuiKey_Tab] = static_cast<int>(KeyCode::Tab);
 	io.KeyMap[ImGuiKey_LeftArrow] = static_cast<int>(KeyCode::Left);
