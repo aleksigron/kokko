@@ -220,14 +220,13 @@ void Engine::Update()
 	editorCameraProjection.SetAspectRatio(viewport.size.x, viewport.size.y);
 
 	renderer.instance->SetFullscreenViewportRectangle(viewport);
-	renderer.instance->SetUseEditorCamera(true);
-	renderer.instance->SetEditorCameraInfo(editorCameraTransform, editorCameraProjection);
 
-	renderer.instance->Render();
+	Optional<CameraParameters> editorCamera = Optional(CameraParameters{ editorCameraTransform, editorCameraProjection });
+	renderer.instance->Render(editorCamera);
 
 	renderer.instance->DebugRender(debug.instance->GetVectorRenderer());
 
-	debug.instance->Render(viewport);
+	debug.instance->Render(viewport, editorCamera);
 
 	editorUI.instance->EndFrame();
 

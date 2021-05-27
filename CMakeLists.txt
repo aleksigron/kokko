@@ -62,6 +62,7 @@ set (KOKKO_SOURCES
 	src/Core/FixedArray.hpp
 	src/Core/Hash.hpp
 	src/Core/HashMap.hpp
+	src/Core/Optional.hpp
 	src/Core/Pair.hpp
 	src/Core/Queue.hpp
 	src/Core/Sort.hpp
@@ -151,6 +152,7 @@ set (KOKKO_SOURCES
 	src/Memory/ProxyAllocator.cpp
 	src/Memory/ProxyAllocator.hpp
 	src/Rendering/CameraId.hpp
+	src/Rendering/CameraParameters.hpp
 	src/Rendering/CameraSystem.cpp
 	src/Rendering/CameraSystem.hpp
 	src/Rendering/CascadedShadowMap.cpp

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Color.hpp"
+#include "Core/Optional.hpp"
 
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
@@ -12,6 +13,7 @@
 #include "Resources/ShaderId.hpp"
 
 struct Entity;
+struct CameraParameters;
 class Allocator;
 class RenderDevice;
 class CameraSystem;
@@ -98,5 +100,5 @@ public:
 
 	void DrawWireFrustum(const Mat4x4f& transform, const ProjectionParameters& projection, const Color& color);
 
-	void Render(const ViewRectangle& viewportRectangle);
+	void Render(const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
 };

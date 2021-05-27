@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Optional.hpp"
+
 class Allocator;
 class AllocatorManager;
 class CameraSystem;
@@ -20,6 +22,7 @@ class DebugLog;
 class DebugMemoryStats;
 
 struct ViewRectangle;
+struct CameraParameters;
 
 class Debug
 {
@@ -63,7 +66,7 @@ public:
 		MeshManager* meshManager, ShaderManager* shaderManager, World* world);
 	void Deinitialize();
 	
-	void Render(const ViewRectangle& viewportRectangle);
+	void Render(const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
 
 	DebugLog* GetLog() { return log; }
 	DebugConsole* GetConsole() { return console; }

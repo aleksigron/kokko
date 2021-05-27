@@ -25,6 +25,7 @@
 
 #include "Memory/Allocator.hpp"
 
+#include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
 #include "Rendering/LightManager.hpp"
@@ -128,7 +129,6 @@ Renderer::Renderer(
 	textureManager(textureManager),
 	environmentManager(nullptr),
 	lockCullingCamera(false),
-	useEditorCamera(false),
 	commandList(allocator),
 	objectVisibility(allocator),
 	lightResultArray(allocator),
@@ -671,11 +671,11 @@ void Renderer::Deinitialize()
 	}
 }
 
-void Renderer::Render()
+void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	unsigned int objectDrawCount = PopulateCommandList();
+	unsigned int objectDrawCount = PopulateCommandList(editorCamera);
 	UpdateUniformBuffers(objectDrawCount);
 
 	int objectDrawsProcessed = 0;
@@ -859,17 +859,6 @@ void Renderer::SetLockCullingCamera(bool lockEnable)
 	lockCullingCamera = lockEnable;
 }
 
-void Renderer::SetUseEditorCamera(bool use)
-{
-	useEditorCamera = use;
-}
-
-void Renderer::SetEditorCameraInfo(const Mat4x4fBijection& transform, const ProjectionParameters& projection)
-{
-	editorCameraTransform = transform;
-	editorCameraParameters = projection;
-}
-
 const Mat4x4f& Renderer::GetCullingCameraTransform() const
 {
 	return lockCullingCameraTransform.forward;
@@ -881,7 +870,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 
 	// Both SSAO and deferred lighting passes use these
 
-	ProjectionParameters projParams = GetCameraProjection();
+	ProjectionParameters projParams = params.cameraParams.projection;
 
 	const RendererFramebuffer& lightAccFramebuffer = framebufferData[FramebufferIndexLightAcc];
 	Vec2i framebufferSize(lightAccFramebuffer.width, lightAccFramebuffer.height);
@@ -1418,46 +1407,31 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 	return (Vec3f::Dot(objPos - eyePos, eyeForward) - minusNear) / farMinusNear;
 }
 
-Mat4x4fBijection Renderer::GetCameraTransform()
+CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>& editorCamera)
 {
-	if (useEditorCamera)
+	if (editorCamera.HasValue())
 	{
-		return editorCameraTransform;
+		return editorCamera.GetValue();
 	}
 	else
 	{
-		Entity renderCameraEntity = world->GetActiveCameraEntity();
+		Entity cameraEntity = world->GetActiveCameraEntity();
 
-		SceneObjectId cameraObject = world->Lookup(renderCameraEntity);
+		CameraParameters result;
 
-		Mat4x4fBijection result;
-		result.forward = world->GetWorldTransform(cameraObject);
-		result.inverse = result.forward.GetInverse();
+		SceneObjectId cameraSceneObj = world->Lookup(cameraEntity);
+		result.transform.forward = world->GetWorldTransform(cameraSceneObj);
+		result.transform.inverse = result.transform.forward.GetInverse();
+
+		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
+		result.projection = cameraSystem->GetData(cameraId);
+		result.projection.SetAspectRatio(fullscreenViewportRectangle.size.x, fullscreenViewportRectangle.size.y);
 
 		return result;
 	}
 }
 
-ProjectionParameters Renderer::GetCameraProjection()
-{
-	if (useEditorCamera)
-	{
-		return editorCameraParameters;
-	}
-	else
-	{
-		Entity renderCameraEntity = world->GetActiveCameraEntity();
-
-		CameraId renderCameraId = cameraSystem->Lookup(renderCameraEntity);
-
-		ProjectionParameters projectionParams = cameraSystem->GetData(renderCameraId);
-		projectionParams.SetAspectRatio(fullscreenViewportRectangle.size.x, fullscreenViewportRectangle.size.y);
-
-		return projectionParams;
-	}
-}
-
-unsigned int Renderer::PopulateCommandList()
+unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -1466,8 +1440,9 @@ unsigned int Renderer::PopulateCommandList()
 
 	// Get camera transforms
 
-	Mat4x4fBijection cameraTransforms = GetCameraTransform();
-	ProjectionParameters projectionParams = GetCameraProjection();
+	CameraParameters cameraParameters = GetCameraParameters(editorCamera);
+	Mat4x4fBijection cameraTransforms = cameraParameters.transform;
+	ProjectionParameters projectionParams = cameraParameters.projection;
 	Mat4x4f cameraProjection = projectionParams.GetProjectionMatrix(true);
 
 	Mat4x4fBijection cullingTransform;

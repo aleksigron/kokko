@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "Rendering/CameraParameters.hpp"
+
 struct RenderCommandList;
 struct RenderViewport;
 
@@ -21,6 +23,7 @@ public:
 	struct RenderParams
 	{
 		const RenderViewport* viewport;
+		CameraParameters cameraParams;
 		unsigned int callbackId;
 		uint64_t command;
 		World* world;

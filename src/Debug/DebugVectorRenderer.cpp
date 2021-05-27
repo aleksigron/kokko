@@ -12,6 +12,7 @@
 #include "Math/Math.hpp"
 #include "Math/Frustum.hpp"
 
+#include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
@@ -439,7 +440,7 @@ void DebugVectorRenderer::DrawWireFrustum(const Mat4x4f& transform, const Projec
 	this->DrawLine(frustum.points[6], frustum.points[7], color);
 }
 
-void DebugVectorRenderer::Render(const ViewRectangle& viewportRectangle)
+void DebugVectorRenderer::Render(const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -474,20 +475,36 @@ void DebugVectorRenderer::Render(const ViewRectangle& viewportRectangle)
 			buffersInitialized = true;
 		}
 
-		Entity cameraEntity = world->GetActiveCameraEntity();
-		SceneObjectId cameraSceneObject = world->Lookup(cameraEntity);
-		const Mat4x4f& cameraTransform = world->GetWorldTransform(cameraSceneObject);
+		Mat4x4f proj;
+		Mat4x4f view;
+		Mat4x4f viewProj;
+		Mat4x4f screenProj = Mat4x4f::ScreenSpaceProjection(viewport.size);
 
-		bool reverseDepth = false;
+		if (editorCamera.HasValue())
+		{
+			const CameraParameters& cameraParams = editorCamera.GetValue();
+			bool reverseDepth = false;
 
-		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
-		ProjectionParameters projectionParams = cameraSystem->GetData(cameraId);
-		projectionParams.SetAspectRatio(viewportRectangle.size.x, viewportRectangle.size.y);
+			proj = cameraParams.projection.GetProjectionMatrix(reverseDepth);
+			view = cameraParams.transform.inverse;
+			viewProj = proj * view;
+		}
+		else
+		{
+			Entity cameraEntity = world->GetActiveCameraEntity();
+			SceneObjectId cameraSceneObject = world->Lookup(cameraEntity);
+			const Mat4x4f& cameraTransform = world->GetWorldTransform(cameraSceneObject);
 
-		Mat4x4f proj = projectionParams.GetProjectionMatrix(reverseDepth);
-		Mat4x4f view = cameraTransform.GetInverse();
-		Mat4x4f viewProj = proj * view;
-		Mat4x4f screenProj = Mat4x4f::ScreenSpaceProjection(viewportRectangle.size);
+			bool reverseDepth = false;
+
+			CameraId cameraId = cameraSystem->Lookup(cameraEntity);
+			ProjectionParameters projectionParams = cameraSystem->GetData(cameraId);
+			projectionParams.SetAspectRatio(viewport.size.x, viewport.size.y);
+
+			proj = projectionParams.GetProjectionMatrix(reverseDepth);
+			view = cameraTransform.GetInverse();
+			viewProj = proj * view;
+		}
 
 		TransformUniformBlock objectUniforms;
 		MaterialBlock materialUniforms;
@@ -496,10 +513,10 @@ void DebugVectorRenderer::Render(const ViewRectangle& viewportRectangle)
 		renderDevice->BlendingDisable();
 
 		RenderCommandData::ViewportData viewportCommand;
-		viewportCommand.x = viewportRectangle.position.x;
-		viewportCommand.y = viewportRectangle.position.y;
-		viewportCommand.w = viewportRectangle.size.x;
-		viewportCommand.h = viewportRectangle.size.y;
+		viewportCommand.x = viewport.position.x;
+		viewportCommand.y = viewport.position.y;
+		viewportCommand.w = viewport.size.x;
+		viewportCommand.h = viewport.size.y;
 		renderDevice->Viewport(&viewportCommand);
 
 		renderDevice->UseShaderProgram(shader.driverId);

@@ -105,12 +105,12 @@ void Debug::Deinitialize()
 	vectorRenderer->Deinitialize();
 }
 
-void Debug::Render(const ViewRectangle& viewportRectangle)
+void Debug::Render(const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	Vec2f frameSize = this->window->GetFrameBufferSize().As<float>();
-	Vec2f viewportSize = viewportRectangle.size.As<float>();
+	Vec2f viewportSize = viewport.size.As<float>();
 	float screenCoordScale = this->window->GetScreenCoordinateScale();
 
 	textRenderer->SetFrameSize(frameSize);
@@ -279,7 +279,7 @@ void Debug::Render(const ViewRectangle& viewportRectangle)
 	if (mode == DebugMode::MemoryStats)
 		memoryStats->UpdateAndDraw();
 
-	vectorRenderer->Render(viewportRectangle);
+	vectorRenderer->Render(viewport, editorCamera);
 	textRenderer->Render();
 
 	ImGui::Begin("Performance stats");
