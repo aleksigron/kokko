@@ -23,7 +23,7 @@ static const char* const ComponentTypeKey = "component_type";
 
 LevelWriter::LevelWriter(Engine* engine) :
 	entityManager(engine->GetEntityManager()),
-	world(engine->GetWorld()),
+	scene(engine->GetScene()),
 	renderer(engine->GetRenderer()),
 	lightManager(engine->GetLightManager()),
 	cameraSystem(engine->GetCameraSystem()),
@@ -44,7 +44,7 @@ bool LevelWriter::WriteToFile(const char* filePath)
 
 	out << YAML::BeginMap;
 
-	int environmentId = world->GetEnvironmentId();
+	int environmentId = scene->GetEnvironmentId();
 	if (environmentId >= 0)
 	{
 		const char* sourcePath = environmentManager->GetEnvironmentSourcePath(environmentId);
@@ -54,8 +54,8 @@ bool LevelWriter::WriteToFile(const char* filePath)
 	out << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
 	for (Entity entity : *entityManager)
 	{
-		SceneObjectId sceneObj = world->Lookup(entity);
-		if (sceneObj != SceneObjectId::Null && world->GetParent(sceneObj) == SceneObjectId::Null)
+		SceneObjectId sceneObj = scene->Lookup(entity);
+		if (sceneObj != SceneObjectId::Null && scene->GetParent(sceneObj) == SceneObjectId::Null)
 			WriteEntity(out, entity, sceneObj);
 	}
 	out << YAML::EndSeq; // objects
@@ -83,7 +83,7 @@ void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId s
 
 	out << YAML::EndSeq; // components
 
-	SceneObjectId firstChild = world->GetFirstChild(sceneObj);
+	SceneObjectId firstChild = scene->GetFirstChild(sceneObj);
 	if (firstChild != SceneObjectId::Null)
 	{
 		out << YAML::Key << "children" << YAML::Value << YAML::BeginSeq;
@@ -91,11 +91,11 @@ void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId s
 		SceneObjectId child = firstChild;
 		while (child != SceneObjectId::Null)
 		{
-			Entity childEntity = world->GetEntity(child);
+			Entity childEntity = scene->GetEntity(child);
 
 			WriteEntity(out, childEntity, child);
 
-			child = world->GetNextSibling(child);
+			child = scene->GetNextSibling(child);
 		}
 
 		out << YAML::EndSeq;
@@ -106,7 +106,7 @@ void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId s
 
 void LevelWriter::WriteTransformComponent(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
 {
-	const SceneEditTransform& transform = world->GetEditTransform(sceneObj);
+	const SceneEditTransform& transform = scene->GetEditTransform(sceneObj);
 
 	out << YAML::BeginMap;
 	out << YAML::Key << ComponentTypeKey << YAML::Value << "transform";

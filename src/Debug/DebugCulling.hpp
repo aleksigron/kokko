@@ -2,7 +2,7 @@
 
 #include "Math/Vec2.hpp"
 
-class World;
+class Scene;
 class Renderer;
 class CameraSystem;
 class DebugTextRenderer;
@@ -12,7 +12,7 @@ class DebugCulling
 {
 private:
 	Renderer* renderer;
-	World* world;
+	Scene* scene;
 	CameraSystem* cameraSystem;
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
@@ -25,7 +25,7 @@ public:
 	DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
 	~DebugCulling();
 
-	void Initialize(Renderer* renderer, World* world, CameraSystem* cameraSystem);
+	void Initialize(Renderer* renderer, Scene* scene, CameraSystem* cameraSystem);
 
 	void UpdateAndDraw();
 

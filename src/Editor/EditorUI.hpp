@@ -9,7 +9,7 @@ class InputView;
 
 class Engine;
 class EntityManager;
-class World;
+class Scene;
 class Renderer;
 class LightManager;
 class CameraSystem;
@@ -29,7 +29,7 @@ private:
 	ImGuiPlatformBackend* platformBackend;
 
 	EntityManager* entityManager;
-	World* world;
+	Scene* scene;
 	Renderer* renderer;
 	LightManager* lightManager;
 	CameraSystem* cameraSystem;

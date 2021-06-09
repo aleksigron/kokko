@@ -11,7 +11,7 @@ class LightManager;
 class MaterialManager;
 class MeshManager;
 class Renderer;
-class World;
+class Scene;
 
 struct SceneObjectId;
 
@@ -19,7 +19,7 @@ class EntityView
 {
 private:
 	EntityManager* entityManager;
-	World* world;
+	Scene* scene;
 
 	// Component systems
 	Renderer* renderer;

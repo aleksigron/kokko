@@ -24,7 +24,7 @@
 
 LevelLoader::LevelLoader(Engine* engine):
 	entityManager(engine->GetEntityManager()),
-	world(engine->GetWorld()),
+	scene(engine->GetScene()),
 	renderer(engine->GetRenderer()),
 	lightManager(engine->GetLightManager()),
 	cameraSystem(engine->GetCameraSystem()),
@@ -47,10 +47,10 @@ void LevelLoader::Load(BufferRef<char> sceneConfig)
 
 		assert(envId >= 0);
 
-		world->SetEnvironmentId(envId);
+		scene->SetEnvironmentId(envId);
 	}
 	else
-		world->SetEnvironmentId(-1);
+		scene->SetEnvironmentId(-1);
 
 	const YAML::Node objects = node["objects"];
 	if (objects.IsDefined() && objects.IsSequence())
@@ -147,10 +147,10 @@ SceneObjectId LevelLoader::CreateComponents(const YAML::Node& componentSequence,
 
 SceneObjectId LevelLoader::CreateTransformComponent(const YAML::Node& map, Entity entity, SceneObjectId parent)
 {
-	SceneObjectId sceneObject = world->AddSceneObject(entity);
+	SceneObjectId sceneObject = scene->AddSceneObject(entity);
 
 	if (parent != SceneObjectId::Null)
-		world->SetParent(sceneObject, parent);
+		scene->SetParent(sceneObject, parent);
 
 	SceneEditTransform transform;
 
@@ -166,7 +166,7 @@ SceneObjectId LevelLoader::CreateTransformComponent(const YAML::Node& map, Entit
 	if (scaleNode.IsDefined() && scaleNode.IsSequence())
 		transform.scale = scaleNode.as<Vec3f>();
 
-	world->SetEditTransform(sceneObject, transform);
+	scene->SetEditTransform(sceneObject, transform);
 
 	return sceneObject;
 }

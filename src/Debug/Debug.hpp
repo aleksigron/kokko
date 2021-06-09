@@ -8,7 +8,7 @@ class CameraSystem;
 class RenderDevice;
 class MeshManager;
 class ShaderManager;
-class World;
+class Scene;
 class Window;
 class Renderer;
 class SceneManager;
@@ -63,7 +63,7 @@ public:
 	~Debug();
 
 	void Initialize(Window* window, Renderer* renderer, CameraSystem* cameraSystem,
-		MeshManager* meshManager, ShaderManager* shaderManager, World* world);
+		MeshManager* meshManager, ShaderManager* shaderManager, Scene* scene);
 	void Deinitialize();
 	
 	void Render(const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);

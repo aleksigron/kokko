@@ -24,7 +24,7 @@ const char* const EntityView::ComponentNames[] = {
 
 EntityView::EntityView() :
 	entityManager(nullptr),
-	world(nullptr),
+	scene(nullptr),
 	renderer(nullptr),
 	lightManager(nullptr),
 	cameraSystem(nullptr),
@@ -39,7 +39,7 @@ EntityView::EntityView() :
 void EntityView::Initialize(Engine* engine)
 {
 	entityManager = engine->GetEntityManager();
-	world = engine->GetWorld();
+	scene = engine->GetScene();
 	renderer = engine->GetRenderer();
 	lightManager = engine->GetLightManager();
 	cameraSystem = engine->GetCameraSystem();
@@ -70,10 +70,10 @@ void EntityView::Draw()
 		{
 			for (Entity entity : *entityManager)
 			{
-				SceneObjectId sceneObj = world->Lookup(entity);
+				SceneObjectId sceneObj = scene->Lookup(entity);
 
 				// Only draw root level objects, or entities that don't exist in the scene hierarchy
-				if (sceneObj == SceneObjectId::Null || world->GetParent(sceneObj) == SceneObjectId::Null)
+				if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
 					DrawEntityNode(entity, sceneObj);
 			}
 			ImGui::Spacing();
@@ -138,7 +138,7 @@ void EntityView::DrawEntityNode(Entity entity, SceneObjectId sceneObj)
 		flags = flags | ImGuiTreeNodeFlags_Leaf;
 	else
 	{
-		firstChild = world->GetFirstChild(sceneObj);
+		firstChild = scene->GetFirstChild(sceneObj);
 
 		if (firstChild == SceneObjectId::Null)
 			flags = flags | ImGuiTreeNodeFlags_Leaf;
@@ -167,11 +167,11 @@ void EntityView::DrawEntityNode(Entity entity, SceneObjectId sceneObj)
 
 		while (child != SceneObjectId::Null)
 		{
-			Entity childEntity = world->GetEntity(child);
+			Entity childEntity = scene->GetEntity(child);
 
 			DrawEntityNode(childEntity, child);
 
-			child = world->GetNextSibling(child);
+			child = scene->GetNextSibling(child);
 		}
 
 		ImGui::TreePop();
@@ -250,7 +250,7 @@ void EntityView::DrawEntityPropertyButtons()
 
 void EntityView::DrawSceneComponent()
 {
-	SceneObjectId sceneObj = world->Lookup(selectedEntity);
+	SceneObjectId sceneObj = scene->Lookup(selectedEntity);
 	if (sceneObj != SceneObjectId::Null)
 	{
 		ImGui::Spacing();
@@ -259,7 +259,7 @@ void EntityView::DrawSceneComponent()
 		if (ImGui::CollapsingHeader("Scene object", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
-			SceneEditTransform transform = world->GetEditTransform(sceneObj);
+			SceneEditTransform transform = scene->GetEditTransform(sceneObj);
 
 			if (ImGui::DragFloat3("Translation", transform.translation.ValuePointer(), 0.01f))
 			{
@@ -279,11 +279,11 @@ void EntityView::DrawSceneComponent()
 			}
 
 			if (edited)
-				world->SetEditTransform(sceneObj, transform);
+				scene->SetEditTransform(sceneObj, transform);
 		}
 
 		if (componentVisible == false)
-			world->RemoveSceneObject(sceneObj);
+			scene->RemoveSceneObject(sceneObj);
 	}
 }
 
@@ -324,9 +324,9 @@ void EntityView::DrawRenderComponent()
 						{
 							renderer->SetMeshId(renderObj, newMeshId);
 							
-							SceneObjectId sceneObj = world->Lookup(selectedEntity);
+							SceneObjectId sceneObj = scene->Lookup(selectedEntity);
 							if (sceneObj != SceneObjectId::Null)
-								world->MarkUpdated(sceneObj);
+								scene->MarkUpdated(sceneObj);
 						}
 					}
 					else
@@ -543,9 +543,9 @@ void EntityView::AddComponent(Entity entity, ComponentType componentType)
 	{
 	case EntityView::ComponentType::Scene:
 	{
-		SceneObjectId sceneObj = world->Lookup(entity);
+		SceneObjectId sceneObj = scene->Lookup(entity);
 		if (sceneObj == SceneObjectId::Null)
-			world->AddSceneObject(entity);
+			scene->AddSceneObject(entity);
 		break;
 	}
 	case EntityView::ComponentType::Render:
@@ -580,9 +580,9 @@ void EntityView::RemoveComponentIfExists(Entity entity, ComponentType componentT
 	{
 	case EntityView::ComponentType::Scene:
 	{
-		SceneObjectId sceneObj = world->Lookup(entity);
+		SceneObjectId sceneObj = scene->Lookup(entity);
 		if (sceneObj != SceneObjectId::Null)
-			world->RemoveSceneObject(sceneObj);
+			scene->RemoveSceneObject(sceneObj);
 		break;
 	}
 	case EntityView::ComponentType::Render:

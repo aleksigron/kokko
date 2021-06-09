@@ -101,11 +101,11 @@ Engine::Engine()
 	environmentManager.New(environmentManager.allocator, renderDevice,
 		shaderManager.instance, meshManager.instance, textureManager.instance);
 
-	world.CreateScope(allocatorManager, "World", alloc);
-	world.New(world.allocator, this);
+	scene.CreateScope(allocatorManager, "Scene", alloc);
+	scene.New(scene.allocator, this);
 
 	renderer.CreateScope(allocatorManager, "Renderer", alloc);
-	renderer.New(renderer.allocator, renderDevice, world.instance, cameraSystem.instance, lightManager.instance,
+	renderer.New(renderer.allocator, renderDevice, scene.instance, cameraSystem.instance, lightManager.instance,
 		shaderManager.instance, meshManager.instance, materialManager.instance, textureManager.instance);
 
 	scriptSystem.CreateScope(allocatorManager, "ScriptSystem", alloc);
@@ -120,7 +120,7 @@ Engine::~Engine()
 
 	scriptSystem.Delete();
 	renderer.Delete();
-	world.Delete();
+	scene.Delete();
 	environmentManager.Delete();
 	particleSystem.Delete();
 	terrainManager.Delete();
@@ -169,7 +169,7 @@ bool Engine::Initialize()
 		}
 
 		debug.instance->Initialize(mainWindow.instance, renderer.instance, cameraSystem.instance,
-			meshManager.instance, shaderManager.instance, world.instance);
+			meshManager.instance, shaderManager.instance, scene.instance);
 
 		textureManager.instance->Initialize();
 		environmentManager.instance->Initialize();
@@ -214,7 +214,7 @@ void Engine::Update()
 	// Propagate transform updates from Scene to other systems that require it
 	TransformUpdateReceiver* transformUpdateReceivers[] = { lightManager.instance, renderer.instance };
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
-	world.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
+	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
 	ViewRectangle viewport = editorUI.instance->GetWorldViewport();
 	editorCameraProjection.SetAspectRatio(viewport.size.x, viewport.size.y);

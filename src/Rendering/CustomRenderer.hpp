@@ -7,7 +7,7 @@
 struct RenderCommandList;
 struct RenderViewport;
 
-class World;
+class Scene;
 
 class CustomRenderer
 {
@@ -17,7 +17,7 @@ public:
 		RenderCommandList* commandList;
 		unsigned int callbackId;
 		unsigned int fullscreenViewport;
-		World* world;
+		Scene* scene;
 	};
 
 	struct RenderParams
@@ -26,7 +26,7 @@ public:
 		CameraParameters cameraParams;
 		unsigned int callbackId;
 		uint64_t command;
-		World* world;
+		Scene* scene;
 	};
 
 	virtual void AddRenderCommands(const CommandParams& params) {}

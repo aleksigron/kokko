@@ -84,7 +84,7 @@ Debug::~Debug()
 }
 
 void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraSystem,
-	MeshManager* meshManager, ShaderManager* shaderManager, World* world)
+	MeshManager* meshManager, ShaderManager* shaderManager, Scene* scene)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -96,8 +96,8 @@ void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraS
 	this->window = window;
 
 	textRenderer->Initialize(shaderManager, meshManager);
-	vectorRenderer->Initialize(meshManager, shaderManager, world, cameraSystem);
-	culling->Initialize(renderer, world, cameraSystem);
+	vectorRenderer->Initialize(meshManager, shaderManager, scene, cameraSystem);
+	culling->Initialize(renderer, scene, cameraSystem);
 }
 
 void Debug::Deinitialize()

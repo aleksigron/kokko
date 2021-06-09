@@ -97,7 +97,7 @@ struct TonemapUniformBlock
 Renderer::Renderer(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
-	World* world,
+	Scene* scene,
 	CameraSystem* cameraSystem,
 	LightManager* lightManager,
 	ShaderManager* shaderManager,
@@ -120,7 +120,7 @@ Renderer::Renderer(
 	objectUniformBufferLists{ Array<unsigned int>(allocator) },
 	currentFrameIndex(0),
 	entityMap(allocator),
-	world(world),
+	scene(scene),
 	cameraSystem(cameraSystem),
 	lightManager(lightManager),
 	shaderManager(shaderManager),
@@ -772,7 +772,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 						params.viewport = &viewport;
 						params.callbackId = callbackId;
 						params.command = command;
-						params.world = world;
+						params.scene = scene;
 
 						customRenderer->RenderCustom(params);
 
@@ -889,7 +889,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	ssao->Render(ssaoRenderParams);
 
 	EnvironmentTextures envMap;
-	int environmentId = world->GetEnvironmentId();
+	int environmentId = scene->GetEnvironmentId();
 	if (environmentId >= 0)
 		envMap = environmentManager->GetEnvironmentMap(environmentId);
 	else
@@ -952,7 +952,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 void Renderer::RenderSkybox(const CustomRenderer::RenderParams& params)
 {
 	EnvironmentTextures envMap;
-	int environmentId = world->GetEnvironmentId();
+	int environmentId = scene->GetEnvironmentId();
 	if (environmentId >= 0)
 		envMap = environmentManager->GetEnvironmentMap(environmentId);
 	else
@@ -1163,7 +1163,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 		uniformsOut.shadowSplits[vpIdx + 1] = cascadeSplitDepths[vpIdx];
 	}
 
-	Vec3f ambientColor(world->ambientColor.r, world->ambientColor.g, world->ambientColor.b);
+	Vec3f ambientColor(scene->ambientColor.r, scene->ambientColor.g, scene->ambientColor.b);
 	uniformsOut.ambientColor = ambientColor;
 
 	uniformsOut.shadowBiasOffset = 0.001f;
@@ -1415,12 +1415,12 @@ CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>&
 	}
 	else
 	{
-		Entity cameraEntity = world->GetActiveCameraEntity();
+		Entity cameraEntity = scene->GetActiveCameraEntity();
 
 		CameraParameters result;
 
-		SceneObjectId cameraSceneObj = world->Lookup(cameraEntity);
-		result.transform.forward = world->GetWorldTransform(cameraSceneObj);
+		SceneObjectId cameraSceneObj = scene->Lookup(cameraEntity);
+		result.transform.forward = scene->GetWorldTransform(cameraSceneObj);
 		result.transform.inverse = result.transform.forward.GetInverse();
 
 		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
@@ -1808,7 +1808,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 			params.fullscreenViewport = this->viewportIndexFullscreen;
 			params.commandList = &commandList;
 			params.callbackId = i + 1;
-			params.world = world;
+			params.scene = scene;
 
 			customRenderers[i]->AddRenderCommands(params);
 		}

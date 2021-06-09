@@ -31,7 +31,7 @@ EditorUI::EditorUI(Allocator* allocator) :
 	renderBackend(nullptr),
 	platformBackend(nullptr),
 	entityManager(nullptr),
-	world(nullptr),
+	scene(nullptr),
 	renderer(nullptr),
 	lightManager(nullptr),
 	cameraSystem(nullptr)
@@ -56,7 +56,7 @@ void EditorUI::Initialize(Engine* engine)
 	platformBackend = allocator->MakeNew<ImGuiPlatformBackend>();
 
 	entityManager = engine->GetEntityManager();
-	world = engine->GetWorld();
+	scene = engine->GetScene();
 	renderer = engine->GetRenderer();
 	lightManager = engine->GetLightManager();
 	cameraSystem = engine->GetCameraSystem();
@@ -198,11 +198,11 @@ void EditorUI::DrawMainMenuBar()
 		if (type == FilePickerDialog::DialogType::FileOpen)
 		{
 			ClearAllEntities();
-			world->LoadFromFile(filePickerPathOut.GetCStr());
+			scene->LoadFromFile(filePickerPathOut.GetCStr());
 		}
 		else if (type == FilePickerDialog::DialogType::FileSave)
 		{
-			world->WriteToFile(filePickerPathOut.GetCStr());
+			scene->WriteToFile(filePickerPathOut.GetCStr());
 		}
 	}
 }
@@ -212,6 +212,6 @@ void EditorUI::ClearAllEntities()
 	cameraSystem->RemoveAll();
 	lightManager->RemoveAll();
 	renderer->RemoveAll();
-	world->RemoveAll();
+	scene->RemoveAll();
 	entityManager->ClearAll();
 }

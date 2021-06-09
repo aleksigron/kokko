@@ -1,12 +1,12 @@
 #pragma once
 
 class AppSettings;
-class World;
+class Scene;
 class InputManager;
 
 struct ScriptContext
 {
 	void* app;
-	World* world;
+	Scene* scene;
 	InputManager* inputManager;
 };

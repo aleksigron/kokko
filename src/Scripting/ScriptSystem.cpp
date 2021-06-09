@@ -42,7 +42,7 @@ void ScriptSystem::UpdateScripts()
 	ScriptContext scriptContext;
 	scriptContext.app = app;
 	scriptContext.inputManager = engine->GetMainWindow()->GetInputManager();
-	scriptContext.world = engine->GetWorld();
+	scriptContext.scene = engine->GetScene();
 
 	for (unsigned int i = 0, count = scriptsToInit.GetCount(); i < count; ++i)
 		scriptsToInit[i]->OnCreate(scriptContext);

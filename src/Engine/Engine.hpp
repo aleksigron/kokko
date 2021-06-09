@@ -7,7 +7,7 @@ class EditorUI;
 class Time;
 class RenderDevice;
 class EntityManager;
-class World;
+class Scene;
 class Renderer;
 class MeshManager;
 class ShaderManager;
@@ -63,7 +63,7 @@ private:
 	InstanceAllocatorPair<TerrainManager> terrainManager;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
 	InstanceAllocatorPair<EnvironmentManager> environmentManager;
-	InstanceAllocatorPair<World> world;
+	InstanceAllocatorPair<Scene> scene;
 	InstanceAllocatorPair<Renderer> renderer;
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
 
@@ -86,7 +86,7 @@ public:
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
 	EnvironmentManager* GetEnvironmentManager() { return environmentManager.instance; }
-	World* GetWorld() { return world.instance; }
+	Scene* GetScene() { return scene.instance; }
 	Renderer* GetRenderer() { return renderer.instance; }
 	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
 };

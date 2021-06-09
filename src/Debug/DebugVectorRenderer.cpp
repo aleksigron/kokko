@@ -37,7 +37,7 @@ DebugVectorRenderer::DebugVectorRenderer(
 	cameraSystem(nullptr),
 	shaderManager(nullptr),
 	meshManager(nullptr),
-	world(nullptr),
+	scene(nullptr),
 	dynamicMeshes(nullptr),
 	dynamicMeshCount(0),
 	dynamicMeshAllocated(0),
@@ -57,14 +57,14 @@ DebugVectorRenderer::~DebugVectorRenderer()
 }
 
 void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-	World* world, CameraSystem* cameraSystem)
+	Scene* scene, CameraSystem* cameraSystem)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	this->cameraSystem = cameraSystem;
 	this->meshManager = meshManager;
 	this->shaderManager = shaderManager;
-	this->world = world;
+	this->scene = scene;
 
 	// Initialize shaders
 
@@ -491,9 +491,9 @@ void DebugVectorRenderer::Render(const ViewRectangle& viewport, const Optional<C
 		}
 		else
 		{
-			Entity cameraEntity = world->GetActiveCameraEntity();
-			SceneObjectId cameraSceneObject = world->Lookup(cameraEntity);
-			const Mat4x4f& cameraTransform = world->GetWorldTransform(cameraSceneObject);
+			Entity cameraEntity = scene->GetActiveCameraEntity();
+			SceneObjectId cameraSceneObject = scene->Lookup(cameraEntity);
+			const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
 
 			bool reverseDepth = false;
 

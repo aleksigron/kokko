@@ -6,7 +6,7 @@
 
 class Engine;
 class EntityManager;
-class World;
+class Scene;
 class Renderer;
 class LightManager;
 class CameraSystem;
@@ -26,7 +26,7 @@ private:
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 
 	EntityManager* entityManager;
-	World* world;
+	Scene* scene;
 	Renderer* renderer;
 	LightManager* lightManager;
 	CameraSystem* cameraSystem;

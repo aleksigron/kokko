@@ -2,7 +2,7 @@
 
 class Engine;
 class EntityManager;
-class World;
+class Scene;
 class Renderer;
 class LightManager;
 class CameraSystem;
@@ -24,7 +24,7 @@ public:
 
 private:
 	EntityManager* entityManager;
-	World* world;
+	Scene* scene;
 	Renderer* renderer;
 	LightManager* lightManager;
 	CameraSystem* cameraSystem;

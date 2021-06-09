@@ -10,7 +10,7 @@
 
 DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
 	renderer(nullptr),
-	world(nullptr),
+	scene(nullptr),
 	cameraSystem(nullptr),
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
@@ -22,10 +22,10 @@ DebugCulling::~DebugCulling()
 {
 }
 
-void DebugCulling::Initialize(Renderer* renderer, World* world, CameraSystem* cameraSystem)
+void DebugCulling::Initialize(Renderer* renderer, Scene* scene, CameraSystem* cameraSystem)
 {
 	this->renderer = renderer;
-	this->world = world;
+	this->scene = scene;
 	this->cameraSystem = cameraSystem;
 }
 
@@ -43,7 +43,7 @@ void DebugCulling::UpdateAndDraw()
 
 		const Mat4x4f& transform = renderer->GetCullingCameraTransform();
 
-		Entity cameraEntity = world->GetActiveCameraEntity();
+		Entity cameraEntity = scene->GetActiveCameraEntity();
 		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
 		ProjectionParameters params = cameraSystem->GetData(cameraId);
 		params.perspectiveFar = params.perspectiveFar < 10.0f ? params.perspectiveFar : 10.0f;
