@@ -3,7 +3,7 @@
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
-#include "Graphics/World.hpp"
+#include "Graphics/Scene.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/Renderer.hpp"

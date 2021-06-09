@@ -19,7 +19,7 @@
 
 #include "Engine/Engine.hpp"
 
-#include "Graphics/World.hpp"
+#include "Graphics/Scene.hpp"
 
 #include "Math/Rectangle.hpp"
 

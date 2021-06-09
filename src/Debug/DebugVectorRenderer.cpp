@@ -7,7 +7,7 @@
 
 #include "Engine/Engine.hpp"
 
-#include "Graphics/World.hpp"
+#include "Graphics/Scene.hpp"
 
 #include "Math/Math.hpp"
 #include "Math/Frustum.hpp"

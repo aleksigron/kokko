@@ -1,4 +1,4 @@
-#include "Graphics/World.hpp"
+#include "Graphics/Scene.hpp"
 
 #include <cassert>
 

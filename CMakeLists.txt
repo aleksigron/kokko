@@ -123,8 +123,8 @@ set (KOKKO_SOURCES
 	src/Graphics/TerrainManager.cpp
 	src/Graphics/TerrainManager.hpp
 	src/Graphics/TransformUpdateReceiver.hpp
-	src/Graphics/World.cpp
-	src/Graphics/World.hpp
+	src/Graphics/Scene.cpp
+	src/Graphics/Scene.hpp
 	src/Math/BoundingBox.hpp
 	src/Math/Frustum.hpp
 	src/Math/Intersect3D.cpp

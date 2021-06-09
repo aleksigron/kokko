@@ -18,7 +18,7 @@
 #include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/ParticleSystem.hpp"
 #include "Graphics/TerrainManager.hpp"
-#include "Graphics/World.hpp"
+#include "Graphics/Scene.hpp"
 
 #include "Memory/AllocatorManager.hpp"
 #include "Memory/Memory.hpp"
