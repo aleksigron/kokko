@@ -680,8 +680,8 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 	MaterialId lastMaterialId = MaterialId{ 0 };
 
 	Array<unsigned int>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
-
-	TransformUniformBlock objectUniforms;
+	
+	CameraParameters cameraParams = GetCameraParameters(editorCamera);
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -763,6 +763,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 					{
 						CustomRenderer::RenderParams params;
 						params.viewport = &viewport;
+						params.cameraParams = cameraParams;
 						params.callbackId = callbackId;
 						params.command = command;
 						params.scene = scene;
