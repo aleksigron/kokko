@@ -18,11 +18,13 @@ TerrainManager::TerrainManager(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	MeshManager* meshManager,
-	MaterialManager* materialManager) :
+	MaterialManager* materialManager,
+	ShaderManager* shaderManager) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	meshManager(meshManager),
 	materialManager(materialManager),
+	shaderManager(shaderManager),
 	terrainInstances(nullptr)
 {
 	terrainMaterial = MaterialId{ 0 };
@@ -33,7 +35,7 @@ TerrainManager::~TerrainManager()
 	allocator->MakeDelete(terrainInstances);
 }
 
-void TerrainManager::Initialize(ShaderManager* shaderManager)
+void TerrainManager::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 

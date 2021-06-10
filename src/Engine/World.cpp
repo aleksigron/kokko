@@ -4,7 +4,9 @@
 
 #include "Entity/EntityManager.hpp"
 
+#include "Graphics/ParticleSystem.hpp"
 #include "Graphics/Scene.hpp"
+#include "Graphics/TerrainManager.hpp"
 
 #include "Math/Rectangle.hpp"
 
@@ -48,10 +50,19 @@ World::World(AllocatorManager* allocManager,
 
 	scriptSystem.CreateScope(allocManager, "ScriptSystem", alloc);
 	scriptSystem.New(scriptSystem.allocator, inputManager);
+
+	terrainManager.CreateScope(allocManager, "TerrainManager", alloc);
+	terrainManager.New(terrainManager.allocator, renderDevice, resourceManagers.meshManager,
+		resourceManagers.materialManager, resourceManagers.shaderManager);
+
+	particleSystem.CreateScope(allocManager, "ParticleEffects", alloc);
+	particleSystem.New(particleSystem.allocator, renderDevice, resourceManagers.shaderManager, resourceManagers.meshManager);
 }
 
 World::~World()
 {
+	particleSystem.Delete();
+	terrainManager.Delete();
 	scriptSystem.Delete();
 	renderer.Delete();
 	scene.Delete();
@@ -63,6 +74,8 @@ World::~World()
 void World::Initialize(Window* window)
 {
 	renderer.instance->Initialize(window->GetFrameBufferSize());
+	terrainManager.instance->Initialize();
+	particleSystem.instance->Initialize();
 }
 
 void World::Deinitialize()
@@ -83,6 +96,9 @@ void World::Render(const Optional<CameraParameters>& editorCamera, const ViewRec
 	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
 	renderer.instance->SetFullscreenViewportRectangle(viewport);
+
+	terrainManager.instance->RegisterCustomRenderer(renderer.instance);
+	particleSystem.instance->RegisterCustomRenderer(renderer.instance);
 
 	renderer.instance->Render(editorCamera);
 }

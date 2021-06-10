@@ -68,10 +68,7 @@ public:
 
 	void Initialize();
 
-	// TODO: Make sure this is called from World::Render
-	// Renderer logic should change so it clears all custom renderers after rendering has finished
 	void RegisterCustomRenderer(Renderer* renderer);
-
 
 	virtual void AddRenderCommands(const CommandParams& params) override final;
 	virtual void RenderCustom(const RenderParams& params) override final;

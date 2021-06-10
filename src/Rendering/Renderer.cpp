@@ -166,10 +166,6 @@ Renderer::Renderer(
 	objectUniformBlockStride = 0;
 	objectsPerUniformBuffer = 0;
 
-	deferredLightingCallback = AddCustomRenderer(this);
-	skyboxRenderCallback = AddCustomRenderer(this);
-	postProcessCallback = AddCustomRenderer(this);
-
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
 
@@ -668,6 +664,10 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	deferredLightingCallback = AddCustomRenderer(this);
+	skyboxRenderCallback = AddCustomRenderer(this);
+	postProcessCallback = AddCustomRenderer(this);
+
 	unsigned int objectDrawCount = PopulateCommandList(editorCamera);
 	UpdateUniformBuffers(objectDrawCount);
 
@@ -791,6 +791,8 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 	renderTargetContainer->ConfirmAllTargetsAreUnused();
 
 	currentFrameIndex = (currentFrameIndex + 1) % FramesInFlightCount;
+
+	customRenderers.Clear();
 }
 
 void Renderer::BindMaterialTextures(const MaterialData& material) const

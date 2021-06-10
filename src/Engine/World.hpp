@@ -21,6 +21,8 @@ class Renderer;
 class LightManager;
 class CameraSystem;
 class ScriptSystem;
+class TerrainManager;
+class ParticleSystem;
 
 class World
 {
@@ -54,4 +56,6 @@ private:
 	InstanceAllocatorPair<Scene> scene;
 	InstanceAllocatorPair<Renderer> renderer;
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
+	InstanceAllocatorPair<TerrainManager> terrainManager;
+	InstanceAllocatorPair<ParticleSystem> particleSystem;
 };

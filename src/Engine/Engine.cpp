@@ -18,8 +18,6 @@
 #include "Entity/EntityManager.hpp"
 
 #include "Graphics/EnvironmentManager.hpp"
-#include "Graphics/ParticleSystem.hpp"
-#include "Graphics/TerrainManager.hpp"
 #include "Graphics/Scene.hpp"
 
 #include "Memory/AllocatorManager.hpp"
@@ -78,12 +76,6 @@ Engine::Engine()
 	materialManager.CreateScope(allocatorManager, "MaterialManager", alloc);
 	materialManager.New(materialManager.allocator, renderDevice, shaderManager.instance, textureManager.instance);
 
-	terrainManager.CreateScope(allocatorManager, "TerrainManager", alloc);
-	terrainManager.New(terrainManager.allocator, renderDevice, meshManager.instance, materialManager.instance);
-
-	particleSystem.CreateScope(allocatorManager, "ParticleEffects", alloc);
-	particleSystem.New(particleSystem.allocator, renderDevice, shaderManager.instance, meshManager.instance);
-
 	environmentManager.CreateScope(allocatorManager, "EnvironmentManager", alloc);
 	environmentManager.New(environmentManager.allocator, renderDevice,
 		shaderManager.instance, meshManager.instance, textureManager.instance);
@@ -108,8 +100,6 @@ Engine::~Engine()
 
 	world.Delete();
 	environmentManager.Delete();
-	particleSystem.Delete();
-	terrainManager.Delete();
 	materialManager.Delete();
 	shaderManager.Delete();
 	textureManager.Delete();
@@ -162,8 +152,6 @@ bool Engine::Initialize()
 
 		textureManager.instance->Initialize();
 		environmentManager.instance->Initialize();
-		terrainManager.instance->Initialize(shaderManager.instance);
-		particleSystem.instance->Initialize();
 
 		world.instance->Initialize(mainWindow.instance);
 

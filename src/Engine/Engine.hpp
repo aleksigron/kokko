@@ -9,19 +9,11 @@ class EditorUI;
 class Time;
 class RenderDevice;
 class World;
-class EntityManager;
-class Scene;
-class Renderer;
 class MeshManager;
 class ShaderManager;
 class MaterialManager;
 class TextureManager;
-class LightManager;
-class CameraSystem;
-class TerrainManager;
-class ParticleSystem;
 class EnvironmentManager;
-class ScriptSystem;
 
 class Debug;
 
@@ -42,8 +34,6 @@ private:
 	InstanceAllocatorPair<TextureManager> textureManager;
 	InstanceAllocatorPair<ShaderManager> shaderManager;
 	InstanceAllocatorPair<MaterialManager> materialManager;
-	InstanceAllocatorPair<TerrainManager> terrainManager;
-	InstanceAllocatorPair<ParticleSystem> particleSystem;
 	InstanceAllocatorPair<EnvironmentManager> environmentManager;
 	InstanceAllocatorPair<World> world;
 
