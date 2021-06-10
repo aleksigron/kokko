@@ -16,10 +16,9 @@ struct Entity;
 struct CameraParameters;
 class Allocator;
 class RenderDevice;
-class CameraSystem;
 class MeshManager;
 class ShaderManager;
-class Scene;
+class World;
 class Window;
 
 class DebugVectorRenderer
@@ -48,10 +47,8 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* renderDevice;
-	CameraSystem* cameraSystem;
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
-	Scene* scene;
 
 	Primitive* primitives;
 	unsigned int primitiveCount;
@@ -84,8 +81,7 @@ public:
 	DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice);
 	~DebugVectorRenderer();
 
-	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-		Scene* scene, CameraSystem* cameraSystem);
+	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager);
 	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
@@ -100,5 +96,5 @@ public:
 
 	void DrawWireFrustum(const Mat4x4f& transform, const ProjectionParameters& projection, const Color& color);
 
-	void Render(const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
+	void Render(World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
 };

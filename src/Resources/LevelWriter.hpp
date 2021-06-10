@@ -1,14 +1,8 @@
 #pragma once
 
-class Engine;
-class EntityManager;
-class Scene;
-class Renderer;
-class LightManager;
-class CameraSystem;
-class MeshManager;
-class MaterialManager;
-class EnvironmentManager;
+#include "Resources/ResourceManagers.hpp"
+
+class World;
 
 struct Entity;
 struct SceneObjectId;
@@ -18,19 +12,13 @@ namespace YAML { class Emitter; }
 class LevelWriter
 {
 public:
-	LevelWriter(Engine* engine);
+	LevelWriter(World* world, const ResourceManagers& resManagers);
 
 	bool WriteToFile(const char* filePath);
 
 private:
-	EntityManager* entityManager;
-	Scene* scene;
-	Renderer* renderer;
-	LightManager* lightManager;
-	CameraSystem* cameraSystem;
-	MeshManager* meshManager;
-	MaterialManager* materialManager;
-	EnvironmentManager* environmentManager;
+	World* world;
+	ResourceManagers resourceManagers;
 
 	void WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj);
 	void WriteTransformComponent(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj);

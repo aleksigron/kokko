@@ -4,14 +4,12 @@
 
 class Allocator;
 class AllocatorManager;
-class CameraSystem;
 class RenderDevice;
 class MeshManager;
 class ShaderManager;
-class Scene;
 class Window;
 class Renderer;
-class SceneManager;
+class World;
 
 class DebugVectorRenderer;
 class DebugTextRenderer;
@@ -62,11 +60,10 @@ public:
 		Window* window, RenderDevice* renderDevice);
 	~Debug();
 
-	void Initialize(Window* window, Renderer* renderer, CameraSystem* cameraSystem,
-		MeshManager* meshManager, ShaderManager* shaderManager, Scene* scene);
+	void Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager);
 	void Deinitialize();
 	
-	void Render(const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
+	void Render(World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
 
 	DebugLog* GetLog() { return log; }
 	DebugConsole* GetConsole() { return console; }

@@ -13,6 +13,8 @@
 
 #include "Editor/EditorUI.hpp"
 
+#include "Engine/World.hpp"
+
 #include "Entity/EntityManager.hpp"
 
 #include "Graphics/EnvironmentManager.hpp"
@@ -40,12 +42,6 @@
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
-template <typename Type>
-void Engine::InstanceAllocatorPair<Type>::CreateScope(AllocatorManager* manager, const char* name, Allocator* alloc)
-{
-	allocator = manager->CreateAllocatorScope(name, alloc);
-}
-
 Engine::Engine()
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -70,9 +66,6 @@ Engine::Engine()
 
 	debugNameAllocator = allocatorManager->CreateAllocatorScope("EntityDebugNames", alloc);
 
-	entityManager.CreateScope(allocatorManager, "EntityManager", alloc);
-	entityManager.New(entityManager.allocator, debugNameAllocator);
-
 	meshManager.CreateScope(allocatorManager, "MeshManager", alloc);
 	meshManager.New(meshManager.allocator, renderDevice);
 
@@ -85,12 +78,6 @@ Engine::Engine()
 	materialManager.CreateScope(allocatorManager, "MaterialManager", alloc);
 	materialManager.New(materialManager.allocator, renderDevice, shaderManager.instance, textureManager.instance);
 
-	lightManager.CreateScope(allocatorManager, "LightManager", alloc);
-	lightManager.New(lightManager.allocator);
-
-	cameraSystem.CreateScope(allocatorManager, "CameraSystem", alloc);
-	cameraSystem.New(cameraSystem.allocator);
-
 	terrainManager.CreateScope(allocatorManager, "TerrainManager", alloc);
 	terrainManager.New(terrainManager.allocator, renderDevice, meshManager.instance, materialManager.instance);
 
@@ -101,36 +88,32 @@ Engine::Engine()
 	environmentManager.New(environmentManager.allocator, renderDevice,
 		shaderManager.instance, meshManager.instance, textureManager.instance);
 
-	scene.CreateScope(allocatorManager, "Scene", alloc);
-	scene.New(scene.allocator, this);
+	ResourceManagers resManagers;
+	resManagers.meshManager = meshManager.instance;
+	resManagers.shaderManager = shaderManager.instance;
+	resManagers.materialManager = materialManager.instance;
+	resManagers.textureManager = textureManager.instance;
+	resManagers.environmentManager = environmentManager.instance;
 
-	renderer.CreateScope(allocatorManager, "Renderer", alloc);
-	renderer.New(renderer.allocator, renderDevice, scene.instance, cameraSystem.instance, lightManager.instance,
-		shaderManager.instance, meshManager.instance, materialManager.instance, textureManager.instance);
-
-	scriptSystem.CreateScope(allocatorManager, "ScriptSystem", alloc);
-	scriptSystem.New(this, scriptSystem.allocator);
+	world.CreateScope(allocatorManager, "World", alloc);
+	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice,
+		mainWindow.instance->GetInputManager(), resManagers);
 }
 
 Engine::~Engine()
 {
-	renderer.instance->Deinitialize();
+	world.instance->Deinitialize();
 	debug.instance->Deinitialize();
 	editorUI.instance->Deinitialize();
 
-	scriptSystem.Delete();
-	renderer.Delete();
-	scene.Delete();
+	world.Delete();
 	environmentManager.Delete();
 	particleSystem.Delete();
 	terrainManager.Delete();
-	cameraSystem.Delete();
-	lightManager.Delete();
 	materialManager.Delete();
 	shaderManager.Delete();
 	textureManager.Delete();
 	meshManager.Delete();
-	entityManager.Delete();
 	debug.Delete();
 	systemAllocator->MakeDelete(this->time);
 	systemAllocator->MakeDelete(this->renderDevice);
@@ -151,7 +134,14 @@ bool Engine::Initialize()
 
 	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko"))
 	{
-		editorUI.instance->Initialize(this);
+		ResourceManagers resManagers;
+		resManagers.meshManager = meshManager.instance;
+		resManagers.shaderManager = shaderManager.instance;
+		resManagers.materialManager = materialManager.instance;
+		resManagers.textureManager = textureManager.instance;
+		resManagers.environmentManager = environmentManager.instance;
+
+		editorUI.instance->Initialize(mainWindow.instance, resManagers);
 
 		const char* const logFilename = "log.txt";
 		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";
@@ -168,14 +158,14 @@ bool Engine::Initialize()
 			debugLog->Log(logText);
 		}
 
-		debug.instance->Initialize(mainWindow.instance, renderer.instance, cameraSystem.instance,
-			meshManager.instance, shaderManager.instance, scene.instance);
+		debug.instance->Initialize(mainWindow.instance, meshManager.instance, shaderManager.instance);
 
 		textureManager.instance->Initialize();
 		environmentManager.instance->Initialize();
-		renderer.instance->Initialize(mainWindow.instance, entityManager.instance, environmentManager.instance);
-		terrainManager.instance->Initialize(renderer.instance, shaderManager.instance);
-		particleSystem.instance->Initialize(renderer.instance);
+		terrainManager.instance->Initialize(shaderManager.instance);
+		particleSystem.instance->Initialize();
+
+		world.instance->Initialize(mainWindow.instance);
 
 		return true;
 	}
@@ -200,33 +190,30 @@ void Engine::Update()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	// FRAME UPDATE
+
 	this->time->Update();
 
-	scriptSystem.instance->UpdateScripts();
+	world.instance->Update();
 
 	// Because editor can change the state of the world and systems,
 	// let's run those updates at the same part of the frame as other updates
-	editorUI.instance->Update();
+	editorUI.instance->Update(world.instance);
 
-	Mat4x4fBijection editorCameraTransform = editorUI.instance->GetEditorCameraTransform();
-	ProjectionParameters editorCameraProjection = editorUI.instance->GetEditorCameraProjection();
-
-	// Propagate transform updates from Scene to other systems that require it
-	TransformUpdateReceiver* transformUpdateReceivers[] = { lightManager.instance, renderer.instance };
-	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
-	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
+	// FRAME RENDER
 
 	ViewRectangle viewport = editorUI.instance->GetWorldViewport();
+	Mat4x4fBijection editorCameraTransform = editorUI.instance->GetEditorCameraTransform();
+	ProjectionParameters editorCameraProjection = editorUI.instance->GetEditorCameraProjection();
 	editorCameraProjection.SetAspectRatio(viewport.size.x, viewport.size.y);
-
-	renderer.instance->SetFullscreenViewportRectangle(viewport);
-
 	Optional<CameraParameters> editorCamera = Optional(CameraParameters{ editorCameraTransform, editorCameraProjection });
-	renderer.instance->Render(editorCamera);
 
-	renderer.instance->DebugRender(debug.instance->GetVectorRenderer());
+	world.instance->Render(editorCamera, viewport);
+	world.instance->DebugRender(debug.instance->GetVectorRenderer());
 
-	debug.instance->Render(viewport, editorCamera);
+	debug.instance->Render(world.instance, viewport, editorCamera);
+
+	// FRAME END
 
 	editorUI.instance->EndFrame();
 
@@ -236,5 +223,5 @@ void Engine::Update()
 
 void Engine::SetAppPointer(void* app)
 {
-	scriptSystem.instance->SetAppPointer(app);
+	world.instance->GetScriptSystem()->SetAppPointer(app);
 }

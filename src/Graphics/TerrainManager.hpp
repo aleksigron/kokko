@@ -28,7 +28,11 @@ public:
 		MeshManager* meshManager, MaterialManager* materialManager);
 	~TerrainManager();
 
-	void Initialize(Renderer* renderer, ShaderManager* shaderManager);
+	void Initialize(ShaderManager* shaderManager);
+
+	// TODO: Make sure this is called from World::Render
+	// Renderer logic should change so it clears all custom renderers after rendering has finished
+	void RegisterCustomRenderer(Renderer* renderer);
 
 	virtual void AddRenderCommands(const CustomRenderer::CommandParams& params) override final;
 	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;

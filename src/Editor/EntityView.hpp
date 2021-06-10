@@ -4,29 +4,16 @@
 
 #include "Entity/Entity.hpp"
 
-class CameraSystem;
-class Engine;
-class EntityManager;
-class LightManager;
+class World;
 class MaterialManager;
 class MeshManager;
-class Renderer;
-class Scene;
 
+struct ResourceManagers;
 struct SceneObjectId;
 
 class EntityView
 {
 private:
-	EntityManager* entityManager;
-	Scene* scene;
-
-	// Component systems
-	Renderer* renderer;
-	LightManager* lightManager;
-	CameraSystem* cameraSystem;
-
-	// Resource managers
 	MaterialManager* materialManager;
 	MeshManager* meshManager;
 
@@ -47,27 +34,27 @@ private:
 	static const size_t ComponentTypeCount = 4;
 	static const char* const ComponentNames[ComponentTypeCount];
 
-	void DrawEntityListButtons();
-	void DrawEntityNode(Entity entity, SceneObjectId sceneObj);
+	void DrawEntityListButtons(World* world);
+	void DrawEntityNode(World* world, Entity entity, SceneObjectId sceneObj);
 
-	void DrawEntityProperties();
-	void DrawEntityPropertyButtons();
+	void DrawEntityProperties(World* world);
+	void DrawEntityPropertyButtons(World* world);
 
-	void DrawSceneComponent();
-	void DrawRenderComponent();
-	void DrawCameraComponent();
-	void DrawLightComponent();
+	void DrawSceneComponent(World* world);
+	void DrawRenderComponent(World* world);
+	void DrawCameraComponent(World* world);
+	void DrawLightComponent(World* world);
 
-	void CreateEntity(ComponentType* components, unsigned int componentCount);
-	void DestroyEntity(Entity entity);
+	void CreateEntity(World* world, ComponentType* components, unsigned int componentCount);
+	void DestroyEntity(World* world, Entity entity);
 
-	void AddComponent(Entity entity, ComponentType componentType);
-	void RemoveComponentIfExists(Entity entity, ComponentType componentType);
+	void AddComponent(World* world, Entity entity, ComponentType componentType);
+	void RemoveComponentIfExists(World* world, Entity entity, ComponentType componentType);
 
 public:
 	EntityView();
 
-	void Initialize(Engine* engine);
+	void Initialize(const ResourceManagers& resourceManagers);
 
-	void Draw();
+	void Draw(World* world);
 };

@@ -1,18 +1,10 @@
 #pragma once
 
-#include "rapidjson/document.h"
-
 #include "Core/BufferRef.hpp"
 
-class Engine;
-class EntityManager;
-class Scene;
-class Renderer;
-class LightManager;
-class CameraSystem;
-class MeshManager;
-class MaterialManager;
-class EnvironmentManager;
+#include "Resources/ResourceManagers.hpp"
+
+class World;
 
 struct Entity;
 struct SceneObjectId;
@@ -22,17 +14,8 @@ namespace YAML { class Node; }
 class LevelLoader
 {
 private:
-	using ValueItr = rapidjson::Value::ConstValueIterator;
-	using MemberItr = rapidjson::Value::ConstMemberIterator;
-
-	EntityManager* entityManager;
-	Scene* scene;
-	Renderer* renderer;
-	LightManager* lightManager;
-	CameraSystem* cameraSystem;
-	MeshManager* meshManager;
-	MaterialManager* materialManager;
-	EnvironmentManager* environmentManager;
+	World* world;
+	ResourceManagers resourceManagers;
 
 	// If parent is set to other than Null, will create children for that object
 	void CreateObjects(const YAML::Node& objectSequence, SceneObjectId parent);
@@ -45,7 +28,7 @@ private:
 	void CreateCameraComponent(const YAML::Node& map, Entity entity);
 
 public:
-	LevelLoader(Engine* engine);
+	LevelLoader(World* world, const ResourceManagers& resManagers);
 
 	void Load(BufferRef<char> sceneConfig);
 };

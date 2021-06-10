@@ -51,7 +51,6 @@ ParticleSystem::ParticleSystem(
 	simulateShaderId(ShaderId{ 0 }),
 	finishUpdateShaderId(ShaderId{ 0 }),
 	renderShaderId(ShaderId{ 0 }),
-	customRenderCallback(0),
 	noiseTextureId(0)
 {
 	for (unsigned int i = 0; i < BufferCount; ++i)
@@ -77,11 +76,9 @@ ParticleSystem::~ParticleSystem()
 	}
 }
 
-void ParticleSystem::Initialize(Renderer* renderer)
+void ParticleSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
-
-	customRenderCallback = renderer->AddCustomRenderer(this);
 
 	float vertexBuffer[] = {
 		-1.0f, -1.0f, 0.0f,
@@ -243,6 +240,11 @@ void ParticleSystem::Initialize(Renderer* renderer)
 	// Set current and next alive lists
 	aliveListCurrent = bufferIds[Buffer_AliveList0];
 	aliveListNext = bufferIds[Buffer_AliveList1];
+}
+
+void ParticleSystem::RegisterCustomRenderer(Renderer* renderer)
+{
+	renderer->AddCustomRenderer(this);
 }
 
 void ParticleSystem::AddRenderCommands(const CommandParams& params)

@@ -107,6 +107,9 @@ set (KOKKO_SOURCES
 	src/Engine/ComponentSystemDefaultImpl.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
+	src/Engine/InstanceAllocatorPair.hpp
+	src/Engine/World.cpp
+	src/Engine/World.hpp
 	src/Entity/Entity.hpp
 	src/Entity/EntityManager.cpp
 	src/Entity/EntityManager.hpp
@@ -203,6 +206,7 @@ set (KOKKO_SOURCES
 	src/Resources/MeshManager.hpp
 	src/Resources/MeshPresets.cpp
 	src/Resources/MeshPresets.hpp
+	src/Resources/ResourceManagers.hpp
 	src/Resources/ShaderId.hpp
 	src/Resources/ShaderLoader.cpp
 	src/Resources/ShaderLoader.hpp

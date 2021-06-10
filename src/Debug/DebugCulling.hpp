@@ -2,18 +2,13 @@
 
 #include "Math/Vec2.hpp"
 
-class Scene;
-class Renderer;
-class CameraSystem;
+class World;
 class DebugTextRenderer;
 class DebugVectorRenderer;
 
 class DebugCulling
 {
 private:
-	Renderer* renderer;
-	Scene* scene;
-	CameraSystem* cameraSystem;
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
 
@@ -25,9 +20,7 @@ public:
 	DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
 	~DebugCulling();
 
-	void Initialize(Renderer* renderer, Scene* scene, CameraSystem* cameraSystem);
-
-	void UpdateAndDraw();
+	void UpdateAndDraw(World* world);
 
 	void SetLockCullingCamera(bool lockCullingCamera);
 	void SetGuideTextPosition(const Vec2f& pos) { guideTextPosition = pos; }

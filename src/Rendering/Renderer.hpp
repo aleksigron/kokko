@@ -53,6 +53,7 @@ struct ShaderData;
 struct ProjectionParameters;
 struct LightingUniformBlock;
 struct PostProcessRenderPass;
+struct ResourceManagers;
 
 class Renderer : public TransformUpdateReceiver, public CustomRenderer
 {
@@ -186,13 +187,10 @@ public:
 		Scene* scene,
 		CameraSystem* cameraSystem,
 		LightManager* lightManager,
-		ShaderManager* shaderManager,
-		MeshManager* meshManager,
-		MaterialManager* materialManager,
-		TextureManager* textureManager);
+		const ResourceManagers& resourceManagers);
 	~Renderer();
 
-	void Initialize(Window* window, EntityManager* entityManager, EnvironmentManager* environmentManager);
+	void Initialize(const Vec2i& framebufferSize);
 	void Deinitialize();
 
 	void SetFullscreenViewportRectangle(const ViewRectangle& rectangle);

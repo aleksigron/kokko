@@ -100,10 +100,7 @@ Renderer::Renderer(
 	Scene* scene,
 	CameraSystem* cameraSystem,
 	LightManager* lightManager,
-	ShaderManager* shaderManager,
-	MeshManager* meshManager,
-	MaterialManager* materialManager,
-	TextureManager* textureManager) :
+	const ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	device(renderDevice),
 	renderTargetContainer(nullptr),
@@ -123,11 +120,11 @@ Renderer::Renderer(
 	scene(scene),
 	cameraSystem(cameraSystem),
 	lightManager(lightManager),
-	shaderManager(shaderManager),
-	meshManager(meshManager),
-	materialManager(materialManager),
-	textureManager(textureManager),
-	environmentManager(nullptr),
+	shaderManager(resourceManagers.shaderManager),
+	meshManager(resourceManagers.meshManager),
+	materialManager(resourceManagers.materialManager),
+	textureManager(resourceManagers.textureManager),
+	environmentManager(resourceManagers.environmentManager),
 	lockCullingCamera(false),
 	commandList(allocator),
 	objectVisibility(allocator),
@@ -189,11 +186,9 @@ Renderer::~Renderer()
 	allocator->Deallocate(renderTargetContainer);
 }
 
-void Renderer::Initialize(Window* window, EntityManager* entityManager, EnvironmentManager* environmentManager)
+void Renderer::Initialize(const Vec2i& framebufferSize)
 {
 	KOKKO_PROFILE_FUNCTION();
-
-	this->environmentManager = environmentManager;
 
 	device->CubemapSeamlessEnable();
 	device->SetClipBehavior(RenderClipOriginMode::LowerLeft, RenderClipDepthMode::ZeroToOne);
@@ -204,15 +199,13 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 	objectUniformBlockStride = (sizeof(TransformUniformBlock) + aligment - 1) / aligment * aligment;
 	objectsPerUniformBuffer = ObjectUniformBufferSize / objectUniformBlockStride;
 
-	Vec2i frameBufferSizei = window->GetFrameBufferSize();
-
 	// Set default viewport rectangle, this might be overridden later
 	ViewRectangle viewportRectangle;
-	viewportRectangle.size = frameBufferSizei;
+	viewportRectangle.size = framebufferSize;
 	fullscreenViewportRectangle = viewportRectangle;
 
 	postProcessRenderer->Initialize();
-	ssao->Initialize(frameBufferSizei);
+	ssao->Initialize(framebufferSize);
 
 	bloomEffect->Initialize();
 
@@ -272,8 +265,8 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 		framebufferCount += 1;
 
 		RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
-		gbuffer.width = frameBufferSizei.x;
-		gbuffer.height = frameBufferSizei.y;
+		gbuffer.width = framebufferSize.x;
+		gbuffer.height = framebufferSize.y;
 
 		// Create and bind framebuffer
 
@@ -440,8 +433,8 @@ void Renderer::Initialize(Window* window, EntityManager* entityManager, Environm
 		framebufferCount += 1;
 
 		RendererFramebuffer& framebuffer = framebufferData[FramebufferIndexLightAcc];
-		framebuffer.width = frameBufferSizei.x;
-		framebuffer.height = frameBufferSizei.y;
+		framebuffer.width = framebufferSize.x;
+		framebuffer.height = framebufferSize.y;
 
 		// Create and bind framebuffer
 

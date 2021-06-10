@@ -33,17 +33,20 @@ TerrainManager::~TerrainManager()
 	allocator->MakeDelete(terrainInstances);
 }
 
-void TerrainManager::Initialize(Renderer* renderer, ShaderManager* shaderManager)
+void TerrainManager::Initialize(ShaderManager* shaderManager)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	renderer->AddCustomRenderer(this);
-	
 	StringRef path("res/materials/deferred_geometry/terrain.material.json");
 	terrainMaterial = materialManager->GetIdByPath(path);
 
 	terrainInstances = allocator->MakeNew<TerrainInstance>(allocator, renderDevice, meshManager, shaderManager);
 	terrainInstances->Initialize();
+}
+
+void TerrainManager::RegisterCustomRenderer(Renderer* renderer)
+{
+	renderer->AddCustomRenderer(this);
 }
 
 void TerrainManager::AddRenderCommands(const CustomRenderer::CommandParams& params)

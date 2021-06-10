@@ -4,7 +4,7 @@
 
 #include "yaml-cpp/yaml.h"
 
-#include "Engine/Engine.hpp"
+#include "Engine/World.hpp"
 
 #include "Entity/EntityManager.hpp"
 
@@ -21,20 +21,17 @@
 
 static const char* const ComponentTypeKey = "component_type";
 
-LevelWriter::LevelWriter(Engine* engine) :
-	entityManager(engine->GetEntityManager()),
-	scene(engine->GetScene()),
-	renderer(engine->GetRenderer()),
-	lightManager(engine->GetLightManager()),
-	cameraSystem(engine->GetCameraSystem()),
-	meshManager(engine->GetMeshManager()),
-	materialManager(engine->GetMaterialManager()),
-	environmentManager(engine->GetEnvironmentManager())
+LevelWriter::LevelWriter(World* world, const ResourceManagers& resManagers) :
+	world(world),
+	resourceManagers(resManagers)
 {
 }
 
 bool LevelWriter::WriteToFile(const char* filePath)
 {
+	EntityManager* entityManager = world->GetEntityManager();
+	Scene* scene = world->GetScene();
+
 	std::ofstream outStream(filePath);
 
 	if (outStream.is_open() == false)
@@ -47,7 +44,7 @@ bool LevelWriter::WriteToFile(const char* filePath)
 	int environmentId = scene->GetEnvironmentId();
 	if (environmentId >= 0)
 	{
-		const char* sourcePath = environmentManager->GetEnvironmentSourcePath(environmentId);
+		const char* sourcePath = resourceManagers.environmentManager->GetEnvironmentSourcePath(environmentId);
 		out << YAML::Key << "environment" << YAML::Value << sourcePath;
 	}
 
@@ -68,6 +65,9 @@ bool LevelWriter::WriteToFile(const char* filePath)
 
 void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
 {
+	EntityManager* entityManager = world->GetEntityManager();
+	Scene* scene = world->GetScene();
+
 	out << YAML::BeginMap;
 
 	const char* name = entityManager->GetDebugName(entity);
@@ -106,6 +106,7 @@ void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId s
 
 void LevelWriter::WriteTransformComponent(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
 {
+	Scene* scene = world->GetScene();
 	const SceneEditTransform& transform = scene->GetEditTransform(sceneObj);
 
 	out << YAML::BeginMap;
@@ -118,14 +119,16 @@ void LevelWriter::WriteTransformComponent(YAML::Emitter& out, Entity entity, Sce
 
 void LevelWriter::WriteRenderComponent(YAML::Emitter& out, Entity entity)
 {
+	Renderer* renderer = world->GetRenderer();
+
 	RenderObjectId renderObj = renderer->Lookup(entity);
 	if (renderObj != RenderObjectId::Null)
 	{
 		MeshId meshId = renderer->GetMeshId(renderObj);
-		const char* meshPath = meshManager->GetPath(meshId);
+		const char* meshPath = resourceManagers.meshManager->GetPath(meshId);
 
 		MaterialId materialId = renderer->GetOrderData(renderObj).material;
-		const MaterialData& material = materialManager->GetMaterialData(materialId);
+		const MaterialData& material = resourceManagers.materialManager->GetMaterialData(materialId);
 		const char* materialPath = material.materialPath;
 
 		// We can't reference resources that have been created at runtime
@@ -142,6 +145,8 @@ void LevelWriter::WriteRenderComponent(YAML::Emitter& out, Entity entity)
 
 void LevelWriter::WriteLightComponent(YAML::Emitter& out, Entity entity)
 {
+	LightManager* lightManager = world->GetLightManager();
+
 	LightId lightId = lightManager->Lookup(entity);
 	if (lightId != LightId::Null)
 	{
@@ -175,6 +180,8 @@ void LevelWriter::WriteLightComponent(YAML::Emitter& out, Entity entity)
 
 void LevelWriter::WriteCameraComponent(YAML::Emitter& out, Entity entity)
 {
+	CameraSystem* cameraSystem = world->GetCameraSystem();
+
 	CameraId cameraId = cameraSystem->Lookup(entity);
 	if (cameraId != CameraId::Null)
 	{

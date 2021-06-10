@@ -19,9 +19,10 @@
 
 const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
-Scene::Scene(Allocator* allocator, Engine* engine):
+Scene::Scene(Allocator* allocator, World* world, const ResourceManagers& resManagers):
 	allocator(allocator),
-	engine(engine),
+	world(world),
+	resourceManagers(resManagers),
 	entityMap(allocator),
 	updatedEntities(allocator),
 	updatedTransforms(allocator),
@@ -47,7 +48,7 @@ bool Scene::LoadFromFile(const char* path)
 
 	if (File::ReadText(path, sceneConfig))
 	{
-		LevelLoader loader(engine);
+		LevelLoader loader(world, resourceManagers);
 		loader.Load(sceneConfig.GetRef());
 
 		return true;
@@ -57,7 +58,7 @@ bool Scene::LoadFromFile(const char* path)
 }
 bool Scene::WriteToFile(const char* path)
 {
-	LevelWriter writer(engine);
+	LevelWriter writer(world, resourceManagers);
 	return writer.WriteToFile(path);
 }
 

@@ -6,7 +6,7 @@
 
 #include "Debug/LogHelper.hpp"
 
-#include "Engine/Engine.hpp"
+#include "Engine/World.hpp"
 
 #include "Entity/EntityManager.hpp"
 
@@ -22,15 +22,9 @@
 #include "Resources/ValueSerialization.hpp"
 #include "Resources/YamlCustomTypes.hpp"
 
-LevelLoader::LevelLoader(Engine* engine):
-	entityManager(engine->GetEntityManager()),
-	scene(engine->GetScene()),
-	renderer(engine->GetRenderer()),
-	lightManager(engine->GetLightManager()),
-	cameraSystem(engine->GetCameraSystem()),
-	meshManager(engine->GetMeshManager()),
-	materialManager(engine->GetMaterialManager()),
-	environmentManager(engine->GetEnvironmentManager())
+LevelLoader::LevelLoader(World* world, const ResourceManagers& resManagers):
+	world(world),
+	resourceManagers(resManagers)
 {
 }
 
@@ -38,12 +32,14 @@ void LevelLoader::Load(BufferRef<char> sceneConfig)
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	Scene* scene = world->GetScene();
+
 	YAML::Node node = YAML::Load(sceneConfig.data);
 
 	const YAML::Node environment = node["environment"];
 	if (environment.IsDefined() && environment.IsScalar())
 	{
-		int envId = environmentManager->LoadHdrEnvironmentMap(environment.Scalar().c_str());
+		int envId = resourceManagers.environmentManager->LoadHdrEnvironmentMap(environment.Scalar().c_str());
 
 		assert(envId >= 0);
 
@@ -68,6 +64,7 @@ void LevelLoader::CreateObjects(const YAML::Node& childSequence, SceneObjectId p
 	{
 		if (itr->IsMap())
 		{
+			EntityManager* entityManager = world->GetEntityManager();
 			Entity entity = entityManager->Create();
 
 			SceneObjectId createdTransform = SceneObjectId::Null;
@@ -147,6 +144,7 @@ SceneObjectId LevelLoader::CreateComponents(const YAML::Node& componentSequence,
 
 SceneObjectId LevelLoader::CreateTransformComponent(const YAML::Node& map, Entity entity, SceneObjectId parent)
 {
+	Scene* scene = world->GetScene();
 	SceneObjectId sceneObject = scene->AddSceneObject(entity);
 
 	if (parent != SceneObjectId::Null)
@@ -173,6 +171,8 @@ SceneObjectId LevelLoader::CreateTransformComponent(const YAML::Node& map, Entit
 
 void LevelLoader::CreateRenderComponent(const YAML::Node& map, Entity entity)
 {
+	Renderer* renderer = world->GetRenderer();
+
 	YAML::Node meshNode = map["mesh"];
 	YAML::Node materialNode = map["material"];
 
@@ -183,7 +183,7 @@ void LevelLoader::CreateRenderComponent(const YAML::Node& map, Entity entity)
 
 		const std::string& meshStr = meshNode.Scalar();
 		StringRef meshPath(meshStr.data(), meshStr.size());
-		MeshId meshId = meshManager->GetIdByPath(meshPath);
+		MeshId meshId = resourceManagers.meshManager->GetIdByPath(meshPath);
 
 		assert(meshId != MeshId::Null);
 
@@ -191,13 +191,13 @@ void LevelLoader::CreateRenderComponent(const YAML::Node& map, Entity entity)
 
 		const std::string& materialStr = materialNode.Scalar();
 		StringRef materialPath(materialStr.data(), materialStr.size());
-		MaterialId materialId = materialManager->GetIdByPath(materialPath);
+		MaterialId materialId = resourceManagers.materialManager->GetIdByPath(materialPath);
 
 		assert(materialId != MaterialId::Null);
 
 		RenderOrderData data;
 		data.material = materialId;
-		data.transparency = materialManager->GetMaterialData(materialId).transparency;
+		data.transparency = resourceManagers.materialManager->GetMaterialData(materialId).transparency;
 
 		renderer->SetOrderData(renderObj, data);
 	}
@@ -205,6 +205,8 @@ void LevelLoader::CreateRenderComponent(const YAML::Node& map, Entity entity)
 
 void LevelLoader::CreateLightComponent(const YAML::Node& map, Entity entity)
 {
+	LightManager* lightManager = world->GetLightManager();
+
 	LightType type;
 
 	YAML::Node typeNode = map["type"];
@@ -279,6 +281,8 @@ void LevelLoader::CreateLightComponent(const YAML::Node& map, Entity entity)
 
 void LevelLoader::CreateCameraComponent(const YAML::Node& map, Entity entity)
 {
+	CameraSystem* cameraSystem = world->GetCameraSystem();
+
 	ProjectionParameters params;
 	params.projection = ProjectionType::Perspective;
 	params.perspectiveFieldOfView = 1.0f;

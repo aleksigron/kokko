@@ -7,14 +7,15 @@
 
 #include "Entity/Entity.hpp"
 
-class Engine;
+class InputManager;
+class World;
 class Allocator;
 class NativeScriptComponent;
 
 class ScriptSystem
 {
 private:
-	Engine* engine;
+	InputManager* inputManager;
 	void* app;
 	Allocator* allocator;
 
@@ -27,7 +28,7 @@ private:
 	void AddScriptInternal(Entity entity, NativeScriptComponent* script);
 
 public:
-	ScriptSystem(Engine* engine, Allocator* allocator);
+	ScriptSystem(Allocator* allocator, InputManager* inputManager);
 	ScriptSystem(const ScriptSystem&) = delete;
 	ScriptSystem(ScriptSystem&&) = delete;
 	~ScriptSystem();
@@ -60,5 +61,5 @@ public:
 			return nullptr;
 	}
 
-	void UpdateScripts();
+	void UpdateScripts(World* world);
 };

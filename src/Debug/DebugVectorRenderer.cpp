@@ -5,7 +5,7 @@
 
 #include "Core/Core.hpp"
 
-#include "Engine/Engine.hpp"
+#include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
 
@@ -34,10 +34,8 @@ DebugVectorRenderer::DebugVectorRenderer(
 	RenderDevice* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
-	cameraSystem(nullptr),
 	shaderManager(nullptr),
 	meshManager(nullptr),
-	scene(nullptr),
 	dynamicMeshes(nullptr),
 	dynamicMeshCount(0),
 	dynamicMeshAllocated(0),
@@ -56,15 +54,12 @@ DebugVectorRenderer::~DebugVectorRenderer()
 {
 }
 
-void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager,
-	Scene* scene, CameraSystem* cameraSystem)
+void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	this->cameraSystem = cameraSystem;
 	this->meshManager = meshManager;
 	this->shaderManager = shaderManager;
-	this->scene = scene;
 
 	// Initialize shaders
 
@@ -440,7 +435,7 @@ void DebugVectorRenderer::DrawWireFrustum(const Mat4x4f& transform, const Projec
 	this->DrawLine(frustum.points[6], frustum.points[7], color);
 }
 
-void DebugVectorRenderer::Render(const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera)
+void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -491,6 +486,9 @@ void DebugVectorRenderer::Render(const ViewRectangle& viewport, const Optional<C
 		}
 		else
 		{
+			Scene* scene = world->GetScene();
+			CameraSystem* cameraSystem = world->GetCameraSystem();
+
 			Entity cameraEntity = scene->GetActiveCameraEntity();
 			SceneObjectId cameraSceneObject = scene->Lookup(cameraEntity);
 			const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);

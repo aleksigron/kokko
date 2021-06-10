@@ -7,7 +7,7 @@
 #include "Editor/EditorViews.hpp"
 #include "Editor/FilePickerDialog.hpp"
 
-#include "Engine/Engine.hpp"
+#include "Engine/World.hpp"
 
 #include "Entity/EntityManager.hpp"
 
@@ -21,6 +21,8 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 
+#include "Resources/ResourceManagers.hpp"
+
 #include "System/ImGuiRenderBackend.hpp"
 #include "System/ImGuiPlatformBackend.hpp"
 #include "System/InputManager.hpp"
@@ -29,12 +31,7 @@
 EditorUI::EditorUI(Allocator* allocator) :
 	allocator(allocator),
 	renderBackend(nullptr),
-	platformBackend(nullptr),
-	entityManager(nullptr),
-	scene(nullptr),
-	renderer(nullptr),
-	lightManager(nullptr),
-	cameraSystem(nullptr)
+	platformBackend(nullptr)
 {
 	views = allocator->MakeNew<EditorViews>();
 
@@ -48,20 +45,13 @@ EditorUI::~EditorUI()
 	allocator->MakeDelete(views);
 }
 
-void EditorUI::Initialize(Engine* engine)
+void EditorUI::Initialize(Window* window, const ResourceManagers& resourceManagers)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	renderBackend = allocator->MakeNew<ImGuiRenderBackend>();
 	platformBackend = allocator->MakeNew<ImGuiPlatformBackend>();
 
-	entityManager = engine->GetEntityManager();
-	scene = engine->GetScene();
-	renderer = engine->GetRenderer();
-	lightManager = engine->GetLightManager();
-	cameraSystem = engine->GetCameraSystem();
-
-	Window* window = engine->GetMainWindow();
 	InputManager* inputManager = window->GetInputManager();
 
 	editorCamera.SetInputManager(inputManager);
@@ -76,7 +66,7 @@ void EditorUI::Initialize(Engine* engine)
 
 	platformBackend->Initialize(window->GetGlfwWindow(), inputManager->GetImGuiInputView());
 
-	views->entityView.Initialize(engine);
+	views->entityView.Initialize(resourceManagers);
 }
 
 void EditorUI::Deinitialize()
@@ -102,15 +92,15 @@ void EditorUI::StartFrame()
 	ImGui::NewFrame();
 }
 
-void EditorUI::Update()
+void EditorUI::Update(World* world)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	editorCamera.Update();
 
-	DrawMainMenuBar();
+	DrawMainMenuBar(world);
 
-	views->entityView.Draw();
+	views->entityView.Draw(world);
 
 	ImGui::ShowDemoWindow();
 }
@@ -148,7 +138,7 @@ ProjectionParameters EditorUI::GetEditorCameraProjection() const
 	return editorCamera.GetProjectionParameters();
 }
 
-void EditorUI::DrawMainMenuBar()
+void EditorUI::DrawMainMenuBar(World* world)
 {
 	bool openLevel = false, saveLevel = false;
 
@@ -158,7 +148,7 @@ void EditorUI::DrawMainMenuBar()
 		{
 			if (ImGui::MenuItem("New"))
 			{
-				ClearAllEntities();
+				ClearAllEntities(world);
 			}
 
 			if (ImGui::MenuItem("Open..."))
@@ -194,10 +184,12 @@ void EditorUI::DrawMainMenuBar()
 
 	if (filePickerClosed && filePickerPathOut.GetLength() > 0)
 	{
+		Scene* scene = world->GetScene();
+
 		FilePickerDialog::DialogType type = views->filePicker.GetLastDialogType();
 		if (type == FilePickerDialog::DialogType::FileOpen)
 		{
-			ClearAllEntities();
+			ClearAllEntities(world);
 			scene->LoadFromFile(filePickerPathOut.GetCStr());
 		}
 		else if (type == FilePickerDialog::DialogType::FileSave)
@@ -207,11 +199,11 @@ void EditorUI::DrawMainMenuBar()
 	}
 }
 
-void EditorUI::ClearAllEntities()
+void EditorUI::ClearAllEntities(World* world)
 {
-	cameraSystem->RemoveAll();
-	lightManager->RemoveAll();
-	renderer->RemoveAll();
-	scene->RemoveAll();
-	entityManager->ClearAll();
+	world->GetCameraSystem()->RemoveAll();
+	world->GetLightManager()->RemoveAll();
+	world->GetRenderer()->RemoveAll();
+	world->GetScene()->RemoveAll();
+	world->GetEntityManager()->ClearAll();
 }

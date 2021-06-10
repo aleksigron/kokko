@@ -17,7 +17,7 @@
 #include "Debug/Instrumentation.hpp"
 #include "Debug/LogHelper.hpp"
 
-#include "Engine/Engine.hpp"
+#include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
 
@@ -83,8 +83,7 @@ Debug::~Debug()
 	allocator->MakeDelete(vectorRenderer);
 }
 
-void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraSystem,
-	MeshManager* meshManager, ShaderManager* shaderManager, Scene* scene)
+void Debug::Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -96,8 +95,7 @@ void Debug::Initialize(Window* window, Renderer* renderer, CameraSystem* cameraS
 	this->window = window;
 
 	textRenderer->Initialize(shaderManager, meshManager);
-	vectorRenderer->Initialize(meshManager, shaderManager, scene, cameraSystem);
-	culling->Initialize(renderer, scene, cameraSystem);
+	vectorRenderer->Initialize(meshManager, shaderManager);
 }
 
 void Debug::Deinitialize()
@@ -105,7 +103,7 @@ void Debug::Deinitialize()
 	vectorRenderer->Deinitialize();
 }
 
-void Debug::Render(const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera)
+void Debug::Render(World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -199,15 +197,19 @@ void Debug::Render(const ViewRectangle& viewport, const Optional<CameraParameter
 
 		// Check culling camera controller switching
 
+		Renderer* renderer = world->GetRenderer();
+
 		if (oldMode != DebugMode::Culling && this->mode == DebugMode::Culling)
 		{
 			// Disable main camera controller
 			culling->SetLockCullingCamera(true);
+			renderer->SetLockCullingCamera(true);
 		}
 		else if (oldMode == DebugMode::Culling && this->mode != DebugMode::Culling)
 		{
 			// Enable main camera controller
 			culling->SetLockCullingCamera(false);
+			renderer->SetLockCullingCamera(false);
 		}
 	}
 
@@ -274,12 +276,12 @@ void Debug::Render(const ViewRectangle& viewport, const Optional<CameraParameter
 		graph->DrawToVectorRenderer();
 
 	if (mode == DebugMode::Culling)
-		culling->UpdateAndDraw();
+		culling->UpdateAndDraw(world);
 
 	if (mode == DebugMode::MemoryStats)
 		memoryStats->UpdateAndDraw();
 
-	vectorRenderer->Render(viewport, editorCamera);
+	vectorRenderer->Render(world, viewport, editorCamera);
 	textRenderer->Render();
 
 	ImGui::Begin("Performance stats");

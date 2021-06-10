@@ -7,12 +7,8 @@ struct GLFWwindow;
 class Allocator;
 class InputView;
 
-class Engine;
-class EntityManager;
-class Scene;
-class Renderer;
-class LightManager;
-class CameraSystem;
+class Window;
+class World;
 
 class ImGuiRenderBackend;
 class ImGuiPlatformBackend;
@@ -20,6 +16,7 @@ class ImGuiPlatformBackend;
 struct EditorViews;
 struct Mat4x4fBijection;
 struct ViewRectangle;
+struct ResourceManagers;
 
 class EditorUI
 {
@@ -28,19 +25,13 @@ private:
 	ImGuiRenderBackend* renderBackend;
 	ImGuiPlatformBackend* platformBackend;
 
-	EntityManager* entityManager;
-	Scene* scene;
-	Renderer* renderer;
-	LightManager* lightManager;
-	CameraSystem* cameraSystem;
-
 	EditorViews* views;
 
 	EditorCamera editorCamera;
 
-	void DrawMainMenuBar();
+	void DrawMainMenuBar(World* world);
 
-	void ClearAllEntities();
+	void ClearAllEntities(World* world);
 
 public:
 	EditorUI(Allocator* allocator);
@@ -51,11 +42,11 @@ public:
 	EditorUI& operator=(const EditorUI&) = delete;
 	EditorUI& operator=(EditorUI&&) = delete;
 
-	void Initialize(Engine* engine);
+	void Initialize(Window* window, const ResourceManagers& resourceManagers);
 	void Deinitialize();
 
 	void StartFrame();
-	void Update();
+	void Update(World* world);
 	void EndFrame();
 
 	ViewRectangle GetWorldViewport();

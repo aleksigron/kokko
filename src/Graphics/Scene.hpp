@@ -10,8 +10,9 @@
 #include "Math/Mat4x4.hpp"
 
 #include "Resources/MaterialData.hpp"
+#include "Resources/ResourceManagers.hpp"
 
-class Engine;
+class World;
 class Camera;
 class Allocator;
 class TransformUpdateReceiver;
@@ -49,7 +50,8 @@ class Scene
 {
 private:
 	Allocator* allocator;
-	Engine* engine;
+	World* world;
+	ResourceManagers resourceManagers;
 
 	struct InstanceData
 	{
@@ -82,7 +84,7 @@ private:
 	static bool IsValidId(SceneObjectId id) { return id.i != 0; }
 
 public:
-	Scene(Allocator* allocator, Engine* engine);
+	Scene(Allocator* allocator, World* world, const ResourceManagers& resManagers);
 	Scene(const Scene& other) = delete;
 	Scene(Scene&& other) = delete;
 	~Scene();

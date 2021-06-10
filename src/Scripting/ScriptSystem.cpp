@@ -8,8 +8,8 @@
 
 #include "System/Window.hpp"
 
-ScriptSystem::ScriptSystem(Engine* engine, Allocator* allocator) :
-	engine(engine),
+ScriptSystem::ScriptSystem(Allocator* allocator, InputManager* inputManager) :
+	inputManager(inputManager),
 	app(nullptr),
 	allocator(allocator),
 	scripts(allocator),
@@ -35,14 +35,14 @@ void ScriptSystem::AddScriptInternal(Entity entity, NativeScriptComponent* scrip
 	mapPair->second = scriptIndex;
 }
 
-void ScriptSystem::UpdateScripts()
+void ScriptSystem::UpdateScripts(World* world)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	ScriptContext scriptContext;
 	scriptContext.app = app;
-	scriptContext.inputManager = engine->GetMainWindow()->GetInputManager();
-	scriptContext.scene = engine->GetScene();
+	scriptContext.world = world;
+	scriptContext.inputManager = inputManager;
 
 	for (unsigned int i = 0, count = scriptsToInit.GetCount(); i < count; ++i)
 		scriptsToInit[i]->OnCreate(scriptContext);

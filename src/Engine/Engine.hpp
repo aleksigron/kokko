@@ -1,11 +1,14 @@
 #pragma once
 
+#include "Engine/InstanceAllocatorPair.hpp"
+
 class Allocator;
 class AllocatorManager;
 class Window;
 class EditorUI;
 class Time;
 class RenderDevice;
+class World;
 class EntityManager;
 class Scene;
 class Renderer;
@@ -25,24 +28,6 @@ class Debug;
 class Engine
 {
 private:
-	template <typename Type>
-	struct InstanceAllocatorPair
-	{
-		void CreateScope(AllocatorManager* manager, const char* name, Allocator* alloc);
-
-		template <typename... Args>
-		void New(Args... args) { instance = allocator->MakeNew<Type>(args...); }
-
-		void Delete()
-		{
-			allocator->MakeDelete(instance);
-			instance = nullptr;
-		}
-
-		Type* instance;
-		Allocator* allocator;
-	};
-
 	AllocatorManager* allocatorManager;
 
 	Allocator* systemAllocator;
@@ -53,19 +38,14 @@ private:
 	Time* time;
 	RenderDevice* renderDevice;
 	InstanceAllocatorPair<Debug> debug;
-	InstanceAllocatorPair<EntityManager> entityManager;
 	InstanceAllocatorPair<MeshManager> meshManager;
 	InstanceAllocatorPair<TextureManager> textureManager;
 	InstanceAllocatorPair<ShaderManager> shaderManager;
 	InstanceAllocatorPair<MaterialManager> materialManager;
-	InstanceAllocatorPair<LightManager> lightManager;
-	InstanceAllocatorPair<CameraSystem> cameraSystem;
 	InstanceAllocatorPair<TerrainManager> terrainManager;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
 	InstanceAllocatorPair<EnvironmentManager> environmentManager;
-	InstanceAllocatorPair<Scene> scene;
-	InstanceAllocatorPair<Renderer> renderer;
-	InstanceAllocatorPair<ScriptSystem> scriptSystem;
+	InstanceAllocatorPair<World> world;
 
 
 public:
@@ -80,13 +60,7 @@ public:
 
 	AllocatorManager* GetAllocatorManager() { return allocatorManager; }
 	Window* GetMainWindow() { return mainWindow.instance; }
-	EntityManager* GetEntityManager() { return entityManager.instance; }
 	MeshManager* GetMeshManager() { return meshManager.instance; }
 	MaterialManager* GetMaterialManager() { return materialManager.instance; }
-	LightManager* GetLightManager() { return lightManager.instance; }
-	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
 	EnvironmentManager* GetEnvironmentManager() { return environmentManager.instance; }
-	Scene* GetScene() { return scene.instance; }
-	Renderer* GetRenderer() { return renderer.instance; }
-	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
 };
