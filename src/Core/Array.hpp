@@ -277,4 +277,40 @@ public:
 		data = nullptr;
 		allocated = 0;
 	}
+
+	class Iterator
+	{
+	private:
+		ValueType* iterator;
+
+		explicit Iterator(ValueType* itr) : iterator(itr)
+		{
+		}
+
+		friend class Array;
+
+	public:
+		Iterator& operator++()
+		{
+			iterator++;
+			return *this;
+		}
+
+		Iterator operator++(int)
+		{
+			Iterator temp(*this);
+			++(*this);
+			return temp;
+		}
+
+		ValueType& operator*() { return *iterator; }
+		const ValueType& operator*() const { return *iterator; }
+		ValueType& operator->() { return operator*(); }
+		const ValueType& operator->() const { return operator*(); }
+
+		bool operator!=(const Iterator& other) { return iterator != other.iterator; }
+	};
+
+	Iterator begin() { return Iterator(data); }
+	Iterator end() { return Iterator(data + count); }
 };
