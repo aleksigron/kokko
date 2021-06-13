@@ -73,7 +73,7 @@ World::~World()
 
 void World::Initialize(Window* window)
 {
-	renderer.instance->Initialize(window->GetFrameBufferSize());
+	renderer.instance->Initialize(window);
 	terrainManager.instance->Initialize();
 	particleSystem.instance->Initialize();
 }

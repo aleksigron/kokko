@@ -44,11 +44,9 @@ ScreenSpaceAmbientOcclusion::~ScreenSpaceAmbientOcclusion()
 	Deinitialize();
 }
 
-void ScreenSpaceAmbientOcclusion::Initialize(Vec2i framebufferResolution)
+void ScreenSpaceAmbientOcclusion::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
-
-	framebufferSize = framebufferResolution;
 
 	kernel.Resize(kernelSize);
 	for (unsigned int i = 0; i < kernelSize;)
@@ -125,6 +123,11 @@ void ScreenSpaceAmbientOcclusion::Deinitialize()
 		renderDevice->DestroyTextures(1, &noiseTextureId);
 		noiseTextureId = 0;
 	}
+}
+
+void ScreenSpaceAmbientOcclusion::SetFramebufferSize(Vec2i framebufferSize)
+{
+	this->framebufferSize = framebufferSize;
 }
 
 void ScreenSpaceAmbientOcclusion::Render(const RenderParams& params)

@@ -85,8 +85,10 @@ public:
 
 	~ScreenSpaceAmbientOcclusion();
 
-	void Initialize(Vec2i framebufferResolution);
+	void Initialize();
 	void Deinitialize();
+
+	void SetFramebufferSize(Vec2i framebufferSize);
 
 	void Render(const RenderParams& params);
 

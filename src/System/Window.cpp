@@ -16,7 +16,9 @@ Window::Window(Allocator* allocator) :
 	allocator(allocator),
 	windowHandle(nullptr),
 	inputManager(nullptr),
-	currentSwapInterval(0)
+	framebufferResizeCallbacks(allocator),
+	currentSwapInterval(0),
+	framebufferResizePending(false)
 {
 }
 
@@ -60,6 +62,8 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 		{
 			KOKKO_PROFILE_SCOPE("GLFWwindow* glfwCreateWindow()");
 			windowHandle = glfwCreateWindow(width, height, windowTitle, NULL, NULL);
+
+			glfwGetFramebufferSize(windowHandle, &currentFramebufferSize.x, &currentFramebufferSize.y);
 		}
 		
 		if (windowHandle != nullptr)
@@ -68,6 +72,8 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 			inputManager->Initialize(windowHandle);
 
 			glfwSetWindowUserPointer(windowHandle, this);
+
+			glfwSetFramebufferSizeCallback(windowHandle, _GlfwFramebufferSizeCallback);
 
 			{
 				KOKKO_PROFILE_SCOPE("void glfwMakeContextCurrent()");
@@ -106,6 +112,17 @@ void Window::UpdateInput()
 	}
 }
 
+void Window::ProcessEvents()
+{
+	if (framebufferResizePending)
+	{
+		for (auto& callback : framebufferResizeCallbacks)
+			callback.function(callback.userPointer, this, currentFramebufferSize);
+
+		framebufferResizePending = false;
+	}
+}
+
 void Window::Swap()
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -116,10 +133,7 @@ void Window::Swap()
 
 Vec2i Window::GetFrameBufferSize()
 {
-	int width, height;
-	glfwGetFramebufferSize(windowHandle, &width, &height);
-
-	return Vec2i(width, height);
+	return currentFramebufferSize;
 }
 
 Vec2i Window::GetWindowSize()
@@ -165,7 +179,52 @@ void Window::SetSwapInterval(int swapInterval)
 	glfwSwapInterval(swapInterval);
 }
 
+void Window::RegisterFramebufferResizeCallback(FramebufferSizeCallbackFn callback, void* userPointer)
+{
+	framebufferResizeCallbacks.PushBack(FramebufferResizeCallbackInfo{ callback, userPointer });
+}
+
+void Window::UnregisterFramebufferResizeCallback(FramebufferSizeCallbackFn callback, void* userPointer)
+{
+	int index = -1;
+
+	for (int i = 0, count = framebufferResizeCallbacks.GetCount(); i < count; ++i)
+	{
+		const FramebufferResizeCallbackInfo& cb = framebufferResizeCallbacks[i];
+		if (cb.function == callback && cb.userPointer == userPointer)
+		{
+			index = i;
+			break;
+		}
+	}
+
+	if (index >= 0)
+	{
+		// Swap the last item into the removed item's place
+		if (static_cast<size_t>(index) < framebufferResizeCallbacks.GetCount() - 1)
+			framebufferResizeCallbacks[index] = framebufferResizeCallbacks.GetBack();
+
+		framebufferResizeCallbacks.PopBack();
+	}
+}
+
 Window* Window::GetWindowObject(GLFWwindow* windowHandle)
 {
 	return static_cast<Window*>(glfwGetWindowUserPointer(windowHandle));
+}
+
+void Window::_GlfwFramebufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+	GetWindowObject(window)->GlfwFramebufferSizeCallback(width, height);
+}
+
+void Window::GlfwFramebufferSizeCallback(int width, int height)
+{
+	if (width != currentFramebufferSize.x || height != currentFramebufferSize.y)
+	{
+		framebufferResizePending = true;
+
+		currentFramebufferSize.x = width;
+		currentFramebufferSize.y = height;
+	}
 }

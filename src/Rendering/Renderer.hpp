@@ -71,6 +71,8 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* device;
+	Window* window;
+
 	RenderTargetContainer* renderTargetContainer;
 	PostProcessRenderer* postProcessRenderer;
 
@@ -158,6 +160,9 @@ private:
 
 	void ReallocateRenderObjects(unsigned int required);
 
+	void CreateFramebuffers(Vec2i framebufferSize);
+	void DestroyFramebuffers();
+
 	void BindMaterialTextures(const MaterialData& material) const;
 	void BindTextures(const ShaderData& shader, unsigned int count,
 		const uint32_t* nameHashes, const unsigned int* textures);
@@ -180,6 +185,8 @@ private:
 	void RenderPostProcess(const CustomRenderer::RenderParams& params);
 	void RenderBloom(const CustomRenderer::RenderParams& params);
 	void RenderTonemapping(const CustomRenderer::RenderParams& params);
+
+	static void _FramebufferResizeCallback(void* userPointer, Window* window, Vec2i framebufferSize);
 	
 public:
 	Renderer(Allocator* allocator,
@@ -190,7 +197,7 @@ public:
 		const ResourceManagers& resourceManagers);
 	~Renderer();
 
-	void Initialize(const Vec2i& framebufferSize);
+	void Initialize(Window* window);
 	void Deinitialize();
 
 	void SetFullscreenViewportRectangle(const ViewRectangle& rectangle);

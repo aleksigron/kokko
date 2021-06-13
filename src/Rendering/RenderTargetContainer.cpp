@@ -10,13 +10,11 @@ RenderTargetContainer::RenderTargetContainer(Allocator* allocator, RenderDevice*
 	renderDevice(renderDevice),
 	renderTargetCount(0)
 {
-	void* buffer = allocator->Allocate(sizeof(TargetInfo) * MaxRenderTargetCount);
-	renderTargets = static_cast<TargetInfo*>(buffer);
 }
 
 RenderTargetContainer::~RenderTargetContainer()
 {
-	allocator->Deallocate(renderTargets);
+	DestroyAllRenderTargets();
 }
 
 RenderTarget RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextureSizedFormat format)
@@ -95,4 +93,18 @@ bool RenderTargetContainer::ConfirmAllTargetsAreUnused()
 	}
 
 	return true;
+}
+
+void RenderTargetContainer::DestroyAllRenderTargets()
+{
+	for (size_t i = 0; i < renderTargetCount; ++i)
+	{
+		renderDevice->DestroyFramebuffers(1, &renderTargets[i].target.framebuffer);
+		renderDevice->DestroyTextures(1, &renderTargets[i].target.colorTexture);
+
+		renderTargets[i].target = RenderTarget{};
+		renderTargets[i].inUse = false;
+	}
+
+	renderTargetCount = 0;
 }

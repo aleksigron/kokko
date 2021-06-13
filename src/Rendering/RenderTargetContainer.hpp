@@ -32,7 +32,7 @@ private:
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 
-	TargetInfo* renderTargets;
+	TargetInfo renderTargets[MaxRenderTargetCount];
 	size_t renderTargetCount;
 
 public:
@@ -43,4 +43,6 @@ public:
 	void ReleaseRenderTarget(unsigned int renderTargetId);
 
 	bool ConfirmAllTargetsAreUnused();
+
+	void DestroyAllRenderTargets();
 };

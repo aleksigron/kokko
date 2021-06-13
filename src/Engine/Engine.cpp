@@ -205,8 +205,9 @@ void Engine::Update()
 
 	editorUI.instance->EndFrame();
 
-	mainWindow.instance->UpdateInput();
 	mainWindow.instance->Swap();
+	mainWindow.instance->ProcessEvents();
+	mainWindow.instance->UpdateInput();
 }
 
 void Engine::SetAppPointer(void* app)
