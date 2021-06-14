@@ -50,8 +50,8 @@ void MeshManager::Reallocate(unsigned int required)
 
 	required = Math::UpperPowerOfTwo(required);
 
-	size_t objectBytes = sizeof(unsigned int) + sizeof(MeshDrawData) +
-		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(char*);
+	size_t objectBytes = sizeof(unsigned int) * 2 + sizeof(MeshDrawData) +
+		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(MeshId) + sizeof(char*);
 
 	InstanceData newData;
 	newData.buffer = allocator->Allocate(required * objectBytes);
@@ -59,24 +59,25 @@ void MeshManager::Reallocate(unsigned int required)
 	newData.allocated = required;
 
 	newData.freeList = static_cast<unsigned int*>(newData.buffer);
-	newData.drawData = reinterpret_cast<MeshDrawData*>(newData.freeList + required);
-	newData.bufferData = reinterpret_cast<MeshBufferData*>(newData.drawData + required);
-	newData.bounds = reinterpret_cast<BoundingBox*>(newData.bufferData + required);
-	newData.pathString = reinterpret_cast<char**>(newData.bounds + required);
+	newData.indexList = newData.freeList + newData.allocated;
+	newData.drawData = reinterpret_cast<MeshDrawData*>(newData.indexList + newData.allocated);
+	newData.bufferData = reinterpret_cast<MeshBufferData*>(newData.drawData + newData.allocated);
+	newData.bounds = reinterpret_cast<BoundingBox*>(newData.bufferData + newData.allocated);
+	newData.meshId = reinterpret_cast<MeshId*>(newData.bounds + newData.allocated);
+	newData.pathString = reinterpret_cast<char**>(newData.meshId + newData.allocated);
 
 	if (data.buffer != nullptr)
 	{
-		// FIXME: This will not copy everything if you have holes in the buffer
-		// This will happen if you remove meshes: count goes down, but the data spans the same area
-		// This needs some real refactoring
-		// I don't want to add levels of indirection because getting mesh information in
-		// the render loop can be a bottleneck. I don't know that for sure, so I should probably
-		// try it before making assumptions
-
 		std::memcpy(newData.freeList, data.freeList, data.allocated * sizeof(unsigned int));
+		std::memset(newData.freeList + data.allocated, 0, (newData.allocated - data.allocated) * sizeof(unsigned int));
+
+		std::memcpy(newData.indexList, data.indexList, data.allocated * sizeof(unsigned int));
+		std::memset(newData.indexList + data.allocated, 0, (newData.allocated - data.allocated) * sizeof(unsigned int));
+
 		std::memcpy(newData.drawData, data.drawData, data.count * sizeof(MeshDrawData));
 		std::memcpy(newData.bufferData, data.bufferData, data.count * sizeof(MeshBufferData));
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
+		std::memcpy(newData.meshId, data.meshId, data.count * sizeof(MeshId));
 		std::memcpy(newData.pathString, data.pathString, data.count * sizeof(char*));
 
 		allocator->Deallocate(data.buffer);
@@ -102,9 +103,13 @@ MeshId MeshManager::CreateMesh()
 		id.i = freeListFirst;
 		freeListFirst = data.freeList[freeListFirst];
 	}
+	
+	unsigned int index = data.count;
+	data.indexList[id.i] = index;
 
-	data.bufferData[id.i] = MeshBufferData{};
-	data.pathString[id.i] = nullptr;
+	data.bufferData[index] = MeshBufferData{};
+	data.meshId[index] = id;
+	data.pathString[index] = nullptr;
 
 	++data.count;
 
@@ -113,17 +118,34 @@ MeshId MeshManager::CreateMesh()
 
 void MeshManager::RemoveMesh(MeshId id)
 {
-	// Mesh isn't the last one
-	if (id.i < data.count - 1)
+	// Add removed MeshId to the free list
+	data.freeList[id.i] = freeListFirst;
+	freeListFirst = id.i;
+
+	unsigned int index = GetIndex(id);
+
+	allocator->Deallocate(data.pathString[index]);
+	data.pathString[index] = nullptr;
+
+	DeleteBuffers(data.bufferData[index]);
+
+	// Mesh isn't the last one in the data array
+	if (index + 1 < data.count)
 	{
-		data.freeList[id.i] = freeListFirst;
-		freeListFirst = id.i;
+		unsigned int lastIndex = data.count - 1;
+
+		MeshId lastMeshId = data.meshId[lastIndex];
+
+		// Move the last mesh into the removed mesh's place
+		data.drawData[index] = data.drawData[lastIndex];
+		data.bufferData[index] = data.bufferData[lastIndex];
+		data.bounds[index] = data.bounds[lastIndex];
+		data.meshId[index] = lastMeshId;
+		data.pathString[index] = data.pathString[lastIndex];
+
+		// Update index list
+		data.indexList[lastMeshId.i] = index;
 	}
-
-	allocator->Deallocate(data.pathString[id.i]);
-	data.pathString[id.i] = nullptr;
-
-	DeleteBuffers(data.bufferData[id.i]);
 
 	--data.count;
 }
@@ -177,14 +199,41 @@ MeshId MeshManager::GetIdByPathHash(uint32_t pathHash)
 	return pair != nullptr ? pair->second : MeshId{};
 }
 
-const char* MeshManager::GetPath(MeshId id)
+unsigned int MeshManager::GetIndex(MeshId meshId) const
 {
-	return data.pathString[id.i];
+	unsigned int index = data.indexList[meshId.i];
+	assert(index != 0);
+	return index;
 }
 
-void MeshManager::UpdateBuffers(MeshId id, const void* vertBuf, unsigned int vertBytes, RenderBufferUsage usage)
+const char* MeshManager::GetPath(MeshId id) const
 {
-	MeshBufferData& bufferData = data.bufferData[id.i];
+	return data.pathString[GetIndex(id)];
+}
+
+const BoundingBox* MeshManager::GetBoundingBox(MeshId id) const
+{
+	return &data.bounds[GetIndex(id)];
+}
+
+void MeshManager::SetBoundingBox(MeshId id, const BoundingBox& bounds)
+{
+	data.bounds[GetIndex(id)] = bounds;
+}
+
+const MeshDrawData* MeshManager::GetDrawData(MeshId id) const
+{
+	return &data.drawData[GetIndex(id)];
+}
+
+const MeshBufferData* MeshManager::GetBufferData(MeshId id) const
+{
+	return &data.bufferData[GetIndex(id)];
+}
+
+void MeshManager::UpdateBuffers(unsigned int index, const void* vertBuf, unsigned int vertBytes, RenderBufferUsage usage)
+{
+	MeshBufferData& bufferData = data.bufferData[index];
 
 	if (bufferData.vertexArrayObject == 0)
 	{
@@ -225,10 +274,10 @@ void MeshManager::UpdateBuffers(MeshId id, const void* vertBuf, unsigned int ver
 }
 
 void MeshManager::UpdateIndexedBuffers(
-	MeshId id, const void* vertBuf, unsigned int vertBytes,
+	unsigned int index, const void* vertBuf, unsigned int vertBytes,
 	const void* idxBuf, unsigned int idxBytes, RenderBufferUsage usage)
 {
-	MeshBufferData& bufferData = data.bufferData[id.i];
+	MeshBufferData& bufferData = data.bufferData[index];
 
 	if (bufferData.vertexArrayObject == 0)
 	{
@@ -300,20 +349,20 @@ void MeshManager::DeleteBuffers(MeshBufferData& bufferDataInOut) const
 	}
 }
 
-void MeshManager::CreateDrawData(MeshId id, const VertexData& vdata)
+void MeshManager::CreateDrawData(unsigned int index, const VertexData& vdata)
 {
-	MeshDrawData& drawData = data.drawData[id.i];
+	MeshDrawData& drawData = data.drawData[index];
 	drawData.primitiveMode = vdata.primitiveMode;
-	drawData.vertexArrayObject = data.bufferData[id.i].vertexArrayObject;
+	drawData.vertexArrayObject = data.bufferData[index].vertexArrayObject;
 	drawData.count = vdata.vertexCount;
 	drawData.indexType = RenderIndexType::None;
 }
 
-void MeshManager::CreateDrawDataIndexed(MeshId id, const IndexedVertexData& vdata)
+void MeshManager::CreateDrawDataIndexed(unsigned int index, const IndexedVertexData& vdata)
 {
-	MeshDrawData& drawData = data.drawData[id.i];
+	MeshDrawData& drawData = data.drawData[index];
 	drawData.primitiveMode = vdata.primitiveMode;
-	drawData.vertexArrayObject = data.bufferData[id.i].vertexArrayObject;
+	drawData.vertexArrayObject = data.bufferData[index].vertexArrayObject;
 	drawData.count = vdata.indexCount;
 	drawData.indexType = RenderIndexType::UnsignedShort;
 }
@@ -342,8 +391,10 @@ void MeshManager::Upload(MeshId id, const VertexData& vdata)
 
 	unsigned int vsize = vdata.vertexFormat.vertexSize * vdata.vertexCount;
 
-	UpdateBuffers(id, vdata.vertexData, vsize, vdata.usage);
-	CreateDrawData(id, vdata);
+	unsigned int index = GetIndex(id);
+
+	UpdateBuffers(index, vdata.vertexData, vsize, vdata.usage);
+	CreateDrawData(index, vdata);
 	SetVertexAttribPointers(vdata.vertexFormat);
 }
 
@@ -356,8 +407,10 @@ void MeshManager::UploadIndexed(MeshId id, const IndexedVertexData& vdata)
 	unsigned int vsize = vdata.vertexFormat.vertexSize * vdata.vertexCount;
 	unsigned int isize = vdata.indexSize * vdata.indexCount;
 
-	UpdateIndexedBuffers(id, vdata.vertexData, vsize, vdata.indexData, isize, vdata.usage);
-	CreateDrawDataIndexed(id, vdata);
+	unsigned int index = GetIndex(id);
+
+	UpdateIndexedBuffers(index, vdata.vertexData, vsize, vdata.indexData, isize, vdata.usage);
+	CreateDrawDataIndexed(index, vdata);
 	SetVertexAttribPointers(vdata.vertexFormat);
 }
 

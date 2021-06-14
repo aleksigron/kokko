@@ -202,7 +202,7 @@ void DebugTextRenderer::Render()
 
 		// Draw
 
-		MeshDrawData* draw = meshManager->GetDrawData(meshId);
+		const MeshDrawData* draw = meshManager->GetDrawData(meshId);
 		renderDevice->BindVertexArray(draw->vertexArrayObject);
 		renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 

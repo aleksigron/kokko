@@ -86,10 +86,23 @@ private:
 		unsigned int allocated;
 		void *buffer;
 
+		// Linked list of freed indices
+		// This could be combined with index list, since the same index is not used
+		// in both at the same time. They are separate for debugging purposes.
 		unsigned int* freeList;
+
+		// Mesh ID is used to look into this array
+		// Values in this array are used to look into the mesh data arrays below
+		// Value 0 means the index is not used
+		unsigned int* indexList;
+
+		// Mesh data arrays
+		// The items can be reordered and compacted because of the indexList indirection
+
 		MeshDrawData* drawData;
 		MeshBufferData* bufferData;
 		BoundingBox* bounds;
+		MeshId* meshId;
 		char** pathString;
 	}
 	data;
@@ -99,16 +112,20 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	void UpdateBuffers(MeshId id, const void* vertBuf, unsigned int vertBytes, RenderBufferUsage usage);
-	void UpdateIndexedBuffers(MeshId id, const void* vertBuf, unsigned int vertBytes,
+	void UpdateBuffers(unsigned int index, const void* vertBuf, unsigned int vertBytes,
+		RenderBufferUsage usage);
+
+	void UpdateIndexedBuffers(unsigned int index, const void* vertBuf, unsigned int vertBytes,
 		const void* idxBuf, unsigned int idxBytes, RenderBufferUsage usage);
 
 	void DeleteBuffers(MeshBufferData& buffers) const;
 
-	void CreateDrawData(MeshId id, const VertexData& vdata);
-	void CreateDrawDataIndexed(MeshId id, const IndexedVertexData& vdata);
+	void CreateDrawData(unsigned int index, const VertexData& vdata);
+	void CreateDrawDataIndexed(unsigned int index, const IndexedVertexData& vdata);
 
 	void SetVertexAttribPointers(const VertexFormat& vertexFormat);
+
+	unsigned int GetIndex(MeshId meshId) const;
 
 public:
 	MeshManager(Allocator* allocator, RenderDevice* renderDevice);
@@ -120,16 +137,15 @@ public:
 	MeshId GetIdByPath(StringRef path);
 	MeshId GetIdByPathHash(uint32_t pathHash);
 
-	const char* GetPath(MeshId id);
+	const char* GetPath(MeshId id) const;
 
-	BoundingBox* GetBoundingBox(MeshId id) { return data.bounds + id.i; }
-	void SetBoundingBox(MeshId id, const BoundingBox& bounds) { data.bounds[id.i] = bounds; }
+	const BoundingBox* GetBoundingBox(MeshId id) const;
+	void SetBoundingBox(MeshId id, const BoundingBox& bounds);
 
-	MeshDrawData* GetDrawData(MeshId id) { return data.drawData + id.i; }
+	const MeshDrawData* GetDrawData(MeshId id) const;
 
-	MeshBufferData* GetBufferData(MeshId id) { return data.bufferData + id.i; }
+	const MeshBufferData* GetBufferData(MeshId id) const;
 
 	void Upload(MeshId id, const VertexData& vdata);
 	void UploadIndexed(MeshId id, const IndexedVertexData& vdata);
-
 };

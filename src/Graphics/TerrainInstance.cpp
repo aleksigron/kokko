@@ -201,7 +201,7 @@ void TerrainInstance::RenderTerrain(const MaterialData& material, const RenderVi
 	// Bind material uniform block to shader
 	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, material.uniformBufferObject);
 
-	MeshDrawData* draw = meshManager->GetDrawData(meshId);
+	const MeshDrawData* draw = meshManager->GetDrawData(meshId);
 	renderDevice->BindVertexArray(draw->vertexArrayObject);
 	renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 }

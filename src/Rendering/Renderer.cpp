@@ -714,7 +714,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 
 	unsigned int lastVpIdx = MaxViewportCount;
 	unsigned int lastShaderProgram = 0;
-	MeshDrawData* draw = nullptr;
+	const MeshDrawData* draw = nullptr;
 	MeshId lastMeshId = MeshId{ 0 };
 	MaterialId lastMaterialId = MaterialId{ 0 };
 
@@ -1039,7 +1039,7 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 	device->BlendingDisable();
 	device->DepthTestDisable();
 
-	MeshDrawData* meshDrawData = meshManager->GetDrawData(fullscreenMesh);
+	const MeshDrawData* meshDrawData = meshManager->GetDrawData(fullscreenMesh);
 	device->BindVertexArray(meshDrawData->vertexArrayObject);
 
 	// Bind default framebuffer
@@ -2002,7 +2002,7 @@ void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entitie
 
 			// Recalculate bounding box
 			MeshId meshId = data.mesh[dataIdx];
-			BoundingBox* bounds = meshManager->GetBoundingBox(meshId);
+			const BoundingBox* bounds = meshManager->GetBoundingBox(meshId);
 			data.bounds[dataIdx] = bounds->Transform(transforms[entityIdx]);
 
 			// Set world transform

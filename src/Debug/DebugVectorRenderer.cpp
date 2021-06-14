@@ -558,7 +558,7 @@ void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, co
 			else
 				meshId = this->staticMeshes[static_cast<unsigned int>(primitive.type)];
 
-			MeshDrawData* draw = meshManager->GetDrawData(meshId);
+			const MeshDrawData* draw = meshManager->GetDrawData(meshId);
 			renderDevice->BindVertexArray(draw->vertexArrayObject);
 
 			if (draw->indexType != RenderIndexType::None)
