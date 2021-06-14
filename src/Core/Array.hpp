@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <cstdint>
 #include <new>
 
 #include "Memory/Allocator.hpp"
@@ -8,14 +9,11 @@
 template <typename ValueType>
 class Array
 {
-public:
-	using SizeType = unsigned int;
-
 private:
 	Allocator* allocator;
 	ValueType* data;
-	SizeType count;
-	SizeType allocated;
+	size_t count;
+	size_t allocated;
 
 public:
 	Array(Allocator* allocator) :
@@ -28,13 +26,13 @@ public:
 
 	~Array()
 	{
-		for (SizeType i = 0; i < count; ++i)
+		for (size_t i = 0; i < count; ++i)
 			data[i].~ValueType();
 
 		allocator->Deallocate(this->data);
 	}
 
-	SizeType GetCount() const { return this->count; }
+	size_t GetCount() const { return this->count; }
 
 	ValueType* GetData() { return this->data; }
 	const ValueType* GetData() const { return this->data; }
@@ -45,20 +43,20 @@ public:
 	ValueType& GetBack() { return this->data[this->count - 1]; }
 	const ValueType& GetBack() const { return this->data[this->count - 1]; }
 
-	ValueType& At(SizeType index) { return this->data[index]; }
-	const ValueType& At(SizeType index) const { return this->data[index]; }
+	ValueType& At(size_t index) { return this->data[index]; }
+	const ValueType& At(size_t index) const { return this->data[index]; }
 
-	ValueType& operator[](SizeType index) { return this->data[index]; }
-	const ValueType& operator[](SizeType index) const { return this->data[index]; }
+	ValueType& operator[](size_t index) { return this->data[index]; }
+	const ValueType& operator[](size_t index) const { return this->data[index]; }
 
 	/**
 	 * Make sure there's at least the specified amount of space in the array
 	 */
-	void Reserve(SizeType required)
+	void Reserve(size_t required)
 	{
 		if (required > allocated)
 		{
-			SizeType newAllocated = allocated > 1 ? allocated * 2 : 4;
+			size_t newAllocated = allocated > 1 ? allocated * 2 : 4;
 
 			if (required > newAllocated)
 				newAllocated = required;
@@ -110,11 +108,11 @@ public:
 	/**
 	 * Insert the specified items to the back of the array
 	 */
-	void InsertBack(const ValueType* items, SizeType count)
+	void InsertBack(const ValueType* items, size_t count)
 	{
 		this->Reserve(this->count + count);
 
-		for (SizeType i = 0; i < count; ++i)
+		for (size_t i = 0; i < count; ++i)
 		{
 			this->data[this->count] = items[i];
 			++(this->count);
@@ -124,7 +122,7 @@ public:
 	/**
 	 * Insert an item in the specified position in the array
 	 */
-	void Insert(SizeType index, const ValueType& item)
+	void Insert(size_t index, const ValueType& item)
 	{
 		this->Insert(index, &item, 1);
 	}
@@ -132,17 +130,17 @@ public:
 	/**
 	 * Insert items in the specified position in the array
 	 */
-	void Insert(SizeType index, const ValueType* items, SizeType itemCount)
+	void Insert(size_t index, const ValueType* items, size_t itemCount)
 	{
 		if (index <= count) // Index is valid
 		{
 			const std::size_t vts = sizeof(ValueType);
-			SizeType required = count + itemCount;
-			SizeType itemsAfter = count - index;
+			size_t required = count + itemCount;
+			size_t itemsAfter = count - index;
 
 			if (required > this->allocated) // Requires reallocation
 			{
-				SizeType newAllocated = this->allocated > 1 ? this->allocated * 2 : 4;
+				size_t newAllocated = this->allocated > 1 ? this->allocated * 2 : 4;
 
 				if (required > newAllocated)
 					newAllocated = required;
@@ -181,7 +179,7 @@ public:
 				}
 
 				// Copy inserted items
-				for (SizeType i = 0; i < itemCount; ++i)
+				for (size_t i = 0; i < itemCount; ++i)
 					this->data[index + i] = items[i];
 			}
 
@@ -202,7 +200,7 @@ public:
 	/**
 	 * Remove an item from the specified position in the array
 	 */
-	void Remove(SizeType index)
+	void Remove(size_t index)
 	{
 		this->Remove(index, 1);
 	}
@@ -210,7 +208,7 @@ public:
 	/**
 	 * Remove items from the specified position in the array
 	 */
-	void Remove(SizeType index, SizeType removeCount)
+	void Remove(size_t index, size_t removeCount)
 	{
 		if (index <= count) // Index is valid
 		{
@@ -221,7 +219,7 @@ public:
 				--count;
 			}
 
-			SizeType itemsAfterRemove = count - index;
+			size_t itemsAfterRemove = count - index;
 
 			// Move existing items
 			if (itemsAfterRemove > 0)
@@ -260,7 +258,7 @@ public:
 	 */
 	void Clear()
 	{
-		for (SizeType i = 0; i < this->count; ++i)
+		for (size_t i = 0; i < this->count; ++i)
 			this->data[i].~ValueType();
 
 		this->count = 0;

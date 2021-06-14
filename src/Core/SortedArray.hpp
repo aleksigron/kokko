@@ -5,10 +5,6 @@
 template <typename ValueType>
 class SortedArray
 {
-
-public:
-	using SizeType = typename Array<ValueType>::SizeType;
-
 private:
 	Array<ValueType> a;
 
@@ -16,17 +12,17 @@ private:
 	Tries to find value. If it's not found, returns the index at which the value
 	should be inserted. Array must be checked to not be empty before calling.
 	 */
-	SizeType FindInternal(const ValueType& value) const
+	size_t FindInternal(const ValueType& value) const
 	{
-		SizeType index = 0;
+		size_t index = 0;
 
 		const ValueType* data = a.GetData();
-		SizeType l = 0;
-		SizeType r = a.GetCount() - 1;
+		size_t l = 0;
+		size_t r = a.GetCount() - 1;
 
 		while (l != r)
 		{
-			SizeType m = (l + r + 1) / 2;
+			size_t m = (l + r + 1) / 2;
 
 			if (data[m] > value)
 				r = m - 1;
@@ -48,25 +44,38 @@ public:
 	{
 	}
 
-	SizeType GetCount() const { return a.GetCount(); }
+	size_t GetCount() const { return a.GetCount(); }
 
 	ValueType* GetData() { return a.GetData(); }
 	const ValueType* GetData() const { return a.GetData(); }
 
-	ValueType& operator[](SizeType index) { return a[index]; }
-	const ValueType& operator[](SizeType index) const { return a[index]; }
+	ValueType& operator[](size_t index) { return a[index]; }
+	const ValueType& operator[](size_t index) const { return a[index]; }
 
 	bool Contains(const ValueType& value) const
 	{
 		if (a.GetCount() == 0)
 			return false;
 
-		SizeType index = FindInternal(value);
+		size_t index = FindInternal(value);
 
 		return a[index] == value;
 	}
 
-	void Insert(const ValueType* items, SizeType count)
+	intptr_t Find(const ValueType& value) const
+	{
+		if (a.GetCount() == 0)
+			return -1;
+
+		size_t index = FindInternal(value);
+
+		if (a[index] == value)
+			return index;
+		else
+			return -1;
+	}
+
+	void Insert(const ValueType* items, size_t count)
 	{
 		for (const ValueType* end = items + count; items != end; ++items)
 			this->Insert(*items);
@@ -74,7 +83,7 @@ public:
 
 	void Insert(const ValueType& val)
 	{
-		SizeType insertIndex = 0;
+		size_t insertIndex = 0;
 
 		if (a.GetCount() > 0)
 			insertIndex = FindInternal(val);
@@ -82,7 +91,7 @@ public:
 		a.Insert(insertIndex, val);
 	}
 
-	void InsertUnique(const ValueType* items, SizeType count)
+	void InsertUnique(const ValueType* items, size_t count)
 	{
 		for (const ValueType* end = items + count; items != end; ++items)
 			this->InsertUnique(*items);
@@ -92,7 +101,7 @@ public:
 	{
 		if (a.GetCount() > 0)
 		{
-			SizeType index = FindInternal(val);
+			size_t index = FindInternal(val);
 
 			if (index >= a.GetCount() || !(a[index] == val))
 				a.Insert(index, val);
@@ -106,8 +115,16 @@ public:
 		a.PopBack();
 	}
 
+	void Remove(size_t index)
+	{
+		a.Remove(index);
+	}
+
 	void Clear()
 	{
 		a.Clear();
 	}
+
+	typename Array<ValueType>::Iterator begin() { return a.begin(); }
+	typename Array<ValueType>::Iterator end() { return a.end(); }
 };
