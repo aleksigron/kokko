@@ -1,8 +1,8 @@
-#include "Memory/ProxyAllocator.hpp"
+#include "Memory/MetricAllocator.hpp"
 
 #include <cassert>
 
-ProxyAllocator::ProxyAllocator(const char* memoryScope, Allocator* allocator):
+MetricAllocator::MetricAllocator(const char* memoryScope, Allocator* allocator):
 	allocator(allocator),
 	memoryScopeName(memoryScope),
 	allocatedSize(0),
@@ -10,28 +10,28 @@ ProxyAllocator::ProxyAllocator(const char* memoryScope, Allocator* allocator):
 {
 }
 
-ProxyAllocator::~ProxyAllocator()
+MetricAllocator::~MetricAllocator()
 {
 	assert(allocatedSize == 0);
 	assert(allocatedCount == 0);
 }
 
-std::size_t ProxyAllocator::GetTotalAllocationSize() const
+std::size_t MetricAllocator::GetTotalAllocationSize() const
 {
 	return allocatedSize;
 }
 
-std::size_t ProxyAllocator::GetTotalAllocationCount() const
+std::size_t MetricAllocator::GetTotalAllocationCount() const
 {
 	return allocatedCount;
 }
 
-const char* ProxyAllocator::GetMemoryScopeName() const
+const char* MetricAllocator::GetMemoryScopeName() const
 {
 	return memoryScopeName;
 }
 
-void* ProxyAllocator::Allocate(std::size_t size, const char* debugTag)
+void* MetricAllocator::Allocate(std::size_t size, const char* debugTag)
 {
 	void* result = allocator->Allocate(size);
 
@@ -44,7 +44,7 @@ void* ProxyAllocator::Allocate(std::size_t size, const char* debugTag)
 	return result;
 }
 
-void ProxyAllocator::Deallocate(void* ptr)
+void MetricAllocator::Deallocate(void* ptr)
 {
 	if (ptr != nullptr)
 	{
@@ -57,7 +57,7 @@ void ProxyAllocator::Deallocate(void* ptr)
 	}
 }
 
-std::size_t ProxyAllocator::GetAllocatedSize(void* ptr)
+std::size_t MetricAllocator::GetAllocatedSize(void* ptr)
 {
 	return allocator->GetAllocatedSize(ptr);
 }

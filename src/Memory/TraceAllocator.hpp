@@ -2,9 +2,9 @@
 
 #include "Core/SortedArray.hpp"
 
-#include "Memory/ProxyAllocator.hpp"
+#include "Memory/MetricAllocator.hpp"
 
-class TraceAllocator : public ProxyAllocator
+class TraceAllocator : public MetricAllocator
 {
 private:
 	struct AllocationInfo

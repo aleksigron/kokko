@@ -2,7 +2,7 @@
 
 #include "Memory/Allocator.hpp"
 
-class ProxyAllocator : public Allocator
+class MetricAllocator : public Allocator
 {
 private:
 	Allocator* allocator;
@@ -11,8 +11,8 @@ private:
 	std::size_t allocatedCount;
 
 public:
-	ProxyAllocator(const char* memoryScope, Allocator* allocator);
-	virtual ~ProxyAllocator();
+	MetricAllocator(const char* memoryScope, Allocator* allocator);
+	virtual ~MetricAllocator();
 
 	std::size_t GetTotalAllocationSize() const;
 	std::size_t GetTotalAllocationCount() const;

@@ -4,14 +4,14 @@
 
 #include "Memory/Allocator.hpp"
 
-class ProxyAllocator;
+class MetricAllocator;
 
 class AllocatorManager
 {
 private:
 	Allocator* alloc;
 
-	ProxyAllocator** scopes;
+	MetricAllocator** scopes;
 	unsigned int scopeCount;
 	unsigned int scopeAllocated;
 

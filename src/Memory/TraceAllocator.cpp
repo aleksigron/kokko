@@ -3,7 +3,7 @@
 #include <cassert>
 
 TraceAllocator::TraceAllocator(const char* memoryScope, Allocator* allocator) :
-	ProxyAllocator(memoryScope, allocator),
+	MetricAllocator(memoryScope, allocator),
 	allocations(allocator)
 {
 }
@@ -18,7 +18,7 @@ TraceAllocator::~TraceAllocator()
 
 void* TraceAllocator::Allocate(std::size_t size, const char* debugTag)
 {
-	void* ptr = ProxyAllocator::Allocate(size);
+	void* ptr = MetricAllocator::Allocate(size);
 	allocations.Insert(AllocationInfo{ ptr, debugTag });
 	return ptr;
 }
@@ -32,7 +32,7 @@ void TraceAllocator::Deallocate(void* ptr)
 		allocations.Remove(index);
 	}
 
-	ProxyAllocator::Deallocate(ptr);
+	MetricAllocator::Deallocate(ptr);
 }
 
 void TraceAllocator::OutputAllocations(FILE* stream)

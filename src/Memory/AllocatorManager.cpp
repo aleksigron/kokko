@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include "Memory/ProxyAllocator.hpp"
+#include "Memory/MetricAllocator.hpp"
 #include "Memory/TraceAllocator.hpp"
 
 AllocatorManager::AllocatorManager(Allocator* allocator) :
@@ -29,23 +29,23 @@ Allocator* AllocatorManager::CreateAllocatorScope(const char* name, Allocator* b
 		// Reallocate
 
 		unsigned int newAllocated = scopeAllocated > 0 ? scopeAllocated * 2 : 32;
-		void* newBuffer = this->alloc->Allocate(sizeof(ProxyAllocator*) * newAllocated);
+		void* newBuffer = this->alloc->Allocate(sizeof(MetricAllocator*) * newAllocated);
 
 		if (scopeCount > 0)
 		{
-			std::memcpy(newBuffer, scopes, sizeof(ProxyAllocator*) * scopeCount);
+			std::memcpy(newBuffer, scopes, sizeof(MetricAllocator*) * scopeCount);
 			this->alloc->Deallocate(scopes);
 		}
 
-		scopes = static_cast<ProxyAllocator**>(newBuffer);
+		scopes = static_cast<MetricAllocator**>(newBuffer);
 		scopeAllocated = newAllocated;
 	}
 
-	ProxyAllocator* proxyAllocator = nullptr;
+	MetricAllocator* proxyAllocator = nullptr;
 	if (tracing)
 		proxyAllocator = this->alloc->MakeNew<TraceAllocator>(name, baseAllocator);
 	else
-		proxyAllocator = this->alloc->MakeNew<ProxyAllocator>(name, baseAllocator);
+		proxyAllocator = this->alloc->MakeNew<MetricAllocator>(name, baseAllocator);
 
 	scopes[scopeCount] = proxyAllocator;
 	scopeCount += 1;
