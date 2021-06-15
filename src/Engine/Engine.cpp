@@ -22,7 +22,6 @@
 
 #include "Memory/AllocatorManager.hpp"
 #include "Memory/Memory.hpp"
-#include "Memory/ProxyAllocator.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"

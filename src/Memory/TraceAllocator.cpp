@@ -46,7 +46,7 @@ void TraceAllocator::OutputAllocations(FILE* stream)
 		for (const AllocationInfo& alloc : allocations)
 		{
 			const char* tag = alloc.tag != nullptr ? alloc.tag : "Unnamed";
-			fprintf(stream, "\t%p: %8zu B, %s\n", alloc, GetAllocatedSize(alloc.ptr), tag);
+			fprintf(stream, "\t%p: %8zu B, %s\n", alloc.ptr, GetAllocatedSize(alloc.ptr), tag);
 		}
 	}
 	else

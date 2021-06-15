@@ -70,6 +70,7 @@ BloomEffect::BloomEffect(
 
 BloomEffect::~BloomEffect()
 {
+	Deinitialize();
 }
 
 void BloomEffect::Initialize()
@@ -96,7 +97,7 @@ void BloomEffect::Initialize()
 	unsigned int blockCount = 32;
 	unsigned int bufferSize = uniformBlockStride * blockCount;
 
-	uniformStagingBuffer = static_cast<unsigned char*>(allocator->Allocate(bufferSize));
+	uniformStagingBuffer = static_cast<unsigned char*>(allocator->Allocate(bufferSize, "BloomEffect::uniformStagingBuffer"));
 
 	renderDevice->CreateBuffers(1, &uniformBufferId);
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);

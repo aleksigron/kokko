@@ -219,7 +219,7 @@ void Renderer::Initialize(Window* window)
 		KOKKO_PROFILE_SCOPE("Allocate framebuffer data");
 
 		// Allocate framebuffer data storage
-		void* buf = this->allocator->Allocate(sizeof(RendererFramebuffer) * MaxFramebufferCount);
+		void* buf = allocator->Allocate(sizeof(RendererFramebuffer) * MaxFramebufferCount, "Renderer::framebufferData");
 		framebufferData = static_cast<RendererFramebuffer*>(buf);
 	}
 
@@ -227,7 +227,7 @@ void Renderer::Initialize(Window* window)
 		KOKKO_PROFILE_SCOPE("Allocate framebuffer texture data");
 
 		// Allocate framebuffer texture info storage
-		void* buf = this->allocator->Allocate(sizeof(unsigned int) * MaxFramebufferTextureCount);
+		void* buf = allocator->Allocate(sizeof(unsigned int) * MaxFramebufferTextureCount, "Renderer::framebufferTextures");
 		framebufferTextures = static_cast<unsigned int*>(buf);
 	}
 
@@ -235,7 +235,7 @@ void Renderer::Initialize(Window* window)
 		KOKKO_PROFILE_SCOPE("Allocate viewport data");
 
 		// Allocate viewport data storage
-		void* buf = this->allocator->Allocate(sizeof(RenderViewport) * MaxViewportCount);
+		void* buf = allocator->Allocate(sizeof(RenderViewport) * MaxViewportCount, "Renderer::viewportData");
 		viewportData = static_cast<RenderViewport*>(buf);
 
 		// Create uniform buffer objects
@@ -467,7 +467,7 @@ void Renderer::Deinitialize()
 
 	if (framebufferData != nullptr)
 	{
-		this->allocator->Deallocate(framebufferData);
+		allocator->Deallocate(framebufferData);
 		framebufferData = nullptr;
 	}
 
@@ -482,9 +482,16 @@ void Renderer::Deinitialize()
 			}
 		}
 
-		this->allocator->Deallocate(viewportData);
+		allocator->Deallocate(viewportData);
 		viewportData = nullptr;
 		viewportCount = 0;
+	}
+
+	if (framebufferTextures != nullptr)
+	{
+		allocator->Deallocate(framebufferTextures);
+		framebufferTextures = nullptr;
+		framebufferTextureCount = 0;
 	}
 
 	if (window != nullptr)
@@ -1868,7 +1875,7 @@ void Renderer::ReallocateRenderObjects(unsigned int required)
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(RenderOrderData) +
 		sizeof(BoundingBox) + sizeof(Mat4x4f));
 
-	newData.buffer = this->allocator->Allocate(bytes);
+	newData.buffer = this->allocator->Allocate(bytes, "Renderer InstanceData buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 

@@ -62,7 +62,7 @@ public:
 				newAllocated = required;
 
 			std::size_t newSize = newAllocated * sizeof(ValueType);
-			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize));
+			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize, __FUNCSIG__));
 
 			if (data != nullptr)
 			{
@@ -146,7 +146,7 @@ public:
 					newAllocated = required;
 
 				std::size_t newSize = newAllocated * vts;
-				ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize));
+				ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize, __FUNCSIG__));
 
 				// We have old data
 				if (data != nullptr)

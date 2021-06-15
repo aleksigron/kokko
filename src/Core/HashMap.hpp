@@ -75,7 +75,7 @@ private:
 	void ReserveInternal(unsigned int desiredCount)
 	{
 		std::size_t newSize = desiredCount * sizeof(KeyValuePair);
-		KeyValuePair* newData = static_cast<KeyValuePair*>(allocator->Allocate(newSize));
+		KeyValuePair* newData = static_cast<KeyValuePair*>(allocator->Allocate(newSize, __FUNCSIG__));
 		std::memset(newData, 0, newSize);
 
 		if (data != nullptr) // Old data exists
