@@ -31,7 +31,7 @@ const char* ProxyAllocator::GetMemoryScopeName() const
 	return memoryScopeName;
 }
 
-void* ProxyAllocator::Allocate(std::size_t size)
+void* ProxyAllocator::Allocate(std::size_t size, const char* debugTag)
 {
 	void* result = allocator->Allocate(size);
 

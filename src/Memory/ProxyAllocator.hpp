@@ -18,7 +18,7 @@ public:
 	std::size_t GetTotalAllocationCount() const;
 	const char* GetMemoryScopeName() const;
 
-	virtual void* Allocate(std::size_t size) override;
+	virtual void* Allocate(std::size_t size, const char* debugTag = nullptr) override;
 	virtual void Deallocate(void* ptr) override;
 	virtual std::size_t GetAllocatedSize(void* ptr) override;
 };

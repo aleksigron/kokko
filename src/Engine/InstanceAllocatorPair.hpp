@@ -13,9 +13,9 @@ struct InstanceAllocatorPair
 	{
 	}
 
-	void CreateScope(AllocatorManager* manager, const char* name, Allocator* alloc)
+	void CreateScope(AllocatorManager* manager, const char* name, Allocator* alloc, bool tracing = false)
 	{
-		allocator = manager->CreateAllocatorScope(name, alloc);
+		allocator = manager->CreateAllocatorScope(name, alloc, tracing);
 	}
 
 	template <typename... Args>

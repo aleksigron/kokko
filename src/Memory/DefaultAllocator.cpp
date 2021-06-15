@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-void* DefaultAllocator::Allocate(std::size_t size)
+void* DefaultAllocator::Allocate(std::size_t size, const char* debugTag)
 {
 	void* ptr = std::malloc(size + PreambleSize);
 	

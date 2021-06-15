@@ -154,6 +154,8 @@ set (KOKKO_SOURCES
 	src/Memory/DefaultAllocator.hpp
 	src/Memory/ProxyAllocator.cpp
 	src/Memory/ProxyAllocator.hpp
+	src/Memory/TraceAllocator.cpp
+	src/Memory/TraceAllocator.hpp
 	src/Rendering/CameraId.hpp
 	src/Rendering/CameraParameters.hpp
 	src/Rendering/CameraSystem.cpp

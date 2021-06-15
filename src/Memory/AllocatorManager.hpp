@@ -29,7 +29,7 @@ public:
 	/// Allocator that will gather memory statistics. Call <see cref="DestroyAllocatorScope(Allocator*)"/>
 	/// with this return value when your done with the allocator.
 	/// </returns>
-	Allocator* CreateAllocatorScope(const char* name, Allocator* baseAllocator);
+	Allocator* CreateAllocatorScope(const char* name, Allocator* baseAllocator, bool tracing = false);
 
 	/// <summary>
 	/// Destroy a previously created allocator scope.

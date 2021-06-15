@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "Memory/ProxyAllocator.hpp"
+#include "Memory/TraceAllocator.hpp"
 
 AllocatorManager::AllocatorManager(Allocator* allocator) :
 	alloc(allocator),
@@ -21,7 +22,7 @@ AllocatorManager::~AllocatorManager()
 	}
 }
 
-Allocator* AllocatorManager::CreateAllocatorScope(const char* name, Allocator* baseAllocator)
+Allocator* AllocatorManager::CreateAllocatorScope(const char* name, Allocator* baseAllocator, bool tracing)
 {
 	if (scopeCount == scopeAllocated)
 	{
@@ -40,12 +41,16 @@ Allocator* AllocatorManager::CreateAllocatorScope(const char* name, Allocator* b
 		scopeAllocated = newAllocated;
 	}
 
-	ProxyAllocator* proxy = this->alloc->MakeNew<ProxyAllocator>(name, baseAllocator);
+	ProxyAllocator* proxyAllocator = nullptr;
+	if (tracing)
+		proxyAllocator = this->alloc->MakeNew<TraceAllocator>(name, baseAllocator);
+	else
+		proxyAllocator = this->alloc->MakeNew<ProxyAllocator>(name, baseAllocator);
 
-	scopes[scopeCount] = proxy;
+	scopes[scopeCount] = proxyAllocator;
 	scopeCount += 1;
 
-	return proxy;
+	return proxyAllocator;
 }
 
 void AllocatorManager::DestroyAllocatorScope(Allocator* allocator)
