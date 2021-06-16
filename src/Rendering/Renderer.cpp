@@ -82,14 +82,6 @@ struct SkyboxUniformBlock
 	alignas(16) Mat4x4f transform;
 };
 
-struct RendererFramebuffer
-{
-	unsigned int framebuffer;
-
-	int width;
-	int height;
-};
-
 struct TonemapUniformBlock
 {
 	alignas(16) float exposure;
@@ -108,10 +100,6 @@ Renderer::Renderer(
 	renderTargetContainer(nullptr),
 	ssao(nullptr),
 	bloomEffect(nullptr),
-	framebufferData(nullptr),
-	framebufferCount(0),
-	framebufferTextures(nullptr),
-	framebufferTextureCount(0),
 	viewportData(nullptr),
 	viewportCount(0),
 	viewportIndexFullscreen(0),
@@ -158,12 +146,7 @@ Renderer::Renderer(
 
 	brdfLutTextureId = 0;
 
-	gBufferAlbedoTextureIndex = 0;
-	gBufferNormalTextureIndex = 0;
-	gBufferMaterialTextureIndex = 0;
-	fullscreenDepthTextureIndex = 0;
-	shadowDepthTextureIndex = 0;
-	lightAccumulationTextureIndex = 0;
+	framebufferTextures = FramebufferTextures{};
 
 	objectUniformBlockStride = 0;
 	objectsPerUniformBuffer = 0;
@@ -216,22 +199,6 @@ void Renderer::Initialize(Window* window)
 	bloomEffect->SetParams(bloomParams);
 
 	{
-		KOKKO_PROFILE_SCOPE("Allocate framebuffer data");
-
-		// Allocate framebuffer data storage
-		void* buf = allocator->Allocate(sizeof(RendererFramebuffer) * MaxFramebufferCount, "Renderer::framebufferData");
-		framebufferData = static_cast<RendererFramebuffer*>(buf);
-	}
-
-	{
-		KOKKO_PROFILE_SCOPE("Allocate framebuffer texture data");
-
-		// Allocate framebuffer texture info storage
-		void* buf = allocator->Allocate(sizeof(unsigned int) * MaxFramebufferTextureCount, "Renderer::framebufferTextures");
-		framebufferTextures = static_cast<unsigned int*>(buf);
-	}
-
-	{
 		KOKKO_PROFILE_SCOPE("Allocate viewport data");
 
 		// Allocate viewport data storage
@@ -256,8 +223,6 @@ void Renderer::Initialize(Window* window)
 		}
 	}
 
-	CreateFramebuffers(framebufferSize);
-
 	{
 		KOKKO_PROFILE_SCOPE("Create shadow framebuffer");
 
@@ -267,29 +232,24 @@ void Renderer::Initialize(Window* window)
 		unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 		Vec2i size(shadowSide * shadowCascadeCount, shadowSide);
 
-		framebufferCount += 1;
-
-		RendererFramebuffer& framebuffer = framebufferData[FramebufferIndexShadow];
-		framebuffer.width = size.x;
-		framebuffer.height = size.y;
+		framebufferShadow.width = size.x;
+		framebufferShadow.height = size.y;
 
 		// Create and bind framebuffer
 
-		device->CreateFramebuffers(1, &framebuffer.framebuffer);
-		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebuffer.framebuffer);
+		device->CreateFramebuffers(1, &framebufferShadow.framebuffer);
+		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebufferShadow.framebuffer);
 
 		// We aren't rendering to any color attachments
 		RenderFramebufferAttachment drawBuffers = RenderFramebufferAttachment::None;
 		device->SetFramebufferDrawBuffers(1, &drawBuffers);
 
 		// Create texture
-		device->CreateTextures(1, &framebufferTextures[framebufferTextureCount]);
 		
-		shadowDepthTextureIndex = framebufferTextureCount++;
+		device->CreateTextures(1, &framebufferTextures.shadowDepth);
 
 		// Create and attach depth buffer
-		unsigned int depthTexture = framebufferTextures[shadowDepthTextureIndex];
-		device->BindTexture(RenderTextureTarget::Texture2d, depthTexture);
+		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.shadowDepth);
 
 		RenderCommandData::SetTextureStorage2D depthTextureStorage{
 			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D32F, size.x, size.y
@@ -305,7 +265,7 @@ void Renderer::Initialize(Window* window)
 
 		RenderCommandData::AttachFramebufferTexture2D depthFramebufferTexture{
 			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
-			RenderTextureTarget::Texture2d, depthTexture, 0
+			RenderTextureTarget::Texture2d, framebufferTextures.shadowDepth, 0
 		};
 		device->AttachFramebufferTexture2D(&depthFramebufferTexture);
 
@@ -313,6 +273,8 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(RenderTextureTarget::Texture2d, 0);
 		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
 	}
+
+	CreateResolutionDependentFramebuffers(framebufferSize);
 	
 	{
 		KOKKO_PROFILE_SCOPE("Create tonemap uniform buffer");
@@ -463,13 +425,9 @@ void Renderer::Deinitialize()
 		}
 	}
 
-	DestroyFramebuffers();
-
-	if (framebufferData != nullptr)
-	{
-		allocator->Deallocate(framebufferData);
-		framebufferData = nullptr;
-	}
+	DestroyFramebuffer(device, framebufferGbuffer);
+	DestroyFramebuffer(device, framebufferShadow);
+	DestroyFramebuffer(device, framebufferLightAcc);
 
 	if (viewportData != nullptr)
 	{
@@ -487,12 +445,12 @@ void Renderer::Deinitialize()
 		viewportCount = 0;
 	}
 
-	if (framebufferTextures != nullptr)
-	{
-		allocator->Deallocate(framebufferTextures);
-		framebufferTextures = nullptr;
-		framebufferTextureCount = 0;
-	}
+	DestroyTexture(device, framebufferTextures.gBufferAlbedo);
+	DestroyTexture(device, framebufferTextures.gBufferNormal);
+	DestroyTexture(device, framebufferTextures.gBufferMaterial);
+	DestroyTexture(device, framebufferTextures.fullscreenDepth);
+	DestroyTexture(device, framebufferTextures.shadowDepth);
+	DestroyTexture(device, framebufferTextures.lightAccumulation);
 
 	if (window != nullptr)
 	{
@@ -501,7 +459,7 @@ void Renderer::Deinitialize()
 	}
 }
 
-void Renderer::CreateFramebuffers(Vec2i framebufferSize)
+void Renderer::CreateResolutionDependentFramebuffers(Vec2i framebufferSize)
 {
 	// Set default viewport rectangle, this might be overridden later
 	ViewRectangle viewportRectangle;
@@ -515,24 +473,13 @@ void Renderer::CreateFramebuffers(Vec2i framebufferSize)
 
 		// Create geometry framebuffer and textures
 
-		framebufferCount += 1;
-
-		RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
-		gbuffer.width = framebufferSize.x;
-		gbuffer.height = framebufferSize.y;
+		framebufferGbuffer.width = framebufferSize.x;
+		framebufferGbuffer.height = framebufferSize.y;
 
 		// Create and bind framebuffer
 
-		device->CreateFramebuffers(1, &gbuffer.framebuffer);
-		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, gbuffer.framebuffer);
-
-		unsigned int gbufferTextureCount = 4;
-		device->CreateTextures(gbufferTextureCount, &framebufferTextures[framebufferTextureCount]);
-
-		gBufferAlbedoTextureIndex = framebufferTextureCount++;
-		gBufferNormalTextureIndex = framebufferTextureCount++;
-		gBufferMaterialTextureIndex = framebufferTextureCount++;
-		fullscreenDepthTextureIndex = framebufferTextureCount++;
+		device->CreateFramebuffers(1, &framebufferGbuffer.framebuffer);
+		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebufferGbuffer.framebuffer);
 
 		RenderFramebufferAttachment colAtt[3] = {
 			RenderFramebufferAttachment::Color0,
@@ -542,11 +489,12 @@ void Renderer::CreateFramebuffers(Vec2i framebufferSize)
 
 		// Albedo color buffer
 
-		unsigned int albTexture = framebufferTextures[gBufferAlbedoTextureIndex];
-		device->BindTexture(RenderTextureTarget::Texture2d, albTexture);
+		device->CreateTextures(1, &framebufferTextures.gBufferAlbedo);
+		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.gBufferAlbedo);
 
 		RenderCommandData::SetTextureStorage2D albTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::SRGB8, gbuffer.width, gbuffer.height
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::SRGB8,
+			framebufferGbuffer.width, framebufferGbuffer.height
 		};
 		device->SetTextureStorage2D(&albTextureStorage);
 
@@ -554,17 +502,19 @@ void Renderer::CreateFramebuffers(Vec2i framebufferSize)
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
 		RenderCommandData::AttachFramebufferTexture2D albAttachTexture{
-			RenderFramebufferTarget::Framebuffer, colAtt[0], RenderTextureTarget::Texture2d, albTexture, 0
+			RenderFramebufferTarget::Framebuffer, colAtt[0], RenderTextureTarget::Texture2d,
+			framebufferTextures.gBufferAlbedo, 0
 		};
 		device->AttachFramebufferTexture2D(&albAttachTexture);
 
 		// Normal buffer
 
-		unsigned int norTexture = framebufferTextures[gBufferNormalTextureIndex];
-		device->BindTexture(RenderTextureTarget::Texture2d, norTexture);
+		device->CreateTextures(1, &framebufferTextures.gBufferNormal);
+		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.gBufferNormal);
 
 		RenderCommandData::SetTextureStorage2D norTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RG16, gbuffer.width, gbuffer.height
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RG16,
+			framebufferGbuffer.width, framebufferGbuffer.height
 		};
 		device->SetTextureStorage2D(&norTextureStorage);
 
@@ -572,17 +522,19 @@ void Renderer::CreateFramebuffers(Vec2i framebufferSize)
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
 		RenderCommandData::AttachFramebufferTexture2D norAttachTexture{
-			RenderFramebufferTarget::Framebuffer, colAtt[1], RenderTextureTarget::Texture2d, norTexture, 0
+			RenderFramebufferTarget::Framebuffer, colAtt[1], RenderTextureTarget::Texture2d,
+			framebufferTextures.gBufferNormal, 0
 		};
 		device->AttachFramebufferTexture2D(&norAttachTexture);
 
 		// Emissivity buffer
 
-		unsigned int matTexture = framebufferTextures[gBufferMaterialTextureIndex];
-		device->BindTexture(RenderTextureTarget::Texture2d, matTexture);
+		device->CreateTextures(1, &framebufferTextures.gBufferMaterial);
+		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.gBufferMaterial);
 
 		RenderCommandData::SetTextureStorage2D matTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RGB8, gbuffer.width, gbuffer.height
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RGB8,
+			framebufferGbuffer.width, framebufferGbuffer.height
 		};
 		device->SetTextureStorage2D(&matTextureStorage);
 
@@ -590,7 +542,8 @@ void Renderer::CreateFramebuffers(Vec2i framebufferSize)
 		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
 
 		RenderCommandData::AttachFramebufferTexture2D matAttachTexture{
-			RenderFramebufferTarget::Framebuffer, colAtt[2], RenderTextureTarget::Texture2d, matTexture, 0
+			RenderFramebufferTarget::Framebuffer, colAtt[2], RenderTextureTarget::Texture2d,
+			framebufferTextures.gBufferMaterial, 0
 		};
 		device->AttachFramebufferTexture2D(&matAttachTexture);
 
@@ -598,11 +551,12 @@ void Renderer::CreateFramebuffers(Vec2i framebufferSize)
 		device->SetFramebufferDrawBuffers(sizeof(colAtt) / sizeof(colAtt[0]), colAtt);
 
 		// Create and attach depth buffer
-		unsigned int depthTexture = framebufferTextures[fullscreenDepthTextureIndex];
-		device->BindTexture(RenderTextureTarget::Texture2d, depthTexture);
+		device->CreateTextures(1, &framebufferTextures.fullscreenDepth);
+		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.fullscreenDepth);
 
 		RenderCommandData::SetTextureStorage2D depthTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D32F, gbuffer.width, gbuffer.height
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D32F,
+			framebufferGbuffer.width, framebufferGbuffer.height
 		};
 		device->SetTextureStorage2D(&depthTextureStorage);
 
@@ -615,11 +569,9 @@ void Renderer::CreateFramebuffers(Vec2i framebufferSize)
 
 		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
 			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
-			RenderTextureTarget::Texture2d, depthTexture, 0
+RenderTextureTarget::Texture2d, framebufferTextures.fullscreenDepth, 0
 		};
 		device->AttachFramebufferTexture2D(&depthAttachTexture);
-
-		framebufferTextureCount += gbufferTextureCount;
 	}
 
 	{
@@ -627,25 +579,20 @@ void Renderer::CreateFramebuffers(Vec2i framebufferSize)
 
 		// HDR light accumulation framebuffer
 
-		framebufferCount += 1;
-
-		RendererFramebuffer& framebuffer = framebufferData[FramebufferIndexLightAcc];
-		framebuffer.width = framebufferSize.x;
-		framebuffer.height = framebufferSize.y;
+		framebufferLightAcc.width = framebufferSize.x;
+		framebufferLightAcc.height = framebufferSize.y;
 
 		// Create and bind framebuffer
 
-		device->CreateFramebuffers(1, &framebuffer.framebuffer);
-		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebuffer.framebuffer);
+		device->CreateFramebuffers(1, &framebufferLightAcc.framebuffer);
+		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebufferLightAcc.framebuffer);
 
-		device->CreateTextures(1, &framebufferTextures[framebufferTextureCount]);
-		lightAccumulationTextureIndex = framebufferTextureCount++;
-		unsigned int lightAccTexture = framebufferTextures[lightAccumulationTextureIndex];
+		device->CreateTextures(1, &framebufferTextures.lightAccumulation);
 
-		device->BindTexture(RenderTextureTarget::Texture2d, lightAccTexture);
+		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.lightAccumulation);
 
 		RenderCommandData::SetTextureStorage2D storage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RGB16F, framebuffer.width, framebuffer.height
+			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RGB16F, framebufferLightAcc.width, framebufferLightAcc.height
 		};
 		device->SetTextureStorage2D(&storage);
 
@@ -654,54 +601,56 @@ void Renderer::CreateFramebuffers(Vec2i framebufferSize)
 
 		RenderCommandData::AttachFramebufferTexture2D colorAttachTexture{
 			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
-			RenderTextureTarget::Texture2d, lightAccTexture, 0
+			RenderTextureTarget::Texture2d, framebufferTextures.lightAccumulation, 0
 		};
 		device->AttachFramebufferTexture2D(&colorAttachTexture);
 
 		// Reuse depth texture from gbuffer
-		unsigned int depthTexture = framebufferTextures[fullscreenDepthTextureIndex];
 		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
 			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
-			RenderTextureTarget::Texture2d, depthTexture, 0
+			RenderTextureTarget::Texture2d, framebufferTextures.fullscreenDepth, 0
 		};
 		device->AttachFramebufferTexture2D(&depthAttachTexture);
 	}
 }
 
-void Renderer::DestroyFramebuffers()
+void Renderer::DestroyResolutionDependentFramebuffers()
 {
-	if (framebufferData != nullptr)
-	{
-		for (unsigned int i = 0; i < framebufferCount; ++i)
-		{
-			RendererFramebuffer& fb = framebufferData[i];
+	DestroyFramebuffer(device, framebufferGbuffer);
+	DestroyFramebuffer(device, framebufferLightAcc);
 
-			if (fb.framebuffer != 0)
-			{
-				device->DestroyFramebuffers(1, &fb.framebuffer);
-
-				fb.framebuffer = 0;
-			}
-		}
-
-		framebufferCount = 0;
-	}
-
-	if (framebufferTextures != nullptr)
-	{
-		device->DestroyTextures(framebufferTextureCount, framebufferTextures);
-
-		framebufferTextureCount = 0;
-	}
+	DestroyTexture(device, framebufferTextures.gBufferAlbedo);
+	DestroyTexture(device, framebufferTextures.gBufferNormal);
+	DestroyTexture(device, framebufferTextures.gBufferMaterial);
+	DestroyTexture(device, framebufferTextures.fullscreenDepth);
+	DestroyTexture(device, framebufferTextures.lightAccumulation);
 
 	renderTargetContainer->DestroyAllRenderTargets();
+}
+
+void Renderer::DestroyFramebuffer(RenderDevice* renderDevice, RendererFramebuffer& fb)
+{
+	if (fb.framebuffer != 0)
+	{
+		renderDevice->DestroyFramebuffers(1, &fb.framebuffer);
+		fb.framebuffer = 0;
+	}
+}
+
+void Renderer::DestroyTexture(RenderDevice* renderDevice, unsigned int& texture)
+{
+	if (texture != 0)
+	{
+		renderDevice->DestroyTextures(1, &texture);
+		texture = 0;
+	}
 }
 
 void Renderer::_FramebufferResizeCallback(void* userPointer, Window* window, Vec2i framebufferSize)
 {
 	Renderer* self = static_cast<Renderer*>(userPointer);
-	self->DestroyFramebuffers();
-	self->CreateFramebuffers(framebufferSize);
+	self->DestroyResolutionDependentFramebuffers();
+	self->CreateResolutionDependentFramebuffers(framebufferSize);
 
 	printf("Renderer framebuffer resize (%d, %d)\n", framebufferSize.x, framebufferSize.y);
 }
@@ -914,8 +863,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 
 	ProjectionParameters projParams = params.cameraParams.projection;
 
-	const RendererFramebuffer& lightAccFramebuffer = framebufferData[FramebufferIndexLightAcc];
-	Vec2i framebufferSize(lightAccFramebuffer.width, lightAccFramebuffer.height);
+	Vec2i framebufferSize(framebufferLightAcc.width, framebufferLightAcc.height);
 
 	LightingUniformBlock lightingUniforms;
 	UpdateLightingDataToUniformBuffer(projParams, lightingUniforms);
@@ -925,8 +873,8 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	device->DepthTestDisable();
 
 	ScreenSpaceAmbientOcclusion::RenderParams ssaoRenderParams;
-	ssaoRenderParams.normalTexture = framebufferTextures[gBufferNormalTextureIndex];
-	ssaoRenderParams.depthTexture = framebufferTextures[fullscreenDepthTextureIndex];
+	ssaoRenderParams.normalTexture = framebufferTextures.gBufferNormal;
+	ssaoRenderParams.depthTexture = framebufferTextures.fullscreenDepth;
 	ssaoRenderParams.projection = projParams;
 	ssao->Render(ssaoRenderParams);
 
@@ -954,12 +902,12 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.textureNameHashes[7] = "spec_irradiance_map"_hash;
 	deferredPass.textureNameHashes[8] = "brdf_lut"_hash;
 
-	deferredPass.textureIds[0] = framebufferTextures[gBufferAlbedoTextureIndex];
-	deferredPass.textureIds[1] = framebufferTextures[gBufferNormalTextureIndex];
-	deferredPass.textureIds[2] = framebufferTextures[gBufferMaterialTextureIndex];
-	deferredPass.textureIds[3] = framebufferTextures[fullscreenDepthTextureIndex];
+	deferredPass.textureIds[0] = framebufferTextures.gBufferAlbedo;
+	deferredPass.textureIds[1] = framebufferTextures.gBufferNormal;
+	deferredPass.textureIds[2] = framebufferTextures.gBufferMaterial;
+	deferredPass.textureIds[3] = framebufferTextures.fullscreenDepth;
 	deferredPass.textureIds[4] = ssao->GetResultTextureId();
-	deferredPass.textureIds[5] = framebufferTextures[shadowDepthTextureIndex];
+	deferredPass.textureIds[5] = framebufferTextures.shadowDepth;
 	deferredPass.textureIds[6] = diffIrrTexture.textureObjectId;
 	deferredPass.textureIds[7] = specIrrTexture.textureObjectId;
 	deferredPass.textureIds[8] = brdfLutTextureId;
@@ -981,7 +929,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.uniformBufferRangeStart = 0;
 	deferredPass.uniformBufferRangeSize = sizeof(LightingUniformBlock);
 
-	deferredPass.framebufferId = lightAccFramebuffer.framebuffer;
+	deferredPass.framebufferId = framebufferLightAcc.framebuffer;
 	deferredPass.viewportSize = framebufferSize;
 	deferredPass.shaderId = lightingShaderId;
 	deferredPass.enableBlending = false;
@@ -1033,8 +981,8 @@ void Renderer::RenderBloom(const CustomRenderer::RenderParams& params)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	unsigned int sourceTexture = framebufferTextures[lightAccumulationTextureIndex];
-	const RendererFramebuffer& fb = framebufferData[FramebufferIndexLightAcc];
+	unsigned int sourceTexture = framebufferTextures.lightAccumulation;
+	const RendererFramebuffer& fb = framebufferLightAcc;
 
 	bloomEffect->Render(sourceTexture, fb.framebuffer, Vec2i(fb.width, fb.height));
 }
@@ -1068,7 +1016,7 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 
 	{
 		uint32_t textureNameHashes[] = { "light_acc_map"_hash };
-		unsigned int textureIds[] = { framebufferTextures[lightAccumulationTextureIndex] };
+		unsigned int textureIds[] = { framebufferTextures.lightAccumulation };
 		BindTextures(shader, 1, textureNameHashes, textureIds);
 	}
 
@@ -1095,8 +1043,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	unsigned int cascadeCount = CascadedShadowMap::GetCascadeCount();
 	uniformsOut.shadowMapScale = Vec2f(1.0f / (cascadeCount * shadowSide), 1.0f / shadowSide);
 
-	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
-	uniformsOut.frameResolution = Vec2f(gbuffer.width, gbuffer.height);
+	uniformsOut.frameResolution = Vec2f(framebufferGbuffer.width, framebufferGbuffer.height);
 
 	// Set viewport transform matrices
 	uniformsOut.perspectiveMatrix = fsvp.projection;
@@ -1558,7 +1505,6 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 				vp.viewportRectangle.size = shadowCascadeSize;
 				vp.viewportRectangle.position = Vec2i(cascade * shadowSide, 0);
 				vp.frustum.Update(lightProjections[cascade], forwardTransform);
-				vp.framebufferIndex = FramebufferIndexShadow;
 
 				viewportUniforms.VP = vp.viewProjection;
 				viewportUniforms.V = vp.view;
@@ -1581,8 +1527,6 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 		bool reverseDepth = true;
 
-		const RendererFramebuffer& fb = framebufferData[FramebufferIndexGBuffer];
-
 		RenderViewport& vp = viewportData[vpIdx];
 		vp.position = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 		vp.forward = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
@@ -1595,7 +1539,6 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		vp.viewProjection = vp.projection * vp.view;
 		vp.viewportRectangle = fullscreenViewportRectangle;
 		vp.frustum.Update(projectionParams, cullingTransform.forward);
-		vp.framebufferIndex = FramebufferIndexGBuffer;
 
 		viewportUniforms.VP = vp.viewProjection;
 		viewportUniforms.V = vp.view;
@@ -1651,20 +1594,18 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		// Bind shadow framebuffer before any shadow cascade draws
 		RenderCommandData::BindFramebufferData data;
 		data.target = RenderFramebufferTarget::Framebuffer;
-		data.framebuffer = framebufferData[FramebufferIndexShadow].framebuffer;
+		data.framebuffer = framebufferShadow.framebuffer;
 
 		commandList.AddControl(0, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
 	}
 
 	{
-		const RendererFramebuffer& fb = framebufferData[FramebufferIndexShadow];
-
 		// Set viewport size to full framebuffer size before clearing
 		RenderCommandData::ViewportData data;
 		data.x = 0;
 		data.y = 0;
-		data.w = fb.width;
-		data.h = fb.height;
+		data.w = framebufferShadow.width;
+		data.h = framebufferShadow.height;
 
 		commandList.AddControl(0, g_pass, 9, ctrl::Viewport, sizeof(data), &data);
 	}
@@ -1698,7 +1639,6 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	// PASS: OPAQUE GEOMETRY
 
 	unsigned int fsvp = viewportIndexFullscreen;
-	const RendererFramebuffer& gbuffer = framebufferData[FramebufferIndexGBuffer];
 
 	// Set depth test function for reverse depth buffer
 	commandList.AddControl(0, g_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Greater));
@@ -1726,7 +1666,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		// Bind geometry framebuffer
 		RenderCommandData::BindFramebufferData data;
 		data.target = RenderFramebufferTarget::Framebuffer;
-		data.framebuffer = gbuffer.framebuffer;
+		data.framebuffer = framebufferGbuffer.framebuffer;
 
 		commandList.AddControl(fsvp, g_pass, 2, ctrl::BindFramebuffer, sizeof(data), &data);
 	}

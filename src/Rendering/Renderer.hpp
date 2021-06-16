@@ -2,6 +2,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/BitPack.hpp"
+#include "Core/FixedArray.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
 
@@ -46,7 +47,6 @@ class RenderTargetContainer;
 
 struct BoundingBox;
 struct CameraParameters;
-struct RendererFramebuffer;
 struct RenderViewport;
 struct MaterialData;
 struct ShaderData;
@@ -58,14 +58,18 @@ struct ResourceManagers;
 class Renderer : public TransformUpdateReceiver, public CustomRenderer
 {
 private:
+	struct RendererFramebuffer
+	{
+		unsigned int framebuffer;
+
+		int width;
+		int height;
+	};
+
 	static const unsigned int FramesInFlightCount = 1;
 	static const unsigned int MaxViewportCount = 8;
 	static const unsigned int MaxFramebufferCount = 4;
 	static const unsigned int MaxFramebufferTextureCount = 16;
-
-	static const unsigned int FramebufferIndexGBuffer = 0;
-	static const unsigned int FramebufferIndexShadow = 1;
-	static const unsigned int FramebufferIndexLightAcc = 2;
 
 	static const unsigned int ObjectUniformBufferSize = 512 * 1024;
 
@@ -79,11 +83,9 @@ private:
 	ScreenSpaceAmbientOcclusion* ssao;
 	BloomEffect* bloomEffect;
 
-	RendererFramebuffer* framebufferData;
-	unsigned int framebufferCount;
-
-	unsigned int* framebufferTextures;
-	unsigned int framebufferTextureCount;
+	RendererFramebuffer framebufferGbuffer;
+	RendererFramebuffer framebufferShadow;
+	RendererFramebuffer framebufferLightAcc;
 
 	RenderViewport* viewportData;
 	unsigned int viewportCount;
@@ -98,12 +100,16 @@ private:
 
 	unsigned int brdfLutTextureId;
 
-	unsigned int gBufferAlbedoTextureIndex;
-	unsigned int gBufferNormalTextureIndex;
-	unsigned int gBufferMaterialTextureIndex;
-	unsigned int fullscreenDepthTextureIndex;
-	unsigned int shadowDepthTextureIndex;
-	unsigned int lightAccumulationTextureIndex;
+	struct FramebufferTextures
+	{
+		unsigned int gBufferAlbedo;
+		unsigned int gBufferNormal;
+		unsigned int gBufferMaterial;
+		unsigned int fullscreenDepth;
+		unsigned int shadowDepth;
+		unsigned int lightAccumulation;
+	}
+	framebufferTextures;
 
 	Array<unsigned char> uniformStagingBuffer;
 	Array<unsigned int> objectUniformBufferLists[FramesInFlightCount];
@@ -160,8 +166,11 @@ private:
 
 	void ReallocateRenderObjects(unsigned int required);
 
-	void CreateFramebuffers(Vec2i framebufferSize);
-	void DestroyFramebuffers();
+	void CreateResolutionDependentFramebuffers(Vec2i framebufferSize);
+	void DestroyResolutionDependentFramebuffers();
+
+	static void DestroyFramebuffer(RenderDevice* renderDevice, RendererFramebuffer& fb);
+	static void DestroyTexture(RenderDevice* renderDevice, unsigned int& texture);
 
 	void BindMaterialTextures(const MaterialData& material) const;
 	void BindTextures(const ShaderData& shader, unsigned int count,

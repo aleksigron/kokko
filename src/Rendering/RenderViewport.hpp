@@ -23,7 +23,5 @@ struct RenderViewport
 
 	FrustumPlanes frustum;
 
-	unsigned int framebufferIndex;
-
 	unsigned int uniformBlockObject;
 };
