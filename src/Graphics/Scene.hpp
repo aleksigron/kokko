@@ -81,8 +81,6 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	static bool IsValidId(SceneObjectId id) { return id.i != 0; }
-
 public:
 	Scene(Allocator* allocator, World* world, const ResourceManagers& resManagers);
 	Scene(const Scene& other) = delete;
