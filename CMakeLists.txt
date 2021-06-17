@@ -12,6 +12,7 @@ set(KOKKO_LIB kokko)
 
 include_directories(
 	src
+	deps/doctest
 	deps/glad/include
 	deps/glfw/include
 	deps/imgui
@@ -49,6 +50,7 @@ set (DEPS_SOURCES
 )
 
 set (KOKKO_SOURCES
+	src/Core/Array.cpp
 	src/Core/Array.hpp
 	src/Core/BitfieldVariable.hpp
 	src/Core/BitPack.hpp
@@ -147,6 +149,7 @@ set (KOKKO_SOURCES
 	src/Math/Vec4.hpp
 	src/Memory/Memory.cpp
 	src/Memory/Memory.hpp
+	src/Memory/Allocator.cpp
 	src/Memory/Allocator.hpp
 	src/Memory/AllocatorManager.cpp
 	src/Memory/AllocatorManager.hpp
@@ -225,6 +228,7 @@ set (KOKKO_SOURCES
 	src/Scripting/ScriptContext.hpp
 	src/Scripting/ScriptSystem.cpp
 	src/Scripting/ScriptSystem.hpp
+	src/System/DoctestImpl.cpp
 	src/System/File.cpp
 	src/System/File.hpp
 	src/System/ImGuiInputView.cpp
@@ -252,7 +256,7 @@ source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
 source_group(Dependencies\\stb_image FILES ${STB_IMAGE_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})
 
-add_library(${KOKKO_LIB} STATIC ${DEPS_SOURCES} ${KOKKO_SOURCES})
+add_library(${KOKKO_LIB} OBJECT ${DEPS_SOURCES} ${KOKKO_SOURCES})
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

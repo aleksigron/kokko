@@ -27,4 +27,6 @@ public:
 			Deallocate(p);
 		}
 	}
+
+	static Allocator* GetDefault();
 };

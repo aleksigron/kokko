@@ -1,5 +1,7 @@
 #include "App.hpp"
 
+#include "doctest/doctest.h"
+
 #include "Debug/Instrumentation.hpp"
 
 #include "Engine/Engine.hpp"
@@ -9,8 +11,16 @@
 
 #include "System/Window.hpp"
 
-int main(void)
+int main(int argc, char** argv)
 {
+	doctest::Context ctx;
+	ctx.setOption("abort-after", 5);
+	ctx.applyCommandLine(argc, argv);
+	ctx.setOption("no-breaks", true);
+	int res = ctx.run();
+	if (ctx.shouldExit())
+		return res;
+
 	Instrumentation& instr = Instrumentation::Get();
 	instr.BeginSession("startup_trace.json");
 
@@ -42,5 +52,5 @@ int main(void)
 		return -1;
 	}
 
-	return 0;
+	return res;
 }

@@ -12,6 +12,7 @@ set(KOKKO_LIB kokko)
 include_directories(
 	src
     ${KOKKO_ENGINE_PATH}/src
+	${KOKKO_ENGINE_PATH}/deps/doctest
 )
 
 set (SOURCES
@@ -22,7 +23,7 @@ set (SOURCES
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${SOURCES})
 
-add_executable(${EXECUTABLE_NAME} ${SOURCES})
+add_executable(${EXECUTABLE_NAME} $<TARGET_OBJECTS:${KOKKO_LIB}> ${SOURCES})
 
 add_subdirectory(${KOKKO_ENGINE_PATH} kokko-build)
 
