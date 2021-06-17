@@ -22,6 +22,8 @@ const char* const EntityView::ComponentNames[] = {
 	"Light"
 };
 
+const char* const EntityView::SceneDragDropPayloadType = "SceneObject";
+
 EntityView::EntityView() :
 	materialManager(nullptr),
 	meshManager(nullptr),
@@ -71,6 +73,12 @@ void EntityView::Draw(World* world)
 			}
 			ImGui::Spacing();
 			ImGui::EndChild();
+
+			if (requestSetSceneObjectParent.first != SceneObjectId::Null)
+			{
+				scene->SetParent(requestSetSceneObjectParent.first, requestSetSceneObjectParent.second);
+				requestSetSceneObjectParent = Pair(SceneObjectId::Null, SceneObjectId::Null);
+			}
 		}
 
 		ImGui::TableNextColumn();
@@ -129,15 +137,17 @@ void EntityView::DrawEntityNode(World* world, Entity entity, SceneObjectId scene
 
 	SceneObjectId firstChild = SceneObjectId::Null;
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-	
-	if (sceneObj == SceneObjectId::Null)
-		flags = flags | ImGuiTreeNodeFlags_Leaf;
-	else
+
+	if (sceneObj != SceneObjectId::Null)
 	{
 		firstChild = scene->GetFirstChild(sceneObj);
 
 		if (firstChild == SceneObjectId::Null)
 			flags = flags | ImGuiTreeNodeFlags_Leaf;
+	}
+	else
+	{
+		flags = flags | ImGuiTreeNodeFlags_Leaf;
 	}
 
 	if (entity == selectedEntity)
@@ -145,6 +155,30 @@ void EntityView::DrawEntityNode(World* world, Entity entity, SceneObjectId scene
 
 	const char* entityName = entityManager->GetDebugNameWithFallback(entity);
 	bool opened = ImGui::TreeNodeEx((void*)entity.id, flags, entityName);
+
+	if (sceneObj != SceneObjectId::Null)
+	{
+		if (ImGui::BeginDragDropSource())
+		{
+			ImGui::SetDragDropPayload(SceneDragDropPayloadType, &sceneObj, sizeof(SceneObjectId));
+			ImGui::Text(entityName);
+			ImGui::EndDragDropSource();
+		}
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(SceneDragDropPayloadType);
+			if (payload != nullptr && payload->DataSize == sizeof(SceneObjectId))
+			{
+				SceneObjectId dragDropObj;
+				std::memcpy(&dragDropObj, payload->Data, sizeof(SceneObjectId));
+
+				requestSetSceneObjectParent = Pair(dragDropObj, sceneObj);
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+	}
 
 	if (entity == requestScrollToEntity)
 	{
@@ -496,8 +530,11 @@ void EntityView::DrawLightComponent(World* world)
 			if (lightType != LightType::Directional)
 			{
 				float radius = lightManager->GetRadius(lightId);
-				if (ImGui::DragFloat("Radius", &radius, 0.01f, 0.01f, 0.0f))
+				if (ImGui::DragFloat("Radius", &radius, 0.01f, 0.01f))
 					lightManager->SetRadius(lightId, radius);
+
+				if (ImGui::Button("Auto-calculate radius"))
+					lightManager->SetRadiusFromColor(lightId);
 			}
 
 			if (lightType == LightType::Spot)

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Core/FixedArray.hpp"
+#include "Core/Pair.hpp"
 
 #include "Entity/Entity.hpp"
+#include "Graphics/Scene.hpp"
 
 class World;
 class MaterialManager;
@@ -18,8 +20,12 @@ private:
 	MeshManager* meshManager;
 
 	Entity selectedEntity;
+
 	Entity requestScrollToEntity;
 	Entity requestDestroyEntity;
+
+	// First one is the object that is moved, the second one is the parent
+	Pair<SceneObjectId, SceneObjectId> requestSetSceneObjectParent;
 
 	FixedArray<char, 256> textInputBuffer;
 
@@ -33,6 +39,8 @@ private:
 	};
 	static const size_t ComponentTypeCount = 4;
 	static const char* const ComponentNames[ComponentTypeCount];
+
+	static const char* const SceneDragDropPayloadType;
 
 	void DrawEntityListButtons(World* world);
 	void DrawEntityNode(World* world, Entity entity, SceneObjectId sceneObj);
