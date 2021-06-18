@@ -73,6 +73,10 @@ private:
 
 	void Reallocate(unsigned int required);
 
+	// The specified object and all its children are updated
+	// The world transform is calculated and the objects are marked as updated
+	void UpdateWorldTransforms(SceneObjectId id);
+
 public:
 	Scene(Allocator* allocator);
 	Scene(const Scene& other) = delete;
@@ -99,7 +103,7 @@ public:
 
 	void RemoveSceneObject(SceneObjectId id);
 
-	void RemoveAll();
+	void Clear();
 
 	Entity GetEntity(SceneObjectId id) const { return data.entity[id.i]; }
 	SceneObjectId GetParent(SceneObjectId id) const { return data.parent[id.i]; }
@@ -119,6 +123,7 @@ public:
 	// This can be used to manually add the entity to the updated transforms queue.
 	// This is useful when the transform hasn't changed but other relevant info,
 	// such as the bounding box has changed.
+	// Only the specified object is marked, but not its children
 	void MarkUpdated(SceneObjectId id);
 
 	void NotifyUpdatedTransforms(unsigned int receiverCount, TransformUpdateReceiver** updateReceivers);

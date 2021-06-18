@@ -135,7 +135,7 @@ void World::ClearAllEntities()
 	cameraSystem.instance->RemoveAll();
 	lightManager.instance->RemoveAll();
 	renderer.instance->RemoveAll();
-	scene.instance->RemoveAll();
+	scene.instance->Clear();
 	// TODO: scriptSystem
 	entityManager.instance->ClearAll();
 

@@ -212,10 +212,11 @@ void Scene::RemoveSceneObject(SceneObjectId id)
 	--data.count;
 }
 
-void Scene::RemoveAll()
+void Scene::Clear()
 {
 	entityMap.Clear();
 	data.count = 1;
+	environmentId = -1;
 }
 
 void Scene::SetParent(SceneObjectId id, SceneObjectId parent)
@@ -273,6 +274,8 @@ void Scene::SetParent(SceneObjectId id, SceneObjectId parent)
 
 		// Finally set the new parent
 		data.parent[id.i] = parent;
+
+		UpdateWorldTransforms(id);
 	}
 }
 
@@ -282,16 +285,34 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 
 	data.local[id.i] = transform;
 
+	UpdateWorldTransforms(id);
+}
+
+const SceneEditTransform& Scene::GetEditTransform(SceneObjectId id)
+{
+	return data.editTransform[id.i];
+}
+
+void Scene::SetEditTransform(SceneObjectId id, const SceneEditTransform& editTransform)
+{
+	data.editTransform[id.i] = editTransform;
+
+	Mat4x4f transform = Mat4x4f::Translate(editTransform.translation) * 
+		Mat4x4f::RotateEuler(editTransform.rotation) *
+		Mat4x4f::Scale(editTransform.scale);
+
+	SetLocalTransform(id, transform);
+}
+
+void Scene::UpdateWorldTransforms(SceneObjectId id)
+{
+	updatedEntities.InsertUnique(data.entity[id.i].id);
+
 	// Set world transform for specified object
 	if (NotNull(data.parent[id.i]))
 		data.world[id.i] = data.world[data.parent[id.i].i] * data.local[id.i];
 	else
 		data.world[id.i] = data.local[id.i];
-
-	// Set the entity as updated
-	updatedEntities.InsertUnique(data.entity[id.i].id);
-
-	// Set world transforms for all children of the specified object
 
 	SceneObjectId current = data.firstChild[id.i];
 	SceneObjectId lastValid;
@@ -322,22 +343,6 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 			}
 		}
 	}
-}
-
-const SceneEditTransform& Scene::GetEditTransform(SceneObjectId id)
-{
-	return data.editTransform[id.i];
-}
-
-void Scene::SetEditTransform(SceneObjectId id, const SceneEditTransform& editTransform)
-{
-	data.editTransform[id.i] = editTransform;
-
-	Mat4x4f transform = Mat4x4f::Translate(editTransform.translation) * 
-		Mat4x4f::RotateEuler(editTransform.rotation) *
-		Mat4x4f::Scale(editTransform.scale);
-
-	SetLocalTransform(id, transform);
 }
 
 void Scene::MarkUpdated(SceneObjectId id)
