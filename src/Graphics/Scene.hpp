@@ -3,16 +3,11 @@
 #include "Core/HashMap.hpp"
 #include "Core/Array.hpp"
 #include "Core/SortedArray.hpp"
-#include "Core/Color.hpp"
 
 #include "Entity/Entity.hpp"
 
 #include "Math/Mat4x4.hpp"
 
-#include "Resources/MaterialData.hpp"
-#include "Resources/ResourceManagers.hpp"
-
-class World;
 class Camera;
 class Allocator;
 class TransformUpdateReceiver;
@@ -50,8 +45,6 @@ class Scene
 {
 private:
 	Allocator* allocator;
-	World* world;
-	ResourceManagers resourceManagers;
 
 	struct InstanceData
 	{
@@ -74,7 +67,6 @@ private:
 	SortedArray<unsigned int> updatedEntities;
 	Array<Mat4x4f> updatedTransforms;
 
-	MaterialId skyboxMaterial;
 	int environmentId;
 
 	Entity activeCamera;
@@ -82,18 +74,13 @@ private:
 	void Reallocate(unsigned int required);
 
 public:
-	Scene(Allocator* allocator, World* world, const ResourceManagers& resManagers);
+	Scene(Allocator* allocator);
 	Scene(const Scene& other) = delete;
 	Scene(Scene&& other) = delete;
 	~Scene();
 
 	Scene& operator=(const Scene& other) = delete;
 	Scene& operator=(Scene&& other) = delete;
-
-	bool LoadFromFile(const char* path);
-	bool WriteToFile(const char* path);
-
-	Color ambientColor;
 
 	SceneObjectId Lookup(Entity e)
 	{
@@ -135,9 +122,6 @@ public:
 	void MarkUpdated(SceneObjectId id);
 
 	void NotifyUpdatedTransforms(unsigned int receiverCount, TransformUpdateReceiver** updateReceivers);
-
-	void SetSkyboxMaterial(MaterialId materialId) { skyboxMaterial = materialId; }
-	MaterialId GetSkyboxMaterial() const { return skyboxMaterial; }
 
 	void SetEnvironmentId(int environmentId) { this->environmentId = environmentId; }
 	int GetEnvironmentId() const { return this->environmentId; }

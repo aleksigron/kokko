@@ -4,6 +4,8 @@
 
 #include "Engine/InstanceAllocatorPair.hpp"
 
+#include "Resources/ResourceManagers.hpp"
+
 class Allocator;
 class AllocatorManager;
 class RenderDevice;
@@ -38,6 +40,11 @@ public:
 	void Initialize(Window* window);
 	void Deinitialize();
 
+	bool LoadFromFile(const char* path);
+	bool WriteToFile(const char* path);
+
+	void ClearAllEntities();
+
 	void Update();
 	void Render(const Optional<CameraParameters>& editorCamera, const ViewRectangle& viewport);
 	void DebugRender(DebugVectorRenderer* vectorRenderer);
@@ -50,6 +57,8 @@ public:
 	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
 
 private:
+	Allocator* allocator;
+
 	InstanceAllocatorPair<EntityManager> entityManager;
 	InstanceAllocatorPair<LightManager> lightManager;
 	InstanceAllocatorPair<CameraSystem> cameraSystem;
@@ -58,4 +67,5 @@ private:
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
 	InstanceAllocatorPair<TerrainManager> terrainManager;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
+	ResourceManagers resourceManagers;
 };

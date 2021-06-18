@@ -29,8 +29,6 @@ private:
 
 	EditorCamera editorCamera;
 
-
-	void ClearAllEntities(World* world);
 	void DrawMainMenuBar(World* world, bool& shouldExitOut);
 
 public:

@@ -1,5 +1,8 @@
 #include "Engine/World.hpp"
 
+#include "Core/Buffer.hpp"
+#include "Core/Core.hpp"
+
 #include "Debug/Debug.hpp"
 
 #include "Entity/EntityManager.hpp"
@@ -17,10 +20,13 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 
+#include "Resources/LevelLoader.hpp"
+#include "Resources/LevelWriter.hpp"
 #include "Resources/ResourceManagers.hpp"
 
 #include "Scripting/ScriptSystem.hpp"
 
+#include "System/File.hpp"
 #include "System/Window.hpp"
 
 World::World(AllocatorManager* allocManager,
@@ -28,7 +34,9 @@ World::World(AllocatorManager* allocManager,
 	Allocator* debugNameAllocator,
 	RenderDevice* renderDevice,
 	InputManager* inputManager,
-	const ResourceManagers& resourceManagers)
+	const ResourceManagers& resourceManagers) :
+	allocator(allocator),
+	resourceManagers(resourceManagers)
 {
 	Allocator* alloc = Memory::GetDefaultAllocator();
 
@@ -42,7 +50,7 @@ World::World(AllocatorManager* allocManager,
 	cameraSystem.New(cameraSystem.allocator);
 
 	scene.CreateScope(allocManager, "Scene", alloc);
-	scene.New(scene.allocator, this, resourceManagers);
+	scene.New(scene.allocator);
 
 	renderer.CreateScope(allocManager, "Renderer", alloc);
 	renderer.New(renderer.allocator, renderDevice, scene.instance, cameraSystem.instance,
@@ -81,6 +89,39 @@ void World::Initialize(Window* window)
 void World::Deinitialize()
 {
 	renderer.instance->Deinitialize();
+}
+
+bool World::LoadFromFile(const char* path)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	Buffer<char> sceneConfig(allocator);
+
+	if (File::ReadText(path, sceneConfig))
+	{
+		LevelLoader loader(this, resourceManagers);
+		loader.Load(sceneConfig.GetRef());
+
+		return true;
+	}
+
+	return false;
+}
+
+bool World::WriteToFile(const char* path)
+{
+	LevelWriter writer(this, resourceManagers);
+	return writer.WriteToFile(path);
+}
+
+void World::ClearAllEntities()
+{
+	cameraSystem.instance->RemoveAll();
+	lightManager.instance->RemoveAll();
+	renderer.instance->RemoveAll();
+	scene.instance->RemoveAll();
+	entityManager.instance->ClearAll();
+	// TODO: scriptSystem
 }
 
 void World::Update()

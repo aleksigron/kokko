@@ -148,7 +148,7 @@ void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 		{
 			if (ImGui::MenuItem("New"))
 			{
-				ClearAllEntities(world);
+				world->ClearAllEntities();
 			}
 
 			if (ImGui::MenuItem("Open..."))
@@ -181,26 +181,15 @@ void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 
 	if (filePickerClosed && filePickerPathOut.GetLength() > 0)
 	{
-		Scene* scene = world->GetScene();
-
 		FilePickerDialog::DialogType type = views->filePicker.GetLastDialogType();
 		if (type == FilePickerDialog::DialogType::FileOpen)
 		{
-			ClearAllEntities(world);
-			scene->LoadFromFile(filePickerPathOut.GetCStr());
+			world->ClearAllEntities();
+			world->LoadFromFile(filePickerPathOut.GetCStr());
 		}
 		else if (type == FilePickerDialog::DialogType::FileSave)
 		{
-			scene->WriteToFile(filePickerPathOut.GetCStr());
+			world->WriteToFile(filePickerPathOut.GetCStr());
 		}
 	}
-}
-
-void EditorUI::ClearAllEntities(World* world)
-{
-	world->GetCameraSystem()->RemoveAll();
-	world->GetLightManager()->RemoveAll();
-	world->GetRenderer()->RemoveAll();
-	world->GetScene()->RemoveAll();
-	world->GetEntityManager()->ClearAll();
 }

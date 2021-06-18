@@ -9,6 +9,7 @@
 
 #include "Debug/Debug.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
+#include "Debug/LogHelper.hpp"
 
 #include "Engine/Engine.hpp"
 
@@ -41,11 +42,11 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
+#include "Resources/ResourceManagers.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
 #include "System/Window.hpp"
-#include <Debug/LogHelper.hpp>
 
 const RenderObjectId RenderObjectId::Null = RenderObjectId{ 0 };
 
@@ -63,7 +64,6 @@ struct LightingUniformBlock
 
 	alignas(16) Mat4x4f perspectiveMatrix;
 	alignas(16) Mat4x4f viewToWorld;
-	alignas(16) Vec3f ambientColor;
 	alignas(8) Vec2f halfNearPlane;
 	alignas(8) Vec2f shadowMapScale;
 	alignas(8) Vec2f frameResolution;
@@ -1151,9 +1151,6 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 		uniformsOut.shadowMatrices[vpIdx] = shadowMat;
 		uniformsOut.shadowSplits[vpIdx + 1] = cascadeSplitDepths[vpIdx];
 	}
-
-	Vec3f ambientColor(scene->ambientColor.r, scene->ambientColor.g, scene->ambientColor.b);
-	uniformsOut.ambientColor = ambientColor;
 
 	uniformsOut.shadowBiasOffset = 0.001f;
 	uniformsOut.shadowBiasFactor = 0.0019f;

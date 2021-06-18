@@ -2,9 +2,7 @@
 
 #include <cassert>
 
-#include "Core/Buffer.hpp"
 #include "Core/Core.hpp"
-#include "Core/StringRef.hpp"
 
 #include "Graphics/TransformUpdateReceiver.hpp"
 
@@ -12,19 +10,12 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "Resources/LevelLoader.hpp"
-#include "Resources/LevelWriter.hpp"
-
-#include "System/File.hpp"
-
 const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
 static bool NotNull(SceneObjectId id) { return id != SceneObjectId::Null; }
 
-Scene::Scene(Allocator* allocator, World* world, const ResourceManagers& resManagers):
+Scene::Scene(Allocator* allocator):
 	allocator(allocator),
-	world(world),
-	resourceManagers(resManagers),
 	entityMap(allocator),
 	updatedEntities(allocator),
 	updatedTransforms(allocator),
@@ -40,28 +31,6 @@ Scene::Scene(Allocator* allocator, World* world, const ResourceManagers& resMana
 Scene::~Scene()
 {
 	allocator->Deallocate(data.buffer);
-}
-
-bool Scene::LoadFromFile(const char* path)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	Buffer<char> sceneConfig(allocator);
-
-	if (File::ReadText(path, sceneConfig))
-	{
-		LevelLoader loader(world, resourceManagers);
-		loader.Load(sceneConfig.GetRef());
-
-		return true;
-	}
-
-	return false;
-}
-bool Scene::WriteToFile(const char* path)
-{
-	LevelWriter writer(world, resourceManagers);
-	return writer.WriteToFile(path);
 }
 
 void Scene::Reallocate(unsigned int required)
