@@ -62,15 +62,26 @@ void EntityView::Draw(World* world)
 		{
 			EntityManager* entityManager = world->GetEntityManager();
 			Scene* scene = world->GetScene();
+			
+			ImGuiTreeNodeFlags levelNodeFlags = ImGuiTreeNodeFlags_SpanAvailWidth |
+				ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen;
 
-			for (Entity entity : *entityManager)
+			if (ImGui::TreeNodeEx(world->GetLoadedLevelFilename().GetCStr(), levelNodeFlags))
 			{
-				SceneObjectId sceneObj = scene->Lookup(entity);
+				ProcessSceneDragDropTarget(SceneObjectId::Null);
 
-				// Only draw root level objects, or entities that don't exist in the scene hierarchy
-				if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
-					DrawEntityNode(world, entity, sceneObj);
+				for (Entity entity : *entityManager)
+				{
+					SceneObjectId sceneObj = scene->Lookup(entity);
+
+					// Only draw root level objects, or entities that don't exist in the scene hierarchy
+					if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
+						DrawEntityNode(world, entity, sceneObj);
+				}
+
+				ImGui::TreePop();
 			}
+
 			ImGui::Spacing();
 			ImGui::EndChild();
 
@@ -158,26 +169,8 @@ void EntityView::DrawEntityNode(World* world, Entity entity, SceneObjectId scene
 
 	if (sceneObj != SceneObjectId::Null)
 	{
-		if (ImGui::BeginDragDropSource())
-		{
-			ImGui::SetDragDropPayload(SceneDragDropPayloadType, &sceneObj, sizeof(SceneObjectId));
-			ImGui::Text(entityName);
-			ImGui::EndDragDropSource();
-		}
-
-		if (ImGui::BeginDragDropTarget())
-		{
-			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(SceneDragDropPayloadType);
-			if (payload != nullptr && payload->DataSize == sizeof(SceneObjectId))
-			{
-				SceneObjectId dragDropObj;
-				std::memcpy(&dragDropObj, payload->Data, sizeof(SceneObjectId));
-
-				requestSetSceneObjectParent = Pair(dragDropObj, sceneObj);
-			}
-
-			ImGui::EndDragDropTarget();
-		}
+		ProcessSceneDragDropSource(sceneObj, entityName);
+		ProcessSceneDragDropTarget(sceneObj);
 	}
 
 	if (entity == requestScrollToEntity)
@@ -205,6 +198,33 @@ void EntityView::DrawEntityNode(World* world, Entity entity, SceneObjectId scene
 		}
 
 		ImGui::TreePop();
+	}
+}
+
+void EntityView::ProcessSceneDragDropSource(SceneObjectId sceneObj, const char* entityName)
+{
+	if (ImGui::BeginDragDropSource())
+	{
+		ImGui::SetDragDropPayload(SceneDragDropPayloadType, &sceneObj, sizeof(SceneObjectId));
+		ImGui::Text(entityName);
+		ImGui::EndDragDropSource();
+	}
+}
+
+void EntityView::ProcessSceneDragDropTarget(SceneObjectId parent)
+{
+	if (ImGui::BeginDragDropTarget())
+	{
+		const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(SceneDragDropPayloadType);
+		if (payload != nullptr && payload->DataSize == sizeof(SceneObjectId))
+		{
+			SceneObjectId dragDropObj;
+			std::memcpy(&dragDropObj, payload->Data, sizeof(SceneObjectId));
+
+			requestSetSceneObjectParent = Pair(dragDropObj, parent);
+		}
+
+		ImGui::EndDragDropTarget();
 	}
 }
 

@@ -69,6 +69,10 @@ public:
 	void Append(const char* s);
 	void Append(char c);
 
+	void Assign(StringRef s);
+	void Assign(const String& s);
+	void Assign(const char* s);
+
 	void Reserve(SizeType reserveLength);
 	void Resize(SizeType size);
 

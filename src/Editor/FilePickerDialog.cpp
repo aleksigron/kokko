@@ -37,7 +37,7 @@ void FilePickerDialog::StartDialogFileSave(const char* popupTitle, const char* a
 	ImGui::OpenPopup(currentTitle);
 }
 
-bool FilePickerDialog::Update(String& pathOut)
+bool FilePickerDialog::Update(std::filesystem::path& pathOut)
 {
 	namespace fs = std::filesystem;
 
@@ -140,10 +140,7 @@ bool FilePickerDialog::Update(String& pathOut)
 			{
 				dialogClosed = true;
 
-				std::string confirmedPathStr = selectedFilePath.u8string();
-				
-				pathOut.Clear();
-				pathOut.Append(confirmedPathStr.c_str());
+				pathOut = selectedFilePath;
 
 				CloseDialog();
 			}

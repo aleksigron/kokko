@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Optional.hpp"
+#include "Core/String.hpp"
 
 #include "Engine/InstanceAllocatorPair.hpp"
 
@@ -40,14 +41,16 @@ public:
 	void Initialize(Window* window);
 	void Deinitialize();
 
-	bool LoadFromFile(const char* path);
-	bool WriteToFile(const char* path);
+	bool LoadFromFile(const char* path, const char* displayName);
+	bool WriteToFile(const char* path, const char* displayName);
 
 	void ClearAllEntities();
 
 	void Update();
 	void Render(const Optional<CameraParameters>& editorCamera, const ViewRectangle& viewport);
 	void DebugRender(DebugVectorRenderer* vectorRenderer);
+
+	const String& GetLoadedLevelFilename() { return loadedLevelDisplayName; }
 
 	EntityManager* GetEntityManager() { return entityManager.instance; }
 	Scene* GetScene() { return scene.instance; }
@@ -58,6 +61,8 @@ public:
 
 private:
 	Allocator* allocator;
+	String loadedLevelDisplayName;
+	String loadedLevelFilePath;
 
 	InstanceAllocatorPair<EntityManager> entityManager;
 	InstanceAllocatorPair<LightManager> lightManager;

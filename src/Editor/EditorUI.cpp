@@ -176,20 +176,23 @@ void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 	if (saveLevel)
 		views->filePicker.StartDialogFileSave("Save level as", "Save");
 
-	String filePickerPathOut(allocator);
+	std::filesystem::path filePickerPathOut;
 	bool filePickerClosed = views->filePicker.Update(filePickerPathOut);
 
-	if (filePickerClosed && filePickerPathOut.GetLength() > 0)
+	if (filePickerClosed && filePickerPathOut.empty() == false)
 	{
+		std::string pathStr = filePickerPathOut.u8string();
+		std::string filenameStr = filePickerPathOut.filename().u8string();
+
 		FilePickerDialog::DialogType type = views->filePicker.GetLastDialogType();
 		if (type == FilePickerDialog::DialogType::FileOpen)
 		{
 			world->ClearAllEntities();
-			world->LoadFromFile(filePickerPathOut.GetCStr());
+			world->LoadFromFile(pathStr.c_str(), filenameStr.c_str());
 		}
 		else if (type == FilePickerDialog::DialogType::FileSave)
 		{
-			world->WriteToFile(filePickerPathOut.GetCStr());
+			world->WriteToFile(pathStr.c_str(), filenameStr.c_str());
 		}
 	}
 }

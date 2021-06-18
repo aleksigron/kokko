@@ -195,6 +195,24 @@ void String::Append(char c)
 	string[length] = '\0';
 }
 
+void String::Assign(StringRef s)
+{
+	Clear();
+	Append(s);
+}
+
+void String::Assign(const String& s)
+{
+	Clear();
+	Append(s);
+}
+
+void String::Assign(const char* s)
+{
+	Clear();
+	Append(s);
+}
+
 void String::Reserve(SizeType reserveLength)
 {
 	if (reserveLength > allocated)

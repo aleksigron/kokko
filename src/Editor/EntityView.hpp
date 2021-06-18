@@ -45,6 +45,9 @@ private:
 	void DrawEntityListButtons(World* world);
 	void DrawEntityNode(World* world, Entity entity, SceneObjectId sceneObj);
 
+	static void ProcessSceneDragDropSource(SceneObjectId sceneObj, const char* entityName);
+	void ProcessSceneDragDropTarget(SceneObjectId parent);
+
 	void DrawEntityProperties(World* world);
 	void DrawEntityPropertyButtons(World* world);
 

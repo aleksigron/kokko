@@ -2,8 +2,6 @@
 
 #include <filesystem>
 
-struct String;
-
 class FilePickerDialog
 {
 public:
@@ -25,7 +23,7 @@ public:
 	* Parameter pathOut is assigned the selected path, or an empty string,
 	* if the dialog was cancelled.
 	*/
-	bool Update(String& pathOut);
+	bool Update(std::filesystem::path& pathOut);
 
 	/*
 	* Returns the dialog type of the current or last dialog that was open.

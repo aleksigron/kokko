@@ -29,6 +29,8 @@
 #include "System/File.hpp"
 #include "System/Window.hpp"
 
+static const char* const UnnamedLevelDisplayName = "Unnamed level";
+
 World::World(AllocatorManager* allocManager,
 	Allocator* allocator,
 	Allocator* debugNameAllocator,
@@ -36,6 +38,8 @@ World::World(AllocatorManager* allocManager,
 	InputManager* inputManager,
 	const ResourceManagers& resourceManagers) :
 	allocator(allocator),
+	loadedLevelDisplayName(allocator, UnnamedLevelDisplayName),
+	loadedLevelFilePath(allocator),
 	resourceManagers(resourceManagers)
 {
 	Allocator* alloc = Memory::GetDefaultAllocator();
@@ -91,7 +95,7 @@ void World::Deinitialize()
 	renderer.instance->Deinitialize();
 }
 
-bool World::LoadFromFile(const char* path)
+bool World::LoadFromFile(const char* path, const char* displayName)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -102,16 +106,28 @@ bool World::LoadFromFile(const char* path)
 		LevelLoader loader(this, resourceManagers);
 		loader.Load(sceneConfig.GetRef());
 
+		loadedLevelDisplayName.Assign(displayName);
+		loadedLevelFilePath.Assign(path);
+
 		return true;
 	}
 
 	return false;
 }
 
-bool World::WriteToFile(const char* path)
+bool World::WriteToFile(const char* path, const char* displayName)
 {
 	LevelWriter writer(this, resourceManagers);
-	return writer.WriteToFile(path);
+	
+	if (writer.WriteToFile(path))
+	{
+		loadedLevelDisplayName.Assign(displayName);
+		loadedLevelFilePath.Assign(path);
+
+		return true;
+	}
+	else
+		return false;
 }
 
 void World::ClearAllEntities()
@@ -120,8 +136,11 @@ void World::ClearAllEntities()
 	lightManager.instance->RemoveAll();
 	renderer.instance->RemoveAll();
 	scene.instance->RemoveAll();
-	entityManager.instance->ClearAll();
 	// TODO: scriptSystem
+	entityManager.instance->ClearAll();
+
+	loadedLevelDisplayName.Assign(UnnamedLevelDisplayName);
+	loadedLevelFilePath.Clear();
 }
 
 void World::Update()
