@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 
 		instr.EndSession();
 
-		while (engine.GetMainWindow()->ShouldClose() == false)
+		while (engine.GetMainWindow()->GetShouldClose() == false)
 		{
 			engine.FrameStart();
 			engine.Update();

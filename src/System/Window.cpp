@@ -97,9 +97,14 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 	return false;
 }
 
-bool Window::ShouldClose()
+bool Window::GetShouldClose()
 {
-	return glfwWindowShouldClose(windowHandle);
+	return glfwWindowShouldClose(windowHandle) == GLFW_TRUE;
+}
+
+void Window::SetShouldClose(bool shouldClose)
+{
+	glfwSetWindowShouldClose(windowHandle, shouldClose ? GLFW_TRUE : GLFW_FALSE);
 }
 
 void Window::UpdateInput()

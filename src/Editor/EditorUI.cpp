@@ -92,13 +92,13 @@ void EditorUI::StartFrame()
 	ImGui::NewFrame();
 }
 
-void EditorUI::Update(World* world)
+void EditorUI::Update(World* world, bool& shouldExitOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	editorCamera.Update();
 
-	DrawMainMenuBar(world);
+	DrawMainMenuBar(world, shouldExitOut);
 
 	views->entityView.Draw(world);
 
@@ -138,7 +138,7 @@ ProjectionParameters EditorUI::GetEditorCameraProjection() const
 	return editorCamera.GetProjectionParameters();
 }
 
-void EditorUI::DrawMainMenuBar(World* world)
+void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 {
 	bool openLevel = false, saveLevel = false;
 
@@ -163,10 +163,7 @@ void EditorUI::DrawMainMenuBar(World* world)
 
 			ImGui::Separator();
 
-			if (ImGui::MenuItem("Exit"))
-			{
-
-			}
+			shouldExitOut = ImGui::MenuItem("Exit");
 
 			ImGui::EndMenu();
 		}

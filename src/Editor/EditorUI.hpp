@@ -29,9 +29,9 @@ private:
 
 	EditorCamera editorCamera;
 
-	void DrawMainMenuBar(World* world);
 
 	void ClearAllEntities(World* world);
+	void DrawMainMenuBar(World* world, bool& shouldExitOut);
 
 public:
 	EditorUI(Allocator* allocator);
@@ -46,7 +46,7 @@ public:
 	void Deinitialize();
 
 	void StartFrame();
-	void Update(World* world);
+	void Update(World* world, bool& shouldExitOut);
 	void EndFrame();
 
 	ViewRectangle GetWorldViewport();

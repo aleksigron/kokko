@@ -19,7 +19,9 @@ public:
 	~Window();
 	
 	bool Initialize(int width, int height, const char* windowTitle);
-	bool ShouldClose();
+
+	bool GetShouldClose();
+	void SetShouldClose(bool shouldClose);
 
 	void UpdateInput();
 	void ProcessEvents();

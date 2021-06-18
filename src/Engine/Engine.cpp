@@ -185,7 +185,10 @@ void Engine::Update()
 
 	// Because editor can change the state of the world and systems,
 	// let's run those updates at the same part of the frame as other updates
-	editorUI.instance->Update(world.instance);
+	bool editorWantsToExit = false;
+	editorUI.instance->Update(world.instance, editorWantsToExit);
+	if (editorWantsToExit)
+		mainWindow.instance->SetShouldClose(true);
 
 	// FRAME RENDER
 
