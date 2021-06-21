@@ -1,5 +1,15 @@
 #include "Core/StringRef.hpp"
 
+#include <cassert>
+#include <cstring>
+
+#include "doctest/doctest.h"
+
+doctest::String toString(const StringRef& value)
+{
+	return doctest::String(value.str, value.len);
+}
+
 bool StringRef::ValueEquals(const StringRef& other) const
 {
 	if (len != other.len || str == nullptr || other.str == nullptr)
@@ -31,7 +41,29 @@ bool StringRef::ValueEquals(const char* cstring) const
 	return cstring[i] == '\0';
 }
 
-void StringRef::TrimBeginning(unsigned int amount)
+TEST_CASE("StringRef can test for equality")
+{
+	const char* str1 = "Test string";
+	const char* str2 = "Test string";
+	const char* str3 = "Test str";
+
+	StringRef ref1(str1);
+	StringRef ref2(str2);
+	StringRef ref3(str3);
+	StringRef ref4(str1, ref3.len);
+
+	CHECK(ref1 == ref2);
+	CHECK(ref1 != ref3);
+	CHECK(ref1 != StringRef());
+	CHECK(StringRef() != StringRef());
+	CHECK(ref1.ValueEquals(ref2) == true);
+	CHECK(ref1.ValueEquals(str2) == true);
+	CHECK(ref1.ValueEquals(ref3) == false);
+	CHECK(ref3.ValueEquals(ref4) == true);
+	CHECK(ref3.ReferenceEquals(ref4) == false);
+}
+
+void StringRef::TrimBeginning(size_t amount)
 {
 	if (amount < len)
 	{
@@ -42,7 +74,7 @@ void StringRef::TrimBeginning(unsigned int amount)
 		this->Clear();
 }
 
-void StringRef::TrimEnd(unsigned int amount)
+void StringRef::TrimEnd(size_t amount)
 {
 	if (amount < len)
 		len = len - amount;
@@ -72,4 +104,107 @@ bool StringRef::EndsWith(const StringRef& other) const
 			return false;
 
 	return true;
+}
+
+StringRef StringRef::SubStr(size_t startPos, size_t length) const
+{
+	assert(startPos < len);
+
+	if (length == 0)
+		length = len - startPos;
+
+	return StringRef(str + startPos, length);
+}
+
+StringRef StringRef::SubStrPos(size_t startPos, intptr_t endPos) const
+{
+	if (endPos < 0)
+		endPos = len + endPos;
+	
+	if (endPos < startPos)
+		return StringRef();
+
+	return StringRef(str + startPos, endPos - startPos);
+}
+
+TEST_CASE("StringRef can return substrings")
+{
+	StringRef testString("Test test string");
+
+	CHECK(testString.SubStr(0) == testString);
+	CHECK(testString.SubStr(1) != testString);
+	CHECK(testString.SubStr(0, testString.len) == testString);
+	CHECK(testString.SubStr(0, testString.len - 1) != testString);
+	CHECK(testString.SubStr(0, 4) == StringRef("Test"));
+	CHECK(testString.SubStr(5, 4) == StringRef("test"));
+	CHECK(testString.SubStr(10) == StringRef("string"));
+
+	CHECK(testString.SubStrPos(0, testString.len) == testString);
+	CHECK(testString.SubStrPos(0, -1) != testString);
+	CHECK(testString.SubStrPos(0, 1) != testString);
+	CHECK(testString.SubStrPos(0, 4) == StringRef("Test"));
+	CHECK(testString.SubStrPos(0, -12) == StringRef("Test"));
+	CHECK(testString.SubStrPos(5, 9) == StringRef("test"));
+	CHECK(testString.SubStrPos(5, -7) == StringRef("test"));
+}
+
+intptr_t StringRef::FindFirst(const StringRef& find, size_t startAt) const
+{
+	for (size_t sourceIdx = startAt; sourceIdx < len; ++sourceIdx)
+	{
+		if (sourceIdx + find.len > len)
+			break;
+
+		bool match = true;
+
+		for (size_t findIdx = 0; findIdx < find.len; ++findIdx)
+		{
+			if (str[sourceIdx + findIdx] != find.str[findIdx])
+			{
+				match = false;
+				break;
+			}
+		}
+
+		if (match)
+			return static_cast<intptr_t>(sourceIdx);
+	}
+
+	return -1;
+}
+
+TEST_CASE("StringRef can find substrings")
+{
+	StringRef str("Test string");
+
+	CHECK(str.FindFirst(StringRef("Test")) == 0);
+	CHECK(str.FindFirst(StringRef("Test"), 1) < 0);
+	CHECK(str.FindFirst(StringRef("ing")) == 8);
+	CHECK(str.FindFirst(StringRef("ing"), 8) == 8);
+}
+
+intptr_t StringRef::FindFirstOf(const char* chars, size_t startAt) const
+{
+	size_t charCount = std::strlen(chars);
+
+	for (size_t sourceIdx = startAt; sourceIdx < len; ++sourceIdx)
+		for (size_t charIdx = 0; charIdx < charCount; ++charIdx)
+			if (str[sourceIdx] == chars[charIdx])
+				return sourceIdx;
+
+	return -1;
+}
+
+TEST_CASE("StringRef can find chars")
+{
+	StringRef str("Test string");
+
+	CHECK(str.FindFirstOf("a") < 0);
+	CHECK(str.FindFirstOf("T", 1) < 0);
+	CHECK(str.FindFirstOf("Te", 2) < 0);
+	CHECK(str.FindFirstOf("T") == 0);
+	CHECK(str.FindFirstOf("tseT") == 0);
+	CHECK(str.FindFirstOf("Te", 1) == 1);
+	CHECK(str.FindFirstOf("g") == 10);
+	CHECK(str.FindFirstOf("ing", 10) == 10);
 }

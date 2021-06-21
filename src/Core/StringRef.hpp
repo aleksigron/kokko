@@ -1,15 +1,17 @@
 #pragma once
 
+#include <cstdint>
+
 struct StringRef
 {
 	const char* str;
-	unsigned int len;
+	size_t len;
 
 	// Create a empty StringRef instance
 	StringRef() : str(nullptr), len(0) {}
 
 	// Create a StringRef instance from char pointer and length
-	StringRef(const char* string, unsigned int length) : str(string), len(length) {}
+	StringRef(const char* string, size_t length) : str(string), len(length) {}
 
 	// Create a StringRef instance from a c-string
 	explicit StringRef(const char* string) : str(string)
@@ -19,7 +21,7 @@ struct StringRef
 			++string;
 		}
 
-		len = static_cast<unsigned int>(string - str);
+		len = static_cast<size_t>(string - str);
 	}
 
 	// Does the other StringRef object reference the same area in memory
@@ -55,11 +57,18 @@ struct StringRef
 	}
 
 	// Modify the reference to remove the specified amount of bytes from the beginning
-	void TrimBeginning(unsigned int amount);
+	void TrimBeginning(size_t amount);
 
 	// Modify the reference to remove the specified amount of bytes from the end
-	void TrimEnd(unsigned int amount);
+	void TrimEnd(size_t amount);
 
 	bool StartsWith(const StringRef& other) const;
 	bool EndsWith(const StringRef& other) const;
+
+	StringRef SubStr(size_t startPos, size_t length = 0) const;
+	StringRef SubStrPos(size_t startPos, intptr_t endPos) const;
+
+	intptr_t FindFirst(const StringRef& str, size_t startAt = 0) const;
+
+	intptr_t FindFirstOf(const char* chars, size_t startAt = 0) const;
 };
