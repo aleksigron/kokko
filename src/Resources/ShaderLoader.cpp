@@ -6,10 +6,12 @@
 
 #include "rapidjson/document.h"
 
+#include "Core/Array.hpp"
 #include "Core/BufferRef.hpp"
 #include "Core/Core.hpp"
 #include "Core/Hash.hpp"
 #include "Core/HashMap.hpp"
+#include "Core/Range.hpp"
 #include "Core/Sort.hpp"
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
@@ -25,6 +27,10 @@
 #include "Resources/ShaderManager.hpp"
 
 #include "System/File.hpp"
+
+static const size_t MaxStageCount = 2;
+static const char* const LineBreakChars = "\r\n";
+static const char* const WhitespaceChars = " \t\r\n";
 
 struct FileString
 {
@@ -179,7 +185,7 @@ static void AddUniforms(
 	KOKKO_PROFILE_FUNCTION();
 
 	static_assert(UniformBlockBinding::Material < 10, "Material uniform block binding point must be less than 10");
-	const char* blockStartFormat = "layout(std140, binding = %d) uniform MaterialBlock {\n";
+	const char* blockStartFormat = "layout(std140, binding = %u) uniform MaterialBlock {\n";
 	const size_t blockStartPlaceholdersLen = 2;
 	const size_t blockStartLen = std::strlen(blockStartFormat) - blockStartPlaceholdersLen + 1;
 	const char* blockRowFormat = "%s %s;\n";
@@ -284,7 +290,10 @@ static void AddUniforms(
 
 		// Copy uniform name
 		const StringRef& uniformName = uniforms[uIndex].name;
-		std::strncpy(namePtr, uniformName.str, uniformName.len + 1);
+
+		std::memcpy(namePtr, uniformName.str, uniformName.len);
+		namePtr[uniformName.len] = '\0';
+
 		baseUniform->name = StringRef(namePtr, uniformName.len);
 		namePtr += uniformName.len + 1;
 
@@ -344,6 +353,7 @@ static void AddUniforms(
 		shaderOut.uniformBlockDefinition.str = uniformBlockPtr;
 		
 		int written = std::sprintf(uniformBlockPtr, blockStartFormat, UniformBlockBinding::Material);
+		assert(written > 0);
 		uniformBlockPtr += written;
 
 		for (unsigned int i = 0, count = shaderOut.uniforms.bufferUniformCount; i < count; ++i)
@@ -352,6 +362,7 @@ static void AddUniforms(
 			const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
 
 			int written = std::sprintf(uniformBlockPtr, blockRowFormat, typeInfo.typeName, uniform.name.str);
+			assert(written > 0);
 			uniformBlockPtr += written;
 		}
 
@@ -380,42 +391,38 @@ static bool Compile(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	RenderShaderStage stage,
-	BufferRef<char> source,
+	StringRef source,
 	unsigned int& shaderIdOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	if (source.IsValid())
+	unsigned int shaderId = renderDevice->CreateShaderStage(stage);
+
+	renderDevice->SetShaderStageSource(shaderId, source.str, source.len);
+	renderDevice->CompileShaderStage(shaderId);
+
+	// Check compile status
+	if (renderDevice->GetShaderStageCompileStatus(shaderId))
 	{
-		const char* data = source.data;
-		int length = static_cast<int>(source.count);
+		shaderIdOut = shaderId;
+		return true;
+	}
+	else
+	{
+		// Get info log length
+		int infoLogLength = renderDevice->GetShaderStageInfoLogLength(shaderId);
 
-		unsigned int shaderId = renderDevice->CreateShaderStage(stage);
-
-		renderDevice->SetShaderStageSource(shaderId, data, length);
-		renderDevice->CompileShaderStage(shaderId);
-
-		// Check compile status
-		if (renderDevice->GetShaderStageCompileStatus(shaderId))
+		if (infoLogLength > 0)
 		{
-			shaderIdOut = shaderId;
-			return true;
-		}
-		else
-		{
-			// Get info log length
-			int infoLogLength = renderDevice->GetShaderStageInfoLogLength(shaderId);
+			String infoLog(allocator);
+			infoLog.Resize(infoLogLength);
 
-			if (infoLogLength > 0)
-			{
-				String infoLog(allocator);
-				infoLog.Resize(infoLogLength);
+			// Print out info log
+			renderDevice->GetShaderStageInfoLog(shaderId, infoLogLength, infoLog.Begin());
 
-				// Print out info log
-				renderDevice->GetShaderStageInfoLog(shaderId, infoLogLength, infoLog.Begin());
-
-				Log::Error(infoLog.GetCStr(), infoLog.GetLength());
-			}
+			Log::Error(infoLog.GetCStr(), infoLog.GetLength());
+			Log::Error("Source:");
+			Log::Error(source.str, source.len);
 		}
 	}
 
@@ -425,24 +432,23 @@ static bool Compile(
 struct StageSource
 {
 	RenderShaderStage stage;
-	BufferRef<char> source;
+	StringRef source;
 };
 
 static bool CompileAndLink(
 	ShaderData& shaderOut,
-	size_t stageCount,
-	const StageSource* stageSources,
+	BufferRef<const StageSource> stages,
 	Allocator* allocator,
-	RenderDevice* renderDevice)
+	RenderDevice* renderDevice,
+	StringRef debugName)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	static const size_t MaxStageCount = 2;
 	unsigned int stageObjects[MaxStageCount];
 
-	for (size_t i = 0; i < stageCount; ++i)
+	for (size_t i = 0; i < stages.count; ++i)
 	{
-		const StageSource& stage = stageSources[i];
+		const StageSource& stage = stages[i];
 		if (Compile(shaderOut, allocator, renderDevice, stage.stage, stage.source, stageObjects[i]) == false)
 		{
 			Log::Error("Compilation of shader stage failed");
@@ -465,14 +471,13 @@ static bool CompileAndLink(
 		// Link the program
 		programId = renderDevice->CreateShaderProgram();
 
-		for (size_t i = 0; i < stageCount; ++i)
+		for (size_t i = 0; i < stages.count; ++i)
 			renderDevice->AttachShaderStageToProgram(programId, stageObjects[i]);
-
 
 		renderDevice->LinkShaderProgram(programId);
 
 		// Release shaders
-		for (size_t i = 0; i < stageCount; ++i)
+		for (size_t i = 0; i < stages.count; ++i)
 			renderDevice->DestroyShaderStage(stageObjects[i]);
 
 		linkSucceeded = renderDevice->GetShaderProgramLinkStatus(programId);
@@ -482,6 +487,8 @@ static bool CompileAndLink(
 	if (linkSucceeded)
 	{
 		shaderOut.driverId = programId;
+
+		renderDevice->SetObjectLabel(RenderObjectType::Program, programId, debugName);
 
 		return true;
 	}
@@ -511,7 +518,8 @@ bool ShaderLoader::LoadFromConfiguration(
 	ShaderData& shaderOut,
 	BufferRef<char> configuration,
 	Allocator* allocator,
-	RenderDevice* renderDevice)
+	RenderDevice* renderDevice,
+	StringRef debugName)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -629,7 +637,6 @@ bool ShaderLoader::LoadFromConfiguration(
 	BufferRef<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
 	AddUniforms(shaderOut, uniformBufferRef, allocator);
 
-	static const size_t MaxStageCount = 2;
 	size_t stageCount = 0;
 	struct StageInfo
 	{
@@ -725,11 +732,13 @@ bool ShaderLoader::LoadFromConfiguration(
 	for (size_t i = 0; i < stageCount; ++i)
 	{
 		stageSources[i].stage = stages[i].stage;
-		stageSources[i].source = sourceBuffers[i].GetRef();
+		stageSources[i].source = StringRef(sourceBuffers[i].Data(), sourceBuffers[i].Count());
 	}
 
+	BufferRef<const StageSource> stageSourceRef(stageSources, stageCount);
+
 	if (processSuccess &&
-		CompileAndLink(shaderOut, stageCount, stageSources, allocator, renderDevice))
+		CompileAndLink(shaderOut, stageSourceRef, allocator, renderDevice, debugName))
 	{
 		UpdateTextureUniformLocations(shaderOut, renderDevice);
 
@@ -743,4 +752,368 @@ bool ShaderLoader::LoadFromConfiguration(
 	}
 
 	return success;
+}
+
+
+static bool FindShaderSections(
+	StringRef shaderContents,
+	StringRef& programSectionOut,
+	StageSource stageSectionsOut[MaxStageCount],
+	size_t& stageCountOut)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	const StringRef stageDeclStr("#stage ");
+
+	intptr_t sectionStart = 0;
+	intptr_t sectionContentStart = 0;
+	size_t stageCount = 0;
+	RenderShaderStage currentStage = RenderShaderStage::VertexShader;
+
+	for (;;)
+	{
+		sectionStart = shaderContents.FindFirst(stageDeclStr, sectionContentStart);
+
+		if (sectionContentStart == 0)
+		{
+			if (sectionStart >= 0)
+				programSectionOut = shaderContents.SubStrPos(0, sectionStart);
+			else
+				break;
+		}
+		else // Finish the previous stage
+		{
+			size_t sectionEnd = sectionStart >= 0 ? sectionStart : shaderContents.len;
+
+			stageSectionsOut[stageCount].stage = currentStage;
+			stageSectionsOut[stageCount].source = shaderContents.SubStrPos(sectionContentStart, sectionEnd);
+
+			stageCount += 1;
+		}
+
+		if (sectionStart < 0)
+			break;
+
+		intptr_t lineEnd = shaderContents.FindFirstOf(LineBreakChars, sectionStart + stageDeclStr.len);
+
+		if (lineEnd < 0)
+			break;
+
+		StringRef sectionName = shaderContents.SubStrPos(sectionStart + stageDeclStr.len, lineEnd);
+
+		if (sectionName == StringRef("vertex"))
+			currentStage = RenderShaderStage::VertexShader;
+		else if (sectionName == StringRef("fragment"))
+			currentStage = RenderShaderStage::FragmentShader;
+		else if (sectionName == StringRef("compute"))
+			currentStage = RenderShaderStage::ComputeShader;
+
+		sectionContentStart = shaderContents.FindFirstNotOf(LineBreakChars, lineEnd);
+
+		if (sectionContentStart < 0)
+			break;
+	}
+
+	if (stageCount > 0)
+	{
+		stageCountOut = stageCount;
+		return true;
+	}
+	else
+		return false;
+}
+
+static void ProcessProgramProperties(ShaderData& shaderOut, StringRef programSection, Allocator* allocator)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	static const size_t MaxUniformCount = 32;
+	AddUniforms_UniformData uniforms[MaxUniformCount];
+	unsigned int uniformCount = 0;
+
+	const StringRef propertyStr("#property ");
+
+	size_t findStart = 0;
+
+	for (;;)
+	{
+		intptr_t lineStart = programSection.FindFirst(propertyStr, findStart);
+		
+		if (lineStart < 0)
+			break;
+
+		intptr_t nameStart = lineStart + propertyStr.len;
+		intptr_t lineEnd = programSection.FindFirstOf(LineBreakChars, nameStart);
+
+		if (lineEnd < 0)
+			lineEnd = programSection.len;
+
+		findStart = lineEnd;
+
+		StringRef nameAndType = programSection.SubStrPos(nameStart, lineEnd);
+		intptr_t nameEnd = nameAndType.FindFirstOf(WhitespaceChars);
+
+		if (nameEnd < 0 || nameAndType.str[nameEnd] == '\r' || nameAndType.str[nameEnd] == '\n')
+			break;
+
+		StringRef nameStr = nameAndType.SubStr(0, nameEnd);
+		StringRef typeStr = nameAndType.SubStr(nameEnd + 1);
+
+		AddUniforms_UniformData& uniform = uniforms[uniformCount];
+		uniform.name = nameStr;
+
+		uint32_t typeHash = Hash::FNV1a_32(typeStr.str, typeStr.len);
+
+		switch (typeHash)
+		{
+		case "tex2d"_hash: uniform.type = UniformDataType::Tex2D; break;
+		case "texCube"_hash: uniform.type = UniformDataType::TexCube; break;
+		case "mat4x4"_hash: uniform.type = UniformDataType::Mat4x4; break;
+		case "mat4x4Array"_hash: uniform.type = UniformDataType::Mat4x4Array; break;
+		case "vec4"_hash: uniform.type = UniformDataType::Vec4; break;
+		case "vec4Array"_hash: uniform.type = UniformDataType::Vec4Array; break;
+		case "vec3"_hash: uniform.type = UniformDataType::Vec3; break;
+		case "vec3Array"_hash: uniform.type = UniformDataType::Vec3Array; break;
+		case "vec2"_hash: uniform.type = UniformDataType::Vec2; break;
+		case "vec2Array"_hash: uniform.type = UniformDataType::Vec2Array; break;
+		case "float"_hash: uniform.type = UniformDataType::Float; break;
+		case "floatArray"_hash: uniform.type = UniformDataType::FloatArray; break;
+		case "int"_hash: uniform.type = UniformDataType::Int; break;
+		case "intArray"_hash: uniform.type = UniformDataType::IntArray; break;
+
+		default:
+			break;
+		}
+
+		uniform.arraySize = 0;
+
+		if (UniformTypeInfo::FromType(uniform.type).isArray)
+		{
+			// TODO: Implement array type size
+			Log::Error("Failed to parse shader because array uniforms aren't implemented");
+		}
+
+		uniformCount += 1;
+	}
+
+	BufferRef<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
+	AddUniforms(shaderOut, uniformBufferRef, allocator);
+
+	// Set default value
+	shaderOut.transparencyType = TransparencyType::Opaque;
+	// TODO: Read value from shader declaration
+}
+
+static bool ProcessShaderStages(
+	ShaderData& shaderOut,
+	StringRef versionStr,
+	BufferRef<const StageSource> stages,
+	Allocator* allocator,
+	RenderDevice* renderDevice,
+	StringRef debugName)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	const StringRef includeDeclStr("#include ");
+
+	struct Replacement
+	{
+		Range<size_t> sourceRange;
+		StringRef replacementText;
+	};
+
+	HashMap<uint32_t, FileString> includeFiles(allocator);
+	Array<Replacement> includeReplacements(allocator);
+	String pathString(allocator);
+
+	String processedStageSources[MaxStageCount];
+	for (size_t i = 0; i < MaxStageCount; ++i)
+		processedStageSources[i] = String(allocator);
+
+	bool processSuccess = true;
+
+	for (size_t stageIdx = 0, stageCount = stages.count; stageIdx < stageCount; ++stageIdx)
+	{
+		StringRef stageSource = stages[stageIdx].source;
+		size_t includeStatementEnd = 0;
+
+		for (;;) // For each include statement
+		{
+			auto FindQuote = [stageSource](intptr_t& quotePosOut, size_t startPos) -> bool
+			{
+				quotePosOut = stageSource.FindFirstOf("\"\n\r", startPos);
+
+				if (quotePosOut < 0 || stageSource[quotePosOut] != '\"')
+					return false;
+
+				return true;
+			};
+
+			intptr_t lineStart = stageSource.FindFirst(includeDeclStr, includeStatementEnd);
+
+			if (lineStart < 0)
+				break;
+
+			intptr_t firstQuote, secondQuote;
+
+			if (FindQuote(firstQuote, lineStart + includeDeclStr.len) == false)
+			{
+				processSuccess = false;
+				break;
+			}
+
+			if (FindQuote(secondQuote, firstQuote + 1) == false)
+			{
+				processSuccess = false;
+				break;
+			}
+
+			includeStatementEnd = secondQuote + 1;
+
+			// We have an include path, let's process it
+
+			StringRef includePath = stageSource.SubStrPos(firstQuote + 1, secondQuote);
+			uint32_t pathHash = Hash::FNV1a_32(includePath.str, includePath.len);
+			auto* file = includeFiles.Lookup(pathHash);
+
+			// File with this hash hasn't been read before, read it now
+			if (file == nullptr)
+			{
+				pathString.Assign(includePath);
+
+				char* stringBuffer;
+				size_t stringLength;
+
+				if (File::ReadText(pathString.GetCStr(), allocator, stringBuffer, stringLength))
+				{
+					FileString str;
+					str.string = stringBuffer;
+					str.length = stringLength;
+
+					file = includeFiles.Insert(pathHash);
+					file->second = str;
+				}
+				else
+				{
+					Log::Error("Shader include couldn't be read from file");
+					Log::Error(pathString.GetCStr());
+				}
+			}
+
+			if (file != nullptr)
+			{
+				const FileString& fileString = file->second;
+
+				Replacement replacement;
+				replacement.sourceRange = Range{ static_cast<size_t>(lineStart), includeStatementEnd };
+				replacement.replacementText = StringRef(fileString.string, fileString.length);
+
+				includeReplacements.PushBack(replacement);
+			}
+			else
+			{
+				processSuccess = false;
+				break;
+			}
+		}
+
+		if (processSuccess == false)
+			break;
+
+		StringRef uniformBlock = shaderOut.uniformBlockDefinition;
+
+		size_t srcPos = 0;
+		intptr_t processedSourceLength = 0;
+		processedSourceLength += versionStr.len;
+		processedSourceLength += uniformBlock.len;
+
+		for (const Replacement& replacement : includeReplacements)
+		{
+			processedSourceLength += replacement.sourceRange.start - srcPos;
+			processedSourceLength += replacement.replacementText.len;
+			srcPos = replacement.sourceRange.end;
+		}
+			
+		processedSourceLength += stageSource.len - srcPos;
+
+		srcPos = 0;
+
+		String& processedSource = processedStageSources[stageIdx];
+		processedSource.Reserve(processedSourceLength);
+
+		processedSource.Append(versionStr);
+
+		if (uniformBlock.len > 0)
+			processedSource.Append(uniformBlock);
+
+		for (const Replacement& replacement : includeReplacements)
+		{
+			processedSource.Append(stageSource.SubStrPos(srcPos, replacement.sourceRange.start));
+			processedSource.Append(replacement.replacementText);
+
+			srcPos = replacement.sourceRange.end;
+		}
+
+		processedSource.Append(stageSource.SubStr(srcPos));
+
+		includeReplacements.Clear();
+	}
+
+	bool compileSuccess = false;
+
+	if (processSuccess)
+	{
+		StageSource stageSources[MaxStageCount];
+		
+		for (size_t i = 0; i < stages.count; ++i)
+		{
+			StringRef sourceRef;
+
+			sourceRef = processedStageSources[i].GetRef();
+			
+			stageSources[i] = StageSource{ stages[i].stage, sourceRef };
+		}
+
+		BufferRef<const StageSource> stageSourceRef(stageSources, stages.count);
+
+		if (CompileAndLink(shaderOut, stageSourceRef, allocator, renderDevice, debugName))
+		{
+			UpdateTextureUniformLocations(shaderOut, renderDevice);
+			compileSuccess = true;
+		}
+	}
+
+	// Release loaded include files
+	for (auto itr = includeFiles.Begin(), end = includeFiles.End(); itr != end; ++itr)
+	{
+		allocator->Deallocate(itr->second.string);
+	}
+
+	return compileSuccess;
+}
+
+bool ShaderLoader::LoadFromShaderFile(
+	ShaderData& shaderOut,
+	StringRef shaderContent,
+	Allocator* allocator,
+	RenderDevice* renderDevice,
+	StringRef debugName)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	StringRef programSection;
+	StageSource stageSections[MaxStageCount];
+	size_t stageCount;
+	
+	if (FindShaderSections(shaderContent, programSection, stageSections, stageCount) == false)
+		return false;
+
+	ProcessProgramProperties(shaderOut, programSection, allocator);
+
+	StringRef versionStr("#version 450\n");
+	BufferRef<const StageSource> stages(stageSections, stageCount);
+	if (ProcessShaderStages(shaderOut, versionStr, stages, allocator, renderDevice, debugName) == false)
+		return false;
+
+	return true;
 }

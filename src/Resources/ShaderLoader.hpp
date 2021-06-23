@@ -7,6 +7,7 @@
 class Allocator;
 class RenderDevice;
 struct ShaderData;
+struct StringRef;
 
 namespace ShaderLoader
 {
@@ -14,5 +15,13 @@ namespace ShaderLoader
 		ShaderData& shaderOut,
 		BufferRef<char> configuration,
 		Allocator* allocator,
-		RenderDevice* renderDevice);
+		RenderDevice* renderDevice,
+		StringRef debugName);
+
+	bool LoadFromShaderFile(
+		ShaderData& shaderOut,
+		StringRef configuration,
+		Allocator* allocator,
+		RenderDevice* renderDevice,
+		StringRef debugName);
 }

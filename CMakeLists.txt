@@ -67,6 +67,7 @@ set (KOKKO_SOURCES
 	src/Core/Optional.hpp
 	src/Core/Pair.hpp
 	src/Core/Queue.hpp
+	src/Core/Range.hpp
 	src/Core/Sort.hpp
 	src/Core/SortedArray.hpp
 	src/Core/String.cpp

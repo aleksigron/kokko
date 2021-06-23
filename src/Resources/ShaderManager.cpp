@@ -155,7 +155,17 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 		ShaderId id = CreateShader();
 		ShaderData& shader = data.shader[id.i];
 
-		if (ShaderLoader::LoadFromConfiguration(shader, file.GetRef(), allocator, renderDevice))
+		bool loadSuccess = false;
+
+		if (pathStr.GetRef().EndsWith(StringRef(".json")))
+			loadSuccess = ShaderLoader::LoadFromConfiguration(shader, file.GetRef(), allocator, renderDevice, pathStr.GetRef());
+		else
+		{
+			StringRef fileString(file.Data(), file.Count());
+			loadSuccess = ShaderLoader::LoadFromShaderFile(shader, fileString, allocator, renderDevice, pathStr.GetRef());
+		}
+
+		if (loadSuccess)
 		{
 			pair = nameHashMap.Insert(hash);
 			pair->second = id;
