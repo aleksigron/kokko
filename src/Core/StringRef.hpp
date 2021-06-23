@@ -24,6 +24,8 @@ struct StringRef
 		len = static_cast<size_t>(string - str);
 	}
 
+	const char& operator[](size_t index) const { return str[index]; }
+
 	// Does the other StringRef object reference the same area in memory
 	bool ReferenceEquals(const StringRef& other) const
 	{
@@ -71,4 +73,5 @@ struct StringRef
 	intptr_t FindFirst(const StringRef& str, size_t startAt = 0) const;
 
 	intptr_t FindFirstOf(const char* chars, size_t startAt = 0) const;
+	intptr_t FindFirstNotOf(const char* chars, size_t startAt = 0) const;
 };

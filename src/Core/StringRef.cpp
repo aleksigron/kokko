@@ -96,14 +96,27 @@ bool StringRef::StartsWith(const StringRef& other) const
 
 bool StringRef::EndsWith(const StringRef& other) const
 {
-	if (this->len < other.len)
+	if (len < other.len)
 		return false;
 
-	for (unsigned int i = this->len - other.len; i < this->len; ++i)
-		if (this->str[i] != other.str[i])
+	for (size_t idx = len - other.len, otherIdx = 0; idx < len; ++idx, ++otherIdx)
+		if (str[idx] != other.str[otherIdx])
 			return false;
 
 	return true;
+}
+
+TEST_CASE("StringRef can match string start and end")
+{
+	StringRef str("Test string");
+
+	CHECK(str.StartsWith(StringRef("T")) == true);
+	CHECK(str.StartsWith(StringRef("Test")) == true);
+	CHECK(str.StartsWith(StringRef("est")) == false);
+
+	CHECK(str.EndsWith(StringRef("g")) == true);
+	CHECK(str.EndsWith(StringRef("ing")) == true);
+	CHECK(str.EndsWith(StringRef("tin")) == false);
 }
 
 StringRef StringRef::SubStr(size_t startPos, size_t length) const
@@ -195,6 +208,25 @@ intptr_t StringRef::FindFirstOf(const char* chars, size_t startAt) const
 	return -1;
 }
 
+intptr_t StringRef::FindFirstNotOf(const char* chars, size_t startAt) const
+{
+	size_t charCount = std::strlen(chars);
+
+	for (size_t sourceIdx = startAt; sourceIdx < len; ++sourceIdx)
+	{
+		bool match = false;
+
+		for (size_t charIdx = 0; charIdx < charCount; ++charIdx)
+			if (str[sourceIdx] == chars[charIdx])
+				match = true;
+
+		if (match == false)
+			return sourceIdx;
+	}
+
+	return -1;
+}
+
 TEST_CASE("StringRef can find chars")
 {
 	StringRef str("Test string");
@@ -207,4 +239,13 @@ TEST_CASE("StringRef can find chars")
 	CHECK(str.FindFirstOf("Te", 1) == 1);
 	CHECK(str.FindFirstOf("g") == 10);
 	CHECK(str.FindFirstOf("ing", 10) == 10);
+
+	CHECK(str.FindFirstNotOf("Test ring") < 0);
+	CHECK(str.FindFirstNotOf("e") == 0);
+	CHECK(str.FindFirstNotOf("T") == 1);
+	CHECK(str.FindFirstNotOf("Test") == 4);
+	CHECK(str.FindFirstNotOf("Test ") == 7);
+	CHECK(str.FindFirstNotOf("str", 5) == 8);
+	CHECK(str.FindFirstNotOf("g", 10) < 0);
+	CHECK(str.FindFirstNotOf("T", 10) == 10);
 }
