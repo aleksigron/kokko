@@ -162,7 +162,7 @@ void DebugTextRenderer::Render()
 
 		CreateAndUploadData();
 
-		const char* shaderPath = "res/shaders/debug/debug_text.shader.json";
+		const char* shaderPath = "res/shaders/debug/debug_text.glsl";
 		ShaderId shaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
 		if (shaderId == ShaderId::Null)
