@@ -63,25 +63,6 @@ TEST_CASE("StringRef can test for equality")
 	CHECK(ref3.ReferenceEquals(ref4) == false);
 }
 
-void StringRef::TrimBeginning(size_t amount)
-{
-	if (amount < len)
-	{
-		str = str + amount;
-		len = len - amount;
-	}
-	else
-		this->Clear();
-}
-
-void StringRef::TrimEnd(size_t amount)
-{
-	if (amount < len)
-		len = len - amount;
-	else
-		this->Clear();
-}
-
 bool StringRef::StartsWith(const StringRef& other) const
 {
 	if (this->len < other.len)
@@ -121,7 +102,7 @@ TEST_CASE("StringRef can match string start and end")
 
 StringRef StringRef::SubStr(size_t startPos, size_t length) const
 {
-	assert(startPos < len);
+	assert(startPos < len || (startPos == len && length == 0));
 
 	if (length == 0)
 		length = len - startPos;
@@ -131,6 +112,9 @@ StringRef StringRef::SubStr(size_t startPos, size_t length) const
 
 StringRef StringRef::SubStrPos(size_t startPos, intptr_t endPos) const
 {
+	assert(startPos < len || startPos == endPos);
+	assert(endPos <= (intptr_t)len);
+
 	if (endPos < 0)
 		endPos = len + endPos;
 	

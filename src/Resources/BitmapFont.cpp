@@ -221,9 +221,9 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, const Buffer<char>&
 			}
 		}
 
-		unprocessed.TrimBeginning(lineEnd);
+		unprocessed = unprocessed.SubStr(lineEnd);
 		uint nextLineStart = FindPrintable(unprocessed);
-		unprocessed.TrimBeginning(nextLineStart);
+		unprocessed = unprocessed.SubStr(nextLineStart);
 
 		lineEnd = FindUnprintable(unprocessed);
 

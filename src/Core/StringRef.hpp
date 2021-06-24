@@ -58,12 +58,6 @@ struct StringRef
 		len = 0;
 	}
 
-	// Modify the reference to remove the specified amount of bytes from the beginning
-	void TrimBeginning(size_t amount);
-
-	// Modify the reference to remove the specified amount of bytes from the end
-	void TrimEnd(size_t amount);
-
 	bool StartsWith(const StringRef& other) const;
 	bool EndsWith(const StringRef& other) const;
 
