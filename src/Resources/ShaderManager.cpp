@@ -155,14 +155,19 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 		ShaderId id = CreateShader();
 		ShaderData& shader = data.shader[id.i];
 
+		StringRef pathRef = pathStr.GetRef();
+
+		const StringRef resFolder("res/");
+		StringRef debugName = pathRef.StartsWith(resFolder) ? pathRef.SubStr(resFolder.len) : pathRef;
+
 		bool loadSuccess = false;
 
 		if (pathStr.GetRef().EndsWith(StringRef(".json")))
-			loadSuccess = ShaderLoader::LoadFromConfiguration(shader, file.GetRef(), allocator, renderDevice, pathStr.GetRef());
+			loadSuccess = ShaderLoader::LoadFromConfiguration(shader, file.GetRef(), allocator, renderDevice, debugName);
 		else
 		{
 			StringRef fileString(file.Data(), file.Count());
-			loadSuccess = ShaderLoader::LoadFromShaderFile(shader, fileString, allocator, renderDevice, pathStr.GetRef());
+			loadSuccess = ShaderLoader::LoadFromShaderFile(shader, pathRef, fileString, allocator, renderDevice, debugName);
 		}
 
 		if (loadSuccess)

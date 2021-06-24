@@ -13,6 +13,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/Range.hpp"
 #include "Core/Sort.hpp"
+#include "Core/SortedArray.hpp"
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
 
@@ -32,15 +33,39 @@ static const size_t MaxStageCount = 2;
 static const char* const LineBreakChars = "\r\n";
 static const char* const WhitespaceChars = " \t\r\n";
 
-struct FileString
+namespace ShaderLoader
 {
-	char* string;
-	size_t length;
-};
+	struct StageSource
+	{
+		RenderShaderStage stage;
+		StringRef source;
+	};
+
+	struct FileString
+	{
+		char* string;
+		size_t length;
+	};
+
+	struct ProcessStore
+	{
+		HashMap<uint32_t, FileString>& includeFileCache;
+		SortedArray<uint32_t>& filesIncludedInStage;
+		String& pathString;
+	};
+
+	struct AddUniforms_UniformData
+	{
+		StringRef name;
+		unsigned int arraySize;
+		UniformDataType type;
+	};
+}
+
 
 static bool LoadIncludes(
 	const rapidjson::Value& value,
-	HashMap<uint32_t, FileString>& includeFiles,
+	HashMap<uint32_t, ShaderLoader::FileString>& includeFileCache,
 	Allocator* allocator)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -57,7 +82,7 @@ static bool LoadIncludes(
 		if (itr->IsString())
 		{
 			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
-			auto* file = includeFiles.Lookup(hash);
+			auto* file = includeFileCache.Lookup(hash);
 
 			// File with this hash hasn't been read before, read it now
 			if (file == nullptr)
@@ -67,11 +92,11 @@ static bool LoadIncludes(
 
 				if (File::ReadText(itr->GetString(), allocator, stringBuffer, stringLength))
 				{
-					FileString str;
+					ShaderLoader::FileString str;
 					str.string = stringBuffer;
 					str.length = stringLength;
 
-					file = includeFiles.Insert(hash);
+					file = includeFileCache.Insert(hash);
 					file->second = str;
 				}
 				else
@@ -90,7 +115,7 @@ static bool ProcessSource(
 	StringRef versionStr,
 	StringRef uniformBlock,
 	const rapidjson::Value* includePaths,
-	HashMap<uint32_t, FileString>& includeFiles,
+	HashMap<uint32_t, ShaderLoader::FileString>& includeFileCache,
 	Allocator* allocator,
 	Buffer<char>& output)
 {
@@ -110,11 +135,11 @@ static bool ProcessSource(
 		for (auto itr = includePaths->Begin(), end = includePaths->End(); itr != end; ++itr)
 		{
 			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
-			auto* file = includeFiles.Lookup(hash);
+			auto* file = includeFileCache.Lookup(hash);
 
 			if (file == nullptr)
 			{
-				Log::Error("ProcessSource: include file source not found from includeFiles map");
+				Log::Error("ProcessSource: include file source not found from includeFileCache map");
 				return false;
 			}
 
@@ -151,7 +176,7 @@ static bool ProcessSource(
 		for (auto itr = includePaths->Begin(), end = includePaths->End(); itr != end; ++itr)
 		{
 			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
-			auto* file = includeFiles.Lookup(hash);
+			auto* file = includeFileCache.Lookup(hash);
 
 			std::memcpy(dest, file->second.string, file->second.length);
 			dest += file->second.length;
@@ -163,13 +188,6 @@ static bool ProcessSource(
 	return true;
 }
 
-struct AddUniforms_UniformData
-{
-	StringRef name;
-	unsigned int arraySize;
-	UniformDataType type;
-};
-
 static bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUniform& b)
 {
 	const UniformTypeInfo& aType = UniformTypeInfo::Types[static_cast<unsigned int>(a.type)];
@@ -179,7 +197,7 @@ static bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUnifo
 
 static void AddUniforms(
 	ShaderData& shaderOut,
-	BufferRef<const AddUniforms_UniformData> uniforms,
+	BufferRef<const ShaderLoader::AddUniforms_UniformData> uniforms,
 	Allocator* allocator)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -208,7 +226,7 @@ static void AddUniforms(
 
 	for (unsigned uIndex = 0; uIndex < uniforms.count; ++uIndex)
 	{
-		const AddUniforms_UniformData& uniform = uniforms[uIndex];
+		const ShaderLoader::AddUniforms_UniformData& uniform = uniforms[uIndex];
 		UniformTypeInfo type = UniformTypeInfo::FromType(uniform.type);
 
 		if (type.isTexture)
@@ -429,15 +447,9 @@ static bool Compile(
 	return false;
 }
 
-struct StageSource
-{
-	RenderShaderStage stage;
-	StringRef source;
-};
-
 static bool CompileAndLink(
 	ShaderData& shaderOut,
-	BufferRef<const StageSource> stages,
+	BufferRef<const ShaderLoader::StageSource> stages,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	StringRef debugName)
@@ -448,7 +460,7 @@ static bool CompileAndLink(
 
 	for (size_t i = 0; i < stages.count; ++i)
 	{
-		const StageSource& stage = stages[i];
+		const ShaderLoader::StageSource& stage = stages[i];
 		if (Compile(shaderOut, allocator, renderDevice, stage.stage, stage.source, stageObjects[i]) == false)
 		{
 			Log::Error("Compilation of shader stage failed");
@@ -682,7 +694,7 @@ bool ShaderLoader::LoadFromConfiguration(
 
 	// Load all include files, they can be shared between shader stages
 
-	HashMap<uint32_t, FileString> includeFiles(allocator);
+	HashMap<uint32_t, FileString> includeFileCache(allocator);
 
 	bool includeLoadSuccess = true;
 
@@ -691,7 +703,7 @@ bool ShaderLoader::LoadFromConfiguration(
 		stages[i].includeItr = stages[i].stageItr->value.FindMember("includes");
 		if (stages[i].includeItr != stages[i].stageItr->value.MemberEnd())
 		{
-			if (LoadIncludes(stages[i].includeItr->value, includeFiles, allocator) == false)
+			if (LoadIncludes(stages[i].includeItr->value, includeFileCache, allocator) == false)
 			{
 				includeLoadSuccess = false;
 			}
@@ -721,7 +733,7 @@ bool ShaderLoader::LoadFromConfiguration(
 			if (stages[i].includeItr != stages[i].stageItr->value.MemberEnd())
 				includeVal = &stages[i].includeItr->value;
 
-			if (ProcessSource(stagePath, versionStr, uniformBlock, includeVal, includeFiles, allocator, sourceBuffers[i]) == false)
+			if (ProcessSource(stagePath, versionStr, uniformBlock, includeVal, includeFileCache, allocator, sourceBuffers[i]) == false)
 				processSuccess = false;
 		}
 	}
@@ -746,7 +758,7 @@ bool ShaderLoader::LoadFromConfiguration(
 	}
 
 	// Release loaded include files
-	for (auto itr = includeFiles.Begin(), end = includeFiles.End(); itr != end; ++itr)
+	for (auto itr = includeFileCache.Begin(), end = includeFileCache.End(); itr != end; ++itr)
 	{
 		allocator->Deallocate(itr->second.string);
 	}
@@ -758,7 +770,7 @@ bool ShaderLoader::LoadFromConfiguration(
 static bool FindShaderSections(
 	StringRef shaderContents,
 	StringRef& programSectionOut,
-	StageSource stageSectionsOut[MaxStageCount],
+	ShaderLoader::StageSource stageSectionsOut[MaxStageCount],
 	size_t& stageCountOut)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -789,6 +801,8 @@ static bool FindShaderSections(
 			stageSectionsOut[stageCount].source = shaderContents.SubStrPos(sectionContentStart, sectionEnd);
 
 			stageCount += 1;
+
+			assert(stageCount <= MaxStageCount);
 		}
 
 		if (sectionStart < 0)
@@ -828,7 +842,7 @@ static void ProcessProgramProperties(ShaderData& shaderOut, StringRef programSec
 	KOKKO_PROFILE_FUNCTION();
 
 	static const size_t MaxUniformCount = 32;
-	AddUniforms_UniformData uniforms[MaxUniformCount];
+	ShaderLoader::AddUniforms_UniformData uniforms[MaxUniformCount];
 	unsigned int uniformCount = 0;
 
 	const StringRef propertyStr("#property ");
@@ -859,7 +873,7 @@ static void ProcessProgramProperties(ShaderData& shaderOut, StringRef programSec
 		StringRef nameStr = nameAndType.SubStr(0, nameEnd);
 		StringRef typeStr = nameAndType.SubStr(nameEnd + 1);
 
-		AddUniforms_UniformData& uniform = uniforms[uniformCount];
+		ShaderLoader::AddUniforms_UniformData& uniform = uniforms[uniformCount];
 		uniform.name = nameStr;
 
 		uint32_t typeHash = Hash::FNV1a_32(typeStr.str, typeStr.len);
@@ -896,7 +910,7 @@ static void ProcessProgramProperties(ShaderData& shaderOut, StringRef programSec
 		uniformCount += 1;
 	}
 
-	BufferRef<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
+	BufferRef<const ShaderLoader::AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
 	AddUniforms(shaderOut, uniformBufferRef, allocator);
 
 	// Set default value
@@ -904,27 +918,161 @@ static void ProcessProgramProperties(ShaderData& shaderOut, StringRef programSec
 	// TODO: Read value from shader declaration
 }
 
+static bool ProcessIncludes(
+	StringRef sourceStr,
+	uint32_t filePathHash,
+	ShaderLoader::ProcessStore& store,
+	Allocator* allocator,
+	String& processedSourceOut)
+{
+	const StringRef includeDeclStr("#include ");
+
+	store.filesIncludedInStage.Insert(filePathHash);
+
+	size_t includeStatementEnd = 0;
+
+	bool success = true;
+
+	for (;;) // For each include statement
+	{
+		auto FindQuote = [sourceStr](intptr_t& quotePosOut, size_t startPos) -> bool
+		{
+			quotePosOut = sourceStr.FindFirstOf("\"\n\r", startPos);
+
+			if (quotePosOut < 0 || sourceStr[quotePosOut] != '\"')
+				return false;
+
+			return true;
+		};
+
+		intptr_t lineStart = sourceStr.FindFirst(includeDeclStr, includeStatementEnd);
+
+		if (lineStart < 0)
+			break;
+
+		intptr_t firstQuote, secondQuote;
+
+		if (FindQuote(firstQuote, lineStart + includeDeclStr.len) == false)
+		{
+			success = false;
+			break;
+		}
+
+		if (FindQuote(secondQuote, firstQuote + 1) == false)
+		{
+			success = false;
+			break;
+		}
+
+		// Add the source that is between this and the previous include
+		processedSourceOut.Append(sourceStr.SubStrPos(includeStatementEnd, lineStart));
+
+		includeStatementEnd = secondQuote + 1;
+
+		StringRef includePath = sourceStr.SubStrPos(firstQuote + 1, secondQuote);
+		uint32_t pathHash = Hash::FNV1a_32(includePath.str, includePath.len);
+
+		// Include file only if it hasn't been included yet in this shader stage
+		if (store.filesIncludedInStage.Contains(pathHash) == false)
+		{
+			auto* file = store.includeFileCache.Lookup(pathHash);
+
+			// File with this hash hasn't been read before, read it now
+			if (file == nullptr)
+			{
+				store.pathString.Assign(includePath);
+
+				char* stringBuffer;
+				size_t stringLength;
+
+				if (File::ReadText(store.pathString.GetCStr(), allocator, stringBuffer, stringLength))
+				{
+					ShaderLoader::FileString str;
+					str.string = stringBuffer;
+					str.length = stringLength;
+
+					file = store.includeFileCache.Insert(pathHash);
+					file->second = str;
+				}
+				else
+				{
+					Log::Error("Shader include couldn't be read from file");
+					Log::Error(store.pathString.GetCStr());
+				}
+			}
+
+			if (file != nullptr) 
+			{
+				StringRef includeFileContent(file->second.string, file->second.length);
+
+				if (ProcessIncludes(includeFileContent, pathHash, store, allocator, processedSourceOut) == false)
+				{
+					success = false;
+					break;
+				}
+			}
+			else // File hadn't been loaded before and couldn't be loaded now
+			{
+				success = false;
+				break;
+			}
+		}
+	}
+
+	if (success)
+	{
+		// Add the source after the last include
+		// or the whole source string if no includes were present
+		processedSourceOut.Append(sourceStr.SubStr(includeStatementEnd));
+	}
+
+	return success;
+}
+
+static bool ProcessStage(
+	StringRef versionStr,
+	StringRef uniformBlockDefinition,
+	StringRef mainFilePath,
+	StringRef mainFileContent,
+	ShaderLoader::ProcessStore& store,
+	Allocator* allocator,
+	String& processedSourceOut)
+{
+	processedSourceOut.Clear();
+	processedSourceOut.Append(versionStr);
+
+	if (uniformBlockDefinition.len > 0)
+		processedSourceOut.Append(uniformBlockDefinition);
+
+	uint32_t pathHash = Hash::FNV1a_32(mainFilePath.str, mainFilePath.len);
+
+	if (ProcessIncludes(mainFileContent, pathHash, store, allocator, processedSourceOut) == false)
+		return false;
+
+	store.filesIncludedInStage.Clear();
+	store.pathString.Clear();
+
+	return true;
+}
+
 static bool ProcessShaderStages(
 	ShaderData& shaderOut,
+	StringRef shaderPath,
+	BufferRef<const ShaderLoader::StageSource> stages,
 	StringRef versionStr,
-	BufferRef<const StageSource> stages,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	StringRef debugName)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	const StringRef includeDeclStr("#include ");
-
-	struct Replacement
-	{
-		Range<size_t> sourceRange;
-		StringRef replacementText;
-	};
-
-	HashMap<uint32_t, FileString> includeFiles(allocator);
-	Array<Replacement> includeReplacements(allocator);
+	HashMap<uint32_t, ShaderLoader::FileString> includeFileCache(allocator);
+	SortedArray<uint32_t> filesIncludedInStage(allocator);
 	String pathString(allocator);
+
+	ShaderLoader::ProcessStore processStore{
+		includeFileCache, filesIncludedInStage, pathString
+	};
 
 	String processedStageSources[MaxStageCount];
 	for (size_t i = 0; i < MaxStageCount; ++i)
@@ -934,147 +1082,21 @@ static bool ProcessShaderStages(
 
 	for (size_t stageIdx = 0, stageCount = stages.count; stageIdx < stageCount; ++stageIdx)
 	{
-		StringRef stageSource = stages[stageIdx].source;
-		size_t includeStatementEnd = 0;
-
-		for (;;) // For each include statement
-		{
-			auto FindQuote = [stageSource](intptr_t& quotePosOut, size_t startPos) -> bool
-			{
-				quotePosOut = stageSource.FindFirstOf("\"\n\r", startPos);
-
-				if (quotePosOut < 0 || stageSource[quotePosOut] != '\"')
-					return false;
-
-				return true;
-			};
-
-			intptr_t lineStart = stageSource.FindFirst(includeDeclStr, includeStatementEnd);
-
-			if (lineStart < 0)
-				break;
-
-			intptr_t firstQuote, secondQuote;
-
-			if (FindQuote(firstQuote, lineStart + includeDeclStr.len) == false)
-			{
-				processSuccess = false;
-				break;
-			}
-
-			if (FindQuote(secondQuote, firstQuote + 1) == false)
-			{
-				processSuccess = false;
-				break;
-			}
-
-			includeStatementEnd = secondQuote + 1;
-
-			// We have an include path, let's process it
-
-			StringRef includePath = stageSource.SubStrPos(firstQuote + 1, secondQuote);
-			uint32_t pathHash = Hash::FNV1a_32(includePath.str, includePath.len);
-			auto* file = includeFiles.Lookup(pathHash);
-
-			// File with this hash hasn't been read before, read it now
-			if (file == nullptr)
-			{
-				pathString.Assign(includePath);
-
-				char* stringBuffer;
-				size_t stringLength;
-
-				if (File::ReadText(pathString.GetCStr(), allocator, stringBuffer, stringLength))
-				{
-					FileString str;
-					str.string = stringBuffer;
-					str.length = stringLength;
-
-					file = includeFiles.Insert(pathHash);
-					file->second = str;
-				}
-				else
-				{
-					Log::Error("Shader include couldn't be read from file");
-					Log::Error(pathString.GetCStr());
-				}
-			}
-
-			if (file != nullptr)
-			{
-				const FileString& fileString = file->second;
-
-				Replacement replacement;
-				replacement.sourceRange = Range{ static_cast<size_t>(lineStart), includeStatementEnd };
-				replacement.replacementText = StringRef(fileString.string, fileString.length);
-
-				includeReplacements.PushBack(replacement);
-			}
-			else
-			{
-				processSuccess = false;
-				break;
-			}
-		}
-
-		if (processSuccess == false)
-			break;
-
-		StringRef uniformBlock = shaderOut.uniformBlockDefinition;
-
-		size_t srcPos = 0;
-		intptr_t processedSourceLength = 0;
-		processedSourceLength += versionStr.len;
-		processedSourceLength += uniformBlock.len;
-
-		for (const Replacement& replacement : includeReplacements)
-		{
-			processedSourceLength += replacement.sourceRange.start - srcPos;
-			processedSourceLength += replacement.replacementText.len;
-			srcPos = replacement.sourceRange.end;
-		}
-			
-		processedSourceLength += stageSource.len - srcPos;
-
-		srcPos = 0;
-
-		String& processedSource = processedStageSources[stageIdx];
-		processedSource.Reserve(processedSourceLength);
-
-		processedSource.Append(versionStr);
-
-		if (uniformBlock.len > 0)
-			processedSource.Append(uniformBlock);
-
-		for (const Replacement& replacement : includeReplacements)
-		{
-			processedSource.Append(stageSource.SubStrPos(srcPos, replacement.sourceRange.start));
-			processedSource.Append(replacement.replacementText);
-
-			srcPos = replacement.sourceRange.end;
-		}
-
-		processedSource.Append(stageSource.SubStr(srcPos));
-
-		includeReplacements.Clear();
+		if (ProcessStage(versionStr, shaderOut.uniformBlockDefinition, shaderPath, stages[stageIdx].source,
+			processStore, allocator, processedStageSources[stageIdx]) == false)
+			processSuccess = false;
 	}
 
 	bool compileSuccess = false;
 
 	if (processSuccess)
 	{
-		StageSource stageSources[MaxStageCount];
+		ShaderLoader::StageSource stageSources[MaxStageCount];
 		
 		for (size_t i = 0; i < stages.count; ++i)
-		{
-			StringRef sourceRef;
+			stageSources[i] = ShaderLoader::StageSource{ stages[i].stage, processedStageSources[i].GetRef() };
 
-			sourceRef = processedStageSources[i].GetRef();
-			
-			stageSources[i] = StageSource{ stages[i].stage, sourceRef };
-		}
-
-		BufferRef<const StageSource> stageSourceRef(stageSources, stages.count);
+		BufferRef<const ShaderLoader::StageSource> stageSourceRef(stageSources, stages.count);
 
 		if (CompileAndLink(shaderOut, stageSourceRef, allocator, renderDevice, debugName))
 		{
@@ -1084,7 +1106,7 @@ static bool ProcessShaderStages(
 	}
 
 	// Release loaded include files
-	for (auto itr = includeFiles.Begin(), end = includeFiles.End(); itr != end; ++itr)
+	for (auto itr = includeFileCache.Begin(), end = includeFileCache.End(); itr != end; ++itr)
 	{
 		allocator->Deallocate(itr->second.string);
 	}
@@ -1094,6 +1116,7 @@ static bool ProcessShaderStages(
 
 bool ShaderLoader::LoadFromShaderFile(
 	ShaderData& shaderOut,
+	StringRef shaderPath,
 	StringRef shaderContent,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
@@ -1112,7 +1135,7 @@ bool ShaderLoader::LoadFromShaderFile(
 
 	StringRef versionStr("#version 450\n");
 	BufferRef<const StageSource> stages(stageSections, stageCount);
-	if (ProcessShaderStages(shaderOut, versionStr, stages, allocator, renderDevice, debugName) == false)
+	if (ProcessShaderStages(shaderOut, shaderPath, stages, versionStr, allocator, renderDevice, debugName) == false)
 		return false;
 
 	return true;

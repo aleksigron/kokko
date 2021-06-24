@@ -20,7 +20,8 @@ namespace ShaderLoader
 
 	bool LoadFromShaderFile(
 		ShaderData& shaderOut,
-		StringRef configuration,
+		StringRef shaderPath,
+		StringRef shaderContent,
 		Allocator* allocator,
 		RenderDevice* renderDevice,
 		StringRef debugName);
