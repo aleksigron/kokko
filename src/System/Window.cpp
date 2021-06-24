@@ -225,7 +225,8 @@ void Window::_GlfwFramebufferSizeCallback(GLFWwindow* window, int width, int hei
 
 void Window::GlfwFramebufferSizeCallback(int width, int height)
 {
-	if (width != currentFramebufferSize.x || height != currentFramebufferSize.y)
+	if ((width != 0 && height != 0) &&
+		(width != currentFramebufferSize.x || height != currentFramebufferSize.y))
 	{
 		framebufferResizePending = true;
 
