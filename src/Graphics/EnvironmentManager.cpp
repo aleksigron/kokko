@@ -5,8 +5,6 @@
 #include "Core/Array.hpp"
 #include "Core/Core.hpp"
 
-#include "Debug/LogHelper.hpp"
-
 #include "Math/Mat4x4.hpp"
 #include "Math/Math.hpp"
 #include "Math/Projection.hpp"

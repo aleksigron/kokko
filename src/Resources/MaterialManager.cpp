@@ -9,8 +9,6 @@
 #include "Core/String.hpp"
 #include "Core/Hash.hpp"
 
-#include "Debug/LogHelper.hpp"
-
 #include "Engine/Engine.hpp"
 
 #include "Memory/Allocator.hpp"

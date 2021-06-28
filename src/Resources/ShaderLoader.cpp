@@ -17,8 +17,6 @@
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
 
-#include "Debug/LogHelper.hpp"
-
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/RenderDevice.hpp"

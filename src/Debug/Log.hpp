@@ -4,11 +4,6 @@
 
 #include "Debug/LogLevel.hpp"
 
-#define KK_LOG_DEBUG(format, ...) ::Log::LogDebug(__FILE__, __LINE__, FMT_STRING(format), __VA_ARGS__)
-#define KK_LOG_INFO(format, ...) ::Log::Log(LogLevel::Info, FMT_STRING(format), __VA_ARGS__)
-#define KK_LOG_WARN(format, ...) ::Log::Log(LogLevel::Warning, FMT_STRING(format), __VA_ARGS__)
-#define KK_LOG_ERROR(format, ...) ::Log::Log(LogLevel::Error, FMT_STRING(format), __VA_ARGS__)
-
 class DebugLog;
 
 namespace Log

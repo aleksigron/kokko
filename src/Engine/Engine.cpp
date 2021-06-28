@@ -10,7 +10,6 @@
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 #include "Debug/Instrumentation.hpp"
-#include "Debug/LogHelper.hpp"
 
 #include "Editor/EditorUI.hpp"
 

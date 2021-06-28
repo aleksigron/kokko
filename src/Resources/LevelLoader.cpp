@@ -4,8 +4,6 @@
 
 #include "Core/Core.hpp"
 
-#include "Debug/LogHelper.hpp"
-
 #include "Engine/World.hpp"
 
 #include "Entity/EntityManager.hpp"

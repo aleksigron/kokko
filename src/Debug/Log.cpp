@@ -1,4 +1,4 @@
-#include "Debug/LogHelper.hpp"
+#include "Debug/Log.hpp"
 
 #include "Core/Array.hpp"
 

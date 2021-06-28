@@ -9,8 +9,6 @@
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
 
-#include "Debug/LogHelper.hpp"
-
 #include "Rendering/RenderDevice.hpp"
 
 #include "Resources/ImageData.hpp"

@@ -15,7 +15,7 @@
 #include "Debug/DebugLog.hpp"
 #include "Debug/DebugMemoryStats.hpp"
 #include "Debug/Instrumentation.hpp"
-#include "Debug/LogHelper.hpp"
+#include "Debug/Log.hpp"
 
 #include "Engine/World.hpp"
 
@@ -62,7 +62,7 @@ Debug::Debug(
 	console = allocator->MakeNew<DebugConsole>(allocator, window, textRenderer, vectorRenderer);
 	log = allocator->MakeNew<DebugLog>(allocator, console);
 
-	// Set up log instance in LogHelper
+	// Set up log instance
 	Log::SetLogInstance(log);
 
 	memoryStats = allocator->MakeNew<DebugMemoryStats>(allocManager, textRenderer);
