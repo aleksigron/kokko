@@ -1,15 +1,9 @@
 #pragma once
 
-#include "Core/StringRef.hpp"
-#include "Core/String.hpp"
-
-#include <cstdio>
-#include <cstdint>
-
 class Instrumentation
 {
 private:
-	FILE* fileHandle;
+	void* fileHandle;
 	unsigned int profileCount;
 
 public:
