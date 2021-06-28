@@ -131,7 +131,7 @@ EntityManager::Iterator::Iterator(EntityManager& entityManager) :
 	}
 }
 
-EntityManager::Iterator::Iterator(EntityManager& entityManager, size_t entityCount, size_t freelistCount) :
+EntityManager::Iterator::Iterator(EntityManager& entityManager, uint32_t entityCount, uint32_t freelistCount) :
 	manager(entityManager),
 	entityIndex(entityCount),
 	freelistIndex(freelistCount)

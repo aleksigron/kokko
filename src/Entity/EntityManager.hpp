@@ -57,13 +57,13 @@ public:
 	{
 	private:
 		EntityManager& manager;
-		size_t entityIndex;
-		size_t freelistIndex;
+		uint32_t entityIndex;
+		uint32_t freelistIndex;
 
 		friend class EntityManager;
 
 		explicit Iterator(EntityManager& entityManager);
-		Iterator(EntityManager& entityManager, size_t entityCount, size_t freelistCount);
+		Iterator(EntityManager& entityManager, uint32_t entityCount, uint32_t freelistCount);
 
 	public:
 		Iterator& operator++();
@@ -77,5 +77,5 @@ public:
 	friend class Iterator;
 
 	Iterator begin() { return Iterator(*this); }
-	Iterator end() { return Iterator(*this, entityRangeEnd, freeIndices.GetCount()); }
+	Iterator end() { return Iterator(*this, entityRangeEnd, static_cast<uint32_t>(freeIndices.GetCount())); }
 };

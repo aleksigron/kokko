@@ -210,13 +210,13 @@ static void BindTexture(RenderDevice* renderDevice, const ShaderData& shader,
 	}
 }
 
-static void SetViewport(RenderDevice* renderDevice, unsigned int size)
+static void SetViewport(RenderDevice* renderDevice, int size)
 {
 	RenderCommandData::ViewportData viewport{ 0, 0, size, size };
 	renderDevice->Viewport(&viewport);
 }
 
-static void BindBufferRange(RenderDevice* renderDevice, unsigned int binding, unsigned int buffer, size_t offset, size_t size)
+static void BindBufferRange(RenderDevice* renderDevice, unsigned int binding, unsigned int buffer, intptr_t offset, size_t size)
 {
 	RenderCommandData::BindBufferRange bindBufferRange{ RenderBufferTarget::UniformBuffer, binding, buffer, offset, size };
 	renderDevice->BindBufferRange(&bindBufferRange);
@@ -415,7 +415,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 			// reisze framebuffer according to mip-level size.
 			unsigned int mipSize = static_cast<unsigned int>(SpecularTextureSize) >> mip;
 
-			SetViewport(renderDevice, mipSize);
+			SetViewport(renderDevice, static_cast<int>(mipSize));
 
 			for (unsigned int i = 0; i < CubemapSideCount; ++i)
 			{
@@ -431,7 +431,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 
 	renderDevice->BindSampler(0, 0);
 
-	unsigned int envIndex = environmentMaps.GetCount();
+	size_t envIndex = environmentMaps.GetCount();
 	
 	Environment& environment = environmentMaps.PushBack();
 
@@ -514,7 +514,7 @@ void EnvironmentManager::LoadEmptyEnvironmentMap()
 	const TextureData& specMapTexture = textureManager->GetTextureData(specMapTextureId);
 	renderDevice->BindTexture(RenderTextureTarget::TextureCubeMap, specMapTexture.textureObjectId);
 
-	for (unsigned int mip = 0; mip < SpecularMipmapLevelCount; ++mip)
+	for (int mip = 0; mip < SpecularMipmapLevelCount; ++mip)
 	{
 		int mipSize = EmptyTextureSize >> mip;
 

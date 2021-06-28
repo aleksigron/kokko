@@ -7,7 +7,7 @@
 
 doctest::String toString(const StringRef& value)
 {
-	return doctest::String(value.str, value.len);
+	return doctest::String(value.str, static_cast<unsigned int>(value.len));
 }
 
 bool StringRef::ValueEquals(const StringRef& other) const
@@ -24,13 +24,13 @@ bool StringRef::ValueEquals(const StringRef& other) const
 
 bool StringRef::ValueEquals(const char* cstring) const
 {
-	if (this->str == nullptr || cstring == nullptr)
+	if (str == nullptr || cstring == nullptr)
 		return false;
 
-	unsigned int i = 0;
-	while (i < this->len)
+	size_t i = 0;
+	while (i < len)
 	{
-		if (cstring[i] == '\0' || this->str[i] != cstring[i])
+		if (cstring[i] == '\0' || str[i] != cstring[i])
 			return false;
 
 		++i;
@@ -110,13 +110,12 @@ StringRef StringRef::SubStr(size_t startPos, size_t length) const
 	return StringRef(str + startPos, length);
 }
 
-StringRef StringRef::SubStrPos(size_t startPos, intptr_t endPos) const
+StringRef StringRef::SubStrPos(size_t startPos, intptr_t end) const
 {
 	assert(startPos < len || startPos == endPos);
 	assert(endPos <= (intptr_t)len);
 
-	if (endPos < 0)
-		endPos = len + endPos;
+	size_t endPos = (end < 0) ? len + end : end;
 	
 	if (endPos < startPos)
 		return StringRef();

@@ -234,7 +234,7 @@ public:
 	/**
 	 * Resize the array to have a specific size
 	 */
-	void Resize(unsigned int size)
+	void Resize(size_t size)
 	{
 		if (size > count)
 		{

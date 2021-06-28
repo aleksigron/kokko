@@ -60,21 +60,21 @@ public:
 private:
 	Allocator* allocator;
 	KeyValuePair* data;
-	unsigned int population;
-	unsigned int allocated;
+	size_t population;
+	size_t allocated;
 
 	bool zeroUsed;
 	KeyValuePair zeroPair;
 
-	unsigned int GetIndex(unsigned int hash) const { return hash & (allocated - 1); }
-	unsigned int GetOffset(KeyValuePair* a, KeyValuePair* b) const
+	size_t GetIndex(size_t hash) const { return hash & (allocated - 1); }
+	size_t GetOffset(KeyValuePair* a, KeyValuePair* b) const
 	{
 		return b >= a ? b - a : allocated + b - a;
 	}
 
-	void ReserveInternal(unsigned int desiredCount)
+	void ReserveInternal(size_t desiredCount)
 	{
-		std::size_t newSize = desiredCount * sizeof(KeyValuePair);
+		size_t newSize = desiredCount * sizeof(KeyValuePair);
 		KeyValuePair* newData = static_cast<KeyValuePair*>(allocator->Allocate(newSize, __FUNCSIG__));
 		std::memset(newData, 0, newSize);
 
@@ -90,7 +90,7 @@ private:
 			{
 				if (p->first) // Pair has value
 				{
-					for (unsigned int i = GetIndex(Hash::FNV1a_32(p->first));; i = GetIndex(i + 1))
+					for (size_t i = GetIndex(Hash::FNV1a_32(p->first));; i = GetIndex(i + 1))
 					{
 						if (!newData[i].first) // Insert here
 						{
@@ -192,7 +192,7 @@ public:
 		{
 			if (data != nullptr)
 			{
-				for (unsigned int i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
+				for (size_t i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
 				{
 					KeyValuePair* pair = data + i;
 
@@ -218,7 +218,7 @@ public:
 		if (key)
 		{
 			for (;;)
-			for (unsigned int i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
+			for (size_t i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
 			{
 				KeyValuePair* pair = data + i;
 
@@ -265,7 +265,7 @@ public:
 			{
 				// Remove this cell by shuffling neighboring cells
 				// so there are no gaps in anyone's probe chain
-				for (unsigned int i = GetIndex(pair - data + 1);; i = GetIndex(i + 1))
+				for (size_t i = GetIndex(pair - data + 1);; i = GetIndex(i + 1))
 				{
 					KeyValuePair* neighbor = data + i;
 
@@ -296,12 +296,12 @@ public:
 		}
 	}
 
-	void Reserve(unsigned int desiredPopulation)
+	void Reserve(size_t desiredPopulation)
 	{
 		if (desiredPopulation < population)
 			return;
 
-		unsigned int desiredSize = (desiredPopulation * 4 + 2) / 3;
+		size_t desiredSize = (desiredPopulation * 4 + 2) / 3;
 
 		// Desired size is not a power-of-two
 		if ((desiredSize & (desiredSize - 1)) != 0)

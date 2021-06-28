@@ -71,7 +71,7 @@ private:
 	static const unsigned int MaxFramebufferCount = 4;
 	static const unsigned int MaxFramebufferTextureCount = 16;
 
-	static const unsigned int ObjectUniformBufferSize = 512 * 1024;
+	static const size_t ObjectUniformBufferSize = 512 * 1024;
 
 	Allocator* allocator;
 	RenderDevice* device;
@@ -115,8 +115,8 @@ private:
 	Array<unsigned int> objectUniformBufferLists[FramesInFlightCount];
 	unsigned int currentFrameIndex;
 
-	size_t objectUniformBlockStride;
-	unsigned int objectsPerUniformBuffer;
+	intptr_t objectUniformBlockStride;
+	intptr_t objectsPerUniformBuffer;
 
 	unsigned int deferredLightingCallback;
 	unsigned int skyboxRenderCallback;
@@ -184,7 +184,7 @@ private:
 	// Returns the number of object draw commands added
 	unsigned int PopulateCommandList(const Optional<CameraParameters>& editorCamera);
 
-	void UpdateUniformBuffers(unsigned int objectDrawCount);
+	void UpdateUniformBuffers(size_t objectDrawCount);
 
 	bool IsDrawCommand(uint64_t orderKey);
 	bool ParseControlCommand(uint64_t orderKey);

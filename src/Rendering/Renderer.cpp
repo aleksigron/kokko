@@ -420,8 +420,9 @@ void Renderer::Deinitialize()
 	{
 		if (objectUniformBufferLists[i].GetCount() > 0)
 		{
-			device->DestroyBuffers(objectUniformBufferLists[i].GetCount(), objectUniformBufferLists[i].GetData());
-			objectUniformBufferLists[i].Clear();
+			Array<uint32_t>& list = objectUniformBufferLists[i];
+			device->DestroyBuffers(static_cast<unsigned int>(list.GetCount()), list.GetData());
+			list.Clear();
 		}
 	}
 
@@ -666,10 +667,10 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 	unsigned int objectDrawCount = PopulateCommandList(editorCamera);
 	UpdateUniformBuffers(objectDrawCount);
 
-	int objectDrawsProcessed = 0;
+	intptr_t objectDrawsProcessed = 0;
 
-	unsigned int lastVpIdx = MaxViewportCount;
-	unsigned int lastShaderProgram = 0;
+	uint64_t lastVpIdx = MaxViewportCount;
+	uint64_t lastShaderProgram = 0;
 	const MeshDrawData* draw = nullptr;
 	MeshId lastMeshId = MeshId{ 0 };
 	MaterialId lastMaterialId = MaterialId{ 0 };
@@ -687,14 +688,14 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 		// If command is not control command, draw object
 		if (ParseControlCommand(command) == false)
 		{
-			unsigned int mat = renderOrder.materialId.GetValue(command);
-			unsigned int vpIdx = renderOrder.viewportIndex.GetValue(command);
+			uint64_t mat = renderOrder.materialId.GetValue(command);
+			uint64_t vpIdx = renderOrder.viewportIndex.GetValue(command);
 			const RenderViewport& viewport = viewportData[vpIdx];
 
 			if (mat != RenderOrderConfiguration::CallbackMaterialId)
 			{
-				MaterialId matId = MaterialId{mat};
-				unsigned int objIdx = renderOrder.renderObject.GetValue(command);
+				MaterialId matId = MaterialId{ static_cast<unsigned int>(mat) };
+				uint64_t objIdx = renderOrder.renderObject.GetValue(command);
 
 				// Update viewport uniform block
 				if (vpIdx != lastVpIdx)
@@ -724,12 +725,13 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 
 				// Bind object transform uniform block to shader
 
-				int bufferIndex = objectDrawsProcessed / objectsPerUniformBuffer;
-				int objectInBuffer = objectDrawsProcessed % objectsPerUniformBuffer;
+				intptr_t bufferIndex = objectDrawsProcessed / objectsPerUniformBuffer;
+				intptr_t objectInBuffer = objectDrawsProcessed % objectsPerUniformBuffer;
+				size_t rangeSize = static_cast<size_t>(objectUniformBlockStride);
 
 				RenderCommandData::BindBufferRange bind{
 					RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object,
-					objUniformBuffers[bufferIndex], objectInBuffer * objectUniformBlockStride, objectUniformBlockStride
+					objUniformBuffers[bufferIndex], objectInBuffer * objectUniformBlockStride, rangeSize
 				};
 
 				device->BindBufferRange(&bind);
@@ -748,7 +750,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 			}
 			else // Render with callback
 			{
-				unsigned int callbackId = renderOrder.renderObject.GetValue(command);
+				size_t callbackId = renderOrder.renderObject.GetValue(command);
 
 				if (callbackId > 0 && callbackId <= customRenderers.GetCount())
 				{
@@ -759,7 +761,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 						CustomRenderer::RenderParams params;
 						params.viewport = &viewport;
 						params.cameraParams = cameraParams;
-						params.callbackId = callbackId;
+						params.callbackId = static_cast<unsigned int>(callbackId);
 						params.command = command;
 						params.scene = scene;
 
@@ -1043,7 +1045,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	unsigned int cascadeCount = CascadedShadowMap::GetCascadeCount();
 	uniformsOut.shadowMapScale = Vec2f(1.0f / (cascadeCount * shadowSide), 1.0f / shadowSide);
 
-	uniformsOut.frameResolution = Vec2f(framebufferGbuffer.width, framebufferGbuffer.height);
+	uniformsOut.frameResolution = Vec2i(framebufferGbuffer.width, framebufferGbuffer.height).As<float>();
 
 	// Set viewport transform matrices
 	uniformsOut.perspectiveMatrix = fsvp.projection;
@@ -1072,7 +1074,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	unsigned int pointLightCount = 0;
 	unsigned int spotLightCount = 0;
 
-	for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
+	for (size_t lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
 	{
 		LightType type = lightManager->GetLightType(nonDirLights[lightIdx]);
 		if (type == LightType::Point)
@@ -1084,14 +1086,14 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	uniformsOut.pointLightCount = pointLightCount;
 	uniformsOut.spotLightCount = spotLightCount;
 
-	const unsigned int dirLightOffset = 1;
-	unsigned int pointLightsAdded = 0;
-	unsigned int spotLightsAdded = 0;
+	const size_t dirLightOffset = 1;
+	size_t pointLightsAdded = 0;
+	size_t spotLightsAdded = 0;
 
 	// Light other visible lights
-	for (unsigned int lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
+	for (size_t lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
 	{
-		unsigned int shaderLightIdx;
+		size_t shaderLightIdx;
 
 		LightId lightId = nonDirLights[lightIdx];
 
@@ -1157,24 +1159,24 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	uniformsOut.shadowBiasClamp = 0.01f;
 }
 
-void Renderer::UpdateUniformBuffers(unsigned int objectDrawCount)
+void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	unsigned int buffersRequired = (objectDrawCount + objectsPerUniformBuffer - 1) / objectsPerUniformBuffer;
+	size_t buffersRequired = (objectDrawCount + objectsPerUniformBuffer - 1) / objectsPerUniformBuffer;
 
 	Array<unsigned int>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
 
 	// Create new object transform uniform buffers if needed
 	if (buffersRequired > objUniformBuffers.GetCount())
 	{
-		unsigned int currentCount = objUniformBuffers.GetCount();
+		size_t currentCount = objUniformBuffers.GetCount();
 		objUniformBuffers.Resize(buffersRequired);
 
-		unsigned int addCount = buffersRequired - currentCount;
+		unsigned int addCount = static_cast<unsigned int>(buffersRequired - currentCount);
 		device->CreateBuffers(addCount, objUniformBuffers.GetData() + currentCount);
 
-		for (unsigned int i = currentCount; i < buffersRequired; ++i)
+		for (size_t i = currentCount; i < buffersRequired; ++i)
 		{
 			device->BindBuffer(RenderBufferTarget::UniformBuffer, objUniformBuffers[i]);
 
@@ -1187,27 +1189,27 @@ void Renderer::UpdateUniformBuffers(unsigned int objectDrawCount)
 		}
 	}
 
-	int prevBufferIndex = -1;
+	intptr_t prevBufferIndex = -1;
 
 	uniformStagingBuffer.Resize(ObjectUniformBufferSize);
 	unsigned char* stagingBuffer = uniformStagingBuffer.GetData();
 
-	unsigned int objectDrawsProcessed = 0;
+	size_t objectDrawsProcessed = 0;
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
 	for (; itr != end; ++itr)
 	{
 		uint64_t command = *itr;
-		unsigned int mat = renderOrder.materialId.GetValue(command);
-		unsigned int vpIdx = renderOrder.viewportIndex.GetValue(command);
-		unsigned int objIdx = renderOrder.renderObject.GetValue(command);
+		uint64_t mat = renderOrder.materialId.GetValue(command);
+		uint64_t vpIdx = renderOrder.viewportIndex.GetValue(command);
+		uint64_t objIdx = renderOrder.renderObject.GetValue(command);
 
 		// Is regular draw command
 		if (IsDrawCommand(command) && mat != RenderOrderConfiguration::CallbackMaterialId)
 		{
-			int bufferIndex = objectDrawsProcessed / objectsPerUniformBuffer;
-			int objectInBuffer = objectDrawsProcessed % objectsPerUniformBuffer;
+			intptr_t bufferIndex = objectDrawsProcessed / objectsPerUniformBuffer;
+			intptr_t objectInBuffer = objectDrawsProcessed % objectsPerUniformBuffer;
 
 			if (bufferIndex != prevBufferIndex)
 			{
@@ -1237,7 +1239,7 @@ void Renderer::UpdateUniformBuffers(unsigned int objectDrawCount)
 	{
 		KOKKO_PROFILE_SCOPE("Update buffer data");
 
-		unsigned int updateSize = (objectDrawsProcessed % objectsPerUniformBuffer) * objectUniformBlockStride;
+		unsigned int updateSize = static_cast<unsigned int>((objectDrawsProcessed % objectsPerUniformBuffer) * objectUniformBlockStride);
 		device->BindBuffer(RenderBufferTarget::UniformBuffer, objUniformBuffers[prevBufferIndex]);
 		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, updateSize, stagingBuffer);
 	}
@@ -1268,7 +1270,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::BlendFunction:
 		{
-			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* blendFn = reinterpret_cast<RenderCommandData::BlendFunctionData*>(data);
 			device->BlendFunction(blendFn);
@@ -1278,7 +1280,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::Viewport:
 		{
-			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* viewport = reinterpret_cast<RenderCommandData::ViewportData*>(data);
 			device->Viewport(viewport);
@@ -1295,7 +1297,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::DepthRange:
 		{
-			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* depthRange = reinterpret_cast<RenderCommandData::DepthRangeData*>(data);
 			device->DepthRange(depthRange);
@@ -1312,7 +1314,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::DepthTestFunction:
 		{
-			unsigned int fn = renderOrder.commandData.GetValue(orderKey);
+			uint64_t fn = renderOrder.commandData.GetValue(orderKey);
 			device->DepthTestFunction(static_cast<RenderDepthCompareFunc>(fn));
 		}
 			break;
@@ -1343,7 +1345,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::Clear:
 		{
-			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* clearMask = reinterpret_cast<RenderCommandData::ClearMask*>(data);
 			device->Clear(clearMask);
@@ -1352,7 +1354,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::ClearColor:
 		{
-			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* color = reinterpret_cast<RenderCommandData::ClearColorData*>(data);
 			device->ClearColor(color);
@@ -1361,7 +1363,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::ClearDepth:
 		{
-			unsigned int intDepth = renderOrder.commandData.GetValue(orderKey);
+			uint64_t intDepth = renderOrder.commandData.GetValue(orderKey);
 			float depth = *reinterpret_cast<float*>(&intDepth);
 			device->ClearDepth(depth);
 		}
@@ -1369,7 +1371,7 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		case RenderControlType::BindFramebuffer:
 		{
-			unsigned int offset = renderOrder.commandData.GetValue(orderKey);
+			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
 			uint8_t* data = commandList.commandData.GetData() + offset;
 			auto* bind = reinterpret_cast<RenderCommandData::BindFramebufferData*>(data);
 			device->BindFramebuffer(bind);
@@ -1409,9 +1411,11 @@ CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>&
 		result.transform.forward = scene->GetWorldTransform(cameraSceneObj);
 		result.transform.inverse = result.transform.forward.GetInverse();
 
+		Vec2f sizef = fullscreenViewportRectangle.size.As<float>();
+
 		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
 		result.projection = cameraSystem->GetData(cameraId);
-		result.projection.SetAspectRatio(fullscreenViewportRectangle.size.x, fullscreenViewportRectangle.size.y);
+		result.projection.SetAspectRatio(sizef.x, sizef.y);
 
 		return result;
 	}
@@ -1467,7 +1471,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 	ViewportUniformBlock viewportUniforms;
 	
-	for (unsigned int i = 0, count = lightResultArray.GetCount(); i < count; ++i)
+	for (size_t i = 0, count = lightResultArray.GetCount(); i < count; ++i)
 	{
 		LightId id = lightResultArray[i];
 
@@ -1779,14 +1783,14 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		}
 	}
 
-	for (unsigned int i = 0, count = customRenderers.GetCount(); i < count; ++i)
+	for (size_t i = 0, count = customRenderers.GetCount(); i < count; ++i)
 	{
 		if (customRenderers[i] != nullptr)
 		{
 			CustomRenderer::CommandParams params;
 			params.fullscreenViewport = this->viewportIndexFullscreen;
 			params.commandList = &commandList;
-			params.callbackId = i + 1;
+			params.callbackId = static_cast<unsigned int>(i + 1);
 			params.scene = scene;
 
 			customRenderers[i]->AddRenderCommands(params);
@@ -1907,18 +1911,18 @@ void Renderer::RemoveAll()
 
 unsigned int Renderer::AddCustomRenderer(CustomRenderer* customRenderer)
 {
-	for (unsigned int i = 0, count = customRenderers.GetCount(); i < count; ++i)
+	for (size_t i = 0, count = customRenderers.GetCount(); i < count; ++i)
 	{
 		if (customRenderers[i] == nullptr)
 		{
 			customRenderers[i] = customRenderer;
 
-			return i + 1;
+			return static_cast<unsigned int>(i + 1);
 		}
 	}
 
 	customRenderers.PushBack(customRenderer);
-	return customRenderers.GetCount();
+	return static_cast<unsigned int>(customRenderers.GetCount());
 }
 
 void Renderer::RemoveCustomRenderer(unsigned int callbackId)
