@@ -1,52 +1,61 @@
 #include "Debug/LogHelper.hpp"
 
-#include "Core/StringRef.hpp"
+#include "Core/Array.hpp"
 
 #include "Debug/DebugLog.hpp"
 
-static DebugLog* debugLog = nullptr;
+static DebugLog* DebugLogInstance = nullptr;
+
+static const size_t FormatBufferSize = 1024;
+
+static const size_t LevelStringLength = 8;
+static const char LevelStrings[][LevelStringLength] =
+{
+	"[DEBUG]",
+	"[INFO ]",
+	"[WARN ]",
+	"[ERROR]"
+};
 
 void Log::SetLogInstance(DebugLog* instance)
 {
-	debugLog = instance;
+	DebugLogInstance = instance;
 }
 
-void Log::Log(LogLevel level, const char* str, unsigned int len)
+void Log::_DebugVarLog(const char* file, int line, fmt::string_view format, fmt::format_args args)
 {
-	debugLog->Log(StringRef(str, len), level);
+	Array<char>& formatBuffer = DebugLogInstance->GetFormatBuffer();
+	formatBuffer.Resize(FormatBufferSize);
+	size_t n = formatBuffer.GetCount() - 1;
+	char* buffer = formatBuffer.GetData();
+	char* itr = buffer;
+
+	auto result = fmt::format_to_n(itr, n, "[DEBUG] {}:{} ", file, line);
+
+	n = &formatBuffer.GetBack() - result.out;
+	result = fmt::vformat_to_n(result.out, n, format, args);
+
+	size_t length = result.out - buffer;
+
+	DebugLogInstance->Log(buffer, length, LogLevel::Debug);
 }
 
-void Log::Log(LogLevel level, const char* str)
+void Log::_VarLog(LogLevel level, fmt::string_view format, fmt::format_args args)
 {
-	debugLog->Log(str, level);
-}
+	Array<char>& formatBuffer = DebugLogInstance->GetFormatBuffer();
+	formatBuffer.Resize(FormatBufferSize);
+	size_t n = formatBuffer.GetCount() - 1;
+	char* buffer = formatBuffer.GetData();
+	char* itr = buffer;
 
-void Log::Info(const char* str, unsigned int len)
-{
-	debugLog->Log(StringRef(str, len), LogLevel::Info);
-}
+	const char* levelStr = LevelStrings[static_cast<size_t>(level)];
 
-void Log::Info(const char* str)
-{
-	debugLog->Log(str, LogLevel::Info);
-}
+	auto result = fmt::format_to_n(itr, n, "{} ", levelStr);
 
-void Log::Warning(const char* str, unsigned int len)
-{
-	debugLog->Log(StringRef(str, len), LogLevel::Warning);
-}
+	n = &formatBuffer.GetBack() - result.out;
+	result = fmt::vformat_to_n(result.out, n, format, args);
 
-void Log::Warning(const char* str)
-{
-	debugLog->Log(str, LogLevel::Warning);
-}
+	size_t length = result.out - buffer;
 
-void Log::Error(const char* str, unsigned int len)
-{
-	debugLog->Log(StringRef(str, len), LogLevel::Error);
-}
-
-void Log::Error(const char* str)
-{
-	debugLog->Log(str, LogLevel::Error);
+	DebugLogInstance->Log(buffer, length, level);
 }

@@ -380,6 +380,6 @@ void TextureManager::AllocateTextureStorage(TextureId id, RenderTextureTarget ta
 	}
 	else
 	{
-		Log::Error("Can't allocate texture storage again");
+		KK_LOG_ERROR("Can't allocate texture storage again");
 	}
 }

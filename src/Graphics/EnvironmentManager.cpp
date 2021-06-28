@@ -284,7 +284,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	}
 	else
 	{
-		Log::Error("Couldn't load HDR texture file");
+		KK_LOG_ERROR("Couldn't load HDR texture file");
 
 		return -1;
 	}

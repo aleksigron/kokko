@@ -37,7 +37,7 @@
 static void RenderDebugCallback(const RenderDevice::DebugMessage& message)
 {
 	if (message.severity != RenderDebugSeverity::Notification)
-		Log::Log(LogLevel::Warning, message.message.str, message.message.len);
+		Log::Log(LogLevel::Warning, message.message.str);
 }
 
 Debug::Debug(

@@ -43,63 +43,20 @@ bool DebugLog::OpenLogFile(const char* filePath, bool append)
 	return false;
 }
 
-void DebugLog::Log(const char* text, LogLevel level)
+void DebugLog::Log(const char* text, size_t length, LogLevel level)
 {
-	this->Log(StringRef(text), level);
-}
-
-void DebugLog::Log(const String& text, LogLevel level)
-{
-	this->Log(text.GetRef(), level);
-}
-
-void DebugLog::Log(StringRef text, LogLevel level)
-{
-	static const size_t levelStringLength = 10;
-	static const char levelStrings[][levelStringLength] =
-	{
-		"[VERBOSE]",
-		"[INFO   ]",
-		"[WARNING]",
-		"[ERROR  ]"
-	};
-
-	const char* levelStr = levelStrings[static_cast<size_t>(level)];
-	formatBuffer.Resize(levelStringLength + text.len + 2);
-
-	char* buffer = formatBuffer.GetData();
-	std::memcpy(buffer, levelStr, levelStringLength - 1);
-	buffer[levelStringLength - 1] = ' ';
-	std::memcpy(buffer + levelStringLength, text.str, text.len);
-	buffer[levelStringLength + text.len] = '\0';
-
-	// Add to debug log view without newline
-	console->AddLogEntry(StringRef(buffer, levelStringLength + text.len), level);
-
-	// Add newline
-	buffer[levelStringLength + text.len] = '\n';
-	buffer[levelStringLength + text.len + 1] = '\0';
-
-	size_t totalLength = levelStringLength + text.len + 1;
+	console->AddLogEntry(StringRef(text, length), level);
 
 	if (fileHandle != nullptr)
 	{
 		FILE* file = static_cast<FILE*>(fileHandle);
 
 		// Write to log file
-		std::fwrite(buffer, 1, totalLength, file);
+		std::fwrite(text, 1, length, file);
+		std::fputc('\n', file);
 	}
 
 	// Write to standard output (console)
-	std::fwrite(buffer, 1, totalLength, stdout);
-}
-
-void DebugLog::FlushFileWrites()
-{
-	FILE* file = static_cast<FILE*>(fileHandle);
-
-	if (fileHandle != nullptr)
-	{
-		std::fflush(file);
-	}
+	std::fwrite(text, 1, length, stdout);
+	std::fputc('\n', stdout);
 }

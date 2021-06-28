@@ -2,7 +2,7 @@
 
 enum class LogLevel
 {
-	Verbose,
+	Debug,
 	Info,
 	Warning,
 	Error

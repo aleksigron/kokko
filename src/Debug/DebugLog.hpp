@@ -24,9 +24,7 @@ public:
 
 	bool OpenLogFile(const char* filePath, bool append);
 
-	void Log(const char* text, LogLevel level = LogLevel::Info);
-	void Log(const String& text, LogLevel level = LogLevel::Info);
-	void Log(StringRef text, LogLevel level = LogLevel::Info);
+	void Log(const char* text, size_t length, LogLevel level);
 
-	void FlushFileWrites();
+	Array<char>& GetFormatBuffer() { return formatBuffer; }
 };

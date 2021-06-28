@@ -10,6 +10,7 @@
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 #include "Debug/Instrumentation.hpp"
+#include "Debug/LogHelper.hpp"
 
 #include "Editor/EditorUI.hpp"
 
@@ -139,13 +140,8 @@ bool Engine::Initialize()
 		debugLog->OpenLogFile(logFilename, false);
 
 		DebugTextRenderer* debugTextRenderer = debug.instance->GetTextRenderer();
-		bool fontLoaded = debugTextRenderer->LoadBitmapFont(textureManager.instance, debugFontFilename);
-		if (fontLoaded == false)
-		{
-			Allocator* defaultAllocator = Memory::GetDefaultAllocator();
-			String logText = String(defaultAllocator, "Loading font at ") + debugFontFilename + " failed.";
-			debugLog->Log(logText);
-		}
+		if (debugTextRenderer->LoadBitmapFont(textureManager.instance, debugFontFilename) == false)
+			KK_LOG_ERROR("Loading debug font failed: {}", debugFontFilename);
 
 		debug.instance->Initialize(mainWindow.instance, meshManager.instance, shaderManager.instance);
 

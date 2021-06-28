@@ -324,18 +324,18 @@ static unsigned int PrepareUniformArray(const rapidjson::Value* jsonValue, unsig
 	unsigned int valueCount = 0;
 
 	if (jsonValue == nullptr)
-		Log::Warning("Failed to read uniform, because JSON value does not exist.");
+		KK_LOG_WARN("Failed to read uniform, because JSON value does not exist.");
 	else if (jsonValue->IsArray() == false)
-		Log::Warning("Failed to read uniform, because JSON value was not an array.");
+		KK_LOG_WARN("Failed to read uniform, because JSON value was not an array.");
 	else
 	{
 		valueCount = jsonValue->Size();
 
 		if (valueCount < uniformArraySize)
-			Log::Warning("JSON didn't provide enough values to fill array");
+			KK_LOG_WARN("JSON didn't provide enough values to fill array");
 		else if (valueCount > uniformArraySize)
 		{
-			Log::Warning("JSON array was longer than shader array");
+			KK_LOG_WARN("JSON array was longer than shader array");
 			valueCount = uniformArraySize;
 		}
 	}

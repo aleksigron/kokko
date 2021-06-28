@@ -88,7 +88,7 @@ void LevelLoader::CreateObjects(const YAML::Node& childSequence, SceneObjectId p
 				if (createdTransform != SceneObjectId::Null)
 					CreateObjects(childrenNode, createdTransform);
 				else
-					Log::Error("LevelLoader: Children were specified on an object with no transform component, ignoring children");
+					KK_LOG_ERROR("LevelLoader: Children were specified on an object with no transform component, ignoring children");
 			}
 		}
 	}
@@ -130,12 +130,12 @@ SceneObjectId LevelLoader::CreateComponents(const YAML::Node& componentSequence,
 					break;
 
 				default:
-					Log::Error("LevelLoader: Unknown component type");
+					KK_LOG_ERROR("LevelLoader: Unknown component type");
 					break;
 				}
 			}
 			else
-				Log::Error("LevelLoader: Invalid component type");
+				KK_LOG_ERROR("LevelLoader: Invalid component type");
 		}
 	}
 
@@ -230,13 +230,13 @@ void LevelLoader::CreateLightComponent(const YAML::Node& map, Entity entity)
 			break;
 
 		default:
-			Log::Error("LevelLoader: Unknown light type");
+			KK_LOG_ERROR("LevelLoader: Unknown light type");
 			return;
 		}
 	}
 	else
 	{
-		Log::Error("LevelLoader: Light type not specified");
+		KK_LOG_ERROR("LevelLoader: Light type not specified");
 		return;
 	}
 
@@ -310,13 +310,13 @@ void LevelLoader::CreateCameraComponent(const YAML::Node& map, Entity entity)
 			break;
 
 		default:
-			Log::Error("LevelLoader: Unknown projection type");
+			KK_LOG_ERROR("LevelLoader: Unknown projection type");
 			return;
 		}
 	}
 	else
 	{
-		Log::Error("LevelLoader: Projection type not specified");
+		KK_LOG_ERROR("LevelLoader: Projection type not specified");
 		return;
 	}
 

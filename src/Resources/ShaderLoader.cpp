@@ -72,7 +72,7 @@ static bool LoadIncludes(
 
 	if (value.IsArray() == false)
 	{
-		Log::Error("LoadIncludes: value is not an array");
+		KK_LOG_ERROR("LoadIncludes: value is not an array");
 		return false;
 	}
 
@@ -100,11 +100,11 @@ static bool LoadIncludes(
 					file->second = str;
 				}
 				else
-					Log::Error("Shader include couldn't be read from file");
+					KK_LOG_ERROR("Shader include couldn't be read from file");
 			}
 		}
 		else
-			Log::Error("Shader include isn't a string");
+			KK_LOG_ERROR("Shader include isn't a string");
 	}
 
 	return true;
@@ -128,7 +128,7 @@ static bool ProcessSource(
 	{
 		if (includePaths->IsArray() == false)
 		{
-			Log::Error("ProcessSource: includePaths->value is not an array");
+			KK_LOG_ERROR("ProcessSource: includePaths->value is not an array");
 			return false;
 		}
 
@@ -139,7 +139,7 @@ static bool ProcessSource(
 
 			if (file == nullptr)
 			{
-				Log::Error("ProcessSource: include file source not found from includeFileCache map");
+				KK_LOG_ERROR("ProcessSource: include file source not found from includeFileCache map");
 				return false;
 			}
 
@@ -151,7 +151,7 @@ static bool ProcessSource(
 
 	if (File::ReadText(mainPath, mainFile) == false)
 	{
-		Log::Error("ProcessSource: failed to read main shader file");
+		KK_LOG_ERROR("ProcessSource: failed to read main shader file");
 		return false;
 	}
 
@@ -438,9 +438,7 @@ static bool Compile(
 			// Print out info log
 			renderDevice->GetShaderStageInfoLog(shaderId, infoLogLength, infoLog.Begin());
 
-			Log::Error(infoLog.GetCStr(), infoLog.GetLength());
-			Log::Error("Source:");
-			Log::Error(source.str, source.len);
+			KK_LOG_ERROR("Shader stage compilation failed:\n{}\nSource:\n{}", infoLog.GetCStr(), source.str);
 		}
 	}
 
@@ -463,8 +461,6 @@ static bool CompileAndLink(
 		const ShaderLoader::StageSource& stage = stages[i];
 		if (Compile(shaderOut, allocator, renderDevice, stage.stage, stage.source, stageObjects[i]) == false)
 		{
-			Log::Error("Compilation of shader stage failed");
-
 			for (size_t j = 0; j < i; ++j)
 				renderDevice->DestroyShaderStage(stageObjects[j]);
 
@@ -518,10 +514,11 @@ static bool CompileAndLink(
 			// Get info log
 			renderDevice->GetShaderProgramInfoLog(programId, infoLogLength, infoLog.Begin());
 
-			Log::Error(infoLog.GetCStr(), infoLog.GetLength());
+			KK_LOG_ERROR("Shader program link failed\n{}\n", infoLog.GetCStr());
 		}
+		else
+			KK_LOG_ERROR("Shader program link failed");
 
-		Log::Error("Linking of shader program failed");
 		return false;
 	}
 }
@@ -638,7 +635,7 @@ bool ShaderLoader::LoadFromConfiguration(
 					if (sizeItr != uItr->MemberEnd() && sizeItr->value.IsInt())
 						uniform.arraySize = sizeItr->value.GetInt();
 					else
-						Log::Error("Failed to parse shader array uniform because JSON didn't contain size");
+						KK_LOG_ERROR("Failed to parse shader array uniform because JSON didn't contain size");
 				}
 
 				uniformCount += 1;
@@ -904,7 +901,7 @@ static void ProcessProgramProperties(ShaderData& shaderOut, StringRef programSec
 		if (UniformTypeInfo::FromType(uniform.type).isArray)
 		{
 			// TODO: Implement array type size
-			Log::Error("Failed to parse shader because array uniforms aren't implemented");
+			KK_LOG_ERROR("Failed to parse shader because array uniforms aren't implemented");
 		}
 
 		uniformCount += 1;
@@ -996,8 +993,7 @@ static bool ProcessIncludes(
 				}
 				else
 				{
-					Log::Error("Shader include couldn't be read from file");
-					Log::Error(store.pathString.GetCStr());
+					KK_LOG_ERROR("Shader include couldn't be read from file: {}", store.pathString.GetCStr());
 				}
 			}
 

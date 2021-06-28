@@ -8,11 +8,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(IMGUI_LIB imgui)
+set(FMT_LIB fmt)
 set(KOKKO_LIB kokko)
 
 include_directories(
 	src
 	deps/doctest
+	deps/fmt/include
 	deps/glad/include
 	deps/glfw/include
 	deps/imgui
@@ -20,6 +22,12 @@ include_directories(
 	deps/stb_image/include
 	deps/yaml-cpp/include
 )
+
+set (FMT_SOURCES
+	deps/fmt/src/format.cc
+	deps/fmt/src/os.cc
+)
+add_library(${FMT_LIB} STATIC ${FMT_SOURCES})
 
 set (IMGUI_SOURCES
 	deps/imgui/imconfig.h
@@ -278,6 +286,7 @@ add_subdirectory(deps/yaml-cpp)
 
 find_package(OpenGL REQUIRED)
 
+target_link_libraries(${KOKKO_LIB} ${FMT_LIB})
 target_link_libraries(${KOKKO_LIB} ${IMGUI_LIB})
 target_link_libraries(${KOKKO_LIB} glfw)
 target_link_libraries(${KOKKO_LIB} ktx_read)
