@@ -10,6 +10,7 @@ class ShaderManager;
 class Window;
 class Renderer;
 class World;
+class Framebuffer;
 
 class DebugVectorRenderer;
 class DebugTextRenderer;
@@ -63,7 +64,7 @@ public:
 	void Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager);
 	void Deinitialize();
 	
-	void Render(World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
+	void Render(World* world, const Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera);
 
 	DebugLog* GetLog() { return log; }
 	DebugConsole* GetConsole() { return console; }

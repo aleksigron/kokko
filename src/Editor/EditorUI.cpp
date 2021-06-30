@@ -19,6 +19,7 @@
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
+#include "Rendering/RenderDevice.hpp"
 #include "Rendering/Renderer.hpp"
 
 #include "Resources/ResourceManagers.hpp"
@@ -45,9 +46,11 @@ EditorUI::~EditorUI()
 	allocator->MakeDelete(views);
 }
 
-void EditorUI::Initialize(Window* window, const ResourceManagers& resourceManagers)
+void EditorUI::Initialize(RenderDevice* renderDevice, Window* window, const ResourceManagers& resourceManagers)
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	this->renderDevice = renderDevice;
 
 	renderBackend = allocator->MakeNew<ImGuiRenderBackend>();
 	platformBackend = allocator->MakeNew<ImGuiPlatformBackend>();
@@ -58,7 +61,9 @@ void EditorUI::Initialize(Window* window, const ResourceManagers& resourceManage
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	ImGui::StyleColorsDark();
 
@@ -67,6 +72,7 @@ void EditorUI::Initialize(Window* window, const ResourceManagers& resourceManage
 	platformBackend->Initialize(window->GetGlfwWindow(), inputManager->GetImGuiInputView());
 
 	views->entityView.Initialize(resourceManagers);
+	views->sceneView.Initialize(renderDevice);
 }
 
 void EditorUI::Deinitialize()
@@ -90,6 +96,8 @@ void EditorUI::StartFrame()
 	platformBackend->NewFrame();
 
 	ImGui::NewFrame();
+
+	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 }
 
 void EditorUI::Update(World* world, bool& shouldExitOut)
@@ -98,11 +106,19 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 
 	editorCamera.Update();
 
-	DrawMainMenuBar(world, shouldExitOut);
+	Draw(world, shouldExitOut);
 
-	views->entityView.Draw(world);
+	static bool firstRun = true;
+	if (firstRun)
+	{
+		firstRun = false;
+		world->LoadFromFile("res/scenes/default.level", "default.level");
+	}
+}
 
-	ImGui::ShowDemoWindow();
+void EditorUI::DrawSceneView()
+{
+	views->sceneView.Draw();
 }
 
 void EditorUI::EndFrame()
@@ -110,7 +126,22 @@ void EditorUI::EndFrame()
 	KOKKO_PROFILE_FUNCTION();
 
 	ImGui::Render();
+
+	// Bind default framebuffer
+	renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
+
+	RenderCommandData::ClearColorData clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };
+	renderDevice->ClearColor(&clearColor);
+
+	RenderCommandData::ClearMask clearMask{ true, false, false };
+	renderDevice->Clear(&clearMask);
+
 	renderBackend->RenderDrawData(ImGui::GetDrawData());
+}
+
+const Framebuffer& EditorUI::GetSceneViewFramebuffer()
+{
+	return views->sceneView.GetFramebuffer();
 }
 
 ViewRectangle EditorUI::GetWorldViewport()
@@ -136,6 +167,15 @@ Mat4x4fBijection EditorUI::GetEditorCameraTransform() const
 ProjectionParameters EditorUI::GetEditorCameraProjection() const
 {
 	return editorCamera.GetProjectionParameters();
+}
+
+void EditorUI::Draw(World* world, bool& shouldExitOut)
+{
+	DrawMainMenuBar(world, shouldExitOut);
+
+	views->entityView.Draw(world);
+
+	ImGui::ShowDemoWindow();
 }
 
 void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)

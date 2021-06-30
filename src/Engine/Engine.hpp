@@ -26,9 +26,9 @@ private:
 	Allocator* debugNameAllocator;
 
 	InstanceAllocatorPair<Window> mainWindow;
-	InstanceAllocatorPair<EditorUI> editorUI;
 	Time* time;
 	RenderDevice* renderDevice;
+	InstanceAllocatorPair<EditorUI> editorUI;
 	InstanceAllocatorPair<Debug> debug;
 	InstanceAllocatorPair<MeshManager> meshManager;
 	InstanceAllocatorPair<TextureManager> textureManager;

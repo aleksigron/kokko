@@ -148,19 +148,17 @@ void World::Update()
 	scriptSystem.instance->UpdateScripts(this);
 }
 
-void World::Render(const Optional<CameraParameters>& editorCamera, const ViewRectangle& viewport)
+void World::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer)
 {
 	// Propagate transform updates from Scene to other systems that require it
 	TransformUpdateReceiver* transformUpdateReceivers[] = { lightManager.instance, renderer.instance };
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
-	renderer.instance->SetFullscreenViewportRectangle(viewport);
-
 	terrainManager.instance->RegisterCustomRenderer(renderer.instance);
 	particleSystem.instance->RegisterCustomRenderer(renderer.instance);
 
-	renderer.instance->Render(editorCamera);
+	renderer.instance->Render(editorCamera, framebuffer);
 }
 
 void World::DebugRender(DebugVectorRenderer* vectorRenderer)

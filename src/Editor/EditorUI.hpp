@@ -6,7 +6,8 @@ struct GLFWwindow;
 
 class Allocator;
 class InputView;
-
+class RenderDevice;
+class Framebuffer;
 class Window;
 class World;
 
@@ -22,6 +23,7 @@ class EditorUI
 {
 private:
 	Allocator* allocator;
+	RenderDevice* renderDevice;
 	ImGuiRenderBackend* renderBackend;
 	ImGuiPlatformBackend* platformBackend;
 
@@ -29,6 +31,7 @@ private:
 
 	EditorCamera editorCamera;
 
+	void Draw(World* world, bool& shouldExitOut);
 	void DrawMainMenuBar(World* world, bool& shouldExitOut);
 
 public:
@@ -40,12 +43,16 @@ public:
 	EditorUI& operator=(const EditorUI&) = delete;
 	EditorUI& operator=(EditorUI&&) = delete;
 
-	void Initialize(Window* window, const ResourceManagers& resourceManagers);
+	void Initialize(RenderDevice* renderDevice, Window* window,
+		const ResourceManagers& resourceManagers);
 	void Deinitialize();
 
 	void StartFrame();
 	void Update(World* world, bool& shouldExitOut);
+	void DrawSceneView();
 	void EndFrame();
+
+	const Framebuffer& GetSceneViewFramebuffer();
 
 	ViewRectangle GetWorldViewport();
 

@@ -116,6 +116,8 @@ set (KOKKO_SOURCES
 	src/Editor/EntityView.hpp
 	src/Editor/FilePickerDialog.cpp
 	src/Editor/FilePickerDialog.hpp
+	src/Editor/SceneView.cpp
+	src/Editor/SceneView.hpp
 	src/Engine/ComponentSystemDefaultImpl.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
@@ -176,6 +178,8 @@ set (KOKKO_SOURCES
 	src/Rendering/CascadedShadowMap.cpp
 	src/Rendering/CascadedShadowMap.hpp
 	src/Rendering/CustomRenderer.hpp
+	src/Rendering/Framebuffer.cpp
+	src/Rendering/Framebuffer.hpp
 	src/Rendering/Light.hpp
 	src/Rendering/LightManager.cpp
 	src/Rendering/LightManager.hpp

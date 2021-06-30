@@ -51,12 +51,12 @@ Engine::Engine()
 	mainWindow.CreateScope(allocatorManager, "Window", alloc);
 	mainWindow.New(mainWindow.allocator);
 
-	editorUI.CreateScope(allocatorManager, "EditorUI", alloc);
-	editorUI.New(editorUI.allocator);
-
 	systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 	time = systemAllocator->MakeNew<Time>();
 	renderDevice = systemAllocator->MakeNew<RenderDeviceOpenGL>();
+
+	editorUI.CreateScope(allocatorManager, "EditorUI", alloc);
+	editorUI.New(editorUI.allocator);
 
 	debug.CreateScope(allocatorManager, "Debug", alloc);
 	debug.New(debug.allocator, allocatorManager, mainWindow.instance, renderDevice);
@@ -104,9 +104,9 @@ Engine::~Engine()
 	textureManager.Delete();
 	meshManager.Delete();
 	debug.Delete();
+	editorUI.Delete();
 	systemAllocator->MakeDelete(this->time);
 	systemAllocator->MakeDelete(this->renderDevice);
-	editorUI.Delete();
 	mainWindow.Delete();
 
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
@@ -130,7 +130,7 @@ bool Engine::Initialize()
 		resManagers.textureManager = textureManager.instance;
 		resManagers.environmentManager = environmentManager.instance;
 
-		editorUI.instance->Initialize(mainWindow.instance, resManagers);
+		editorUI.instance->Initialize(renderDevice, mainWindow.instance, resManagers);
 
 		const char* const logFilename = "log.txt";
 		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";
@@ -193,10 +193,13 @@ void Engine::Update()
 	editorCameraProjection.SetAspectRatio(viewport.size.x, viewport.size.y);
 	Optional<CameraParameters> editorCamera = Optional(CameraParameters{ editorCameraTransform, editorCameraProjection });
 
-	world.instance->Render(editorCamera, viewport);
+	const Framebuffer& sceneViewFramebuffer = editorUI.instance->GetSceneViewFramebuffer();
+	world.instance->Render(editorCamera, sceneViewFramebuffer);
 	world.instance->DebugRender(debug.instance->GetVectorRenderer());
 
-	debug.instance->Render(world.instance, viewport, editorCamera);
+	debug.instance->Render(world.instance, sceneViewFramebuffer, editorCamera);
+
+	editorUI.instance->DrawSceneView();
 
 	// FRAME END
 

@@ -28,6 +28,7 @@
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
+#include "Rendering/Framebuffer.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/PostProcessRenderer.hpp"
 #include "Rendering/PostProcessRenderPass.hpp"
@@ -99,6 +100,7 @@ Renderer::Renderer(
 	renderTargetContainer(nullptr),
 	ssao(nullptr),
 	bloomEffect(nullptr),
+	targetFramebufferId(0),
 	viewportData(nullptr),
 	viewportCount(0),
 	viewportIndexFullscreen(0),
@@ -461,11 +463,6 @@ void Renderer::Deinitialize()
 
 void Renderer::CreateResolutionDependentFramebuffers(Vec2i framebufferSize)
 {
-	// Set default viewport rectangle, this might be overridden later
-	ViewRectangle viewportRectangle;
-	viewportRectangle.size = framebufferSize;
-	fullscreenViewportRectangle = viewportRectangle;
-
 	ssao->SetFramebufferSize(framebufferSize);
 
 	{
@@ -655,7 +652,7 @@ void Renderer::_FramebufferResizeCallback(void* userPointer, Window* window, Vec
 	printf("Renderer framebuffer resize (%d, %d)\n", framebufferSize.x, framebufferSize.y);
 }
 
-void Renderer::Render(const Optional<CameraParameters>& editorCamera)
+void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -663,7 +660,9 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 	skyboxRenderCallback = AddCustomRenderer(this);
 	postProcessCallback = AddCustomRenderer(this);
 
-	unsigned int objectDrawCount = PopulateCommandList(editorCamera);
+	targetFramebufferId = targetFramebuffer.GetFramebufferId();
+
+	unsigned int objectDrawCount = PopulateCommandList(editorCamera, targetFramebuffer);
 	UpdateUniformBuffers(objectDrawCount);
 
 	intptr_t objectDrawsProcessed = 0;
@@ -676,7 +675,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera)
 
 	Array<unsigned int>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
 	
-	CameraParameters cameraParams = GetCameraParameters(editorCamera);
+	CameraParameters cameraParams = GetCameraParameters(editorCamera, targetFramebuffer);
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -841,11 +840,6 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 		RenderPostProcess(params);
 }
 
-void Renderer::SetFullscreenViewportRectangle(const ViewRectangle& rectangle)
-{
-	fullscreenViewportRectangle = rectangle;
-}
-
 void Renderer::SetLockCullingCamera(bool lockEnable)
 {
 	lockCullingCamera = lockEnable;
@@ -992,36 +986,40 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	device->BlendingDisable();
-	device->DepthTestDisable();
-
-	const MeshDrawData* meshDrawData = meshManager->GetDrawData(fullscreenMesh);
-	device->BindVertexArray(meshDrawData->vertexArrayObject);
-
-	// Bind default framebuffer
-
-	RenderCommandData::BindFramebufferData bindFramebufferCommand;
-	bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
-	bindFramebufferCommand.framebuffer = 0;
-	device->BindFramebuffer(&bindFramebufferCommand);
-
-	const ShaderData& shader = shaderManager->GetShaderData(tonemappingShaderId);
-	device->UseShaderProgram(shader.driverId);
-
-	TonemapUniformBlock uniforms;
-	uniforms.exposure = 1.0f;
-
-	device->BindBuffer(RenderBufferTarget::UniformBuffer, tonemapUniformBufferId);
-	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TonemapUniformBlock), &uniforms);
-	device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, tonemapUniformBufferId);
-
+	if (targetFramebufferId != 0)
 	{
-		uint32_t textureNameHashes[] = { "light_acc_map"_hash };
-		unsigned int textureIds[] = { framebufferTextures.lightAccumulation };
-		BindTextures(shader, 1, textureNameHashes, textureIds);
-	}
+		device->BlendingDisable();
+		device->DepthTestDisable();
 
-	device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
+		const MeshDrawData* meshDrawData = meshManager->GetDrawData(fullscreenMesh);
+		device->BindVertexArray(meshDrawData->vertexArrayObject);
+
+		// Bind default framebuffer
+
+		RenderCommandData::BindFramebufferData bindFramebufferCommand;
+		bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
+		bindFramebufferCommand.framebuffer = targetFramebufferId;
+		//bindFramebufferCommand.framebuffer = 0;
+		device->BindFramebuffer(&bindFramebufferCommand);
+
+		const ShaderData& shader = shaderManager->GetShaderData(tonemappingShaderId);
+		device->UseShaderProgram(shader.driverId);
+
+		TonemapUniformBlock uniforms;
+		uniforms.exposure = 1.0f;
+
+		device->BindBuffer(RenderBufferTarget::UniformBuffer, tonemapUniformBufferId);
+		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TonemapUniformBlock), &uniforms);
+		device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, tonemapUniformBufferId);
+
+		{
+			uint32_t textureNameHashes[] = { "light_acc_map"_hash };
+			unsigned int textureIds[] = { framebufferTextures.lightAccumulation };
+			BindTextures(shader, 1, textureNameHashes, textureIds);
+		}
+
+		device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
+	}
 }
 
 void Renderer::UpdateLightingDataToUniformBuffer(
@@ -1394,7 +1392,7 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 	return (Vec3f::Dot(objPos - eyePos, eyeForward) - minusNear) / farMinusNear;
 }
 
-CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>& editorCamera)
+CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
 {
 	if (editorCamera.HasValue())
 	{
@@ -1410,17 +1408,15 @@ CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>&
 		result.transform.forward = scene->GetWorldTransform(cameraSceneObj);
 		result.transform.inverse = result.transform.forward.GetInverse();
 
-		Vec2f sizef = fullscreenViewportRectangle.size.As<float>();
-
 		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
 		result.projection = cameraSystem->GetData(cameraId);
-		result.projection.SetAspectRatio(sizef.x, sizef.y);
+		result.projection.SetAspectRatio(targetFramebuffer.GetWidth(), targetFramebuffer.GetHeight());
 
 		return result;
 	}
 }
 
-unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& editorCamera)
+unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -1429,7 +1425,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 	// Get camera transforms
 
-	CameraParameters cameraParameters = GetCameraParameters(editorCamera);
+	CameraParameters cameraParameters = GetCameraParameters(editorCamera, targetFramebuffer);
 	Mat4x4fBijection cameraTransforms = cameraParameters.transform;
 	ProjectionParameters projectionParams = cameraParameters.projection;
 	Mat4x4f cameraProjection = projectionParams.GetProjectionMatrix(true);
@@ -1527,6 +1523,8 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 		bool reverseDepth = true;
 
+		Rectanglei viewportRect{ 0, 0, targetFramebuffer.GetWidth(), targetFramebuffer.GetHeight() };
+
 		RenderViewport& vp = viewportData[vpIdx];
 		vp.position = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 		vp.forward = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
@@ -1537,7 +1535,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		vp.view = cameraTransforms.inverse;
 		vp.projection = cameraProjection;
 		vp.viewProjection = vp.projection * vp.view;
-		vp.viewportRectangle = fullscreenViewportRectangle;
+		vp.viewportRectangle = viewportRect;
 		vp.frustum.Update(projectionParams, cullingTransform.forward);
 
 		viewportUniforms.VP = vp.viewProjection;

@@ -29,7 +29,8 @@ EntityView::EntityView() :
 	meshManager(nullptr),
 	selectedEntity(Entity::Null),
 	requestScrollToEntity(Entity::Null),
-	requestDestroyEntity(Entity::Null)
+	requestDestroyEntity(Entity::Null),
+	requestSetSceneObjectParent(SceneObjectId::Null, SceneObjectId::Null)
 {
 }
 

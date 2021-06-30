@@ -13,10 +13,10 @@ class RenderDevice;
 class InputManager;
 class DebugVectorRenderer;
 class Window;
+class Framebuffer;
 
 struct CameraParameters;
 struct ResourceManagers;
-struct ViewRectangle;
 
 class EntityManager;
 class Scene;
@@ -47,7 +47,7 @@ public:
 	void ClearAllEntities();
 
 	void Update();
-	void Render(const Optional<CameraParameters>& editorCamera, const ViewRectangle& viewport);
+	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
 	void DebugRender(DebugVectorRenderer* vectorRenderer);
 
 	const String& GetLoadedLevelFilename() { return loadedLevelDisplayName; }

@@ -44,6 +44,7 @@ class BloomEffect;
 class EnvironmentManager;
 class PostProcessRenderer;
 class RenderTargetContainer;
+class Framebuffer;
 
 struct BoundingBox;
 struct CameraParameters;
@@ -86,6 +87,7 @@ private:
 	RendererFramebuffer framebufferGbuffer;
 	RendererFramebuffer framebufferShadow;
 	RendererFramebuffer framebufferLightAcc;
+	unsigned int targetFramebufferId;
 
 	RenderViewport* viewportData;
 	unsigned int viewportCount;
@@ -149,7 +151,6 @@ private:
 	TextureManager* textureManager;
 	EnvironmentManager* environmentManager;
 
-	ViewRectangle fullscreenViewportRectangle;
 	bool lockCullingCamera;
 	Mat4x4fBijection lockCullingCameraTransform;
 
@@ -179,10 +180,12 @@ private:
 	void UpdateLightingDataToUniformBuffer(
 		const ProjectionParameters& projection, LightingUniformBlock& uniformsOut);
 
-	CameraParameters GetCameraParameters(const Optional<CameraParameters>& editorCamera);
+	CameraParameters GetCameraParameters(const Optional<CameraParameters>& editorCamera,
+		const Framebuffer& targetFramebuffer);
 
 	// Returns the number of object draw commands added
-	unsigned int PopulateCommandList(const Optional<CameraParameters>& editorCamera);
+	unsigned int PopulateCommandList(const Optional<CameraParameters>& editorCamera,
+		const Framebuffer& targetFramebuffer);
 
 	void UpdateUniformBuffers(size_t objectDrawCount);
 
@@ -209,12 +212,10 @@ public:
 	void Initialize(Window* window);
 	void Deinitialize();
 
-	void SetFullscreenViewportRectangle(const ViewRectangle& rectangle);
-
 	void SetLockCullingCamera(bool lockEnable);
 	const Mat4x4f& GetCullingCameraTransform() const;
 
-	void Render(const Optional<CameraParameters>& editorCamera);
+	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer);
 
 	void DebugRender(DebugVectorRenderer* vectorRenderer);
 

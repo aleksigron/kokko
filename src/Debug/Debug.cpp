@@ -23,6 +23,7 @@
 
 #include "Math/Rectangle.hpp"
 
+#include "Rendering/Framebuffer.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Rendering/RenderDevice.hpp"
 
@@ -103,15 +104,15 @@ void Debug::Deinitialize()
 	vectorRenderer->Deinitialize();
 }
 
-void Debug::Render(World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera)
+void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Vec2f frameSize = this->window->GetFrameBufferSize().As<float>();
-	Vec2f viewportSize = viewport.size.As<float>();
+	Vec2i framebufferSize(framebuffer.GetWidth(), framebuffer.GetHeight());
+	Vec2f frameSizef = framebufferSize.As<float>();
 	float screenCoordScale = this->window->GetScreenCoordinateScale();
 
-	textRenderer->SetFrameSize(frameSize);
+	textRenderer->SetFrameSize(frameSizef);
 	textRenderer->SetScaleFactor(screenCoordScale);
 
 	float scaledLineHeight = 0;
@@ -136,8 +137,8 @@ void Debug::Render(World* world, const ViewRectangle& viewport, const Optional<C
 	Rectanglef graphArea;
 	graphArea.position.x = 0.0f;
 	graphArea.position.y = pixelLineHeight;
-	graphArea.size.x = frameSize.x;
-	graphArea.size.y = frameSize.y - pixelLineHeight;
+	graphArea.size.x = frameSizef.x;
+	graphArea.size.y = frameSizef.y - pixelLineHeight;
 	graph->SetDrawArea(graphArea);
 
 	culling->SetGuideTextPosition(Vec2f(0.0f, scaledLineHeight));
@@ -280,6 +281,10 @@ void Debug::Render(World* world, const ViewRectangle& viewport, const Optional<C
 
 	if (mode == DebugMode::MemoryStats)
 		memoryStats->UpdateAndDraw();
+
+	ViewRectangle viewport;
+	viewport.position = Vec2i();
+	viewport.size = framebufferSize;
 
 	vectorRenderer->Render(world, viewport, editorCamera);
 	textRenderer->Render();
