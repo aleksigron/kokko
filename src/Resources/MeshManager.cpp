@@ -182,6 +182,8 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 			std::memcpy(data.pathString[id.i], path.str, path.len);
 			data.pathString[id.i][path.len] = '\0';
 
+			renderDevice->SetObjectLabel(RenderObjectType::VertexArray, data.bufferData[id.i].vertexArrayObject, path);
+
 			return id;
 		}
 		else

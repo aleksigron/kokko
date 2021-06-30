@@ -112,8 +112,8 @@ StringRef StringRef::SubStr(size_t startPos, size_t length) const
 
 StringRef StringRef::SubStrPos(size_t startPos, intptr_t end) const
 {
-	assert(startPos < len || startPos == endPos);
-	assert(endPos <= (intptr_t)len);
+	assert(startPos < len || startPos == end);
+	assert(end <= (intptr_t)len);
 
 	size_t endPos = (end < 0) ? len + end : end;
 	

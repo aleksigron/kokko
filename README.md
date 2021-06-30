@@ -74,6 +74,8 @@ The motivation behind using a custom format is to better understand the content 
 
 [yaml-cpp](https://github.com/jbeder/yaml-cpp) is used to read and write YAML formatted asset files.
 
+[fmt](https://github.com/fmtlib/fmt) is used for logging formatting.
+
 [KTX](https://github.com/KhronosGroup/KTX-Software) is used to process textures to a runtime-friendly format.
 
 [Gohufont](https://github.com/hchargois/gohufont) is used for debug text rendering.

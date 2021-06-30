@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <new>
 
+#include "Core/ArrayView.hpp"
+
 #include "Memory/Allocator.hpp"
 
 template <typename ValueType>
@@ -48,6 +50,19 @@ public:
 
 	ValueType& operator[](size_t index) { return this->data[index]; }
 	const ValueType& operator[](size_t index) const { return this->data[index]; }
+
+	ArrayView<ValueType> GetView() { return ArrayView(data, count); }
+	ArrayView<const ValueType> GetView() const { return ArrayView(data, count); }
+
+	ArrayView<ValueType> GetSubView(size_t start, size_t end)
+	{
+		return GetView().GetSubView(start, end);
+	}
+
+	ArrayView<const ValueType> GetSubView(size_t start, size_t end) const
+	{
+		return GetView().GetSubView(start, end);
+	}
 
 	/**
 	 * Make sure there's at least the specified amount of space in the array

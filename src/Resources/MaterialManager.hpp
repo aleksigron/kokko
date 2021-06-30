@@ -80,8 +80,8 @@ public:
 	MaterialId GetIdByPath(StringRef path);
 	MaterialId GetIdByPathHash(uint32_t pathHash);
 
-	const MaterialData& GetMaterialData(MaterialId id) const { return data.material[id.i]; }
-	MaterialData& GetMaterialData(MaterialId id) { return data.material[id.i]; }
+	const MaterialData& GetMaterialData(MaterialId id) const;
+	MaterialData& GetMaterialData(MaterialId id);
 
 	void UpdateUniformsToGPU(MaterialId id);
 };

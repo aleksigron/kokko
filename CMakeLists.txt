@@ -60,6 +60,7 @@ set (DEPS_SOURCES
 set (KOKKO_SOURCES
 	src/Core/Array.cpp
 	src/Core/Array.hpp
+	src/Core/ArrayView.hpp
 	src/Core/BitfieldVariable.hpp
 	src/Core/BitPack.hpp
 	src/Core/Buffer.hpp

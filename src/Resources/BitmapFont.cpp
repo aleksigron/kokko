@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "Core/Core.hpp"
 #include "Core/Hash.hpp"
 #include "Core/Sort.hpp"
 
@@ -55,6 +56,8 @@ const BitmapGlyph* BitmapFont::GetGlyph(unsigned int codePoint) const
 
 bool BitmapFont::LoadFromBDF(TextureManager* textureManager, const Buffer<char>& content)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	using uint = unsigned int;
 
 	StringRef unprocessed;

@@ -212,6 +212,18 @@ MaterialId MaterialManager::GetIdByPathHash(uint32_t pathHash)
 	return pair != nullptr ? pair->second : MaterialId{};
 }
 
+const MaterialData& MaterialManager::GetMaterialData(MaterialId id) const
+{
+	assert(id != MaterialId::Null);
+	return data.material[id.i];
+}
+
+MaterialData& MaterialManager::GetMaterialData(MaterialId id)
+{
+	assert(id != MaterialId::Null);
+	return data.material[id.i];
+}
+
 void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 {
 	KOKKO_PROFILE_FUNCTION();
