@@ -70,6 +70,8 @@ The motivation behind using a custom format is to better understand the content 
 
 [Glad](https://github.com/Dav1dde/glad) is used to load the OpenGL profile and extensions.
 
+[Dear ImGui](https://github.com/ocornut/imgui) is used to draw the editor UI.
+
 [rapidjson](https://github.com/Tencent/rapidjson) is used to read JSON formatted asset files.
 
 [yaml-cpp](https://github.com/jbeder/yaml-cpp) is used to read and write YAML formatted asset files.

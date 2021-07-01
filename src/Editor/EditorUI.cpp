@@ -104,7 +104,12 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 
 	views->sceneView.Update();
 
-	Draw(world, shouldExitOut);
+	DrawMainMenuBar(world, shouldExitOut);
+
+	views->entityListView.Draw(views->selectionContext, world);
+	views->entityView.Draw(views->selectionContext, world);
+
+	ImGui::ShowDemoWindow();
 
 	static bool firstRun = true;
 	if (firstRun)
@@ -147,14 +152,6 @@ CameraParameters EditorUI::GetEditorCameraParameters() const
 	return views->sceneView.GetCameraParameters();
 }
 
-void EditorUI::Draw(World* world, bool& shouldExitOut)
-{
-	DrawMainMenuBar(world, shouldExitOut);
-
-	views->entityView.Draw(world);
-
-	ImGui::ShowDemoWindow();
-}
 
 void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 {

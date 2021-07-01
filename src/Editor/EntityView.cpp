@@ -2,6 +2,9 @@
 
 #include "imgui.h"
 
+#include "Editor/SelectionContext.hpp"
+
+#include "Engine/EntityFactory.hpp"
 #include "Engine/World.hpp"
 
 #include "Entity/EntityManager.hpp"
@@ -15,22 +18,9 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 
-const char* const EntityView::ComponentNames[] = {
-	"Scene object",
-	"Update object",
-	"Camera",
-	"Light"
-};
-
-const char* const EntityView::SceneDragDropPayloadType = "SceneObject";
-
 EntityView::EntityView() :
 	materialManager(nullptr),
-	meshManager(nullptr),
-	selectedEntity(Entity::Null),
-	requestScrollToEntity(Entity::Null),
-	requestDestroyEntity(Entity::Null),
-	requestSetSceneObjectParent(SceneObjectId::Null, SceneObjectId::Null)
+	meshManager(nullptr)
 {
 }
 
@@ -40,249 +30,62 @@ void EntityView::Initialize(const ResourceManagers& resourceManagers)
 	meshManager = resourceManagers.meshManager;
 }
 
-void EntityView::Draw(World* world)
+void EntityView::Draw(SelectionContext& context, World* world)
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	ImGui::Begin("Entities", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-	ImGui::PopStyleVar();
+	ImGui::Begin("Properties");
 
-	float fontSize = ImGui::GetFontSize();
-
-	ImGuiTableFlags tableFlags =
-		ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchSame |
-		ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip;
-
-	if (ImGui::BeginTable("EntityLayout", 2, tableFlags))
-	{
-		ImGui::TableNextRow();
-		ImGui::TableNextColumn();
-
-		DrawEntityListButtons(world);
-
-		if (ImGui::BeginChild("EntityList"))
-		{
-			EntityManager* entityManager = world->GetEntityManager();
-			Scene* scene = world->GetScene();
-			
-			ImGuiTreeNodeFlags levelNodeFlags = ImGuiTreeNodeFlags_SpanAvailWidth |
-				ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen;
-
-			if (ImGui::TreeNodeEx(world->GetLoadedLevelFilename().GetCStr(), levelNodeFlags))
-			{
-				ProcessSceneDragDropTarget(SceneObjectId::Null);
-
-				for (Entity entity : *entityManager)
-				{
-					SceneObjectId sceneObj = scene->Lookup(entity);
-
-					// Only draw root level objects, or entities that don't exist in the scene hierarchy
-					if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
-						DrawEntityNode(world, entity, sceneObj);
-				}
-
-				ImGui::TreePop();
-			}
-
-			ImGui::Spacing();
-			ImGui::EndChild();
-
-			if (requestSetSceneObjectParent.first != SceneObjectId::Null)
-			{
-				scene->SetParent(requestSetSceneObjectParent.first, requestSetSceneObjectParent.second);
-				requestSetSceneObjectParent = Pair(SceneObjectId::Null, SceneObjectId::Null);
-			}
-		}
-
-		ImGui::TableNextColumn();
-
-		{
-			ImGui::BeginChild("EntityProps", ImVec2(0.0f, 0.0f));
-			DrawEntityProperties(world);
-			ImGui::EndChild();
-		}
-
-		ImGui::EndTable();
-	}
-
-	ImGui::End();
-}
-
-void EntityView::DrawEntityListButtons(World* world)
-{
-	ImGui::PushItemWidth(ImGui::GetFontSize() * 10.0f);
-	if (ImGui::BeginCombo("##CreateEntityCombo", "Create new...", ImGuiComboFlags_NoArrowButton))
-	{
-		if (ImGui::Selectable("Empty"))
-		{
-			CreateEntity(world, nullptr, 0);
-		}
-		if (ImGui::Selectable("Scene object"))
-		{
-			ComponentType component = ComponentType::Scene;
-			CreateEntity(world, &component, 1);
-		}
-		if (ImGui::Selectable("Render object"))
-		{
-			ComponentType components[] = { ComponentType::Scene, ComponentType::Render };
-			CreateEntity(world, components, sizeof(components) / sizeof(components[0]));
-		}
-		if (ImGui::Selectable("Camera"))
-		{
-			ComponentType components[] = { ComponentType::Scene, ComponentType::Camera };
-			CreateEntity(world, components, sizeof(components) / sizeof(components[0]));
-		}
-		if (ImGui::Selectable("Light"))
-		{
-			ComponentType components[] = { ComponentType::Scene, ComponentType::Light };
-			CreateEntity(world, components, sizeof(components) / sizeof(components[0]));
-		}
-
-		ImGui::EndCombo();
-	}
-	ImGui::PopItemWidth();
-}
-
-void EntityView::DrawEntityNode(World* world, Entity entity, SceneObjectId sceneObj)
-{
-	EntityManager* entityManager = world->GetEntityManager();
-	Scene* scene = world->GetScene();
-
-	SceneObjectId firstChild = SceneObjectId::Null;
-	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-	if (sceneObj != SceneObjectId::Null)
-	{
-		firstChild = scene->GetFirstChild(sceneObj);
-
-		if (firstChild == SceneObjectId::Null)
-			flags = flags | ImGuiTreeNodeFlags_Leaf;
-	}
-	else
-	{
-		flags = flags | ImGuiTreeNodeFlags_Leaf;
-	}
-
-	if (entity == selectedEntity)
-		flags = flags | ImGuiTreeNodeFlags_Selected;
-
-	const char* entityName = entityManager->GetDebugNameWithFallback(entity);
-	bool opened = ImGui::TreeNodeEx((void*)entity.id, flags, entityName);
-
-	if (sceneObj != SceneObjectId::Null)
-	{
-		ProcessSceneDragDropSource(sceneObj, entityName);
-		ProcessSceneDragDropTarget(sceneObj);
-	}
-
-	if (entity == requestScrollToEntity)
-	{
-		ImGui::SetScrollHereY();
-		requestScrollToEntity = Entity::Null;
-	}
-
-	if (ImGui::IsItemClicked())
-	{
-		selectedEntity = entity;
-	}
-
-	if (opened)
-	{
-		SceneObjectId child = firstChild;
-
-		while (child != SceneObjectId::Null)
-		{
-			Entity childEntity = scene->GetEntity(child);
-
-			DrawEntityNode(world, childEntity, child);
-
-			child = scene->GetNextSibling(child);
-		}
-
-		ImGui::TreePop();
-	}
-}
-
-void EntityView::ProcessSceneDragDropSource(SceneObjectId sceneObj, const char* entityName)
-{
-	if (ImGui::BeginDragDropSource())
-	{
-		ImGui::SetDragDropPayload(SceneDragDropPayloadType, &sceneObj, sizeof(SceneObjectId));
-		ImGui::Text(entityName);
-		ImGui::EndDragDropSource();
-	}
-}
-
-void EntityView::ProcessSceneDragDropTarget(SceneObjectId parent)
-{
-	if (ImGui::BeginDragDropTarget())
-	{
-		const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(SceneDragDropPayloadType);
-		if (payload != nullptr && payload->DataSize == sizeof(SceneObjectId))
-		{
-			SceneObjectId dragDropObj;
-			std::memcpy(&dragDropObj, payload->Data, sizeof(SceneObjectId));
-
-			requestSetSceneObjectParent = Pair(dragDropObj, parent);
-		}
-
-		ImGui::EndDragDropTarget();
-	}
-}
-
-void EntityView::DrawEntityProperties(World* world)
-{
 	EntityManager* entityManager = world->GetEntityManager();
 
-	if (selectedEntity != Entity::Null)
+	if (context.selectedEntity != Entity::Null)
 	{
-		ImGui::Spacing();
-
 		// Name
 
-		const char* entityName = entityManager->GetDebugNameWithFallback(selectedEntity);
+		const char* entityName = entityManager->GetDebugNameWithFallback(context.selectedEntity);
 		std::strncpy(textInputBuffer.GetData(), entityName, textInputBuffer.GetCapacity());
 		if (ImGui::InputText("Name", textInputBuffer.GetData(), textInputBuffer.GetCapacity()))
 		{
 			if (std::strlen(textInputBuffer.GetData()) > 0)
-				entityManager->SetDebugName(selectedEntity, textInputBuffer.GetData());
+				entityManager->SetDebugName(context.selectedEntity, textInputBuffer.GetData());
 			else
-				entityManager->ClearDebugName(selectedEntity);
+				entityManager->ClearDebugName(context.selectedEntity);
 		}
 
-		DrawEntityPropertyButtons(world);
+		DrawButtons(context.selectedEntity, world);
 
-		DrawSceneComponent(world);
-		DrawRenderComponent(world);
-		DrawCameraComponent(world);
-		DrawLightComponent(world);
+		DrawSceneComponent(context.selectedEntity, world);
+		DrawRenderComponent(context.selectedEntity, world);
+		DrawCameraComponent(context.selectedEntity, world);
+		DrawLightComponent(context.selectedEntity, world);
 
 		ImGui::Spacing();
 	}
 
 	if (requestDestroyEntity != Entity::Null)
 	{
-		if (selectedEntity == requestDestroyEntity)
-			selectedEntity = Entity::Null;
+		if (context.selectedEntity == requestDestroyEntity)
+			context.selectedEntity = Entity::Null;
 
-		DestroyEntity(world, requestDestroyEntity);
+		EntityFactory::DestroyEntity(world, requestDestroyEntity);
 		requestDestroyEntity = Entity::Null;
 	}
+
+	ImGui::End();
 }
 
-void EntityView::DrawEntityPropertyButtons(World* world)
+void EntityView::DrawButtons(Entity selectedEntity, World* world)
 {
 	bool addComponent = false;
-	ComponentType addComponentType;
+	EntityComponentType addComponentType;
 
 	ImGui::PushItemWidth(ImGui::GetFontSize() * 9.0f);
 	if (ImGui::BeginCombo("##AddComponentCombo", "Add component...", ImGuiComboFlags_NoArrowButton))
 	{
-		for (unsigned int i = 0; i < ComponentTypeCount; ++i)
+		for (size_t i = 0; i < EntityFactory::ComponentTypeCount; ++i)
 		{
-			if (ImGui::Selectable(ComponentNames[i], false))
+			if (ImGui::Selectable(EntityFactory::GetComponentTypeName(i), false))
 			{
 				addComponent = true;
-				addComponentType = static_cast<ComponentType>(i);
+				addComponentType = static_cast<EntityComponentType>(i);
 			}
 		}
 
@@ -291,7 +94,7 @@ void EntityView::DrawEntityPropertyButtons(World* world)
 	ImGui::PopItemWidth();
 
 	if (addComponent)
-		AddComponent(world, selectedEntity, addComponentType);
+		EntityFactory::AddComponent(world, selectedEntity, addComponentType);
 
 	ImGui::SameLine();
 
@@ -301,7 +104,7 @@ void EntityView::DrawEntityPropertyButtons(World* world)
 	}
 }
 
-void EntityView::DrawSceneComponent(World* world)
+void EntityView::DrawSceneComponent(Entity selectedEntity, World* world)
 {
 	Scene* scene = world->GetScene();
 	SceneObjectId sceneObj = scene->Lookup(selectedEntity);
@@ -342,7 +145,7 @@ void EntityView::DrawSceneComponent(World* world)
 	}
 }
 
-void EntityView::DrawRenderComponent(World* world)
+void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 {
 	Scene* scene = world->GetScene();
 	Renderer* renderer = world->GetRenderer();
@@ -443,7 +246,7 @@ void EntityView::DrawRenderComponent(World* world)
 	}
 }
 
-void EntityView::DrawCameraComponent(World* world)
+void EntityView::DrawCameraComponent(Entity selectedEntity, World* world)
 {
 	CameraSystem* cameraSystem = world->GetCameraSystem();
 	CameraId cameraId = cameraSystem->Lookup(selectedEntity);
@@ -511,7 +314,7 @@ void EntityView::DrawCameraComponent(World* world)
 	}
 }
 
-void EntityView::DrawLightComponent(World* world)
+void EntityView::DrawLightComponent(Entity selectedEntity, World* world)
 {
 	LightManager* lightManager = world->GetLightManager();
 	LightId lightId = lightManager->Lookup(selectedEntity);
@@ -580,112 +383,5 @@ void EntityView::DrawLightComponent(World* world)
 			if (componentVisible == false)
 				lightManager->RemoveLight(lightId);
 		}
-	}
-}
-
-void EntityView::CreateEntity(World* world, ComponentType* components, unsigned int componentCount)
-{
-	EntityManager* entityManager = world->GetEntityManager();
-
-	Entity entity = entityManager->Create();
-
-	for (unsigned int i = 0; i < componentCount; ++i)
-		AddComponent(world, entity, components[i]);
-
-	selectedEntity = entity;
-	requestScrollToEntity = entity;
-}
-
-void EntityView::DestroyEntity(World* world, Entity entity)
-{
-	EntityManager* entityManager = world->GetEntityManager();
-
-	for (size_t i = 0; i < ComponentTypeCount; ++i)
-		RemoveComponentIfExists(world, entity, static_cast<ComponentType>(i));
-
-	entityManager->Destroy(entity);
-}
-
-void EntityView::AddComponent(World* world, Entity entity, ComponentType componentType)
-{
-	Scene* scene = world->GetScene();
-	Renderer* renderer = world->GetRenderer();
-	CameraSystem* cameraSystem = world->GetCameraSystem();
-	LightManager* lightManager = world->GetLightManager();
-
-	switch (componentType)
-	{
-	case EntityView::ComponentType::Scene:
-	{
-		SceneObjectId sceneObj = scene->Lookup(entity);
-		if (sceneObj == SceneObjectId::Null)
-			scene->AddSceneObject(entity);
-		break;
-	}
-	case EntityView::ComponentType::Render:
-	{
-		RenderObjectId renderObj = renderer->Lookup(entity);
-		if (renderObj == RenderObjectId::Null)
-			renderer->AddRenderObject(entity);
-		break;
-	}
-	case EntityView::ComponentType::Camera:
-	{
-		CameraId cameraId = cameraSystem->Lookup(entity);
-		if (cameraId == CameraId::Null)
-			cameraSystem->AddComponentToEntity(entity);
-		break;
-	}
-	case EntityView::ComponentType::Light:
-	{
-		LightId lightId = lightManager->Lookup(entity);
-		if (lightId == LightId::Null)
-			lightManager->AddLight(entity);
-		break;
-	}
-	default:
-		break;
-	}
-}
-
-void EntityView::RemoveComponentIfExists(World* world, Entity entity, ComponentType componentType)
-{
-	Scene* scene = world->GetScene();
-	Renderer* renderer = world->GetRenderer();
-	CameraSystem* cameraSystem = world->GetCameraSystem();
-	LightManager* lightManager = world->GetLightManager();
-
-	switch (componentType)
-	{
-	case EntityView::ComponentType::Scene:
-	{
-		SceneObjectId sceneObj = scene->Lookup(entity);
-		if (sceneObj != SceneObjectId::Null)
-			scene->RemoveSceneObject(sceneObj);
-		break;
-	}
-	case EntityView::ComponentType::Render:
-	{
-		RenderObjectId renderObj = renderer->Lookup(entity);
-		if (renderObj != RenderObjectId::Null)
-			renderer->RemoveRenderObject(renderObj);
-		break;
-	}
-	case EntityView::ComponentType::Camera:
-	{
-		CameraId cameraId = cameraSystem->Lookup(entity);
-		if (cameraId != CameraId::Null)
-			cameraSystem->RemoveComponent(cameraId);
-		break;
-	}
-	case EntityView::ComponentType::Light:
-	{
-		LightId lightId = lightManager->Lookup(entity);
-		if (lightId != LightId::Null)
-			lightManager->RemoveLight(lightId);
-		break;
-	}
-	default:
-		break;
 	}
 }

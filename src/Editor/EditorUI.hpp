@@ -1,6 +1,5 @@
 #pragma once
 
-
 struct GLFWwindow;
 
 class Allocator;
@@ -29,7 +28,6 @@ private:
 
 	EditorViews* views;
 
-	void Draw(World* world, bool& shouldExitOut);
 	void DrawMainMenuBar(World* world, bool& shouldExitOut);
 
 public:

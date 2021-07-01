@@ -110,15 +110,20 @@ set (KOKKO_SOURCES
 	src/Editor/EditorUI.cpp
 	src/Editor/EditorUI.hpp
 	src/Editor/EditorViews.hpp
+	src/Editor/EntityListView.cpp
+	src/Editor/EntityListView.hpp
 	src/Editor/EntityView.cpp
 	src/Editor/EntityView.hpp
 	src/Editor/FilePickerDialog.cpp
 	src/Editor/FilePickerDialog.hpp
 	src/Editor/SceneView.cpp
 	src/Editor/SceneView.hpp
+	src/Editor/SelectionContext.hpp
 	src/Engine/ComponentSystemDefaultImpl.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
+	src/Engine/EntityFactory.cpp
+	src/Engine/EntityFactory.hpp
 	src/Engine/InstanceAllocatorPair.hpp
 	src/Engine/World.cpp
 	src/Engine/World.hpp
