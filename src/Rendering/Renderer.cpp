@@ -137,8 +137,7 @@ Renderer::Renderer(
 	bloomEffect = allocator->MakeNew<BloomEffect>(
 		allocator, renderDevice, shaderManager, postProcessRenderer);
 
-	framebufferShadow = RendererFramebuffer{};
-
+	framebufferShadow.SetRenderDevice(renderDevice);
 	framebufferGbuffer.SetRenderDevice(renderDevice);
 	framebufferLightAcc.SetRenderDevice(renderDevice);
 
@@ -150,8 +149,6 @@ Renderer::Renderer(
 	tonemapUniformBufferId = 0;
 
 	brdfLutTextureId = 0;
-
-	framebufferTextures = FramebufferTextures{};
 
 	objectUniformBlockStride = 0;
 	objectsPerUniformBuffer = 0;
@@ -233,46 +230,10 @@ void Renderer::Initialize()
 		unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 		Vec2i size(shadowSide * shadowCascadeCount, shadowSide);
 
-		framebufferShadow.width = size.x;
-		framebufferShadow.height = size.y;
-
-		// Create and bind framebuffer
-
-		device->CreateFramebuffers(1, &framebufferShadow.framebuffer);
-		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebufferShadow.framebuffer);
-
-		// We aren't rendering to any color attachments
-		RenderFramebufferAttachment drawBuffers = RenderFramebufferAttachment::None;
-		device->SetFramebufferDrawBuffers(1, &drawBuffers);
-
-		// Create texture
-		
-		device->CreateTextures(1, &framebufferTextures.shadowDepth);
-
-		// Create and attach depth buffer
-		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.shadowDepth);
-
-		RenderCommandData::SetTextureStorage2D depthTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D32F, size.x, size.y
-		};
-		device->SetTextureStorage2D(&depthTextureStorage);
-
-		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-		device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		device->SetTextureCompareMode(RenderTextureTarget::Texture2d, RenderTextureCompareMode::CompareRefToTexture);
-		device->SetTextureCompareFunc(RenderTextureTarget::Texture2d, RenderDepthCompareFunc::GreaterThanOrEqual);
-
-		RenderCommandData::AttachFramebufferTexture2D depthFramebufferTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
-			RenderTextureTarget::Texture2d, framebufferTextures.shadowDepth, 0
-		};
-		device->AttachFramebufferTexture2D(&depthFramebufferTexture);
-
-		// Clear texture and framebuffer binds
-		device->BindTexture(RenderTextureTarget::Texture2d, 0);
-		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
+		RenderTextureSizedFormat depthFormat = RenderTextureSizedFormat::D32F;
+		framebufferShadow.Create(size.x, size.y, depthFormat, ArrayView<RenderTextureSizedFormat>());
+		framebufferShadow.SetDepthTextureCompare(
+			RenderTextureCompareMode::CompareRefToTexture, RenderDepthCompareFunc::GreaterThanOrEqual);
 	}
 	
 	{
@@ -425,8 +386,7 @@ void Renderer::Deinitialize()
 		}
 	}
 
-	DestroyFramebuffer(device, framebufferShadow);
-
+	framebufferShadow.Destroy();
 	framebufferGbuffer.Destroy();
 	framebufferLightAcc.Destroy();
 
@@ -445,8 +405,6 @@ void Renderer::Deinitialize()
 		viewportData = nullptr;
 		viewportCount = 0;
 	}
-
-	DestroyTexture(device, framebufferTextures.shadowDepth);
 }
 
 void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
@@ -488,24 +446,6 @@ void Renderer::DestroyResolutionDependentFramebuffers()
 	framebufferLightAcc.Destroy();
 
 	renderTargetContainer->DestroyAllRenderTargets();
-}
-
-void Renderer::DestroyFramebuffer(RenderDevice* renderDevice, RendererFramebuffer& fb)
-{
-	if (fb.framebuffer != 0)
-	{
-		renderDevice->DestroyFramebuffers(1, &fb.framebuffer);
-		fb.framebuffer = 0;
-	}
-}
-
-void Renderer::DestroyTexture(RenderDevice* renderDevice, unsigned int& texture)
-{
-	if (texture != 0)
-	{
-		renderDevice->DestroyTextures(1, &texture);
-		texture = 0;
-	}
 }
 
 void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
@@ -766,7 +706,7 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.textureIds[2] = framebufferGbuffer.GetColorTextureId(GbufferMaterialIndex);
 	deferredPass.textureIds[3] = framebufferGbuffer.GetDepthTextureId();
 	deferredPass.textureIds[4] = ssao->GetResultTextureId();
-	deferredPass.textureIds[5] = framebufferTextures.shadowDepth;
+	deferredPass.textureIds[5] = framebufferShadow.GetDepthTextureId();
 	deferredPass.textureIds[6] = diffIrrTexture.textureObjectId;
 	deferredPass.textureIds[7] = specIrrTexture.textureObjectId;
 	deferredPass.textureIds[8] = brdfLutTextureId;
@@ -1456,7 +1396,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		// Bind shadow framebuffer before any shadow cascade draws
 		RenderCommandData::BindFramebufferData data;
 		data.target = RenderFramebufferTarget::Framebuffer;
-		data.framebuffer = framebufferShadow.framebuffer;
+		data.framebuffer = framebufferShadow.GetFramebufferId();
 
 		commandList.AddControl(0, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
 	}
@@ -1466,8 +1406,8 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		RenderCommandData::ViewportData data;
 		data.x = 0;
 		data.y = 0;
-		data.w = framebufferShadow.width;
-		data.h = framebufferShadow.height;
+		data.w = framebufferShadow.GetWidth();
+		data.h = framebufferShadow.GetHeight();
 
 		commandList.AddControl(0, g_pass, 9, ctrl::Viewport, sizeof(data), &data);
 	}

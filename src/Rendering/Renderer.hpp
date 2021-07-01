@@ -59,14 +59,6 @@ struct ResourceManagers;
 class Renderer : public TransformUpdateReceiver, public CustomRenderer
 {
 private:
-	struct RendererFramebuffer
-	{
-		unsigned int framebuffer;
-
-		int width;
-		int height;
-	};
-
 	static const unsigned int FramesInFlightCount = 1;
 	static const unsigned int MaxViewportCount = 8;
 	static const unsigned int MaxFramebufferCount = 4;
@@ -88,8 +80,7 @@ private:
 	ScreenSpaceAmbientOcclusion* ssao;
 	BloomEffect* bloomEffect;
 
-	RendererFramebuffer framebufferShadow;
-
+	Framebuffer framebufferShadow;
 	Framebuffer framebufferGbuffer;
 	Framebuffer framebufferLightAcc;
 
@@ -107,12 +98,6 @@ private:
 	unsigned int tonemapUniformBufferId;
 
 	unsigned int brdfLutTextureId;
-
-	struct FramebufferTextures
-	{
-		unsigned int shadowDepth;
-	}
-	framebufferTextures;
 
 	Array<unsigned char> uniformStagingBuffer;
 	Array<unsigned int> objectUniformBufferLists[FramesInFlightCount];
@@ -170,9 +155,6 @@ private:
 
 	void CreateResolutionDependentFramebuffers(int width, int height);
 	void DestroyResolutionDependentFramebuffers();
-
-	static void DestroyFramebuffer(RenderDevice* renderDevice, RendererFramebuffer& fb);
-	static void DestroyTexture(RenderDevice* renderDevice, unsigned int& texture);
 
 	void BindMaterialTextures(const MaterialData& material) const;
 	void BindTextures(const ShaderData& shader, unsigned int count,

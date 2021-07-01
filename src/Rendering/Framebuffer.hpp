@@ -9,6 +9,8 @@
 
 class RenderDevice;
 enum class RenderTextureSizedFormat;
+enum class RenderTextureCompareMode;
+enum class RenderDepthCompareFunc;
 
 class Framebuffer
 {
@@ -40,6 +42,7 @@ public:
 	void Destroy();
 
 	void AttachExternalDepthTexture(unsigned int textureId);
+	void SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDepthCompareFunc func);
 
 private:
 	void CreateTexture(RenderTextureSizedFormat format, int width, int height);

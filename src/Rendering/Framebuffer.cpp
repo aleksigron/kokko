@@ -172,6 +172,11 @@ void Framebuffer::Create(
 
 		renderDevice->SetFramebufferDrawBuffers(static_cast<unsigned int>(colorTextureCount), colAtt);
 	}
+	else
+	{
+		RenderFramebufferAttachment noneAttachment = RenderFramebufferAttachment::None;
+		renderDevice->SetFramebufferDrawBuffers(1, &noneAttachment);
+	}
 }
 
 void Framebuffer::Destroy()
@@ -214,6 +219,16 @@ void Framebuffer::AttachExternalDepthTexture(unsigned int textureId)
 		RenderTextureTarget::Texture2d, depthTextureId, 0
 	};
 	renderDevice->AttachFramebufferTexture2D(&attachTexture);
+}
+
+void Framebuffer::SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDepthCompareFunc func)
+{
+	assert(depthTextureId != 0);
+	assert(depthTextureIsOwned == true);
+
+	renderDevice->BindTexture(RenderTextureTarget::Texture2d, depthTextureId);
+	renderDevice->SetTextureCompareMode(RenderTextureTarget::Texture2d, mode);
+	renderDevice->SetTextureCompareFunc(RenderTextureTarget::Texture2d, func);
 }
 
 void Framebuffer::CreateTexture(RenderTextureSizedFormat format, int width, int height)
