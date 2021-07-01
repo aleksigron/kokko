@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Editor/EditorCamera.hpp"
 
 struct GLFWwindow;
 
@@ -14,6 +13,7 @@ class World;
 class ImGuiRenderBackend;
 class ImGuiPlatformBackend;
 
+struct CameraParameters;
 struct EditorViews;
 struct Mat4x4fBijection;
 struct ViewRectangle;
@@ -28,8 +28,6 @@ private:
 	ImGuiPlatformBackend* platformBackend;
 
 	EditorViews* views;
-
-	EditorCamera editorCamera;
 
 	void Draw(World* world, bool& shouldExitOut);
 	void DrawMainMenuBar(World* world, bool& shouldExitOut);
@@ -54,8 +52,5 @@ public:
 
 	const Framebuffer& GetSceneViewFramebuffer();
 
-	ViewRectangle GetWorldViewport();
-
-	Mat4x4fBijection GetEditorCameraTransform() const;
-	ProjectionParameters GetEditorCameraProjection() const;
+	CameraParameters GetEditorCameraParameters() const;
 };

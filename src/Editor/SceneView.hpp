@@ -1,19 +1,31 @@
 #pragma once
 
+#include "Editor/EditorCamera.hpp"
+
 #include "Math/Vec2.hpp"
 
 #include "Rendering/Framebuffer.hpp"
+
+class InputManager;
+
+struct CameraParameters;
 
 class SceneView
 {
 public:
 	SceneView();
 
-	void Initialize(RenderDevice* renderDevice);
+	void Initialize(RenderDevice* renderDevice, InputManager* inputManager);
 
+	void Update();
 	void Draw();
 
+	void ResizeFramebufferIfRequested();
+
 	const Framebuffer& GetFramebuffer();
+	Vec2i GetContentAreaSize();
+
+	CameraParameters GetCameraParameters() const;
 
 private:
 	void ResizeFramebuffer();
@@ -21,5 +33,8 @@ private:
 	int contentWidth;
 	int contentHeight;
 
+	bool resizeRequested;
+
+	EditorCamera editorCamera;
 	Framebuffer framebuffer;
 };

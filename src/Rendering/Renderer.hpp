@@ -36,7 +36,6 @@ class TextureManager;
 class EntityManager;
 class RenderDevice;
 class Scene;
-class Window;
 class DebugVectorRenderer;
 class CustomRenderer;
 class ScreenSpaceAmbientOcclusion;
@@ -76,7 +75,6 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* device;
-	Window* window;
 
 	RenderTargetContainer* renderTargetContainer;
 	PostProcessRenderer* postProcessRenderer;
@@ -167,7 +165,7 @@ private:
 
 	void ReallocateRenderObjects(unsigned int required);
 
-	void CreateResolutionDependentFramebuffers(Vec2i framebufferSize);
+	void CreateResolutionDependentFramebuffers(int width, int height);
 	void DestroyResolutionDependentFramebuffers();
 
 	static void DestroyFramebuffer(RenderDevice* renderDevice, RendererFramebuffer& fb);
@@ -198,8 +196,6 @@ private:
 	void RenderBloom(const CustomRenderer::RenderParams& params);
 	void RenderTonemapping(const CustomRenderer::RenderParams& params);
 
-	static void _FramebufferResizeCallback(void* userPointer, Window* window, Vec2i framebufferSize);
-	
 public:
 	Renderer(Allocator* allocator,
 		RenderDevice* renderDevice,
@@ -209,7 +205,7 @@ public:
 		const ResourceManagers& resourceManagers);
 	~Renderer();
 
-	void Initialize(Window* window);
+	void Initialize();
 	void Deinitialize();
 
 	void SetLockCullingCamera(bool lockEnable);

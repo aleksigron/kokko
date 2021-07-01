@@ -38,7 +38,7 @@ public:
 		const ResourceManagers& resourceManagers);
 	~World();
 
-	void Initialize(Window* window);
+	void Initialize();
 	void Deinitialize();
 
 	bool LoadFromFile(const char* path, const char* displayName);

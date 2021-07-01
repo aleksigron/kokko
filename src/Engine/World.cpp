@@ -83,9 +83,9 @@ World::~World()
 	entityManager.Delete();
 }
 
-void World::Initialize(Window* window)
+void World::Initialize()
 {
-	renderer.instance->Initialize(window);
+	renderer.instance->Initialize();
 	terrainManager.instance->Initialize();
 	particleSystem.instance->Initialize();
 }

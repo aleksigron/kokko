@@ -17,6 +17,7 @@
 
 #include "Memory/Allocator.hpp"
 
+#include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/RenderDevice.hpp"
@@ -36,9 +37,6 @@ EditorUI::EditorUI(Allocator* allocator) :
 {
 	views = allocator->MakeNew<EditorViews>();
 
-	Vec3f position(-3.0f, 2.0f, 6.0f);
-	Vec3f target(0.0f, 1.0f, 0.0f);
-	editorCamera.LookAt(position, target);
 }
 
 EditorUI::~EditorUI()
@@ -57,8 +55,6 @@ void EditorUI::Initialize(RenderDevice* renderDevice, Window* window, const Reso
 
 	InputManager* inputManager = window->GetInputManager();
 
-	editorCamera.SetInputManager(inputManager);
-
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
@@ -72,7 +68,7 @@ void EditorUI::Initialize(RenderDevice* renderDevice, Window* window, const Reso
 	platformBackend->Initialize(window->GetGlfwWindow(), inputManager->GetImGuiInputView());
 
 	views->entityView.Initialize(resourceManagers);
-	views->sceneView.Initialize(renderDevice);
+	views->sceneView.Initialize(renderDevice, inputManager);
 }
 
 void EditorUI::Deinitialize()
@@ -92,6 +88,8 @@ void EditorUI::StartFrame()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	views->sceneView.ResizeFramebufferIfRequested();
+
 	renderBackend->NewFrame();
 	platformBackend->NewFrame();
 
@@ -104,7 +102,7 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	editorCamera.Update();
+	views->sceneView.Update();
 
 	Draw(world, shouldExitOut);
 
@@ -144,29 +142,9 @@ const Framebuffer& EditorUI::GetSceneViewFramebuffer()
 	return views->sceneView.GetFramebuffer();
 }
 
-ViewRectangle EditorUI::GetWorldViewport()
+CameraParameters EditorUI::GetEditorCameraParameters() const
 {
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-
-	Vec2i pos = Vec2f(viewport->WorkPos.x, viewport->WorkPos.y).As<int>();
-	Vec2i size = Vec2f(viewport->WorkSize.x, viewport->WorkSize.y).As<int>();
-	Vec2i fullSize = Vec2f(viewport->Size.x, viewport->Size.y).As<int>();
-
-	ViewRectangle rect;
-	rect.position = fullSize - size - pos;
-	rect.size = size;
-
-	return rect;
-}
-
-Mat4x4fBijection EditorUI::GetEditorCameraTransform() const
-{
-	return editorCamera.GetCameraTransform();
-}
-
-ProjectionParameters EditorUI::GetEditorCameraProjection() const
-{
-	return editorCamera.GetProjectionParameters();
+	return views->sceneView.GetCameraParameters();
 }
 
 void EditorUI::Draw(World* world, bool& shouldExitOut)

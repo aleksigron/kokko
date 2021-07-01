@@ -33,6 +33,8 @@ public:
 	void SetInputManager(InputManager* inputManager);
 	void LookAt(const Vec3f& position, const Vec3f& lookAtTarget);
 
+	void SetAspectRatio(float width, float height);
+
 	void Update();
 
 	/*

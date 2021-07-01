@@ -147,7 +147,7 @@ bool Engine::Initialize()
 		textureManager.instance->Initialize();
 		environmentManager.instance->Initialize();
 
-		world.instance->Initialize(mainWindow.instance);
+		world.instance->Initialize();
 
 		return true;
 	}
@@ -187,11 +187,7 @@ void Engine::Update()
 
 	// FRAME RENDER
 
-	ViewRectangle viewport = editorUI.instance->GetWorldViewport();
-	Mat4x4fBijection editorCameraTransform = editorUI.instance->GetEditorCameraTransform();
-	ProjectionParameters editorCameraProjection = editorUI.instance->GetEditorCameraProjection();
-	editorCameraProjection.SetAspectRatio(viewport.size.x, viewport.size.y);
-	Optional<CameraParameters> editorCamera = Optional(CameraParameters{ editorCameraTransform, editorCameraProjection });
+	CameraParameters editorCamera = editorUI.instance->GetEditorCameraParameters();
 
 	const Framebuffer& sceneViewFramebuffer = editorUI.instance->GetSceneViewFramebuffer();
 	world.instance->Render(editorCamera, sceneViewFramebuffer);

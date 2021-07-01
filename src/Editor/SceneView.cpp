@@ -4,15 +4,31 @@
 
 #include "Core/Core.hpp"
 
+#include "Rendering/CameraParameters.hpp"
+
 SceneView::SceneView() :
 	contentWidth(0),
-	contentHeight(0)
+	contentHeight(0),
+	resizeRequested(false)
 {
+	Vec3f position(-3.0f, 2.0f, 6.0f);
+	Vec3f target(0.0f, 1.0f, 0.0f);
+	editorCamera.LookAt(position, target);
 }
 
-void SceneView::Initialize(RenderDevice* renderDevice)
+void SceneView::Initialize(RenderDevice* renderDevice, InputManager* inputManager)
 {
 	framebuffer.SetRenderDevice(renderDevice);
+
+	editorCamera.SetInputManager(inputManager);
+}
+
+void SceneView::Update()
+{
+	if (contentWidth > 0 && contentHeight > 0)
+		editorCamera.SetAspectRatio(contentWidth, contentHeight);
+
+	editorCamera.Update();
 }
 
 void SceneView::Draw()
@@ -32,7 +48,7 @@ void SceneView::Draw()
 			contentWidth = static_cast<int>(size.x);
 			contentHeight = static_cast<int>(size.y);
 
-			ResizeFramebuffer();
+			resizeRequested = true;
 		}
 
 		if (framebuffer.IsInitialized())
@@ -50,9 +66,32 @@ void SceneView::Draw()
 	ImGui::PopStyleVar();
 }
 
+void SceneView::ResizeFramebufferIfRequested()
+{
+	if (resizeRequested)
+	{
+		ResizeFramebuffer();
+
+		resizeRequested = false;
+	}
+}
+
 const Framebuffer& SceneView::GetFramebuffer()
 {
 	return framebuffer;
+}
+
+Vec2i SceneView::GetContentAreaSize()
+{
+	return Vec2i(contentWidth, contentHeight);
+}
+
+CameraParameters SceneView::GetCameraParameters() const
+{
+	Mat4x4fBijection cameraTransform = editorCamera.GetCameraTransform();
+	ProjectionParameters cameraProjection = editorCamera.GetProjectionParameters();
+
+	return CameraParameters{ cameraTransform, cameraProjection };
 }
 
 void SceneView::ResizeFramebuffer()

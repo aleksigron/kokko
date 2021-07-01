@@ -38,6 +38,11 @@ void EditorCamera::LookAt(const Vec3f& position, const Vec3f& lookAtTarget)
 	cameraPitch = std::atan2(-diff.y, xzDistance);
 }
 
+void EditorCamera::SetAspectRatio(float width, float height)
+{
+	projection.SetAspectRatio(width, height);
+}
+
 void EditorCamera::Update()
 {
 	static const int MouseButtonGrab = 0;

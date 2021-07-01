@@ -96,7 +96,6 @@ Renderer::Renderer(
 	const ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	device(renderDevice),
-	window(nullptr),
 	renderTargetContainer(nullptr),
 	ssao(nullptr),
 	bloomEffect(nullptr),
@@ -170,13 +169,9 @@ Renderer::~Renderer()
 	allocator->MakeDelete(renderTargetContainer);
 }
 
-void Renderer::Initialize(Window* window)
+void Renderer::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
-
-	this->window = window;
-	window->RegisterFramebufferResizeCallback(_FramebufferResizeCallback, this);
-	Vec2i framebufferSize = window->GetFrameBufferSize();
 
 	device->CubemapSeamlessEnable();
 	device->SetClipBehavior(RenderClipOriginMode::LowerLeft, RenderClipDepthMode::ZeroToOne);
@@ -274,8 +269,6 @@ void Renderer::Initialize(Window* window)
 		device->BindTexture(RenderTextureTarget::Texture2d, 0);
 		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
 	}
-
-	CreateResolutionDependentFramebuffers(framebufferSize);
 	
 	{
 		KOKKO_PROFILE_SCOPE("Create tonemap uniform buffer");
@@ -453,25 +446,19 @@ void Renderer::Deinitialize()
 	DestroyTexture(device, framebufferTextures.fullscreenDepth);
 	DestroyTexture(device, framebufferTextures.shadowDepth);
 	DestroyTexture(device, framebufferTextures.lightAccumulation);
-
-	if (window != nullptr)
-	{
-		window->UnregisterFramebufferResizeCallback(_FramebufferResizeCallback, this);
-		window = nullptr;
-	}
 }
 
-void Renderer::CreateResolutionDependentFramebuffers(Vec2i framebufferSize)
+void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
 {
-	ssao->SetFramebufferSize(framebufferSize);
+	ssao->SetFramebufferSize(Vec2i(width, height));
 
 	{
 		KOKKO_PROFILE_SCOPE("Create geometry framebuffer");
 
 		// Create geometry framebuffer and textures
 
-		framebufferGbuffer.width = framebufferSize.x;
-		framebufferGbuffer.height = framebufferSize.y;
+		framebufferGbuffer.width = width;
+		framebufferGbuffer.height = height;
 
 		// Create and bind framebuffer
 
@@ -576,8 +563,8 @@ RenderTextureTarget::Texture2d, framebufferTextures.fullscreenDepth, 0
 
 		// HDR light accumulation framebuffer
 
-		framebufferLightAcc.width = framebufferSize.x;
-		framebufferLightAcc.height = framebufferSize.y;
+		framebufferLightAcc.width = width;
+		framebufferLightAcc.height = height;
 
 		// Create and bind framebuffer
 
@@ -643,18 +630,19 @@ void Renderer::DestroyTexture(RenderDevice* renderDevice, unsigned int& texture)
 	}
 }
 
-void Renderer::_FramebufferResizeCallback(void* userPointer, Window* window, Vec2i framebufferSize)
-{
-	Renderer* self = static_cast<Renderer*>(userPointer);
-	self->DestroyResolutionDependentFramebuffers();
-	self->CreateResolutionDependentFramebuffers(framebufferSize);
-
-	printf("Renderer framebuffer resize (%d, %d)\n", framebufferSize.x, framebufferSize.y);
-}
-
 void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	if (targetFramebuffer.IsInitialized() == false)
+		return;
+
+	if (targetFramebuffer.GetWidth() != framebufferGbuffer.width ||
+		targetFramebuffer.GetHeight() != framebufferGbuffer.height)
+	{
+		DestroyResolutionDependentFramebuffers();
+		CreateResolutionDependentFramebuffers(targetFramebuffer.GetWidth(), targetFramebuffer.GetHeight());
+	}
 
 	deferredLightingCallback = AddCustomRenderer(this);
 	skyboxRenderCallback = AddCustomRenderer(this);
@@ -789,6 +777,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 	currentFrameIndex = (currentFrameIndex + 1) % FramesInFlightCount;
 
 	customRenderers.Clear();
+	targetFramebufferId = 0;
 }
 
 void Renderer::BindMaterialTextures(const MaterialData& material) const
