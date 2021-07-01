@@ -94,12 +94,12 @@ bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const cha
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Buffer<char> content(allocator);
+	Array<char> content(allocator);
 
 	if (File::ReadText(filePath, content))
 	{
 		font = allocator->MakeNew<BitmapFont>(allocator);
-		return font->LoadFromBDF(textureManager, content);
+		return font->LoadFromBDF(textureManager, StringRef(content.GetData(), content.GetCount()));
 	}
 	else
 		return false;

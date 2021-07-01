@@ -163,7 +163,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	Buffer<unsigned char> file(allocator);
+	Array<unsigned char> file(allocator);
 	String pathStr(allocator, path);
 
 	if (File::ReadBinary(pathStr.GetCStr(), file))
@@ -171,8 +171,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 		MeshId id = CreateMesh();
 		MeshLoader loader(this);
 
-		ArrayView<unsigned char> fileView(file.Data(), file.Count());
-		MeshLoader::Status status = loader.LoadFromBuffer(id, fileView);
+		MeshLoader::Status status = loader.LoadFromBuffer(id, file.GetView());
 		if (status == MeshLoader::Status::Success)
 		{
 			pair = pathHashMap.Insert(hash);

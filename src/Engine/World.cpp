@@ -1,6 +1,5 @@
 #include "Engine/World.hpp"
 
-#include "Core/Buffer.hpp"
 #include "Core/Core.hpp"
 
 #include "Debug/Debug.hpp"
@@ -99,12 +98,12 @@ bool World::LoadFromFile(const char* path, const char* displayName)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Buffer<char> sceneConfig(allocator);
+	Array<char> sceneConfig(allocator);
 
 	if (File::ReadText(path, sceneConfig))
 	{
 		LevelLoader loader(this, resourceManagers);
-		loader.Load(sceneConfig.Data());
+		loader.Load(sceneConfig.GetData());
 
 		loadedLevelDisplayName.Assign(displayName);
 		loadedLevelFilePath.Assign(path);

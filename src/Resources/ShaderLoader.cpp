@@ -115,7 +115,7 @@ static bool ProcessSource(
 	const rapidjson::Value* includePaths,
 	HashMap<uint32_t, ShaderLoader::FileString>& includeFileCache,
 	Allocator* allocator,
-	Buffer<char>& output)
+	Array<char>& output)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -145,7 +145,7 @@ static bool ProcessSource(
 		}
 	}
 
-	Buffer<char> mainFile(allocator);
+	Array<char> mainFile(allocator);
 
 	if (File::ReadText(mainPath, mainFile) == false)
 	{
@@ -153,13 +153,13 @@ static bool ProcessSource(
 		return false;
 	}
 
-	totalLength += mainFile.Count();
+	totalLength += mainFile.GetCount();
 
-	output.Allocate(totalLength);
+	output.Resize(totalLength);
 
 	// Concatenate all files together
 
-	char* dest = output.Data();
+	char* dest = output.GetData();
 	std::memcpy(dest, versionStr.str, versionStr.len);
 	dest += versionStr.len;
 
@@ -181,7 +181,7 @@ static bool ProcessSource(
 		}
 	}
 
-	std::strcpy(dest, mainFile.Data());
+	std::strcpy(dest, mainFile.GetData());
 
 	return true;
 }
@@ -710,9 +710,9 @@ bool ShaderLoader::LoadFromConfiguration(
 	bool processSuccess = true;
 
 	// TODO: Make this definition more robust
-	Buffer<char> sourceBuffers[MaxStageCount] = {
-		Buffer<char>(allocator),
-		Buffer<char>(allocator)
+	Array<char> sourceBuffers[MaxStageCount] = {
+		Array<char>(allocator),
+		Array<char>(allocator)
 	};
 
 	if (includeLoadSuccess)
@@ -739,7 +739,7 @@ bool ShaderLoader::LoadFromConfiguration(
 	for (size_t i = 0; i < stageCount; ++i)
 	{
 		stageSources[i].stage = stages[i].stage;
-		stageSources[i].source = StringRef(sourceBuffers[i].Data(), sourceBuffers[i].Count());
+		stageSources[i].source = StringRef(sourceBuffers[i].GetData(), sourceBuffers[i].GetCount());
 	}
 
 	ArrayView<const StageSource> stageSourceRef(stageSources, stageCount);

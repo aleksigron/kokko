@@ -178,14 +178,14 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	Buffer<char> file(allocator);
+	Array<char> file(allocator);
 	String pathStr(allocator, path);
 
 	if (File::ReadText(pathStr.GetCStr(), file))
 	{
 		MaterialId id = CreateMaterial();
 
-		if (LoadFromConfiguration(id, file.Data()))
+		if (LoadFromConfiguration(id, file.GetData()))
 		{
 			pair = pathHashMap.Insert(hash);
 			pair->second = id;

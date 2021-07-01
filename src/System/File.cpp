@@ -5,7 +5,7 @@
 
 #include "Core/Core.hpp"
 
-bool File::ReadBinary(const char* path, Buffer<unsigned char>& output)
+bool File::ReadBinary(const char* path, Array<unsigned char>& output)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -19,8 +19,8 @@ bool File::ReadBinary(const char* path, Buffer<unsigned char>& output)
 		std::rewind(fileHandle);
 
 		// Get the file contents
-		output.Allocate(fileLength);
-		std::fread(output.Data(), 1, fileLength, fileHandle);
+		output.Resize(fileLength);
+		std::fread(output.GetData(), 1, fileLength, fileHandle);
 		std::fclose(fileHandle);
 
 		return true;
@@ -29,7 +29,7 @@ bool File::ReadBinary(const char* path, Buffer<unsigned char>& output)
 	return false;
 }
 
-bool File::ReadText(const char* path, Buffer<char>& output)
+bool File::ReadText(const char* path, Array<char>& output)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -43,9 +43,9 @@ bool File::ReadText(const char* path, Buffer<char>& output)
 		std::rewind(fileHandle);
 
 		// Get the file contents
-		output.Allocate(fileLength + 1);
+		output.Resize(fileLength + 1);
 
-		std::fread(output.Data(), 1, fileLength, fileHandle);
+		std::fread(output.GetData(), 1, fileLength, fileHandle);
 		std::fclose(fileHandle);
 
 		// Null-terminate so it can be used as a c-string
@@ -87,7 +87,7 @@ bool File::ReadText(const char* path, Allocator* allocator, char*& strOut, size_
 	return false;
 }
 
-bool File::Write(const char* path, BufferRef<char> content, bool append)
+bool File::Write(const char* path, ArrayView<char> content, bool append)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -95,10 +95,10 @@ bool File::Write(const char* path, BufferRef<char> content, bool append)
 
 	if (fileHandle != nullptr)
 	{
-		size_t written = fwrite(content.data, sizeof(char), content.count, fileHandle);
+		size_t written = fwrite(content.GetData(), 1, content.GetCount(), fileHandle);
 		fclose(fileHandle);
 
-		return written == content.count;
+		return written == content.GetCount();
 	}
 
 	return false;

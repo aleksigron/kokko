@@ -177,7 +177,6 @@ TextureId TextureManager::GetIdByPath(StringRef path)
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	Buffer<char> file(allocator);
 	String pathStr(allocator, path);
 
 	TextureId id = CreateTexture();

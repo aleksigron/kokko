@@ -3,11 +3,10 @@
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
 
-#include "Core/StringRef.hpp"
-#include "Core/Buffer.hpp"
-
 class Allocator;
 class TextureManager;
+
+struct StringRef;
 
 struct BitmapGlyph
 {
@@ -52,5 +51,5 @@ public:
 	unsigned int GetTextureDriverId() const { return textureId; }
 	Vec2f GetTextureSize() const { return textureSize; }
 
-	bool LoadFromBDF(TextureManager* textureManager, const Buffer<char>& content);
+	bool LoadFromBDF(TextureManager* textureManager, StringRef content);
 };

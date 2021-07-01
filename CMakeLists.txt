@@ -63,8 +63,6 @@ set (KOKKO_SOURCES
 	src/Core/ArrayView.hpp
 	src/Core/BitfieldVariable.hpp
 	src/Core/BitPack.hpp
-	src/Core/Buffer.hpp
-	src/Core/BufferRef.hpp
 	src/Core/Color.hpp
 	src/Core/ColorSrgb.hpp
 	src/Core/Core.hpp

@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "Core/Array.hpp"
 #include "Core/Core.hpp"
 #include "Core/Hash.hpp"
 #include "Core/Sort.hpp"
@@ -54,15 +55,13 @@ const BitmapGlyph* BitmapFont::GetGlyph(unsigned int codePoint) const
 	return nullptr;
 }
 
-bool BitmapFont::LoadFromBDF(TextureManager* textureManager, const Buffer<char>& content)
+bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	using uint = unsigned int;
 
-	StringRef unprocessed;
-	unprocessed.str = content.Data();
-	unprocessed.len = static_cast<uint>(content.Count());
+	StringRef unprocessed = content;
 
 	// Find end of first line
 
@@ -82,7 +81,7 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, const Buffer<char>&
 	Vec2f glyphSize(0.0f, 0.0f);
 	Vec2f glyphSafeSize(0.0f, 0.0f);
 
-	Buffer<unsigned char> textureBuffer(allocator);
+	Array<unsigned char> textureBuffer(allocator);
 	Vec2i glyphsOnAxes(0, 0);
 
 	uint spacesInLine[7];
@@ -159,10 +158,10 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, const Buffer<char>&
 
 						textureSize = CalculateTextureSize(glyphCount, glyphSafeSize);
 						int pixelCount = static_cast<int>(textureSize.x * textureSize.y);
-						textureBuffer.Allocate(pixelCount);
+						textureBuffer.Resize(pixelCount);
 
 						// Set buffer to zero so we don't have to worry about unused parts
-						std::memset(textureBuffer.Data(), 0, textureBuffer.Count());
+						std::memset(textureBuffer.GetData(), 0, textureBuffer.GetCount());
 
 						glyphsOnAxes.x = int(textureSize.x / glyphSafeSize.x);
 						glyphsOnAxes.y = int(textureSize.y / glyphSafeSize.y);
@@ -216,7 +215,7 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, const Buffer<char>&
 				int bufferOffset = rowPos.y * static_cast<int>(textureSize.x) + rowPos.x;
 				int glyphRowWidth = static_cast<int>(currentGlyph->size.x);
 
-				unsigned char* rowBuffer = textureBuffer.Data() + bufferOffset;
+				unsigned char* rowBuffer = textureBuffer.GetData() + bufferOffset;
 
 				ParseBitmapRow(line, glyphRowWidth, rowBuffer);
 
@@ -259,12 +258,12 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, const Buffer<char>&
 		glyphSkipList[skipIndex] = glyphs[readGlyphs - 1].codePoint;
 	}
 
-	if (textureBuffer.IsValid())
+	if (textureBuffer.GetData() != nullptr)
 	{
 		ImageData imageData;
 
-		imageData.imageData = textureBuffer.Data();
-		imageData.imageDataSize = textureBuffer.Count();
+		imageData.imageData = textureBuffer.GetData();
+		imageData.imageDataSize = textureBuffer.GetCount();
 
 		imageData.imageSize = Vec2i(int(textureSize.x), int(textureSize.y));
 		imageData.pixelFormat = GL_RED;

@@ -3,7 +3,6 @@
 #include <cstdint>
 
 #include "Core/HashMap.hpp"
-#include "Core/BufferRef.hpp"
 #include "Core/StringRef.hpp"
 
 #include "Math/Vec2.hpp"
