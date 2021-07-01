@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "Core/BufferRef.hpp"
+#include "Core/ArrayView.hpp"
 
 class Allocator;
 class RenderDevice;
@@ -13,7 +13,7 @@ namespace ShaderLoader
 {
 	bool LoadFromConfiguration(
 		ShaderData& shaderOut,
-		BufferRef<char> configuration,
+		ArrayView<char> configuration,
 		Allocator* allocator,
 		RenderDevice* renderDevice,
 		StringRef debugName);

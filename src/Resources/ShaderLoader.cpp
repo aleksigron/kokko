@@ -7,7 +7,7 @@
 #include "rapidjson/document.h"
 
 #include "Core/Array.hpp"
-#include "Core/BufferRef.hpp"
+#include "Core/ArrayView.hpp"
 #include "Core/Core.hpp"
 #include "Core/Hash.hpp"
 #include "Core/HashMap.hpp"
@@ -195,7 +195,7 @@ static bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUnifo
 
 static void AddUniforms(
 	ShaderData& shaderOut,
-	BufferRef<const ShaderLoader::AddUniforms_UniformData> uniforms,
+	ArrayView<const ShaderLoader::AddUniforms_UniformData> uniforms,
 	Allocator* allocator)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -222,7 +222,7 @@ static void AddUniforms(
 	size_t textureUniformCount = 0;
 	size_t bufferUniformCount = 0;
 
-	for (unsigned uIndex = 0; uIndex < uniforms.count; ++uIndex)
+	for (size_t uIndex = 0, uCount = uniforms.GetCount(); uIndex < uCount; ++uIndex)
 	{
 		const ShaderLoader::AddUniforms_UniformData& uniform = uniforms[uIndex];
 		UniformTypeInfo type = UniformTypeInfo::FromType(uniform.type);
@@ -261,7 +261,7 @@ static void AddUniforms(
 	unsigned int textureUniformsCopied = 0;
 	unsigned int bufferUniformsCopied = 0;
 
-	for (unsigned uIndex = 0; uIndex < uniforms.count; ++uIndex)
+	for (size_t uIndex = 0, uCount = uniforms.GetCount(); uIndex < uCount; ++uIndex)
 	{
 		ShaderUniform* baseUniform = nullptr;
 
@@ -445,7 +445,7 @@ static bool Compile(
 
 static bool CompileAndLink(
 	ShaderData& shaderOut,
-	BufferRef<const ShaderLoader::StageSource> stages,
+	ArrayView<const ShaderLoader::StageSource> stages,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	StringRef debugName)
@@ -454,7 +454,7 @@ static bool CompileAndLink(
 
 	unsigned int stageObjects[MaxStageCount];
 
-	for (size_t i = 0; i < stages.count; ++i)
+	for (size_t i = 0, count = stages.GetCount(); i < stages.GetCount(); ++i)
 	{
 		const ShaderLoader::StageSource& stage = stages[i];
 		if (Compile(shaderOut, allocator, renderDevice, stage.stage, stage.source, stageObjects[i]) == false)
@@ -477,13 +477,13 @@ static bool CompileAndLink(
 		// Link the program
 		programId = renderDevice->CreateShaderProgram();
 
-		for (size_t i = 0; i < stages.count; ++i)
+		for (size_t i = 0, count = stages.GetCount(); i < stages.GetCount(); ++i)
 			renderDevice->AttachShaderStageToProgram(programId, stageObjects[i]);
 
 		renderDevice->LinkShaderProgram(programId);
 
 		// Release shaders
-		for (size_t i = 0; i < stages.count; ++i)
+		for (size_t i = 0, count = stages.GetCount(); i < stages.GetCount(); ++i)
 			renderDevice->DestroyShaderStage(stageObjects[i]);
 
 		linkSucceeded = renderDevice->GetShaderProgramLinkStatus(programId);
@@ -523,7 +523,7 @@ static bool CompileAndLink(
 
 bool ShaderLoader::LoadFromConfiguration(
 	ShaderData& shaderOut,
-	BufferRef<char> configuration,
+	ArrayView<char> configuration,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	StringRef debugName)
@@ -533,8 +533,8 @@ bool ShaderLoader::LoadFromConfiguration(
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 	using ValueItr = rapidjson::Value::ConstValueIterator;
 
-	char* data = configuration.data;
-	unsigned long size = configuration.count;
+	char* data = configuration.GetData();
+	unsigned long size = configuration.GetCount();
 
 	rapidjson::Document config;
 	config.Parse(data, size);
@@ -641,7 +641,7 @@ bool ShaderLoader::LoadFromConfiguration(
 		}
 	}
 
-	BufferRef<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
+	ArrayView<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
 	AddUniforms(shaderOut, uniformBufferRef, allocator);
 
 	size_t stageCount = 0;
@@ -742,7 +742,7 @@ bool ShaderLoader::LoadFromConfiguration(
 		stageSources[i].source = StringRef(sourceBuffers[i].Data(), sourceBuffers[i].Count());
 	}
 
-	BufferRef<const StageSource> stageSourceRef(stageSources, stageCount);
+	ArrayView<const StageSource> stageSourceRef(stageSources, stageCount);
 
 	if (processSuccess &&
 		CompileAndLink(shaderOut, stageSourceRef, allocator, renderDevice, debugName))
@@ -905,7 +905,7 @@ static void ProcessProgramProperties(ShaderData& shaderOut, StringRef programSec
 		uniformCount += 1;
 	}
 
-	BufferRef<const ShaderLoader::AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
+	ArrayView<const ShaderLoader::AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
 	AddUniforms(shaderOut, uniformBufferRef, allocator);
 
 	// Set default value
@@ -1052,7 +1052,7 @@ static bool ProcessStage(
 static bool ProcessShaderStages(
 	ShaderData& shaderOut,
 	StringRef shaderPath,
-	BufferRef<const ShaderLoader::StageSource> stages,
+	ArrayView<const ShaderLoader::StageSource> stages,
 	StringRef versionStr,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
@@ -1074,10 +1074,10 @@ static bool ProcessShaderStages(
 
 	bool processSuccess = true;
 
-	for (size_t stageIdx = 0, stageCount = stages.count; stageIdx < stageCount; ++stageIdx)
+	for (size_t i = 0, count = stages.GetCount(); i < count; ++i)
 	{
-		if (ProcessStage(versionStr, shaderOut.uniformBlockDefinition, shaderPath, stages[stageIdx].source,
-			processStore, allocator, processedStageSources[stageIdx]) == false)
+		if (ProcessStage(versionStr, shaderOut.uniformBlockDefinition, shaderPath, stages[i].source,
+			processStore, allocator, processedStageSources[i]) == false)
 			processSuccess = false;
 	}
 
@@ -1087,10 +1087,10 @@ static bool ProcessShaderStages(
 	{
 		ShaderLoader::StageSource stageSources[MaxStageCount];
 		
-		for (size_t i = 0; i < stages.count; ++i)
+		for (size_t i = 0, count = stages.GetCount(); i < count; ++i)
 			stageSources[i] = ShaderLoader::StageSource{ stages[i].stage, processedStageSources[i].GetRef() };
 
-		BufferRef<const ShaderLoader::StageSource> stageSourceRef(stageSources, stages.count);
+		ArrayView<const ShaderLoader::StageSource> stageSourceRef(stageSources, stages.GetCount());
 
 		if (CompileAndLink(shaderOut, stageSourceRef, allocator, renderDevice, debugName))
 		{
@@ -1128,7 +1128,7 @@ bool ShaderLoader::LoadFromShaderFile(
 	ProcessProgramProperties(shaderOut, programSection, allocator);
 
 	StringRef versionStr("#version 450\n");
-	BufferRef<const StageSource> stages(stageSections, stageCount);
+	ArrayView<const StageSource> stages(stageSections, stageCount);
 	if (ProcessShaderStages(shaderOut, shaderPath, stages, versionStr, allocator, renderDevice, debugName) == false)
 		return false;
 

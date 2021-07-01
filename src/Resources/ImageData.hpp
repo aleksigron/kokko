@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Math/Vec2.hpp"
-#include "Core/BufferRef.hpp"
 
 struct ImageData
 {
@@ -16,6 +15,4 @@ struct ImageData
 	bool compressed;
 
 	ImageData();
-
-	bool LoadGlraw(BufferRef<unsigned char> fileContent);
 };

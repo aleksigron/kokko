@@ -171,7 +171,8 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 		MeshId id = CreateMesh();
 		MeshLoader loader(this);
 
-		MeshLoader::Status status = loader.LoadFromBuffer(id, file.GetRef());
+		ArrayView<unsigned char> fileView(file.Data(), file.Count());
+		MeshLoader::Status status = loader.LoadFromBuffer(id, fileView);
 		if (status == MeshLoader::Status::Success)
 		{
 			pair = pathHashMap.Insert(hash);

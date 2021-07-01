@@ -104,7 +104,7 @@ bool World::LoadFromFile(const char* path, const char* displayName)
 	if (File::ReadText(path, sceneConfig))
 	{
 		LevelLoader loader(this, resourceManagers);
-		loader.Load(sceneConfig.GetRef());
+		loader.Load(sceneConfig.Data());
 
 		loadedLevelDisplayName.Assign(displayName);
 		loadedLevelFilePath.Assign(path);

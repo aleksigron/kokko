@@ -26,13 +26,13 @@ LevelLoader::LevelLoader(World* world, const ResourceManagers& resManagers):
 {
 }
 
-void LevelLoader::Load(BufferRef<char> sceneConfig)
+void LevelLoader::Load(const char* data)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	Scene* scene = world->GetScene();
 
-	YAML::Node node = YAML::Load(sceneConfig.data);
+	YAML::Node node = YAML::Load(data);
 
 	const YAML::Node environment = node["environment"];
 	if (environment.IsDefined() && environment.IsScalar())

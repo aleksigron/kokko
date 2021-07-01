@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/BufferRef.hpp"
-
 #include "Resources/ResourceManagers.hpp"
 
 class World;
@@ -30,5 +28,5 @@ private:
 public:
 	LevelLoader(World* world, const ResourceManagers& resManagers);
 
-	void Load(BufferRef<char> sceneConfig);
+	void Load(const char* data);
 };

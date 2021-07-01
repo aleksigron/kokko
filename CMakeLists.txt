@@ -220,6 +220,7 @@ set (KOKKO_SOURCES
 	src/Resources/MaterialManager.hpp
 	src/Resources/MaterialData.hpp
 	src/Resources/MeshData.hpp
+	src/Resources/MeshLoader.cpp
 	src/Resources/MeshLoader.hpp
 	src/Resources/MeshManager.cpp
 	src/Resources/MeshManager.hpp

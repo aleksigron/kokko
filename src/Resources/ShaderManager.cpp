@@ -163,7 +163,10 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 		bool loadSuccess = false;
 
 		if (pathStr.GetRef().EndsWith(StringRef(".json")))
-			loadSuccess = ShaderLoader::LoadFromConfiguration(shader, file.GetRef(), allocator, renderDevice, debugName);
+		{
+			ArrayView<char> fileView(file.Data(), file.Count());
+			loadSuccess = ShaderLoader::LoadFromConfiguration(shader, fileView, allocator, renderDevice, debugName);
+		}
 		else
 		{
 			StringRef fileString(file.Data(), file.Count());
