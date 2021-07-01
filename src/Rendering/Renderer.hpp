@@ -72,6 +72,11 @@ private:
 	static const unsigned int MaxFramebufferCount = 4;
 	static const unsigned int MaxFramebufferTextureCount = 16;
 
+	static const size_t GbufferAlbedoIndex = 0;
+	static const size_t GbufferNormalIndex = 1;
+	static const size_t GbufferMaterialIndex = 2;
+	static const size_t GbufferColorCount = 3;
+
 	static const size_t ObjectUniformBufferSize = 512 * 1024;
 
 	Allocator* allocator;
@@ -83,9 +88,9 @@ private:
 	ScreenSpaceAmbientOcclusion* ssao;
 	BloomEffect* bloomEffect;
 
-	RendererFramebuffer framebufferGbuffer;
 	RendererFramebuffer framebufferShadow;
 
+	Framebuffer framebufferGbuffer;
 	Framebuffer framebufferLightAcc;
 
 	unsigned int targetFramebufferId;
@@ -105,10 +110,6 @@ private:
 
 	struct FramebufferTextures
 	{
-		unsigned int gBufferAlbedo;
-		unsigned int gBufferNormal;
-		unsigned int gBufferMaterial;
-		unsigned int fullscreenDepth;
 		unsigned int shadowDepth;
 	}
 	framebufferTextures;

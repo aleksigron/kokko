@@ -7,14 +7,14 @@ struct Vec2
 {
 	T x, y;
 	
-	inline Vec2(): x(0), y(0) {}
-	inline Vec2(T x, T y): x(x), y(y) {}
+	Vec2(): x(0), y(0) {}
+	Vec2(T x, T y): x(x), y(y) {}
 
-	inline T* ValuePointer() { return &x; }
-	inline const T* ValuePointer() const { return &x; }
+	T* ValuePointer() { return &x; }
+	const T* ValuePointer() const { return &x; }
 
-	inline T& operator[](std::size_t index) { return (&x)[index]; }
-	inline const T& operator[](std::size_t index) const { return (&x)[index]; }
+	T& operator[](std::size_t index) { return (&x)[index]; }
+	const T& operator[](std::size_t index) const { return (&x)[index]; }
 
 	template <typename CastType>
 	Vec2<CastType> As() const
@@ -23,7 +23,7 @@ struct Vec2
 	}
 	
 	// Normalize the vector
-	inline void Normalize()
+	void Normalize()
 	{
 		T magnitude = this->Magnitude();
 		x /= magnitude;
@@ -31,7 +31,7 @@ struct Vec2
 	}
 	
 	// Return a normalized version of the vector
-	inline Vec2 GetNormalized() const
+	Vec2 GetNormalized() const
 	{
 		Vec2<T> normalized = *this;
 		normalized.Normalize();
@@ -39,25 +39,25 @@ struct Vec2
 	}
 	
 	// Magnitude of the vector
-	inline T Magnitude() const
+	T Magnitude() const
 	{
 		return T(std::sqrt((x * x) + (y * y)));
 	}
 	
 	// Squared magnitude of the vector
-	inline T SqrMagnitude() const
+	T SqrMagnitude() const
 	{
 		return (x * x) + (y * y);
 	}
 	
 	// Negation of the vector
-	inline Vec2 operator-() const
+	Vec2 operator-() const
 	{
 		return Vec2(-x, -y);
 	}
 
 	// In-place addition
-	inline Vec2& operator+=(const Vec2& value)
+	Vec2& operator+=(const Vec2& value)
 	{
 		x += value.x;
 		y += value.y;
@@ -66,7 +66,7 @@ struct Vec2
 	}
 
 	// In-place subtraction
-	inline Vec2& operator-=(const Vec2& value)
+	Vec2& operator-=(const Vec2& value)
 	{
 		x -= value.x;
 		y -= value.y;
@@ -74,14 +74,24 @@ struct Vec2
 		return *this;
 	}
 
+	bool operator==(const Vec2& other)
+	{
+		return x == other.x && y == other.y;
+	}
+
+	bool operator!=(const Vec2& other)
+	{
+		return operator==(other) == false;
+	}
+
 	// Component-wise multiplication (Hadamard product) of two vectors
-	static inline Vec2 Hadamard(const Vec2& lhs, const Vec2& rhs)
+	static Vec2 Hadamard(const Vec2& lhs, const Vec2& rhs)
 	{
 		return Vec2(lhs.x * rhs.x, lhs.y * rhs.y);
 	}
 	
 	// Dot product of two vectors
-	static inline T Dot(const Vec2& lhs, const Vec2& rhs)
+	static T Dot(const Vec2& lhs, const Vec2& rhs)
 	{
 		return (lhs.x * rhs.x) + (lhs.y * rhs.y);
 	}

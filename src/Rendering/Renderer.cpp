@@ -137,9 +137,9 @@ Renderer::Renderer(
 	bloomEffect = allocator->MakeNew<BloomEffect>(
 		allocator, renderDevice, shaderManager, postProcessRenderer);
 
-	framebufferGbuffer = RendererFramebuffer{};
 	framebufferShadow = RendererFramebuffer{};
 
+	framebufferGbuffer.SetRenderDevice(renderDevice);
 	framebufferLightAcc.SetRenderDevice(renderDevice);
 
 	fullscreenMesh = MeshId{ 0 };
@@ -425,9 +425,9 @@ void Renderer::Deinitialize()
 		}
 	}
 
-	DestroyFramebuffer(device, framebufferGbuffer);
 	DestroyFramebuffer(device, framebufferShadow);
 
+	framebufferGbuffer.Destroy();
 	framebufferLightAcc.Destroy();
 
 	if (viewportData != nullptr)
@@ -446,10 +446,6 @@ void Renderer::Deinitialize()
 		viewportCount = 0;
 	}
 
-	DestroyTexture(device, framebufferTextures.gBufferAlbedo);
-	DestroyTexture(device, framebufferTextures.gBufferNormal);
-	DestroyTexture(device, framebufferTextures.gBufferMaterial);
-	DestroyTexture(device, framebufferTextures.fullscreenDepth);
 	DestroyTexture(device, framebufferTextures.shadowDepth);
 }
 
@@ -462,105 +458,16 @@ void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
 
 		// Create geometry framebuffer and textures
 
-		framebufferGbuffer.width = width;
-		framebufferGbuffer.height = height;
+		RenderTextureSizedFormat depthFormat = RenderTextureSizedFormat::D32F;
 
-		// Create and bind framebuffer
+		RenderTextureSizedFormat colorFormats[GbufferColorCount];
+		colorFormats[GbufferAlbedoIndex] = RenderTextureSizedFormat::SRGB8;
+		colorFormats[GbufferNormalIndex] = RenderTextureSizedFormat::RG16,
+		colorFormats[GbufferMaterialIndex] = RenderTextureSizedFormat::RGB8;
 
-		device->CreateFramebuffers(1, &framebufferGbuffer.framebuffer);
-		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebufferGbuffer.framebuffer);
+		ArrayView<RenderTextureSizedFormat> colorFormatsList(colorFormats, GbufferColorCount);
 
-		RenderFramebufferAttachment colAtt[3] = {
-			RenderFramebufferAttachment::Color0,
-			RenderFramebufferAttachment::Color1,
-			RenderFramebufferAttachment::Color2
-		};
-
-		// Albedo color buffer
-
-		device->CreateTextures(1, &framebufferTextures.gBufferAlbedo);
-		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.gBufferAlbedo);
-
-		RenderCommandData::SetTextureStorage2D albTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::SRGB8,
-			framebufferGbuffer.width, framebufferGbuffer.height
-		};
-		device->SetTextureStorage2D(&albTextureStorage);
-
-		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-
-		RenderCommandData::AttachFramebufferTexture2D albAttachTexture{
-			RenderFramebufferTarget::Framebuffer, colAtt[0], RenderTextureTarget::Texture2d,
-			framebufferTextures.gBufferAlbedo, 0
-		};
-		device->AttachFramebufferTexture2D(&albAttachTexture);
-
-		// Normal buffer
-
-		device->CreateTextures(1, &framebufferTextures.gBufferNormal);
-		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.gBufferNormal);
-
-		RenderCommandData::SetTextureStorage2D norTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RG16,
-			framebufferGbuffer.width, framebufferGbuffer.height
-		};
-		device->SetTextureStorage2D(&norTextureStorage);
-
-		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-
-		RenderCommandData::AttachFramebufferTexture2D norAttachTexture{
-			RenderFramebufferTarget::Framebuffer, colAtt[1], RenderTextureTarget::Texture2d,
-			framebufferTextures.gBufferNormal, 0
-		};
-		device->AttachFramebufferTexture2D(&norAttachTexture);
-
-		// Emissivity buffer
-
-		device->CreateTextures(1, &framebufferTextures.gBufferMaterial);
-		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.gBufferMaterial);
-
-		RenderCommandData::SetTextureStorage2D matTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RGB8,
-			framebufferGbuffer.width, framebufferGbuffer.height
-		};
-		device->SetTextureStorage2D(&matTextureStorage);
-
-		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-
-		RenderCommandData::AttachFramebufferTexture2D matAttachTexture{
-			RenderFramebufferTarget::Framebuffer, colAtt[2], RenderTextureTarget::Texture2d,
-			framebufferTextures.gBufferMaterial, 0
-		};
-		device->AttachFramebufferTexture2D(&matAttachTexture);
-
-		// Which color attachments we'll use for rendering
-		device->SetFramebufferDrawBuffers(sizeof(colAtt) / sizeof(colAtt[0]), colAtt);
-
-		// Create and attach depth buffer
-		device->CreateTextures(1, &framebufferTextures.fullscreenDepth);
-		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.fullscreenDepth);
-
-		RenderCommandData::SetTextureStorage2D depthTextureStorage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::D32F,
-			framebufferGbuffer.width, framebufferGbuffer.height
-		};
-		device->SetTextureStorage2D(&depthTextureStorage);
-
-		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-
-		// Set depth texture to clamp to edge, because SSAO pass can read beyond the edge
-		device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-
-		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
-RenderTextureTarget::Texture2d, framebufferTextures.fullscreenDepth, 0
-		};
-		device->AttachFramebufferTexture2D(&depthAttachTexture);
+		framebufferGbuffer.Create(width, height, depthFormat, colorFormatsList);
 	}
 
 	{
@@ -571,20 +478,14 @@ RenderTextureTarget::Texture2d, framebufferTextures.fullscreenDepth, 0
 		RenderTextureSizedFormat colorFormat = RenderTextureSizedFormat::RGB16F;
 		ArrayView<RenderTextureSizedFormat> colorFormatList(&colorFormat, 1);
 		framebufferLightAcc.Create(width, height, Optional<RenderTextureSizedFormat>(), colorFormatList);
-		framebufferLightAcc.AttachExternalDepthTexture(framebufferTextures.fullscreenDepth);
+		framebufferLightAcc.AttachExternalDepthTexture(framebufferGbuffer.GetDepthTextureId());
 	}
 }
 
 void Renderer::DestroyResolutionDependentFramebuffers()
 {
-	DestroyFramebuffer(device, framebufferGbuffer);
-	
+	framebufferGbuffer.Destroy();
 	framebufferLightAcc.Destroy();
-
-	DestroyTexture(device, framebufferTextures.gBufferAlbedo);
-	DestroyTexture(device, framebufferTextures.gBufferNormal);
-	DestroyTexture(device, framebufferTextures.gBufferMaterial);
-	DestroyTexture(device, framebufferTextures.fullscreenDepth);
 
 	renderTargetContainer->DestroyAllRenderTargets();
 }
@@ -614,8 +515,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 	if (targetFramebuffer.IsInitialized() == false)
 		return;
 
-	if (targetFramebuffer.GetWidth() != framebufferGbuffer.width ||
-		targetFramebuffer.GetHeight() != framebufferGbuffer.height)
+	if (targetFramebuffer.GetSize() != framebufferGbuffer.GetSize())
 	{
 		DestroyResolutionDependentFramebuffers();
 		CreateResolutionDependentFramebuffers(targetFramebuffer.GetWidth(), targetFramebuffer.GetHeight());
@@ -832,8 +732,8 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	device->DepthTestDisable();
 
 	ScreenSpaceAmbientOcclusion::RenderParams ssaoRenderParams;
-	ssaoRenderParams.normalTexture = framebufferTextures.gBufferNormal;
-	ssaoRenderParams.depthTexture = framebufferTextures.fullscreenDepth;
+	ssaoRenderParams.normalTexture = framebufferGbuffer.GetColorTextureId(GbufferNormalIndex);
+	ssaoRenderParams.depthTexture = framebufferGbuffer.GetDepthTextureId();
 	ssaoRenderParams.projection = projParams;
 	ssao->Render(ssaoRenderParams);
 
@@ -861,10 +761,10 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.textureNameHashes[7] = "spec_irradiance_map"_hash;
 	deferredPass.textureNameHashes[8] = "brdf_lut"_hash;
 
-	deferredPass.textureIds[0] = framebufferTextures.gBufferAlbedo;
-	deferredPass.textureIds[1] = framebufferTextures.gBufferNormal;
-	deferredPass.textureIds[2] = framebufferTextures.gBufferMaterial;
-	deferredPass.textureIds[3] = framebufferTextures.fullscreenDepth;
+	deferredPass.textureIds[0] = framebufferGbuffer.GetColorTextureId(GbufferAlbedoIndex);
+	deferredPass.textureIds[1] = framebufferGbuffer.GetColorTextureId(GbufferNormalIndex);
+	deferredPass.textureIds[2] = framebufferGbuffer.GetColorTextureId(GbufferMaterialIndex);
+	deferredPass.textureIds[3] = framebufferGbuffer.GetDepthTextureId();
 	deferredPass.textureIds[4] = ssao->GetResultTextureId();
 	deferredPass.textureIds[5] = framebufferTextures.shadowDepth;
 	deferredPass.textureIds[6] = diffIrrTexture.textureObjectId;
@@ -1006,7 +906,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	unsigned int cascadeCount = CascadedShadowMap::GetCascadeCount();
 	uniformsOut.shadowMapScale = Vec2f(1.0f / (cascadeCount * shadowSide), 1.0f / shadowSide);
 
-	uniformsOut.frameResolution = Vec2i(framebufferGbuffer.width, framebufferGbuffer.height).As<float>();
+	uniformsOut.frameResolution = framebufferGbuffer.GetSize().As<float>();
 
 	// Set viewport transform matrices
 	uniformsOut.perspectiveMatrix = fsvp.projection;
@@ -1628,7 +1528,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		// Bind geometry framebuffer
 		RenderCommandData::BindFramebufferData data;
 		data.target = RenderFramebufferTarget::Framebuffer;
-		data.framebuffer = framebufferGbuffer.framebuffer;
+		data.framebuffer = framebufferGbuffer.GetFramebufferId();
 
 		commandList.AddControl(fsvp, g_pass, 2, ctrl::BindFramebuffer, sizeof(data), &data);
 	}

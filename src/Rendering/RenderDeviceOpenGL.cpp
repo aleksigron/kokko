@@ -593,7 +593,7 @@ void RenderDeviceOpenGL::AttachFramebufferTexture2D(const RenderCommandData::Att
 		ConvertTextureTarget(data->textureTarget), data->texture, data->mipLevel);
 }
 
-void RenderDeviceOpenGL::SetFramebufferDrawBuffers(unsigned int count, RenderFramebufferAttachment* buffers)
+void RenderDeviceOpenGL::SetFramebufferDrawBuffers(unsigned int count, const RenderFramebufferAttachment* buffers)
 {
 	unsigned int attachments[16];
 

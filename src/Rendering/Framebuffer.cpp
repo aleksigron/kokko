@@ -153,19 +153,24 @@ void Framebuffer::Create(
 
 	colorTextureCount = colorTextureFormats.GetCount();
 
-	renderDevice->CreateTextures(static_cast<unsigned int>(colorTextureFormats.GetCount()), colorTextureIds);
-
-	for (size_t i = 0, count = colorTextureFormats.GetCount(); i < count; ++i)
+	if (colorTextureCount > 0)
 	{
-		unsigned int textureId = colorTextureIds[i];
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureId);
+		renderDevice->CreateTextures(static_cast<unsigned int>(colorTextureFormats.GetCount()), colorTextureIds);
 
-		CreateTexture(colorTextureFormats[i], width, height);
+		for (size_t i = 0, count = colorTextureFormats.GetCount(); i < count; ++i)
+		{
+			unsigned int textureId = colorTextureIds[i];
+			renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureId);
 
-		RenderCommandData::AttachFramebufferTexture2D attachTexture{
-			RenderFramebufferTarget::Framebuffer, colAtt[i], RenderTextureTarget::Texture2d, textureId, 0
-		};
-		renderDevice->AttachFramebufferTexture2D(&attachTexture);
+			CreateTexture(colorTextureFormats[i], width, height);
+
+			RenderCommandData::AttachFramebufferTexture2D attachTexture{
+				RenderFramebufferTarget::Framebuffer, colAtt[i], RenderTextureTarget::Texture2d, textureId, 0
+			};
+			renderDevice->AttachFramebufferTexture2D(&attachTexture);
+		}
+
+		renderDevice->SetFramebufferDrawBuffers(static_cast<unsigned int>(colorTextureCount), colAtt);
 	}
 }
 
