@@ -4,22 +4,19 @@
 #include <utility>
 
 #include "Rendering/RenderDevice.hpp"
+#include "Rendering/RenderDeviceEnums.hpp"
 
 Framebuffer::Framebuffer() :
 	renderDevice(nullptr),
 	width(0),
 	height(0),
 	framebufferId(0),
-	colorTextureCount(0)
+	colorTextureCount(0),
+	depthTextureId(0),
+	depthTextureIsOwned(false)
 {
 	for (size_t i = 0; i < MaxColorTextureCount; ++i)
-	{
-		colorTextureFormats[i] = RenderTextureSizedFormat::RGB8;
 		colorTextureIds[i] = 0;
-	}
-
-	depthTextureFormat = RenderTextureSizedFormat::D24;
-	depthTextureId = 0;
 }
 
 Framebuffer::Framebuffer(Framebuffer&& other) noexcept :
@@ -47,20 +44,20 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& other) noexcept
 
 	for (size_t i = 0; i < other.colorTextureCount; ++i)
 	{
-		colorTextureFormats[i] = other.colorTextureFormats[i];
 		colorTextureIds[i] = other.colorTextureIds[i];
 
 		other.colorTextureIds[i] = 0;
 	}
 
-	depthTextureFormat = other.depthTextureFormat;
 	depthTextureId = other.depthTextureId;
+	depthTextureIsOwned = other.depthTextureIsOwned;
 
 	other.width = 0;
 	other.height = 0;
 	other.framebufferId = 0;
 	other.colorTextureCount = 0;
 	other.depthTextureId = 0;
+	other.depthTextureIsOwned = false;
 
 	return *this;
 }
@@ -102,6 +99,11 @@ int Framebuffer::GetHeight() const
 	return height;
 }
 
+Vec2i Framebuffer::GetSize() const
+{
+	return Vec2i(width, height);
+}
+
 void Framebuffer::Create(
 	int width,
 	int height,
@@ -122,7 +124,6 @@ void Framebuffer::Create(
 	this->width = width;
 	this->height = height;
 
-
 	// Create and bind framebuffer
 
 	renderDevice->CreateFramebuffers(1, &framebufferId);
@@ -132,7 +133,7 @@ void Framebuffer::Create(
 
 	if (depthFormat.HasValue())
 	{
-		depthTextureFormat = depthFormat.GetValue();
+		RenderTextureSizedFormat depthTextureFormat = depthFormat.GetValue();
 
 		renderDevice->CreateTextures(1, &depthTextureId);
 		renderDevice->BindTexture(RenderTextureTarget::Texture2d, depthTextureId);
@@ -144,6 +145,8 @@ void Framebuffer::Create(
 			RenderTextureTarget::Texture2d, depthTextureId, 0
 		};
 		renderDevice->AttachFramebufferTexture2D(&attachTexture);
+
+		depthTextureIsOwned = true;
 	}
 
 	// Color textures
@@ -154,9 +157,7 @@ void Framebuffer::Create(
 
 	for (size_t i = 0, count = colorTextureFormats.GetCount(); i < count; ++i)
 	{
-		this->colorTextureFormats[i] = colorTextureFormats[i];
 		unsigned int textureId = colorTextureIds[i];
-
 		renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureId);
 
 		CreateTexture(colorTextureFormats[i], width, height);
@@ -184,15 +185,30 @@ void Framebuffer::Destroy()
 			colorTextureCount = 0;
 		}
 
-		if (depthTextureId != 0)
+		if (depthTextureIsOwned && depthTextureId != 0)
 		{
 			renderDevice->DestroyTextures(1, &depthTextureId);
 			depthTextureId = 0;
+			depthTextureIsOwned = false;
 		}
 
 		renderDevice->DestroyFramebuffers(1, &framebufferId);
 		framebufferId = 0;
 	}
+}
+
+void Framebuffer::AttachExternalDepthTexture(unsigned int textureId)
+{
+	assert(depthTextureId == 0);
+
+	depthTextureId = textureId;
+	depthTextureIsOwned = false;
+
+	RenderCommandData::AttachFramebufferTexture2D attachTexture{
+		RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
+		RenderTextureTarget::Texture2d, depthTextureId, 0
+	};
+	renderDevice->AttachFramebufferTexture2D(&attachTexture);
 }
 
 void Framebuffer::CreateTexture(RenderTextureSizedFormat format, int width, int height)

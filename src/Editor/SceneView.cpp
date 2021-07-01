@@ -5,6 +5,7 @@
 #include "Core/Core.hpp"
 
 #include "Rendering/CameraParameters.hpp"
+#include "Rendering/RenderDeviceEnums.hpp"
 
 SceneView::SceneView() :
 	contentWidth(0),

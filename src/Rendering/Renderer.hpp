@@ -21,6 +21,7 @@
 #include "Resources/ShaderId.hpp"
 
 #include "Rendering/CustomRenderer.hpp"
+#include "Rendering/Framebuffer.hpp"
 #include "Rendering/Light.hpp"
 #include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RendererData.hpp"
@@ -84,7 +85,9 @@ private:
 
 	RendererFramebuffer framebufferGbuffer;
 	RendererFramebuffer framebufferShadow;
-	RendererFramebuffer framebufferLightAcc;
+
+	Framebuffer framebufferLightAcc;
+
 	unsigned int targetFramebufferId;
 
 	RenderViewport* viewportData;
@@ -107,7 +110,6 @@ private:
 		unsigned int gBufferMaterial;
 		unsigned int fullscreenDepth;
 		unsigned int shadowDepth;
-		unsigned int lightAccumulation;
 	}
 	framebufferTextures;
 

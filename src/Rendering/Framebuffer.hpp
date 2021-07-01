@@ -5,9 +5,10 @@
 #include "Core/ArrayView.hpp"
 #include "Core/Optional.hpp"
 
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Math/Vec2.hpp"
 
 class RenderDevice;
+enum class RenderTextureSizedFormat;
 
 class Framebuffer
 {
@@ -32,10 +33,13 @@ public:
 
 	int GetWidth() const;
 	int GetHeight() const;
+	Vec2i GetSize() const;
 
 	void Create(int width, int height, Optional<RenderTextureSizedFormat> depthFormat,
 		ArrayView<RenderTextureSizedFormat> colorTextureFormats);
 	void Destroy();
+
+	void AttachExternalDepthTexture(unsigned int textureId);
 
 private:
 	void CreateTexture(RenderTextureSizedFormat format, int width, int height);
@@ -48,9 +52,8 @@ private:
 	unsigned int framebufferId;
 
 	size_t colorTextureCount;
-	RenderTextureSizedFormat colorTextureFormats[MaxColorTextureCount];
 	unsigned int colorTextureIds[MaxColorTextureCount];
 
-	RenderTextureSizedFormat depthTextureFormat;
 	unsigned int depthTextureId;
+	bool depthTextureIsOwned;
 };

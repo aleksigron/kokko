@@ -137,6 +137,11 @@ Renderer::Renderer(
 	bloomEffect = allocator->MakeNew<BloomEffect>(
 		allocator, renderDevice, shaderManager, postProcessRenderer);
 
+	framebufferGbuffer = RendererFramebuffer{};
+	framebufferShadow = RendererFramebuffer{};
+
+	framebufferLightAcc.SetRenderDevice(renderDevice);
+
 	fullscreenMesh = MeshId{ 0 };
 	lightingShaderId = ShaderId{ 0 };
 	tonemappingShaderId = ShaderId{ 0 };
@@ -422,7 +427,8 @@ void Renderer::Deinitialize()
 
 	DestroyFramebuffer(device, framebufferGbuffer);
 	DestroyFramebuffer(device, framebufferShadow);
-	DestroyFramebuffer(device, framebufferLightAcc);
+
+	framebufferLightAcc.Destroy();
 
 	if (viewportData != nullptr)
 	{
@@ -445,7 +451,6 @@ void Renderer::Deinitialize()
 	DestroyTexture(device, framebufferTextures.gBufferMaterial);
 	DestroyTexture(device, framebufferTextures.fullscreenDepth);
 	DestroyTexture(device, framebufferTextures.shadowDepth);
-	DestroyTexture(device, framebufferTextures.lightAccumulation);
 }
 
 void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
@@ -563,51 +568,23 @@ RenderTextureTarget::Texture2d, framebufferTextures.fullscreenDepth, 0
 
 		// HDR light accumulation framebuffer
 
-		framebufferLightAcc.width = width;
-		framebufferLightAcc.height = height;
-
-		// Create and bind framebuffer
-
-		device->CreateFramebuffers(1, &framebufferLightAcc.framebuffer);
-		device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebufferLightAcc.framebuffer);
-
-		device->CreateTextures(1, &framebufferTextures.lightAccumulation);
-
-		device->BindTexture(RenderTextureTarget::Texture2d, framebufferTextures.lightAccumulation);
-
-		RenderCommandData::SetTextureStorage2D storage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RGB16F, framebufferLightAcc.width, framebufferLightAcc.height
-		};
-		device->SetTextureStorage2D(&storage);
-
-		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-
-		RenderCommandData::AttachFramebufferTexture2D colorAttachTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
-			RenderTextureTarget::Texture2d, framebufferTextures.lightAccumulation, 0
-		};
-		device->AttachFramebufferTexture2D(&colorAttachTexture);
-
-		// Reuse depth texture from gbuffer
-		RenderCommandData::AttachFramebufferTexture2D depthAttachTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
-			RenderTextureTarget::Texture2d, framebufferTextures.fullscreenDepth, 0
-		};
-		device->AttachFramebufferTexture2D(&depthAttachTexture);
+		RenderTextureSizedFormat colorFormat = RenderTextureSizedFormat::RGB16F;
+		ArrayView<RenderTextureSizedFormat> colorFormatList(&colorFormat, 1);
+		framebufferLightAcc.Create(width, height, Optional<RenderTextureSizedFormat>(), colorFormatList);
+		framebufferLightAcc.AttachExternalDepthTexture(framebufferTextures.fullscreenDepth);
 	}
 }
 
 void Renderer::DestroyResolutionDependentFramebuffers()
 {
 	DestroyFramebuffer(device, framebufferGbuffer);
-	DestroyFramebuffer(device, framebufferLightAcc);
+	
+	framebufferLightAcc.Destroy();
 
 	DestroyTexture(device, framebufferTextures.gBufferAlbedo);
 	DestroyTexture(device, framebufferTextures.gBufferNormal);
 	DestroyTexture(device, framebufferTextures.gBufferMaterial);
 	DestroyTexture(device, framebufferTextures.fullscreenDepth);
-	DestroyTexture(device, framebufferTextures.lightAccumulation);
 
 	renderTargetContainer->DestroyAllRenderTargets();
 }
@@ -847,8 +824,6 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 
 	ProjectionParameters projParams = params.cameraParams.projection;
 
-	Vec2i framebufferSize(framebufferLightAcc.width, framebufferLightAcc.height);
-
 	LightingUniformBlock lightingUniforms;
 	UpdateLightingDataToUniformBuffer(projParams, lightingUniforms);
 	device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
@@ -913,8 +888,8 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	deferredPass.uniformBufferRangeStart = 0;
 	deferredPass.uniformBufferRangeSize = sizeof(LightingUniformBlock);
 
-	deferredPass.framebufferId = framebufferLightAcc.framebuffer;
-	deferredPass.viewportSize = framebufferSize;
+	deferredPass.framebufferId = framebufferLightAcc.GetFramebufferId();
+	deferredPass.viewportSize = framebufferLightAcc.GetSize();
 	deferredPass.shaderId = lightingShaderId;
 	deferredPass.enableBlending = false;
 
@@ -965,10 +940,10 @@ void Renderer::RenderBloom(const CustomRenderer::RenderParams& params)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	unsigned int sourceTexture = framebufferTextures.lightAccumulation;
-	const RendererFramebuffer& fb = framebufferLightAcc;
+	unsigned int sourceTexture = framebufferLightAcc.GetColorTextureId(0);
+	unsigned int framebufferId = framebufferLightAcc.GetFramebufferId();
 
-	bloomEffect->Render(sourceTexture, fb.framebuffer, Vec2i(fb.width, fb.height));
+	bloomEffect->Render(sourceTexture, framebufferId, framebufferLightAcc.GetSize());
 }
 
 void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
@@ -1003,7 +978,7 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 
 		{
 			uint32_t textureNameHashes[] = { "light_acc_map"_hash };
-			unsigned int textureIds[] = { framebufferTextures.lightAccumulation };
+			unsigned int textureIds[] = { framebufferLightAcc.GetColorTextureId(0) };
 			BindTextures(shader, 1, textureNameHashes, textureIds);
 		}
 
