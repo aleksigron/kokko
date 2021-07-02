@@ -4,7 +4,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/BitPack.hpp"
 
-#include "Entity/Entity.hpp"
+#include "Engine/Entity.hpp"
 
 #include "Graphics/TransformUpdateReceiver.hpp"
 

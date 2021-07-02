@@ -3,7 +3,7 @@
 #include "Core/FixedArray.hpp"
 #include "Core/Pair.hpp"
 
-#include "Entity/Entity.hpp"
+#include "Engine/Entity.hpp"
 #include "Graphics/Scene.hpp"
 
 class World;

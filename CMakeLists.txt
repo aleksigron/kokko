@@ -122,14 +122,14 @@ set (KOKKO_SOURCES
 	src/Engine/ComponentSystemDefaultImpl.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
+	src/Engine/Entity.hpp
 	src/Engine/EntityFactory.cpp
 	src/Engine/EntityFactory.hpp
+	src/Engine/EntityManager.cpp
+	src/Engine/EntityManager.hpp
 	src/Engine/InstanceAllocatorPair.hpp
 	src/Engine/World.cpp
 	src/Engine/World.hpp
-	src/Entity/Entity.hpp
-	src/Entity/EntityManager.cpp
-	src/Entity/EntityManager.hpp
 	src/Graphics/BloomEffect.cpp
 	src/Graphics/BloomEffect.hpp
 	src/Graphics/EnvironmentManager.cpp

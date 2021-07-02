@@ -4,7 +4,7 @@
 #include "Core/Array.hpp"
 #include "Core/SortedArray.hpp"
 
-#include "Entity/Entity.hpp"
+#include "Engine/Entity.hpp"
 
 #include "Math/Mat4x4.hpp"
 

@@ -15,7 +15,7 @@
 
 #include "Engine/World.hpp"
 
-#include "Entity/EntityManager.hpp"
+#include "Engine/EntityManager.hpp"
 
 #include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/Scene.hpp"

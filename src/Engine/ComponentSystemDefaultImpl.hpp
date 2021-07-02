@@ -3,7 +3,7 @@
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
 
-#include "Entity/Entity.hpp"
+#include "Engine/Entity.hpp"
 
 template <typename ComponentData, typename ComponentId>
 class ComponentSystemDefaultImpl

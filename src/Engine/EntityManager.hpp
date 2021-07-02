@@ -6,7 +6,7 @@
 #include "Core/SortedArray.hpp"
 #include "Core/String.hpp"
 
-#include "Entity/Entity.hpp"
+#include "Engine/Entity.hpp"
 
 class Allocator;
 struct StringRef;

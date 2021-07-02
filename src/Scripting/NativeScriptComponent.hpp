@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Entity/Entity.hpp"
+#include "Engine/Entity.hpp"
 
 #include "Scripting/ScriptContext.hpp"
 

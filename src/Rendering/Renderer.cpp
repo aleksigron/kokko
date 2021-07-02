@@ -12,7 +12,7 @@
 
 #include "Engine/Engine.hpp"
 
-#include "Entity/EntityManager.hpp"
+#include "Engine/EntityManager.hpp"
 
 #include "Graphics/BloomEffect.hpp"
 #include "Graphics/ScreenSpaceAmbientOcclusion.hpp"

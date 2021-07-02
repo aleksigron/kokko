@@ -4,7 +4,7 @@
 
 #include "Debug/Debug.hpp"
 
-#include "Entity/EntityManager.hpp"
+#include "Engine/EntityManager.hpp"
 
 #include "Graphics/ParticleSystem.hpp"
 #include "Graphics/Scene.hpp"
