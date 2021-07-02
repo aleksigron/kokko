@@ -5,6 +5,7 @@
 
 struct Mat3x3f;
 struct Mat4x4fBijection;
+struct CameraParameters;
 
 class InputManager;
 
@@ -35,7 +36,7 @@ public:
 
 	void SetAspectRatio(float width, float height);
 
-	void Update();
+	void Update(bool windowIsActive);
 
 	/*
 	* Forward is the camera transform (view space to world space)
@@ -43,4 +44,5 @@ public:
 	*/
 	Mat4x4fBijection GetCameraTransform() const;
 	ProjectionParameters GetProjectionParameters() const;
+	CameraParameters GetCameraParameters() const;
 };

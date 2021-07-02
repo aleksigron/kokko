@@ -10,7 +10,10 @@
 SceneView::SceneView() :
 	contentWidth(0),
 	contentHeight(0),
-	resizeRequested(false)
+	resizeRequested(false),
+	windowIsFocused(false),
+	windowIsHovered(false),
+	windowIsOpen(true)
 {
 	Vec3f position(-3.0f, 2.0f, 6.0f);
 	Vec3f target(0.0f, 1.0f, 0.0f);
@@ -29,42 +32,67 @@ void SceneView::Update()
 	if (contentWidth > 0 && contentHeight > 0)
 		editorCamera.SetAspectRatio(contentWidth, contentHeight);
 
-	editorCamera.Update();
+	editorCamera.Update(windowIsFocused || windowIsHovered);
 }
 
 void SceneView::Draw()
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	if (ImGui::Begin("Scene"))
+	bool requestSetFocus = false;
+
+	if (ImGui::BeginMainMenuBar())
 	{
-		ImVec2 size = ImGui::GetContentRegionAvail();
-		
-		if (ImGui::IsAnyMouseDown() == false &&
-			size.x > 0 && size.y > 0 &&
-			(size.x != contentWidth || size.y != contentHeight))
+		if (ImGui::BeginMenu("View"))
 		{
-			// Update framebuffer
-			KK_LOG_INFO("Scene view content region resized to ({}, {})", size.x, size.y);
+			if (ImGui::MenuItem("Scene", nullptr, &windowIsOpen))
+			{
+				windowIsOpen = true;
+				requestSetFocus = true;
+			}
 
-			contentWidth = static_cast<int>(size.x);
-			contentHeight = static_cast<int>(size.y);
-
-			resizeRequested = true;
-		}
-
-		if (framebuffer.IsInitialized())
-		{
-			ImVec2 uv0(0.0f, 1.0f);
-			ImVec2 uv1(1.0f, 0.0f);
-
-			void* texId = reinterpret_cast<void*>(static_cast<size_t>(framebuffer.GetColorTextureId(0)));
-
-			ImGui::Image(texId, size, uv0, uv1);
+			ImGui::EndMenu();
 		}
 	}
+	
+	if (windowIsOpen)
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		if (ImGui::Begin("Scene", &windowIsOpen))
+		{
+			ImVec2 size = ImGui::GetContentRegionAvail();
 
-	ImGui::End();
-	ImGui::PopStyleVar();
+			if (ImGui::IsAnyMouseDown() == false &&
+				size.x > 0 && size.y > 0 &&
+				(size.x != contentWidth || size.y != contentHeight))
+			{
+				// Update framebuffer
+				KK_LOG_INFO("Scene view content region resized to ({}, {})", size.x, size.y);
+
+				contentWidth = static_cast<int>(size.x);
+				contentHeight = static_cast<int>(size.y);
+
+				resizeRequested = true;
+			}
+
+			if (framebuffer.IsInitialized())
+			{
+				ImVec2 uv0(0.0f, 1.0f);
+				ImVec2 uv1(1.0f, 0.0f);
+
+				void* texId = reinterpret_cast<void*>(static_cast<size_t>(framebuffer.GetColorTextureId(0)));
+
+				ImGui::Image(texId, size, uv0, uv1);
+			}
+		}
+
+		if (requestSetFocus)
+			ImGui::SetWindowFocus();
+
+		windowIsFocused = ImGui::IsWindowFocused();
+		windowIsHovered = ImGui::IsWindowHovered();
+
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
 }
 
 void SceneView::ResizeFramebufferIfRequested()
@@ -89,10 +117,7 @@ Vec2i SceneView::GetContentAreaSize()
 
 CameraParameters SceneView::GetCameraParameters() const
 {
-	Mat4x4fBijection cameraTransform = editorCamera.GetCameraTransform();
-	ProjectionParameters cameraProjection = editorCamera.GetProjectionParameters();
-
-	return CameraParameters{ cameraTransform, cameraProjection };
+	return editorCamera.GetCameraParameters();
 }
 
 void SceneView::ResizeFramebuffer()

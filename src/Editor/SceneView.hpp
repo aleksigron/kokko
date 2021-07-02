@@ -34,6 +34,9 @@ private:
 	int contentHeight;
 
 	bool resizeRequested;
+	bool windowIsFocused;
+	bool windowIsHovered;
+	bool windowIsOpen;
 
 	EditorCamera editorCamera;
 	Framebuffer framebuffer;
