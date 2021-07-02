@@ -2,21 +2,12 @@
 
 #include "imgui.h"
 
+#include "Editor/EditorWindowInfo.hpp"
 #include "Editor/SelectionContext.hpp"
 
 #include "Engine/EntityFactory.hpp"
-#include "Engine/World.hpp"
-
 #include "Engine/EntityManager.hpp"
-
-#include "Graphics/Scene.hpp"
-
-#include "Rendering/CameraSystem.hpp"
-#include "Rendering/LightManager.hpp"
-#include "Rendering/Renderer.hpp"
-
-#include "Resources/MaterialManager.hpp"
-#include "Resources/MeshManager.hpp"
+#include "Engine/World.hpp"
 
 const char* const EntityListView::SceneDragDropPayloadType = "SceneObject";
 
@@ -26,49 +17,58 @@ EntityListView::EntityListView() :
 {
 }
 
-void EntityListView::Draw(SelectionContext& context, World* world)
+void EntityListView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world)
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	ImGui::Begin("Entities", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-	ImGui::PopStyleVar();
-
-	DrawEntityListButtons(world);
-
-	if (ImGui::BeginChild("EntityList"))
+	if (windowInfo.isOpen)
 	{
-		EntityManager* entityManager = world->GetEntityManager();
-		Scene* scene = world->GetScene();
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-		ImGuiTreeNodeFlags levelNodeFlags = ImGuiTreeNodeFlags_SpanAvailWidth |
-			ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_DefaultOpen;
-
-		if (ImGui::TreeNodeEx(world->GetLoadedLevelFilename().GetCStr(), levelNodeFlags))
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen, windowFlags))
 		{
-			ProcessSceneDragDropTarget(SceneObjectId::Null);
+			DrawEntityListButtons(world);
 
-			for (Entity entity : *entityManager)
+			if (ImGui::BeginChild("EntityList"))
 			{
-				SceneObjectId sceneObj = scene->Lookup(entity);
+				EntityManager* entityManager = world->GetEntityManager();
+				Scene* scene = world->GetScene();
 
-				// Only draw root level objects, or entities that don't exist in the scene hierarchy
-				if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
-					DrawEntityNode(context, world, entity, sceneObj);
+				ImGuiTreeNodeFlags levelNodeFlags = ImGuiTreeNodeFlags_SpanAvailWidth |
+					ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_DefaultOpen;
+
+				if (ImGui::TreeNodeEx(world->GetLoadedLevelFilename().GetCStr(), levelNodeFlags))
+				{
+					ProcessSceneDragDropTarget(SceneObjectId::Null);
+
+					for (Entity entity : *entityManager)
+					{
+						SceneObjectId sceneObj = scene->Lookup(entity);
+
+						// Only draw root level objects, or entities that don't exist in the scene hierarchy
+						if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
+							DrawEntityNode(context, world, entity, sceneObj);
+					}
+
+					ImGui::TreePop();
+				}
+
+				ImGui::Spacing();
+				ImGui::EndChild();
+
+				if (requestSetSceneObjectParent.first != SceneObjectId::Null)
+				{
+					scene->SetParent(requestSetSceneObjectParent.first, requestSetSceneObjectParent.second);
+					requestSetSceneObjectParent = Pair(SceneObjectId::Null, SceneObjectId::Null);
+				}
 			}
-
-			ImGui::TreePop();
 		}
 
-		ImGui::Spacing();
-		ImGui::EndChild();
+		if (windowInfo.requestFocus)
+			ImGui::SetWindowFocus();
 
-		if (requestSetSceneObjectParent.first != SceneObjectId::Null)
-		{
-			scene->SetParent(requestSetSceneObjectParent.first, requestSetSceneObjectParent.second);
-			requestSetSceneObjectParent = Pair(SceneObjectId::Null, SceneObjectId::Null);
-		}
+		ImGui::End();
+		ImGui::PopStyleVar();
 	}
-
-	ImGui::End();
 }
 
 void EntityListView::DrawEntityListButtons(World* world)

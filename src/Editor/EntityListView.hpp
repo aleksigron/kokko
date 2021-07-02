@@ -4,12 +4,14 @@
 #include "Core/Pair.hpp"
 
 #include "Engine/Entity.hpp"
+
 #include "Graphics/Scene.hpp"
 
 class World;
 
 struct SceneObjectId;
 struct SelectionContext;
+struct EditorWindowInfo;
 
 class EntityListView
 {
@@ -18,9 +20,6 @@ private:
 
 	// First one is the object that is moved, the second one is the parent
 	Pair<SceneObjectId, SceneObjectId> requestSetSceneObjectParent;
-
-	static const size_t ComponentTypeCount = 4;
-	static const char* const ComponentNames[ComponentTypeCount];
 
 	static const char* const SceneDragDropPayloadType;
 
@@ -33,5 +32,5 @@ private:
 public:
 	EntityListView();
 
-	void Draw(SelectionContext& context, World* world);
+	void Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world);
 };

@@ -2,12 +2,12 @@
 
 #include "imgui.h"
 
+#include "Editor/EditorWindowInfo.hpp"
 #include "Editor/SelectionContext.hpp"
 
 #include "Engine/EntityFactory.hpp"
-#include "Engine/World.hpp"
-
 #include "Engine/EntityManager.hpp"
+#include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
 
@@ -20,7 +20,8 @@
 
 EntityView::EntityView() :
 	materialManager(nullptr),
-	meshManager(nullptr)
+	meshManager(nullptr),
+	requestDestroyEntity(Entity::Null)
 {
 }
 
@@ -30,46 +31,53 @@ void EntityView::Initialize(const ResourceManagers& resourceManagers)
 	meshManager = resourceManagers.meshManager;
 }
 
-void EntityView::Draw(SelectionContext& context, World* world)
+void EntityView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world)
 {
-	ImGui::Begin("Properties");
-
-	EntityManager* entityManager = world->GetEntityManager();
-
-	if (context.selectedEntity != Entity::Null)
+	if (windowInfo.isOpen)
 	{
-		// Name
-
-		const char* entityName = entityManager->GetDebugNameWithFallback(context.selectedEntity);
-		std::strncpy(textInputBuffer.GetData(), entityName, textInputBuffer.GetCapacity());
-		if (ImGui::InputText("Name", textInputBuffer.GetData(), textInputBuffer.GetCapacity()))
+		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen))
 		{
-			if (std::strlen(textInputBuffer.GetData()) > 0)
-				entityManager->SetDebugName(context.selectedEntity, textInputBuffer.GetData());
-			else
-				entityManager->ClearDebugName(context.selectedEntity);
+			EntityManager* entityManager = world->GetEntityManager();
+
+			if (context.selectedEntity != Entity::Null)
+			{
+				// Name
+
+				const char* entityName = entityManager->GetDebugNameWithFallback(context.selectedEntity);
+				std::strncpy(textInputBuffer.GetData(), entityName, textInputBuffer.GetCapacity());
+				if (ImGui::InputText("Name", textInputBuffer.GetData(), textInputBuffer.GetCapacity()))
+				{
+					if (std::strlen(textInputBuffer.GetData()) > 0)
+						entityManager->SetDebugName(context.selectedEntity, textInputBuffer.GetData());
+					else
+						entityManager->ClearDebugName(context.selectedEntity);
+				}
+
+				DrawButtons(context.selectedEntity, world);
+
+				DrawSceneComponent(context.selectedEntity, world);
+				DrawRenderComponent(context.selectedEntity, world);
+				DrawCameraComponent(context.selectedEntity, world);
+				DrawLightComponent(context.selectedEntity, world);
+
+				ImGui::Spacing();
+			}
+
+			if (requestDestroyEntity != Entity::Null)
+			{
+				if (context.selectedEntity == requestDestroyEntity)
+					context.selectedEntity = Entity::Null;
+
+				EntityFactory::DestroyEntity(world, requestDestroyEntity);
+				requestDestroyEntity = Entity::Null;
+			}
 		}
 
-		DrawButtons(context.selectedEntity, world);
+		if (windowInfo.requestFocus)
+			ImGui::SetWindowFocus();
 
-		DrawSceneComponent(context.selectedEntity, world);
-		DrawRenderComponent(context.selectedEntity, world);
-		DrawCameraComponent(context.selectedEntity, world);
-		DrawLightComponent(context.selectedEntity, world);
-
-		ImGui::Spacing();
+		ImGui::End();
 	}
-
-	if (requestDestroyEntity != Entity::Null)
-	{
-		if (context.selectedEntity == requestDestroyEntity)
-			context.selectedEntity = Entity::Null;
-
-		EntityFactory::DestroyEntity(world, requestDestroyEntity);
-		requestDestroyEntity = Entity::Null;
-	}
-
-	ImGui::End();
 }
 
 void EntityView::DrawButtons(Entity selectedEntity, World* world)

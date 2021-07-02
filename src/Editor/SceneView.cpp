@@ -4,6 +4,8 @@
 
 #include "Core/Core.hpp"
 
+#include "Editor/EditorWindowInfo.hpp"
+
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/RenderDeviceEnums.hpp"
 
@@ -12,8 +14,7 @@ SceneView::SceneView() :
 	contentHeight(0),
 	resizeRequested(false),
 	windowIsFocused(false),
-	windowIsHovered(false),
-	windowIsOpen(true)
+	windowIsHovered(false)
 {
 	Vec3f position(-3.0f, 2.0f, 6.0f);
 	Vec3f target(0.0f, 1.0f, 0.0f);
@@ -35,28 +36,12 @@ void SceneView::Update()
 	editorCamera.Update(windowIsFocused || windowIsHovered);
 }
 
-void SceneView::Draw()
+void SceneView::Draw(EditorWindowInfo& windowInfo)
 {
-	bool requestSetFocus = false;
-
-	if (ImGui::BeginMainMenuBar())
-	{
-		if (ImGui::BeginMenu("View"))
-		{
-			if (ImGui::MenuItem("Scene", nullptr, &windowIsOpen))
-			{
-				windowIsOpen = true;
-				requestSetFocus = true;
-			}
-
-			ImGui::EndMenu();
-		}
-	}
-	
-	if (windowIsOpen)
+	if (windowInfo.isOpen)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		if (ImGui::Begin("Scene", &windowIsOpen))
+		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen))
 		{
 			ImVec2 size = ImGui::GetContentRegionAvail();
 
@@ -84,7 +69,7 @@ void SceneView::Draw()
 			}
 		}
 
-		if (requestSetFocus)
+		if (windowInfo.requestFocus)
 			ImGui::SetWindowFocus();
 
 		windowIsFocused = ImGui::IsWindowFocused();

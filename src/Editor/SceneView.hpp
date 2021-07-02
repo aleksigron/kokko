@@ -9,6 +9,7 @@
 class InputManager;
 
 struct CameraParameters;
+struct EditorWindowInfo;
 
 class SceneView
 {
@@ -18,7 +19,7 @@ public:
 	void Initialize(RenderDevice* renderDevice, InputManager* inputManager);
 
 	void Update();
-	void Draw();
+	void Draw(EditorWindowInfo& windowInfo);
 
 	void ResizeFramebufferIfRequested();
 
@@ -36,7 +37,6 @@ private:
 	bool resizeRequested;
 	bool windowIsFocused;
 	bool windowIsHovered;
-	bool windowIsOpen;
 
 	EditorCamera editorCamera;
 	Framebuffer framebuffer;

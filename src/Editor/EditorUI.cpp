@@ -32,6 +32,7 @@
 
 EditorUI::EditorUI(Allocator* allocator) :
 	allocator(allocator),
+	renderDevice(nullptr),
 	renderBackend(nullptr),
 	platformBackend(nullptr)
 {
@@ -62,6 +63,10 @@ void EditorUI::Initialize(RenderDevice* renderDevice, Window* window, const Reso
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	ImGui::StyleColorsDark();
+
+	editorWindows[EditorWindow_Entities] = EditorWindowInfo{ "Entities", true, false };
+	editorWindows[EditorWindow_Properties] = EditorWindowInfo{ "Properties", true, false };
+	editorWindows[EditorWindow_Scene] = EditorWindowInfo{ "Scene", true, false };
 
 	renderBackend->Initialize();
 
@@ -106,8 +111,8 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 
 	DrawMainMenuBar(world, shouldExitOut);
 
-	views->entityListView.Draw(views->selectionContext, world);
-	views->entityView.Draw(views->selectionContext, world);
+	views->entityListView.Draw(editorWindows[EditorWindow_Entities], views->selectionContext, world);
+	views->entityView.Draw(editorWindows[EditorWindow_Properties], views->selectionContext, world);
 
 	ImGui::ShowDemoWindow();
 
@@ -121,12 +126,17 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 
 void EditorUI::DrawSceneView()
 {
-	views->sceneView.Draw();
+	KOKKO_PROFILE_FUNCTION();
+
+	views->sceneView.Draw(editorWindows[EditorWindow_Scene]);
 }
 
 void EditorUI::EndFrame()
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	for (size_t i = 0; i < EditorWindow_COUNT; ++i)
+		editorWindows[i].requestFocus = false;
 
 	ImGui::Render();
 
@@ -152,9 +162,10 @@ CameraParameters EditorUI::GetEditorCameraParameters() const
 	return views->sceneView.GetCameraParameters();
 }
 
-
 void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	bool openLevel = false, saveLevel = false;
 
 	if (ImGui::BeginMainMenuBar())
@@ -162,19 +173,13 @@ void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("New"))
-			{
 				world->ClearAllEntities();
-			}
 
 			if (ImGui::MenuItem("Open..."))
-			{
 				openLevel = true;
-			}
 
 			if (ImGui::MenuItem("Save as..."))
-			{
 				saveLevel = true;
-			}
 
 			ImGui::Separator();
 
@@ -182,6 +187,23 @@ void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 
 			ImGui::EndMenu();
 		}
+
+		if (ImGui::BeginMenu("View"))
+		{
+			for (size_t i = 0; i < EditorWindow_COUNT; ++i)
+			{
+				EditorWindowInfo& windowInfo = editorWindows[i];
+
+				if (ImGui::MenuItem(windowInfo.title, nullptr, &windowInfo.isOpen))
+				{
+					windowInfo.isOpen = true;
+					windowInfo.requestFocus = true;
+				}
+			}
+
+			ImGui::EndMenu();
+		}
+
 		ImGui::EndMainMenuBar();
 	}
 

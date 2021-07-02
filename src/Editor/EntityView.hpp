@@ -4,15 +4,14 @@
 #include "Core/Pair.hpp"
 
 #include "Engine/Entity.hpp"
-#include "Graphics/Scene.hpp"
 
 class World;
 class MaterialManager;
 class MeshManager;
 
 struct ResourceManagers;
-struct SceneObjectId;
 struct SelectionContext;
+struct EditorWindowInfo;
 
 class EntityView
 {
@@ -31,11 +30,10 @@ private:
 	void DrawCameraComponent(Entity selectedEntity, World* world);
 	void DrawLightComponent(Entity selectedEntity, World* world);
 
-
 public:
 	EntityView();
 
 	void Initialize(const ResourceManagers& resourceManagers);
 
-	void Draw(SelectionContext& context, World* world);
+	void Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world);
 };

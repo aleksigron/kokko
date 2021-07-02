@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+
+#include "Editor/EditorWindowInfo.hpp"
+
 struct GLFWwindow;
 
 class Allocator;
@@ -27,6 +31,17 @@ private:
 	ImGuiPlatformBackend* platformBackend;
 
 	EditorViews* views;
+
+	enum EditorWindow
+	{
+		EditorWindow_Entities,
+		EditorWindow_Properties,
+		EditorWindow_Scene,
+
+		EditorWindow_COUNT
+	};
+
+	EditorWindowInfo editorWindows[EditorWindow_COUNT];
 
 	void DrawMainMenuBar(World* world, bool& shouldExitOut);
 

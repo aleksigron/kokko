@@ -110,6 +110,7 @@ set (KOKKO_SOURCES
 	src/Editor/EditorUI.cpp
 	src/Editor/EditorUI.hpp
 	src/Editor/EditorViews.hpp
+	src/Editor/EditorWindowInfo.hpp
 	src/Editor/EntityListView.cpp
 	src/Editor/EntityListView.hpp
 	src/Editor/EntityView.cpp
