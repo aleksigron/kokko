@@ -17,17 +17,9 @@ class Renderer;
 
 struct MaterialData;
 
-struct TerrainId
-{
-	unsigned int i;
+using TerrainId = ComponentSystemDefaultImpl<TerrainInstance>::ComponentId;
 
-	bool operator==(TerrainId other) { return i == other.i; }
-	bool operator!=(TerrainId other) { return !operator==(other); }
-
-	static const TerrainId Null;
-};
-
-class TerrainManager : public CustomRenderer, public ComponentSystemDefaultImpl<TerrainInstance, TerrainId>
+class TerrainManager : public CustomRenderer, public ComponentSystemDefaultImpl<TerrainInstance>
 {
 private:
 	struct UniformBlock

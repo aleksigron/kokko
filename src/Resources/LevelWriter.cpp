@@ -183,7 +183,7 @@ void LevelWriter::WriteCameraComponent(YAML::Emitter& out, Entity entity)
 	CameraSystem* cameraSystem = world->GetCameraSystem();
 
 	CameraId cameraId = cameraSystem->Lookup(entity);
-	if (cameraId != CameraId::Null)
+	if (cameraId != CameraId::Null())
 	{
 		out << YAML::BeginMap;
 		out << YAML::Key << ComponentTypeKey << YAML::Value << "camera";

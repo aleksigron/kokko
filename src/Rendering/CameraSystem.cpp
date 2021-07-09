@@ -2,7 +2,6 @@
 
 #include <cassert>
 
-const CameraId CameraId::Null = CameraId{ 0 };
 const char* CameraSystem::ProjectionTypeNames[] = { "perspective", "orthographic" };
 const char* CameraSystem::ProjectionTypeDisplayNames[] = { "Perspective", "Orthographic" };
 

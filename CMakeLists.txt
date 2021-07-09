@@ -175,7 +175,6 @@ set (KOKKO_SOURCES
 	src/Memory/MetricAllocator.hpp
 	src/Memory/TraceAllocator.cpp
 	src/Memory/TraceAllocator.hpp
-	src/Rendering/CameraId.hpp
 	src/Rendering/CameraParameters.hpp
 	src/Rendering/CameraSystem.cpp
 	src/Rendering/CameraSystem.hpp

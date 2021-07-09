@@ -67,7 +67,7 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 	{
 		CameraSystem* cameraSystem = world->GetCameraSystem();
 		CameraId cameraId = cameraSystem->Lookup(entity);
-		if (cameraId == CameraId::Null)
+		if (cameraId == CameraId::Null())
 			cameraSystem->AddComponentToEntity(entity);
 		break;
 	}
@@ -83,7 +83,7 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 	{
 		TerrainManager* terrainManager = world->GetTerrainManager();
 		TerrainId terrainId = terrainManager->Lookup(entity);
-		if (terrainId == TerrainId::Null)
+		if (terrainId == TerrainId::Null())
 		{
 			terrainId = terrainManager->AddComponentToEntity(entity);
 			terrainManager->InitializeTerrain(terrainId);
@@ -119,7 +119,7 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 	{
 		CameraSystem* cameraSystem = world->GetCameraSystem();
 		CameraId cameraId = cameraSystem->Lookup(entity);
-		if (cameraId != CameraId::Null)
+		if (cameraId != CameraId::Null())
 			cameraSystem->RemoveComponent(cameraId);
 		break;
 	}
@@ -135,7 +135,7 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 	{
 		TerrainManager* terrainManager = world->GetTerrainManager();
 		TerrainId terrainId = terrainManager->Lookup(entity);
-		if (terrainId != TerrainId::Null)
+		if (terrainId != TerrainId::Null())
 		{
 			terrainManager->DeinitializeTerrain(terrainId);
 			terrainManager->RemoveComponent(terrainId);

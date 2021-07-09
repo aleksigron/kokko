@@ -263,7 +263,7 @@ void EntityView::DrawCameraComponent(Entity selectedEntity, World* world)
 	CameraSystem* cameraSystem = world->GetCameraSystem();
 	CameraId cameraId = cameraSystem->Lookup(selectedEntity);
 
-	if (cameraId != CameraId::Null)
+	if (cameraId != CameraId::Null())
 	{
 		ImGui::Spacing();
 
@@ -405,7 +405,7 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 	TerrainManager* terrainManager = world->GetTerrainManager();
 	TerrainId terrainId = terrainManager->Lookup(selectedEntity);
 
-	if (terrainId != TerrainId::Null)
+	if (terrainId != TerrainId::Null())
 	{
 		ImGui::Spacing();
 

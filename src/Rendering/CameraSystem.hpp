@@ -4,11 +4,11 @@
 
 #include "Math/Projection.hpp"
 
-#include "Rendering/CameraId.hpp"
-
 class Allocator;
 
-class CameraSystem : public ComponentSystemDefaultImpl<ProjectionParameters, CameraId>
+using CameraId = ComponentSystemDefaultImpl<ProjectionParameters>::ComponentId;
+
+class CameraSystem : public ComponentSystemDefaultImpl<ProjectionParameters>
 {
 private:
 	static const size_t ProjectionTypeCount = 2;

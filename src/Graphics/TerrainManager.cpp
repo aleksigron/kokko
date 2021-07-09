@@ -16,8 +16,6 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 
-const TerrainId TerrainId::Null = TerrainId{ 0 };
-
 TerrainManager::TerrainManager(
 	Allocator* allocator,
 	RenderDevice* renderDevice,

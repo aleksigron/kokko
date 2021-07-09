@@ -5,7 +5,7 @@
 
 #include "Engine/Entity.hpp"
 
-template <typename ComponentData, typename ComponentId>
+template <typename ComponentData>
 class ComponentSystemDefaultImpl
 {
 public:
@@ -13,6 +13,16 @@ public:
 	{
 		ComponentData data;
 		Entity entity;
+	};
+
+	struct ComponentId
+	{
+		unsigned int i;
+
+		bool operator==(ComponentId other) { return i == other.i; }
+		bool operator!=(ComponentId other) { return !operator==(other); }
+
+		static ComponentId Null() { return ComponentId{ 0 }; }
 	};
 
 	ComponentSystemDefaultImpl(Allocator* allocator) :
@@ -37,7 +47,7 @@ public:
 	ComponentId Lookup(Entity e)
 	{
 		HashMap<unsigned int, ComponentId>::KeyValuePair* pair = entityMap.Lookup(e.id);
-		return pair != nullptr ? pair->second : ComponentId::Null;
+		return pair != nullptr ? pair->second : ComponentId::Null();
 	}
 
 	ComponentId AddComponentToEntity(Entity e)
