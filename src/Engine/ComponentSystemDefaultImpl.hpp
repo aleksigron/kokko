@@ -9,6 +9,12 @@ template <typename ComponentData, typename ComponentId>
 class ComponentSystemDefaultImpl
 {
 public:
+	struct EntityComponent
+	{
+		ComponentData data;
+		Entity entity;
+	};
+
 	ComponentSystemDefaultImpl(Allocator* allocator) :
 		componentData(allocator),
 		entityMap(allocator)
@@ -31,7 +37,7 @@ public:
 	ComponentId Lookup(Entity e)
 	{
 		HashMap<unsigned int, ComponentId>::KeyValuePair* pair = entityMap.Lookup(e.id);
-		return pair != nullptr ? pair->second : CameraId::Null;
+		return pair != nullptr ? pair->second : ComponentId::Null;
 	}
 
 	ComponentId AddComponentToEntity(Entity e)
@@ -88,13 +94,10 @@ public:
 		componentData[id.i].data = data;
 	}
 
-private:
-	struct EntityComponent
-	{
-		ComponentData data;
-		Entity entity;
-	};
+	typename Array<EntityComponent>::Iterator begin() { return ++componentData.begin(); }
+	typename Array<EntityComponent>::Iterator end() { return componentData.end(); }
 
+private:
 	Array<EntityComponent> componentData;
 	HashMap<unsigned int, ComponentId> entityMap;
 };

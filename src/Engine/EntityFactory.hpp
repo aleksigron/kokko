@@ -10,13 +10,14 @@ enum class EntityComponentType
 	Scene,
 	Render,
 	Camera,
-	Light
+	Light,
+	Terrain
 };
 
 class EntityFactory
 {
 public:
-	static const size_t ComponentTypeCount = 4;
+	static const size_t ComponentTypeCount = 5;
 
 	static Entity CreateEntity(World* world, ArrayView<EntityComponentType> components);
 	static void DestroyEntity(World* world, Entity entity);

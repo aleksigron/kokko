@@ -57,6 +57,7 @@ public:
 	Renderer* GetRenderer() { return renderer.instance; }
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
+	TerrainManager* GetTerrainManager() { return terrainManager.instance; }
 	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
 
 private:

@@ -10,6 +10,7 @@
 #include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
+#include "Graphics/TerrainManager.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
@@ -59,6 +60,7 @@ void EntityView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, W
 				DrawRenderComponent(context.selectedEntity, world);
 				DrawCameraComponent(context.selectedEntity, world);
 				DrawLightComponent(context.selectedEntity, world);
+				DrawTerrainComponent(context.selectedEntity, world);
 
 				ImGui::Spacing();
 			}
@@ -122,7 +124,8 @@ void EntityView::DrawSceneComponent(Entity selectedEntity, World* world)
 		ImGui::Spacing();
 
 		bool componentVisible = true;
-		if (ImGui::CollapsingHeader("Scene object", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
+		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Scene);
+		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
 			SceneEditTransform transform = scene->GetEditTransform(sceneObj);
@@ -166,7 +169,8 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 		ImVec4 warningColor(1.0f, 0.6f, 0.0f, 1.0f);
 
 		bool componentVisible = true;
-		if (ImGui::CollapsingHeader("Render object", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
+		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Render);
+		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			MeshId meshId = renderer->GetMeshId(renderObj);
 			const char* meshPath = nullptr;
@@ -264,7 +268,8 @@ void EntityView::DrawCameraComponent(Entity selectedEntity, World* world)
 		ImGui::Spacing();
 
 		bool componentVisible = true;
-		if (ImGui::CollapsingHeader("Camera", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
+		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Camera);
+		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
 			ProjectionParameters params = cameraSystem->GetData(cameraId);
@@ -332,7 +337,8 @@ void EntityView::DrawLightComponent(Entity selectedEntity, World* world)
 		ImGui::Spacing();
 
 		bool componentVisible = true;
-		if (ImGui::CollapsingHeader("Light", &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
+		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Light);
+		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
 			LightType lightType = lightManager->GetLightType(lightId);
@@ -390,6 +396,50 @@ void EntityView::DrawLightComponent(Entity selectedEntity, World* world)
 
 			if (componentVisible == false)
 				lightManager->RemoveLight(lightId);
+		}
+	}
+}
+
+void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
+{
+	TerrainManager* terrainManager = world->GetTerrainManager();
+	TerrainId terrainId = terrainManager->Lookup(selectedEntity);
+
+	if (terrainId != TerrainId::Null)
+	{
+		ImGui::Spacing();
+
+		bool componentVisible = true;
+		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Terrain);
+		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			bool edited = false;
+			TerrainInstance terrain = terrainManager->GetData(terrainId);
+			float heightRange = terrain.maxHeight - terrain.minHeight;
+
+			if (ImGui::DragFloat("Terrain size", &terrain.terrainSize, 1.0f, 1.0f))
+				edited = true;
+
+			if (ImGui::DragFloat("Height origin", &terrain.minHeight, 0.1f))
+			{
+				edited = true;
+				terrain.maxHeight = terrain.minHeight + heightRange;
+			}
+
+			if (ImGui::DragFloat("Height range", &heightRange, 0.1f, 0.1f))
+			{
+				edited = true;
+				terrain.maxHeight = terrain.minHeight + heightRange;
+			}
+
+			if (ImGui::DragFloat2("Texture scale", terrain.textureScale.ValuePointer(), 0.01f, 0.01f))
+				edited = true;
+
+			if (edited)
+				terrainManager->SetData(terrainId, terrain);
+
+			if (componentVisible == false)
+				terrainManager->RemoveComponent(terrainId);
 		}
 	}
 }

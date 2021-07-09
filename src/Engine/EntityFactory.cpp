@@ -1,20 +1,24 @@
 #include "Engine/EntityFactory.hpp"
 
+#include <cassert>
+
 #include "Engine/World.hpp"
 
 #include "Engine/EntityManager.hpp"
 
 #include "Graphics/Scene.hpp"
+#include "Graphics/TerrainManager.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 
 const char* const EntityFactory::ComponentNames[] = {
-	"Scene object",
+	"Transform",
 	"Render object",
 	"Camera",
-	"Light"
+	"Light",
+	"Terrain"
 };
 
 Entity EntityFactory::CreateEntity(World* world, ArrayView<EntityComponentType> components)
@@ -75,6 +79,17 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 			lightManager->AddLight(entity);
 		break;
 	}
+	case EntityComponentType::Terrain:
+	{
+		TerrainManager* terrainManager = world->GetTerrainManager();
+		TerrainId terrainId = terrainManager->Lookup(entity);
+		if (terrainId == TerrainId::Null)
+		{
+			terrainId = terrainManager->AddComponentToEntity(entity);
+			terrainManager->InitializeTerrain(terrainId);
+		}
+		break;
+	}
 	default:
 		break;
 	}
@@ -82,15 +97,11 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 
 void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityComponentType componentType)
 {
-	Scene* scene = world->GetScene();
-	Renderer* renderer = world->GetRenderer();
-	CameraSystem* cameraSystem = world->GetCameraSystem();
-	LightManager* lightManager = world->GetLightManager();
-
 	switch (componentType)
 	{
 	case EntityComponentType::Scene:
 	{
+		Scene* scene = world->GetScene();
 		SceneObjectId sceneObj = scene->Lookup(entity);
 		if (sceneObj != SceneObjectId::Null)
 			scene->RemoveSceneObject(sceneObj);
@@ -98,6 +109,7 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 	}
 	case EntityComponentType::Render:
 	{
+		Renderer* renderer = world->GetRenderer();
 		RenderObjectId renderObj = renderer->Lookup(entity);
 		if (renderObj != RenderObjectId::Null)
 			renderer->RemoveRenderObject(renderObj);
@@ -105,6 +117,7 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 	}
 	case EntityComponentType::Camera:
 	{
+		CameraSystem* cameraSystem = world->GetCameraSystem();
 		CameraId cameraId = cameraSystem->Lookup(entity);
 		if (cameraId != CameraId::Null)
 			cameraSystem->RemoveComponent(cameraId);
@@ -112,9 +125,21 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 	}
 	case EntityComponentType::Light:
 	{
+		LightManager* lightManager = world->GetLightManager();
 		LightId lightId = lightManager->Lookup(entity);
 		if (lightId != LightId::Null)
 			lightManager->RemoveLight(lightId);
+		break;
+	}
+	case EntityComponentType::Terrain:
+	{
+		TerrainManager* terrainManager = world->GetTerrainManager();
+		TerrainId terrainId = terrainManager->Lookup(entity);
+		if (terrainId != TerrainId::Null)
+		{
+			terrainManager->DeinitializeTerrain(terrainId);
+			terrainManager->RemoveComponent(terrainId);
+		}
 		break;
 	}
 	default:
@@ -124,10 +149,12 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 
 const char* EntityFactory::GetComponentTypeName(size_t typeIndex)
 {
+	assert(typeIndex < ComponentTypeCount);
+
 	return ComponentNames[typeIndex];
 }
 
 const char* EntityFactory::GetComponentTypeName(EntityComponentType component)
 {
-	return ComponentNames[static_cast<size_t>(component)];
+	return GetComponentTypeName(static_cast<size_t>(component));
 }
