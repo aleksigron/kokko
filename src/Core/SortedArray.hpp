@@ -59,7 +59,7 @@ public:
 
 		size_t index = FindInternal(value);
 
-		return a[index] == value;
+		return index < a.GetCount() && a[index] == value;
 	}
 
 	intptr_t Find(const ValueType& value) const
