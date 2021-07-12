@@ -6,7 +6,7 @@
 
 static DebugLog* DebugLogInstance = nullptr;
 
-static const size_t FormatBufferSize = 1024;
+static const size_t FormatBufferSize = 4096;
 
 static const size_t LevelStringLength = 8;
 static const char LevelStrings[][LevelStringLength] =

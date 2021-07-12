@@ -49,11 +49,10 @@ void EntityListView::Draw(EditorWindowInfo& windowInfo, SelectionContext& contex
 							DrawEntityNode(context, world, entity, sceneObj);
 					}
 
-					ImGui::TreePop();
+					// No TreePop() because we're using CollapsingHeader, and therefore NoTreePushOnOpen
 				}
 
 				ImGui::Spacing();
-				ImGui::EndChild();
 
 				if (requestSetSceneObjectParent.first != SceneObjectId::Null)
 				{
@@ -61,6 +60,8 @@ void EntityListView::Draw(EditorWindowInfo& windowInfo, SelectionContext& contex
 					requestSetSceneObjectParent = Pair(SceneObjectId::Null, SceneObjectId::Null);
 				}
 			}
+
+			ImGui::EndChild();
 		}
 
 		if (windowInfo.requestFocus)
