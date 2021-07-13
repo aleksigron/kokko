@@ -1,5 +1,5 @@
 {
-	"shader": "res/shaders/deferred_geometry/standard_opaque.shader.json",
+	"shader": "res/shaders/deferred_geometry/standard_opaque.glsl",
 	"variables":
 	[
 		{ "name": "metalness", "value": 0.0 },

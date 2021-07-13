@@ -2,6 +2,7 @@
 	"shader": "res/shaders/deferred_geometry/terrain.glsl",
 	"variables":
 	[
+		{ "name": "albedo_map", "value": "res/textures/ground037_d.ktx2" },
 		{ "name": "metalness", "value": 0.0 },
 		{ "name": "roughness", "value": 0.8 }
 	]
