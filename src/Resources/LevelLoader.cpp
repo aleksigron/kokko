@@ -10,6 +10,7 @@
 
 #include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/Scene.hpp"
+#include "Graphics/TerrainManager.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/Renderer.hpp"
@@ -126,6 +127,9 @@ SceneObjectId LevelLoader::CreateComponents(const YAML::Node& componentSequence,
 				case "camera"_hash:
 					CreateCameraComponent(*itr, entity);
 					break;
+
+				case "terrain"_hash:
+					CreateTerrainComponent(*itr, entity);
 
 				default:
 					KK_LOG_ERROR("LevelLoader: Unknown component type");
@@ -350,4 +354,35 @@ void LevelLoader::CreateCameraComponent(const YAML::Node& map, Entity entity)
 
 	CameraId cameraId = cameraSystem->AddComponentToEntity(entity);
 	cameraSystem->SetData(cameraId, params);
+}
+
+void LevelLoader::CreateTerrainComponent(const YAML::Node& map, Entity entity)
+{
+	TerrainManager* terrainManager = world->GetTerrainManager();
+
+	TerrainInstance terrain;
+
+	YAML::Node sizeNode = map["terrain_size"];
+	if (sizeNode.IsDefined() && sizeNode.IsScalar())
+		terrain.terrainSize = sizeNode.as<float>();
+
+	YAML::Node resNode = map["terrain_resolution"];
+	if (resNode.IsDefined() && resNode.IsScalar())
+		terrain.terrainResolution = resNode.as<int>();
+
+	YAML::Node scaleNode = map["texture_scale"];
+	if (scaleNode.IsDefined() && scaleNode.IsSequence())
+		terrain.textureScale = scaleNode.as<Vec2f>();
+
+	YAML::Node minNode = map["min_height"];
+	if (minNode.IsDefined() && minNode.IsScalar())
+		terrain.minHeight = minNode.as<float>();
+
+	YAML::Node maxNode = map["max_height"];
+	if (maxNode.IsDefined() && maxNode.IsScalar())
+		terrain.maxHeight = maxNode.as<float>();
+
+	TerrainId id = terrainManager->AddComponentToEntity(entity);
+	terrainManager->SetData(id, terrain);
+	terrainManager->InitializeTerrain(id);
 }

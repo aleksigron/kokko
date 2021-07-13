@@ -24,6 +24,7 @@ private:
 	void CreateRenderComponent(const YAML::Node& map, Entity entity);
 	void CreateLightComponent(const YAML::Node& map, Entity entity);
 	void CreateCameraComponent(const YAML::Node& map, Entity entity);
+	void CreateTerrainComponent(const YAML::Node& map, Entity entity);
 
 public:
 	LevelLoader(World* world, const ResourceManagers& resManagers);

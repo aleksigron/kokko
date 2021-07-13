@@ -10,6 +10,7 @@
 
 #include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/Scene.hpp"
+#include "Graphics/TerrainManager.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
@@ -52,11 +53,10 @@ bool LevelWriter::WriteToFile(const char* filePath)
 	for (Entity entity : *entityManager)
 	{
 		SceneObjectId sceneObj = scene->Lookup(entity);
-		if (sceneObj != SceneObjectId::Null && scene->GetParent(sceneObj) == SceneObjectId::Null)
+		if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
 			WriteEntity(out, entity, sceneObj);
 	}
 	out << YAML::EndSeq; // objects
-
 
 	out << YAML::EndMap;
 
@@ -80,6 +80,7 @@ void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId s
 	WriteRenderComponent(out, entity);
 	WriteLightComponent(out, entity);
 	WriteCameraComponent(out, entity);
+	WriteTerrainComponent(out, entity);
 
 	out << YAML::EndSeq; // components
 
@@ -107,14 +108,18 @@ void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId s
 void LevelWriter::WriteTransformComponent(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
 {
 	Scene* scene = world->GetScene();
-	const SceneEditTransform& transform = scene->GetEditTransform(sceneObj);
 
-	out << YAML::BeginMap;
-	out << YAML::Key << ComponentTypeKey << YAML::Value << "transform";
-	out << YAML::Key << "position" << YAML::Value << transform.translation;
-	out << YAML::Key << "rotation" << YAML::Value << transform.rotation;
-	out << YAML::Key << "scale" << YAML::Value << transform.scale;
-	out << YAML::EndMap;
+	if (sceneObj != SceneObjectId::Null)
+	{
+		const SceneEditTransform& transform = scene->GetEditTransform(sceneObj);
+
+		out << YAML::BeginMap;
+		out << YAML::Key << ComponentTypeKey << YAML::Value << "transform";
+		out << YAML::Key << "position" << YAML::Value << transform.translation;
+		out << YAML::Key << "rotation" << YAML::Value << transform.rotation;
+		out << YAML::Key << "scale" << YAML::Value << transform.scale;
+		out << YAML::EndMap;
+	}
 }
 
 void LevelWriter::WriteRenderComponent(YAML::Emitter& out, Entity entity)
@@ -204,6 +209,28 @@ void LevelWriter::WriteCameraComponent(YAML::Emitter& out, Entity entity)
 			out << YAML::Key << "near" << YAML::Value << params.orthographicNear;
 			out << YAML::Key << "far" << YAML::Value << params.orthographicFar;
 		}
+
+		out << YAML::EndMap;
+	}
+}
+
+void LevelWriter::WriteTerrainComponent(YAML::Emitter& out, Entity entity)
+{
+	TerrainManager* terrainManager = world->GetTerrainManager();
+
+	TerrainId terrainId = terrainManager->Lookup(entity);
+	if (terrainId != TerrainId::Null())
+	{
+		out << YAML::BeginMap;
+		out << YAML::Key << ComponentTypeKey << YAML::Value << "terrain";
+
+		const TerrainInstance& terrain = terrainManager->GetData(terrainId);
+
+		out << YAML::Key << "terrain_size" << YAML::Value << terrain.terrainSize;
+		out << YAML::Key << "terrain_resolution" << YAML::Value << terrain.terrainResolution;
+		out << YAML::Key << "texture_scale" << YAML::Value << terrain.textureScale;
+		out << YAML::Key << "min_height" << YAML::Value << terrain.minHeight;
+		out << YAML::Key << "max_height" << YAML::Value << terrain.maxHeight;
 
 		out << YAML::EndMap;
 	}
