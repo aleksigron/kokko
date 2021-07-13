@@ -4,6 +4,10 @@
 
 #include "Graphics/TerrainInstance.hpp"
 
+#include "Math/Mat4x4.hpp"
+#include "Math/Vec3.hpp"
+#include "Math/Vec2.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/Renderer.hpp"
@@ -15,6 +19,21 @@
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
+
+struct TerrainUniformBlock
+{
+	static const unsigned int BindingPoint = 2;
+
+	alignas(16) Mat4x4f MVP;
+	alignas(16) Mat4x4f MV;
+
+	alignas(8) Vec2f textureScale;
+
+	alignas(4) float terrainSize;
+	alignas(4) float terrainResolution;
+	alignas(4) float minHeight;
+	alignas(4) float maxHeight;
+};
 
 TerrainManager::TerrainManager(
 	Allocator* allocator,
@@ -34,6 +53,7 @@ TerrainManager::TerrainManager(
 
 TerrainManager::~TerrainManager()
 {
+	// TODO: Release memory for terrain instances
 }
 
 void TerrainManager::Initialize()
@@ -76,7 +96,7 @@ void TerrainManager::InitializeTerrain(TerrainId id)
 
 	size_t texSize = terrain.terrainResolution;
 	float texSizeInv = 1.0f / texSize;
-	float scale = 128.0f;
+	float scale = 64.0f;
 	size_t dataSizeBytes = texSize * texSize * sizeof(uint16_t);
 	terrain.heightData = static_cast<uint16_t*>(allocator->Allocate(dataSizeBytes));
 
@@ -118,24 +138,23 @@ void TerrainManager::InitializeTerrain(TerrainId id)
 	size_t indexCount = sideQuads * sideQuads * quadIndices;
 	uint16_t* indexData = static_cast<uint16_t*>(allocator->Allocate(indexCount * sizeof(uint16_t)));
 
-	float origin = terrain.terrainSize * -0.5f;
-	float quadSize = terrain.terrainSize / terrain.terrainResolution;
+	float quadSize = 1.0f / terrain.terrainSize;
 
 	// Set vertex data
-	for (size_t x = 0; x < sideVerts; ++x)
+	for (size_t y = 0; y < sideVerts; ++y)
 	{
-		for (size_t y = 0; y < sideVerts; ++y)
+		for (size_t x = 0; x < sideVerts; ++x)
 		{
 			size_t vertIndex = y * sideVerts + x;
-			vertexData[vertIndex * vertexComponents + 0] = origin + x * quadSize;
-			vertexData[vertIndex * vertexComponents + 1] = origin + y * quadSize;
+			vertexData[vertIndex * vertexComponents + 0] = x * quadSize;
+			vertexData[vertIndex * vertexComponents + 1] = y * quadSize;
 		}
 	}
 
 	// Set index data
-	for (size_t x = 0; x < sideQuads; ++x)
+	for (size_t y = 0; y < sideQuads; ++y)
 	{
-		for (size_t y = 0; y < sideQuads; ++y)
+		for (size_t x = 0; x < sideQuads; ++x)
 		{
 			size_t quad = y * sideQuads + x;
 			indexData[quad * quadIndices + 0] = y * sideVerts + x;
@@ -178,7 +197,7 @@ void TerrainManager::InitializeTerrain(TerrainId id)
 
 	RenderCommandData::SetBufferStorage bufferStorage{};
 	bufferStorage.target = RenderBufferTarget::UniformBuffer;
-	bufferStorage.size = sizeof(UniformBlock);
+	bufferStorage.size = sizeof(TerrainUniformBlock);
 	bufferStorage.data = nullptr;
 	bufferStorage.dynamicStorage = true;
 	renderDevice->SetBufferStorage(&bufferStorage);
@@ -206,7 +225,7 @@ void TerrainManager::RenderTerrain(TerrainInstance& terrain, const MaterialData&
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	UniformBlock uniforms;
+	TerrainUniformBlock uniforms;
 	uniforms.MVP = viewport.viewProjection;
 	uniforms.MV = viewport.view;
 	uniforms.textureScale = terrain.textureScale;
@@ -216,7 +235,7 @@ void TerrainManager::RenderTerrain(TerrainInstance& terrain, const MaterialData&
 	uniforms.maxHeight = terrain.maxHeight;
 
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, terrain.uniformBufferId);
-	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(UniformBlock), &uniforms);
+	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TerrainUniformBlock), &uniforms);
 
 	// Bind object transform uniform block to shader
 	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, terrain.uniformBufferId);
