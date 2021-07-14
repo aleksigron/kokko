@@ -7,7 +7,7 @@
 #include "Engine/EntityManager.hpp"
 
 #include "Graphics/Scene.hpp"
-#include "Graphics/TerrainManager.hpp"
+#include "Graphics/TerrainSystem.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
@@ -81,12 +81,12 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 	}
 	case EntityComponentType::Terrain:
 	{
-		TerrainManager* terrainManager = world->GetTerrainManager();
-		TerrainId terrainId = terrainManager->Lookup(entity);
+		TerrainSystem* terrainSystem = world->GetTerrainSystem();
+		TerrainId terrainId = terrainSystem->Lookup(entity);
 		if (terrainId == TerrainId::Null())
 		{
-			terrainId = terrainManager->AddComponentToEntity(entity);
-			terrainManager->InitializeTerrain(terrainId);
+			terrainId = terrainSystem->AddComponentToEntity(entity);
+			terrainSystem->InitializeTerrain(terrainId);
 		}
 		break;
 	}
@@ -133,12 +133,12 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 	}
 	case EntityComponentType::Terrain:
 	{
-		TerrainManager* terrainManager = world->GetTerrainManager();
-		TerrainId terrainId = terrainManager->Lookup(entity);
+		TerrainSystem* terrainSystem = world->GetTerrainSystem();
+		TerrainId terrainId = terrainSystem->Lookup(entity);
 		if (terrainId != TerrainId::Null())
 		{
-			terrainManager->DeinitializeTerrain(terrainId);
-			terrainManager->RemoveComponent(terrainId);
+			terrainSystem->DeinitializeTerrain(terrainId);
+			terrainSystem->RemoveComponent(terrainId);
 		}
 		break;
 	}

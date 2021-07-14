@@ -10,7 +10,7 @@
 #include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
-#include "Graphics/TerrainManager.hpp"
+#include "Graphics/TerrainSystem.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
@@ -402,8 +402,8 @@ void EntityView::DrawLightComponent(Entity selectedEntity, World* world)
 
 void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 {
-	TerrainManager* terrainManager = world->GetTerrainManager();
-	TerrainId terrainId = terrainManager->Lookup(selectedEntity);
+	TerrainSystem* terrainSystem = world->GetTerrainSystem();
+	TerrainId terrainId = terrainSystem->Lookup(selectedEntity);
 
 	if (terrainId != TerrainId::Null())
 	{
@@ -414,7 +414,7 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
-			TerrainInstance terrain = terrainManager->GetData(terrainId);
+			TerrainInstance terrain = terrainSystem->GetData(terrainId);
 			float heightRange = terrain.maxHeight - terrain.minHeight;
 
 			if (ImGui::DragFloat("Terrain size", &terrain.terrainSize, 1.0f, 1.0f))
@@ -436,10 +436,10 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 				edited = true;
 
 			if (edited)
-				terrainManager->SetData(terrainId, terrain);
+				terrainSystem->SetData(terrainId, terrain);
 
 			if (componentVisible == false)
-				terrainManager->RemoveComponent(terrainId);
+				terrainSystem->RemoveComponent(terrainId);
 		}
 	}
 }

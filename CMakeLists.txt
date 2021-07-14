@@ -142,8 +142,8 @@ set (KOKKO_SOURCES
 	src/Graphics/ScreenSpaceAmbientOcclusion.hpp
 	src/Graphics/TerrainInstance.cpp
 	src/Graphics/TerrainInstance.hpp
-	src/Graphics/TerrainManager.cpp
-	src/Graphics/TerrainManager.hpp
+	src/Graphics/TerrainSystem.cpp
+	src/Graphics/TerrainSystem.hpp
 	src/Graphics/TransformUpdateReceiver.hpp
 	src/Graphics/Scene.cpp
 	src/Graphics/Scene.hpp

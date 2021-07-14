@@ -19,12 +19,12 @@ struct MaterialData;
 
 using TerrainId = ComponentSystemDefaultImpl<TerrainInstance>::ComponentId;
 
-class TerrainManager : public CustomRenderer, public ComponentSystemDefaultImpl<TerrainInstance>
+class TerrainSystem : public CustomRenderer, public ComponentSystemDefaultImpl<TerrainInstance>
 {
 public:
-	TerrainManager(Allocator* allocator, RenderDevice* renderDevice,
+	TerrainSystem(Allocator* allocator, RenderDevice* renderDevice,
 		MeshManager* meshManager, MaterialManager* materialManager, ShaderManager* shaderManager);
-	~TerrainManager();
+	~TerrainSystem();
 
 	void Initialize();
 

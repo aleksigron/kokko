@@ -1,4 +1,4 @@
-#include "Graphics/TerrainManager.hpp"
+#include "Graphics/TerrainSystem.hpp"
 
 #include "Core/Core.hpp"
 
@@ -35,7 +35,7 @@ struct TerrainUniformBlock
 	alignas(4) float maxHeight;
 };
 
-TerrainManager::TerrainManager(
+TerrainSystem::TerrainSystem(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	MeshManager* meshManager,
@@ -51,12 +51,12 @@ TerrainManager::TerrainManager(
 	terrainMaterial = MaterialId::Null;
 }
 
-TerrainManager::~TerrainManager()
+TerrainSystem::~TerrainSystem()
 {
 	// TODO: Release memory for terrain instances
 }
 
-void TerrainManager::Initialize()
+void TerrainSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -64,17 +64,17 @@ void TerrainManager::Initialize()
 	terrainMaterial = materialManager->GetIdByPath(path);
 }
 
-void TerrainManager::RegisterCustomRenderer(Renderer* renderer)
+void TerrainSystem::RegisterCustomRenderer(Renderer* renderer)
 {
 	renderer->AddCustomRenderer(this);
 }
 
-void TerrainManager::AddRenderCommands(const CustomRenderer::CommandParams& params)
+void TerrainSystem::AddRenderCommands(const CustomRenderer::CommandParams& params)
 {
 	params.commandList->AddDrawWithCallback(params.fullscreenViewport, RenderPass::OpaqueGeometry, 0.0f, params.callbackId);
 }
 
-void TerrainManager::RenderCustom(const CustomRenderer::RenderParams& params)
+void TerrainSystem::RenderCustom(const CustomRenderer::RenderParams& params)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -86,7 +86,7 @@ void TerrainManager::RenderCustom(const CustomRenderer::RenderParams& params)
 	}
 }
 
-void TerrainManager::InitializeTerrain(TerrainId id)
+void TerrainSystem::InitializeTerrain(TerrainId id)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -206,7 +206,7 @@ void TerrainManager::InitializeTerrain(TerrainId id)
 	SetData(id, terrain);
 }
 
-void TerrainManager::DeinitializeTerrain(TerrainId id)
+void TerrainSystem::DeinitializeTerrain(TerrainId id)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -221,7 +221,7 @@ void TerrainManager::DeinitializeTerrain(TerrainId id)
 		renderDevice->DestroyTextures(1, &terrain.textureId);
 }
 
-void TerrainManager::RenderTerrain(TerrainInstance& terrain, const MaterialData& material, const RenderViewport& viewport)
+void TerrainSystem::RenderTerrain(TerrainInstance& terrain, const MaterialData& material, const RenderViewport& viewport)
 {
 	KOKKO_PROFILE_FUNCTION();
 

@@ -10,7 +10,7 @@
 
 #include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/Scene.hpp"
-#include "Graphics/TerrainManager.hpp"
+#include "Graphics/TerrainSystem.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
@@ -216,15 +216,15 @@ void LevelWriter::WriteCameraComponent(YAML::Emitter& out, Entity entity)
 
 void LevelWriter::WriteTerrainComponent(YAML::Emitter& out, Entity entity)
 {
-	TerrainManager* terrainManager = world->GetTerrainManager();
+	TerrainSystem* terrainSystem = world->GetTerrainSystem();
 
-	TerrainId terrainId = terrainManager->Lookup(entity);
+	TerrainId terrainId = terrainSystem->Lookup(entity);
 	if (terrainId != TerrainId::Null())
 	{
 		out << YAML::BeginMap;
 		out << YAML::Key << ComponentTypeKey << YAML::Value << "terrain";
 
-		const TerrainInstance& terrain = terrainManager->GetData(terrainId);
+		const TerrainInstance& terrain = terrainSystem->GetData(terrainId);
 
 		out << YAML::Key << "terrain_size" << YAML::Value << terrain.terrainSize;
 		out << YAML::Key << "terrain_resolution" << YAML::Value << terrain.terrainResolution;

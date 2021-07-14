@@ -8,7 +8,7 @@
 
 #include "Graphics/ParticleSystem.hpp"
 #include "Graphics/Scene.hpp"
-#include "Graphics/TerrainManager.hpp"
+#include "Graphics/TerrainSystem.hpp"
 
 #include "Math/Rectangle.hpp"
 
@@ -62,8 +62,8 @@ World::World(AllocatorManager* allocManager,
 	scriptSystem.CreateScope(allocManager, "ScriptSystem", alloc);
 	scriptSystem.New(scriptSystem.allocator, inputManager);
 
-	terrainManager.CreateScope(allocManager, "TerrainManager", alloc);
-	terrainManager.New(terrainManager.allocator, renderDevice, resourceManagers.meshManager,
+	terrainSystem.CreateScope(allocManager, "TerrainSystem", alloc);
+	terrainSystem.New(terrainSystem.allocator, renderDevice, resourceManagers.meshManager,
 		resourceManagers.materialManager, resourceManagers.shaderManager);
 
 	particleSystem.CreateScope(allocManager, "ParticleEffects", alloc);
@@ -73,7 +73,7 @@ World::World(AllocatorManager* allocManager,
 World::~World()
 {
 	particleSystem.Delete();
-	terrainManager.Delete();
+	terrainSystem.Delete();
 	scriptSystem.Delete();
 	renderer.Delete();
 	scene.Delete();
@@ -85,7 +85,7 @@ World::~World()
 void World::Initialize()
 {
 	renderer.instance->Initialize();
-	terrainManager.instance->Initialize();
+	terrainSystem.instance->Initialize();
 	particleSystem.instance->Initialize();
 }
 
@@ -154,7 +154,7 @@ void World::Render(const Optional<CameraParameters>& editorCamera, const Framebu
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
-	terrainManager.instance->RegisterCustomRenderer(renderer.instance);
+	terrainSystem.instance->RegisterCustomRenderer(renderer.instance);
 	particleSystem.instance->RegisterCustomRenderer(renderer.instance);
 
 	renderer.instance->Render(editorCamera, framebuffer);

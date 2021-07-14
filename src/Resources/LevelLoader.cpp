@@ -10,7 +10,7 @@
 
 #include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/Scene.hpp"
-#include "Graphics/TerrainManager.hpp"
+#include "Graphics/TerrainSystem.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/Renderer.hpp"
@@ -358,7 +358,7 @@ void LevelLoader::CreateCameraComponent(const YAML::Node& map, Entity entity)
 
 void LevelLoader::CreateTerrainComponent(const YAML::Node& map, Entity entity)
 {
-	TerrainManager* terrainManager = world->GetTerrainManager();
+	TerrainSystem* terrainSystem = world->GetTerrainSystem();
 
 	TerrainInstance terrain;
 
@@ -382,7 +382,7 @@ void LevelLoader::CreateTerrainComponent(const YAML::Node& map, Entity entity)
 	if (maxNode.IsDefined() && maxNode.IsScalar())
 		terrain.maxHeight = maxNode.as<float>();
 
-	TerrainId id = terrainManager->AddComponentToEntity(entity);
-	terrainManager->SetData(id, terrain);
-	terrainManager->InitializeTerrain(id);
+	TerrainId id = terrainSystem->AddComponentToEntity(entity);
+	terrainSystem->SetData(id, terrain);
+	terrainSystem->InitializeTerrain(id);
 }

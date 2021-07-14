@@ -24,7 +24,7 @@ class Renderer;
 class LightManager;
 class CameraSystem;
 class ScriptSystem;
-class TerrainManager;
+class TerrainSystem;
 class ParticleSystem;
 
 class World
@@ -57,7 +57,7 @@ public:
 	Renderer* GetRenderer() { return renderer.instance; }
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
-	TerrainManager* GetTerrainManager() { return terrainManager.instance; }
+	TerrainSystem* GetTerrainSystem() { return terrainSystem.instance; }
 	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
 
 private:
@@ -71,7 +71,7 @@ private:
 	InstanceAllocatorPair<Scene> scene;
 	InstanceAllocatorPair<Renderer> renderer;
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
-	InstanceAllocatorPair<TerrainManager> terrainManager;
+	InstanceAllocatorPair<TerrainSystem> terrainSystem;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
 	ResourceManagers resourceManagers;
 };
