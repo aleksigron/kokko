@@ -3,16 +3,15 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 #include "rapidjson/document.h"
 
 #include "Core/Array.hpp"
-#include "Core/ArrayView.hpp"
 #include "Core/Core.hpp"
 #include "Core/Hash.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/Range.hpp"
-#include "Core/Sort.hpp"
 #include "Core/SortedArray.hpp"
 #include "Core/String.hpp"
 #include "Core/StringRef.hpp"
@@ -190,7 +189,7 @@ static bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUnifo
 {
 	const UniformTypeInfo& aType = UniformTypeInfo::Types[static_cast<unsigned int>(a.type)];
 	const UniformTypeInfo& bType = UniformTypeInfo::Types[static_cast<unsigned int>(b.type)];
-	return aType.size < bType.size;
+	return aType.size > bType.size;
 }
 
 static void AddUniforms(
@@ -235,10 +234,15 @@ static void AddUniforms(
 		else
 		{
 			nameBytes += uniform.name.len + 1;
+			// TODO: Calculate array definition length
 			uniformBlockBytes += uniform.name.len + type.typeNameLength + blockRowFixedMaxLen;
 			++bufferUniformCount;
 		}
 	}
+
+	const size_t shaderDataAlignment = 8;
+	nameBytes = (nameBytes + shaderDataAlignment - 1) / shaderDataAlignment * shaderDataAlignment;
+	uniformBlockBytes = (uniformBlockBytes + shaderDataAlignment - 1) / shaderDataAlignment * shaderDataAlignment;
 
 	size_t bufferUniformBytes = sizeof(BufferUniform) * bufferUniformCount;
 	size_t textureUniformBytes = sizeof(TextureUniform) * textureUniformCount;
@@ -322,7 +326,9 @@ static void AddUniforms(
 	shaderOut.uniforms.textureUniformCount = textureUniformCount;
 
 	// Order buffer uniforms based on size
-	InsertionSortPred(shaderOut.uniforms.bufferUniforms, bufferUniformCount, BufferUniformSortPredicate);
+	BufferUniform* begin = shaderOut.uniforms.bufferUniforms;
+	BufferUniform* end = begin + bufferUniformCount;
+	std::sort(begin, end, BufferUniformSortPredicate);
 
 	// Calculate CPU and GPU buffer offsets for buffer uniforms
 
@@ -333,10 +339,9 @@ static void AddUniforms(
 	{
 		BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
 		const UniformTypeInfo& type = UniformTypeInfo::FromType(uniform.type);
-
-		unsigned int alignmentModulo = bufferObjectOffset % type.alignment;
-		if (alignmentModulo > 0)
-			bufferObjectOffset += type.alignment - alignmentModulo;
+		
+		// Round up the offset to match type aligment
+		bufferObjectOffset = (bufferObjectOffset + type.alignment - 1) / type.alignment * type.alignment;
 
 		uniform.dataOffset = dataBufferOffset;
 		uniform.bufferObjectOffset = bufferObjectOffset;
@@ -355,8 +360,10 @@ static void AddUniforms(
 		}
 	}
 
+	const unsigned int bufferSizeUnit = 16;
+
 	shaderOut.uniforms.uniformDataSize = dataBufferOffset;
-	shaderOut.uniforms.uniformBufferSize = bufferObjectOffset;
+	shaderOut.uniforms.uniformBufferSize = (bufferObjectOffset + bufferSizeUnit - 1) / bufferSizeUnit * bufferSizeUnit;
 
 	// Generate uniform block definition
 

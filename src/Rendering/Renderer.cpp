@@ -280,6 +280,11 @@ void Renderer::Initialize()
 	}
 
 	{
+		const char* path = "res/materials/deferred_geometry/fallback.material.json";
+		fallbackMeshMaterial = materialManager->GetIdByPath(StringRef(path));
+	}
+
+	{
 		const char* path = "res/shaders/deferred_lighting/lighting.shader.json";
 		lightingShaderId = shaderManager->GetIdByPath(StringRef(path));
 	}
@@ -498,6 +503,10 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 			if (mat != RenderOrderConfiguration::CallbackMaterialId)
 			{
 				MaterialId matId = MaterialId{ static_cast<unsigned int>(mat) };
+
+				if (matId == MaterialId::Null)
+					matId = fallbackMeshMaterial;
+
 				uint64_t objIdx = renderOrder.renderObject.GetValue(command);
 
 				// Update viewport uniform block
@@ -803,7 +812,6 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 		RenderCommandData::BindFramebufferData bindFramebufferCommand;
 		bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
 		bindFramebufferCommand.framebuffer = targetFramebufferId;
-		//bindFramebufferCommand.framebuffer = 0;
 		device->BindFramebuffer(&bindFramebufferCommand);
 
 		const ShaderData& shader = shaderManager->GetShaderData(tonemappingShaderId);
@@ -1751,8 +1759,12 @@ void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entitie
 
 			// Recalculate bounding box
 			MeshId meshId = data.mesh[dataIdx];
-			const BoundingBox* bounds = meshManager->GetBoundingBox(meshId);
-			data.bounds[dataIdx] = bounds->Transform(transforms[entityIdx]);
+
+			if (meshId != MeshId::Null)
+			{
+				const BoundingBox* bounds = meshManager->GetBoundingBox(meshId);
+				data.bounds[dataIdx] = bounds->Transform(transforms[entityIdx]);
+			}
 
 			// Set world transform
 			data.transform[dataIdx] = transforms[entityIdx];

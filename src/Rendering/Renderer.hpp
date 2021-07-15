@@ -94,6 +94,7 @@ private:
 	ShaderId lightingShaderId;
 	ShaderId tonemappingShaderId;
 	MaterialId shadowMaterial;
+	MaterialId fallbackMeshMaterial;
 	unsigned int lightingUniformBufferId;
 	unsigned int tonemapUniformBufferId;
 

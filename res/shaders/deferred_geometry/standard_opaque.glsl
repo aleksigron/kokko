@@ -2,6 +2,7 @@
 #property albedo_map tex2d
 #property normal_map tex2d
 #property roughness_map tex2d
+#property color_tint vec3
 #property metalness float
 #property roughness float
 
@@ -32,6 +33,7 @@ void main()
 
 #stage fragment
 #include "res/shaders/common/constants.glsl"
+#include "res/shaders/common/g_buffer_io.glsl"
 #include "res/shaders/common/deferred_frag_output.glsl"
 
 in VS_TO_FS {
@@ -49,7 +51,7 @@ void main()
     vec3 v_normal = normalize(fs_in.TBN * (tan_normal * 2.0 - 1.0));
     float tex_roughness = texture(roughness_map, fs_in.tex_coord).r;
 
-    g_albedo = texture(albedo_map, fs_in.tex_coord).rgb;
-    g_normal = vec2(atan(v_normal.y, v_normal.x) / M_PI * 0.5 + 0.5, acos(v_normal.z) / M_PI);
+    g_albedo = texture(albedo_map, fs_in.tex_coord).rgb * color_tint;
+    g_normal = pack_normal(v_normal);
     g_material = vec3(metalness, tex_roughness * roughness, 0.0);
 }
