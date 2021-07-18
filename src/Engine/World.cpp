@@ -150,7 +150,13 @@ void World::Update()
 void World::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer)
 {
 	// Propagate transform updates from Scene to other systems that require it
-	TransformUpdateReceiver* transformUpdateReceivers[] = { lightManager.instance, renderer.instance };
+	TransformUpdateReceiver* transformUpdateReceivers[] =
+	{
+		lightManager.instance,
+		renderer.instance,
+		particleSystem.instance
+	};
+
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 

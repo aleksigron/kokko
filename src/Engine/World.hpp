@@ -57,8 +57,9 @@ public:
 	Renderer* GetRenderer() { return renderer.instance; }
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
-	TerrainSystem* GetTerrainSystem() { return terrainSystem.instance; }
 	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
+	TerrainSystem* GetTerrainSystem() { return terrainSystem.instance; }
+	ParticleSystem* GetParticleSystem() { return particleSystem.instance; }
 
 private:
 	Allocator* allocator;

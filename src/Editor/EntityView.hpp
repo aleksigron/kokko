@@ -30,6 +30,7 @@ private:
 	void DrawCameraComponent(Entity selectedEntity, World* world);
 	void DrawLightComponent(Entity selectedEntity, World* world);
 	void DrawTerrainComponent(Entity selectedEntity, World* world);
+	void DrawParticleComponent(Entity selectedEntity, World* world);
 
 public:
 	EntityView();

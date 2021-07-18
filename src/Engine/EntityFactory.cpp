@@ -8,6 +8,7 @@
 
 #include "Graphics/Scene.hpp"
 #include "Graphics/TerrainSystem.hpp"
+#include "Graphics/ParticleSystem.hpp"
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
@@ -18,7 +19,8 @@ const char* const EntityFactory::ComponentNames[] = {
 	"Render object",
 	"Camera",
 	"Light",
-	"Terrain"
+	"Terrain",
+	"Particle emitter"
 };
 
 Entity EntityFactory::CreateEntity(World* world, ArrayView<EntityComponentType> components)
@@ -90,6 +92,14 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 		}
 		break;
 	}
+	case EntityComponentType::Particle:
+	{
+		ParticleSystem* particleSystem = world->GetParticleSystem();
+		ParticleEmitterId emitterId = particleSystem->Lookup(entity);
+		if (emitterId == ParticleEmitterId::Null)
+			emitterId = particleSystem->AddEmitter(entity);
+		break;
+	}
 	default:
 		break;
 	}
@@ -140,6 +150,14 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 			terrainSystem->DeinitializeTerrain(terrainId);
 			terrainSystem->RemoveComponent(terrainId);
 		}
+		break;
+	}
+	case EntityComponentType::Particle:
+	{
+		ParticleSystem* particleSystem = world->GetParticleSystem();
+		ParticleEmitterId emitterId = particleSystem->Lookup(entity);
+		if (emitterId != ParticleEmitterId::Null)
+			particleSystem->RemoveEmitter(emitterId);
 		break;
 	}
 	default:

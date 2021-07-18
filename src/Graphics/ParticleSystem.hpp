@@ -1,6 +1,11 @@
 #pragma once
 
+#include <cstdint>
+
+#include "Core/HashMap.hpp"
+
 #include "Rendering/CustomRenderer.hpp"
+#include "Graphics/TransformUpdateReceiver.hpp"
 
 #include "Resources/MeshData.hpp"
 #include "Resources/ShaderId.hpp"
@@ -11,8 +16,51 @@ class ShaderManager;
 class MeshManager;
 class Renderer;
 
-class ParticleSystem : public CustomRenderer
+struct Entity;
+
+struct ParticleEmitterId
 {
+	unsigned int i;
+
+	bool operator==(const ParticleEmitterId& other) { return i == other.i; }
+	bool operator!=(const ParticleEmitterId& other) { return operator==(other) == false; }
+
+	static const ParticleEmitterId Null;
+};
+
+class ParticleSystem : public CustomRenderer, public TransformUpdateReceiver
+{
+public:
+	ParticleSystem(Allocator* allocator, RenderDevice* renderDevice,
+		ShaderManager* shaderManager, MeshManager* meshManager);
+	ParticleSystem(const ParticleSystem&) = delete;
+	ParticleSystem(ParticleSystem&&) = delete;
+	~ParticleSystem();
+
+	ParticleSystem& operator=(const ParticleSystem&) = delete;
+	ParticleSystem& operator=(ParticleSystem&&) = delete;
+
+	void Initialize();
+	void Deinitialize();
+
+	void RegisterCustomRenderer(Renderer* renderer);
+
+	virtual void AddRenderCommands(const CommandParams& params) override final;
+	virtual void RenderCustom(const RenderParams& params) override final;
+
+	virtual void NotifyUpdatedTransforms(
+		unsigned int count, const Entity* entities, const Mat4x4f* transforms) override final;
+
+	ParticleEmitterId Lookup(Entity e);
+
+	ParticleEmitterId AddEmitter(Entity entity);
+	void AddEmitters(unsigned int count, const Entity* entities, ParticleEmitterId* emitterIdsOut);
+	void RemoveEmitter(ParticleEmitterId id);
+	void RemoveAll();
+
+	float GetEmitRate(ParticleEmitterId id) const;
+	void SetEmitRate(ParticleEmitterId id, float rate);
+
 private:
 	static const size_t MaxParticleCount = 16 * 1024;
 	static const unsigned int NoiseTextureSize = 64;
@@ -35,7 +83,6 @@ private:
 
 	unsigned int noiseTextureId;
 
-	static const unsigned int BufferCount = 10;
 	enum Buffer {
 		Buffer_Position,
 		Buffer_Velocity,
@@ -46,30 +93,48 @@ private:
 		Buffer_Counter,
 		Buffer_Indirect,
 		Buffer_UpdateUniforms,
-		Buffer_RenderTransform
+		Buffer_RenderTransform,
+
+		Buffer_COUNT
 	};
-	unsigned int bufferIds[BufferCount];
 
-	unsigned int aliveListCurrent;
-	unsigned int aliveListNext;
+	struct EmitterData
+	{
+		unsigned int bufferIds[Buffer_COUNT];
 
-	float emitAccumulation;
-	float emitRate;
+		unsigned int aliveListCurrent;
+		unsigned int aliveListNext;
 
-public:
-	ParticleSystem(Allocator* allocator, RenderDevice* renderDevice,
-		ShaderManager* shaderManager, MeshManager* meshManager);
-	ParticleSystem(const ParticleSystem&) = delete;
-	ParticleSystem(ParticleSystem&&) = delete;
-	~ParticleSystem();
+		float emitAccumulation;
+		float emitRate;
 
-	ParticleSystem& operator=(const ParticleSystem&) = delete;
-	ParticleSystem& operator=(ParticleSystem&&) = delete;
+		EmitterData() :
+			aliveListCurrent(0),
+			aliveListNext(0),
+			emitAccumulation(0),
+			emitRate(0)
+		{
+			for (size_t i = 0; i < Buffer_COUNT; ++i)
+				bufferIds[i] = 0;
+		}
+	};
 
-	void Initialize();
+	struct InstanceData
+	{
+		unsigned int count;
+		unsigned int allocated;
+		void* buffer;
 
-	void RegisterCustomRenderer(Renderer* renderer);
+		Entity* entity;
+		Mat4x4f* transform;
+		EmitterData* emitter;
+	}
+	data;
 
-	virtual void AddRenderCommands(const CommandParams& params) override final;
-	virtual void RenderCustom(const RenderParams& params) override final;
+	HashMap<unsigned int, ParticleEmitterId> entityMap;
+
+	void ReallocateEmitters(unsigned int requiredCount);
+
+	void InitializeEmitter(ParticleEmitterId id);
+	void DeinitializeEmitter(ParticleEmitterId id);
 };

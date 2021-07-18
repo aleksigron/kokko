@@ -9,6 +9,7 @@
 #include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
 
+#include "Graphics/ParticleSystem.hpp"
 #include "Graphics/Scene.hpp"
 #include "Graphics/TerrainSystem.hpp"
 
@@ -61,6 +62,7 @@ void EntityView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, W
 				DrawCameraComponent(context.selectedEntity, world);
 				DrawLightComponent(context.selectedEntity, world);
 				DrawTerrainComponent(context.selectedEntity, world);
+				DrawParticleComponent(context.selectedEntity, world);
 
 				ImGui::Spacing();
 			}
@@ -440,6 +442,29 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 
 			if (componentVisible == false)
 				terrainSystem->RemoveComponent(terrainId);
+		}
+	}
+}
+
+void EntityView::DrawParticleComponent(Entity selectedEntity, World* world)
+{
+	ParticleSystem* particleSystem = world->GetParticleSystem();
+	ParticleEmitterId emitterId = particleSystem->Lookup(selectedEntity);
+
+	if (emitterId != ParticleEmitterId::Null)
+	{
+		ImGui::Spacing();
+
+		bool componentVisible = true;
+		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Particle);
+		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			float emitRate = particleSystem->GetEmitRate(emitterId);
+			if (ImGui::DragFloat("Emit rate", &emitRate, 1.0f, 1.0f))
+				particleSystem->SetEmitRate(emitterId, emitRate);
+
+			if (componentVisible == false)
+				particleSystem->RemoveEmitter(emitterId);
 		}
 	}
 }
