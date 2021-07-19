@@ -9,6 +9,7 @@
 #include "Engine/EntityManager.hpp"
 
 #include "Graphics/EnvironmentManager.hpp"
+#include "Graphics/ParticleSystem.hpp"
 #include "Graphics/Scene.hpp"
 #include "Graphics/TerrainSystem.hpp"
 
@@ -81,6 +82,7 @@ void LevelWriter::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId s
 	WriteLightComponent(out, entity);
 	WriteCameraComponent(out, entity);
 	WriteTerrainComponent(out, entity);
+	WriteParticleComponent(out, entity);
 
 	out << YAML::EndSeq; // components
 
@@ -231,6 +233,23 @@ void LevelWriter::WriteTerrainComponent(YAML::Emitter& out, Entity entity)
 		out << YAML::Key << "texture_scale" << YAML::Value << terrain.textureScale;
 		out << YAML::Key << "min_height" << YAML::Value << terrain.minHeight;
 		out << YAML::Key << "max_height" << YAML::Value << terrain.maxHeight;
+
+		out << YAML::EndMap;
+	}
+}
+
+void LevelWriter::WriteParticleComponent(YAML::Emitter& out, Entity entity)
+{
+	ParticleSystem* particleSystem = world->GetParticleSystem();
+
+	ParticleEmitterId emitterId = particleSystem->Lookup(entity);
+	if (emitterId != ParticleEmitterId::Null)
+	{
+		out << YAML::BeginMap;
+		out << YAML::Key << ComponentTypeKey << YAML::Value << "particle";
+
+		float emitRate = particleSystem->GetEmitRate(emitterId);
+		out << YAML::Key << "emit_rate" << YAML::Value << emitRate;
 
 		out << YAML::EndMap;
 	}

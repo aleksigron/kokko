@@ -9,6 +9,7 @@
 #include "Engine/EntityManager.hpp"
 
 #include "Graphics/EnvironmentManager.hpp"
+#include "Graphics/ParticleSystem.hpp"
 #include "Graphics/Scene.hpp"
 #include "Graphics/TerrainSystem.hpp"
 
@@ -130,6 +131,10 @@ SceneObjectId LevelLoader::CreateComponents(const YAML::Node& componentSequence,
 
 				case "terrain"_hash:
 					CreateTerrainComponent(*itr, entity);
+					break;
+
+				case "particle"_hash:
+					CreateParticleComponent(*itr, entity);
 
 				default:
 					KK_LOG_ERROR("LevelLoader: Unknown component type");
@@ -385,4 +390,20 @@ void LevelLoader::CreateTerrainComponent(const YAML::Node& map, Entity entity)
 	TerrainId id = terrainSystem->AddComponentToEntity(entity);
 	terrainSystem->SetData(id, terrain);
 	terrainSystem->InitializeTerrain(id);
+}
+
+void LevelLoader::CreateParticleComponent(const YAML::Node& map, Entity entity)
+{
+	ParticleSystem* particleSystem = world->GetParticleSystem();
+
+	ParticleEmitterId id = particleSystem->AddEmitter(entity);
+
+	float emitRate = 0.0f;
+
+	YAML::Node rateNode = map["emit_rate"];
+	if (rateNode.IsDefined() && rateNode.IsScalar())
+		emitRate = rateNode.as<float>();
+
+	particleSystem->SetEmitRate(id, emitRate);
+
 }

@@ -26,4 +26,5 @@ private:
 	void WriteLightComponent(YAML::Emitter& out, Entity entity);
 	void WriteCameraComponent(YAML::Emitter& out, Entity entity);
 	void WriteTerrainComponent(YAML::Emitter& out, Entity entity);
+	void WriteParticleComponent(YAML::Emitter& out, Entity entity);
 };
