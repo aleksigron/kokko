@@ -221,12 +221,8 @@ set (KOKKO_SOURCES
 	src/Resources/BitmapFont.hpp
 	src/Resources/ImageData.cpp
 	src/Resources/ImageData.hpp
-	src/Resources/LevelLoader.cpp
-	src/Resources/LevelLoader.hpp
 	src/Resources/LevelSerializer.cpp
 	src/Resources/LevelSerializer.hpp
-	src/Resources/LevelWriter.cpp
-	src/Resources/LevelWriter.hpp
 	src/Resources/MaterialManager.cpp
 	src/Resources/MaterialManager.hpp
 	src/Resources/MaterialData.hpp
