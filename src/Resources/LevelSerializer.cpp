@@ -8,6 +8,7 @@
 
 #include "Graphics/ParticleEmitterSerializer.hpp"
 #include "Graphics/TerrainSerializer.hpp"
+#include "Graphics/TransformSerializer.hpp"
 
 #include "Rendering/CameraSerializer.hpp"
 #include "Rendering/LightSerializer.hpp"
@@ -24,6 +25,7 @@ LevelSerializer::LevelSerializer(Allocator* allocator) :
 	allocator(allocator),
 	world(nullptr),
 	resourceManagers(ResourceManagers{}),
+	transformSerializer(nullptr),
 	componentSerializers(allocator)
 {
 }
@@ -32,12 +34,16 @@ LevelSerializer::~LevelSerializer()
 {
 	for (ComponentSerializer* serializer : componentSerializers)
 		allocator->MakeDelete(serializer);
+
+	allocator->MakeDelete(transformSerializer);
 }
 
 void LevelSerializer::Initialize(World* world, const ResourceManagers& resourceManagers)
 {
 	this->world = world;
 	this->resourceManagers = resourceManagers;
+
+	transformSerializer = allocator->MakeNew<TransformSerializer>(world->GetScene());
 
 	componentSerializers.PushBack(allocator->MakeNew<RenderObjectSerializer>(world->GetRenderer(), resourceManagers));
 	componentSerializers.PushBack(allocator->MakeNew<LightSerializer>(world->GetLightManager()));
@@ -121,7 +127,7 @@ void LevelSerializer::WriteEntity(YAML::Emitter& out, Entity entity, SceneObject
 
 	out << YAML::Key << "components" << YAML::Value << YAML::BeginSeq;
 
-	WriteTransformComponent(out, entity, sceneObj);
+	transformSerializer->Serialize(out, entity, sceneObj);
 
 	for (ComponentSerializer* serializer : componentSerializers)
 	{
@@ -150,24 +156,6 @@ void LevelSerializer::WriteEntity(YAML::Emitter& out, Entity entity, SceneObject
 
 	out << YAML::EndMap;
 }
-
-void LevelSerializer::WriteTransformComponent(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
-{
-	Scene* scene = world->GetScene();
-
-	if (sceneObj != SceneObjectId::Null)
-	{
-		const SceneEditTransform& transform = scene->GetEditTransform(sceneObj);
-
-		out << YAML::BeginMap;
-		out << YAML::Key << ComponentTypeKey << YAML::Value << "transform";
-		out << YAML::Key << "position" << YAML::Value << transform.translation;
-		out << YAML::Key << "rotation" << YAML::Value << transform.rotation;
-		out << YAML::Key << "scale" << YAML::Value << transform.scale;
-		out << YAML::EndMap;
-	}
-}
-
 
 void LevelSerializer::CreateObjects(const YAML::Node& childSequence, SceneObjectId parent)
 {
@@ -202,7 +190,7 @@ void LevelSerializer::CreateObjects(const YAML::Node& childSequence, SceneObject
 				if (createdTransform != SceneObjectId::Null)
 					CreateObjects(childrenNode, createdTransform);
 				else
-					KK_LOG_ERROR("LevelLoader: Children were specified on an object with no transform component, ignoring children");
+					KK_LOG_ERROR("LevelSerializer: Children were specified on an object with no transform component, ignoring children");
 			}
 		}
 	}
@@ -226,7 +214,7 @@ SceneObjectId LevelSerializer::CreateComponents(const YAML::Node& componentSeque
 				uint32_t typeHash = Hash::FNV1a_32(typeStr.data(), typeStr.size());
 
 				if (typeHash == "transform"_hash)
-					createdTransform = CreateTransformComponent(*itr, entity, parent);
+					createdTransform = transformSerializer->Deserialize(*itr, entity, parent);
 				else
 				{
 					ComponentSerializer* foundSerializer = nullptr;
@@ -243,40 +231,13 @@ SceneObjectId LevelSerializer::CreateComponents(const YAML::Node& componentSeque
 					if (foundSerializer != nullptr)
 						foundSerializer->DeserializeComponent(*itr, entity);
 					else
-						KK_LOG_ERROR("LevelLoader: Unknown component type");
+						KK_LOG_ERROR("LevelSerializer: Unknown component type");
 				}
 			}
 			else
-				KK_LOG_ERROR("LevelLoader: Invalid component type");
+				KK_LOG_ERROR("LevelSerializer: Invalid component type");
 		}
 	}
 
 	return createdTransform;
-}
-
-SceneObjectId LevelSerializer::CreateTransformComponent(const YAML::Node& map, Entity entity, SceneObjectId parent)
-{
-	Scene* scene = world->GetScene();
-	SceneObjectId sceneObject = scene->AddSceneObject(entity);
-
-	if (parent != SceneObjectId::Null)
-		scene->SetParent(sceneObject, parent);
-
-	SceneEditTransform transform;
-
-	YAML::Node positionNode = map["position"];
-	if (positionNode.IsDefined() && positionNode.IsSequence())
-		transform.translation = positionNode.as<Vec3f>();
-
-	YAML::Node rotationNode = map["rotation"];
-	if (rotationNode.IsDefined() && rotationNode.IsSequence())
-		transform.rotation = rotationNode.as<Vec3f>();
-
-	YAML::Node scaleNode = map["scale"];
-	if (scaleNode.IsDefined() && scaleNode.IsSequence())
-		transform.scale = scaleNode.as<Vec3f>();
-
-	scene->SetEditTransform(sceneObject, transform);
-
-	return sceneObject;
 }

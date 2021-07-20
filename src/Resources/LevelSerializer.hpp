@@ -7,6 +7,7 @@
 class Allocator;
 class World;
 class ComponentSerializer;
+class TransformSerializer;
 
 struct Entity;
 struct SceneObjectId;
@@ -33,12 +34,12 @@ private:
 	World* world;
 	ResourceManagers resourceManagers;
 
+	TransformSerializer* transformSerializer;
 	Array<ComponentSerializer*> componentSerializers;
 
 	// Serialization
 
 	void WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj);
-	void WriteTransformComponent(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj);
 
 	// Deserialization
 
@@ -46,5 +47,4 @@ private:
 	void CreateObjects(const YAML::Node& objectSequence, SceneObjectId parent);
 
 	SceneObjectId CreateComponents(const YAML::Node& componentSequence, Entity entity, SceneObjectId parent);
-	SceneObjectId CreateTransformComponent(const YAML::Node& map, Entity entity, SceneObjectId parent);
 };
