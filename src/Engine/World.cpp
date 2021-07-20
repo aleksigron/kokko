@@ -19,10 +19,6 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 
-#include "Resources/LevelLoader.hpp"
-#include "Resources/LevelWriter.hpp"
-#include "Resources/ResourceManagers.hpp"
-
 #include "Scripting/ScriptSystem.hpp"
 
 #include "System/File.hpp"
@@ -37,6 +33,7 @@ World::World(AllocatorManager* allocManager,
 	InputManager* inputManager,
 	const ResourceManagers& resourceManagers) :
 	allocator(allocator),
+	levelSerializer(allocator),
 	loadedLevelDisplayName(allocator, UnnamedLevelDisplayName),
 	loadedLevelFilePath(allocator),
 	resourceManagers(resourceManagers)
@@ -68,6 +65,8 @@ World::World(AllocatorManager* allocManager,
 
 	particleSystem.CreateScope(allocManager, "ParticleEffects", alloc);
 	particleSystem.New(particleSystem.allocator, renderDevice, resourceManagers.shaderManager, resourceManagers.meshManager);
+
+	levelSerializer.Initialize(this, resourceManagers);
 }
 
 World::~World()
@@ -102,8 +101,7 @@ bool World::LoadFromFile(const char* path, const char* displayName)
 
 	if (File::ReadText(path, sceneConfig))
 	{
-		LevelLoader loader(this, resourceManagers);
-		loader.Load(sceneConfig.GetData());
+		levelSerializer.DeserializeFromString(sceneConfig.GetData());
 
 		loadedLevelDisplayName.Assign(displayName);
 		loadedLevelFilePath.Assign(path);
@@ -116,9 +114,7 @@ bool World::LoadFromFile(const char* path, const char* displayName)
 
 bool World::WriteToFile(const char* path, const char* displayName)
 {
-	LevelWriter writer(this, resourceManagers);
-	
-	if (writer.WriteToFile(path))
+	if (levelSerializer.SerializeToFile(path))
 	{
 		loadedLevelDisplayName.Assign(displayName);
 		loadedLevelFilePath.Assign(path);

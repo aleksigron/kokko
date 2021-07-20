@@ -5,6 +5,7 @@
 
 #include "Engine/InstanceAllocatorPair.hpp"
 
+#include "Resources/LevelSerializer.hpp"
 #include "Resources/ResourceManagers.hpp"
 
 class Allocator;
@@ -26,6 +27,8 @@ class CameraSystem;
 class ScriptSystem;
 class TerrainSystem;
 class ParticleSystem;
+
+class ComponentSerializer;
 
 class World
 {
@@ -63,6 +66,9 @@ public:
 
 private:
 	Allocator* allocator;
+
+	LevelSerializer levelSerializer;
+
 	String loadedLevelDisplayName;
 	String loadedLevelFilePath;
 
@@ -74,5 +80,6 @@ private:
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
 	InstanceAllocatorPair<TerrainSystem> terrainSystem;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
+
 	ResourceManagers resourceManagers;
 };

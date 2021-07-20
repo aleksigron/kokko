@@ -121,6 +121,7 @@ set (KOKKO_SOURCES
 	src/Editor/SceneView.cpp
 	src/Editor/SceneView.hpp
 	src/Editor/SelectionContext.hpp
+	src/Engine/ComponentSerializer.hpp
 	src/Engine/ComponentSystemDefaultImpl.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
@@ -138,6 +139,7 @@ set (KOKKO_SOURCES
 	src/Graphics/EnvironmentManager.hpp
 	src/Graphics/ParticleSystem.cpp
 	src/Graphics/ParticleSystem.hpp
+	src/Graphics/ParticleEmitterSerializer.hpp
 	src/Graphics/ScreenSpaceAmbientOcclusion.cpp
 	src/Graphics/ScreenSpaceAmbientOcclusion.hpp
 	src/Graphics/TerrainInstance.cpp
@@ -177,6 +179,7 @@ set (KOKKO_SOURCES
 	src/Memory/TraceAllocator.cpp
 	src/Memory/TraceAllocator.hpp
 	src/Rendering/CameraParameters.hpp
+	src/Rendering/CameraSerializer.hpp
 	src/Rendering/CameraSystem.cpp
 	src/Rendering/CameraSystem.hpp
 	src/Rendering/CascadedShadowMap.cpp
@@ -187,6 +190,7 @@ set (KOKKO_SOURCES
 	src/Rendering/Light.hpp
 	src/Rendering/LightManager.cpp
 	src/Rendering/LightManager.hpp
+	src/Rendering/LightSerializer.hpp
 	src/Rendering/PostProcessRenderer.cpp
 	src/Rendering/PostProcessRenderer.hpp
 	src/Rendering/PostProcessRenderPass.hpp
@@ -201,6 +205,7 @@ set (KOKKO_SOURCES
 	src/Rendering/Renderer.cpp
 	src/Rendering/Renderer.hpp
 	src/Rendering/RendererData.hpp
+	src/Rendering/RenderObjectSerializer.hpp
 	src/Rendering/RenderOrder.hpp
 	src/Rendering/RenderTargetContainer.cpp
 	src/Rendering/RenderTargetContainer.hpp
@@ -218,6 +223,8 @@ set (KOKKO_SOURCES
 	src/Resources/ImageData.hpp
 	src/Resources/LevelLoader.cpp
 	src/Resources/LevelLoader.hpp
+	src/Resources/LevelSerializer.cpp
+	src/Resources/LevelSerializer.hpp
 	src/Resources/LevelWriter.cpp
 	src/Resources/LevelWriter.hpp
 	src/Resources/MaterialManager.cpp
