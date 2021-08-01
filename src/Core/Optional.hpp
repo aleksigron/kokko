@@ -33,12 +33,14 @@ public:
 	{
 		value = v;
 		hasValue = true;
+		return *this;
 	}
 
 	Optional& operator=(T&& v)
 	{
 		value = std::move(v);
 		hasValue = true;
+		return *this;
 	}
 
 	operator bool() const

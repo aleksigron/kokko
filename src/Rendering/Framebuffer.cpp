@@ -195,9 +195,11 @@ void Framebuffer::Destroy()
 			colorTextureCount = 0;
 		}
 
-		if (depthTextureIsOwned && depthTextureId != 0)
+		if (depthTextureId != 0)
 		{
-			renderDevice->DestroyTextures(1, &depthTextureId);
+			if (depthTextureIsOwned)
+				renderDevice->DestroyTextures(1, &depthTextureId);
+
 			depthTextureId = 0;
 			depthTextureIsOwned = false;
 		}

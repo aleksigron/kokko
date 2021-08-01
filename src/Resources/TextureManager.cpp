@@ -235,12 +235,29 @@ bool TextureManager::LoadFromKtxFile(TextureId id, const char* ktxFilePath)
 
 	switch (target)
 	{
-	case GL_TEXTURE_1D: textureData.textureTarget = RenderTextureTarget::Texture1d;
-	case GL_TEXTURE_2D: textureData.textureTarget = RenderTextureTarget::Texture2d;
-	case GL_TEXTURE_3D: textureData.textureTarget = RenderTextureTarget::Texture3d;
-	case GL_TEXTURE_1D_ARRAY: textureData.textureTarget = RenderTextureTarget::Texture1dArray;
-	case GL_TEXTURE_2D_ARRAY: textureData.textureTarget = RenderTextureTarget::Texture2dArray;
-	case GL_TEXTURE_CUBE_MAP: textureData.textureTarget = RenderTextureTarget::TextureCubeMap;
+	case GL_TEXTURE_1D:
+		textureData.textureTarget = RenderTextureTarget::Texture1d;
+		break;
+
+	case GL_TEXTURE_2D:
+		textureData.textureTarget = RenderTextureTarget::Texture2d;
+		break;
+
+	case GL_TEXTURE_3D:
+		textureData.textureTarget = RenderTextureTarget::Texture3d;
+		break;
+
+	case GL_TEXTURE_1D_ARRAY:
+		textureData.textureTarget = RenderTextureTarget::Texture1dArray;
+		break;
+
+	case GL_TEXTURE_2D_ARRAY:
+		textureData.textureTarget = RenderTextureTarget::Texture2dArray;
+		break;
+
+	case GL_TEXTURE_CUBE_MAP:
+		textureData.textureTarget = RenderTextureTarget::TextureCubeMap;
+		break;
 	}
 
 	return true;

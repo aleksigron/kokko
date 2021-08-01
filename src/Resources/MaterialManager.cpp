@@ -645,6 +645,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 		materialUniform.textureId = textureId;
 
 		const TextureData& texture = textureManager->GetTextureData(textureId);
+		assert(texture.textureObjectId != 0);
 		materialUniform.textureObject = texture.textureObjectId;
 	}
 

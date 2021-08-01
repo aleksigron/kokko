@@ -137,6 +137,7 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 	size_t quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
 	size_t indexCount = sideQuads * sideQuads * quadIndices;
 	uint16_t* indexData = static_cast<uint16_t*>(allocator->Allocate(indexCount * sizeof(uint16_t)));
+	// TODO: Use 32-bit index type if necessary
 
 	float quadSize = 1.0f / terrain.terrainSize;
 
