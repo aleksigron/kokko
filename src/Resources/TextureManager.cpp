@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "rapidjson/document.h"
+#include "stb_image/stb_image.h"
 #include "ktx.h"
 
 #include "Core/Core.hpp"
@@ -181,17 +182,116 @@ TextureId TextureManager::GetIdByPath(StringRef path)
 
 	TextureId id = CreateTexture();
 
-	if (LoadFromKtxFile(id, pathStr.GetCStr()))
+	if (path.EndsWith(StringRef(".jpg")) ||
+		path.EndsWith(StringRef(".jpeg")) ||
+		path.EndsWith(StringRef(".png")))
 	{
-		pair = nameHashMap.Insert(hash);
-		pair->second = id;
+		if (LoadWithStbImage(id, pathStr.GetCStr()))
+		{
+			pair = nameHashMap.Insert(hash);
+			pair->second = id;
 
-		return id;
+			return id;
+		}
+	}
+	else if (path.EndsWith(StringRef(".ktx")) || path.EndsWith(StringRef(".ktx2")))
+	{
+		if (LoadFromKtxFile(id, pathStr.GetCStr()))
+		{
+			pair = nameHashMap.Insert(hash);
+			pair->second = id;
+
+			return id;
+		}
+	}
+
+	RemoveTexture(id);
+	return TextureId::Null;
+}
+
+bool TextureManager::LoadWithStbImage(TextureId id, const char* filePath, bool preferLinear)
+{
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrComponents;
+	uint8_t* textureBytes;
+	{
+		KOKKO_PROFILE_SCOPE("void* stbi_loadf()");
+		textureBytes = stbi_load(filePath, &width, &height, &nrComponents, 0);
+	}
+
+	unsigned int textureObjectId = 0;
+
+	if (textureBytes != nullptr)
+	{
+		bool formatFound = false;
+		RenderTextureSizedFormat sizedFormat;
+		RenderTextureBaseFormat baseFormat;
+
+		switch (nrComponents)
+		{
+		case 1:
+			formatFound = true;
+			sizedFormat = RenderTextureSizedFormat::R8;
+			baseFormat = RenderTextureBaseFormat::R;
+			break;
+
+		case 2:
+			formatFound = true;
+			sizedFormat = RenderTextureSizedFormat::RG8;
+			baseFormat = RenderTextureBaseFormat::RG;
+			break;
+
+		case 3:
+			formatFound = true;
+			sizedFormat = preferLinear ? RenderTextureSizedFormat::RGB8 : RenderTextureSizedFormat::SRGB8;
+			baseFormat = RenderTextureBaseFormat::RGB;
+			break;
+
+		case 4:
+			formatFound = true;
+			sizedFormat = preferLinear ? RenderTextureSizedFormat::RGBA8 : RenderTextureSizedFormat::SRGB8_A8;
+			baseFormat = RenderTextureBaseFormat::RGBA;
+			break;
+
+		default:
+			KK_LOG_ERROR("Invalid number of components in texture: %d", nrComponents);
+			break;
+		}
+
+		if (formatFound)
+		{
+			KOKKO_PROFILE_SCOPE("Create and upload texture");
+
+			renderDevice->CreateTextures(1, &textureObjectId);
+			renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureObjectId);
+
+			RenderCommandData::SetTextureStorage2D textureStorage{
+				RenderTextureTarget::Texture2d, 1, sizedFormat, width, height,
+			};
+			renderDevice->SetTextureStorage2D(&textureStorage);
+
+			RenderCommandData::SetTextureSubImage2D textureImage{
+				RenderTextureTarget::Texture2d, 0, 0, 0, width, height,
+				baseFormat, RenderTextureDataType::UnsignedByte, textureBytes
+			};
+			renderDevice->SetTextureSubImage2D(&textureImage);
+		}
+
+		{
+			KOKKO_PROFILE_SCOPE("void stbi_image_free()");
+			stbi_image_free(textureBytes);
+		}
+
+		TextureData& textureData = data.texture[id.i];
+		textureData.textureSize = Vec2i(width, height);
+		textureData.textureObjectId = textureObjectId;
+		textureData.textureTarget = RenderTextureTarget::Texture2d;
 	}
 	else
 	{
-		RemoveTexture(id);
-		return TextureId{};
+		KK_LOG_ERROR("Couldn't load texture file with stb_image");
+
+		return -1;
 	}
 }
 
