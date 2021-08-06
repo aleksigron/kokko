@@ -8,6 +8,9 @@
 #include "Math/Vec2.hpp"
 
 class RenderDevice;
+
+struct StringRef;
+
 enum class RenderTextureSizedFormat;
 enum class RenderTextureCompareMode;
 enum class RenderDepthCompareFunc;
@@ -43,6 +46,8 @@ public:
 
 	void AttachExternalDepthTexture(unsigned int textureId);
 	void SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDepthCompareFunc func);
+
+	void SetDebugLabel(StringRef label);
 
 private:
 	void CreateTexture(RenderTextureSizedFormat format, int width, int height);

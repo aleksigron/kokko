@@ -203,7 +203,7 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 		}
 	}
 
-	return MaterialId{};
+	return MaterialId::Null;
 }
 
 MaterialId MaterialManager::GetIdByPathHash(uint32_t pathHash)

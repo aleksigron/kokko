@@ -233,6 +233,11 @@ void Framebuffer::SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDe
 	renderDevice->SetTextureCompareFunc(RenderTextureTarget::Texture2d, func);
 }
 
+void Framebuffer::SetDebugLabel(StringRef label)
+{
+	renderDevice->SetObjectLabel(RenderObjectType::Framebuffer, framebufferId, label);
+}
+
 void Framebuffer::CreateTexture(RenderTextureSizedFormat format, int width, int height)
 {
 	RenderCommandData::SetTextureStorage2D textureStorage{ RenderTextureTarget::Texture2d, 1, format, width, height };

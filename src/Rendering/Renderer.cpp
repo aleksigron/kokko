@@ -218,6 +218,9 @@ void Renderer::Initialize()
 			storage.data = nullptr;
 			storage.dynamicStorage = true;
 			device->SetBufferStorage(&storage);
+
+			StringRef label("Renderer viewport uniform buffer");
+			device->SetObjectLabel(RenderObjectType::Buffer, buffers[i], label);
 		}
 	}
 
@@ -234,6 +237,8 @@ void Renderer::Initialize()
 		framebufferShadow.Create(size.x, size.y, depthFormat, ArrayView<RenderTextureSizedFormat>());
 		framebufferShadow.SetDepthTextureCompare(
 			RenderTextureCompareMode::CompareRefToTexture, RenderDepthCompareFunc::GreaterThanOrEqual);
+
+		framebufferShadow.SetDebugLabel(StringRef("Renderer shadow framebuffer"));
 	}
 	
 	{
@@ -250,6 +255,9 @@ void Renderer::Initialize()
 		storage.data = nullptr;
 		storage.dynamicStorage = true;
 		device->SetBufferStorage(&storage);
+
+		StringRef label("Renderer tonemap uniform buffer");
+		device->SetObjectLabel(RenderObjectType::Buffer, tonemapUniformBufferId, label);
 	}
 
 	{
@@ -266,6 +274,9 @@ void Renderer::Initialize()
 		storage.data = nullptr;
 		storage.dynamicStorage = true;
 		device->SetBufferStorage(&storage);
+
+		StringRef label("Renderer deferred lighting uniform buffer");
+		device->SetObjectLabel(RenderObjectType::Buffer, lightingUniformBufferId, label);
 	}
 
 	{
@@ -339,6 +350,9 @@ void Renderer::Initialize()
 		device->DrawIndexed(meshDraw->primitiveMode, meshDraw->count, meshDraw->indexType);
 
 		device->DestroyFramebuffers(1, &framebuffer);
+
+		StringRef label("Renderer BRDF LUT");
+		device->SetObjectLabel(RenderObjectType::Texture, brdfLutTextureId, label);
 	}
 
 	// Inialize skybox resources
@@ -431,6 +445,7 @@ void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
 		ArrayView<RenderTextureSizedFormat> colorFormatsList(colorFormats, GbufferColorCount);
 
 		framebufferGbuffer.Create(width, height, depthFormat, colorFormatsList);
+		framebufferGbuffer.SetDebugLabel(StringRef("Renderer G-buffer"));
 	}
 
 	{
@@ -442,6 +457,7 @@ void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
 		ArrayView<RenderTextureSizedFormat> colorFormatList(&colorFormat, 1);
 		framebufferLightAcc.Create(width, height, Optional<RenderTextureSizedFormat>(), colorFormatList);
 		framebufferLightAcc.AttachExternalDepthTexture(framebufferGbuffer.GetDepthTextureId());
+		framebufferLightAcc.SetDebugLabel(StringRef("Renderer light accumulation framebuffer"));
 	}
 }
 
@@ -995,6 +1011,9 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 			setStorage.dynamicStorage = true;
 
 			device->SetBufferStorage(&setStorage);
+
+			StringRef label("Renderer object uniform buffer");
+			device->SetObjectLabel(RenderObjectType::Buffer, objUniformBuffers[i], label);
 		}
 	}
 
