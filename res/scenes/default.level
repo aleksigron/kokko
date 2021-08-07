@@ -1,0 +1,98 @@
+environment: res/textures/dark_gray_env.jpg
+objects:
+  - entity_name: Terrain
+    components:
+      - component_type: transform
+        position: [0, 0, 0]
+        rotation: [0, 0, 0]
+        scale: [1, 1, 1]
+      - component_type: terrain
+        terrain_size: 128
+        terrain_resolution: 128
+        texture_scale: [0.25, 0.25]
+        min_height: -1.75
+        max_height: 1.04999995
+  - entity_name: DatSun
+    components:
+      - component_type: transform
+        position: [0, 0, 0]
+        rotation: [-1.04719758, 0.785398185, 0]
+        scale: [1, 1, 1]
+      - component_type: light
+        type: directional
+        color: [2, 2, 2]
+        cast_shadow: true
+  - entity_name: Cube
+    components:
+      - component_type: transform
+        position: [0, 0.449999988, 0]
+        rotation: [0, 0.244346097, 0]
+        scale: [2, 2, 2]
+      - component_type: render
+        mesh: res/models/simple_cube.mesh
+        material: res/materials/deferred_geometry/gray_r05.material.json
+    children:
+      - entity_name: Cyan light
+        components:
+          - component_type: transform
+            position: [-0.980000019, 0, 0]
+            rotation: [0, 0, 0]
+            scale: [1, 1, 1]
+          - component_type: light
+            type: point
+            color: [0, 2, 2]
+            radius: 10.1192884
+            cast_shadow: false
+      - entity_name: Particle emitter
+        components:
+          - component_type: transform
+            position: [0, 0, 0]
+            rotation: [0, 0, 0]
+            scale: [1, 1, 1]
+          - component_type: particle
+            emit_rate: 50
+  - entity_name: Gold sphere
+    components:
+      - component_type: transform
+        position: [1.5, 3, 1]
+        rotation: [0.0174532924, 0, 0]
+        scale: [1, 1, 1]
+      - component_type: render
+        mesh: res/models/simple_sphere.mesh
+        material: res/materials/deferred_geometry/gold_r01.material.json
+  - entity_name: Copper sphere
+    components:
+      - component_type: transform
+        position: [-1.5, 3, 1]
+        rotation: [0, 0, 0]
+        scale: [1, 1, 1]
+      - component_type: render
+        mesh: res/models/simple_sphere.mesh
+        material: res/materials/deferred_geometry/copper_r01.material.json
+  - entity_name: Silver sphere
+    components:
+      - component_type: transform
+        position: [0, 3, 1]
+        rotation: [0, 0, 0]
+        scale: [1, 1, 1]
+      - component_type: render
+        mesh: res/models/simple_sphere.mesh
+        material: res/materials/deferred_geometry/silver_r01.material.json
+  - entity_name: Iron sphere
+    components:
+      - component_type: transform
+        position: [3, 3, 1]
+        rotation: [0, 0, 0]
+        scale: [1, 1, 1]
+      - component_type: render
+        mesh: res/models/simple_sphere.mesh
+        material: res/materials/deferred_geometry/iron_r01.material.json
+  - entity_name: Gray sphere
+    components:
+      - component_type: transform
+        position: [-3, 3, 1]
+        rotation: [0, 0, 0]
+        scale: [1, 1, 1]
+      - component_type: render
+        mesh: res/models/simple_sphere.mesh
+        material: res/materials/deferred_geometry/gray_r01.material.json
