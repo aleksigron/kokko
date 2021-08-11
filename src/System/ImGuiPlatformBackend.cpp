@@ -50,7 +50,13 @@ bool ImGuiPlatformBackend::Initialize(GLFWwindow* window, InputView* inputView)
 	// We can honor io.WantSetMousePos requests (optional, rarely used)
 	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
-	float fontSize = 15.0f;
+	float xScale, yScale;
+	glfwGetWindowContentScale(window, &xScale, &yScale);
+
+	// TODO: Scale spacing values
+	// TODO: Update font size and spacing if window is moved to another screen
+
+	float fontSize(int(15.0f * xScale));
 	io.Fonts->AddFontFromFileTTF("res/fonts/roboto/Roboto-Regular.ttf", fontSize);
 
 	// Keyboard mapping. Dear ImGui will use those indices to peek into the io.KeysDown[] array.
