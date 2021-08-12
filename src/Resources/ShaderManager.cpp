@@ -13,12 +13,13 @@
 #include "Resources/ShaderLoader.hpp"
 #include "Resources/ValueSerialization.hpp"
 
-#include "System/File.hpp"
+#include "System/Filesystem.hpp"
 
 const ShaderId ShaderId::Null = ShaderId{ 0 };
 
-ShaderManager::ShaderManager(Allocator* allocator, RenderDevice* renderDevice) :
+ShaderManager::ShaderManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
 	allocator(allocator),
+	filesystem(filesystem),
 	renderDevice(renderDevice),
 	freeListFirst(0),
 	nameHashMap(allocator)
@@ -150,7 +151,7 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 	Array<char> file(allocator);
 	String pathStr(allocator, path);
 
-	if (File::ReadText(pathStr.GetCStr(), file))
+	if (filesystem->ReadText(pathStr.GetCStr(), file))
 	{
 		ShaderId id = CreateShader();
 		ShaderData& shader = data.shader[id.i];
@@ -169,7 +170,8 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 		else
 		{
 			StringRef fileString(file.GetData(), file.GetCount());
-			loadSuccess = ShaderLoader::LoadFromShaderFile(shader, pathRef, fileString, allocator, renderDevice, debugName);
+			ShaderFileLoader loader(allocator, filesystem, renderDevice);
+			loadSuccess = loader.LoadFromFile(shader, pathRef, fileString, debugName);
 		}
 
 		if (loadSuccess)

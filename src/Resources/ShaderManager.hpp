@@ -11,6 +11,7 @@
 #include "Resources/ShaderId.hpp"
 
 class Allocator;
+class Filesystem;
 class RenderDevice;
 
 struct ShaderData
@@ -29,6 +30,7 @@ class ShaderManager
 {
 private:
 	Allocator* allocator;
+	Filesystem* filesystem;
 	RenderDevice* renderDevice;
 
 	struct InstanceData
@@ -48,7 +50,7 @@ private:
 	void Reallocate(unsigned int required);
 
 public:
-	ShaderManager(Allocator* allocator, RenderDevice* renderDevice);
+	ShaderManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice);
 	~ShaderManager();
 
 	ShaderId CreateShader();
