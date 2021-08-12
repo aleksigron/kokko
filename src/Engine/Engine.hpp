@@ -8,6 +8,8 @@ class Window;
 class EditorUI;
 class Time;
 class RenderDevice;
+class Filesystem;
+
 class World;
 class MeshManager;
 class ShaderManager;
@@ -28,6 +30,7 @@ private:
 	InstanceAllocatorPair<Window> mainWindow;
 	Time* time;
 	RenderDevice* renderDevice;
+	Filesystem* filesystem;
 	InstanceAllocatorPair<EditorUI> editorUI;
 	InstanceAllocatorPair<Debug> debug;
 	InstanceAllocatorPair<MeshManager> meshManager;
@@ -50,6 +53,7 @@ public:
 
 	AllocatorManager* GetAllocatorManager() { return allocatorManager; }
 	Window* GetMainWindow() { return mainWindow.instance; }
+	Filesystem* GetFilesystem() { return filesystem; }
 	MeshManager* GetMeshManager() { return meshManager.instance; }
 	MaterialManager* GetMaterialManager() { return materialManager.instance; }
 	EnvironmentManager* GetEnvironmentManager() { return environmentManager.instance; }

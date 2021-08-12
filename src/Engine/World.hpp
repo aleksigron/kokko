@@ -11,6 +11,7 @@
 class Allocator;
 class AllocatorManager;
 class RenderDevice;
+class Filesystem;
 class InputManager;
 class DebugVectorRenderer;
 class Window;
@@ -37,6 +38,7 @@ public:
 		Allocator* allocator,
 		Allocator* debugNameAllocator,
 		RenderDevice* renderDevice,
+		Filesystem* filesystem,
 		InputManager* inputManager,
 		const ResourceManagers& resourceManagers);
 	~World();
@@ -66,6 +68,7 @@ public:
 
 private:
 	Allocator* allocator;
+	Filesystem* filesystem;
 
 	LevelSerializer levelSerializer;
 

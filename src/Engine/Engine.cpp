@@ -35,6 +35,7 @@
 
 #include "Scripting/ScriptSystem.hpp"
 
+#include "System/FilesystemDefault.hpp"
 #include "System/InputManager.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
@@ -54,6 +55,7 @@ Engine::Engine()
 	systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 	time = systemAllocator->MakeNew<Time>();
 	renderDevice = systemAllocator->MakeNew<RenderDeviceOpenGL>();
+	filesystem = systemAllocator->MakeNew<FilesystemDefault>();
 
 	editorUI.CreateScope(allocatorManager, "EditorUI", alloc);
 	editorUI.New(editorUI.allocator);
@@ -88,7 +90,7 @@ Engine::Engine()
 
 	world.CreateScope(allocatorManager, "World", alloc);
 	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice,
-		mainWindow.instance->GetInputManager(), resManagers);
+		filesystem, mainWindow.instance->GetInputManager(), resManagers);
 }
 
 Engine::~Engine()
@@ -105,8 +107,9 @@ Engine::~Engine()
 	meshManager.Delete();
 	debug.Delete();
 	editorUI.Delete();
-	systemAllocator->MakeDelete(this->time);
-	systemAllocator->MakeDelete(this->renderDevice);
+	systemAllocator->MakeDelete(filesystem);
+	systemAllocator->MakeDelete(renderDevice);
+	systemAllocator->MakeDelete(time);
 	mainWindow.Delete();
 
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();

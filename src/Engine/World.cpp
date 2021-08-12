@@ -21,7 +21,7 @@
 
 #include "Scripting/ScriptSystem.hpp"
 
-#include "System/File.hpp"
+#include "System/Filesystem.hpp"
 #include "System/Window.hpp"
 
 static const char* const UnnamedLevelDisplayName = "Unnamed level";
@@ -30,9 +30,11 @@ World::World(AllocatorManager* allocManager,
 	Allocator* allocator,
 	Allocator* debugNameAllocator,
 	RenderDevice* renderDevice,
+	Filesystem* filesystem,
 	InputManager* inputManager,
 	const ResourceManagers& resourceManagers) :
 	allocator(allocator),
+	filesystem(filesystem),
 	levelSerializer(allocator),
 	loadedLevelDisplayName(allocator, UnnamedLevelDisplayName),
 	loadedLevelFilePath(allocator),
@@ -99,7 +101,7 @@ bool World::LoadFromFile(const char* path, const char* displayName)
 
 	Array<char> sceneConfig(allocator);
 
-	if (File::ReadText(path, sceneConfig))
+	if (filesystem->ReadText(path, sceneConfig))
 	{
 		levelSerializer.DeserializeFromString(sceneConfig.GetData());
 
