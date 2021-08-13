@@ -66,7 +66,7 @@ Engine::Engine()
 	debugNameAllocator = allocatorManager->CreateAllocatorScope("EntityDebugNames", alloc);
 
 	meshManager.CreateScope(allocatorManager, "MeshManager", alloc);
-	meshManager.New(meshManager.allocator, renderDevice);
+	meshManager.New(meshManager.allocator, filesystem, renderDevice);
 
 	textureManager.CreateScope(allocatorManager, "TextureManager", alloc);
 	textureManager.New(textureManager.allocator, renderDevice);
@@ -75,7 +75,8 @@ Engine::Engine()
 	shaderManager.New(shaderManager.allocator, filesystem, renderDevice);
 
 	materialManager.CreateScope(allocatorManager, "MaterialManager", alloc);
-	materialManager.New(materialManager.allocator, renderDevice, shaderManager.instance, textureManager.instance);
+	materialManager.New(materialManager.allocator, filesystem, renderDevice,
+		shaderManager.instance, textureManager.instance);
 
 	environmentManager.CreateScope(allocatorManager, "EnvironmentManager", alloc);
 	environmentManager.New(environmentManager.allocator, renderDevice,

@@ -13,9 +13,10 @@
 #include "Resources/ShaderId.hpp"
 
 class Allocator;
+class Filesystem;
+class RenderDevice;
 class ShaderManager;
 class TextureManager;
-class RenderDevice;
 
 struct MaterialData
 {
@@ -37,6 +38,7 @@ class MaterialManager
 {
 private:
 	Allocator* allocator;
+	Filesystem* filesystem;
 	RenderDevice* renderDevice;
 	ShaderManager* shaderManager;
 	TextureManager* textureManager;
@@ -66,6 +68,7 @@ private:
 public:
 	MaterialManager(
 		Allocator* allocator,
+		Filesystem* filesystem,
 		RenderDevice* renderDevice,
 		ShaderManager* shaderManager,
 		TextureManager* textureManager);

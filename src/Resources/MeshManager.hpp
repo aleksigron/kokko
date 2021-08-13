@@ -13,7 +13,9 @@
 #include "Resources/MeshData.hpp"
 
 struct BoundingBox;
+
 class Allocator;
+class Filesystem;
 class RenderDevice;
 
 struct VertexData
@@ -76,7 +78,7 @@ class MeshManager
 {
 private:
 	Allocator* allocator;
-
+	Filesystem* filesystem;
 	RenderDevice* renderDevice;
 
 	struct InstanceData
@@ -127,7 +129,7 @@ private:
 	unsigned int GetIndex(MeshId meshId) const;
 
 public:
-	MeshManager(Allocator* allocator, RenderDevice* renderDevice);
+	MeshManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice);
 	~MeshManager();
 
 	MeshId CreateMesh();

@@ -19,17 +19,19 @@
 #include "Resources/ShaderManager.hpp"
 #include "Resources/ValueSerialization.hpp"
 
-#include "System/File.hpp"
+#include "System/Filesystem.hpp"
 #include "System/IncludeOpenGL.hpp"
 
 const MaterialId MaterialId::Null = MaterialId{ 0 };
 
 MaterialManager::MaterialManager(
 	Allocator* allocator,
+	Filesystem* filesystem,
 	RenderDevice* renderDevice,
 	ShaderManager* shaderManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
+	filesystem(filesystem),
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
 	textureManager(textureManager),
@@ -181,7 +183,7 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 	Array<char> file(allocator);
 	String pathStr(allocator, path);
 
-	if (File::ReadText(pathStr.GetCStr(), file))
+	if (filesystem->ReadText(pathStr.GetCStr(), file))
 	{
 		MaterialId id = CreateMaterial();
 
@@ -199,9 +201,13 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 		}
 		else
 		{
+			KK_LOG_ERROR("Material failed to load: \"{}\"", pathStr.GetCStr());
+
 			RemoveMaterial(id);
 		}
 	}
+	else
+		KK_LOG_ERROR("Material file couldn't be read: \"{}\"", pathStr.GetCStr());
 
 	return MaterialId::Null;
 }

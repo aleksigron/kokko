@@ -10,12 +10,13 @@
 
 #include "Resources/MeshLoader.hpp"
 
-#include "System/File.hpp"
+#include "System/Filesystem.hpp"
 
 const MeshId MeshId::Null = MeshId{ 0 };
 
-MeshManager::MeshManager(Allocator* allocator, RenderDevice* renderDevice) :
+MeshManager::MeshManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
 	allocator(allocator),
+	filesystem(filesystem),
 	renderDevice(renderDevice),
 	pathHashMap(allocator)
 {
@@ -166,7 +167,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	Array<unsigned char> file(allocator);
 	String pathStr(allocator, path);
 
-	if (File::ReadBinary(pathStr.GetCStr(), file))
+	if (filesystem->ReadBinary(pathStr.GetCStr(), file))
 	{
 		MeshId id = CreateMesh();
 		MeshLoader loader(this);
