@@ -88,7 +88,6 @@ public:
 	const TextureData& GetTextureData(TextureId id) { return data.texture[id.i]; }
 
 	bool LoadWithStbImage(TextureId id, const char* filePath, bool preferLinear = false);
-	bool LoadFromKtxFile(TextureId id, const char* ktxFilePath);
 
 	void Upload_2D(TextureId id, const ImageData& image, const TextureOptions& options);
 	void Upload_Cube(TextureId id, const ImageData* images, const TextureOptions& options);

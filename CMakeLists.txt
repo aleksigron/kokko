@@ -290,12 +290,6 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(deps/glfw)
 
-set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "" FORCE)
-set(KTX_FEATURE_TESTS OFF CACHE BOOL "" FORCE)
-set(KTX_FEATURE_TOOLS OFF CACHE BOOL "" FORCE)
-
-add_subdirectory(deps/ktx)
-
 set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 
@@ -306,6 +300,5 @@ find_package(OpenGL REQUIRED)
 target_link_libraries(${KOKKO_LIB} ${FMT_LIB})
 target_link_libraries(${KOKKO_LIB} ${IMGUI_LIB})
 target_link_libraries(${KOKKO_LIB} glfw)
-target_link_libraries(${KOKKO_LIB} ktx_read)
 target_link_libraries(${KOKKO_LIB} yaml-cpp)
 target_link_libraries(${KOKKO_LIB} OpenGL::GL)

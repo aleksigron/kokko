@@ -4,7 +4,6 @@
 
 #include "rapidjson/document.h"
 #include "stb_image/stb_image.h"
-#include "ktx.h"
 
 #include "Core/Core.hpp"
 #include "Core/Hash.hpp"
@@ -194,16 +193,6 @@ TextureId TextureManager::GetIdByPath(StringRef path)
 			return id;
 		}
 	}
-	else if (path.EndsWith(StringRef(".ktx")) || path.EndsWith(StringRef(".ktx2")))
-	{
-		if (LoadFromKtxFile(id, pathStr.GetCStr()))
-		{
-			pair = nameHashMap.Insert(hash);
-			pair->second = id;
-
-			return id;
-		}
-	}
 
 	RemoveTexture(id);
 	return TextureId::Null;
@@ -293,74 +282,6 @@ bool TextureManager::LoadWithStbImage(TextureId id, const char* filePath, bool p
 
 		return -1;
 	}
-}
-
-bool TextureManager::LoadFromKtxFile(TextureId id, const char* ktxFilePath)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	TextureData& textureData = data.texture[id.i];
-
-	ktxTexture* kTexture;
-	KTX_error_code result;
-
-	result = ktxTexture_CreateFromNamedFile(ktxFilePath, KTX_TEXTURE_CREATE_NO_FLAGS, &kTexture);
-
-	assert(result == KTX_SUCCESS);
-
-	GLuint textureName = 0;
-	GLenum target;
-
-	if (kTexture->classId == ktxTexture2_c)
-	{
-		ktxTexture2* k2Texture = reinterpret_cast<ktxTexture2*>(kTexture);
-
-		if (ktxTexture2_NeedsTranscoding(k2Texture))
-		{
-			ktx_texture_transcode_fmt_e tf = KTX_TTF_BC1_OR_3;
-
-			result = ktxTexture2_TranscodeBasis(k2Texture, tf, 0);
-			assert(result == KTX_SUCCESS);
-		}
-	}
-
-
-	result = ktxTexture_GLUpload(kTexture, &textureName, &target, nullptr);
-
-	assert(result == KTX_SUCCESS);
-
-	ktxTexture_Destroy(kTexture);
-
-	textureData.textureObjectId = textureName;
-
-	switch (target)
-	{
-	case GL_TEXTURE_1D:
-		textureData.textureTarget = RenderTextureTarget::Texture1d;
-		break;
-
-	case GL_TEXTURE_2D:
-		textureData.textureTarget = RenderTextureTarget::Texture2d;
-		break;
-
-	case GL_TEXTURE_3D:
-		textureData.textureTarget = RenderTextureTarget::Texture3d;
-		break;
-
-	case GL_TEXTURE_1D_ARRAY:
-		textureData.textureTarget = RenderTextureTarget::Texture1dArray;
-		break;
-
-	case GL_TEXTURE_2D_ARRAY:
-		textureData.textureTarget = RenderTextureTarget::Texture2dArray;
-		break;
-
-	case GL_TEXTURE_CUBE_MAP:
-		textureData.textureTarget = RenderTextureTarget::TextureCubeMap;
-		break;
-	}
-
-	return true;
 }
 
 void TextureManager::Upload_2D(TextureId id, const ImageData& image, const TextureOptions& options)
