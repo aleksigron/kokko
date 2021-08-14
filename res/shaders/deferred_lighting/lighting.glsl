@@ -1,3 +1,41 @@
+#version 450
+
+#property g_albedo tex2d
+#property g_normal tex2d
+#property g_material tex2d
+#property g_depth tex2d
+#property ssao_map tex2d
+#property shadow_map tex2d
+#property diff_irradiance_map texCube
+#property spec_irradiance_map texCube
+#property brdf_lut tex2d
+
+#stage vertex
+
+#include "res/shaders/common/constants.glsl"
+#include "res/shaders/deferred_lighting/lighting_ubo.glsl"
+
+layout(location = 0) in vec3 ndc_pos;
+
+out VS_TO_FS
+{
+	vec2 tex_coord;
+	vec3 eye_dir;
+}
+vs_out;
+
+void main()
+{
+	vs_out.tex_coord = ndc_pos.xy * 0.5 + vec2(0.5, 0.5);
+	vs_out.eye_dir = vec3((2.0 * half_near_plane * vs_out.tex_coord) - half_near_plane, -1.0);
+	gl_Position = vec4(ndc_pos, 1.0);
+}
+
+#stage fragment
+
+#include "res/shaders/common/constants.glsl"
+#include "res/shaders/common/g_buffer_io.glsl"
+#include "res/shaders/deferred_lighting/lighting_ubo.glsl"
 
 in VS_TO_FS
 {

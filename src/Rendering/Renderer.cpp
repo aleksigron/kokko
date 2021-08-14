@@ -296,7 +296,7 @@ void Renderer::Initialize()
 	}
 
 	{
-		const char* path = "res/shaders/deferred_lighting/lighting.shader.json";
+		const char* path = "res/shaders/deferred_lighting/lighting.glsl";
 		lightingShaderId = shaderManager->GetIdByPath(StringRef(path));
 	}
 
