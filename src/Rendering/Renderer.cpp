@@ -58,6 +58,7 @@ struct LightingUniformBlock
 	UniformBlockArray<Vec3f, MaxLightCount> lightColors;
 	UniformBlockArray<Vec4f, MaxLightCount> lightPositions; // xyz: position, w: inverse square radius
 	UniformBlockArray<Vec4f, MaxLightCount> lightDirections; // xyz: direction, w: spot light angle
+	UniformBlockArray<bool, MaxLightCount> lightCastShadow;
 
 	UniformBlockArray<Mat4x4f, MaxCascadeCount> shadowMatrices;
 	UniformBlockArray<float, MaxCascadeCount + 1> shadowSplits;
@@ -68,6 +69,7 @@ struct LightingUniformBlock
 	alignas(8) Vec2f shadowMapScale;
 	alignas(8) Vec2f frameResolution;
 
+	alignas(4) int directionalLightCount;
 	alignas(4) int pointLightCount;
 	alignas(4) int spotLightCount;
 	alignas(4) int cascadeCount;
@@ -876,18 +878,21 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	uniformsOut.perspectiveMatrix = fsvp.projection;
 	uniformsOut.viewToWorld = fsvp.viewToWorld;
 
+	size_t dirLightCount = directionalLights.GetCount();
+	uniformsOut.directionalLightCount = static_cast<int>(dirLightCount);
+
 	// Directional light
-	if (directionalLights.GetCount() > 0)
+	for (size_t i = 0; i < dirLightCount; ++i)
 	{
-		LightId dirLightId = directionalLights[0];
+		LightId dirLightId = directionalLights[i];
 
 		Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
 		Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 		Vec4f vLightDir = fsvp.view * Vec4f(wLightDir, 0.0f);
-		uniformsOut.lightDirections[0] = vLightDir;
+		uniformsOut.lightDirections[i] = vLightDir;
 
-		Vec3f lightCol = lightManager->GetColor(dirLightId);
-		uniformsOut.lightColors[0] = lightCol;
+		uniformsOut.lightColors[i] = lightManager->GetColor(dirLightId);
+		uniformsOut.lightCastShadow[i] = lightManager->GetShadowCasting(dirLightId);
 	}
 
 	lightResultArray.Clear();
@@ -1419,48 +1424,51 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	// Disable blending
 	commandList.AddControl(0, g_pass, 7, ctrl::BlendingDisable);
 
+	if (numShadowViewports > 0)
 	{
-		// Bind shadow framebuffer before any shadow cascade draws
-		RenderCommandData::BindFramebufferData data;
-		data.target = RenderFramebufferTarget::Framebuffer;
-		data.framebuffer = framebufferShadow.GetFramebufferId();
+		{
+			// Bind shadow framebuffer before any shadow cascade draws
+			RenderCommandData::BindFramebufferData data;
+			data.target = RenderFramebufferTarget::Framebuffer;
+			data.framebuffer = framebufferShadow.GetFramebufferId();
 
-		commandList.AddControl(0, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
-	}
+			commandList.AddControl(0, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
+		}
 
-	{
-		// Set viewport size to full framebuffer size before clearing
-		RenderCommandData::ViewportData data;
-		data.x = 0;
-		data.y = 0;
-		data.w = framebufferShadow.GetWidth();
-		data.h = framebufferShadow.GetHeight();
+		{
+			// Set viewport size to full framebuffer size before clearing
+			RenderCommandData::ViewportData data;
+			data.x = 0;
+			data.y = 0;
+			data.w = framebufferShadow.GetWidth();
+			data.h = framebufferShadow.GetHeight();
 
-		commandList.AddControl(0, g_pass, 9, ctrl::Viewport, sizeof(data), &data);
-	}
+			commandList.AddControl(0, g_pass, 9, ctrl::Viewport, sizeof(data), &data);
+		}
 
-	// Clear shadow framebuffer RenderFramebufferTarget::Framebuffer
-	{
-		RenderCommandData::ClearMask clearMask{ false, true, false };
-		commandList.AddControl(0, g_pass, 10, ctrl::Clear, sizeof(clearMask), &clearMask);
-	}
+		// Clear shadow framebuffer RenderFramebufferTarget::Framebuffer
+		{
+			RenderCommandData::ClearMask clearMask{ false, true, false };
+			commandList.AddControl(0, g_pass, 10, ctrl::Clear, sizeof(clearMask), &clearMask);
+		}
 
-	// Enable sRGB conversion for framebuffer
-	commandList.AddControl(0, g_pass, 11, ctrl::FramebufferSrgbEnable);
+		// Enable sRGB conversion for framebuffer
+		commandList.AddControl(0, g_pass, 11, ctrl::FramebufferSrgbEnable);
 
-	// For each shadow viewport
-	for (unsigned int vpIdx = 0; vpIdx < numShadowViewports; ++vpIdx)
-	{
-		const RenderViewport& viewport = viewportData[vpIdx];
+		// For each shadow viewport
+		for (unsigned int vpIdx = 0; vpIdx < numShadowViewports; ++vpIdx)
+		{
+			const RenderViewport& viewport = viewportData[vpIdx];
 
-		// Set viewport size
-		RenderCommandData::ViewportData data;
-		data.x = viewport.viewportRectangle.position.x;
-		data.y = viewport.viewportRectangle.position.y;
-		data.w = viewport.viewportRectangle.size.x;
-		data.h = viewport.viewportRectangle.size.y;
+			// Set viewport size
+			RenderCommandData::ViewportData data;
+			data.x = viewport.viewportRectangle.position.x;
+			data.y = viewport.viewportRectangle.position.y;
+			data.w = viewport.viewportRectangle.size.x;
+			data.h = viewport.viewportRectangle.size.y;
 
-		commandList.AddControl(vpIdx, g_pass, 12, ctrl::Viewport, sizeof(data), &data);
+			commandList.AddControl(vpIdx, g_pass, 12, ctrl::Viewport, sizeof(data), &data);
+		}
 	}
 
 	// Before fullscreen viewport
@@ -1562,7 +1570,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 	BitPack* vis[MaxViewportCount];
 
-	for (size_t vpIdx = 0, count = viewportCount; vpIdx < count; ++vpIdx)
+	for (size_t vpIdx = 0; vpIdx < viewportCount; ++vpIdx)
 	{
 		vis[vpIdx] = objectVisibility.GetData() + visRequired * vpIdx;
 

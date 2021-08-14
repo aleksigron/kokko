@@ -6,6 +6,7 @@ layout(std140, binding = BLOCK_BINDING_OBJECT) uniform Lighting
 	vec3 light_col[MaxLightCount];
 	vec4 light_pos[MaxLightCount]; // xyz: position, w: inverse square radius
 	vec4 light_dir[MaxLightCount]; // xyz: direction, w: spot light angle
+	bool light_shadow[MaxLightCount];
 
 	mat4x4 shadow_mats[MaxCascadeCount];
 	float shadow_splits[MaxCascadeCount + 1];
@@ -16,6 +17,7 @@ layout(std140, binding = BLOCK_BINDING_OBJECT) uniform Lighting
 	vec2 shadow_map_scale;
 	vec2 frame_resolution;
 
+	int dir_count;
 	int point_count;
 	int spot_count;
 	int shadow_casc_count;

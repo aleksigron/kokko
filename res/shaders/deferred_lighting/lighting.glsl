@@ -55,8 +55,6 @@ uniform samplerCube diff_irradiance_map;
 uniform samplerCube spec_irradiance_map;
 uniform sampler2D brdf_lut;
 
-const int DirLightIndex = 0;
-
 vec3 fresnel_schlick(float cosTheta, vec3 F0)
 {
 	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
@@ -153,7 +151,10 @@ void main()
 	vec3 V = normalize(-surface_pos);
 	vec3 F0 = mix(vec3(0.04), albedo, metalness);
 	vec3 Lo = vec3(0.0);
+	
+	int light_idx = 0;
 
+	for (int end = dir_count; light_idx < end; ++light_idx)
 	{
 		float view_z = surface_pos.z;
 
@@ -163,45 +164,49 @@ void main()
 			if (shadow_splits[i] <= -view_z && shadow_splits[i + 1] > -view_z)
 				cascade_index = i;
 
-		vec3 L = -light_dir[DirLightIndex].xyz;
-
-		// Get shadow depth
-		vec4 shadow_coord = shadow_mats[cascade_index] * vec4(surface_pos, 1.0);
-		shadow_coord.x = (cascade_index + shadow_coord.x) / shadow_casc_count;
-		float NdotL = max(dot(N, L), 0.0);
-		shadow_coord.z += shadow_bias_offset + clamp(shadow_bias_factor * tan(acos(NdotL)), 0.0, shadow_bias_clamp);
-
-		float shadow_coeff = 0.0;
-		for (float y = -1.5; y <= 1.5; y += 1.0)
-			for (float x = -1.5; x <= 1.5; x += 1.0)
-				shadow_coeff += offset_lookup(shadow_map, shadow_coord, vec2(x, y)); 
-				
-		shadow_coeff /= 16.0;
+		vec3 L = -light_dir[light_idx].xyz;
 		
-		Lo += calc_light(F0, N, V, L, albedo, light_col[DirLightIndex], metalness, roughness) * shadow_coeff;
+		float shadow_coeff = 1.0;
+
+		if (light_shadow[light_idx] == true)
+		{
+			// Get shadow depth
+			vec4 shadow_coord = shadow_mats[cascade_index] * vec4(surface_pos, 1.0);
+			shadow_coord.x = (cascade_index + shadow_coord.x) / shadow_casc_count;
+			float NdotL = max(dot(N, L), 0.0);
+			shadow_coord.z += shadow_bias_offset + clamp(shadow_bias_factor * tan(acos(NdotL)), 0.0, shadow_bias_clamp);
+
+			shadow_coeff = 0.0;
+			for (float y = -1.5; y <= 1.5; y += 1.0)
+				for (float x = -1.5; x <= 1.5; x += 1.0)
+					shadow_coeff += offset_lookup(shadow_map, shadow_coord, vec2(x, y)); 
+					
+			shadow_coeff /= 16.0;
+		}
+		
+		Lo += calc_light(F0, N, V, L, albedo, light_col[light_idx], metalness, roughness) * shadow_coeff;
 	}
 
-	int idx = 1;
-	for (int end = point_count + 1; idx < end; ++idx)
+	for (int end = dir_count + point_count; light_idx < end; ++light_idx)
 	{
-		vec3 surface_to_light = light_pos[idx].xyz - surface_pos;
-		float attenuation = get_distance_att(surface_to_light, light_pos[idx].w);
+		vec3 surface_to_light = light_pos[light_idx].xyz - surface_pos;
+		float attenuation = get_distance_att(surface_to_light, light_pos[light_idx].w);
 
 		vec3 L = normalize(surface_to_light);
-		Lo += calc_light(F0, N, V, L, albedo, light_col[idx], metalness, roughness) * attenuation;
+		Lo += calc_light(F0, N, V, L, albedo, light_col[light_idx], metalness, roughness) * attenuation;
 	}
 	
-	for (; idx < point_count + spot_count + 1; ++idx)
+	for (int end = dir_count + point_count + spot_count; light_idx < end; ++light_idx)
 	{
-		vec3 surface_to_light = light_pos[idx].xyz - surface_pos;
+		vec3 surface_to_light = light_pos[light_idx].xyz - surface_pos;
 		vec3 L = normalize(surface_to_light);
 
-		float direction_asin = asin(dot(L, light_dir[idx].xyz));
-		float direction_att = clamp((direction_asin - (M_HPI) + light_dir[idx].w) * 20, 0.0, 1.0);
+		float direction_asin = asin(dot(L, light_dir[light_idx].xyz));
+		float direction_att = clamp((direction_asin - (M_HPI) + light_dir[light_idx].w) * 20, 0.0, 1.0);
 
-		float distance_att = get_distance_att(surface_to_light, light_pos[idx].w);
+		float distance_att = get_distance_att(surface_to_light, light_pos[light_idx].w);
 		
-		Lo += calc_light(F0, N, V, L, albedo, light_col[idx], metalness, roughness) * direction_att * distance_att;
+		Lo += calc_light(F0, N, V, L, albedo, light_col[light_idx], metalness, roughness) * direction_att * distance_att;
 	}
 
     vec3 F = fresnel_schlick_roughness(max(dot(N, V), 0.0), F0, roughness);
