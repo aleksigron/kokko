@@ -28,37 +28,18 @@ namespace Math
 		return degrees * Const::DegToRad;
 	}
 
-	inline Vec3f DegreesToRadians(const Vec3f& degrees)
-	{
-		return degrees * Const::DegToRad;
-	}
+	Vec3f DegreesToRadians(const Vec3f& degrees);
 	
 	constexpr float RadiansToDegrees(float radians)
 	{
 		return radians * Const::RadToDeg;
 	}
 
-	inline Vec3f RadiansToDegrees(const Vec3f& degrees)
-	{
-		return degrees * Const::RadToDeg;
-	}
+	Vec3f RadiansToDegrees(const Vec3f& radians);
 
-	inline float Lerp(float a, float b, float t)
-	{
-		// Based on https://github.com/emsr/cxx_linear/blob/master/lerp.h
+	float Lerp(float a, float b, float t);
 
-		if (std::isnan(a) || std::isnan(b) || std::isnan(t))
-			return std::numeric_limits<float>::quiet_NaN();
-		else if ((a <= 0.0f && b >= 0.0f) || (a >= 0.0f && b <= 0.0f))
-			return t * b + (1.0f - t) * a;
-		else if (t == 1.0f)
-			return b;
-		else
-		{
-			const float x = a + t * (b - a);
-			return (t > 1.0f) == (b > a) ? std::max(b, x) : std::min(b, x);
-		}
-	}
+	bool IsPowerOfTwo(unsigned int v);
 
 	constexpr unsigned int UpperPowerOfTwo(unsigned int v)
 	{

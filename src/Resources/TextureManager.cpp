@@ -121,6 +121,20 @@ void TextureManager::Reallocate(unsigned int required)
 	data = newData;
 }
 
+int TextureManager::MipLevelsFromDimensions(int width, int height)
+{
+	if (Math::IsPowerOfTwo(width) == false || Math::IsPowerOfTwo(height) == false)
+		return 1;
+
+	unsigned int smaller = static_cast<unsigned int>(width > height ? height : width);
+
+	int levels = 1;
+	while ((smaller >>= 1) > 0)
+		levels += 1;
+
+	return levels;
+}
+
 TextureId TextureManager::CreateTexture()
 {
 	TextureId id;
@@ -251,11 +265,13 @@ bool TextureManager::LoadWithStbImage(TextureId id, const char* filePath, bool p
 		{
 			KOKKO_PROFILE_SCOPE("Create and upload texture");
 
+			int mipLevels = MipLevelsFromDimensions(width, height);
+
 			renderDevice->CreateTextures(1, &textureObjectId);
 			renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureObjectId);
 
 			RenderCommandData::SetTextureStorage2D textureStorage{
-				RenderTextureTarget::Texture2d, 1, sizedFormat, width, height,
+				RenderTextureTarget::Texture2d, mipLevels, sizedFormat, width, height,
 			};
 			renderDevice->SetTextureStorage2D(&textureStorage);
 
@@ -264,6 +280,9 @@ bool TextureManager::LoadWithStbImage(TextureId id, const char* filePath, bool p
 				baseFormat, RenderTextureDataType::UnsignedByte, textureBytes
 			};
 			renderDevice->SetTextureSubImage2D(&textureImage);
+
+			if (mipLevels > 1)
+				renderDevice->GenerateTextureMipmaps(RenderTextureTarget::Texture2d);
 		}
 
 		{
@@ -271,17 +290,20 @@ bool TextureManager::LoadWithStbImage(TextureId id, const char* filePath, bool p
 			stbi_image_free(textureBytes);
 		}
 
-		TextureData& textureData = data.texture[id.i];
-		textureData.textureSize = Vec2i(width, height);
-		textureData.textureObjectId = textureObjectId;
-		textureData.textureTarget = RenderTextureTarget::Texture2d;
+		if (formatFound)
+		{
+			TextureData& textureData = data.texture[id.i];
+			textureData.textureSize = Vec2i(width, height);
+			textureData.textureObjectId = textureObjectId;
+			textureData.textureTarget = RenderTextureTarget::Texture2d;
+
+			return true;
+		}
 	}
 	else
-	{
 		KK_LOG_ERROR("Couldn't load texture file with stb_image");
 
-		return -1;
-	}
+	return false;
 }
 
 void TextureManager::Upload_2D(TextureId id, const ImageData& image, const TextureOptions& options)

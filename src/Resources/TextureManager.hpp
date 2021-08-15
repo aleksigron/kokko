@@ -65,6 +65,8 @@ private:
 
 	void Reallocate(unsigned int required);
 
+	static int MipLevelsFromDimensions(int width, int height);
+
 public:
 	TextureManager(Allocator* allocator, RenderDevice* renderDevice);
 	~TextureManager();

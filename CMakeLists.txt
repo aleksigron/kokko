@@ -158,6 +158,7 @@ set (KOKKO_SOURCES
 	src/Math/Mat3x3.hpp
 	src/Math/Mat4x4.cpp
 	src/Math/Mat4x4.hpp
+	src/Math/Math.cpp
 	src/Math/Math.hpp
 	src/Math/Plane.hpp
 	src/Math/Projection.hpp
