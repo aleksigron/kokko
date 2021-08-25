@@ -133,6 +133,10 @@ set (KOKKO_SOURCES
 	src/Engine/EntityManager.cpp
 	src/Engine/EntityManager.hpp
 	src/Engine/InstanceAllocatorPair.hpp
+	src/Engine/JobSystem.cpp
+	src/Engine/JobSystem.hpp
+	src/Engine/JobWorker.cpp
+	src/Engine/JobWorker.hpp
 	src/Engine/World.cpp
 	src/Engine/World.hpp
 	src/Graphics/BloomEffect.cpp
