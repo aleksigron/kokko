@@ -73,6 +73,7 @@ set (KOKKO_SOURCES
 	src/Core/HashMap.hpp
 	src/Core/Optional.hpp
 	src/Core/Pair.hpp
+	src/Core/Queue.cpp
 	src/Core/Queue.hpp
 	src/Core/Range.hpp
 	src/Core/Sort.hpp

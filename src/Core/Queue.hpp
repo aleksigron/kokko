@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <new>
+#include <utility>
 
 #include "Memory/Allocator.hpp"
 
@@ -90,16 +91,33 @@ public:
 		if (count > 0)
 		{
 			SizeType frontIndex = this->GetArrayIndex(0);
-			result = data[frontIndex]; // Copy return value
+
+			result = std::move(data[frontIndex]); // Move return value
 			data[frontIndex].~ValueType(); // Run destructor
 
 			start = this->GetArrayIndex(1);
 			--count;
 		}
-		else
-			result = ValueType();
 
 		return result;
+	}
+
+	bool TryPop(ValueType& out)
+	{
+		if (count > 0)
+		{
+			SizeType frontIndex = this->GetArrayIndex(0);
+
+			out = std::move(data[frontIndex]); // Move return value
+			data[frontIndex].~ValueType(); // Run destructor
+
+			start = this->GetArrayIndex(1);
+			--count;
+
+			return true;
+		}
+		else
+			return false;
 	}
 
 	void Pop(SizeType popCount)
@@ -123,17 +141,19 @@ public:
 
 	void Push(const ValueType& value)
 	{
-		this->ReserveInternal(count + 1);
+		ReserveInternal(count + 1);
 
-		data[this->GetArrayIndex(count++)] = value;
+		data[GetArrayIndex(count)] = value;
 		++count;
 	}
 
 	void Push(const ValueType* values, SizeType valueCount)
 	{
-		this->ReserveInternal(this->count + valueCount);
+		ReserveInternal(count + valueCount);
 
 		for (SizeType i = 0; i < valueCount; ++i)
-			data[this->GetArrayIndex(this->count++)] = values[i];
+		{
+			data[GetArrayIndex(count++)] = values[i];
+		}
 	}
 };
