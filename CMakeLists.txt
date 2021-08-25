@@ -102,6 +102,7 @@ set (KOKKO_SOURCES
 	src/Debug/DebugVectorRenderer.hpp
 	src/Debug/Instrumentation.cpp
 	src/Debug/Instrumentation.hpp
+	src/Debug/InstrumentationTimer.cpp
 	src/Debug/InstrumentationTimer.hpp
 	src/Debug/Log.cpp
 	src/Debug/Log.hpp

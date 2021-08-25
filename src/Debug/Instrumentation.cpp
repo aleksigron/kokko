@@ -36,7 +36,7 @@ bool Instrumentation::BeginSession(const char* filepath)
 	return false;
 }
 
-void Instrumentation::WriteProfile(const char* name, double start, double end, unsigned int threadId)
+void Instrumentation::WriteProfile(const char* name, double start, double end, size_t threadId)
 {
 	if (fileHandle != nullptr)
 	{
@@ -45,8 +45,9 @@ void Instrumentation::WriteProfile(const char* name, double start, double end, u
 		if (profileCount++ > 0)
 			std::fputc(',', file);
 
-		const char* format =
-			"{{"
+		fmt::print(
+			file,
+			FMT_STRING("{{"
 			"\"cat\":\"function\","
 			"\"dur\":{},"
 			"\"name\":\"{}\","
@@ -54,9 +55,8 @@ void Instrumentation::WriteProfile(const char* name, double start, double end, u
 			"\"pid\":0,"
 			"\"tid\":{},"
 			"\"ts\":{}"
-			"}}";
-
-		fmt::print(file, format, end - start, name, threadId, start);
+			"}}"),
+			end - start, name, threadId, start);
 	}
 }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 class Instrumentation
 {
 private:
@@ -12,11 +14,11 @@ public:
 	Instrumentation(Instrumentation&&) = delete;
 	~Instrumentation();
 
-	Instrumentation& operator==(const Instrumentation&) = delete;
-	Instrumentation& operator==(Instrumentation&&) = delete;
+	Instrumentation& operator=(const Instrumentation&) = delete;
+	Instrumentation& operator=(Instrumentation&&) = delete;
 
 	bool BeginSession(const char* filepath);
-	void WriteProfile(const char* name, double start, double end, unsigned int threadId);
+	void WriteProfile(const char* name, double start, double end, size_t threadId);
 	void EndSession();
 
 	static Instrumentation& Get()

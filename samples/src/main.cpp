@@ -13,6 +13,9 @@
 
 int main(int argc, char** argv)
 {
+	Instrumentation& instr = Instrumentation::Get();
+	instr.BeginSession("unit_test_trace.json");
+
 	doctest::Context ctx;
 	ctx.setOption("abort-after", 5);
 	ctx.applyCommandLine(argc, argv);
@@ -21,7 +24,7 @@ int main(int argc, char** argv)
 	if (ctx.shouldExit())
 		return res;
 
-	Instrumentation& instr = Instrumentation::Get();
+	instr.EndSession();
 	instr.BeginSession("startup_trace.json");
 
 	Engine engine;
@@ -54,3 +57,4 @@ int main(int argc, char** argv)
 
 	return res;
 }
+	
