@@ -40,6 +40,7 @@ namespace Math
 	float Lerp(float a, float b, float t);
 
 	bool IsPowerOfTwo(unsigned int v);
+	bool IsPowerOfTwo(size_t v);
 
 	constexpr unsigned int UpperPowerOfTwo(unsigned int v)
 	{

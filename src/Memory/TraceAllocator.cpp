@@ -23,6 +23,13 @@ void* TraceAllocator::Allocate(std::size_t size, const char* debugTag)
 	return ptr;
 }
 
+void* TraceAllocator::AllocateAligned(size_t size, size_t alignment, const char* debugTag)
+{
+	void* ptr = MetricAllocator::AllocateAligned(size, alignment);
+	allocations.Insert(AllocationInfo{ ptr, debugTag });
+	return ptr;
+}
+
 void TraceAllocator::Deallocate(void* ptr)
 {
 	if (ptr != nullptr)

@@ -5,10 +5,12 @@
 class DefaultAllocator : public Allocator
 {
 private:
-	static const std::size_t PreambleSize = 16; // To preserve alignment
+	static const size_t DefaultMinAlign = 16;
+	static const size_t MetadataSize = sizeof(size_t) * 2;
 
 public:
-	virtual void* Allocate(std::size_t size, const char* debugTag = nullptr) override;
+	virtual void* Allocate(size_t size, const char* debugTag = nullptr) override;
+	virtual void* AllocateAligned(size_t size, size_t alignment, const char* debugTag = nullptr) override;
 	virtual void Deallocate(void* ptr) override;
-	virtual std::size_t GetAllocatedSize(void* ptr) override;
+	virtual size_t GetAllocatedSize(void* ptr) override;
 };

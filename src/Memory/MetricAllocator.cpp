@@ -31,9 +31,22 @@ const char* MetricAllocator::GetMemoryScopeName() const
 	return memoryScopeName;
 }
 
-void* MetricAllocator::Allocate(std::size_t size, const char* debugTag)
+void* MetricAllocator::Allocate(size_t size, const char* debugTag)
 {
 	void* result = allocator->Allocate(size);
+
+	if (result != nullptr)
+	{
+		allocatedSize += size;
+		allocatedCount += 1;
+	}
+
+	return result;
+}
+
+void* MetricAllocator::AllocateAligned(size_t size, size_t alignment, const char* debugTag)
+{
+	void* result = allocator->AllocateAligned(size, alignment);
 
 	if (result != nullptr)
 	{
@@ -48,7 +61,7 @@ void MetricAllocator::Deallocate(void* ptr)
 {
 	if (ptr != nullptr)
 	{
-		std::size_t size = allocator->GetAllocatedSize(ptr);
+		size_t size = allocator->GetAllocatedSize(ptr);
 
 		allocatedSize -= size;
 		allocatedCount -= 1;

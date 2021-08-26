@@ -1,5 +1,7 @@
 #include "Debug/DebugMemoryStats.hpp"
 
+#include <cstdio>
+
 #include "Core/Color.hpp"
 #include "Resources/BitmapFont.hpp"
 

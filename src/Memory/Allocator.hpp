@@ -1,16 +1,17 @@
 #pragma once
 
-#include <cstdio>
+#include <cstdint>
 #include <new>
 
 class Allocator
 {
 public:
-	virtual ~Allocator() {};
+	virtual ~Allocator() {}
 
-	virtual void* Allocate(std::size_t size, const char* debugTag = nullptr) = 0;
+	virtual void* Allocate(size_t size, const char* debugTag = nullptr) = 0;
+	virtual void* AllocateAligned(size_t size, size_t alignment, const char* debugTag = nullptr) = 0;
 	virtual void Deallocate(void* ptr) = 0;
-	virtual std::size_t GetAllocatedSize(void* ptr) = 0;
+	virtual size_t GetAllocatedSize(void* ptr) = 0;
 
 	template <typename T, typename... Args>
 	T* MakeNew(Args... args)

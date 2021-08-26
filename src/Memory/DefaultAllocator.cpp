@@ -1,27 +1,58 @@
 #include "Memory/DefaultAllocator.hpp"
 
+#include <cassert>
 #include <cstdlib>
+#include <memory>
+
+#include "Math/Math.hpp"
 
 void* DefaultAllocator::Allocate(std::size_t size, const char* debugTag)
 {
-	void* ptr = std::malloc(size + PreambleSize);
-	
-	if (ptr == nullptr)
-		return nullptr;
+	return AllocateAligned(size, DefaultMinAlign, debugTag);
+}
 
-	*static_cast<std::size_t*>(ptr) = size; // Save allocated size to preamble
-	return static_cast<char*>(ptr) + PreambleSize;
+void* DefaultAllocator::AllocateAligned(size_t size, size_t alignment, const char* debugTag)
+{
+	assert(Math::IsPowerOfTwo(alignment));
+
+	if (alignment < DefaultMinAlign)
+		alignment = DefaultMinAlign;
+
+	size_t spaceSize = size + alignment - DefaultMinAlign;
+	size_t totalSize = spaceSize + MetadataSize;
+
+	void* alloc = std::malloc(totalSize);
+
+	assert(alloc != nullptr);
+
+	if (alloc == nullptr)
+		return nullptr;
+	
+	void* spacePtr = static_cast<char*>(alloc) + MetadataSize;
+	void* aligned = std::align(alignment, size, spacePtr, spaceSize);
+
+	assert(aligned != nullptr);
+
+	// Save allocated size
+	*(static_cast<size_t*>(aligned) - 2) = size;
+
+	// Save alignment offset
+	size_t offset = static_cast<char*>(aligned) - static_cast<char*>(alloc);
+	*(static_cast<size_t*>(aligned) - 1) = offset;
+
+	return aligned;
 }
 
 void DefaultAllocator::Deallocate(void* ptr)
 {
 	if (ptr != nullptr)
 	{
-		std::free(static_cast<char*>(ptr) - PreambleSize);
+		size_t offset = *(static_cast<size_t*>(ptr) - 1);
+		std::free(static_cast<char*>(ptr) - offset);
 	}
 }
 
-std::size_t DefaultAllocator::GetAllocatedSize(void* ptr)
+size_t DefaultAllocator::GetAllocatedSize(void* ptr)
 {
-	return *reinterpret_cast<std::size_t*>(static_cast<char*>(ptr) - PreambleSize);
+	return *(static_cast<size_t*>(ptr) - 2);
 }

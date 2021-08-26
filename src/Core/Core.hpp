@@ -20,3 +20,5 @@
 #define KK_LOG_INFO(format, ...) ::Log::Log(LogLevel::Info, FMT_STRING(format), __VA_ARGS__)
 #define KK_LOG_WARN(format, ...) ::Log::Log(LogLevel::Warning, FMT_STRING(format), __VA_ARGS__)
 #define KK_LOG_ERROR(format, ...) ::Log::Log(LogLevel::Error, FMT_STRING(format), __VA_ARGS__)
+
+#define KK_CACHE_LINE 64
