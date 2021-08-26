@@ -19,15 +19,10 @@ void JobWorker::StartThread()
 void JobWorker::RequestExit()
 {
 	exitRequested = true;
-
-	if (thread.joinable())
-		thread.join();
 }
 
 void JobWorker::WaitToExit()
 {
-	exitRequested = true;
-
 	if (thread.joinable())
 		thread.join();
 }

@@ -42,6 +42,12 @@ void JobSystem::Deinitialize()
 		for (int i = 0; i < workerCount; ++i)
 			workers[i].RequestExit();
 
+		// Lock must be acquired before notifying the condition
+		std::unique_lock<std::mutex> lock(queueMutex);
+		lock.unlock();
+
+		jobAddedCondition.notify_all();
+
 		for (int i = 0; i < workerCount; ++i)
 			workers[i].WaitToExit();
 
@@ -81,7 +87,7 @@ TEST_CASE("JobSystem")
 	TestFn(&validationResult);
 
 	Allocator* allocator = Allocator::GetDefault();
-	JobSystem jobSystem(allocator, 1);
+	JobSystem jobSystem(allocator, 2);
 	jobSystem.Initialize();
 
 	int64_t* results = static_cast<int64_t*>(allocator->Allocate(sizeof(int64_t) * IterationCount));
