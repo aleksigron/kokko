@@ -11,6 +11,7 @@ class Window;
 class Renderer;
 class World;
 class Framebuffer;
+class Filesystem;
 
 class DebugVectorRenderer;
 class DebugTextRenderer;
@@ -58,7 +59,7 @@ private:
 
 public:
 	Debug(Allocator* allocator, AllocatorManager* allocManager,
-		Window* window, RenderDevice* renderDevice);
+		Window* window, RenderDevice* renderDevice, Filesystem* filesystem);
 	~Debug();
 
 	void Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager);

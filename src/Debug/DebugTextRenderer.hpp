@@ -9,8 +9,9 @@
 #include "Resources/MeshData.hpp"
 
 class Allocator;
-class BitmapFont;
 class RenderDevice;
+class Filesystem;
+class BitmapFont;
 class ShaderManager;
 class MeshManager;
 class TextureManager;
@@ -27,6 +28,7 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* renderDevice;
+	Filesystem* filesystem;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
 
@@ -48,7 +50,7 @@ private:
 	void CreateAndUploadData();
 
 public:
-	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice);
+	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice, Filesystem* filesystem);
 	~DebugTextRenderer();
 
 	void Initialize(ShaderManager* shaderManager, MeshManager* meshManager);

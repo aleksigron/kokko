@@ -17,7 +17,7 @@
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
 
-#include "System/File.hpp"
+#include "System/Filesystem.hpp"
 
 struct UniformBlock
 {
@@ -26,9 +26,11 @@ struct UniformBlock
 
 DebugTextRenderer::DebugTextRenderer(
 	Allocator* allocator,
-	RenderDevice* renderDevice) :
+	RenderDevice* renderDevice,
+	Filesystem* filesystem) :
 	allocator(allocator),
 	renderDevice(renderDevice),
+	filesystem(filesystem),
 	shaderManager(nullptr),
 	meshManager(nullptr),
 	font(nullptr),
@@ -96,7 +98,7 @@ bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const cha
 
 	Array<char> content(allocator);
 
-	if (File::ReadText(filePath, content))
+	if (filesystem->ReadText(filePath, content))
 	{
 		font = allocator->MakeNew<BitmapFont>(allocator);
 		return font->LoadFromBDF(textureManager, StringRef(content.GetData(), content.GetCount()));

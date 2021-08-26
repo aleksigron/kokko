@@ -20,7 +20,6 @@
 
 #include "Resources/ShaderManager.hpp"
 
-#include "System/File.hpp"
 #include "System/Filesystem.hpp"
 
 static const size_t MaxStageCount = 2;
@@ -50,7 +49,8 @@ namespace ShaderLoader
 static bool LoadIncludes(
 	const rapidjson::Value& value,
 	HashMap<uint32_t, ShaderLoader::FileString>& includeFileCache,
-	Allocator* allocator)
+	Allocator* allocator,
+	Filesystem* filesystem)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -74,7 +74,7 @@ static bool LoadIncludes(
 				char* stringBuffer;
 				size_t stringLength;
 
-				if (File::ReadText(itr->GetString(), allocator, stringBuffer, stringLength))
+				if (filesystem->ReadText(itr->GetString(), allocator, stringBuffer, stringLength))
 				{
 					ShaderLoader::FileString str;
 					str.string = stringBuffer;
@@ -101,6 +101,7 @@ static bool ProcessSource(
 	const rapidjson::Value* includePaths,
 	HashMap<uint32_t, ShaderLoader::FileString>& includeFileCache,
 	Allocator* allocator,
+	Filesystem* filesystem,
 	Array<char>& output)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -133,7 +134,7 @@ static bool ProcessSource(
 
 	Array<char> mainFile(allocator);
 
-	if (File::ReadText(mainPath, mainFile) == false)
+	if (filesystem->ReadText(mainPath, mainFile) == false)
 	{
 		KK_LOG_ERROR("ProcessSource: failed to read main shader file");
 		return false;
@@ -519,6 +520,7 @@ bool ShaderLoader::LoadFromConfiguration(
 	ShaderData& shaderOut,
 	ArrayView<char> configuration,
 	Allocator* allocator,
+	Filesystem* filesystem,
 	RenderDevice* renderDevice,
 	StringRef debugName)
 {
@@ -692,7 +694,8 @@ bool ShaderLoader::LoadFromConfiguration(
 		stages[i].includeItr = stages[i].stageItr->value.FindMember("includes");
 		if (stages[i].includeItr != stages[i].stageItr->value.MemberEnd())
 		{
-			if (LoadIncludes(stages[i].includeItr->value, includeFileCache, allocator) == false)
+			if (LoadIncludes(stages[i].includeItr->value, includeFileCache,
+				allocator, filesystem) == false)
 			{
 				includeLoadSuccess = false;
 			}
@@ -722,7 +725,8 @@ bool ShaderLoader::LoadFromConfiguration(
 			if (stages[i].includeItr != stages[i].stageItr->value.MemberEnd())
 				includeVal = &stages[i].includeItr->value;
 
-			if (ProcessSource(stagePath, versionStr, uniformBlock, includeVal, includeFileCache, allocator, sourceBuffers[i]) == false)
+			if (ProcessSource(stagePath, versionStr, uniformBlock, includeVal, includeFileCache,
+				allocator, filesystem, sourceBuffers[i]) == false)
 				processSuccess = false;
 		}
 	}

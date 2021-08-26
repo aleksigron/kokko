@@ -61,7 +61,8 @@ Engine::Engine()
 	editorUI.New(editorUI.allocator);
 
 	debug.CreateScope(allocatorManager, "Debug", alloc);
-	debug.New(debug.allocator, allocatorManager, mainWindow.instance, renderDevice);
+	debug.New(debug.allocator, allocatorManager, mainWindow.instance,
+		renderDevice, filesystem);
 
 	debugNameAllocator = allocatorManager->CreateAllocatorScope("EntityDebugNames", alloc);
 

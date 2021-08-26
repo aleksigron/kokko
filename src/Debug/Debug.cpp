@@ -45,7 +45,8 @@ Debug::Debug(
 	Allocator* allocator,
 	AllocatorManager* allocManager,
 	Window* window,
-	RenderDevice* renderDevice) :
+	RenderDevice* renderDevice,
+	Filesystem* filesystem) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	window(nullptr),
@@ -57,7 +58,7 @@ Debug::Debug(
 	mode(DebugMode::None)
 {
 	vectorRenderer = allocator->MakeNew<DebugVectorRenderer>(allocator, renderDevice);
-	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator, renderDevice);
+	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator, renderDevice, filesystem);
 	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
 	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
 	console = allocator->MakeNew<DebugConsole>(allocator, window, textRenderer, vectorRenderer);

@@ -259,8 +259,6 @@ set (KOKKO_SOURCES
 	src/Scripting/ScriptSystem.cpp
 	src/Scripting/ScriptSystem.hpp
 	src/System/DoctestImpl.cpp
-	src/System/File.cpp
-	src/System/File.hpp
 	src/System/FilesystemDefault.cpp
 	src/System/FilesystemDefault.hpp
 	src/System/Filesystem.hpp

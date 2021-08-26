@@ -22,6 +22,7 @@ namespace ShaderLoader
 		ShaderData& shaderOut,
 		ArrayView<char> configuration,
 		Allocator* allocator,
+		Filesystem* filesystem,
 		RenderDevice* renderDevice,
 		StringRef debugName);
 }
