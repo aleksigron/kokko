@@ -7,11 +7,15 @@
 
 #include "Core/Core.hpp"
 
+#include "Engine/Job.hpp"
+#include "Engine/JobWorker.hpp"
+
 #include "Memory/Allocator.hpp"
 
 JobSystem::JobSystem(Allocator* allocator, int numWorkers) :
+	allocator(allocator),
 	queue(allocator),
-	workers(allocator),
+	workers(nullptr),
 	workerCount(numWorkers)
 {
 	assert(workerCount > 0);
@@ -23,9 +27,10 @@ JobSystem::~JobSystem()
 
 void JobSystem::Initialize()
 {
-	if (workers.GetCount() == 0)
+	if (workers == nullptr)
 	{
-		workers.Resize(workerCount);
+		void* buf = allocator->AllocateAligned(sizeof(JobWorker) * workerCount, KK_CACHE_LINE);
+		workers = static_cast<JobWorker*>(buf);
 
 		for (int i = 0; i < workerCount; ++i)
 			workers[i] = JobWorker(this);
@@ -37,7 +42,7 @@ void JobSystem::Initialize()
 
 void JobSystem::Deinitialize()
 {
-	if (workers.GetCount() > 0)
+	if (workers != nullptr)
 	{
 		for (int i = 0; i < workerCount; ++i)
 			workers[i].RequestExit();
@@ -51,12 +56,18 @@ void JobSystem::Deinitialize()
 		for (int i = 0; i < workerCount; ++i)
 			workers[i].WaitToExit();
 
-		workers.Clear();
+		allocator->Deallocate(workers);
+		workers = nullptr;
 	}
 }
 
-void JobSystem::AddJob(const Job& job)
+void JobSystem::AddJob(JobFunction function, void* userData)
 {
+	Job* job = allocator->MakeNew<Job>();
+	job->function = function;
+	job->userData = userData;
+	job->unfinishedJobs = 1;
+
 	{
 		std::lock_guard<std::mutex> lock{ queueMutex };
 		queue.Push(job);
@@ -64,7 +75,20 @@ void JobSystem::AddJob(const Job& job)
 
 	jobAddedCondition.notify_one();
 }
-
+/*
+void Wait(const Job* job)
+{
+	// wait until the job has completed. in the meantime, work on any other job.
+	while (!HasJobCompleted(job))
+	{
+		Job* nextJob = GetJob();
+		if (nextJob)
+		{
+			Execute(nextJob);
+		}
+	}
+}
+*/
 static void TestFn(void* data)
 {
 	KOKKO_PROFILE_SCOPE("TestJob");
@@ -93,10 +117,7 @@ TEST_CASE("JobSystem")
 	int64_t* results = static_cast<int64_t*>(allocator->Allocate(sizeof(int64_t) * IterationCount));
 
 	for (int i = 0; i < IterationCount; ++i)
-	{
-		Job job{ TestFn, &results[i] };
-		jobSystem.AddJob(job);
-	}
+		jobSystem.AddJob(TestFn, &results[i]);
 	
 	// This will currently wait for the jobs to finish
 	jobSystem.Deinitialize();

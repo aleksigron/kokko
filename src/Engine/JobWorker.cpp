@@ -1,5 +1,6 @@
 #include "Engine/JobWorker.hpp"
 
+#include "Engine/Job.hpp"
 #include "Engine/JobSystem.hpp"
 
 JobWorker::JobWorker() : jobSystem(nullptr), exitRequested(false)
@@ -29,7 +30,7 @@ void JobWorker::WaitToExit()
 
 void JobWorker::ThreadFunc(JobWorker* self)
 {
-	Queue<Job>& jobQueue = self->jobSystem->queue;
+	Queue<Job*>& jobQueue = self->jobSystem->queue;
 
 	for (;;)
 	{
@@ -43,13 +44,13 @@ void JobWorker::ThreadFunc(JobWorker* self)
 
 		for (;;)
 		{
-			Job job;
+			Job* job;
 			
 			if (jobQueue.TryPop(job))
 			{
 				lock.unlock();
 
-				job.function(job.userData);
+				job->function(job->userData);
 
 				lock.lock();
 			}

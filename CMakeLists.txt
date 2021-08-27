@@ -133,6 +133,7 @@ set (KOKKO_SOURCES
 	src/Engine/EntityManager.cpp
 	src/Engine/EntityManager.hpp
 	src/Engine/InstanceAllocatorPair.hpp
+	src/Engine/Job.hpp
 	src/Engine/JobSystem.cpp
 	src/Engine/JobSystem.hpp
 	src/Engine/JobWorker.cpp

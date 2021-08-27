@@ -1,22 +1,18 @@
 #pragma once
 
-#include <thread>
-#include <mutex>
+#include <atomic>
 #include <condition_variable>
+#include <mutex>
+#include <thread>
 
 #include "Core/Array.hpp"
 #include "Core/Queue.hpp"
 
-#include "Engine/JobWorker.hpp"
-
 using JobFunction = void(*)(void*);
 
-struct Job
-{
-	JobFunction function;
-	void* userData;
-	uint8_t padding[64 - sizeof(void*) * 2];
-};
+class JobWorker;
+
+struct Job;
 
 class JobSystem
 {
@@ -27,11 +23,13 @@ public:
 	void Initialize();
 	void Deinitialize();
 
-	void AddJob(const Job& job);
+	void AddJob(JobFunction function, void* userData);
 
 private:
-	Queue<Job> queue;
-	Array<JobWorker> workers;
+	Allocator* allocator;
+
+	Queue<Job*> queue;
+	JobWorker* workers;
 
 	std::mutex queueMutex;
 	std::condition_variable jobAddedCondition;
