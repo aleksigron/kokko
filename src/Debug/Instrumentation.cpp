@@ -42,21 +42,22 @@ void Instrumentation::WriteProfile(const char* name, double start, double end, s
 	{
 		FILE* file = static_cast<FILE*>(fileHandle);
 
-		if (profileCount++ > 0)
-			std::fputc(',', file);
+		char comma = profileCount > 0 ? ',' : ' ';
+		
+		profileCount += 1;
 
 		fmt::print(
 			file,
-			FMT_STRING("{{"
+			FMT_STRING("{:c}{{"
 			"\"cat\":\"function\","
-			"\"dur\":{},"
+			"\"dur\":{:f},"
 			"\"name\":\"{}\","
 			"\"ph\":\"X\","
 			"\"pid\":0,"
-			"\"tid\":{},"
-			"\"ts\":{}"
+			"\"tid\":{:d},"
+			"\"ts\":{:f}"
 			"}}"),
-			end - start, name, threadId, start);
+			comma, end - start, name, threadId, start);
 	}
 }
 
