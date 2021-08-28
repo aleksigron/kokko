@@ -18,8 +18,9 @@ JobSystem::JobSystem(Allocator* allocator, int numWorkers) :
 	workerCount(numWorkers),
 	workers(nullptr),
 	queue(allocator),
-	jobsToDelete(nullptr),
-	jobsToDeleteCount(0)
+	jobBuffer(nullptr),
+	jobBufferHead(0),
+	jobsDuringFrame(0)
 {
 	assert(workerCount > 0);
 }
@@ -43,10 +44,10 @@ void JobSystem::Initialize()
 			workers[i].StartThread();
 	}
 
-	if (jobsToDelete == nullptr)
+	if (jobBuffer == nullptr)
 	{
-		void* buf = allocator->Allocate(sizeof(Job*) * MaxJobsToDelete);
-		jobsToDelete = static_cast<Job**>(buf);
+		void* buf = allocator->AllocateAligned(sizeof(Job) * MaxJobsPerFrame, KK_CACHE_LINE);
+		jobBuffer = static_cast<Job*>(buf);
 	}
 }
 
@@ -70,37 +71,66 @@ void JobSystem::Deinitialize()
 		workers = nullptr;
 	}
 
-	if (jobsToDelete != nullptr)
+	if (jobBuffer != nullptr)
 	{
-		allocator->Deallocate(workers);
-		jobsToDelete = nullptr;
+		allocator->Deallocate(jobBuffer);
+		jobBuffer = nullptr;
 	}
 }
 
-Job* JobSystem::CreateJob(JobFunction function, void* userData)
+Job* JobSystem::CreateJob(JobFunction function)
 {
+	return CreateJobWithData(function, nullptr, 0);
+}
+
+Job* JobSystem::CreateJobWithPtr(JobFunction function, void* ptr)
+{
+	return CreateJobWithData(function, &ptr, sizeof(void*));
+}
+
+Job* JobSystem::CreateJobWithData(JobFunction function, const void* data, size_t size)
+{
+	assert(size <= sizeof(Job::padding));
+
 	Job* job = AllocateJob();
 	job->function = function;
-	job->userData = userData;
+	job->parent = nullptr;
 	job->unfinishedJobs = 1;
+
+	if (size > 0)
+	{
+		std::memcpy(job->padding, data, size);
+	}
 
 	return job;
 }
 
-/*
-Job* JobSystem::CreateJobAsChild(JobFunction function, void* userData, Job* parent)
+Job* JobSystem::CreateJobAsChild(JobFunction function, Job* parent)
+{
+	return CreateJobAsChildWithData(function, parent, nullptr, 0);
+}
+
+Job* JobSystem::CreateJobAsChildWithPtr(JobFunction function, Job* parent, void* ptr)
+{
+	return CreateJobAsChildWithData(function, parent, &ptr, sizeof(void*));
+}
+
+Job* JobSystem::CreateJobAsChildWithData(JobFunction function, Job* parent, const void* data, size_t size)
 {
 	parent->unfinishedJobs.fetch_add(1);
 
 	Job* job = AllocateJob();
 	job->function = function;
-	job->userData = userData;
 	job->parent = parent;
 	job->unfinishedJobs = 1;
 
+	if (size > 0)
+	{
+		std::memcpy(job->padding, data, size);
+	}
+
 	return job;
 }
-*/
 
 void JobSystem::Enqueue(size_t count, Job** jobs)
 {
@@ -137,20 +167,15 @@ void JobSystem::Wait(const Job* job)
 	}
 }
 
-void JobSystem::ReleaseCompletedJobs()
+void JobSystem::EndFrame()
 {
-	size_t deleteCount = jobsToDeleteCount.exchange(0);
-
-	for (size_t i = 0; i < deleteCount; ++i)
-	{
-		ReleaseJob(jobsToDelete[i]);
-		jobsToDelete[i] = nullptr;
-	}
+	assert(jobsDuringFrame < MaxJobsPerFrame);
+	jobsDuringFrame.store(0);
 }
 
 bool JobSystem::HasJobCompleted(const Job* job)
 {
-	return job->unfinishedJobs.load() < 0;
+	return job->unfinishedJobs.load() == 0;
 }
 
 Job* JobSystem::GetJobToExecute()
@@ -162,43 +187,28 @@ Job* JobSystem::GetJobToExecute()
 
 void JobSystem::Execute(Job* job)
 {
-	job->function(job->userData);
+	job->function(job);
 	Finish(job);
 }
 
 void JobSystem::Finish(Job* job)
 {
-	const int unfinishedJobs = job->unfinishedJobs.fetch_sub(1);
+	size_t unfinishedJobs = job->unfinishedJobs.fetch_sub(1);
 
 	// fetch_sub returns the previous value, so 1 means the value now is 0
-	if (unfinishedJobs == 1)
+	if (unfinishedJobs == 1 && job->parent != nullptr)
 	{
-		const size_t index = jobsToDeleteCount.fetch_add(1);
-
-		// Make sure we never get close to filling the delete array
-		assert(index < (MaxJobsToDelete / 2));
-
-		jobsToDelete[index] = job;
-
-		// No child job support yet
-		//if (job->parent != nullptr)
-		//{
-		//	Finish(job->parent);
-		//}
-
-		// Decrement unfinishedJobs to -1 to mark it as safe to delete
-		job->unfinishedJobs.fetch_sub(1);
+		Finish(job->parent);
 	}
 }
 
 Job* JobSystem::AllocateJob()
 {
-	return allocator->MakeNew<Job>();
-}
+	size_t index = jobBufferHead.fetch_add(1);
 
-void JobSystem::ReleaseJob(Job* job)
-{
-	allocator->MakeDelete(job);
+	jobsDuringFrame.fetch_add(1);
+
+	return &jobBuffer[index];
 }
 
 struct TestFnData
@@ -207,17 +217,27 @@ struct TestFnData
 	int64_t padding[7];
 };
 
-static void TestFn(void* data)
+static void EmptyJob(Job* job)
 {
-	KOKKO_PROFILE_SCOPE("TestJob");
+}
 
-	constexpr int64_t SumCount = 1 << 24;
+static int64_t Work()
+{
+	constexpr int64_t SumCount = 1 << 22;
 
 	int64_t sum = 0;
 	for (int64_t i = 0; i < SumCount; ++i)
 		sum += i;
 
-	static_cast<TestFnData*>(data)->result = sum;
+	return sum;
+}
+
+static void TestJob(Job* job)
+{
+	KOKKO_PROFILE_SCOPE("TestJob");
+
+	int64_t sum = Work();
+	static_cast<TestFnData*>(job->GetPtr())->result = sum;
 };
 
 TEST_CASE("JobSystem")
@@ -225,40 +245,39 @@ TEST_CASE("JobSystem")
 	constexpr size_t IterationCount = 5;
 	constexpr size_t JobCount = 100;
 
-	TestFnData validationResult{};
-	TestFn(&validationResult);
+	int64_t validationResult = Work();
 
 	Allocator* allocator = Allocator::GetDefault();
-
-	Job** jobs = static_cast<Job**>(allocator->Allocate(sizeof(Job*) * JobCount));
 
 	void* resultsBuffer = allocator->AllocateAligned(sizeof(TestFnData) * JobCount, KK_CACHE_LINE);
 	TestFnData* results = static_cast<TestFnData*>(resultsBuffer);
 
 	for (size_t iter = 0; iter < IterationCount; ++iter)
 	{
-		std::memset(jobs, 0, sizeof(Job*) * JobCount);
 		std::memset(results, 0, sizeof(TestFnData) * JobCount);
 
 		JobSystem jobSystem(allocator, 3);
 		jobSystem.Initialize();
 
-		for (size_t j = 0; j < JobCount; ++j)
-			jobs[j] = jobSystem.CreateJob(TestFn, &results[j]);
-
-		jobSystem.Enqueue(JobCount, jobs);
+		Job* parent = jobSystem.CreateJob(EmptyJob);
 
 		for (size_t j = 0; j < JobCount; ++j)
-			jobSystem.Wait(jobs[j]);
+		{
+			Job* job = jobSystem.CreateJobAsChildWithPtr(TestJob, parent, &results[j]);
+			jobSystem.Enqueue(1, &job);
+		}
 
-		jobSystem.ReleaseCompletedJobs();
+		jobSystem.Enqueue(1, &parent);
+
+		jobSystem.Wait(parent);
+
+		jobSystem.EndFrame();
 
 		jobSystem.Deinitialize();
 
 		for (int j = 0; j < JobCount; ++j)
-			CHECK(results[j].result == validationResult.result);
+			CHECK(results[j].result == validationResult);
 	}
 
 	allocator->Deallocate(resultsBuffer);
-	allocator->Deallocate(jobs);
 }

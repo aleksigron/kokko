@@ -8,11 +8,11 @@
 #include "Core/Array.hpp"
 #include "Core/Queue.hpp"
 
-using JobFunction = void(*)(void*);
-
 class JobWorker;
 
 struct Job;
+
+using JobFunction = void(*)(Job*);
 
 class JobSystem
 {
@@ -23,14 +23,19 @@ public:
 	void Initialize();
 	void Deinitialize();
 
-	Job* CreateJob(JobFunction function, void* userData);
+	Job* CreateJob(JobFunction function);
+	Job* CreateJobWithPtr(JobFunction function, void* ptr);
+	Job* CreateJobWithData(JobFunction function, const void* data, size_t size);
+
+	Job* CreateJobAsChild(JobFunction function, Job* parent);
+	Job* CreateJobAsChildWithPtr(JobFunction function, Job* parent, void* ptr);
+	Job* CreateJobAsChildWithData(JobFunction function, Job* parent, const void* data, size_t size);
 
 	void Enqueue(size_t count, Job** jobs);
 
 	void Wait(const Job* job);
 
-	// NOTE: Jobs can NOT be running when calling this
-	void ReleaseCompletedJobs();
+	void EndFrame();
 
 private:
 	static bool HasJobCompleted(const Job* job);
@@ -42,22 +47,22 @@ private:
 	void Finish(Job* job);
 
 	Job* AllocateJob();
-	void ReleaseJob(Job* job);
 
+private:
 	Allocator* allocator;
 
 	int workerCount;
-
 	JobWorker* workers;
+
 	Queue<Job*> queue;
 
-	static const size_t MaxJobsToDelete = 1 << 10;
-	Job** jobsToDelete;
-	std::atomic_size_t jobsToDeleteCount;
+	static const size_t MaxJobsPerFrame = 1 << 12;
+	Job* jobBuffer;
+	std::atomic_size_t jobBufferHead;
+	std::atomic_size_t jobsDuringFrame;
 
 	std::mutex queueMutex;
 	std::condition_variable jobAddedCondition;
-
 
 	friend class JobWorker;
 };
