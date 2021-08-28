@@ -1,15 +1,15 @@
 #pragma once
 
-#include <thread>
+#include <atomic>
 #include <cstdint>
+#include <thread>
 
 class JobSystem;
 
 class JobWorker
 {
 public:
-	JobWorker();
-	JobWorker(JobSystem* jobSystem);
+	explicit JobWorker(JobSystem* jobSystem);
 
 	void StartThread();
 
@@ -19,12 +19,12 @@ public:
 private:
 	std::thread thread;
 	JobSystem* jobSystem;
-	bool exitRequested;
+	std::atomic_bool exitRequested;
 
 	// Set padding size to align the class size to a cache line to avoid false sharing
 	static const size_t CacheLine = 64;
-	static const size_t MemberBytes = sizeof(std::thread) + sizeof(JobSystem*) + sizeof(bool);
+	static const size_t MemberBytes = sizeof(std::thread) + sizeof(JobSystem*) + sizeof(std::atomic_bool);
 	uint8_t padding[(MemberBytes + CacheLine - 1) / CacheLine * CacheLine - MemberBytes];
 
-	static void ThreadFunc(JobWorker* self);
+	void ThreadMain();
 };

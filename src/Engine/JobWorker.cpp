@@ -1,25 +1,24 @@
 #include "Engine/JobWorker.hpp"
 
+#include <cstring>
+
 #include "Engine/Job.hpp"
 #include "Engine/JobSystem.hpp"
 
-JobWorker::JobWorker() : jobSystem(nullptr), exitRequested(false)
-{
-}
-
 JobWorker::JobWorker(JobSystem* jobSystem) : jobSystem(jobSystem), exitRequested(false)
 {
+	std::memset(padding, 0, sizeof(padding));
 }
 
 void JobWorker::StartThread()
 {
 	if (thread.joinable() == false)
-		thread = std::thread(ThreadFunc, this);
+		thread = std::thread(&JobWorker::ThreadMain, this);
 }
 
 void JobWorker::RequestExit()
 {
-	exitRequested = true;
+	exitRequested.store(true);
 }
 
 void JobWorker::WaitToExit()
@@ -28,44 +27,36 @@ void JobWorker::WaitToExit()
 		thread.join();
 }
 
-void JobWorker::ThreadFunc(JobWorker* self)
+void JobWorker::ThreadMain()
 {
-	Queue<Job*>& jobQueue = self->jobSystem->queue;
+	std::unique_lock<std::mutex> lock(jobSystem->queueMutex);
 
-	for (;;)
+	bool exit = false;
+
+	while (exit == false)
 	{
-		std::unique_lock<std::mutex> lock{ self->jobSystem->queueMutex };
-
-		// Make sure there are jobs in the queue before we start working
-		while (jobQueue.GetCount() == 0)
-		{
-			self->jobSystem->jobAddedCondition.wait(lock);
-		}
-
 		for (;;)
 		{
-			Job* job;
-			
-			if (jobQueue.TryPop(job))
+			Job* job = jobSystem->GetJobToExecute();
+			if (job != nullptr)
 			{
 				lock.unlock();
 
-				job->function(job->userData);
+				jobSystem->Execute(job);
 
 				lock.lock();
 			}
-
-			// TODO: Check if worker should exit
-
-			// Check if there's still work to do
-			// If not, go back to waiting on the condition variable
-			// std::unique_lock automatically releases mutex when destructed
-			if (jobQueue.GetCount() == 0 /* || self->exitRequested */)
+			else
+			{
 				break;
+			}
 		}
 
-		if (self->exitRequested)
-			break;
-
+		// Make sure there are jobs in the queue before we start working
+		while (jobSystem->queue.GetCount() == 0 && exit == false)
+		{
+			jobSystem->jobAddedCondition.wait(lock);
+			exit = exitRequested.load();
+		}
 	}
 }

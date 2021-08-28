@@ -23,18 +23,41 @@ public:
 	void Initialize();
 	void Deinitialize();
 
-	void AddJob(JobFunction function, void* userData);
+	Job* CreateJob(JobFunction function, void* userData);
+
+	void Enqueue(size_t count, Job** jobs);
+
+	void Wait(const Job* job);
+
+	// NOTE: Jobs can NOT be running when calling this
+	void ReleaseCompletedJobs();
 
 private:
+	static bool HasJobCompleted(const Job* job);
+	
+	// Lock on queueMutex must be acquired to call this
+	Job* GetJobToExecute();
+
+	void Execute(Job* job);
+	void Finish(Job* job);
+
+	Job* AllocateJob();
+	void ReleaseJob(Job* job);
+
 	Allocator* allocator;
 
-	Queue<Job*> queue;
+	int workerCount;
+
 	JobWorker* workers;
+	Queue<Job*> queue;
+
+	static const size_t MaxJobsToDelete = 1 << 10;
+	Job** jobsToDelete;
+	std::atomic_size_t jobsToDeleteCount;
 
 	std::mutex queueMutex;
 	std::condition_variable jobAddedCondition;
 
-	int workerCount;
 
 	friend class JobWorker;
 };
