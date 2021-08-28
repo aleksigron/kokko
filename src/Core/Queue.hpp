@@ -1,51 +1,56 @@
 #pragma once
 
+#include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <new>
 #include <utility>
+
+#include "Math/Math.hpp"
 
 #include "Memory/Allocator.hpp"
 
 template <typename ValueType>
 class Queue
 {
-public:
-	using SizeType = unsigned int;
-
 private:
 	Allocator* allocator;
 	ValueType* data;
-	SizeType start;
-	SizeType count;
-	SizeType allocated;
+	size_t start;
+	size_t count;
+	size_t allocated;
 
-	SizeType GetArrayIndex(SizeType queueIndex) const
+	size_t GetArrayIndex(size_t queueIndex) const
 	{
-		return (start + queueIndex) % allocated;
+		assert(allocated != 0);
+		assert(Math::IsPowerOfTwo(allocated));
+		return (start + queueIndex) & (allocated - 1);
 	}
 
-	void ReserveInternal(SizeType requiredSize)
+	void ReserveInternal(size_t requiredSize)
 	{
 		if (requiredSize > allocated)
 		{
-			std::size_t vts = sizeof(ValueType);
-			SizeType newAllocated = allocated > 0 ? allocated * 2 : 8;
-			std::size_t newSize = newAllocated * vts;
-			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize));
+			size_t newAllocated = allocated > 0 ? allocated * 2 : 8;
+			if (newAllocated < requiredSize)
+				newAllocated = Math::UpperPowerOfTwo(requiredSize);
 
-			SizeType startToMemEnd = allocated - start;
+			size_t newBytes = newAllocated * sizeof(ValueType);
+			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newBytes));
+
+			size_t startToMemEnd = allocated - start;
 
 			if (startToMemEnd < count) // Used data passes over the reserved memory end
 			{
 				// Copy memory from start of data to end of allocated memory
-				std::memcpy(newData, data + start, startToMemEnd * vts);
+				std::memcpy(newData, data + start, startToMemEnd * sizeof(ValueType));
 
 				// Copy memory from start of allocated memory to end of data
-				std::memcpy(newData + startToMemEnd, data, (count - startToMemEnd) * vts);
+				std::memcpy(newData + startToMemEnd, data, (count - startToMemEnd) * sizeof(ValueType));
 			}
 			else // Entire used data is contiguous in reserved memory
 			{
-				std::memcpy(newData, data + start, count * vts);
+				std::memcpy(newData, data + start, count * sizeof(ValueType));
 			}
 
 			allocator->Deallocate(data);
@@ -67,19 +72,19 @@ public:
 
 	~Queue()
 	{
-		for (SizeType i = 0; i < count; ++i)
+		for (size_t i = 0; i < count; ++i)
 			data[this->GetArrayIndex(i)].~ValueType();
 
 		allocator->Deallocate(data);
 	}
 
-	SizeType GetCount() const { return count; }
+	size_t GetCount() const { return count; }
 
-	ValueType& At(SizeType index) { return data[this->GetArrayIndex(index)]; }
-	const ValueType& At(SizeType index) const { return data[this->GetArrayIndex(index)]; }
+	ValueType& At(size_t index) { return data[this->GetArrayIndex(index)]; }
+	const ValueType& At(size_t index) const { return data[this->GetArrayIndex(index)]; }
 
-	ValueType& operator[](SizeType index) { return data[this->GetArrayIndex(index)]; }
-	const ValueType& operator[](SizeType index) const { return data[this->GetArrayIndex(index)]; }
+	ValueType& operator[](size_t index) { return data[this->GetArrayIndex(index)]; }
+	const ValueType& operator[](size_t index) const { return data[this->GetArrayIndex(index)]; }
 
 	ValueType& Peek() { return data[this->GetArrayIndex(0)]; }
 	const ValueType& Peek() const { return data[this->GetArrayIndex(0)]; }
@@ -90,7 +95,7 @@ public:
 
 		if (count > 0)
 		{
-			SizeType frontIndex = this->GetArrayIndex(0);
+			size_t frontIndex = this->GetArrayIndex(0);
 
 			result = std::move(data[frontIndex]); // Move return value
 			data[frontIndex].~ValueType(); // Run destructor
@@ -106,7 +111,7 @@ public:
 	{
 		if (count > 0)
 		{
-			SizeType frontIndex = this->GetArrayIndex(0);
+			size_t frontIndex = this->GetArrayIndex(0);
 
 			out = std::move(data[frontIndex]); // Move return value
 			data[frontIndex].~ValueType(); // Run destructor
@@ -120,7 +125,7 @@ public:
 			return false;
 	}
 
-	void Pop(SizeType popCount)
+	void Pop(size_t popCount)
 	{
 		while (popCount > 0 && count > 0)
 		{
@@ -147,13 +152,14 @@ public:
 		++count;
 	}
 
-	void Push(const ValueType* values, SizeType valueCount)
+	void Push(const ValueType* values, size_t valueCount)
 	{
 		ReserveInternal(count + valueCount);
 
-		for (SizeType i = 0; i < valueCount; ++i)
+		for (size_t i = 0; i < valueCount; ++i)
 		{
-			data[GetArrayIndex(count++)] = values[i];
+			data[GetArrayIndex(count)] = values[i];
+			count += 1;
 		}
 	}
 };
