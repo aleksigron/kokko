@@ -6,7 +6,7 @@
 class Random
 {
 private:
-	static std::default_random_engine randomEngine;
+	static thread_local std::default_random_engine randomEngine;
 
 public:
 	static void Seed(unsigned int seed);

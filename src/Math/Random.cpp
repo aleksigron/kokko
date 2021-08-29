@@ -1,6 +1,6 @@
 #include "Math/Random.hpp"
 
-std::default_random_engine Random::randomEngine;
+thread_local std::default_random_engine Random::randomEngine;
 
 void Random::Seed(unsigned int seed)
 {
