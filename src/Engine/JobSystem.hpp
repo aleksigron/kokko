@@ -3,21 +3,22 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
-#include <thread>
 
-#include "Core/Array.hpp"
-#include "Core/Queue.hpp"
-
+class Allocator;
+class JobAllocator;
+class JobQueue;
+class JobSystem;
 class JobWorker;
 
 struct Job;
+struct JobStorage;
 
-using JobFunction = void(*)(Job*);
+using JobFunction = void(*)(Job*, JobSystem*);
 
 class JobSystem
 {
 public:
-	JobSystem(Allocator* allocator, int numWorkers);
+	JobSystem(Allocator* allocator, size_t numWorkers);
 	~JobSystem();
 
 	void Initialize();
@@ -31,37 +32,39 @@ public:
 	Job* CreateJobAsChildWithPtr(JobFunction function, Job* parent, void* ptr);
 	Job* CreateJobAsChildWithData(JobFunction function, Job* parent, const void* data, size_t size);
 
-	void Enqueue(size_t count, Job** jobs);
+	void Enqueue(Job* job);
 
 	void Wait(const Job* job);
 
 	void EndFrame();
 
+	static const size_t MaxJobsPerThreadPerFrame = 1 << 12;
+	static const size_t ThreadIndexMainThread = 0;
+
+	static thread_local size_t currentThreadIndex;
+
 private:
 	static bool HasJobCompleted(const Job* job);
-	
-	// Lock on queueMutex must be acquired to call this
-	Job* GetJobToExecute();
 
 	void Execute(Job* job);
 	void Finish(Job* job);
 
+	Job* GetJobToExecute();
+	
 	Job* AllocateJob();
+
+	JobQueue* GetCurrentThreadJobQueue();
 
 private:
 	Allocator* allocator;
 
-	int workerCount;
+	JobAllocator* jobAllocators;
+	JobQueue* jobQueues;
+
+	size_t workerCount;
 	JobWorker* workers;
 
-	Queue<Job*> queue;
-
-	static const size_t MaxJobsPerFrame = 1 << 12;
-	Job* jobBuffer;
-	std::atomic_size_t jobBufferHead;
-	std::atomic_size_t jobsDuringFrame;
-
-	std::mutex queueMutex;
+	std::mutex conditionMutex;
 	std::condition_variable jobAddedCondition;
 
 	friend class JobWorker;

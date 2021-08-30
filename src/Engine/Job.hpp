@@ -2,6 +2,8 @@
 
 #include <atomic>
 
+#include "Core/Core.hpp"
+
 #include "Engine/JobSystem.hpp"
 
 struct Job
@@ -9,7 +11,10 @@ struct Job
 	JobFunction function;
 	Job* parent;
 	std::atomic_size_t unfinishedJobs;
-	uint8_t padding[64 - (sizeof(JobFunction) + sizeof(Job*) + sizeof(std::atomic_size_t))];
+
+	static const size_t CL = KK_CACHE_LINE;
+	static const size_t MemberBytes = sizeof(JobFunction) + sizeof(Job*) + sizeof(std::atomic_size_t);
+	uint8_t padding[(MemberBytes + CL - 1) / CL * CL - MemberBytes];
 
 	void* GetPtr()
 	{

@@ -1,11 +1,15 @@
 #include "Engine/JobWorker.hpp"
 
+#include <cassert>
 #include <cstring>
 
 #include "Engine/Job.hpp"
 #include "Engine/JobSystem.hpp"
 
-JobWorker::JobWorker(JobSystem* jobSystem) : jobSystem(jobSystem), exitRequested(false)
+JobWorker::JobWorker(size_t threadIndex, JobSystem* jobSystem) :
+	threadIndex(threadIndex),
+	jobSystem(jobSystem),
+	exitRequested(false)
 {
 	std::memset(padding, 0, sizeof(padding));
 }
@@ -29,34 +33,32 @@ void JobWorker::WaitToExit()
 
 void JobWorker::ThreadMain()
 {
-	std::unique_lock<std::mutex> lock(jobSystem->queueMutex);
+	JobSystem::currentThreadIndex = threadIndex;
 
 	bool exit = false;
 
 	while (exit == false)
 	{
-		for (;;)
+		Job* job;
+
+		do
 		{
-			Job* job = jobSystem->GetJobToExecute();
+			job = jobSystem->GetJobToExecute();
+
 			if (job != nullptr)
-			{
-				lock.unlock();
-
 				jobSystem->Execute(job);
-
-				lock.lock();
-			}
-			else
-			{
-				break;
-			}
 		}
+		while (job != nullptr);
 
-		// Make sure there are jobs in the queue before we start working
-		while (jobSystem->queue.GetCount() == 0 && exit == false)
-		{
-			jobSystem->jobAddedCondition.wait(lock);
-			exit = exitRequested.load();
-		}
+
+		// Allow wake-ups even when we don't know if there is work to do
+		// That means we try get a job but we will return here if no jobs are available
+		std::unique_lock<std::mutex> lock(jobSystem->conditionMutex);
+		jobSystem->jobAddedCondition.wait(lock);
+
+		exit = exitRequested.load();
 	}
+
+	// We need to make sure no one is accidentally modifying the thread index
+	assert(JobSystem::currentThreadIndex == threadIndex);
 }

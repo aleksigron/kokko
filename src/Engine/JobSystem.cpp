@@ -9,18 +9,22 @@
 #include "Core/Core.hpp"
 
 #include "Engine/Job.hpp"
+#include "Engine/JobAllocator.hpp"
+#include "Engine/JobQueue.hpp"
 #include "Engine/JobWorker.hpp"
+
+#include "Math/Random.hpp"
 
 #include "Memory/Allocator.hpp"
 
-JobSystem::JobSystem(Allocator* allocator, int numWorkers) :
+thread_local size_t JobSystem::currentThreadIndex = 0;
+
+JobSystem::JobSystem(Allocator* allocator, size_t numWorkers) :
 	allocator(allocator),
+	jobAllocators(nullptr),
+	jobQueues(nullptr),
 	workerCount(numWorkers),
-	workers(nullptr),
-	queue(allocator),
-	jobBuffer(nullptr),
-	jobBufferHead(0),
-	jobsDuringFrame(0)
+	workers(nullptr)
 {
 	assert(workerCount > 0);
 }
@@ -32,34 +36,50 @@ JobSystem::~JobSystem()
 
 void JobSystem::Initialize()
 {
+	size_t threadCount = workerCount + 1;
+
+	if (jobAllocators == nullptr)
+	{
+		void* buf = allocator->AllocateAligned(sizeof(JobAllocator) * threadCount, KK_CACHE_LINE);
+		jobAllocators = static_cast<JobAllocator*>(buf);
+
+		for (int i = 0; i < threadCount; ++i)
+			new (&jobAllocators[i]) JobAllocator(allocator);
+	}
+
+	if (jobQueues == nullptr)
+	{
+		void* buf = allocator->AllocateAligned(sizeof(JobQueue) * threadCount, KK_CACHE_LINE);
+		jobQueues = static_cast<JobQueue*>(buf);
+
+		for (int i = 0; i < threadCount; ++i)
+			new (&jobQueues[i]) JobQueue(allocator);
+	}
+
 	if (workers == nullptr)
 	{
 		void* buf = allocator->AllocateAligned(sizeof(JobWorker) * workerCount, KK_CACHE_LINE);
 		workers = static_cast<JobWorker*>(buf);
 
 		for (int i = 0; i < workerCount; ++i)
-			new (&workers[i]) JobWorker(this);
+			new (&workers[i]) JobWorker(i + 1, this);
 
 		for (int i = 0; i < workerCount; ++i)
 			workers[i].StartThread();
-	}
-
-	if (jobBuffer == nullptr)
-	{
-		void* buf = allocator->AllocateAligned(sizeof(Job) * MaxJobsPerFrame, KK_CACHE_LINE);
-		jobBuffer = static_cast<Job*>(buf);
 	}
 }
 
 void JobSystem::Deinitialize()
 {
+	size_t threadCount = workerCount + 1;
+
 	if (workers != nullptr)
 	{
 		for (int i = 0; i < workerCount; ++i)
 			workers[i].RequestExit();
 
 		// Lock must be acquired before notifying the condition
-		std::unique_lock<std::mutex> lock(queueMutex);
+		std::unique_lock<std::mutex> lock(conditionMutex);
 		lock.unlock();
 
 		jobAddedCondition.notify_all();
@@ -71,10 +91,22 @@ void JobSystem::Deinitialize()
 		workers = nullptr;
 	}
 
-	if (jobBuffer != nullptr)
+	if (jobQueues != nullptr)
 	{
-		allocator->Deallocate(jobBuffer);
-		jobBuffer = nullptr;
+		for (int i = 0; i < threadCount; ++i)
+			jobQueues[i].~JobQueue();
+
+		allocator->Deallocate(jobQueues);
+		jobQueues = nullptr;
+	}
+
+	if (jobAllocators != nullptr)
+	{
+		for (int i = 0; i < threadCount; ++i)
+			jobAllocators[i].~JobAllocator();
+
+		allocator->Deallocate(jobAllocators);
+		jobAllocators = nullptr;
 	}
 }
 
@@ -132,19 +164,13 @@ Job* JobSystem::CreateJobAsChildWithData(JobFunction function, Job* parent, cons
 	return job;
 }
 
-void JobSystem::Enqueue(size_t count, Job** jobs)
+void JobSystem::Enqueue(Job* job)
 {
-	assert(count > 0);
+	JobQueue* queue = GetCurrentThreadJobQueue();
 
-	{
-		std::lock_guard<std::mutex> lock(queueMutex);
-		queue.Push(jobs, count);
-	}
+	queue->Push(job);
 
-	if (count == 1)
-		jobAddedCondition.notify_one();
-	else
-		jobAddedCondition.notify_all();
+	jobAddedCondition.notify_all();
 }
 
 void JobSystem::Wait(const Job* job)
@@ -153,41 +179,32 @@ void JobSystem::Wait(const Job* job)
 	while (HasJobCompleted(job) == false)
 	{
 		// While waiting, work on any other job
-		Job* nextJob;
-
-		{
-			std::lock_guard<std::mutex> lock(queueMutex);
-			nextJob = GetJobToExecute();
-		}
+		Job* nextJob = GetJobToExecute();
 
 		if (nextJob != nullptr)
-		{
 			Execute(nextJob);
-		}
 	}
 }
 
 void JobSystem::EndFrame()
 {
-	assert(jobsDuringFrame < MaxJobsPerFrame);
-	jobsDuringFrame.store(0);
+	size_t threadCount = workerCount + 1;
+	for (size_t i = 0; i < threadCount; ++i)
+		jobAllocators[i].Reset();
 }
+
+// ===============
+// PRIVATE METHODS
+// ===============
 
 bool JobSystem::HasJobCompleted(const Job* job)
 {
 	return job->unfinishedJobs.load() == 0;
 }
 
-Job* JobSystem::GetJobToExecute()
-{
-	Job* job = nullptr;
-	queue.TryPop(job);
-	return job;
-}
-
 void JobSystem::Execute(Job* job)
 {
-	job->function(job);
+	job->function(job, this);
 	Finish(job);
 }
 
@@ -202,13 +219,49 @@ void JobSystem::Finish(Job* job)
 	}
 }
 
+Job* JobSystem::GetJobToExecute()
+{
+	JobQueue* queue = GetCurrentThreadJobQueue();
+
+	Job* job = queue->Pop();
+	if (job != nullptr)
+		return job;
+
+	// No jobs found in current thread queue
+	// Try to steal a job from another thread
+
+	const size_t threadCount = workerCount + 1;
+	const size_t lastQueueIndex = threadCount - 1;
+		
+	// Get start index by random number generation
+	size_t threadIndex = static_cast<size_t>(Random::Uint(0, lastQueueIndex));
+		
+	// Try to steal from each thread queue
+	for (size_t i = 0; i < threadCount; ++i)
+	{
+		// Skip current thread queue
+		if (threadIndex == currentThreadIndex)
+			continue;
+
+		Job* stolenJob = jobQueues[threadIndex].Steal();
+
+		if (stolenJob != nullptr)
+			return stolenJob;
+
+		threadIndex = (threadIndex + 1) % threadCount;
+	}
+
+	return nullptr;
+}
+
 Job* JobSystem::AllocateJob()
 {
-	size_t index = jobBufferHead.fetch_add(1);
+	return jobAllocators[currentThreadIndex].AllocateJob();
+}
 
-	jobsDuringFrame.fetch_add(1);
-
-	return &jobBuffer[index];
+JobQueue* JobSystem::GetCurrentThreadJobQueue()
+{
+	return &jobQueues[currentThreadIndex];
 }
 
 struct TestFnData
@@ -217,7 +270,7 @@ struct TestFnData
 	int64_t padding[7];
 };
 
-static void EmptyJob(Job* job)
+static void EmptyJob(Job* job, JobSystem* jobSystem)
 {
 }
 
@@ -232,7 +285,7 @@ static int64_t Work()
 	return sum;
 }
 
-static void TestJob(Job* job)
+static void TestJob(Job* job, JobSystem* jobSystem)
 {
 	KOKKO_PROFILE_SCOPE("TestJob");
 
@@ -264,10 +317,10 @@ TEST_CASE("JobSystem")
 		for (size_t j = 0; j < JobCount; ++j)
 		{
 			Job* job = jobSystem.CreateJobAsChildWithPtr(TestJob, parent, &results[j]);
-			jobSystem.Enqueue(1, &job);
+			jobSystem.Enqueue(job);
 		}
 
-		jobSystem.Enqueue(1, &parent);
+		jobSystem.Enqueue(parent);
 
 		jobSystem.Wait(parent);
 
