@@ -240,13 +240,13 @@ Job* JobSystem::GetJobToExecute()
 	for (size_t i = 0; i < threadCount; ++i)
 	{
 		// Skip current thread queue
-		if (threadIndex == currentThreadIndex)
-			continue;
+		if (threadIndex != currentThreadIndex)
+		{
+			Job* stolenJob = jobQueues[threadIndex].Steal();
 
-		Job* stolenJob = jobQueues[threadIndex].Steal();
-
-		if (stolenJob != nullptr)
-			return stolenJob;
+			if (stolenJob != nullptr)
+				return stolenJob;
+		}
 
 		threadIndex = (threadIndex + 1) % threadCount;
 	}
