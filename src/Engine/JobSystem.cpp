@@ -276,7 +276,7 @@ static void EmptyJob(Job* job, JobSystem* jobSystem)
 
 static int64_t Work()
 {
-	constexpr int64_t SumCount = 1 << 22;
+	constexpr int64_t SumCount = 1 << 19;
 
 	int64_t sum = 0;
 	for (int64_t i = 0; i < SumCount; ++i)
@@ -296,7 +296,7 @@ static void TestJob(Job* job, JobSystem* jobSystem)
 TEST_CASE("JobSystem")
 {
 	constexpr size_t IterationCount = 5;
-	constexpr size_t JobCount = 100;
+	constexpr size_t JobCount = 1000;
 
 	int64_t validationResult = Work();
 
@@ -309,7 +309,7 @@ TEST_CASE("JobSystem")
 	{
 		std::memset(results, 0, sizeof(TestFnData) * JobCount);
 
-		JobSystem jobSystem(allocator, 3);
+		JobSystem jobSystem(allocator, 5);
 		jobSystem.Initialize();
 
 		Job* parent = jobSystem.CreateJob(EmptyJob);
@@ -328,8 +328,11 @@ TEST_CASE("JobSystem")
 
 		jobSystem.Deinitialize();
 
+		bool resultsMatch = true;
 		for (int j = 0; j < JobCount; ++j)
-			CHECK(results[j].result == validationResult);
+			resultsMatch = resultsMatch && results[j].result == validationResult;
+
+		CHECK(resultsMatch == true);
 	}
 
 	allocator->Deallocate(resultsBuffer);

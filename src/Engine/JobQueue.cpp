@@ -23,39 +23,70 @@ JobQueue::~JobQueue()
 
 void JobQueue::Push(Job* job)
 {
-	std::lock_guard lock(mutex);
+	long b = bottom;
+	jobs[b & JobIndexMask] = job;
 
-	jobs[bottom] = job;
-	++bottom;
+	// Atomic store ensures the job is written before b+1 is published to other threads
+	bottom.store(b + 1);
 }
 
 Job* JobQueue::Pop()
 {
-	std::lock_guard lock(mutex);
+	long b = bottom - 1;
+	bottom.exchange(b);
 
-	const int jobCount = bottom - top;
-	if (jobCount <= 0)
+	long t = top;
+	if (t <= b)
 	{
-		// no job left in the queue
+		// Queue is not empty since t<=b
+		Job* job = jobs[b & JobIndexMask];
+		if (t != b)
+		{
+			// There's still more than one item left in the queue
+			return job;
+		}
+
+		// This is the last item in the queue
+		if (top.compare_exchange_strong(t, t + 1) == false)
+		{
+			// A concurrent steal operation removed an element from the queue
+			job = nullptr;
+		}
+
+		bottom = t + 1;
+		return job;
+	}
+	else
+	{
+		// Queue was already empty
+		bottom = t;
 		return nullptr;
 	}
-
-	--bottom;
-	return jobs[bottom & JobIndexMask];
 }
 
 Job* JobQueue::Steal()
 {
-	std::lock_guard lock(mutex);
+	// Atomic loads ensure that top is always read before bottom
+	long t = top.load();
+	long b = bottom.load();
 
-	const int jobCount = bottom - top;
-	if (jobCount <= 0)
+	if (t < b)
 	{
-		// no job there to steal
+		// Queue is not empty
+		Job* job = jobs[t & JobIndexMask];
+
+		// Compare-exchange guarantees that the read happens before it
+		if (top.compare_exchange_strong(t, t + 1) == false)
+		{
+			// A concurrent steal or pop operation removed an element from the queue
+			return nullptr;
+		}
+
+		return job;
+	}
+	else
+	{
+		// Queue was empty
 		return nullptr;
 	}
-
-	Job* job = jobs[top & JobIndexMask];
-	++top;
-	return job;
 }

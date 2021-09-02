@@ -49,7 +49,8 @@ void JobWorker::ThreadMain()
 				jobSystem->Execute(job);
 		}
 		while (job != nullptr);
-
+		// GetJobToExecute can return nullptr even when there are jobs remaining
+		// TODO: Add some kind of safe guard so we don't stop working too early
 
 		// Allow wake-ups even when we don't know if there is work to do
 		// That means we try get a job but we will return here if no jobs are available

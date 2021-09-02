@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <mutex>
+#include <atomic>
 
 #include "Core/Core.hpp"
 
@@ -25,13 +25,10 @@ private:
 
 	Allocator* allocator;
 	Job** jobs;
-	int top;
-	int bottom;
-
-	std::mutex mutex;
+	std::atomic<long> top;
+	std::atomic<long> bottom;
 
 	static const size_t CL = KK_CACHE_LINE;
-	static const size_t MemberBytes =
-		sizeof(Allocator*) + sizeof(Job**) + sizeof(size_t) * 2 + sizeof(std::mutex);
+	static const size_t MemberBytes = sizeof(Allocator*) + sizeof(Job**) + sizeof(long) * 2;
 	uint8_t padding[(MemberBytes + CL - 1) / CL * CL - MemberBytes];
 };
