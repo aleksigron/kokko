@@ -36,6 +36,8 @@ JobSystem::~JobSystem()
 
 void JobSystem::Initialize()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	size_t threadCount = workerCount + 1;
 
 	if (jobAllocators == nullptr)
@@ -71,6 +73,8 @@ void JobSystem::Initialize()
 
 void JobSystem::Deinitialize()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	size_t threadCount = workerCount + 1;
 
 	if (workers != nullptr)
@@ -235,7 +239,7 @@ Job* JobSystem::GetJobToExecute()
 		
 	// Get start index by random number generation
 	size_t threadIndex = static_cast<size_t>(Random::Uint(0, lastQueueIndex));
-		
+
 	// Try to steal from each thread queue
 	for (size_t i = 0; i < threadCount; ++i)
 	{
@@ -307,32 +311,45 @@ TEST_CASE("JobSystem")
 
 	for (size_t iter = 0; iter < IterationCount; ++iter)
 	{
-		std::memset(results, 0, sizeof(TestFnData) * JobCount);
-
-		JobSystem jobSystem(allocator, 5);
-		jobSystem.Initialize();
-
-		Job* parent = jobSystem.CreateJob(EmptyJob);
-
-		for (size_t j = 0; j < JobCount; ++j)
 		{
-			Job* job = jobSystem.CreateJobAsChildWithPtr(TestJob, parent, &results[j]);
-			jobSystem.Enqueue(job);
+			KOKKO_PROFILE_SCOPE("Zero out results");
+			std::memset(results, 0, sizeof(TestFnData) * JobCount);
 		}
 
-		jobSystem.Enqueue(parent);
+		JobSystem jobSystem(allocator, 5);
+		Job* parent;
+
+		{
+			KOKKO_PROFILE_SCOPE("JobSystem init and enqueue work");
+
+			jobSystem.Initialize();
+
+			parent = jobSystem.CreateJob(EmptyJob);
+
+			for (size_t j = 0; j < JobCount; ++j)
+			{
+				Job* job = jobSystem.CreateJobAsChildWithPtr(TestJob, parent, &results[j]);
+				jobSystem.Enqueue(job);
+			}
+
+			jobSystem.Enqueue(parent);
+		}
 
 		jobSystem.Wait(parent);
 
-		jobSystem.EndFrame();
+		{
+			KOKKO_PROFILE_SCOPE("JobSystem deinit and check results");
 
-		jobSystem.Deinitialize();
+			jobSystem.EndFrame();
 
-		bool resultsMatch = true;
-		for (int j = 0; j < JobCount; ++j)
-			resultsMatch = resultsMatch && results[j].result == validationResult;
+			jobSystem.Deinitialize();
 
-		CHECK(resultsMatch == true);
+			bool resultsMatch = true;
+			for (int j = 0; j < JobCount; ++j)
+				resultsMatch = resultsMatch && results[j].result == validationResult;
+
+			CHECK(resultsMatch == true);
+		}
 	}
 
 	allocator->Deallocate(resultsBuffer);
