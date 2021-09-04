@@ -4,7 +4,7 @@
 
 #include "Core/Core.hpp"
 
-#include "Engine/JobSystem.hpp"
+#include "Engine/JobFunction.hpp"
 
 struct Job
 {
@@ -14,17 +14,24 @@ struct Job
 
 	static const size_t CL = KK_CACHE_LINE;
 	static const size_t MemberBytes = sizeof(JobFunction) + sizeof(Job*) + sizeof(std::atomic_size_t);
-	uint8_t padding[(MemberBytes + CL - 1) / CL * CL - MemberBytes];
+	uint8_t data[(MemberBytes + CL - 1) / CL * CL - MemberBytes];
 
-	void* GetPtr()
+	void* GetDataAsPtr()
 	{
-		return *reinterpret_cast<void**>(padding);
+		return *reinterpret_cast<void**>(data);
+	}
+
+	template <typename T>
+	T* GetPtrToData()
+	{
+		static_assert(sizeof(T) <= sizeof(data));
+		return reinterpret_cast<T*>(&data);
 	}
 
 	template <typename T>
 	void GetDataAs(T& valueOut)
 	{
-		static_assert(sizeof(T) <= sizeof(padding));
-		std::memcpy(&value, padding, sizeof(T));
+		static_assert(sizeof(T) <= sizeof(data));
+		std::memcpy(&value, data, sizeof(T));
 	}
 };

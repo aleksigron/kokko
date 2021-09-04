@@ -4,16 +4,13 @@
 #include <condition_variable>
 #include <mutex>
 
+#include "Engine/Job.hpp"
+#include "Engine/JobFunction.hpp"
+
 class Allocator;
 class JobAllocator;
 class JobQueue;
-class JobSystem;
 class JobWorker;
-
-struct Job;
-struct JobStorage;
-
-using JobFunction = void(*)(Job*, JobSystem*);
 
 class JobSystem
 {
@@ -26,11 +23,25 @@ public:
 
 	Job* CreateJob(JobFunction function);
 	Job* CreateJobWithPtr(JobFunction function, void* ptr);
-	Job* CreateJobWithData(JobFunction function, const void* data, size_t size);
+	Job* CreateJobWithBuffer(JobFunction function, const void* data, size_t size);
 
-	Job* CreateJobAsChild(JobFunction function, Job* parent);
-	Job* CreateJobAsChildWithPtr(JobFunction function, Job* parent, void* ptr);
-	Job* CreateJobAsChildWithData(JobFunction function, Job* parent, const void* data, size_t size);
+	Job* CreateJobAsChild(Job* parent, JobFunction function);
+	Job* CreateJobAsChildWithPtr(Job* parent, JobFunction function, void* ptr);
+	Job* CreateJobAsChildWithBuffer(Job* parent, JobFunction function, const void* data, size_t size);
+
+	template <typename T>
+	Job* CreateJobWithData(JobFunction function, const T& data)
+	{
+		static_assert(sizeof(T) <= sizeof(Job::data));
+		return CreateJobWithBuffer(function, &data, sizeof(data));
+	}
+
+	template <typename T>
+	Job* CreateJobAsChildWithData(Job* parent, JobFunction function, const T& data)
+	{
+		static_assert(sizeof(T) <= sizeof(Job::data));
+		return CreateJobAsChildWithBuffer(parent, function, &data, sizeof(data));
+	}
 
 	void Enqueue(Job* job);
 

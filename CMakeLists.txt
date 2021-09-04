@@ -136,6 +136,8 @@ set (KOKKO_SOURCES
 	src/Engine/Job.hpp
 	src/Engine/JobAllocator.cpp
 	src/Engine/JobAllocator.hpp
+	src/Engine/JobFunction.hpp
+	src/Engine/JobHelpers.hpp
 	src/Engine/JobQueue.cpp
 	src/Engine/JobQueue.hpp
 	src/Engine/JobSystem.cpp

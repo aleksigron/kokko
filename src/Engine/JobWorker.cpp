@@ -70,7 +70,10 @@ void JobWorker::ThreadMain()
 		// Allow wake-ups even when we don't know if there is work to do
 		// That means we try get a job but we will return here if no jobs are available
 		std::unique_lock<std::mutex> lock(jobSystem->conditionMutex);
-		jobSystem->jobAddedCondition.wait(lock);
+		{
+			KOKKO_PROFILE_SCOPE("CondWait");
+			jobSystem->jobAddedCondition.wait(lock);
+		}
 
 		exit = exitRequested.load();
 	}

@@ -8,8 +8,8 @@
 
 #include "Core/Core.hpp"
 
-#include "Engine/Job.hpp"
 #include "Engine/JobAllocator.hpp"
+#include "Engine/JobHelpers.hpp"
 #include "Engine/JobQueue.hpp"
 #include "Engine/JobWorker.hpp"
 
@@ -116,17 +116,17 @@ void JobSystem::Deinitialize()
 
 Job* JobSystem::CreateJob(JobFunction function)
 {
-	return CreateJobWithData(function, nullptr, 0);
+	return CreateJobWithBuffer(function, nullptr, 0);
 }
 
 Job* JobSystem::CreateJobWithPtr(JobFunction function, void* ptr)
 {
-	return CreateJobWithData(function, &ptr, sizeof(void*));
+	return CreateJobWithBuffer(function, &ptr, sizeof(void*));
 }
 
-Job* JobSystem::CreateJobWithData(JobFunction function, const void* data, size_t size)
+Job* JobSystem::CreateJobWithBuffer(JobFunction function, const void* data, size_t size)
 {
-	assert(size <= sizeof(Job::padding));
+	assert(size <= sizeof(Job::data));
 
 	Job* job = AllocateJob();
 	job->function = function;
@@ -135,23 +135,23 @@ Job* JobSystem::CreateJobWithData(JobFunction function, const void* data, size_t
 
 	if (size > 0)
 	{
-		std::memcpy(job->padding, data, size);
+		std::memcpy(job->data, data, size);
 	}
 
 	return job;
 }
 
-Job* JobSystem::CreateJobAsChild(JobFunction function, Job* parent)
+Job* JobSystem::CreateJobAsChild(Job* parent, JobFunction function)
 {
-	return CreateJobAsChildWithData(function, parent, nullptr, 0);
+	return CreateJobAsChildWithBuffer(parent, function, nullptr, 0);
 }
 
-Job* JobSystem::CreateJobAsChildWithPtr(JobFunction function, Job* parent, void* ptr)
+Job* JobSystem::CreateJobAsChildWithPtr(Job* parent, JobFunction function, void* ptr)
 {
-	return CreateJobAsChildWithData(function, parent, &ptr, sizeof(void*));
+	return CreateJobAsChildWithBuffer(parent, function, &ptr, sizeof(void*));
 }
 
-Job* JobSystem::CreateJobAsChildWithData(JobFunction function, Job* parent, const void* data, size_t size)
+Job* JobSystem::CreateJobAsChildWithBuffer(Job* parent, JobFunction function, const void* data, size_t size)
 {
 	parent->unfinishedJobs.fetch_add(1);
 
@@ -162,7 +162,7 @@ Job* JobSystem::CreateJobAsChildWithData(JobFunction function, Job* parent, cons
 
 	if (size > 0)
 	{
-		std::memcpy(job->padding, data, size);
+		std::memcpy(job->data, data, size);
 	}
 
 	return job;
@@ -268,74 +268,82 @@ JobQueue* JobSystem::GetCurrentThreadJobQueue()
 	return &jobQueues[currentThreadIndex];
 }
 
-struct TestFnData
+struct TestJobData
 {
-	int64_t result;
-	int64_t padding[7];
+	float pos[3];
+	float vel[3];
 };
 
-static void EmptyJob(Job* job, JobSystem* jobSystem)
-{
-}
-
-static int64_t Work()
-{
-	constexpr int64_t SumCount = 1 << 19;
-
-	int64_t sum = 0;
-	for (int64_t i = 0; i < SumCount; ++i)
-		sum += i;
-
-	return sum;
-}
-
-static void TestJob(Job* job, JobSystem* jobSystem)
+static void TestJob(TestJobData* data, size_t count)
 {
 	KOKKO_PROFILE_SCOPE("TestJob");
 
-	int64_t sum = Work();
-	static_cast<TestFnData*>(job->GetPtr())->result = sum;
+	static const size_t Iterations = 16;
+
+	for (size_t iter = 0; iter < Iterations; ++iter)
+	{
+		for (size_t index = 0; index < count; ++index)
+		{
+			data[index].pos[0] += data[index].vel[0];
+			data[index].pos[1] += data[index].vel[1];
+			data[index].pos[2] += data[index].vel[2];
+
+			data[index].vel[0] -= 0.125f;
+			data[index].vel[1] -= 0.125f;
+			data[index].vel[2] -= 0.125f;
+		}
+	}
 };
+
+static void ResetTestData(TestJobData* data, size_t count)
+{
+	KOKKO_PROFILE_SCOPE("ResetTestData");
+
+	for (size_t i = 0; i < count; ++i)
+	{
+		data[i].pos[0] = 0.0f;
+		data[i].pos[1] = 0.0f;
+		data[i].pos[2] = 0.0f;
+
+		data[i].vel[0] = 8.0f;
+		data[i].vel[1] = 8.0f;
+		data[i].vel[2] = 8.0f;
+	}
+}
 
 TEST_CASE("JobSystem")
 {
 	constexpr size_t IterationCount = 5;
-	constexpr size_t JobCount = 1000;
+	constexpr size_t DataCount = 1'000'000;
 
-	int64_t validationResult = Work();
+	TestJobData validationResult;
+	ResetTestData(&validationResult, 1);
+	TestJob(&validationResult, 1);
 
 	Allocator* allocator = Allocator::GetDefault();
 
-	void* resultsBuffer = allocator->AllocateAligned(sizeof(TestFnData) * JobCount, KK_CACHE_LINE);
-	TestFnData* results = static_cast<TestFnData*>(resultsBuffer);
+	void* resultsBuffer = allocator->Allocate(sizeof(TestJobData) * DataCount);
+	TestJobData* results = static_cast<TestJobData*>(resultsBuffer);
 
 	for (size_t iter = 0; iter < IterationCount; ++iter)
 	{
-		{
-			KOKKO_PROFILE_SCOPE("Zero out results");
-			std::memset(results, 0, sizeof(TestFnData) * JobCount);
-		}
+		ResetTestData(results, DataCount);
 
 		JobSystem jobSystem(allocator, 5);
-		Job* parent;
+		Job* job;
 
 		{
 			KOKKO_PROFILE_SCOPE("JobSystem init and enqueue work");
 
 			jobSystem.Initialize();
 
-			parent = jobSystem.CreateJob(EmptyJob);
+			size_t splitCount = 1 << 12;
+			job = JobHelpers::CreateParallelFor(&jobSystem, results, DataCount, TestJob, splitCount);
 
-			for (size_t j = 0; j < JobCount; ++j)
-			{
-				Job* job = jobSystem.CreateJobAsChildWithPtr(TestJob, parent, &results[j]);
-				jobSystem.Enqueue(job);
-			}
-
-			jobSystem.Enqueue(parent);
+			jobSystem.Enqueue(job);
 		}
 
-		jobSystem.Wait(parent);
+		jobSystem.Wait(job);
 
 		{
 			KOKKO_PROFILE_SCOPE("JobSystem deinit and check results");
@@ -345,8 +353,19 @@ TEST_CASE("JobSystem")
 			jobSystem.Deinitialize();
 
 			bool resultsMatch = true;
-			for (int j = 0; j < JobCount; ++j)
-				resultsMatch = resultsMatch && results[j].result == validationResult;
+			for (int j = 0; j < DataCount; ++j)
+			{
+				if (results[j].pos[0] != validationResult.pos[0] ||
+					results[j].pos[1] != validationResult.pos[1] ||
+					results[j].pos[2] != validationResult.pos[2] ||
+					results[j].vel[0] != validationResult.vel[0] ||
+					results[j].vel[1] != validationResult.vel[1] ||
+					results[j].vel[2] != validationResult.vel[2])
+				{
+					resultsMatch = false;
+					break;
+				}
+			}
 
 			CHECK(resultsMatch == true);
 		}
