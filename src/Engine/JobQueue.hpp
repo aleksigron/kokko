@@ -25,8 +25,8 @@ private:
 
 	Allocator* allocator;
 	Job** jobs;
-	std::atomic<long> top;
-	std::atomic<long> bottom;
+	std::atomic_int64_t top;
+	std::atomic_int64_t bottom;
 
 	static const size_t CL = KK_CACHE_LINE;
 	static const size_t MemberBytes = sizeof(Allocator*) + sizeof(Job**) + sizeof(long) * 2;

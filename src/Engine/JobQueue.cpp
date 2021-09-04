@@ -7,6 +7,9 @@
 
 #include "Memory/Allocator.hpp"
 
+// Lock free implementation is based on post on Molecular Musings blog
+// https://blog.molecular-matters.com/2015/09/25/job-system-2-0-lock-free-work-stealing-part-3-going-lock-free/
+
 JobQueue::JobQueue(Allocator* allocator) :
 	allocator(allocator),
 	jobs(nullptr),
@@ -23,19 +26,22 @@ JobQueue::~JobQueue()
 
 void JobQueue::Push(Job* job)
 {
-	long b = bottom;
+	int64_t b = bottom.load(std::memory_order_relaxed);
 	jobs[b & JobIndexMask] = job;
 
 	// Atomic store ensures the job is written before b+1 is published to other threads
-	bottom.store(b + 1);
+	// Release semantics prevent memory reordering of operations preceding this
+	bottom.store(b + 1, std::memory_order_release);
 }
 
 Job* JobQueue::Pop()
 {
-	long b = bottom - 1;
-	bottom.exchange(b);
+	// Read-modify-write to bottom must happen before the load from top
+	// This is accomplished with acquire ordering
+	int64_t prevBottom = bottom.fetch_sub(1, std::memory_order_acquire);
+	int64_t b = prevBottom - 1;
 
-	long t = top;
+	int64_t t = top.load(std::memory_order_relaxed);
 	if (t <= b)
 	{
 		// Queue is not empty since t<=b
@@ -47,38 +53,43 @@ Job* JobQueue::Pop()
 		}
 
 		// This is the last item in the queue
-		if (top.compare_exchange_strong(t, t + 1) == false)
+		if (top.compare_exchange_strong(t, t + 1, std::memory_order_relaxed) == false)
 		{
 			// A concurrent steal operation removed an element from the queue
 			job = nullptr;
 		}
 
-		bottom = t + 1;
+		bottom.store(t + 1, std::memory_order_relaxed);
 		return job;
 	}
 	else
 	{
 		// Queue was already empty
-		bottom = t;
+		// Reset bottom to be same as top loaded
+		bottom.store(t, std::memory_order_relaxed);
 		return nullptr;
 	}
 }
 
 Job* JobQueue::Steal()
 {
-	// Atomic loads ensure that top is always read before bottom
-	long t = top.load();
-	long b = bottom.load();
+	// Atomic load with acquire semantics ensures that top is always read before bottom
+	int64_t t = top.load(std::memory_order_acquire);
 
-	if (t < b)
+	// We can use relaxed ordering for bottom, since executing the next instructions is
+	// dependent on the value of bottom
+	int64_t b = bottom.load(std::memory_order_relaxed);
+
+	if (t < b) // Queue is not empty
 	{
-		// Queue is not empty
 		Job* job = jobs[t & JobIndexMask];
 
-		// Compare-exchange guarantees that the read happens before it
-		if (top.compare_exchange_strong(t, t + 1) == false)
+		// Compare-exchange operation with release ordering guarantees that
+		// the jobs array read happens before it
+		if (top.compare_exchange_strong(t, t + 1, std::memory_order_release) == false)
 		{
-			// A concurrent steal or pop operation removed an element from the queue
+			// If compare_exchange returns false,
+			// a concurrent steal or pop operation removed an element from the queue
 			return nullptr;
 		}
 
