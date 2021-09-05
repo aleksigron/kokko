@@ -5,29 +5,29 @@
 class JobHelpers
 {
 public:
-	template <typename DataType>
+	template <typename InstanceData, typename ConstantData>
 	static Job* CreateParallelFor(
 		JobSystem* jobSystem,
-		DataType* data,
+		ConstantData* constantData,
+		InstanceData* instanceData,
 		size_t count,
-		void (*function)(DataType*, size_t),
+		void (*function)(ConstantData*, InstanceData*, size_t),
 		size_t splitCount)
 	{
-		using JobData = ParallerForJobData<DataType>;
-		const JobData jobData{ data, count, function, splitCount };
+		using JobData = ParallerForJobData<InstanceData, ConstantData>;
+		const JobData jobData{ constantData, instanceData, count, function, splitCount };
 
 		return jobSystem->CreateJobWithData(ParallelForJob<JobData>, jobData);
 	}
 
 private:
-	template <typename DataType>
+	template <typename InstanceData, typename ConstantData>
 	struct ParallerForJobData
 	{
-		using ParallelForJobFunction = void(*)(DataType*, size_t);
-
-		DataType* data;
+		ConstantData* constantData;
+		InstanceData* instanceData;
 		size_t count;
-		ParallelForJobFunction function;
+		void (*function)(ConstantData*, InstanceData*, size_t);
 		size_t splitCount;
 	};
 
@@ -41,19 +41,35 @@ private:
 			// Split data range in two
 
 			const size_t leftCount = data->count / 2;
-			const JobData leftData{ data->data, leftCount, data->function, data->splitCount };
+			const JobData leftData
+			{
+				data->constantData,
+				data->instanceData,
+				leftCount,
+				data->function,
+				data->splitCount
+			};
+
 			Job* left = jobSystem->CreateJobAsChildWithData(job, ParallelForJob<JobData>, leftData);
 			jobSystem->Enqueue(left);
 
 			const size_t rightCount = data->count - leftCount;
-			const JobData rightData{ data->data + leftCount, rightCount, data->function, data->splitCount };
+			const JobData rightData
+			{
+				data->constantData,
+				&data->instanceData[leftCount],
+				rightCount,
+				data->function,
+				data->splitCount
+			};
+
 			Job* right = jobSystem->CreateJobAsChildWithData(job, ParallelForJob<JobData>, rightData);
 			jobSystem->Enqueue(right);
 		}
 		else
 		{
 			// Execute the function on the range of data
-			data->function(data->data, data->count);
+			data->function(data->constantData, data->instanceData, data->count);
 		}
 	}
 };

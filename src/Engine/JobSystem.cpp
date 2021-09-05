@@ -13,6 +13,7 @@
 #include "Engine/JobQueue.hpp"
 #include "Engine/JobWorker.hpp"
 
+#include "Math/Math.hpp"
 #include "Math/Random.hpp"
 
 #include "Memory/Allocator.hpp"
@@ -268,29 +269,48 @@ JobQueue* JobSystem::GetCurrentThreadJobQueue()
 	return &jobQueues[currentThreadIndex];
 }
 
+struct TestJobConstantData
+{
+	float deltaTime;
+	float dampenPerSecond;
+	int iterations;
+};
+
 struct TestJobData
 {
 	float pos[3];
 	float vel[3];
 };
 
-static void TestJob(TestJobData* data, size_t count)
+static void TestJob(TestJobConstantData* constant, TestJobData* data, size_t count)
 {
 	KOKKO_PROFILE_SCOPE("TestJob");
 
-	static const size_t Iterations = 16;
+	const float dt = constant->deltaTime;
+	const float hdt = dt * 0.5f;
+	const float dampen = Math::DampenMultiplier(constant->dampenPerSecond, dt);
 
-	for (size_t iter = 0; iter < Iterations; ++iter)
+	const int iterations = constant->iterations;
+
+	for (size_t iter = 0; iter < iterations; ++iter)
 	{
 		for (size_t index = 0; index < count; ++index)
 		{
-			data[index].pos[0] += data[index].vel[0];
-			data[index].pos[1] += data[index].vel[1];
-			data[index].pos[2] += data[index].vel[2];
+			float velx = data[index].vel[0];
+			float vely = data[index].vel[1];
+			float velz = data[index].vel[2];
 
-			data[index].vel[0] -= 0.125f;
-			data[index].vel[1] -= 0.125f;
-			data[index].vel[2] -= 0.125f;
+			float posx = data[index].pos[0] + velx * hdt;
+			float posy = data[index].pos[1] + vely * hdt;
+			float posz = data[index].pos[2] + velz * hdt;
+
+			velx = velx * dampen;
+			vely = vely * dampen;
+			velz = velz * dampen;
+
+			data[index].pos[0] = posx + velx * hdt;
+			data[index].pos[1] = posy + vely * hdt;
+			data[index].pos[2] = posz + velz * hdt;
 		}
 	}
 };
@@ -305,20 +325,26 @@ static void ResetTestData(TestJobData* data, size_t count)
 		data[i].pos[1] = 0.0f;
 		data[i].pos[2] = 0.0f;
 
-		data[i].vel[0] = 8.0f;
-		data[i].vel[1] = 8.0f;
-		data[i].vel[2] = 8.0f;
+		data[i].vel[0] = 4.0f;
+		data[i].vel[1] = 4.0f;
+		data[i].vel[2] = 4.0f;
 	}
 }
+
 
 TEST_CASE("JobSystem")
 {
 	constexpr size_t IterationCount = 5;
 	constexpr size_t DataCount = 1'000'000;
 
+	TestJobConstantData jobConstantData;
+	jobConstantData.deltaTime = 0.01f;
+	jobConstantData.dampenPerSecond = 0.8f;
+	jobConstantData.iterations = 20;
+
 	TestJobData validationResult;
 	ResetTestData(&validationResult, 1);
-	TestJob(&validationResult, 1);
+	TestJob(&jobConstantData, &validationResult, 1);
 
 	Allocator* allocator = Allocator::GetDefault();
 
@@ -338,7 +364,7 @@ TEST_CASE("JobSystem")
 			jobSystem.Initialize();
 
 			size_t splitCount = 1 << 12;
-			job = JobHelpers::CreateParallelFor(&jobSystem, results, DataCount, TestJob, splitCount);
+			job = JobHelpers::CreateParallelFor(&jobSystem, &jobConstantData, results, DataCount, TestJob, splitCount);
 
 			jobSystem.Enqueue(job);
 		}
