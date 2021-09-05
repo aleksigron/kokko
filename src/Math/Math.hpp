@@ -39,6 +39,8 @@ namespace Math
 
 	float Lerp(float a, float b, float t);
 
+	float DampenMultiplier(float dampenPerSecond, float deltaTime);
+
 	bool IsPowerOfTwo(unsigned int v);
 	bool IsPowerOfTwo(size_t v);
 
