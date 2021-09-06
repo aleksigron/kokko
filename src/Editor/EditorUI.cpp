@@ -142,18 +142,28 @@ void EditorUI::EndFrame()
 	for (size_t i = 0; i < EditorWindow_COUNT; ++i)
 		editorWindows[i].requestFocus = false;
 
-	ImGui::Render();
+	{
+		KOKKO_PROFILE_SCOPE("ImGui::Render()");
+		ImGui::Render();
+	}
 
-	// Bind default framebuffer
-	renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
+	{
+		KOKKO_PROFILE_SCOPE("Clear default framebuffer");
 
-	RenderCommandData::ClearColorData clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };
-	renderDevice->ClearColor(&clearColor);
+		// Bind default framebuffer
+		renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
 
-	RenderCommandData::ClearMask clearMask{ true, false, false };
-	renderDevice->Clear(&clearMask);
+		RenderCommandData::ClearColorData clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };
+		renderDevice->ClearColor(&clearColor);
 
-	renderBackend->RenderDrawData(ImGui::GetDrawData());
+		RenderCommandData::ClearMask clearMask{ true, false, false };
+		renderDevice->Clear(&clearMask);
+	}
+
+	{
+		KOKKO_PROFILE_SCOPE("ImGuiRenderBackend::RenderDrawData()");
+		renderBackend->RenderDrawData(ImGui::GetDrawData());
+	}
 }
 
 const Framebuffer& EditorUI::GetSceneViewFramebuffer()

@@ -2,6 +2,8 @@
 
 #include "imgui.h"
 
+#include "Core/Core.hpp"
+
 #include "Editor/EditorWindowInfo.hpp"
 #include "Editor/SelectionContext.hpp"
 
@@ -35,6 +37,8 @@ void EntityView::Initialize(const ResourceManagers& resourceManagers)
 
 void EntityView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (windowInfo.isOpen)
 	{
 		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen))

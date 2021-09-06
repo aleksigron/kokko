@@ -21,6 +21,8 @@ void DebugView::Initialize(Debug* debug)
 
 void DebugView::Draw(EditorWindowInfo& windowInfo)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (windowInfo.isOpen)
 	{
 		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen))
@@ -36,6 +38,10 @@ void DebugView::Draw(EditorWindowInfo& windowInfo)
 			{
 				debug->RequestBeginProfileSession();
 			}
+
+			bool vsync = debug->GetVerticalSyncEnabled();
+			if (ImGui::Checkbox("Vertical sync", &vsync))
+				debug->SetVerticalSyncEnabled(vsync);
 		}
 
 		if (windowInfo.requestFocus)

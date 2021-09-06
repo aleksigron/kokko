@@ -76,4 +76,7 @@ public:
 
 	bool ShouldBeginProfileSession() const;
 	bool ShouldEndProfileSession();
+
+	bool GetVerticalSyncEnabled() const;
+	void SetVerticalSyncEnabled(bool enabled);
 };

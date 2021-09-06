@@ -465,6 +465,8 @@ void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
 
 void Renderer::DestroyResolutionDependentFramebuffers()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	framebufferGbuffer.Destroy();
 	framebufferLightAcc.Destroy();
 
@@ -514,6 +516,8 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 		// If command is not control command, draw object
 		if (ParseControlCommand(command) == false)
 		{
+			KOKKO_PROFILE_SCOPE("Draw command");
+
 			uint64_t mat = renderOrder.materialId.GetValue(command);
 			uint64_t vpIdx = renderOrder.viewportIndex.GetValue(command);
 			const RenderViewport& viewport = viewportData[vpIdx];
@@ -626,6 +630,8 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 
 void Renderer::BindMaterialTextures(const MaterialData& material) const
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	unsigned int usedTextures = 0;
 
 	for (unsigned uIndex = 0; uIndex < material.uniforms.textureUniformCount; ++uIndex)
@@ -685,8 +691,6 @@ const Mat4x4f& Renderer::GetCullingCameraTransform() const
 
 void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params)
 {
-	KOKKO_PROFILE_FUNCTION();
-
 	// Both SSAO and deferred lighting passes use these
 
 	ProjectionParameters projParams = params.cameraParams.projection;
@@ -767,6 +771,8 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 
 void Renderer::RenderSkybox(const CustomRenderer::RenderParams& params)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	EnvironmentTextures envMap;
 	int environmentId = scene->GetEnvironmentId();
 	if (environmentId >= 0)
@@ -805,8 +811,6 @@ void Renderer::RenderPostProcess(const CustomRenderer::RenderParams& params)
 
 void Renderer::RenderBloom(const CustomRenderer::RenderParams& params)
 {
-	KOKKO_PROFILE_FUNCTION();
-
 	unsigned int sourceTexture = framebufferLightAcc.GetColorTextureId(0);
 	unsigned int framebufferId = framebufferLightAcc.GetFramebufferId();
 
@@ -1085,6 +1089,8 @@ bool Renderer::IsDrawCommand(uint64_t orderKey)
 
 bool Renderer::ParseControlCommand(uint64_t orderKey)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (renderOrder.command.GetValue(orderKey) == static_cast<uint64_t>(RenderCommandType::Draw))
 		return false;
 
@@ -1230,6 +1236,8 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 
 CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (editorCamera.HasValue())
 	{
 		return editorCamera.GetValue();

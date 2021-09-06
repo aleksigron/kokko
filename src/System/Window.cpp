@@ -130,10 +130,14 @@ void Window::ProcessEvents()
 
 void Window::Swap()
 {
-	KOKKO_PROFILE_FUNCTION();
-
-	glfwSwapBuffers(windowHandle);
-	glfwPollEvents();
+	{
+		KOKKO_PROFILE_SCOPE("glfwSwapBuffers()");
+		glfwSwapBuffers(windowHandle);
+	}
+	{
+		KOKKO_PROFILE_SCOPE("glfwPollEvents()");
+		glfwPollEvents();
+	}
 }
 
 Vec2i Window::GetFrameBufferSize()

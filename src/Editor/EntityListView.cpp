@@ -2,6 +2,8 @@
 
 #include "imgui.h"
 
+#include "Core/Core.hpp"
+
 #include "Editor/EditorWindowInfo.hpp"
 #include "Editor/SelectionContext.hpp"
 
@@ -19,6 +21,8 @@ EntityListView::EntityListView() :
 
 void EntityListView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (windowInfo.isOpen)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
