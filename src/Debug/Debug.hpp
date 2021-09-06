@@ -72,6 +72,8 @@ public:
 	DebugTextRenderer* GetTextRenderer() { return textRenderer; }
 	DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer; }
 
+	void RequestBeginProfileSession();
+
 	bool ShouldBeginProfileSession() const;
 	bool ShouldEndProfileSession();
 };

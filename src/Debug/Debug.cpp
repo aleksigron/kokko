@@ -176,9 +176,7 @@ void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<
 
 		if (input->GetKeyDown(KeyCode::F7) && profileInProgress == false)
 		{
-			profileInProgress = true;
-			profileStarted = false;
-			endProfileOnFrame = Time::GetFrameNumber() + 20;
+			RequestBeginProfileSession();
 		}
 
 		// Check vsync switching
@@ -289,14 +287,16 @@ void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<
 
 	vectorRenderer->Render(world, viewport, editorCamera);
 	textRenderer->Render();
+}
 
-	ImGui::Begin("Performance stats");
-
-	const char* timingFormat = "Frametime: %.3f ms";
-	std::snprintf(buffer, sizeof(buffer), timingFormat, currentFrameTime * 1000.0);
-	ImGui::Text(buffer);
-
-	ImGui::End();
+void Debug::RequestBeginProfileSession()
+{
+	if (profileInProgress == false)
+	{
+		profileInProgress = true;
+		profileStarted = false;
+		endProfileOnFrame = Time::GetFrameNumber() + 100;
+	}
 }
 
 bool Debug::ShouldBeginProfileSession() const

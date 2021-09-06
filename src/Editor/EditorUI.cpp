@@ -45,7 +45,8 @@ EditorUI::~EditorUI()
 	allocator->MakeDelete(views);
 }
 
-void EditorUI::Initialize(RenderDevice* renderDevice, Window* window, const ResourceManagers& resourceManagers)
+void EditorUI::Initialize(Debug* debug, RenderDevice* renderDevice,
+	Window* window, const ResourceManagers& resourceManagers)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -67,6 +68,7 @@ void EditorUI::Initialize(RenderDevice* renderDevice, Window* window, const Reso
 	editorWindows[EditorWindow_Entities] = EditorWindowInfo{ "Entities", true, false };
 	editorWindows[EditorWindow_Properties] = EditorWindowInfo{ "Properties", true, false };
 	editorWindows[EditorWindow_Scene] = EditorWindowInfo{ "Scene", true, false };
+	editorWindows[EditorWindow_Debug] = EditorWindowInfo{ "Debug", true, false };
 
 	renderBackend->Initialize();
 
@@ -74,6 +76,7 @@ void EditorUI::Initialize(RenderDevice* renderDevice, Window* window, const Reso
 
 	views->entityView.Initialize(resourceManagers);
 	views->sceneView.Initialize(renderDevice, inputManager);
+	views->debugView.Initialize(debug);
 }
 
 void EditorUI::Deinitialize()
@@ -113,6 +116,7 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 
 	views->entityListView.Draw(editorWindows[EditorWindow_Entities], views->selectionContext, world);
 	views->entityView.Draw(editorWindows[EditorWindow_Properties], views->selectionContext, world);
+	views->debugView.Draw(editorWindows[EditorWindow_Debug]);
 
 	ImGui::ShowDemoWindow();
 

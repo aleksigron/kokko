@@ -7,6 +7,7 @@
 struct GLFWwindow;
 
 class Allocator;
+class Debug;
 class InputView;
 class RenderDevice;
 class Framebuffer;
@@ -37,6 +38,7 @@ private:
 		EditorWindow_Entities,
 		EditorWindow_Properties,
 		EditorWindow_Scene,
+		EditorWindow_Debug,
 
 		EditorWindow_COUNT
 	};
@@ -54,7 +56,7 @@ public:
 	EditorUI& operator=(const EditorUI&) = delete;
 	EditorUI& operator=(EditorUI&&) = delete;
 
-	void Initialize(RenderDevice* renderDevice, Window* window,
+	void Initialize(Debug* debug, RenderDevice* renderDevice, Window* window,
 		const ResourceManagers& resourceManagers);
 	void Deinitialize();
 

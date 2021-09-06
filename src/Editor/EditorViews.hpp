@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Editor/DebugView.hpp"
 #include "Editor/EntityListView.hpp"
 #include "Editor/EntityView.hpp"
 #include "Editor/FilePickerDialog.hpp"
@@ -14,4 +15,5 @@ struct EditorViews
 	EntityView entityView;
 	FilePickerDialog filePicker;
 	SceneView sceneView;
+	DebugView debugView;
 };

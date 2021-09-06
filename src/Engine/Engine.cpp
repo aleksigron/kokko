@@ -135,7 +135,7 @@ bool Engine::Initialize()
 		resManagers.textureManager = textureManager.instance;
 		resManagers.environmentManager = environmentManager.instance;
 
-		editorUI.instance->Initialize(renderDevice, mainWindow.instance, resManagers);
+		editorUI.instance->Initialize(debug.instance, renderDevice, mainWindow.instance, resManagers);
 
 		const char* const logFilename = "log.txt";
 		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";
