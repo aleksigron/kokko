@@ -112,9 +112,10 @@ set (KOKKO_SOURCES
 	src/Editor/DebugView.hpp
 	src/Editor/EditorCamera.cpp
 	src/Editor/EditorCamera.hpp
+	src/Editor/EditorCore.cpp
+	src/Editor/EditorCore.hpp
 	src/Editor/EditorUI.cpp
 	src/Editor/EditorUI.hpp
-	src/Editor/EditorViews.hpp
 	src/Editor/EditorWindowInfo.hpp
 	src/Editor/EntityListView.cpp
 	src/Editor/EntityListView.hpp

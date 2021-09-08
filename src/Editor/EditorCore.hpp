@@ -1,5 +1,9 @@
 #pragma once
 
+class Allocator;
+
+#include "Core/String.hpp"
+
 #include "Editor/DebugView.hpp"
 #include "Editor/EntityListView.hpp"
 #include "Editor/EntityView.hpp"
@@ -7,13 +11,23 @@
 #include "Editor/SceneView.hpp"
 #include "Editor/SelectionContext.hpp"
 
-struct EditorViews
+class EditorCore
 {
+public:
+	EditorCore(Allocator* allocator);
+
+	void CopyEntity(World* world);
+	void PasteEntity(World* world);
+
 	SelectionContext selectionContext;
+
+	FilePickerDialog filePicker;
 
 	EntityListView entityListView;
 	EntityView entityView;
-	FilePickerDialog filePicker;
 	SceneView sceneView;
 	DebugView debugView;
+
+private:
+	String copiedEntity;
 };

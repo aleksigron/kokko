@@ -4,12 +4,11 @@
 
 #include "Core/Core.hpp"
 
-#include "Editor/EditorViews.hpp"
+#include "Editor/EditorCore.hpp"
 #include "Editor/FilePickerDialog.hpp"
 
-#include "Engine/World.hpp"
-
 #include "Engine/EntityManager.hpp"
+#include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
 
@@ -36,13 +35,12 @@ EditorUI::EditorUI(Allocator* allocator) :
 	renderBackend(nullptr),
 	platformBackend(nullptr)
 {
-	views = allocator->MakeNew<EditorViews>();
-
+	core = allocator->MakeNew<EditorCore>(allocator);
 }
 
 EditorUI::~EditorUI()
 {
-	allocator->MakeDelete(views);
+	allocator->MakeDelete(core);
 }
 
 void EditorUI::Initialize(Debug* debug, RenderDevice* renderDevice,
@@ -74,9 +72,9 @@ void EditorUI::Initialize(Debug* debug, RenderDevice* renderDevice,
 
 	platformBackend->Initialize(window->GetGlfwWindow(), inputManager->GetImGuiInputView());
 
-	views->entityView.Initialize(resourceManagers);
-	views->sceneView.Initialize(renderDevice, inputManager);
-	views->debugView.Initialize(debug);
+	core->entityView.Initialize(resourceManagers);
+	core->sceneView.Initialize(renderDevice, inputManager);
+	core->debugView.Initialize(debug);
 }
 
 void EditorUI::Deinitialize()
@@ -96,7 +94,7 @@ void EditorUI::StartFrame()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	views->sceneView.ResizeFramebufferIfRequested();
+	core->sceneView.ResizeFramebufferIfRequested();
 
 	renderBackend->NewFrame();
 	platformBackend->NewFrame();
@@ -110,13 +108,13 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	views->sceneView.Update();
+	core->sceneView.Update();
 
 	DrawMainMenuBar(world, shouldExitOut);
 
-	views->entityListView.Draw(editorWindows[EditorWindow_Entities], views->selectionContext, world);
-	views->entityView.Draw(editorWindows[EditorWindow_Properties], views->selectionContext, world);
-	views->debugView.Draw(editorWindows[EditorWindow_Debug]);
+	core->entityListView.Draw(editorWindows[EditorWindow_Entities], core->selectionContext, world);
+	core->entityView.Draw(editorWindows[EditorWindow_Properties], core->selectionContext, world);
+	core->debugView.Draw(editorWindows[EditorWindow_Debug]);
 
 	ImGui::ShowDemoWindow();
 
@@ -132,7 +130,7 @@ void EditorUI::DrawSceneView()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	views->sceneView.Draw(editorWindows[EditorWindow_Scene]);
+	core->sceneView.Draw(editorWindows[EditorWindow_Scene]);
 }
 
 void EditorUI::EndFrame()
@@ -168,12 +166,12 @@ void EditorUI::EndFrame()
 
 const Framebuffer& EditorUI::GetSceneViewFramebuffer()
 {
-	return views->sceneView.GetFramebuffer();
+	return core->sceneView.GetFramebuffer();
 }
 
 CameraParameters EditorUI::GetEditorCameraParameters() const
 {
-	return views->sceneView.GetCameraParameters();
+	return core->sceneView.GetCameraParameters();
 }
 
 void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
@@ -202,13 +200,28 @@ void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Edit"))
+		{
+			if (ImGui::MenuItem("Copy"))
+			{
+				core->CopyEntity(world);
+			}
+
+			if (ImGui::MenuItem("Paste"))
+			{
+				core->PasteEntity(world);
+			}
+
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::BeginMenu("View"))
 		{
 			for (size_t i = 0; i < EditorWindow_COUNT; ++i)
 			{
 				EditorWindowInfo& windowInfo = editorWindows[i];
 
-				if (ImGui::MenuItem(windowInfo.title, nullptr, &windowInfo.isOpen))
+				if (ImGui::MenuItem(windowInfo.title, nullptr))
 				{
 					windowInfo.isOpen = true;
 					windowInfo.requestFocus = true;
@@ -222,20 +235,20 @@ void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
 	}
 
 	if (openLevel)
-		views->filePicker.StartDialogFileOpen("Open level", "Open");
+		core->filePicker.StartDialogFileOpen("Open level", "Open");
 
 	if (saveLevel)
-		views->filePicker.StartDialogFileSave("Save level as", "Save");
+		core->filePicker.StartDialogFileSave("Save level as", "Save");
 
 	std::filesystem::path filePickerPathOut;
-	bool filePickerClosed = views->filePicker.Update(filePickerPathOut);
+	bool filePickerClosed = core->filePicker.Update(filePickerPathOut);
 
 	if (filePickerClosed && filePickerPathOut.empty() == false)
 	{
 		std::string pathStr = filePickerPathOut.u8string();
 		std::string filenameStr = filePickerPathOut.filename().u8string();
 
-		FilePickerDialog::DialogType type = views->filePicker.GetLastDialogType();
+		FilePickerDialog::DialogType type = core->filePicker.GetLastDialogType();
 		if (type == FilePickerDialog::DialogType::FileOpen)
 		{
 			world->ClearAllEntities();

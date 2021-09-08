@@ -66,6 +66,8 @@ public:
 	TerrainSystem* GetTerrainSystem() { return terrainSystem.instance; }
 	ParticleSystem* GetParticleSystem() { return particleSystem.instance; }
 
+	LevelSerializer* GetSerializer() { return &levelSerializer; }
+
 private:
 	Allocator* allocator;
 	Filesystem* filesystem;

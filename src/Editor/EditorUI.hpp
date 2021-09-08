@@ -8,9 +8,10 @@ struct GLFWwindow;
 
 class Allocator;
 class Debug;
+class EditorCore;
+class Framebuffer;
 class InputView;
 class RenderDevice;
-class Framebuffer;
 class Window;
 class World;
 
@@ -18,7 +19,6 @@ class ImGuiRenderBackend;
 class ImGuiPlatformBackend;
 
 struct CameraParameters;
-struct EditorViews;
 struct Mat4x4fBijection;
 struct ViewRectangle;
 struct ResourceManagers;
@@ -31,7 +31,7 @@ private:
 	ImGuiRenderBackend* renderBackend;
 	ImGuiPlatformBackend* platformBackend;
 
-	EditorViews* views;
+	EditorCore* core;
 
 	enum EditorWindow
 	{

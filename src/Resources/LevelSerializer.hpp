@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Array.hpp"
+#include "Core/ArrayView.hpp"
 
 #include "Resources/ResourceManagers.hpp"
 
@@ -8,9 +9,11 @@ class Allocator;
 class World;
 class ComponentSerializer;
 class TransformSerializer;
+class String;
 
 struct Entity;
 struct SceneObjectId;
+struct StringRef;
 
 namespace YAML
 {
@@ -29,6 +32,9 @@ public:
 	void DeserializeFromString(const char* data);
 	bool SerializeToFile(const char* filePath);
 
+	void DeserializeEntitiesFromString(const char* data, SceneObjectId parent);
+	void SerializeEntitiesToString(ArrayView<Entity> serializeEntities, String& serializedOut);
+
 private:
 	Allocator* allocator;
 	World* world;
@@ -38,7 +44,6 @@ private:
 	Array<ComponentSerializer*> componentSerializers;
 
 	// Serialization
-
 	void WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj);
 
 	// Deserialization

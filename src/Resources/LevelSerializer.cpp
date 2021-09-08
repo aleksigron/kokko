@@ -81,8 +81,7 @@ void LevelSerializer::DeserializeFromString(const char* data)
 
 bool LevelSerializer::SerializeToFile(const char* filePath)
 {
-	EntityManager* entityManager = world->GetEntityManager();
-	Scene* scene = world->GetScene();
+	KOKKO_PROFILE_FUNCTION();
 
 	std::ofstream outStream(filePath);
 
@@ -90,6 +89,9 @@ bool LevelSerializer::SerializeToFile(const char* filePath)
 		return false;
 
 	YAML::Emitter out(outStream);
+
+	EntityManager* entityManager = world->GetEntityManager();
+	Scene* scene = world->GetScene();
 
 	out << YAML::BeginMap;
 
@@ -101,6 +103,7 @@ bool LevelSerializer::SerializeToFile(const char* filePath)
 	}
 
 	out << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
+
 	for (Entity entity : *entityManager)
 	{
 		SceneObjectId sceneObj = scene->Lookup(entity);
@@ -112,6 +115,34 @@ bool LevelSerializer::SerializeToFile(const char* filePath)
 	out << YAML::EndMap;
 
 	return true;
+}
+
+void LevelSerializer::DeserializeEntitiesFromString(const char* data, SceneObjectId parent)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	YAML::Node node = YAML::Load(data);
+
+	CreateObjects(node, parent);
+}
+
+void LevelSerializer::SerializeEntitiesToString(ArrayView<Entity> serializeEntities, String& serializedOut)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	Scene* scene = world->GetScene();
+
+	YAML::Emitter emitter;
+
+	emitter << YAML::BeginSeq;
+	for (Entity entity : serializeEntities)
+	{
+		SceneObjectId sceneObj = scene->Lookup(entity);
+		WriteEntity(emitter, entity, sceneObj);
+	}
+	emitter << YAML::EndSeq;
+
+	serializedOut.Assign(StringRef(emitter.c_str(), emitter.size()));
 }
 
 void LevelSerializer::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
