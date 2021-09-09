@@ -22,7 +22,6 @@ private:
 	float cameraPitch;
 
 	bool mouseLookActive;
-	bool mouseGrabActive;
 
 	float cameraAimSensitivity;
 

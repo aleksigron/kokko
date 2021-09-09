@@ -62,7 +62,7 @@ public:
 
 	void StartFrame();
 	void Update(World* world, bool& shouldExitOut);
-	void DrawSceneView();
+	void DrawSceneView(World* world);
 	void EndFrame();
 
 	const Framebuffer& GetSceneViewFramebuffer();

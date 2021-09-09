@@ -200,7 +200,7 @@ void Engine::Update()
 
 	debug.instance->Render(world.instance, sceneViewFramebuffer, editorCamera);
 
-	editorUI.instance->DrawSceneView();
+	editorUI.instance->DrawSceneView(world.instance);
 
 	// FRAME END
 

@@ -288,6 +288,13 @@ void Scene::SetLocalTransform(SceneObjectId id, const Mat4x4f& transform)
 	UpdateWorldTransforms(id);
 }
 
+void Scene::SetLocalAndEditTransform(SceneObjectId id, const Mat4x4f& local, const SceneEditTransform& edit)
+{
+	SetLocalTransform(id, local);
+
+	data.editTransform[id.i] = edit;
+}
+
 const SceneEditTransform& Scene::GetEditTransform(SceneObjectId id)
 {
 	return data.editTransform[id.i];

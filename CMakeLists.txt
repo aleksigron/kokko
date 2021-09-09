@@ -18,6 +18,7 @@ include_directories(
 	deps/glad/include
 	deps/glfw/include
 	deps/imgui
+	deps/imguizmo
 	deps/rapidjson/include
 	deps/stb_image/include
 	deps/yaml-cpp/include
@@ -42,6 +43,11 @@ set (IMGUI_SOURCES
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 add_library(${IMGUI_LIB} STATIC ${IMGUI_SOURCES})
 
+set (IMGUIZMO_SOURCES
+	deps/imguizmo/ImGuizmo.cpp
+	deps/imguizmo/ImGuizmo.h
+)
+
 set (GLAD_SOURCES
 	deps/glad/include/glad/glad.h
 	deps/glad/src/glad.c
@@ -53,6 +59,7 @@ set (STB_IMAGE_SOURCES
 )
 
 set (DEPS_SOURCES
+	${IMGUIZMO_SOURCES}
 	${GLAD_SOURCES}
 	${STB_IMAGE_SOURCES}
 )
@@ -293,6 +300,7 @@ set (KOKKO_SOURCES
 	src/System/Window.hpp
 )
 
+source_group(Dependencies\\imguizmo FILES ${IMGUIZMO_SOURCES})
 source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
 source_group(Dependencies\\stb_image FILES ${STB_IMAGE_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})

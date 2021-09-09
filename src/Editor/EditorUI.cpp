@@ -1,6 +1,7 @@
 #include "Editor/EditorUI.hpp"
 
 #include "imgui.h"
+#include "ImGuizmo.h"
 
 #include "Core/Core.hpp"
 
@@ -100,6 +101,9 @@ void EditorUI::StartFrame()
 	platformBackend->NewFrame();
 
 	ImGui::NewFrame();
+	ImGuizmo::BeginFrame();
+
+	ImGuizmo::SetOrthographic(false);
 
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 }
@@ -126,11 +130,11 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 	}
 }
 
-void EditorUI::DrawSceneView()
+void EditorUI::DrawSceneView(World* world)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	core->sceneView.Draw(editorWindows[EditorWindow_Scene]);
+	core->sceneView.Draw(editorWindows[EditorWindow_Scene], world, core->selectionContext);
 }
 
 void EditorUI::EndFrame()

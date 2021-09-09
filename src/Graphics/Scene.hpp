@@ -113,6 +113,7 @@ public:
 	void SetParent(SceneObjectId id, SceneObjectId parent);
 
 	void SetLocalTransform(SceneObjectId id, const Mat4x4f& transform);
+	void SetLocalAndEditTransform(SceneObjectId id, const Mat4x4f& local, const SceneEditTransform& edit);
 
 	const Mat4x4f& GetWorldTransform(SceneObjectId id) { return data.world[id.i]; }
 	const Mat4x4f& GetLocalTransform(SceneObjectId id) { return data.local[id.i]; }

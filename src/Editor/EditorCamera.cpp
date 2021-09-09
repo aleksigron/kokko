@@ -16,7 +16,6 @@ EditorCamera::EditorCamera() :
 	cameraYaw(0.0f),
 	cameraPitch(0.0f),
 	mouseLookActive(false),
-	mouseGrabActive(false),
 	cameraAimSensitivity(1.0f)
 {
 	projection.SetPerspective(Math::DegreesToRadians(60.0f));
@@ -53,7 +52,6 @@ static float GetKeyValue0to1(ImGuiIO& io, KeyCode key)
 
 void EditorCamera::Update(bool windowIsActive)
 {
-	static const int MouseButtonGrab = 0;
 	static const int MouseButtonLook = 1;
 
 	float targetSpeed = 4.0f;
@@ -105,36 +103,15 @@ void EditorCamera::Update(bool windowIsActive)
 		Vec3f right = orientation.Right();
 		Vec3f forward = orientation.Forward();
 
-		if (mouseLookActive == false)
-		{
-			if (mouseGrabActive == false && io.MouseDown[MouseButtonGrab])
-				mouseGrabActive = true;
+		moveDir -= GetKeyValue0to1(io, KeyCode::Q) * up;
+		moveDir += GetKeyValue0to1(io, KeyCode::W) * forward;
+		moveDir += GetKeyValue0to1(io, KeyCode::E) * up;
+		moveDir -= GetKeyValue0to1(io, KeyCode::A) * right;
+		moveDir -= GetKeyValue0to1(io, KeyCode::S) * forward;
+		moveDir += GetKeyValue0to1(io, KeyCode::D) * right;
 
-			if (mouseGrabActive == true && io.MouseDown[MouseButtonGrab] == false)
-				mouseGrabActive = false;
-
-			if (mouseGrabActive)
-			{
-				// TODO: Use some reasonable multiplier, not a magic number
-
-				Vec2f movement = mouseDelta * 0.015f;
-
-				cameraPosition += right * -movement.x + up * movement.y;
-			}
-		}
-
-		if (mouseGrabActive == false)
-		{
-			moveDir -= GetKeyValue0to1(io, KeyCode::Q) * up;
-			moveDir += GetKeyValue0to1(io, KeyCode::W) * forward;
-			moveDir += GetKeyValue0to1(io, KeyCode::E) * up;
-			moveDir -= GetKeyValue0to1(io, KeyCode::A) * right;
-			moveDir -= GetKeyValue0to1(io, KeyCode::S) * forward;
-			moveDir += GetKeyValue0to1(io, KeyCode::D) * right;
-
-			if (moveDir.SqrMagnitude() > 1.0f)
-				moveDir.Normalize();
-		}
+		if (moveDir.SqrMagnitude() > 1.0f)
+			moveDir.Normalize();
 
 		if (io.KeyMods & ImGuiKeyModFlags_Shift)
 			targetSpeed *= 4.0f;
