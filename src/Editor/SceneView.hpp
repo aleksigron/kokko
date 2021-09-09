@@ -33,12 +33,10 @@ public:
 private:
 	void ResizeFramebuffer();
 
-	void UpdateGizmo(World* world, SelectionContext& selectionContext);
-
 	int contentWidth;
 	int contentHeight;
-	int contentRegionLeft;
-	int contentRegionTop;
+
+	int currentGizmoOperation;
 
 	bool resizeRequested;
 	bool windowIsFocused;

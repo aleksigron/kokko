@@ -19,6 +19,7 @@
 SceneView::SceneView() :
 	contentWidth(0),
 	contentHeight(0),
+	currentGizmoOperation(ImGuizmo::TRANSLATE),
 	resizeRequested(false),
 	windowIsFocused(false),
 	windowIsHovered(false)
@@ -54,8 +55,8 @@ void SceneView::Draw(EditorWindowInfo& windowInfo, World* world, SelectionContex
 			ImVec2 windowPos = ImGui::GetWindowPos();
 			ImVec2 regionMin = ImGui::GetWindowContentRegionMin();
 
-			contentRegionLeft = windowPos.x + regionMin.x;
-			contentRegionTop = windowPos.y + regionMin.y;
+			int contentRegionLeft = windowPos.x + regionMin.x;
+			int contentRegionTop = windowPos.y + regionMin.y;
 
 			if (ImGui::IsAnyMouseDown() == false &&
 				size.x > 0 && size.y > 0 &&
@@ -69,6 +70,8 @@ void SceneView::Draw(EditorWindowInfo& windowInfo, World* world, SelectionContex
 
 				resizeRequested = true;
 			}
+			
+			ImVec2 startCursorPos = ImGui::GetCursorPos();
 
 			if (framebuffer.IsInitialized())
 			{
@@ -79,8 +82,65 @@ void SceneView::Draw(EditorWindowInfo& windowInfo, World* world, SelectionContex
 
 				ImGui::Image(texId, size, uv0, uv1);
 			}
+			
+			// Draw tool buttons
 
-			UpdateGizmo(world, selectionContext);
+			// Start drawing on top of the image
+			ImGui::SetCursorPos(startCursorPos);
+
+			if (ImGui::Button("Translate"))
+				currentGizmoOperation = ImGuizmo::TRANSLATE;
+					
+			ImGui::SameLine();
+			if (ImGui::Button("Rotate"))
+				currentGizmoOperation = ImGuizmo::ROTATE;
+
+			ImGui::SameLine();
+			if (ImGui::Button("Scale"))
+				currentGizmoOperation = ImGuizmo::SCALE;
+
+			// Draw gizmo
+
+			ImGuizmo::OPERATION op = static_cast<ImGuizmo::OPERATION>(currentGizmoOperation);
+			ImGuizmo::MODE mode = ImGuizmo::LOCAL;
+
+			Entity entity = selectionContext.selectedEntity;
+
+			if (entity != Entity::Null)
+			{
+				Scene* scene = world->GetScene();
+				SceneObjectId sceneObj = scene->Lookup(entity);
+
+				if (sceneObj != SceneObjectId::Null)
+				{
+					ImGuizmo::SetDrawlist();
+					ImGuizmo::SetRect(contentRegionLeft, contentRegionTop, contentWidth, contentHeight);
+
+					Mat4x4f viewTransform = editorCamera.GetCameraTransform().inverse;
+					float* view = viewTransform.ValuePointer();
+
+					Mat4x4f projectionTransform = editorCamera.GetProjectionParameters().GetProjectionMatrix(false);
+					float* proj = projectionTransform.ValuePointer();
+
+					Mat4x4f objectTransform = scene->GetLocalTransform(sceneObj);
+					float* obj = objectTransform.ValuePointer();
+
+					if (ImGuizmo::Manipulate(view, proj, op, mode, obj))
+					{
+						SceneEditTransform editTransform;
+						float* translation = editTransform.translation.ValuePointer();
+						float* rotation = editTransform.rotation.ValuePointer();
+						float* scale = editTransform.scale.ValuePointer();
+
+						ImGuizmo::DecomposeMatrixToComponents(obj, translation, rotation, scale);
+
+						// DecomposeMatrixToComponents returns degrees, so convert to radians
+						editTransform.rotation = Math::DegreesToRadians(editTransform.rotation);
+
+						scene->SetLocalAndEditTransform(sceneObj, objectTransform, editTransform);
+					}
+				}
+			}
 		}
 
 		if (windowInfo.requestFocus)
@@ -128,48 +188,4 @@ void SceneView::ResizeFramebuffer()
 
 	framebuffer.Create(contentWidth, contentHeight,
 		Optional<RenderTextureSizedFormat>(), ArrayView<RenderTextureSizedFormat>(&format, 1));
-}
-
-void SceneView::UpdateGizmo(World* world, SelectionContext& selectionContext)
-{
-	ImGuizmo::OPERATION op = ImGuizmo::TRANSLATE;
-	ImGuizmo::MODE mode = ImGuizmo::LOCAL;
-
-	Entity entity = selectionContext.selectedEntity;
-
-	if (entity != Entity::Null)
-	{
-		Scene* scene = world->GetScene();
-		SceneObjectId sceneObj = scene->Lookup(entity);
-
-		if (sceneObj != SceneObjectId::Null)
-		{
-			ImGuizmo::SetDrawlist();
-			ImGuizmo::SetRect(contentRegionLeft, contentRegionTop, contentWidth, contentHeight);
-			
-			Mat4x4f viewTransform = editorCamera.GetCameraTransform().inverse;
-			float* view = viewTransform.ValuePointer();
-
-			Mat4x4f projectionTransform = editorCamera.GetProjectionParameters().GetProjectionMatrix(false);
-			float* proj = projectionTransform.ValuePointer();
-
-			Mat4x4f objectTransform = scene->GetLocalTransform(sceneObj);
-			float* obj = objectTransform.ValuePointer();
-
-			if (ImGuizmo::Manipulate(view, proj, op, mode, obj))
-			{
-				SceneEditTransform editTransform;
-				float* translation = editTransform.translation.ValuePointer();
-				float* rotation = editTransform.rotation.ValuePointer();
-				float* scale = editTransform.scale.ValuePointer();
-
-				ImGuizmo::DecomposeMatrixToComponents(obj, translation, rotation, scale);
-
-				// DecomposeMatrixToComponents returns degrees, so convert to radians
-				editTransform.rotation = Math::DegreesToRadians(editTransform.rotation);
-
-				scene->SetLocalAndEditTransform(sceneObj, objectTransform, editTransform);
-			}
-		}
-	}
 }
