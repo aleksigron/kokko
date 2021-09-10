@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-#include "Editor/EditorWindowInfo.hpp"
-
 struct GLFWwindow;
 
 class Allocator;
@@ -32,20 +30,6 @@ private:
 	ImGuiPlatformBackend* platformBackend;
 
 	EditorCore* core;
-
-	enum EditorWindow
-	{
-		EditorWindow_Entities,
-		EditorWindow_Properties,
-		EditorWindow_Scene,
-		EditorWindow_Debug,
-
-		EditorWindow_COUNT
-	};
-
-	EditorWindowInfo editorWindows[EditorWindow_COUNT];
-
-	void DrawMainMenuBar(World* world, bool& shouldExitOut);
 
 public:
 	EditorUI(Allocator* allocator);

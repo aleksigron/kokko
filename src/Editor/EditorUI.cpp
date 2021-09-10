@@ -54,8 +54,6 @@ void EditorUI::Initialize(Debug* debug, RenderDevice* renderDevice,
 	renderBackend = allocator->MakeNew<ImGuiRenderBackend>();
 	platformBackend = allocator->MakeNew<ImGuiPlatformBackend>();
 
-	InputManager* inputManager = window->GetInputManager();
-
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
@@ -64,18 +62,14 @@ void EditorUI::Initialize(Debug* debug, RenderDevice* renderDevice,
 
 	ImGui::StyleColorsDark();
 
-	editorWindows[EditorWindow_Entities] = EditorWindowInfo{ "Entities", true, false };
-	editorWindows[EditorWindow_Properties] = EditorWindowInfo{ "Properties", true, false };
-	editorWindows[EditorWindow_Scene] = EditorWindowInfo{ "Scene", true, false };
-	editorWindows[EditorWindow_Debug] = EditorWindowInfo{ "Debug", true, false };
-
 	renderBackend->Initialize();
 
-	platformBackend->Initialize(window->GetGlfwWindow(), inputManager->GetImGuiInputView());
+	InputManager* inputManager = window->GetInputManager();
+	GLFWwindow* glfwWindow = window->GetGlfwWindow();
 
-	core->entityView.Initialize(resourceManagers);
-	core->sceneView.Initialize(renderDevice, inputManager);
-	core->debugView.Initialize(debug);
+	platformBackend->Initialize(glfwWindow, inputManager->GetImGuiInputView());
+
+	core->Initialize(debug, renderDevice, inputManager, resourceManagers);
 }
 
 void EditorUI::Deinitialize()
@@ -95,7 +89,7 @@ void EditorUI::StartFrame()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	core->sceneView.ResizeFramebufferIfRequested();
+	core->ResizeSceneViewFramebufferIfRequested();
 
 	renderBackend->NewFrame();
 	platformBackend->NewFrame();
@@ -112,15 +106,10 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	core->sceneView.Update();
+	core->SetWorld(world);
+	core->Update();
 
-	DrawMainMenuBar(world, shouldExitOut);
-
-	core->entityListView.Draw(editorWindows[EditorWindow_Entities], core->selectionContext, world);
-	core->entityView.Draw(editorWindows[EditorWindow_Properties], core->selectionContext, world);
-	core->debugView.Draw(editorWindows[EditorWindow_Debug]);
-
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 
 	static bool firstRun = true;
 	if (firstRun)
@@ -134,15 +123,14 @@ void EditorUI::DrawSceneView(World* world)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	core->sceneView.Draw(editorWindows[EditorWindow_Scene], world, core->selectionContext);
+	core->DrawSceneView();
 }
 
 void EditorUI::EndFrame()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	for (size_t i = 0; i < EditorWindow_COUNT; ++i)
-		editorWindows[i].requestFocus = false;
+	core->EndFrame();
 
 	{
 		KOKKO_PROFILE_SCOPE("ImGui::Render()");
@@ -170,97 +158,11 @@ void EditorUI::EndFrame()
 
 const Framebuffer& EditorUI::GetSceneViewFramebuffer()
 {
-	return core->sceneView.GetFramebuffer();
+	return core->GetSceneViewFramebuffer();
 }
 
 CameraParameters EditorUI::GetEditorCameraParameters() const
 {
-	return core->sceneView.GetCameraParameters();
+	return core->GetEditorCameraParameters();
 }
 
-void EditorUI::DrawMainMenuBar(World* world, bool& shouldExitOut)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	bool openLevel = false, saveLevel = false;
-
-	if (ImGui::BeginMainMenuBar())
-	{
-		if (ImGui::BeginMenu("File"))
-		{
-			if (ImGui::MenuItem("New"))
-				world->ClearAllEntities();
-
-			if (ImGui::MenuItem("Open..."))
-				openLevel = true;
-
-			if (ImGui::MenuItem("Save as..."))
-				saveLevel = true;
-
-			ImGui::Separator();
-
-			shouldExitOut = ImGui::MenuItem("Exit");
-
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Edit"))
-		{
-			if (ImGui::MenuItem("Copy"))
-			{
-				core->CopyEntity(world);
-			}
-
-			if (ImGui::MenuItem("Paste"))
-			{
-				core->PasteEntity(world);
-			}
-
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("View"))
-		{
-			for (size_t i = 0; i < EditorWindow_COUNT; ++i)
-			{
-				EditorWindowInfo& windowInfo = editorWindows[i];
-
-				if (ImGui::MenuItem(windowInfo.title, nullptr))
-				{
-					windowInfo.isOpen = true;
-					windowInfo.requestFocus = true;
-				}
-			}
-
-			ImGui::EndMenu();
-		}
-
-		ImGui::EndMainMenuBar();
-	}
-
-	if (openLevel)
-		core->filePicker.StartDialogFileOpen("Open level", "Open");
-
-	if (saveLevel)
-		core->filePicker.StartDialogFileSave("Save level as", "Save");
-
-	std::filesystem::path filePickerPathOut;
-	bool filePickerClosed = core->filePicker.Update(filePickerPathOut);
-
-	if (filePickerClosed && filePickerPathOut.empty() == false)
-	{
-		std::string pathStr = filePickerPathOut.u8string();
-		std::string filenameStr = filePickerPathOut.filename().u8string();
-
-		FilePickerDialog::DialogType type = core->filePicker.GetLastDialogType();
-		if (type == FilePickerDialog::DialogType::FileOpen)
-		{
-			world->ClearAllEntities();
-			world->LoadFromFile(pathStr.c_str(), filenameStr.c_str());
-		}
-		else if (type == FilePickerDialog::DialogType::FileSave)
-		{
-			world->WriteToFile(pathStr.c_str(), filenameStr.c_str());
-		}
-	}
-}
