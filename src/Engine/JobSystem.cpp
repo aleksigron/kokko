@@ -247,6 +247,9 @@ Job* JobSystem::GetJobToExecute()
 		// Skip current thread queue
 		if (threadIndex != currentThreadIndex)
 		{
+			// Give hint to allow other threads to work
+			std::this_thread::yield();
+
 			Job* stolenJob = jobQueues[threadIndex].Steal();
 
 			if (stolenJob != nullptr)
@@ -330,7 +333,6 @@ static void ResetTestData(TestJobData* data, size_t count)
 		data[i].vel[2] = 4.0f;
 	}
 }
-
 
 TEST_CASE("JobSystem")
 {

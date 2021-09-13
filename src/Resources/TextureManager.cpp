@@ -13,7 +13,6 @@
 
 #include "Resources/ImageData.hpp"
 
-#include "System/File.hpp"
 #include "System/IncludeOpenGL.hpp"
 
 TextureId TextureId::Null = TextureId{ 0 };
@@ -123,7 +122,8 @@ void TextureManager::Reallocate(unsigned int required)
 
 int TextureManager::MipLevelsFromDimensions(int width, int height)
 {
-	if (Math::IsPowerOfTwo(width) == false || Math::IsPowerOfTwo(height) == false)
+	if (Math::IsPowerOfTwo(static_cast<unsigned>(width)) == false ||
+		Math::IsPowerOfTwo(static_cast<unsigned>(height)) == false)
 		return 1;
 
 	unsigned int smaller = static_cast<unsigned int>(width > height ? height : width);
@@ -282,7 +282,10 @@ bool TextureManager::LoadWithStbImage(TextureId id, const char* filePath, bool p
 			renderDevice->SetTextureSubImage2D(&textureImage);
 
 			if (mipLevels > 1)
+			{
+				KOKKO_PROFILE_SCOPE("Generate texture mipmaps");
 				renderDevice->GenerateTextureMipmaps(RenderTextureTarget::Texture2d);
+			}
 		}
 
 		{

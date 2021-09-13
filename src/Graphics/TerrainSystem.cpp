@@ -76,8 +76,6 @@ void TerrainSystem::AddRenderCommands(const CustomRenderer::CommandParams& param
 
 void TerrainSystem::RenderCustom(const CustomRenderer::RenderParams& params)
 {
-	KOKKO_PROFILE_FUNCTION();
-
 	const MaterialData& material = materialManager->GetMaterialData(terrainMaterial);
 
 	for (auto& terrainComponent : *this)
@@ -245,6 +243,7 @@ void TerrainSystem::RenderTerrain(TerrainInstance& terrain, const MaterialData& 
 
 	const TextureUniform* heightMap = material.uniforms.FindTextureUniformByNameHash("height_map"_hash);
 	const TextureUniform* albedoMap = material.uniforms.FindTextureUniformByNameHash("albedo_map"_hash);
+	const TextureUniform* roughMap = material.uniforms.FindTextureUniformByNameHash("roughness_map"_hash);
 
 	if (heightMap != nullptr)
 	{
@@ -258,6 +257,13 @@ void TerrainSystem::RenderTerrain(TerrainInstance& terrain, const MaterialData& 
 		renderDevice->SetUniformInt(albedoMap->uniformLocation, 1);
 		renderDevice->SetActiveTextureUnit(1);
 		renderDevice->BindTexture(RenderTextureTarget::Texture2d, albedoMap->textureObject);
+	}
+
+	if (roughMap != nullptr)
+	{
+		renderDevice->SetUniformInt(roughMap->uniformLocation, 2);
+		renderDevice->SetActiveTextureUnit(2);
+		renderDevice->BindTexture(RenderTextureTarget::Texture2d, roughMap->textureObject);
 	}
 
 	// Bind material uniform block to shader
