@@ -4,6 +4,7 @@
 
 #include "Debug/Debug.hpp"
 
+#include "Engine/EngineSettings.hpp"
 #include "Engine/EntityManager.hpp"
 
 #include "Graphics/ParticleSystem.hpp"
@@ -164,7 +165,8 @@ void World::Render(const Optional<CameraParameters>& editorCamera, const Framebu
 	renderer.instance->Render(editorCamera, framebuffer);
 }
 
-void World::DebugRender(DebugVectorRenderer* vectorRenderer)
+void World::DebugRender(EngineSettings* engineSettings, DebugVectorRenderer* vectorRenderer)
 {
-	renderer.instance->DebugRender(vectorRenderer);
+	if (engineSettings->drawMeshBounds)
+		renderer.instance->DebugRender(vectorRenderer);
 }

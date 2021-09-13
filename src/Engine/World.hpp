@@ -18,6 +18,7 @@ class Window;
 class Framebuffer;
 
 struct CameraParameters;
+struct EngineSettings;
 struct ResourceManagers;
 
 class EntityManager;
@@ -53,7 +54,7 @@ public:
 
 	void Update();
 	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
-	void DebugRender(DebugVectorRenderer* vectorRenderer);
+	void DebugRender(EngineSettings* engineSettings, DebugVectorRenderer* vectorRenderer);
 
 	const String& GetLoadedLevelFilename() { return loadedLevelDisplayName; }
 

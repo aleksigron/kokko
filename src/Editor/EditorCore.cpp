@@ -59,7 +59,7 @@ bool EditorCore::IsExitRequested() const
 	return exitRequested;
 }
 
-void EditorCore::Update()
+void EditorCore::Update(EngineSettings* engineSettings)
 {
 	DrawMainMenuBar();
 
@@ -67,7 +67,7 @@ void EditorCore::Update()
 
 	entityListView.Draw(editorWindows[EditorWindow_Entities], selectionContext, world);
 	entityView.Draw(editorWindows[EditorWindow_Properties], selectionContext, world);
-	debugView.Draw(editorWindows[EditorWindow_Debug]);
+	debugView.Draw(editorWindows[EditorWindow_Debug], engineSettings);
 }
 
 void EditorCore::DrawSceneView()

@@ -17,7 +17,7 @@ Window::Window(Allocator* allocator) :
 	windowHandle(nullptr),
 	inputManager(nullptr),
 	framebufferResizeCallbacks(allocator),
-	currentSwapInterval(0),
+	currentSwapInterval(-1),
 	framebufferResizePending(false)
 {
 }
@@ -85,8 +85,6 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 				// Tell glad how it can load the OpenGL functions it needs
 				gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 			}
-
-			this->SetSwapInterval(1);
 
 			return true;
 		}
@@ -184,8 +182,11 @@ Mat4x4f Window::GetScreenSpaceProjectionMatrix()
 
 void Window::SetSwapInterval(int swapInterval)
 {
-	this->currentSwapInterval = swapInterval;
-	glfwSwapInterval(swapInterval);
+	if (swapInterval != currentSwapInterval)
+	{
+		currentSwapInterval = swapInterval;
+		glfwSwapInterval(swapInterval);
+	}
 }
 
 void Window::RegisterFramebufferResizeCallback(FramebufferSizeCallbackFn callback, void* userPointer)

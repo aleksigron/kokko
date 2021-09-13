@@ -17,6 +17,7 @@ class ImGuiRenderBackend;
 class ImGuiPlatformBackend;
 
 struct CameraParameters;
+struct EngineSettings;
 struct Mat4x4fBijection;
 struct ViewRectangle;
 struct ResourceManagers;
@@ -45,8 +46,8 @@ public:
 	void Deinitialize();
 
 	void StartFrame();
-	void Update(World* world, bool& shouldExitOut);
-	void DrawSceneView(World* world);
+	void Update(EngineSettings* engineSettings, World* world, bool& shouldExitOut);
+	void DrawSceneView();
 	void EndFrame();
 
 	const Framebuffer& GetSceneViewFramebuffer();

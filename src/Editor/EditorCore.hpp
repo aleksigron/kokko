@@ -3,6 +3,8 @@
 class Allocator;
 class World;
 
+struct EngineSettings;
+
 #include "Core/String.hpp"
 
 #include "Editor/DebugView.hpp"
@@ -30,7 +32,7 @@ public:
 
 	bool IsExitRequested() const;
 
-	void Update();
+	void Update(EngineSettings* engineSettings);
 	void DrawSceneView();
 	void EndFrame();
 

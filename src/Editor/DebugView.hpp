@@ -1,6 +1,7 @@
 #pragma once
 
 struct EditorWindowInfo;
+struct EngineSettings;
 
 class Debug;
 
@@ -11,7 +12,7 @@ public:
 
 	void Initialize(Debug* debug);
 
-	void Draw(EditorWindowInfo& windowInfo);
+	void Draw(EditorWindowInfo& windowInfo, EngineSettings* engineSettings);
 
 private:
 	Debug* debug;

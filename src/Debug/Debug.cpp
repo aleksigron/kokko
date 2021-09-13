@@ -316,13 +316,3 @@ bool Debug::ShouldEndProfileSession()
 
 	return ended;
 }
-
-bool Debug::GetVerticalSyncEnabled() const
-{
-	return window->GetSwapInterval() != 0;
-}
-
-void Debug::SetVerticalSyncEnabled(bool enabled)
-{
-	window->SetSwapInterval(enabled ? 1 : 0);
-}

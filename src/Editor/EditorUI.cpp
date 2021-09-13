@@ -102,12 +102,12 @@ void EditorUI::StartFrame()
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 }
 
-void EditorUI::Update(World* world, bool& shouldExitOut)
+void EditorUI::Update(EngineSettings* engineSettings, World* world, bool& shouldExitOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	core->SetWorld(world);
-	core->Update();
+	core->Update(engineSettings);
 
 	//ImGui::ShowDemoWindow();
 
@@ -119,7 +119,7 @@ void EditorUI::Update(World* world, bool& shouldExitOut)
 	}
 }
 
-void EditorUI::DrawSceneView(World* world)
+void EditorUI::DrawSceneView()
 {
 	KOKKO_PROFILE_FUNCTION();
 

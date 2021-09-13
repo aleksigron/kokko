@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/EngineSettings.hpp"
 #include "Engine/InstanceAllocatorPair.hpp"
 
 class Allocator;
@@ -26,6 +27,8 @@ private:
 
 	Allocator* systemAllocator;
 	Allocator* debugNameAllocator;
+
+	EngineSettings settings;
 
 	InstanceAllocatorPair<Window> mainWindow;
 	Time* time;

@@ -186,7 +186,7 @@ void Engine::Update()
 	// Because editor can change the state of the world and systems,
 	// let's run those updates at the same part of the frame as other updates
 	bool editorWantsToExit = false;
-	editorUI.instance->Update(world.instance, editorWantsToExit);
+	editorUI.instance->Update(&settings, world.instance, editorWantsToExit);
 	if (editorWantsToExit)
 		mainWindow.instance->SetShouldClose(true);
 
@@ -196,11 +196,11 @@ void Engine::Update()
 
 	const Framebuffer& sceneViewFramebuffer = editorUI.instance->GetSceneViewFramebuffer();
 	world.instance->Render(editorCamera, sceneViewFramebuffer);
-	world.instance->DebugRender(debug.instance->GetVectorRenderer());
+	world.instance->DebugRender(&settings, debug.instance->GetVectorRenderer());
 
 	debug.instance->Render(world.instance, sceneViewFramebuffer, editorCamera);
 
-	editorUI.instance->DrawSceneView(world.instance);
+	editorUI.instance->DrawSceneView();
 
 	// FRAME END
 
@@ -209,6 +209,8 @@ void Engine::Update()
 	mainWindow.instance->Swap();
 	mainWindow.instance->ProcessEvents();
 	mainWindow.instance->UpdateInput();
+
+	mainWindow.instance->SetSwapInterval(settings.verticalSync ? 1 : 0);
 }
 
 void Engine::SetAppPointer(void* app)

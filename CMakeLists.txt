@@ -137,6 +137,7 @@ set (KOKKO_SOURCES
 	src/Engine/ComponentSystemDefaultImpl.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
+	src/Engine/EngineSettings.hpp
 	src/Engine/Entity.hpp
 	src/Engine/EntityFactory.cpp
 	src/Engine/EntityFactory.hpp
