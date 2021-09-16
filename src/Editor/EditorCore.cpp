@@ -25,8 +25,11 @@ EditorCore::EditorCore(Allocator* allocator) :
 
 void EditorCore::Initialize(Debug* debug, RenderDevice* renderDevice, InputManager* inputManager, const ResourceManagers& resourceManagers)
 {
+	images.LoadImages(resourceManagers.textureManager);
+
 	entityView.Initialize(resourceManagers);
 	sceneView.Initialize(renderDevice, inputManager);
+	assetBrowserView.Initialize(&images);
 	debugView.Initialize(debug);
 }
 

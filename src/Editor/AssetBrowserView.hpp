@@ -5,6 +5,7 @@
 #include "Core/String.hpp"
 
 class Allocator;
+class EditorImages;
 
 struct EditorWindowInfo;
 
@@ -14,6 +15,8 @@ public:
 	AssetBrowserView();
 	~AssetBrowserView();
 
+	void Initialize(const EditorImages* editorImages);
+
 	void Draw(EditorWindowInfo& windowInfo);
 
 private:
@@ -21,4 +24,6 @@ private:
 
 	std::filesystem::path currentPath;
 	std::filesystem::path selectedPath;
+
+	const EditorImages* editorImages;
 };

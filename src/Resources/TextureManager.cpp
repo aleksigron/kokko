@@ -214,7 +214,7 @@ TextureId TextureManager::GetIdByPath(StringRef path)
 
 bool TextureManager::LoadWithStbImage(TextureId id, const char* filePath, bool preferLinear)
 {
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(false);
 	int width, height, nrComponents;
 	uint8_t* textureBytes;
 	{

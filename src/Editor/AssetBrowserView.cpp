@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 
+#include "Editor/EditorImages.hpp"
 #include "Editor/EditorWindowInfo.hpp"
 
 AssetBrowserView::AssetBrowserView()
@@ -12,6 +13,11 @@ AssetBrowserView::AssetBrowserView()
 
 AssetBrowserView::~AssetBrowserView()
 {
+}
+
+void AssetBrowserView::Initialize(const EditorImages* editorImages)
+{
+	this->editorImages = editorImages;
 }
 
 void AssetBrowserView::Draw(EditorWindowInfo& windowInfo)
@@ -43,7 +49,7 @@ void AssetBrowserView::Draw(EditorWindowInfo& windowInfo)
 			float scrollbarWidth = style.ScrollbarSize;
 
 			float fontSize = ImGui::GetFontSize();
-			float buttonSide = fontSize * 7.0f;
+			float buttonSide = fontSize * 9.0f;
 			float cellWidth = buttonSide + style.CellPadding.x * 2.0f;
 			ImVec2 buttonSize(buttonSide, buttonSide);
 			float availableWidth = ImGui::GetContentRegionAvail().x - scrollbarWidth;
@@ -82,6 +88,8 @@ void AssetBrowserView::Draw(EditorWindowInfo& windowInfo)
 					ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
 					bool selected = path == selectedPath;
 
+					ImVec2 cursorStartPos = ImGui::GetCursorPos();
+
 					ImGui::PushID(index);
 					if (ImGui::Selectable("##AssetBrowserItem", selected, selectableFlags, buttonSize))
 					{
@@ -104,6 +112,12 @@ void AssetBrowserView::Draw(EditorWindowInfo& windowInfo)
 							}
 						}
 					}
+
+					TextureId texId = isDir ? editorImages->folderIcon : editorImages->genericFileIcon;
+					void* image = editorImages->GetImGuiTextureId(texId);
+
+					ImGui::SetCursorPos(cursorStartPos);
+					ImGui::Image(image, buttonSize);
 
 					ImGui::TextWrapped(pathStr.c_str());
 					ImGui::Spacing();

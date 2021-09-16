@@ -14,6 +14,8 @@ struct EngineSettings;
 #include "Editor/EntityView.hpp"
 #include "Editor/FilePickerDialog.hpp"
 #include "Editor/SceneView.hpp"
+
+#include "Editor/EditorImages.hpp"
 #include "Editor/SelectionContext.hpp"
 
 class EditorCore
@@ -60,6 +62,7 @@ private:
 
 	World* world;
 	SelectionContext selectionContext;
+	EditorImages images;
 
 	FilePickerDialog filePicker;
 

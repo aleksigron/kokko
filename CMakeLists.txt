@@ -123,6 +123,8 @@ set (KOKKO_SOURCES
 	src/Editor/EditorCamera.hpp
 	src/Editor/EditorCore.cpp
 	src/Editor/EditorCore.hpp
+	src/Editor/EditorImages.cpp
+	src/Editor/EditorImages.hpp
 	src/Editor/EditorUI.cpp
 	src/Editor/EditorUI.hpp
 	src/Editor/EditorWindowInfo.hpp
