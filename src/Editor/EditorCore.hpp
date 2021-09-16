@@ -7,6 +7,7 @@ struct EngineSettings;
 
 #include "Core/String.hpp"
 
+#include "Editor/AssetBrowserView.hpp"
 #include "Editor/DebugView.hpp"
 #include "Editor/EditorWindowInfo.hpp"
 #include "Editor/EntityListView.hpp"
@@ -47,6 +48,7 @@ private:
 		EditorWindow_Entities,
 		EditorWindow_Properties,
 		EditorWindow_Scene,
+		EditorWindow_AssetBrowser,
 		EditorWindow_Debug,
 
 		EditorWindow_COUNT
@@ -64,6 +66,7 @@ private:
 	EntityListView entityListView;
 	EntityView entityView;
 	SceneView sceneView;
+	AssetBrowserView assetBrowserView;
 	DebugView debugView;
 
 	String copiedEntity;

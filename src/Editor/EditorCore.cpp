@@ -19,6 +19,7 @@ EditorCore::EditorCore(Allocator* allocator) :
 	editorWindows[EditorWindow_Entities] = EditorWindowInfo{ "Entities", true, false };
 	editorWindows[EditorWindow_Properties] = EditorWindowInfo{ "Properties", true, false };
 	editorWindows[EditorWindow_Scene] = EditorWindowInfo{ "Scene", true, false };
+	editorWindows[EditorWindow_AssetBrowser] = EditorWindowInfo{ "Asset Browser", true, false };
 	editorWindows[EditorWindow_Debug] = EditorWindowInfo{ "Debug", true, false };
 }
 
@@ -67,6 +68,7 @@ void EditorCore::Update(EngineSettings* engineSettings)
 
 	entityListView.Draw(editorWindows[EditorWindow_Entities], selectionContext, world);
 	entityView.Draw(editorWindows[EditorWindow_Properties], selectionContext, world);
+	assetBrowserView.Draw(editorWindows[EditorWindow_AssetBrowser]);
 	debugView.Draw(editorWindows[EditorWindow_Debug], engineSettings);
 }
 

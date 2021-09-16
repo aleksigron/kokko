@@ -115,6 +115,8 @@ set (KOKKO_SOURCES
 	src/Debug/Log.hpp
 	src/Debug/LogLevel.hpp
 	src/Debug/PerformanceTimer.hpp
+	src/Editor/AssetBrowserView.cpp
+	src/Editor/AssetBrowserView.hpp
 	src/Editor/DebugView.cpp
 	src/Editor/DebugView.hpp
 	src/Editor/EditorCamera.cpp
