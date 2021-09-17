@@ -121,6 +121,8 @@ set (KOKKO_SOURCES
 	src/Editor/DebugView.hpp
 	src/Editor/EditorCamera.cpp
 	src/Editor/EditorCamera.hpp
+	src/Editor/EditorConstants.cpp
+	src/Editor/EditorConstants.hpp
 	src/Editor/EditorCore.cpp
 	src/Editor/EditorCore.hpp
 	src/Editor/EditorImages.cpp

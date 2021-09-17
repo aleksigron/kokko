@@ -21,8 +21,6 @@ private:
 
 	Entity requestDestroyEntity;
 
-	FixedArray<char, 256> textInputBuffer;
-
 	void DrawButtons(Entity selectedEntity, World* world);
 
 	void DrawSceneComponent(Entity selectedEntity, World* world);

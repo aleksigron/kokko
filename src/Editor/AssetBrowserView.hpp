@@ -20,6 +20,8 @@ public:
 	void Draw(EditorWindowInfo& windowInfo);
 
 private:
+	void SetUpColumns(int columnCount, float columnWidth);
+	void DrawEntry(const std::filesystem::directory_iterator& entry, float columnWidth);
 	void UpdateDirectoryListing();
 
 	std::filesystem::path currentPath;

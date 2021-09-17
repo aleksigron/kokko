@@ -4,14 +4,13 @@
 
 #include "Core/Core.hpp"
 
+#include "Editor/EditorConstants.hpp"
 #include "Editor/EditorWindowInfo.hpp"
 #include "Editor/SelectionContext.hpp"
 
 #include "Engine/EntityFactory.hpp"
 #include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
-
-const char* const EntityListView::SceneDragDropPayloadType = "SceneObject";
 
 EntityListView::EntityListView() :
 	requestScrollToEntity(Entity::Null),
@@ -174,7 +173,7 @@ void EntityListView::ProcessSceneDragDropSource(SceneObjectId sceneObj, const ch
 {
 	if (ImGui::BeginDragDropSource())
 	{
-		ImGui::SetDragDropPayload(SceneDragDropPayloadType, &sceneObj, sizeof(SceneObjectId));
+		ImGui::SetDragDropPayload(EditorConstants::SceneDragDropType, &sceneObj, sizeof(SceneObjectId));
 		ImGui::Text(entityName);
 		ImGui::EndDragDropSource();
 	}
@@ -184,7 +183,7 @@ void EntityListView::ProcessSceneDragDropTarget(SceneObjectId parent)
 {
 	if (ImGui::BeginDragDropTarget())
 	{
-		const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(SceneDragDropPayloadType);
+		const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EditorConstants::SceneDragDropType);
 		if (payload != nullptr && payload->DataSize == sizeof(SceneObjectId))
 		{
 			SceneObjectId dragDropObj;

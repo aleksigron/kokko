@@ -4,6 +4,7 @@
 
 #include "Core/Core.hpp"
 
+#include "Editor/EditorConstants.hpp"
 #include "Editor/EditorWindowInfo.hpp"
 #include "Editor/SelectionContext.hpp"
 
@@ -47,16 +48,20 @@ void EntityView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, W
 
 			if (context.selectedEntity != Entity::Null)
 			{
-				// Name
 
-				const char* entityName = entityManager->GetDebugNameWithFallback(context.selectedEntity);
-				std::strncpy(textInputBuffer.GetData(), entityName, textInputBuffer.GetCapacity());
-				if (ImGui::InputText("Name", textInputBuffer.GetData(), textInputBuffer.GetCapacity()))
+				// Name
 				{
-					if (std::strlen(textInputBuffer.GetData()) > 0)
-						entityManager->SetDebugName(context.selectedEntity, textInputBuffer.GetData());
-					else
-						entityManager->ClearDebugName(context.selectedEntity);
+					FixedArray<char, 256> inputBuf;
+
+					const char* entityName = entityManager->GetDebugNameWithFallback(context.selectedEntity);
+					std::strncpy(inputBuf.GetData(), entityName, inputBuf.GetCapacity());
+					if (ImGui::InputText("Name", inputBuf.GetData(), inputBuf.GetCapacity()))
+					{
+						if (std::strlen(inputBuf.GetData()) > 0)
+							entityManager->SetDebugName(context.selectedEntity, inputBuf.GetData());
+						else
+							entityManager->ClearDebugName(context.selectedEntity);
+					}
 				}
 
 				DrawButtons(context.selectedEntity, world);
@@ -178,6 +183,8 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Render);
 		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			FixedArray<char, 256> inputBuf;
+
 			MeshId meshId = renderer->GetMeshId(renderObj);
 			const char* meshPath = nullptr;
 			
@@ -192,24 +199,29 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 				if (meshPath == nullptr)
 					meshPath = "";
 
-				std::strncpy(textInputBuffer.GetData(), meshPath, textInputBuffer.GetCapacity());
-				if (ImGui::InputText("Mesh path", textInputBuffer.GetData(), textInputBuffer.GetCapacity()))
-				{
-					MeshId newMeshId = meshManager->GetIdByPath(StringRef(textInputBuffer.GetData()));
+				ImGuiInputTextFlags flags = ImGuiInputTextFlags_ReadOnly;
+				std::strncpy(inputBuf.GetData(), meshPath, inputBuf.GetCapacity());
+				ImGui::InputText("Mesh path", inputBuf.GetData(), inputBuf.GetCapacity(), flags);
 
-					if (newMeshId != MeshId::Null)
+				if (ImGui::BeginDragDropTarget())
+				{
+					const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+					if (payload != nullptr)
 					{
-						if (newMeshId != meshId)
+						StringRef assetPath(static_cast<const char*>(payload->Data), payload->DataSize);
+
+						MeshId newMeshId = meshManager->GetIdByPath(assetPath);
+						if (newMeshId != MeshId::Null && newMeshId != meshId)
 						{
 							renderer->SetMeshId(renderObj, newMeshId);
-							
+
 							SceneObjectId sceneObj = scene->Lookup(selectedEntity);
 							if (sceneObj != SceneObjectId::Null)
 								scene->MarkUpdated(sceneObj);
 						}
 					}
-					else
-						ImGui::TextColored(warningColor, "Mesh not found");
+
+					ImGui::EndDragDropTarget();
 				}
 			}
 			else // We currently don't support editing meshes that have been created directly from code
@@ -231,14 +243,19 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 				if (materialPath == nullptr)
 					materialPath = "";
 
-				std::strncpy(textInputBuffer.GetData(), materialPath, textInputBuffer.GetCapacity());
-				if (ImGui::InputText("Material path", textInputBuffer.GetData(), textInputBuffer.GetCapacity()))
-				{
-					MaterialId newMatId = materialManager->GetIdByPath(StringRef(textInputBuffer.GetData()));
+				ImGuiInputTextFlags flags = ImGuiInputTextFlags_ReadOnly;
+				std::strncpy(inputBuf.GetData(), materialPath, inputBuf.GetCapacity());
+				ImGui::InputText("Material path", inputBuf.GetData(), inputBuf.GetCapacity(), flags);
 
-					if (newMatId != MaterialId::Null)
+				if (ImGui::BeginDragDropTarget())
+				{
+					const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+					if (payload != nullptr)
 					{
-						if (newMatId != materialId)
+						StringRef assetPath(static_cast<const char*>(payload->Data), payload->DataSize);
+
+						MaterialId newMatId = materialManager->GetIdByPath(assetPath);
+						if (newMatId != MaterialId::Null && newMatId != materialId)
 						{
 							const MaterialData& material = materialManager->GetMaterialData(newMatId);
 
@@ -249,8 +266,6 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 							renderer->SetOrderData(renderObj, order);
 						}
 					}
-					else
-						ImGui::TextColored(warningColor, "Material not found");
 				}
 			}
 			else // We currently don't support editing materials that have created as a copy from another material

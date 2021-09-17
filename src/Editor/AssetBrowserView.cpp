@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 
+#include "Editor/EditorConstants.hpp"
 #include "Editor/EditorImages.hpp"
 #include "Editor/EditorWindowInfo.hpp"
 
@@ -49,78 +50,21 @@ void AssetBrowserView::Draw(EditorWindowInfo& windowInfo)
 			float scrollbarWidth = style.ScrollbarSize;
 
 			float fontSize = ImGui::GetFontSize();
-			float buttonSide = fontSize * 9.0f;
-			float cellWidth = buttonSide + style.CellPadding.x * 2.0f;
-			ImVec2 buttonSize(buttonSide, buttonSide);
+			float columnWidth = fontSize * 8.0f;
+			float cellWidth = columnWidth + style.CellPadding.x * 2.0f;
+
 			float availableWidth = ImGui::GetContentRegionAvail().x - scrollbarWidth;
 			int columnCount = static_cast<int>(availableWidth / cellWidth);
 
-			ImGuiTableFlags tableFlags = ImGuiTableFlags_ScrollY;
-
-			if (ImGui::BeginTable("AssetBrowserTable", columnCount, tableFlags))
+			if (ImGui::BeginTable("AssetBrowserTable", columnCount, ImGuiTableFlags_ScrollY))
 			{
-				for (int col = 0; col < columnCount; ++col)
-				{
-					ImGuiTableColumnFlags flags = ImGuiTableColumnFlags_WidthFixed;
-
-					float columnWidth;
-					if (col + 1 == columnCount)
-						columnWidth = 0.0f;
-					else
-						columnWidth = buttonSide;
-
-					ImGui::PushID(col);
-					ImGui::TableSetupColumn("Column", flags, columnWidth);
-					ImGui::PopID();
-				}
+				SetUpColumns(columnCount, columnWidth);
 
 				size_t index = 1;
 				for (fs::directory_iterator itr(currentPath), end; itr != end; ++itr, ++index)
 				{
-					ImGui::TableNextColumn();
-
-					bool isDir = itr->is_directory();
-					bool isFile = itr->is_regular_file();
-
-					fs::path path = itr->path();
-					std::string pathStr = path.filename().u8string();
-
-					ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
-					bool selected = path == selectedPath;
-
-					ImVec2 cursorStartPos = ImGui::GetCursorPos();
-
 					ImGui::PushID(index);
-					if (ImGui::Selectable("##AssetBrowserItem", selected, selectableFlags, buttonSize))
-					{
-						if (isFile)
-						{
-							// Select file
-							selectedPath = path;
-						}
-						else if (isDir)
-						{
-							if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-							{
-								// Move into directory
-								currentPath = path;
-								selectedPath = fs::path();
-							}
-							else
-							{
-								selectedPath = path;
-							}
-						}
-					}
-
-					TextureId texId = isDir ? editorImages->folderIcon : editorImages->genericFileIcon;
-					void* image = editorImages->GetImGuiTextureId(texId);
-
-					ImGui::SetCursorPos(cursorStartPos);
-					ImGui::Image(image, buttonSize);
-
-					ImGui::TextWrapped(pathStr.c_str());
-					ImGui::Spacing();
+					DrawEntry(itr, columnWidth);
 					ImGui::PopID();
 				}
 
@@ -133,6 +77,89 @@ void AssetBrowserView::Draw(EditorWindowInfo& windowInfo)
 
 		ImGui::End();
 	}
+}
+
+void AssetBrowserView::SetUpColumns(int columnCount, float columnWidth)
+{
+	for (int col = 0; col < columnCount; ++col)
+	{
+		ImGuiTableColumnFlags flags = ImGuiTableColumnFlags_WidthFixed;
+
+		float width;
+		if (col + 1 == columnCount)
+			width = 0.0f;
+		else
+			width = columnWidth;
+
+		ImGui::PushID(col);
+		ImGui::TableSetupColumn("Column", flags, width);
+		ImGui::PopID();
+	}
+}
+
+void AssetBrowserView::DrawEntry(const std::filesystem::directory_iterator& entry, float columnWidth)
+{
+	namespace fs = std::filesystem;
+
+	ImGui::TableNextColumn();
+
+	bool isDir = entry->is_directory();
+	bool isFile = entry->is_regular_file();
+
+	const fs::path& path = entry->path();
+	std::string fileStr = path.filename().u8string();
+
+	ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
+	bool selected = path == selectedPath;
+
+	ImVec2 buttonSize(columnWidth, columnWidth);
+	ImVec2 cursorStartPos = ImGui::GetCursorPos();
+
+	if (ImGui::Selectable("##AssetBrowserItem", selected, selectableFlags, buttonSize))
+	{
+		if (isFile)
+		{
+			// Select file
+			selectedPath = path;
+		}
+		else if (isDir)
+		{
+			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			{
+				// Move into directory
+				currentPath = path;
+				selectedPath = fs::path();
+			}
+			else
+			{
+				selectedPath = path;
+			}
+		}
+	}
+
+	if (isFile)
+	{
+		if (ImGui::BeginDragDropSource())
+		{
+			const char* type = EditorConstants::AssetDragDropType;
+
+			std::string pathStr = path.u8string();
+			ImGui::SetDragDropPayload(type, pathStr.c_str(), pathStr.size());
+
+			ImGui::Text(fileStr.c_str());
+
+			ImGui::EndDragDropSource();
+		}
+	}
+
+	TextureId texId = isDir ? editorImages->folderIcon : editorImages->genericFileIcon;
+	void* image = editorImages->GetImGuiTextureId(texId);
+
+	ImGui::SetCursorPos(cursorStartPos);
+	ImGui::Image(image, buttonSize);
+
+	ImGui::TextWrapped(fileStr.c_str());
+	ImGui::Spacing();
 }
 
 void AssetBrowserView::UpdateDirectoryListing()

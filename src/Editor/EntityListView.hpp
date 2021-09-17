@@ -21,8 +21,6 @@ private:
 	// First one is the object that is moved, the second one is the parent
 	Pair<SceneObjectId, SceneObjectId> requestSetSceneObjectParent;
 
-	static const char* const SceneDragDropPayloadType;
-
 	void DrawEntityListButtons(World* world);
 	void DrawEntityNode(SelectionContext& context, World* world, Entity entity, SceneObjectId sceneObj);
 
