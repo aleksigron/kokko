@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <cstddef>
 
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"

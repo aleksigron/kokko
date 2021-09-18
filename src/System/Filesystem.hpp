@@ -2,6 +2,7 @@
 
 class Allocator;
 
+#include <cstddef>
 #include <cstdint>
 
 #include "Core/Array.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <atomic>
-#include <cstdint>
+#include <cstddef>
 #include <thread>
 
 class JobSystem;

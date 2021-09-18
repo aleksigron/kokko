@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <cstddef>
 
 #include "Core/ArrayView.hpp"
 #include "Core/Optional.hpp"

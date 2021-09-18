@@ -5,7 +5,6 @@
 #endif
 
 #include <cstdio>
-#include <cstdint>
 
 #include "System/IncludeOpenGL.hpp"
 

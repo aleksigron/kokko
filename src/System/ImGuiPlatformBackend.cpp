@@ -5,7 +5,7 @@
 #endif
 
 #include <cstdio>
-#include <cstdint>
+#include <cstddef>
 
 #include "System/IncludeOpenGL.hpp"
 #include "System/InputView.hpp"

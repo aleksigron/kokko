@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #include "Rendering/RenderDeviceEnums.hpp"
@@ -119,7 +120,7 @@ namespace RenderCommandData
 		int elementCount;
 		RenderVertexElemType elementType;
 		int stride;
-		std::uintptr_t offset;
+		uintptr_t offset;
 	};
 
 	struct BindBufferRange

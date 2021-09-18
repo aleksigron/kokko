@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <cstddef>
 #include <atomic>
 
 #include "Core/Core.hpp"

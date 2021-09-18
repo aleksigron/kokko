@@ -1,6 +1,5 @@
 #include "Math/Mat4x4.hpp"
 
-#include <cstdint>
 #include <immintrin.h>
 
 #include "Math/Vec2.hpp"

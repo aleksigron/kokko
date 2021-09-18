@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstring>
-#include <cstdint>
+#include <cstddef>
 #include <new>
 
 #include "Core/Core.hpp"

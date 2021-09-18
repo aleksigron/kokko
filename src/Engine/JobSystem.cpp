@@ -1,7 +1,7 @@
 #include "Engine/JobSystem.hpp"
 
 #include <cassert>
-#include <cstdint>
+#include <cstddef>
 #include <new>
 
 #include "doctest/doctest.h"
