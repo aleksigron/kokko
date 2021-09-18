@@ -1,5 +1,7 @@
 #include "EnvironmentManager.hpp"
 
+#include <cstdint>
+
 #include "stb_image/stb_image.h"
 
 #include "Core/Array.hpp"

@@ -1,7 +1,8 @@
 #include "Memory/DefaultAllocator.hpp"
 
 #include <cassert>
-#include <cstdlib>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 
 #include "doctest/doctest.h"

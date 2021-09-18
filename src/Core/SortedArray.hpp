@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "Core/Array.hpp"
 
 template <typename ValueType>

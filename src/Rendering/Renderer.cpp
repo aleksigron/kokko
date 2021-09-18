@@ -1,8 +1,8 @@
 #include "Rendering/Renderer.hpp"
 
 #include <cassert>
-#include <cstring>
 #include <cstdio>
+#include <cstring>
 
 #include "Core/Core.hpp"
 #include "Core/Sort.hpp"

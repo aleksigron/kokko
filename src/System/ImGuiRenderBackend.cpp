@@ -4,6 +4,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#include <cstdint>
 #include <cstdio>
 
 #include "System/IncludeOpenGL.hpp"

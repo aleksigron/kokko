@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "Core/Array.hpp"
 #include "Core/BitPack.hpp"
 #include "Core/FixedArray.hpp"

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "Core/StringRef.hpp"
 
 #include "Rendering/RenderCommandData.hpp"
