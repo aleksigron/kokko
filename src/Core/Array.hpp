@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <new>
 
+#include "Core/Core.hpp"
 #include "Core/ArrayView.hpp"
 
 #include "Memory/Allocator.hpp"
@@ -77,7 +78,7 @@ public:
 				newAllocated = required;
 
 			std::size_t newSize = newAllocated * sizeof(ValueType);
-			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize, __FUNCSIG__));
+			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize, KOKKO_FUNC_SIG));
 
 			if (data != nullptr)
 			{
@@ -161,7 +162,7 @@ public:
 					newAllocated = required;
 
 				std::size_t newSize = newAllocated * vts;
-				ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize, __FUNCSIG__));
+				ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newSize, KOKKO_FUNC_SIG));
 
 				// We have old data
 				if (data != nullptr)

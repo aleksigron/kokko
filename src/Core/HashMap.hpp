@@ -2,6 +2,7 @@
 
 #include <cstring>
 
+#include "Core/Core.hpp"
 #include "Core/Pair.hpp"
 #include "Core/Hash.hpp"
 #include "Math/Math.hpp"
@@ -75,7 +76,7 @@ private:
 	void ReserveInternal(size_t desiredCount)
 	{
 		size_t newSize = desiredCount * sizeof(KeyValuePair);
-		KeyValuePair* newData = static_cast<KeyValuePair*>(allocator->Allocate(newSize, __FUNCSIG__));
+		KeyValuePair* newData = static_cast<KeyValuePair*>(allocator->Allocate(newSize, KOKKO_FUNC_SIG));
 		std::memset(newData, 0, newSize);
 
 		if (data != nullptr) // Old data exists

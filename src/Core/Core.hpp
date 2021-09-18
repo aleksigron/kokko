@@ -5,10 +5,16 @@
 
 #define KOKKO_PROFILING_ENABLED 1
 
+#ifdef _MSC_VER 
+#define KOKKO_FUNC_SIG __FUNCSIG__
+#else
+#define KOKKO_FUNC_SIG __PRETTY_FUNCTION__
+#endif
+
 #if KOKKO_PROFILING_ENABLED
 #include "Debug/InstrumentationTimer.hpp"
 #define KOKKO_PROFILE_SCOPE(name) InstrumentationTimer KK_UNIQUE_NAME(instrTimer, __LINE__)(name)
-#define KOKKO_PROFILE_FUNCTION() KOKKO_PROFILE_SCOPE(__FUNCSIG__)
+#define KOKKO_PROFILE_FUNCTION() KOKKO_PROFILE_SCOPE(KOKKO_FUNC_SIG)
 #else
 #define KOKKO_PROFILE_SCOPE(name)
 #define KOKKO_PROFILE_FUNCTION()

@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <new>
 
+#include "Core/Core.hpp"
+
 class Allocator
 {
 public:
@@ -16,7 +18,7 @@ public:
 	template <typename T, typename... Args>
 	T* MakeNew(Args... args)
 	{
-		return new (Allocate(sizeof(T), __FUNCSIG__)) T(args...);
+		return new (Allocate(sizeof(T), KOKKO_FUNC_SIG)) T(args...);
 	}
 
 	template <typename T>

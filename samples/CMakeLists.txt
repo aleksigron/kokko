@@ -13,6 +13,7 @@ include_directories(
 	src
     ${KOKKO_ENGINE_PATH}/src
 	${KOKKO_ENGINE_PATH}/deps/doctest
+	${KOKKO_ENGINE_PATH}/deps/fmt/include
 )
 
 set (SOURCES
