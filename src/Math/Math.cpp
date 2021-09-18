@@ -75,15 +75,7 @@ TEST_CASE("Math::DampenMultiplier")
 	}
 }
 
-bool Math::IsPowerOfTwo(unsigned int v)
-{
-	if (v == 0)
-		return false;
-
-	return (v & (v - 1)) == 0;
-}
-
-bool Math::IsPowerOfTwo(size_t v)
+bool Math::IsPowerOfTwo(uint64_t v)
 {
 	if (v == 0)
 		return false;
@@ -93,17 +85,6 @@ bool Math::IsPowerOfTwo(size_t v)
 
 TEST_CASE("Math::IsPowerOfTwo")
 {
-	CHECK(Math::IsPowerOfTwo(0u) == false);
-	CHECK(Math::IsPowerOfTwo(1u) == true);
-	CHECK(Math::IsPowerOfTwo(2u) == true);
-	CHECK(Math::IsPowerOfTwo(3u) == false);
-	CHECK(Math::IsPowerOfTwo(4u) == true);
-	CHECK(Math::IsPowerOfTwo(5u) == false);
-	CHECK(Math::IsPowerOfTwo(6u) == false);
-	CHECK(Math::IsPowerOfTwo(7u) == false);
-	CHECK(Math::IsPowerOfTwo(8u) == true);
-	CHECK(Math::IsPowerOfTwo(9u) == false);
-
 	CHECK(Math::IsPowerOfTwo(0ull) == false);
 	CHECK(Math::IsPowerOfTwo(1ull) == true);
 	CHECK(Math::IsPowerOfTwo(2ull) == true);
@@ -122,17 +103,6 @@ TEST_CASE("Math::IsPowerOfTwo")
 
 TEST_CASE("Math::UpperPowerOfTwo")
 {
-	CHECK(Math::UpperPowerOfTwo(0u) == 0u);
-	CHECK(Math::UpperPowerOfTwo(1u) == 1u);
-	CHECK(Math::UpperPowerOfTwo(2u) == 2u);
-	CHECK(Math::UpperPowerOfTwo(3u) == 4u);
-	CHECK(Math::UpperPowerOfTwo(4u) == 4u);
-	CHECK(Math::UpperPowerOfTwo(5u) == 8u);
-	CHECK(Math::UpperPowerOfTwo(6u) == 8u);
-	CHECK(Math::UpperPowerOfTwo(7u) == 8u);
-	CHECK(Math::UpperPowerOfTwo(8u) == 8u);
-	CHECK(Math::UpperPowerOfTwo(9u) == 16u);
-
 	CHECK(Math::UpperPowerOfTwo(0ull) == 0ull);
 	CHECK(Math::UpperPowerOfTwo(1ull) == 1ull);
 	CHECK(Math::UpperPowerOfTwo(2ull) == 2ull);

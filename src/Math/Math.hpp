@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <cstdint>
 
 #include "Math/Vec3.hpp"
 
@@ -41,22 +42,9 @@ namespace Math
 
 	float DampenMultiplier(float dampenPerSecond, float deltaTime);
 
-	bool IsPowerOfTwo(unsigned int v);
-	bool IsPowerOfTwo(size_t v);
+	bool IsPowerOfTwo(uint64_t v);
 
-	constexpr unsigned int UpperPowerOfTwo(unsigned int v)
-	{
-		v--;
-		v |= v >> 1;
-		v |= v >> 2;
-		v |= v >> 4;
-		v |= v >> 8;
-		v |= v >> 16;
-		v++;
-		return v;
-	}
-
-	constexpr unsigned long long UpperPowerOfTwo(unsigned long long v)
+	constexpr uint64_t UpperPowerOfTwo(uint64_t v)
 	{
 		v--;
 		v |= v >> 1;

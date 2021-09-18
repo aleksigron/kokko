@@ -122,8 +122,8 @@ void TextureManager::Reallocate(unsigned int required)
 
 int TextureManager::MipLevelsFromDimensions(int width, int height)
 {
-	if (Math::IsPowerOfTwo(static_cast<unsigned>(width)) == false ||
-		Math::IsPowerOfTwo(static_cast<unsigned>(height)) == false)
+	if (Math::IsPowerOfTwo(static_cast<uint64_t>(width)) == false ||
+		Math::IsPowerOfTwo(static_cast<uint64_t>(height)) == false)
 		return 1;
 
 	unsigned int smaller = static_cast<unsigned int>(width > height ? height : width);
