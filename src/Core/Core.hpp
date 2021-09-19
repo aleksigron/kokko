@@ -5,7 +5,7 @@
 
 #define KOKKO_PROFILING_ENABLED 1
 
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
 #define KOKKO_FUNC_SIG __FUNCSIG__
 #else
 #define KOKKO_FUNC_SIG __PRETTY_FUNCTION__
@@ -22,9 +22,9 @@
 
 #include "Debug/Log.hpp"
 
-#define KK_LOG_DEBUG(format, ...) ::Log::LogDebug(__FILE__, __LINE__, FMT_STRING(format), __VA_ARGS__)
-#define KK_LOG_INFO(format, ...) ::Log::Log(LogLevel::Info, FMT_STRING(format), __VA_ARGS__)
-#define KK_LOG_WARN(format, ...) ::Log::Log(LogLevel::Warning, FMT_STRING(format), __VA_ARGS__)
-#define KK_LOG_ERROR(format, ...) ::Log::Log(LogLevel::Error, FMT_STRING(format), __VA_ARGS__)
+#define KK_LOG_DEBUG(format, ...) ::Log::LogDebug(__FILE__, __LINE__, FMT_STRING(format), ## __VA_ARGS__)
+#define KK_LOG_INFO(format, ...) ::Log::Log(LogLevel::Info, FMT_STRING(format), ## __VA_ARGS__)
+#define KK_LOG_WARN(format, ...) ::Log::Log(LogLevel::Warning, FMT_STRING(format), ## __VA_ARGS__)
+#define KK_LOG_ERROR(format, ...) ::Log::Log(LogLevel::Error, FMT_STRING(format), ## __VA_ARGS__)
 
 #define KK_CACHE_LINE 64

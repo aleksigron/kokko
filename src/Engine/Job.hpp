@@ -32,6 +32,6 @@ struct Job
 	void GetDataAs(T& valueOut)
 	{
 		static_assert(sizeof(T) <= sizeof(data));
-		std::memcpy(&value, data, sizeof(T));
+		std::memcpy(&valueOut, data, sizeof(T));
 	}
 };

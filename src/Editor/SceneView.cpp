@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-#include "imguizmo.h"
+#include "ImGuizmo.h"
 
 #include "Core/Core.hpp"
 

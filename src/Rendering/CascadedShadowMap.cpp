@@ -145,12 +145,11 @@ void CalculateSplitDepths(float near, float far, float* depthsOut)
 	unsigned int cascadeCountInt = GetCascadeCount();
 	float cascadeCountFloat = static_cast<float>(cascadeCountInt);
 
-
 	for (unsigned int i = 0; i < cascadeCountInt - 1; i++, i_f += 1.0f)
 	{
 		depthsOut[i] = Math::Lerp(
 			near + (i_f / cascadeCountFloat) * (far - near),
-			near * std::powf(far / near, i_f / cascadeCountFloat),
+			near * std::pow(far / near, i_f / cascadeCountFloat),
 			shadowSplitLogFactor);
 	}
 	depthsOut[cascadeCountInt - 1] = far;
