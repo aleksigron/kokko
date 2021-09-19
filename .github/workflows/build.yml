@@ -40,8 +40,8 @@ jobs:
 
     - name: Configure CMake
       env:
-        CC: ${{env.cc}}
-        CXX: ${{env.cxx}}
+        CC: ${{matrix.config.cc}}
+        CXX: ${{matrix.config.cxx}}
       run: |
         mkdir ${{github.workspace}}/samples/build
         cmake -B ${{github.workspace}}/samples/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
