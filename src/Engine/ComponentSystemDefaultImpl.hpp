@@ -46,7 +46,7 @@ public:
 
 	ComponentId Lookup(Entity e)
 	{
-		HashMap<unsigned int, ComponentId>::KeyValuePair* pair = entityMap.Lookup(e.id);
+		auto* pair = entityMap.Lookup(e.id);
 		return pair != nullptr ? pair->second : ComponentId::Null();
 	}
 

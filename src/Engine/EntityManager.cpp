@@ -55,7 +55,7 @@ void EntityManager::ClearAll()
 
 const char* EntityManager::GetDebugName(Entity entity)
 {
-	HashMap<unsigned int, unsigned int>::KeyValuePair* pair = debugNameMap.Lookup(entity.id);
+	auto* pair = debugNameMap.Lookup(entity.id);
 
 	if (pair != nullptr)
 		return debugNames[pair->second].GetCStr();
@@ -78,7 +78,7 @@ const char* EntityManager::GetDebugNameWithFallback(Entity entity)
 
 void EntityManager::SetDebugName(Entity entity, const char* name)
 {
-	HashMap<unsigned int, unsigned int>::KeyValuePair* pair = debugNameMap.Lookup(entity.id);
+	auto* pair = debugNameMap.Lookup(entity.id);
 
 	if (pair == nullptr)
 	{
@@ -106,7 +106,7 @@ void EntityManager::SetDebugName(Entity entity, const char* name)
 
 void EntityManager::ClearDebugName(Entity entity)
 {
-	HashMap<unsigned int, unsigned int>::KeyValuePair* pair = debugNameMap.Lookup(entity.id);
+	auto* pair = debugNameMap.Lookup(entity.id);
 
 	if (pair != nullptr)
 	{

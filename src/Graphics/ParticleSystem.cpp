@@ -273,7 +273,7 @@ void ParticleSystem::NotifyUpdatedTransforms(unsigned int count, const Entity* e
 
 ParticleEmitterId ParticleSystem::Lookup(Entity e)
 {
-	HashMap<unsigned int, ParticleEmitterId>::KeyValuePair* pair = entityMap.Lookup(e.id);
+	auto* pair = entityMap.Lookup(e.id);
 	return pair != nullptr ? pair->second : ParticleEmitterId::Null;
 }
 
@@ -317,7 +317,7 @@ void ParticleSystem::RemoveEmitter(ParticleEmitterId id)
 
 	// Remove from entity map
 	Entity entity = data.entity[id.i];
-	HashMap<unsigned int, ParticleEmitterId>::KeyValuePair* pair = entityMap.Lookup(entity.id);
+	auto* pair = entityMap.Lookup(entity.id);
 	if (pair != nullptr)
 		entityMap.Remove(pair);
 

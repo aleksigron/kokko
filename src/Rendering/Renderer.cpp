@@ -1724,7 +1724,7 @@ void Renderer::RemoveRenderObject(RenderObjectId id)
 
 	// Remove from entity map
 	Entity entity = data.entity[id.i];
-	HashMap<unsigned int, RenderObjectId>::KeyValuePair* pair = entityMap.Lookup(entity.id);
+	auto* pair = entityMap.Lookup(entity.id);
 	if (pair != nullptr)
 		entityMap.Remove(pair);
 

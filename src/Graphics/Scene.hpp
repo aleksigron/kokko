@@ -88,7 +88,7 @@ public:
 
 	SceneObjectId Lookup(Entity e)
 	{
-		HashMap<unsigned int, SceneObjectId>::KeyValuePair* pair = entityMap.Lookup(e.id);
+		auto* pair = entityMap.Lookup(e.id);
 		return pair != nullptr ? pair->second : SceneObjectId::Null;
 	}
 

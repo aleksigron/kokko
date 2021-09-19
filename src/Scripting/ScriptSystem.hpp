@@ -53,7 +53,7 @@ public:
 	template <typename ScriptType>
 	ScriptType* GetEntityScriptAs(Entity e)
 	{
-		HashMap<unsigned int, unsigned int>::KeyValuePair* pair = entityMap.Lookup(e.id);
+		auto* pair = entityMap.Lookup(e.id);
 		
 		if (pair != nullptr)
 			return dynamic_cast<ScriptType*>(scripts[pair->second]);

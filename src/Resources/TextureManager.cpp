@@ -184,7 +184,7 @@ TextureId TextureManager::GetIdByPath(StringRef path)
 {
 	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
 
-	HashMap<uint32_t, TextureId>::KeyValuePair* pair = nameHashMap.Lookup(hash);
+	auto* pair = nameHashMap.Lookup(hash);
 	if (pair != nullptr)
 		return pair->second;
 

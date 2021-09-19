@@ -31,7 +31,7 @@ void ScriptSystem::AddScriptInternal(Entity entity, NativeScriptComponent* scrip
 	scripts.PushBack(script);
 	scriptsToInit.PushBack(script);
 
-	HashMap<unsigned int, unsigned int>::KeyValuePair* mapPair = entityMap.Insert(entity.id);
+	auto* mapPair = entityMap.Insert(entity.id);
 	mapPair->second = scriptIndex;
 }
 

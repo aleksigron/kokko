@@ -173,7 +173,7 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 
 	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
 
-	HashMap<uint32_t, MaterialId>::KeyValuePair* pair = pathHashMap.Lookup(hash);
+	auto* pair = pathHashMap.Lookup(hash);
 	if (pair != nullptr)
 		return pair->second;
 

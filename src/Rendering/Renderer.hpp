@@ -209,7 +209,7 @@ public:
 
 	RenderObjectId Lookup(Entity e)
 	{
-		HashMap<unsigned int, RenderObjectId>::KeyValuePair* pair = entityMap.Lookup(e.id);
+		auto* pair = entityMap.Lookup(e.id);
 		return pair != nullptr ? pair->second : RenderObjectId{};
 	}
 
