@@ -71,6 +71,8 @@ set (KOKKO_SOURCES
 	src/Core/Color.hpp
 	src/Core/ColorSrgb.hpp
 	src/Core/Core.hpp
+	src/Core/CString.cpp
+	src/Core/CString.hpp
 	src/Core/EncodingUtf8.cpp
 	src/Core/EncodingUtf8.hpp
 	src/Core/FixedArray.hpp

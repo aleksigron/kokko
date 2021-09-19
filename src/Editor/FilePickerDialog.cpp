@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 
+#include "Core/CString.hpp"
 #include "Core/String.hpp"
 
 FilePickerDialog::FilePickerDialog() :
@@ -113,20 +114,22 @@ bool FilePickerDialog::Update(std::filesystem::path& pathOut)
 		}
 		ImGui::EndChild();
 
+		char inputBuf[512];
+
 		// Selected file name input
 
 		if (selectedFilePath.has_filename())
 		{
 			std::string fileName = selectedFilePath.filename().u8string();
-			std::strncpy(textInputBuffer, fileName.c_str(), TextInputBufferSize);
+			StringCopySafe(inputBuf, fileName.c_str());
 		}
 		else
-			textInputBuffer[0] = '\0';
+			SetEmptyString(inputBuf);
 
 		ImGui::SetNextItemWidth(-FLT_MIN);
-		if (ImGui::InputText("Name", textInputBuffer, TextInputBufferSize))
+		if (ImGui::InputText("Name", inputBuf, sizeof(inputBuf)))
 		{
-			selectedFilePath = currentPath / fs::path(textInputBuffer);
+			selectedFilePath = currentPath / fs::path(inputBuf);
 		}
 
 		// Buttons

@@ -1,6 +1,6 @@
 #include "EncodingUtf8.hpp"
 
-unsigned int EncodingUtf8::EncodeCodepoint(unsigned int codepoint, char* utf8BytesOut)
+size_t EncodingUtf8::EncodeCodepoint(uint32_t codepoint, char* utf8BytesOut)
 {
 	if (codepoint <= 0x7F)
 	{
@@ -32,10 +32,10 @@ unsigned int EncodingUtf8::EncodeCodepoint(unsigned int codepoint, char* utf8Byt
 		return 0;
 }
 
-unsigned int EncodingUtf8::DecodeCodepoint(const char* input, unsigned int& codepointOut)
+size_t EncodingUtf8::DecodeCodepoint(const char* input, uint32_t& codepointOut)
 {
 	char byte0 = input[0];
-	unsigned int bytesDecoded = 0;
+	size_t bytesDecoded = 0;
 
 	if ((byte0 & 0x80) == 0x00) // First bit is 0
 	{
@@ -57,17 +57,14 @@ unsigned int EncodingUtf8::DecodeCodepoint(const char* input, unsigned int& code
 		codepointOut = (byte0 & 0x07) << 18 | (input[1] & 0x3f) << 12 | (input[2] & 0x3f) << 6 | (input[3] & 0x3f);
 		bytesDecoded = 4;
 	}
-	else // Not a valid first byte of character
-	{
-		bytesDecoded = 0;
-	}
+	// else: Not a valid first byte of character
 
 	return bytesDecoded;
 }
 
-unsigned int EncodingUtf8::CountCharacters(StringRef input)
+size_t EncodingUtf8::CountCharacters(StringRef input)
 {
-	unsigned int count = 0;
+	size_t count = 0;
 
 	const char* itr = input.str;
 	const char* end = itr + input.len;
@@ -104,9 +101,11 @@ unsigned int EncodingUtf8::CountCharacters(StringRef input)
 	return count;
 }
 
-unsigned int EncodingUtf8::FindLastCharacter(StringRef input)
+size_t EncodingUtf8::FindLastCharacter(StringRef input)
 {
-	for (const char* itr = input.str + input.len - 1, *end = input.str; itr >= end; --itr)
+	const char* itr = input.str + input.len - 1;
+	const char* end = input.str;
+	for (; itr >= end; --itr)
 	{
 		char c = *itr;
 
@@ -115,7 +114,7 @@ unsigned int EncodingUtf8::FindLastCharacter(StringRef input)
 			(c & 0xf0) == 0xe0 || // 3-byte char
 			(c & 0xf8) == 0xf0) // 4-byte char
 		{
-			return static_cast<unsigned int>(itr - input.str);
+			return static_cast<size_t>(itr - input.str);
 		}
 	}
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cstring>
-
 #include "Core/Core.hpp"
 #include "Core/Pair.hpp"
 #include "Core/Hash.hpp"
+
 #include "Math/Math.hpp"
+
 #include "Memory/Allocator.hpp"
 
 // Based on https://github.com/preshing/CompareIntegerMaps

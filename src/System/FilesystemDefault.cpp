@@ -1,7 +1,6 @@
 #include "System/FilesystemDefault.hpp"
 
 #include <cstdio>
-#include <cstring>
 
 #include "Core/Core.hpp"
 

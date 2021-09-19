@@ -1,6 +1,5 @@
 #include "Debug/DebugTextRenderer.hpp"
 
-#include <cstring>
 #include <cassert>
 
 #include "Core/Core.hpp"

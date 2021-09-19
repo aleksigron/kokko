@@ -38,8 +38,5 @@ private:
 	const char* currentTitle;
 	const char* currentActionText;
 
-	static const size_t TextInputBufferSize = 256;
-	char textInputBuffer[TextInputBufferSize];
-
 	void CloseDialog();
 };

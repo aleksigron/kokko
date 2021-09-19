@@ -1,7 +1,6 @@
 #include "Engine/JobWorker.hpp"
 
 #include <cassert>
-#include <cstring>
 
 #include "Engine/Job.hpp"
 #include "Engine/JobSystem.hpp"

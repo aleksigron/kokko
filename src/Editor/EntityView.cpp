@@ -3,6 +3,7 @@
 #include "imgui.h"
 
 #include "Core/Core.hpp"
+#include "Core/CString.hpp"
 
 #include "Editor/EditorConstants.hpp"
 #include "Editor/EditorWindowInfo.hpp"
@@ -48,17 +49,16 @@ void EntityView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, W
 
 			if (context.selectedEntity != Entity::Null)
 			{
-
 				// Name
 				{
-					FixedArray<char, 256> inputBuf;
+					char inputBuf[256];
 
 					const char* entityName = entityManager->GetDebugNameWithFallback(context.selectedEntity);
-					std::strncpy(inputBuf.GetData(), entityName, inputBuf.GetCapacity());
-					if (ImGui::InputText("Name", inputBuf.GetData(), inputBuf.GetCapacity()))
+					StringCopySafe(inputBuf, entityName);
+					if (ImGui::InputText("Name", inputBuf, sizeof(inputBuf)))
 					{
-						if (std::strlen(inputBuf.GetData()) > 0)
-							entityManager->SetDebugName(context.selectedEntity, inputBuf.GetData());
+						if (StringIsEmpty(inputBuf) == false)
+							entityManager->SetDebugName(context.selectedEntity, inputBuf);
 						else
 							entityManager->ClearDebugName(context.selectedEntity);
 					}
@@ -183,7 +183,7 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Render);
 		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			FixedArray<char, 256> inputBuf;
+			char inputBuf[256];
 
 			MeshId meshId = renderer->GetMeshId(renderObj);
 			const char* meshPath = nullptr;
@@ -200,8 +200,8 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 					meshPath = "";
 
 				ImGuiInputTextFlags flags = ImGuiInputTextFlags_ReadOnly;
-				std::strncpy(inputBuf.GetData(), meshPath, inputBuf.GetCapacity());
-				ImGui::InputText("Mesh path", inputBuf.GetData(), inputBuf.GetCapacity(), flags);
+				StringCopySafe(inputBuf, meshPath);
+				ImGui::InputText("Mesh path", inputBuf, sizeof(inputBuf), flags);
 
 				if (ImGui::BeginDragDropTarget())
 				{
@@ -244,8 +244,8 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 					materialPath = "";
 
 				ImGuiInputTextFlags flags = ImGuiInputTextFlags_ReadOnly;
-				std::strncpy(inputBuf.GetData(), materialPath, inputBuf.GetCapacity());
-				ImGui::InputText("Material path", inputBuf.GetData(), inputBuf.GetCapacity(), flags);
+				StringCopySafe(inputBuf, meshPath);
+				ImGui::InputText("Material path", inputBuf, sizeof(inputBuf), flags);
 
 				if (ImGui::BeginDragDropTarget())
 				{
