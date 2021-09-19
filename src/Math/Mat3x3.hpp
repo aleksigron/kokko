@@ -1,11 +1,12 @@
 #pragma once
 
+#include <cmath>
+
 #include "Math/Vec3.hpp"
 
 struct Mat3x3f
 {
 	float m[9];
-
 
 	Mat3x3f(): m{ 1, 0, 0, 0, 1, 0, 0, 0, 1 } {}
 

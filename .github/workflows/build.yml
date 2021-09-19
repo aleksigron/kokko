@@ -19,12 +19,14 @@ jobs:
               name: "Windows Latest MSVC",
               os: windows-latest,
               build_type: Release,
+              cc: "cl", cxx: "cl",
               dependencies: ""
             }
           - {
               name: "Ubuntu Latest GCC",
               os: ubuntu-latest,
               build_type: Release,
+              cc: "gcc", cxx: "g++",
               dependencies: "sudo apt-get install xorg-dev"
             }
 
@@ -37,6 +39,9 @@ jobs:
       run: ${{matrix.config.dependencies}}
 
     - name: Configure CMake
+      env:
+        CC: ${{env.cc}}
+        CXX: ${{env.cxx}}
       run: |
         mkdir ${{github.workspace}}/samples/build
         cmake -B ${{github.workspace}}/samples/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
