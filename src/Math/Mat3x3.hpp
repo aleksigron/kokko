@@ -72,27 +72,27 @@ struct Mat3x3f
 		x[1] = 0.0f;
 		x[2] = 0.0f;
 		x[3] = 0.0f;
-		x[4] = std::cosf(angles.x);
-		x[5] = std::sinf(angles.x);
+		x[4] = std::cos(angles.x);
+		x[5] = std::sin(angles.x);
 		x[6] = 0.0f;
-		x[7] = -std::sinf(angles.x);
-		x[8] = std::cosf(angles.x);
+		x[7] = -std::sin(angles.x);
+		x[8] = std::cos(angles.x);
 
-		y[0] = std::cosf(angles.y);
+		y[0] = std::cos(angles.y);
 		y[1] = 0.0f;
-		y[2] = -std::sinf(angles.y);
+		y[2] = -std::sin(angles.y);
 		y[3] = 0.0f;
 		y[4] = 1.0f;
 		y[5] = 0.0f;
-		y[6] = std::sinf(angles.y);
+		y[6] = std::sin(angles.y);
 		y[7] = 0.0f;
-		y[8] = std::cosf(angles.y);
+		y[8] = std::cos(angles.y);
 
-		z[0] = std::cosf(angles.z);
-		z[1] = -std::sinf(angles.z);
+		z[0] = std::cos(angles.z);
+		z[1] = -std::sin(angles.z);
 		z[2] = 0.0f;
-		z[3] = std::sinf(angles.z);
-		z[4] = std::cosf(angles.z);
+		z[3] = std::sin(angles.z);
+		z[4] = std::cos(angles.z);
 		z[5] = 0.0f;
 		z[6] = 0.0f;
 		z[7] = 0.0f;
@@ -113,8 +113,8 @@ struct Mat3x3f
 		const float xz = axis.x * axis.z;
 		const float yz = axis.y * axis.z;
 
-		const float ca = std::cosf(angle);
-		const float sa = std::sinf(angle);
+		const float ca = std::cos(angle);
+		const float sa = std::sin(angle);
 
 		Mat3x3f result;
 

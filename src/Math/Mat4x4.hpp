@@ -111,8 +111,8 @@ struct alignas(16) Mat4x4f
 		const float xz = axis.x * axis.z;
 		const float yz = axis.y * axis.z;
 
-		const float ca = std::cosf(angle);
-		const float sa = std::sinf(angle);
+		const float ca = std::cos(angle);
+		const float sa = std::sin(angle);
 
 		Mat4x4f result;
 
