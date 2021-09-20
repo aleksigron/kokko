@@ -1781,7 +1781,7 @@ void Renderer::RemoveCustomRenderer(unsigned int callbackId)
 	}
 }
 
-void Renderer::NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms)
+void Renderer::NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms)
 {
 	for (unsigned int entityIdx = 0; entityIdx < count; ++entityIdx)
 	{

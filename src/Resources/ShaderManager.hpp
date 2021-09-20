@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #include "Core/HashMap.hpp"
@@ -35,8 +36,8 @@ private:
 
 	struct InstanceData
 	{
-		unsigned int count;
-		unsigned int allocated;
+		size_t count;
+		size_t allocated;
 		void* buffer;
 
 		unsigned int* freeList;
@@ -47,7 +48,7 @@ private:
 	unsigned int freeListFirst;
 	HashMap<uint32_t, ShaderId> nameHashMap;
 
-	void Reallocate(unsigned int required);
+	void Reallocate(size_t required);
 
 public:
 	ShaderManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice);

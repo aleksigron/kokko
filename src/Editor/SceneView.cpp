@@ -39,7 +39,7 @@ void SceneView::Initialize(RenderDevice* renderDevice, InputManager* inputManage
 void SceneView::Update()
 {
 	if (contentWidth > 0 && contentHeight > 0)
-		editorCamera.SetAspectRatio(contentWidth, contentHeight);
+		editorCamera.SetAspectRatio(float(contentWidth), float(contentHeight));
 
 	editorCamera.Update(windowIsFocused || windowIsHovered);
 }
@@ -55,8 +55,8 @@ void SceneView::Draw(EditorWindowInfo& windowInfo, World* world, SelectionContex
 			ImVec2 windowPos = ImGui::GetWindowPos();
 			ImVec2 regionMin = ImGui::GetWindowContentRegionMin();
 
-			int contentRegionLeft = windowPos.x + regionMin.x;
-			int contentRegionTop = windowPos.y + regionMin.y;
+			float contentRegionLeft = windowPos.x + regionMin.x;
+			float contentRegionTop = windowPos.y + regionMin.y;
 
 			if (ImGui::IsAnyMouseDown() == false &&
 				size.x > 0 && size.y > 0 &&
@@ -113,8 +113,11 @@ void SceneView::Draw(EditorWindowInfo& windowInfo, World* world, SelectionContex
 
 				if (sceneObj != SceneObjectId::Null)
 				{
+					float rectWidth = static_cast<float>(contentWidth);
+					float rectHeight = static_cast<float>(contentHeight);
+
 					ImGuizmo::SetDrawlist();
-					ImGuizmo::SetRect(contentRegionLeft, contentRegionTop, contentWidth, contentHeight);
+					ImGuizmo::SetRect(contentRegionLeft, contentRegionTop, rectWidth, rectHeight);
 
 					Mat4x4f viewTransform = editorCamera.GetCameraTransform().inverse;
 					float* view = viewTransform.ValuePointer();

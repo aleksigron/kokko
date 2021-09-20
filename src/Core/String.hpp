@@ -1,22 +1,21 @@
 #pragma once
 
+#include <cstddef>
+
 #include "Core/StringRef.hpp"
 
 class Allocator;
 
 class String
 {
-public:
-	using SizeType = unsigned int;
-
 private:
 	Allocator* allocator;
 
 	char* string;
-	SizeType length;
-	SizeType allocated;
+	size_t length;
+	size_t allocated;
 
-	static SizeType CalculateAllocationSize(SizeType currentAllocated, SizeType requiredSize);
+	static size_t CalculateAllocationSize(size_t currentAllocated, size_t requiredSize);
 
 public:
 	String();
@@ -53,14 +52,14 @@ public:
 	char* End() { return string + length; }
 	const char* End() const { return string + length; }
 
-	SizeType GetLength() const { return length; }
+	size_t GetLength() const { return length; }
 	StringRef GetRef() const { return StringRef(string, length); }
 
-	char& At(SizeType index) { return string[index]; }
-	const char& At(SizeType index) const { return string[index]; }
+	char& At(size_t index) { return string[index]; }
+	const char& At(size_t index) const { return string[index]; }
 
-	char& operator[](SizeType index) { return string[index]; }
-	const char& operator[](SizeType index) const { return string[index]; }
+	char& operator[](size_t index) { return string[index]; }
+	const char& operator[](size_t index) const { return string[index]; }
 
 	String& operator+=(const String& append);
 
@@ -73,8 +72,8 @@ public:
 	void Assign(const String& s);
 	void Assign(const char* s);
 
-	void Reserve(SizeType reserveLength);
-	void Resize(SizeType size);
+	void Reserve(size_t reserveLength);
+	void Resize(size_t size);
 
 	void Clear();
 

@@ -60,7 +60,7 @@ void AssetBrowserView::Draw(EditorWindowInfo& windowInfo)
 			{
 				SetUpColumns(columnCount, columnWidth);
 
-				size_t index = 1;
+				int index = 1;
 				for (fs::directory_iterator itr(currentPath), end; itr != end; ++itr, ++index)
 				{
 					ImGui::PushID(index);

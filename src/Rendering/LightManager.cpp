@@ -93,7 +93,7 @@ float LightManager::CalculateDefaultRadius(Vec3f color)
 	return std::sqrt(lightMax * thresholdInv);
 }
 
-void LightManager::NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms)
+void LightManager::NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms)
 {
 	Vec4f origin(0.0f, 0.0f, 0.0f, 1.0f);
 	

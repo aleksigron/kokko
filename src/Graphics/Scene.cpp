@@ -357,16 +357,16 @@ void Scene::MarkUpdated(SceneObjectId id)
 	updatedEntities.InsertUnique(data.entity[id.i].id);
 }
 
-void Scene::NotifyUpdatedTransforms(unsigned int receiverCount, TransformUpdateReceiver** updateReceivers)
+void Scene::NotifyUpdatedTransforms(size_t receiverCount, TransformUpdateReceiver** updateReceivers)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	unsigned int updateCount = updatedEntities.GetCount();
+	size_t updateCount = updatedEntities.GetCount();
 	updatedTransforms.Resize(updateCount);
 
 	Entity* entities = reinterpret_cast<Entity*>(updatedEntities.GetData());
 
-	for (unsigned int i = 0; i < updateCount; ++i)
+	for (size_t i = 0; i < updateCount; ++i)
 	{
 		SceneObjectId obj = this->Lookup(entities[i]);
 		updatedTransforms[i] = this->GetWorldTransform(obj);

@@ -56,7 +56,7 @@ public:
 	static const char* GetLightTypeName(LightType type);
 	static const char* GetLightTypeDisplayName(LightType type);
 
-	virtual void NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms);
+	virtual void NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms) override;
 
 	LightId Lookup(Entity e)
 	{

@@ -203,7 +203,7 @@ public:
 
 	void DebugRender(DebugVectorRenderer* vectorRenderer);
 
-	virtual void NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms);
+	virtual void NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms) override;
 
 	// Render object management
 

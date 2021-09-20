@@ -50,7 +50,7 @@ public:
 	virtual void RenderCustom(const RenderParams& params) override final;
 
 	virtual void NotifyUpdatedTransforms(
-		unsigned int count, const Entity* entities, const Mat4x4f* transforms) override final;
+		size_t count, const Entity* entities, const Mat4x4f* transforms) override final;
 
 	ParticleEmitterId Lookup(Entity e);
 

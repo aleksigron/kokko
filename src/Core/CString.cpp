@@ -7,11 +7,6 @@
 
 #include "Core/EncodingUtf8.hpp"
 
-static void ClearToUtf8Boundary()
-{
-
-}
-
 void StringCopyN(char* destination, const char* source, size_t destBufferCount)
 {
 	assert(destBufferCount > 0);

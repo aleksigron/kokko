@@ -27,7 +27,7 @@ void ScriptSystem::AddScriptInternal(Entity entity, NativeScriptComponent* scrip
 {
 	script->entity = entity;
 
-	unsigned int scriptIndex = scripts.GetCount();
+	size_t scriptIndex = scripts.GetCount();
 	scripts.PushBack(script);
 	scriptsToInit.PushBack(script);
 
@@ -44,15 +44,15 @@ void ScriptSystem::UpdateScripts(World* world)
 	scriptContext.world = world;
 	scriptContext.inputManager = inputManager;
 
-	for (unsigned int i = 0, count = scriptsToInit.GetCount(); i < count; ++i)
+	for (size_t i = 0, count = scriptsToInit.GetCount(); i < count; ++i)
 		scriptsToInit[i]->OnCreate(scriptContext);
 
-	for (unsigned int i = 0, count = scriptsToDestroy.GetCount(); i < count; ++i)
+	for (size_t i = 0, count = scriptsToDestroy.GetCount(); i < count; ++i)
 		scriptsToDestroy[i]->OnDestroy(scriptContext);
 
 	scriptsToInit.Clear();
 	scriptsToDestroy.Clear();
 
-	for (unsigned int i = 0, count = scripts.GetCount(); i < count; ++i)
+	for (size_t i = 0, count = scripts.GetCount(); i < count; ++i)
 		scripts[i]->OnUpdate(scriptContext);
 }

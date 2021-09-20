@@ -267,7 +267,7 @@ void ParticleSystem::RenderCustom(const RenderParams& params)
 	}
 }
 
-void ParticleSystem::NotifyUpdatedTransforms(unsigned int count, const Entity* entities, const Mat4x4f* transforms)
+void ParticleSystem::NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms)
 {
 }
 

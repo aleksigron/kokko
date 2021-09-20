@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstring>
 
+#include "Core/CString.hpp"
+
 #include "Memory/Allocator.hpp"
 
 String::String() :
@@ -30,8 +32,12 @@ String::String(const String& s)
 
 	if (allocated > 0)
 	{
-		string = static_cast<char*>(allocator->Allocate(allocated + 1));
-		std::strcpy(string, s.GetCStr());
+		size_t bufferSize = allocated + 1;
+		string = static_cast<char*>(allocator->Allocate(bufferSize));
+		
+		size_t len = s.GetLength();
+		std::memcpy(string, s.GetCStr(), len);
+		string[len] = '\0';
 	}
 	else
 		string = nullptr;
@@ -57,8 +63,9 @@ String::String(Allocator* allocator, const char* s) :
 
 	if (allocated > 0)
 	{
-		string = static_cast<char*>(allocator->Allocate(allocated + 1));
-		std::strcpy(string, s);
+		size_t bufferSize = allocated + 1;
+		string = static_cast<char*>(allocator->Allocate(bufferSize));
+		StringCopyN(string, s, bufferSize);
 	}
 	else
 		string = nullptr;
@@ -88,7 +95,7 @@ String::~String()
 
 String& String::operator=(const String& s)
 {
-	SizeType newLength = s.GetLength();
+	size_t newLength = s.GetLength();
 
 	if (newLength > allocated)
 	{
@@ -147,11 +154,11 @@ String& String::operator+=(const String& append)
 
 void String::Append(StringRef s)
 {
-	SizeType requiredLength = length + s.len;
+	size_t requiredLength = length + s.len;
 
 	if (allocated < requiredLength)
 	{
-		SizeType newAllocated = CalculateAllocationSize(allocated, requiredLength);
+		size_t newAllocated = CalculateAllocationSize(allocated, requiredLength);
 
 		char* newString = static_cast<char*>(allocator->Allocate(newAllocated + 1));
 		std::memcpy(newString, string, length);
@@ -180,7 +187,7 @@ void String::Append(char c)
 {
 	if (allocated < length + 1)
 	{
-		SizeType newAllocated = CalculateAllocationSize(this->allocated, length + 1);
+		size_t newAllocated = CalculateAllocationSize(this->allocated, length + 1);
 
 		char* newString = static_cast<char*>(allocator->Allocate(newAllocated + 1));
 		std::memcpy(newString, string, length);
@@ -213,15 +220,16 @@ void String::Assign(const char* s)
 	Append(s);
 }
 
-void String::Reserve(SizeType reserveLength)
+void String::Reserve(size_t reserveLength)
 {
 	if (reserveLength > allocated)
 	{
-		char* newString = static_cast<char*>(allocator->Allocate(reserveLength + 1));
+		size_t bufferSize = reserveLength + 1;
+		char* newString = static_cast<char*>(allocator->Allocate(bufferSize));
 
 		if (string != nullptr)
 		{
-			std::strcpy(newString, string);
+			StringCopyN(newString, string, bufferSize);
 
 			allocator->Deallocate(string);
 		}
@@ -231,7 +239,7 @@ void String::Reserve(SizeType reserveLength)
 	}
 }
 
-void String::Resize(SizeType size)
+void String::Resize(size_t size)
 {
 	if (size > length)
 	{
@@ -259,12 +267,12 @@ void String::Resize(SizeType size)
 	}
 }
 
-String::SizeType String::CalculateAllocationSize(SizeType currentAllocated, SizeType requiredSize)
+size_t String::CalculateAllocationSize(size_t currentAllocated, size_t requiredSize)
 {
-	SizeType newAllocated;
+	size_t newAllocated;
 	
 	if (currentAllocated > 1024)
-		newAllocated = static_cast<SizeType>(currentAllocated * 1.5);
+		newAllocated = static_cast<size_t>(currentAllocated * 1.5);
 	else if (currentAllocated > 16)
 		newAllocated = currentAllocated * 2;
 	else
@@ -289,8 +297,8 @@ void String::Clear()
 String operator+(const String& lhs, StringRef rhs)
 {
 	String result(lhs.allocator);
-	String::SizeType leftLength = lhs.GetLength();
-	String::SizeType combinedLength = leftLength + rhs.len;
+	size_t leftLength = lhs.GetLength();
+	size_t combinedLength = leftLength + rhs.len;
 
 	if (combinedLength > 0)
 	{
@@ -327,7 +335,7 @@ String operator+(const char* lhs, const String& rhs)
 bool operator==(const String& lhs, const String& rhs)
 {
 	if (lhs.GetLength() == rhs.GetLength())
-		for (unsigned int i = 0, len = lhs.GetLength(); i < len; ++i)
+		for (size_t i = 0, len = lhs.GetLength(); i < len; ++i)
 			if (lhs[i] != rhs[i])
 				return false;
 
@@ -336,7 +344,7 @@ bool operator==(const String& lhs, const String& rhs)
 
 bool operator==(const String& lhs, const char* rhs)
 {
-	for (unsigned int i = 0, len = lhs.GetLength(); i < len; ++i)
+	for (size_t i = 0, len = lhs.GetLength(); i < len; ++i)
 		if (lhs[i] != rhs[i] || lhs[i] == '\0')
 			return false;
 

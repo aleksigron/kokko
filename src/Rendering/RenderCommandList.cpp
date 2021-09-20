@@ -43,7 +43,7 @@ void RenderCommandList::AddControl(
 
 	// Always insert a multiple of 8 bytes
 
-	unsigned int offset = commandData.GetCount();
+	size_t offset = commandData.GetCount();
 	unsigned int alignedByteSize = (byteCount + alignment - 1) / alignment * alignment;
 	unsigned int pad = alignedByteSize - byteCount;
 
@@ -74,12 +74,12 @@ void RenderCommandList::AddDraw(
 
 	if ((0xfc & intpass) != 0) // Is greater than 0x03; must be transparent
 	{
-		uint64_t intDepth(renderOrder.maxTransparentDepth * (1.0f - depth));
+		uint64_t intDepth = static_cast<uint64_t>(renderOrder.maxTransparentDepth * (1.0f - depth));
 		renderOrder.transparentDepth.AssignValue(c, intDepth);
 	}
 	else
 	{
-		uint64_t intDepth(renderOrder.maxOpaqueDepth * depth);
+		uint64_t intDepth = static_cast<uint64_t>(renderOrder.maxOpaqueDepth * depth);
 		renderOrder.opaqueDepth.AssignValue(c, intDepth);
 	}
 
@@ -103,12 +103,12 @@ void RenderCommandList::AddDrawWithCallback(unsigned int viewport, RenderPass pa
 
 	if ((0xfc & intpass) != 0) // Is greater than 0x03; must be transparent
 	{
-		uint64_t intDepth(renderOrder.maxTransparentDepth * (1.0f - depth));
+		uint64_t intDepth = static_cast<uint64_t>(renderOrder.maxTransparentDepth * (1.0f - depth));
 		renderOrder.transparentDepth.AssignValue(c, intDepth);
 	}
 	else
 	{
-		uint64_t intDepth(renderOrder.maxOpaqueDepth * depth);
+		uint64_t intDepth = static_cast<uint64_t>(renderOrder.maxOpaqueDepth * depth);
 		renderOrder.opaqueDepth.AssignValue(c, intDepth);
 	}
 

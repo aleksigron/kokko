@@ -38,7 +38,7 @@ ShaderManager::~ShaderManager()
 	allocator->Deallocate(data.buffer);
 }
 
-void ShaderManager::Reallocate(unsigned int required)
+void ShaderManager::Reallocate(size_t required)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -86,7 +86,7 @@ ShaderId ShaderManager::CreateShader()
 			this->Reallocate(data.count + 1);
 
 		// If there are no freelist entries, first <objectCount> indices must be in use
-		id.i = data.count;
+		id.i = static_cast<unsigned int>(data.count);
 	}
 	else
 	{

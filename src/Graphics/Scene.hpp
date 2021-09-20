@@ -127,7 +127,7 @@ public:
 	// Only the specified object is marked, but not its children
 	void MarkUpdated(SceneObjectId id);
 
-	void NotifyUpdatedTransforms(unsigned int receiverCount, TransformUpdateReceiver** updateReceivers);
+	void NotifyUpdatedTransforms(size_t receiverCount, TransformUpdateReceiver** updateReceivers);
 
 	void SetEnvironmentId(int environmentId) { this->environmentId = environmentId; }
 	int GetEnvironmentId() const { return this->environmentId; }

@@ -9,6 +9,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/Core.hpp"
+#include "Core/CString.hpp"
 #include "Core/Hash.hpp"
 #include "Core/Range.hpp"
 
@@ -323,7 +324,7 @@ static void AddUniforms(
 	unsigned int dataBufferOffset = 0;
 	unsigned int bufferObjectOffset = 0;
 
-	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+	for (size_t i = 0, count = bufferUniformCount; i < count; ++i)
 	{
 		BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
 		const UniformTypeInfo& type = UniformTypeInfo::FromType(uniform.type);
@@ -367,7 +368,7 @@ static void AddUniforms(
 		assert(written > 0);
 		uniformBlockPtr += written;
 
-		for (unsigned int i = 0, count = shaderOut.uniforms.bufferUniformCount; i < count; ++i)
+		for (size_t i = 0, count = shaderOut.uniforms.bufferUniformCount; i < count; ++i)
 		{
 			const BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
 			const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
@@ -377,7 +378,7 @@ static void AddUniforms(
 			uniformBlockPtr += written;
 		}
 
-		std::strncpy(uniformBlockPtr, blockEnd, blockEndLen + 1);
+		StringCopyN(uniformBlockPtr, blockEnd, blockEndLen + 1);
 		uniformBlockPtr += blockEndLen;
 
 		shaderOut.uniformBlockDefinition.len = uniformBlockPtr - shaderOut.uniformBlockDefinition.str;
@@ -390,7 +391,7 @@ static void UpdateTextureUniformLocations(
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	for (unsigned idx = 0, count = shaderInOut.uniforms.textureUniformCount; idx < count; ++idx)
+	for (size_t idx = 0, count = shaderInOut.uniforms.textureUniformCount; idx < count; ++idx)
 	{
 		TextureUniform& u = shaderInOut.uniforms.textureUniforms[idx];
 		u.uniformLocation = renderDevice->GetUniformLocation(shaderInOut.driverId, u.name.str);
@@ -409,7 +410,7 @@ static bool Compile(
 
 	unsigned int shaderId = renderDevice->CreateShaderStage(stage);
 
-	renderDevice->SetShaderStageSource(shaderId, source.str, source.len);
+	renderDevice->SetShaderStageSource(shaderId, source.str, static_cast<int>(source.len));
 	renderDevice->CompileShaderStage(shaderId);
 
 	// Check compile status
@@ -451,14 +452,21 @@ static bool CompileAndLink(
 
 	for (size_t i = 0, count = stages.GetCount(); i < stages.GetCount(); ++i)
 	{
-		const ShaderLoader::StageSource& stage = stages[i];
-		if (Compile(shaderOut, allocator, renderDevice, stage.stage, stage.source, stageObjects[i]) == false)
+		RenderShaderStage stageType = stages[i].stage;
+		StringRef source = stages[i].source;
+
+		unsigned int stageObject = 0;
+		bool compiled = Compile(shaderOut, allocator, renderDevice, stageType, source, stageObject);
+
+		if (compiled == false)
 		{
 			for (size_t j = 0; j < i; ++j)
 				renderDevice->DestroyShaderStage(stageObjects[j]);
 
 			return false;
 		}
+
+		stageObjects[i] = stageObject;
 	}
 
 	// At this point we know that shader compilations were successful
@@ -530,7 +538,7 @@ bool ShaderLoader::LoadFromConfiguration(
 	using ValueItr = rapidjson::Value::ConstValueIterator;
 
 	char* data = configuration.GetData();
-	unsigned long size = configuration.GetCount();
+	size_t size = configuration.GetCount();
 
 	rapidjson::Document config;
 	config.Parse(data, size);

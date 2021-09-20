@@ -49,7 +49,7 @@ void ScreenSpaceAmbientOcclusion::Initialize()
 	KOKKO_PROFILE_FUNCTION();
 
 	kernel.Resize(kernelSize);
-	for (unsigned int i = 0; i < kernelSize;)
+	for (int i = 0; i < kernelSize;)
 	{
 		Vec3f vec(Random::Float(-1.0f, 1.0f),
 			Random::Float(-1.0f, 1.0f),
@@ -246,7 +246,7 @@ void ScreenSpaceAmbientOcclusion::UpdateUniformBuffers(const ProjectionParameter
 
 void ScreenSpaceAmbientOcclusion::CreatePassResources(size_t passCount, const StringRef* shaderPaths, const size_t* uniformSizes)
 {
-	renderDevice->CreateBuffers(passCount, uniformBufferIds);
+	renderDevice->CreateBuffers(static_cast<unsigned int>(passCount), uniformBufferIds);
 
 	for (unsigned int i = 0; i < passCount; ++i)
 	{

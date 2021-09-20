@@ -409,12 +409,12 @@ void RenderDeviceOpenGL::SetDebugMessageCallback(DebugCallbackFn callback)
 
 void RenderDeviceOpenGL::SetObjectLabel(RenderObjectType type, unsigned int object, StringRef label)
 {
-	glObjectLabel(ConvertObjectType(type), object, label.len, label.str);
+	glObjectLabel(ConvertObjectType(type), object, static_cast<GLsizei>(label.len), label.str);
 }
 
 void RenderDeviceOpenGL::SetObjectPtrLabel(void* ptr, StringRef label)
 {
-	glObjectPtrLabel(ptr, label.len, label.str);
+	glObjectPtrLabel(ptr, static_cast<GLsizei>(label.len), label.str);
 }
 
 void RenderDeviceOpenGL::GetIntegerValue(RenderDeviceParameter parameter, int* valueOut)
@@ -424,7 +424,7 @@ void RenderDeviceOpenGL::GetIntegerValue(RenderDeviceParameter parameter, int* v
 
 void RenderDeviceOpenGL::PushDebugGroup(unsigned int id, StringRef message)
 {
-	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, message.len, message.str);
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, static_cast<GLsizei>(message.len), message.str);
 }
 
 void RenderDeviceOpenGL::PopDebugGroup()
