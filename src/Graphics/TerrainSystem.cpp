@@ -92,7 +92,7 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 
 	// Create texture data
 
-	size_t texSize = terrain.terrainResolution;
+	int texSize = static_cast<int>(terrain.terrainResolution);
 	float texSizeInv = 1.0f / texSize;
 	float scale = 64.0f;
 	size_t dataSizeBytes = texSize * texSize * sizeof(uint16_t);

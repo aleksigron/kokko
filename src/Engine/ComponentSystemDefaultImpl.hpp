@@ -52,7 +52,7 @@ public:
 
 	ComponentId AddComponentToEntity(Entity e)
 	{
-		unsigned int id = componentData.GetCount();
+		unsigned int id = static_cast<unsigned int>(componentData.GetCount());
 
 		auto mapPair = entityMap.Insert(e.id);
 		mapPair->second.i = id;

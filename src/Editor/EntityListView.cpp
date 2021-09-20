@@ -133,7 +133,8 @@ void EntityListView::DrawEntityNode(SelectionContext& context, World* world, Ent
 		flags = flags | ImGuiTreeNodeFlags_Selected;
 
 	const char* entityName = entityManager->GetDebugNameWithFallback(entity);
-	bool opened = ImGui::TreeNodeEx((void*)entity.id, flags, entityName);
+	void* nodeId = reinterpret_cast<void*>(static_cast<size_t>(entity.id));
+	bool opened = ImGui::TreeNodeEx(nodeId, flags, "%s", entityName);
 
 	if (sceneObj != SceneObjectId::Null)
 	{
@@ -174,7 +175,7 @@ void EntityListView::ProcessSceneDragDropSource(SceneObjectId sceneObj, const ch
 	if (ImGui::BeginDragDropSource())
 	{
 		ImGui::SetDragDropPayload(EditorConstants::SceneDragDropType, &sceneObj, sizeof(SceneObjectId));
-		ImGui::Text(entityName);
+		ImGui::Text("%s", entityName);
 		ImGui::EndDragDropSource();
 	}
 }

@@ -146,7 +146,7 @@ void AssetBrowserView::DrawEntry(const std::filesystem::directory_iterator& entr
 			std::string pathStr = path.u8string();
 			ImGui::SetDragDropPayload(type, pathStr.c_str(), pathStr.size());
 
-			ImGui::Text(fileStr.c_str());
+			ImGui::Text("%s", fileStr.c_str());
 
 			ImGui::EndDragDropSource();
 		}
@@ -158,7 +158,7 @@ void AssetBrowserView::DrawEntry(const std::filesystem::directory_iterator& entr
 	ImGui::SetCursorPos(cursorStartPos);
 	ImGui::Image(image, buttonSize);
 
-	ImGui::TextWrapped(fileStr.c_str());
+	ImGui::TextWrapped("%s", fileStr.c_str());
 	ImGui::Spacing();
 }
 

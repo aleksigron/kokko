@@ -19,7 +19,9 @@ bool FilesystemDefault::ReadBinary(const char* path, Array<unsigned char>& outpu
 
 		// Get the file contents
 		output.Resize(fileLength);
-		std::fread(output.GetData(), 1, fileLength, fileHandle);
+		size_t read = std::fread(output.GetData(), 1, fileLength, fileHandle);
+		output.Resize(read);
+
 		std::fclose(fileHandle);
 
 		return true;
@@ -44,7 +46,9 @@ bool FilesystemDefault::ReadText(const char* path, Array<char>& output)
 		// Get the file contents
 		output.Resize(fileLength + 1);
 
-		std::fread(output.GetData(), 1, fileLength, fileHandle);
+		size_t read = std::fread(output.GetData(), 1, fileLength, fileHandle);
+		output.Resize(read + 1);
+
 		std::fclose(fileHandle);
 
 		// Null-terminate so it can be used as a c-string
@@ -71,11 +75,11 @@ bool FilesystemDefault::ReadText(const char* path, Allocator* allocator, char*& 
 
 		void* buffer = allocator->Allocate(static_cast<size_t>(fileLength) + 1);
 
-		std::fread(buffer, 1, fileLength, fileHandle);
+		size_t read = std::fread(buffer, 1, fileLength, fileHandle);
 		std::fclose(fileHandle);
 
 		// Null-terminate so it can be used as a c-string
-		static_cast<char*>(buffer)[fileLength] = '\0';
+		static_cast<char*>(buffer)[read] = '\0';
 
 		strOut = static_cast<char*>(buffer);
 		lenOut = fileLength;

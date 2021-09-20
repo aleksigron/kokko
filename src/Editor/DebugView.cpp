@@ -29,12 +29,8 @@ void DebugView::Draw(EditorWindowInfo& windowInfo, EngineSettings* engineSetting
 	{
 		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen))
 		{
-			const char* timingFormat = "Frametime: %.2f ms";
-			char buffer[64];
-
 			float currentFrameTime = Time::GetDeltaTime();
-			std::snprintf(buffer, sizeof(buffer), timingFormat, currentFrameTime * 1000.0);
-			ImGui::Text(buffer);
+			ImGui::Text("Frametime: %.2f ms", currentFrameTime * 1000.0);
 
 			ImGui::Checkbox("Vertical sync", &engineSettings->verticalSync);
 			ImGui::Checkbox("Draw mesh bounds", &engineSettings->drawMeshBounds);

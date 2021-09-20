@@ -378,8 +378,10 @@ void MeshManager::SetVertexAttribPointers(const VertexFormat& vertexFormat)
 
 		renderDevice->EnableVertexAttribute(attr.attrIndex);
 
+		int stride = static_cast<int>(vertexFormat.vertexSize);
+
 		RenderCommandData::SetVertexAttributePointer data{
-			attr.attrIndex, attr.elemCount, attr.elemType, vertexFormat.vertexSize, attr.offset
+			attr.attrIndex, attr.elemCount, attr.elemType, stride, attr.offset
 		};
 
 		renderDevice->SetVertexAttributePointer(&data);
