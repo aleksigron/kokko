@@ -3,8 +3,6 @@
 #include <cassert>
 #include <cstdio>
 
-#include "imgui.h"
-
 #include "Core/Core.hpp"
 
 #include "Debug/DebugVectorRenderer.hpp"
@@ -119,8 +117,9 @@ void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<
 	float scaledLineHeight = 0;
 	const BitmapFont* font = textRenderer->GetFont();
 
-	if (font != nullptr)
-		scaledLineHeight = static_cast<float>(font->GetLineHeight());
+	assert(font != nullptr);
+
+	scaledLineHeight = static_cast<float>(font->GetLineHeight());
 
 	float pixelLineHeight = scaledLineHeight * screenCoordScale;
 
