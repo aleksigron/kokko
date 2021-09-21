@@ -3,12 +3,10 @@
 struct GLFWwindow;
 
 class Allocator;
-class Debug;
 class EditorCore;
+class Engine;
 class Framebuffer;
-class InputView;
 class RenderDevice;
-class Window;
 class World;
 
 class ImGuiRenderBackend;
@@ -16,11 +14,8 @@ class ImGuiPlatformBackend;
 
 struct CameraParameters;
 struct EngineSettings;
-struct Mat4x4fBijection;
-struct ViewRectangle;
-struct ResourceManagers;
 
-class EditorUI
+class EditorApp
 {
 private:
 	Allocator* allocator;
@@ -31,21 +26,19 @@ private:
 	EditorCore* core;
 
 public:
-	EditorUI(Allocator* allocator);
-	EditorUI(const EditorUI&) = delete;
-	EditorUI(EditorUI&&) = delete;
-	~EditorUI();
+	EditorApp(Allocator* allocator);
+	EditorApp(const EditorApp&) = delete;
+	EditorApp(EditorApp&&) = delete;
+	~EditorApp();
 
-	EditorUI& operator=(const EditorUI&) = delete;
-	EditorUI& operator=(EditorUI&&) = delete;
+	EditorApp& operator=(const EditorApp&) = delete;
+	EditorApp& operator=(EditorApp&&) = delete;
 
-	void Initialize(Debug* debug, RenderDevice* renderDevice, Window* window,
-		const ResourceManagers& resourceManagers);
+	void Initialize(Engine* engine);
 	void Deinitialize();
 
 	void StartFrame();
 	void Update(EngineSettings* engineSettings, World* world, bool& shouldExitOut);
-	void DrawSceneView();
 	void EndFrame();
 
 	const Framebuffer& GetSceneViewFramebuffer();

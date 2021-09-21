@@ -25,9 +25,7 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 - Asset files are JSON or YAML for readability and mergeability
   - Scenes
   - Materials
-  - Shaders
 - Mesh files are using a custom binary format
-- Textures are processed to a runtime-friendly format with KTX
 
 ### Debugging
 - Logging
@@ -42,18 +40,14 @@ This is a personal project that lets me test out new ideas and learn some OpenGL
 - CMake for building the project
 - C++17 compliant compiler
 - Blender for exporting mesh files
-- KTX for encoding textures
 
 ### Creating a x64 Visual Studio solution on Windows
 ```
-git submodule init
-cd samples
+git submodule update --init --recursive
+cd editor
 mkdir build
-cd build
-cmake -G "Visual Studio 16 2019" -A x64 ../
+cmake -B build -G "Visual Studio 16 2019" -A x64
 ```
-
-You can find a list of the available generators in the [CMake documentation](https://cmake.org/documentation/). 
 
 ### Working directory
 You need to set a custom working directory in the IDE when running the project.
@@ -77,8 +71,6 @@ The motivation behind using a custom format is to better understand the content 
 [yaml-cpp](https://github.com/jbeder/yaml-cpp) is used to read and write YAML formatted asset files.
 
 [fmt](https://github.com/fmtlib/fmt) is used for logging formatting.
-
-[KTX](https://github.com/KhronosGroup/KTX-Software) is used to process textures to a runtime-friendly format.
 
 [Gohufont](https://github.com/hchargois/gohufont) is used for debug text rendering.
 

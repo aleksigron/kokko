@@ -5,11 +5,12 @@
 
 class Allocator;
 class AllocatorManager;
-class Window;
-class EditorUI;
-class Time;
-class RenderDevice;
+class Debug;
 class Filesystem;
+class Framebuffer;
+class RenderDevice;
+class Time;
+class Window;
 
 class World;
 class MeshManager;
@@ -18,7 +19,7 @@ class MaterialManager;
 class TextureManager;
 class EnvironmentManager;
 
-class Debug;
+struct CameraParameters;
 
 class Engine
 {
@@ -34,7 +35,6 @@ private:
 	Time* time;
 	RenderDevice* renderDevice;
 	Filesystem* filesystem;
-	InstanceAllocatorPair<EditorUI> editorUI;
 	InstanceAllocatorPair<Debug> debug;
 	InstanceAllocatorPair<MeshManager> meshManager;
 	InstanceAllocatorPair<TextureManager> textureManager;
@@ -43,21 +43,28 @@ private:
 	InstanceAllocatorPair<EnvironmentManager> environmentManager;
 	InstanceAllocatorPair<World> world;
 
-
 public:
 	Engine();
 	~Engine();
 
 	bool Initialize();
-	void FrameStart();
-	void Update();
+
+	void StartFrame();
+	void UpdateWorld();
+	void Render(const CameraParameters& editorCamera, const Framebuffer& framebuffer);
+	void EndFrame();
 
 	void SetAppPointer(void* app);
 
 	AllocatorManager* GetAllocatorManager() { return allocatorManager; }
+	EngineSettings* GetSettings() { return &settings; }
 	Window* GetMainWindow() { return mainWindow.instance; }
+	RenderDevice* GetRenderDevice() { return renderDevice; }
+	Debug* GetDebug() { return debug.instance; }
 	Filesystem* GetFilesystem() { return filesystem; }
 	MeshManager* GetMeshManager() { return meshManager.instance; }
+	TextureManager* GetTextureManager() { return textureManager.instance; }
 	MaterialManager* GetMaterialManager() { return materialManager.instance; }
 	EnvironmentManager* GetEnvironmentManager() { return environmentManager.instance; }
+	World* GetWorld() { return world.instance; }
 };

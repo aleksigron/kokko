@@ -11,8 +11,6 @@
 #include "Debug/DebugVectorRenderer.hpp"
 #include "Debug/Instrumentation.hpp"
 
-#include "Editor/EditorUI.hpp"
-
 #include "Engine/World.hpp"
 
 #include "Engine/EntityManager.hpp"
@@ -57,9 +55,6 @@ Engine::Engine()
 	renderDevice = systemAllocator->MakeNew<RenderDeviceOpenGL>();
 	filesystem = systemAllocator->MakeNew<FilesystemDefault>();
 
-	editorUI.CreateScope(allocatorManager, "EditorUI", alloc);
-	editorUI.New(editorUI.allocator);
-
 	debug.CreateScope(allocatorManager, "Debug", alloc);
 	debug.New(debug.allocator, allocatorManager, mainWindow.instance,
 		renderDevice, filesystem);
@@ -99,7 +94,6 @@ Engine::~Engine()
 {
 	world.instance->Deinitialize();
 	debug.instance->Deinitialize();
-	editorUI.instance->Deinitialize();
 
 	world.Delete();
 	environmentManager.Delete();
@@ -108,7 +102,6 @@ Engine::~Engine()
 	textureManager.Delete();
 	meshManager.Delete();
 	debug.Delete();
-	editorUI.Delete();
 	systemAllocator->MakeDelete(filesystem);
 	systemAllocator->MakeDelete(renderDevice);
 	systemAllocator->MakeDelete(time);
@@ -135,8 +128,6 @@ bool Engine::Initialize()
 		resManagers.textureManager = textureManager.instance;
 		resManagers.environmentManager = environmentManager.instance;
 
-		editorUI.instance->Initialize(debug.instance, renderDevice, mainWindow.instance, resManagers);
-
 		const char* const logFilename = "log.txt";
 		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";
 
@@ -162,50 +153,35 @@ bool Engine::Initialize()
 	}
 }
 
-void Engine::FrameStart()
+void Engine::StartFrame()
 {
 	if (debug.instance->ShouldBeginProfileSession())
 		Instrumentation::Get().BeginSession("runtime_trace.json");
 
 	if (debug.instance->ShouldEndProfileSession())
 		Instrumentation::Get().EndSession();
-
-	editorUI.instance->StartFrame();
 }
 
-void Engine::Update()
+void Engine::UpdateWorld()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	// FRAME UPDATE
-
-	this->time->Update();
-
+	time->Update();
 	world.instance->Update();
+}
 
-	// Because editor can change the state of the world and systems,
-	// let's run those updates at the same part of the frame as other updates
-	bool editorWantsToExit = false;
-	editorUI.instance->Update(&settings, world.instance, editorWantsToExit);
-	if (editorWantsToExit)
-		mainWindow.instance->SetShouldClose(true);
+void Engine::Render(const CameraParameters& editorCamera, const Framebuffer& framebuffer)
+{
+	KOKKO_PROFILE_FUNCTION();
 
-	// FRAME RENDER
-
-	CameraParameters editorCamera = editorUI.instance->GetEditorCameraParameters();
-
-	const Framebuffer& sceneViewFramebuffer = editorUI.instance->GetSceneViewFramebuffer();
-	world.instance->Render(editorCamera, sceneViewFramebuffer);
+	world.instance->Render(editorCamera, framebuffer);
 	world.instance->DebugRender(&settings, debug.instance->GetVectorRenderer());
 
-	debug.instance->Render(world.instance, sceneViewFramebuffer, editorCamera);
+	debug.instance->Render(world.instance, framebuffer, editorCamera);
+}
 
-	editorUI.instance->DrawSceneView();
-
-	// FRAME END
-
-	editorUI.instance->EndFrame();
-
+void Engine::EndFrame()
+{
 	mainWindow.instance->Swap();
 	mainWindow.instance->ProcessEvents();
 	mainWindow.instance->UpdateInput();

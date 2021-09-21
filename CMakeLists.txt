@@ -5,8 +5,6 @@ project("Kokko Engine")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(IMGUI_LIB imgui)
-set(FMT_LIB fmt)
 set(KOKKO_LIB kokko)
 
 include_directories(
@@ -15,8 +13,6 @@ include_directories(
 	deps/fmt/include
 	deps/glad/include
 	deps/glfw/include
-	deps/imgui
-	deps/imguizmo
 	deps/rapidjson/include
 	deps/stb_image/include
 	deps/yaml-cpp/include
@@ -25,25 +21,6 @@ include_directories(
 set (FMT_SOURCES
 	deps/fmt/src/format.cc
 	deps/fmt/src/os.cc
-)
-add_library(${FMT_LIB} STATIC ${FMT_SOURCES})
-
-set (IMGUI_SOURCES
-	deps/imgui/imconfig.h
-	deps/imgui/imgui.cpp
-	deps/imgui/imgui.h
-	deps/imgui/imgui_demo.cpp
-	deps/imgui/imgui_draw.cpp
-	deps/imgui/imgui_tables.cpp
-	deps/imgui/imgui_widgets.cpp
-)
-
-add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-add_library(${IMGUI_LIB} STATIC ${IMGUI_SOURCES})
-
-set (IMGUIZMO_SOURCES
-	deps/imguizmo/ImGuizmo.cpp
-	deps/imguizmo/ImGuizmo.h
 )
 
 set (GLAD_SOURCES
@@ -57,7 +34,7 @@ set (STB_IMAGE_SOURCES
 )
 
 set (DEPS_SOURCES
-	${IMGUIZMO_SOURCES}
+	${FMT_SOURCES}
 	${GLAD_SOURCES}
 	${STB_IMAGE_SOURCES}
 )
@@ -115,30 +92,6 @@ set (KOKKO_SOURCES
 	src/Debug/Log.hpp
 	src/Debug/LogLevel.hpp
 	src/Debug/PerformanceTimer.hpp
-	src/Editor/AssetBrowserView.cpp
-	src/Editor/AssetBrowserView.hpp
-	src/Editor/DebugView.cpp
-	src/Editor/DebugView.hpp
-	src/Editor/EditorCamera.cpp
-	src/Editor/EditorCamera.hpp
-	src/Editor/EditorConstants.cpp
-	src/Editor/EditorConstants.hpp
-	src/Editor/EditorCore.cpp
-	src/Editor/EditorCore.hpp
-	src/Editor/EditorImages.cpp
-	src/Editor/EditorImages.hpp
-	src/Editor/EditorUI.cpp
-	src/Editor/EditorUI.hpp
-	src/Editor/EditorWindowInfo.hpp
-	src/Editor/EntityListView.cpp
-	src/Editor/EntityListView.hpp
-	src/Editor/EntityView.cpp
-	src/Editor/EntityView.hpp
-	src/Editor/FilePickerDialog.cpp
-	src/Editor/FilePickerDialog.hpp
-	src/Editor/SceneView.cpp
-	src/Editor/SceneView.hpp
-	src/Editor/SelectionContext.hpp
 	src/Engine/ComponentSerializer.hpp
 	src/Engine/ComponentSystemDefaultImpl.hpp
 	src/Engine/Engine.cpp
@@ -307,7 +260,7 @@ set (KOKKO_SOURCES
 	src/System/Window.hpp
 )
 
-source_group(Dependencies\\imguizmo FILES ${IMGUIZMO_SOURCES})
+source_group(Dependencies\\fmt FILES ${FMT_SOURCES})
 source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
 source_group(Dependencies\\stb_image FILES ${STB_IMAGE_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})
