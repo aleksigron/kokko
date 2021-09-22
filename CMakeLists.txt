@@ -239,12 +239,6 @@ set (KOKKO_SOURCES
 	src/System/FilesystemDefault.cpp
 	src/System/FilesystemDefault.hpp
 	src/System/Filesystem.hpp
-	src/System/ImGuiInputView.cpp
-	src/System/ImGuiInputView.hpp
-	src/System/ImGuiPlatformBackend.cpp
-	src/System/ImGuiPlatformBackend.hpp
-	src/System/ImGuiRenderBackend.cpp
-	src/System/ImGuiRenderBackend.hpp
 	src/System/IncludeOpenGL.hpp
 	src/System/IncludeGLFW.hpp
 	src/System/InputManager.cpp

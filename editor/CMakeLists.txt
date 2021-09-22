@@ -14,6 +14,7 @@ include_directories(
 	${KOKKO_ENGINE_PATH}/src
 	${KOKKO_ENGINE_PATH}/deps/doctest
 	${KOKKO_ENGINE_PATH}/deps/fmt/include
+	${KOKKO_ENGINE_PATH}/deps/glad/include
 	${KOKKO_ENGINE_PATH}/deps/imgui
 	${KOKKO_ENGINE_PATH}/deps/imguizmo
 )
@@ -26,6 +27,10 @@ set (IMGUI_SOURCES
 	${KOKKO_ENGINE_PATH}/deps/imgui/imgui_draw.cpp
 	${KOKKO_ENGINE_PATH}/deps/imgui/imgui_tables.cpp
 	${KOKKO_ENGINE_PATH}/deps/imgui/imgui_widgets.cpp
+	${KOKKO_ENGINE_PATH}/deps/imgui/backends/imgui_impl_glfw.cpp
+	${KOKKO_ENGINE_PATH}/deps/imgui/backends/imgui_impl_glfw.h
+	${KOKKO_ENGINE_PATH}/deps/imgui/backends/imgui_impl_opengl3.cpp
+	${KOKKO_ENGINE_PATH}/deps/imgui/backends/imgui_impl_opengl3.h
 )
 
 set (IMGUIZMO_SOURCES
@@ -72,6 +77,10 @@ set(SOURCES
 )
 
 add_executable(${EXECUTABLE_NAME} $<TARGET_OBJECTS:${KOKKO_LIB}> ${SOURCES})
+
+target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
+	IMGUI_IMPL_OPENGL_LOADER_GLAD
+)
 
 add_subdirectory(${KOKKO_ENGINE_PATH} kokko-build)
 

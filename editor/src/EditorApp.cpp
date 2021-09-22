@@ -3,6 +3,9 @@
 #include "imgui.h"
 #include "ImGuizmo.h"
 
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
+
 #include "Core/Core.hpp"
 
 #include "EditorCore.hpp"
@@ -26,16 +29,12 @@
 
 #include "Resources/ResourceManagers.hpp"
 
-#include "System/ImGuiRenderBackend.hpp"
-#include "System/ImGuiPlatformBackend.hpp"
 #include "System/InputManager.hpp"
 #include "System/Window.hpp"
 
 EditorApp::EditorApp(Allocator* allocator) :
 	allocator(allocator),
-	renderDevice(nullptr),
-	renderBackend(nullptr),
-	platformBackend(nullptr)
+	renderDevice(nullptr)
 {
 	core = allocator->MakeNew<EditorCore>(allocator);
 }
@@ -51,9 +50,6 @@ void EditorApp::Initialize(Engine* engine)
 
 	this->renderDevice = engine->GetRenderDevice();
 
-	renderBackend = allocator->MakeNew<ImGuiRenderBackend>();
-	platformBackend = allocator->MakeNew<ImGuiPlatformBackend>();
-
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
@@ -62,13 +58,12 @@ void EditorApp::Initialize(Engine* engine)
 
 	ImGui::StyleColorsDark();
 
-	renderBackend->Initialize();
-
 	Window* window = engine->GetMainWindow();
 	InputManager* inputManager = window->GetInputManager();
 	GLFWwindow* glfwWindow = window->GetGlfwWindow();
 
-	platformBackend->Initialize(glfwWindow, inputManager->GetImGuiInputView());
+	ImGui_ImplGlfw_InitForOpenGL(window->GetGlfwWindow(), false);
+	ImGui_ImplOpenGL3_Init();
 
 	core->Initialize(engine);
 }
@@ -77,13 +72,10 @@ void EditorApp::Deinitialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	platformBackend->Deinitialize();
-	renderBackend->Deinitialize();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
 
 	ImGui::DestroyContext();
-
-	allocator->MakeDelete(platformBackend);
-	allocator->MakeDelete(renderBackend);
 }
 
 void EditorApp::StartFrame()
@@ -92,8 +84,8 @@ void EditorApp::StartFrame()
 
 	core->ResizeSceneViewFramebufferIfRequested();
 
-	renderBackend->NewFrame();
-	platformBackend->NewFrame();
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
 
 	ImGui::NewFrame();
 	ImGuizmo::BeginFrame();
@@ -148,7 +140,7 @@ void EditorApp::EndFrame()
 
 	{
 		KOKKO_PROFILE_SCOPE("ImGuiRenderBackend::RenderDrawData()");
-		renderBackend->RenderDrawData(ImGui::GetDrawData());
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 }
 

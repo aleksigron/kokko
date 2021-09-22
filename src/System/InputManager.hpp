@@ -28,7 +28,6 @@ private:
 	Allocator* allocator;
 
 	InputSource* inputSource;
-	InputView* imguiInputView;
 	InputView* gameInputView;
 
 	void UpdateInputViews();
@@ -46,6 +45,5 @@ public:
 	CursorMode GetCursorMode() const;
 
 	InputSource* GetInputSource() { return inputSource; }
-	InputView* GetImGuiInputView() { return imguiInputView; }
 	InputView* GetGameInputView() { return gameInputView; }
 };

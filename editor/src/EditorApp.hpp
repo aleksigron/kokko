@@ -9,9 +9,6 @@ class Framebuffer;
 class RenderDevice;
 class World;
 
-class ImGuiRenderBackend;
-class ImGuiPlatformBackend;
-
 struct CameraParameters;
 struct EngineSettings;
 
@@ -20,8 +17,6 @@ class EditorApp
 private:
 	Allocator* allocator;
 	RenderDevice* renderDevice;
-	ImGuiRenderBackend* renderBackend;
-	ImGuiPlatformBackend* platformBackend;
 
 	EditorCore* core;
 

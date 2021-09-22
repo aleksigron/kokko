@@ -4,7 +4,6 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "System/ImGuiInputView.hpp"
 #include "System/InputSource.hpp"
 #include "System/InputView.hpp"
 
@@ -14,7 +13,6 @@ InputManager::InputManager(Allocator* allocator):
 	windowHandle(nullptr),
 	allocator(allocator),
 	inputSource(nullptr),
-	imguiInputView(nullptr),
 	gameInputView(nullptr)
 {
 }
@@ -22,7 +20,6 @@ InputManager::InputManager(Allocator* allocator):
 InputManager::~InputManager()
 {
 	allocator->MakeDelete(gameInputView);
-	allocator->MakeDelete(imguiInputView);
 	allocator->MakeDelete(inputSource);
 }
 
@@ -35,7 +32,6 @@ void InputManager::Initialize(GLFWwindow* windowHandle)
 	inputSource = allocator->MakeNew<InputSource>();
 	inputSource->Initialize(windowHandle);
 
-	imguiInputView = allocator->MakeNew<ImGuiInputView>(inputSource);
 	gameInputView = allocator->MakeNew<FilterInputView>(inputSource, "GameInputView");
 }
 
@@ -49,13 +45,6 @@ void InputManager::Update()
 
 void InputManager::UpdateInputViews()
 {
-	imguiInputView->SetBlockMouseInput(false);
-	imguiInputView->SetBlockKeyboardInput(false);
-	imguiInputView->SetBlockTextInput(false);
-
-	gameInputView->SetBlockMouseInput(imguiInputView->WantsMouseInput());
-	gameInputView->SetBlockKeyboardInput(imguiInputView->WantsKeyboardInput());
-	gameInputView->SetBlockTextInput(imguiInputView->WantsTextInput());
 }
 
 void InputManager::OnTextInputEnableChanged(bool textInputEnabled)
