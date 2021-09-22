@@ -280,8 +280,6 @@ add_subdirectory(deps/yaml-cpp)
 
 find_package(OpenGL REQUIRED)
 
-target_link_libraries(${KOKKO_LIB} ${FMT_LIB})
-target_link_libraries(${KOKKO_LIB} ${IMGUI_LIB})
 target_link_libraries(${KOKKO_LIB} glfw)
 target_link_libraries(${KOKKO_LIB} yaml-cpp)
 target_link_libraries(${KOKKO_LIB} OpenGL::GL)
