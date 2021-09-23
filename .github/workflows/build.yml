@@ -47,5 +47,5 @@ jobs:
         cmake -B ${{github.workspace}}/editor/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
 
     - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/editor/build --config ${{matrix.config.build_type}}
+      # GitHub runners have 2 vCPU, run 3 parallel build jobs
+      run: cmake --build ${{github.workspace}}/editor/build --config ${{matrix.config.build_type}} --parallel 3
