@@ -6,7 +6,7 @@
 
 #include "Rendering/Framebuffer.hpp"
 
-class InputManager;
+class Window;
 class World;
 
 struct CameraParameters;
@@ -18,7 +18,7 @@ class SceneView
 public:
 	SceneView();
 
-	void Initialize(RenderDevice* renderDevice, InputManager* inputManager);
+	void Initialize(RenderDevice* renderDevice, Window* window);
 
 	void Update();
 	void Draw(EditorWindowInfo& windowInfo, World* world, SelectionContext& selectionContext);

@@ -28,11 +28,10 @@ EditorCore::EditorCore(Allocator* allocator) :
 
 void EditorCore::Initialize(Engine* engine)
 {
-	Window* window = engine->GetMainWindow();
 	images.LoadImages(engine->GetTextureManager());
 
 	entityView.Initialize(engine->GetMaterialManager(), engine->GetMeshManager());
-	sceneView.Initialize(engine->GetRenderDevice(), window->GetInputManager());
+	sceneView.Initialize(engine->GetRenderDevice(), engine->GetMainWindow());
 	assetBrowserView.Initialize(&images);
 	debugView.Initialize(engine->GetDebug());
 }

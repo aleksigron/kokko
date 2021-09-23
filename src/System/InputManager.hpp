@@ -14,14 +14,6 @@ class Allocator;
 
 class InputManager
 {
-public:
-	enum class CursorMode
-	{
-		Normal,
-		Hidden,
-		Disabled
-	};
-
 private:
 	GLFWwindow* windowHandle;
 
@@ -40,9 +32,6 @@ public:
 	void Update();
 
 	void OnTextInputEnableChanged(bool textInputEnabled);
-
-	void SetCursorMode(CursorMode mode);
-	CursorMode GetCursorMode() const;
 
 	InputSource* GetInputSource() { return inputSource; }
 	InputView* GetGameInputView() { return gameInputView; }

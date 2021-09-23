@@ -7,12 +7,12 @@ struct Mat3x3f;
 struct Mat4x4fBijection;
 struct CameraParameters;
 
-class InputManager;
+class Window;
 
 class EditorCamera
 {
 private:
-	InputManager* inputManager;
+	Window* window;
 
 	ProjectionParameters projection;
 
@@ -30,7 +30,7 @@ private:
 public:
 	EditorCamera();
 
-	void SetInputManager(InputManager* inputManager);
+	void SetWindow(Window* window);
 	void LookAt(const Vec3f& position, const Vec3f& lookAtTarget);
 
 	void SetAspectRatio(float width, float height);

@@ -7,11 +7,11 @@
 
 #include "Rendering/CameraParameters.hpp"
 
-#include "System/InputManager.hpp"
+#include "System/Window.hpp"
 #include "System/KeyCode.hpp"
 
 EditorCamera::EditorCamera() :
-	inputManager(nullptr),
+	window(nullptr),
 	cameraVelocity(),
 	cameraYaw(0.0f),
 	cameraPitch(0.0f),
@@ -24,9 +24,9 @@ EditorCamera::EditorCamera() :
 	projection.SetAspectRatio(16.0f, 9.0f);
 }
 
-void EditorCamera::SetInputManager(InputManager* inputManager)
+void EditorCamera::SetWindow(Window* window)
 {
-	this->inputManager = inputManager;
+	this->window = window;
 }
 
 void EditorCamera::LookAt(const Vec3f& position, const Vec3f& lookAtTarget)
@@ -65,12 +65,12 @@ void EditorCamera::Update(bool windowIsActive)
 		if (mouseLookActive == false && io.MouseDown[MouseButtonLook])
 		{
 			mouseLookActive = true;
-			inputManager->SetCursorMode(InputManager::CursorMode::Disabled);
+			window->SetCursorMode(Window::CursorMode::Disabled);
 		}
 		else if (mouseLookActive == true && io.MouseDown[MouseButtonLook] == false)
 		{
 			mouseLookActive = false;
-			inputManager->SetCursorMode(InputManager::CursorMode::Normal);
+			window->SetCursorMode(Window::CursorMode::Normal);
 		}
 
 		Vec2f mouseDelta(io.MouseDelta.x, io.MouseDelta.y);
