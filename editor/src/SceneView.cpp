@@ -29,11 +29,11 @@ SceneView::SceneView() :
 	editorCamera.LookAt(position, target);
 }
 
-void SceneView::Initialize(RenderDevice* renderDevice, InputManager* inputManager)
+void SceneView::Initialize(RenderDevice* renderDevice, Window* window)
 {
 	framebuffer.SetRenderDevice(renderDevice);
 
-	editorCamera.SetInputManager(inputManager);
+	editorCamera.SetWindow(window);
 }
 
 void SceneView::Update()

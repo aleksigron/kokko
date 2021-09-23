@@ -13,6 +13,13 @@ class InputManager;
 class Window
 {
 public:
+	enum class CursorMode
+	{
+		Normal,
+		Hidden,
+		Disabled
+	};
+
 	using FramebufferSizeCallbackFn = void(*)(void*, Window*, Vec2i);
 
 	Window(Allocator* allocator);
@@ -52,7 +59,10 @@ public:
 	0: vsync off, 1: vsync every refresh, n: vsync once every n refreshes
 	*/
 	void SetSwapInterval(int swapInterval);
-	int GetSwapInterval() const { return currentSwapInterval; }
+	int GetSwapInterval() const;
+
+	void SetCursorMode(CursorMode mode);
+	CursorMode GetCursorMode() const;
 
 	InputManager* GetInputManager() { return inputManager; }
 	GLFWwindow* GetGlfwWindow() { return windowHandle; }

@@ -189,6 +189,37 @@ void Window::SetSwapInterval(int swapInterval)
 	}
 }
 
+int Window::GetSwapInterval() const
+{
+	return currentSwapInterval;
+}
+
+void Window::SetCursorMode(CursorMode mode)
+{
+	int cursorModeValue = GLFW_CURSOR_NORMAL;
+
+	if (mode == CursorMode::Hidden)
+		cursorModeValue = GLFW_CURSOR_HIDDEN;
+	else if (mode == CursorMode::Disabled)
+		cursorModeValue = GLFW_CURSOR_DISABLED;
+
+	glfwSetInputMode(windowHandle, GLFW_CURSOR, cursorModeValue);
+}
+
+Window::CursorMode Window::GetCursorMode() const
+{
+	int cursorModeValue = glfwGetInputMode(windowHandle, GLFW_CURSOR);
+
+	CursorMode mode = CursorMode::Normal;
+
+	if (cursorModeValue == GLFW_CURSOR_HIDDEN)
+		mode = CursorMode::Hidden;
+	else if (cursorModeValue == GLFW_CURSOR_DISABLED)
+		mode = CursorMode::Disabled;
+
+	return mode;
+}
+
 void Window::RegisterFramebufferResizeCallback(FramebufferSizeCallbackFn callback, void* userPointer)
 {
 	framebufferResizeCallbacks.PushBack(FramebufferResizeCallbackInfo{ callback, userPointer });
