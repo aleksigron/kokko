@@ -59,15 +59,13 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	using uint = unsigned int;
-
 	StringRef unprocessed = content;
 
 	// Find end of first line
 
 	StringRef line;
 
-	uint lineEnd = FindUnprintable(unprocessed);
+	size_t lineEnd = FindUnprintable(unprocessed);
 
 	if (lineEnd < unprocessed.len)
 	{
@@ -84,14 +82,14 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 	Array<unsigned char> textureBuffer(allocator);
 	Vec2i glyphsOnAxes(0, 0);
 
-	uint spacesInLine[7];
+	size_t spacesInLine[7];
 	StringRef tokens[8];
 
 	while (line.IsNonNull())
 	{
 		// Find spaces in the line
 
-		uint spaceCount = FindSpacesInString(line, spacesInLine, 7);
+		size_t spaceCount = FindSpacesInString(line, spacesInLine, 7);
 
 		// Create token string references
 
@@ -100,14 +98,14 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 			tokens[0].str = line.str;
 			tokens[0].len = spacesInLine[0];
 
-			for (uint i = 1; i < spaceCount; ++i)
+			for (size_t i = 1; i < spaceCount; ++i)
 			{
-				uint tokenStart = spacesInLine[i - 1] + 1;
+				size_t tokenStart = spacesInLine[i - 1] + 1;
 				tokens[i].str = line.str + tokenStart;
 				tokens[i].len = spacesInLine[i] - tokenStart;
 			}
 
-			uint tokenStart = spacesInLine[spaceCount - 1] + 1;
+			size_t tokenStart = spacesInLine[spaceCount - 1] + 1;
 			tokens[spaceCount].str = line.str + tokenStart;
 			tokens[spaceCount].len = line.len - tokenStart;
 		}
@@ -145,11 +143,11 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 
 					if (glyphCount > 0)
 					{
-						uint skipStep = glyphSkipListStep;
-						uint skipListLength = glyphCount + ((skipStep - 1)) / skipStep;
+						size_t skipStep = glyphSkipListStep;
+						size_t skipListLength = glyphCount + ((skipStep - 1)) / skipStep;
 
-						size_t skipListSize = skipListLength * sizeof(uint);
-						this->glyphSkipList = static_cast<uint*>(allocator->Allocate(skipListSize));
+						size_t skipListSize = skipListLength * sizeof(size_t);
+						this->glyphSkipList = static_cast<size_t*>(allocator->Allocate(skipListSize));
 
 						size_t glyphsSize = glyphCount * sizeof(BitmapGlyph);
 						this->glyphs = static_cast<BitmapGlyph*>(allocator->Allocate(glyphsSize));
@@ -224,7 +222,7 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 		}
 
 		unprocessed = unprocessed.SubStr(lineEnd);
-		uint nextLineStart = FindPrintable(unprocessed);
+		size_t nextLineStart = FindPrintable(unprocessed);
 		unprocessed = unprocessed.SubStr(nextLineStart);
 
 		lineEnd = FindUnprintable(unprocessed);
@@ -248,13 +246,13 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 		InsertionSortPred(glyphs, glyphCount, CompareGlyphCodePointAsc);
 
 		// Update skip values
-		for (uint i = glyphSkipListStep - 1; i < glyphCount; i += glyphSkipListStep)
+		for (size_t i = glyphSkipListStep - 1; i < glyphCount; i += glyphSkipListStep)
 		{
 			glyphSkipList[i / glyphSkipListStep] = glyphs[i].codePoint;
 		}
 
 		// Set last skip value
-		uint skipIndex = (readGlyphs + (glyphSkipListStep - 1)) / glyphSkipListStep;
+		size_t skipIndex = (readGlyphs + (glyphSkipListStep - 1)) / glyphSkipListStep;
 		glyphSkipList[skipIndex] = glyphs[readGlyphs - 1].codePoint;
 	}
 
@@ -325,7 +323,7 @@ void BitmapFont::ParseBitmapRow(StringRef line, unsigned int pixels, unsigned ch
 	}
 }
 
-unsigned int BitmapFont::FindPrintable(StringRef string)
+size_t BitmapFont::FindPrintable(StringRef string)
 {
 	const char* itr = string.str;
 	const char* end = string.str + string.len;
@@ -340,7 +338,7 @@ unsigned int BitmapFont::FindPrintable(StringRef string)
 	return string.len;
 }
 
-unsigned int BitmapFont::FindUnprintable(StringRef string)
+size_t BitmapFont::FindUnprintable(StringRef string)
 {
 	const char* itr = string.str;
 	const char* end = string.str + string.len;
@@ -355,7 +353,7 @@ unsigned int BitmapFont::FindUnprintable(StringRef string)
 	return string.len;
 }
 
-unsigned int BitmapFont::FindSpacesInString(StringRef string, unsigned int* posOut, unsigned int maxPositions)
+size_t BitmapFont::FindSpacesInString(StringRef string, size_t* posOut, size_t maxPositions)
 {
 	unsigned int foundCount = 0;
 

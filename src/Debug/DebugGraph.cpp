@@ -35,12 +35,12 @@ void DebugGraph::Update()
 
 void DebugGraph::DrawToVectorRenderer()
 {
-	unsigned int count = data.GetCount();
+	size_t count = data.GetCount();
 
 	// Find range
 	double min = std::numeric_limits<double>::max();
 	double max = std::numeric_limits<double>::min();
-	for (unsigned i = 0; i < count; ++i)
+	for (size_t i = 0; i < count; ++i)
 	{
 		double value = data.At(i).data;
 		if (value < min) min = value;
@@ -63,7 +63,7 @@ void DebugGraph::DrawToVectorRenderer()
 	{
 		pointStorage.Resize(count);
 
-		for (unsigned i = 0, count = data.GetCount(); i < count; ++i)
+		for (size_t i = 0, count = data.GetCount(); i < count; ++i)
 		{
 			DataPoint& dataPoint = data.At(i);
 			double y = (dataPoint.data - rangeMin) / rangeSize;
@@ -97,9 +97,9 @@ double DebugGraph::GetAverageOverLastSeconds(double seconds)
 		double total = 0.0;
 		int framesAdded = 0;
 
-		for (int i = data.GetCount() - 1; i >= 0; --i)
+		for (size_t end = data.GetCount(); end > 0; --end)
 		{
-			const DataPoint point = data.At(i);
+			const DataPoint point = data.At(end - 1);
 
 			if (point.time > lastTime)
 			{

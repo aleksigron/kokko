@@ -1,17 +1,19 @@
 #pragma once
 
+#include <cstddef>
+
 #include "Math/Vec2.hpp"
 
 struct ImageData
 {
 	unsigned char* imageData;
-	unsigned long imageDataSize;
+	size_t imageDataSize;
 
 	Vec2i imageSize;
 	unsigned int pixelFormat;
 	unsigned int componentDataType;
 
-	unsigned int compressedSize;
+	size_t compressedSize;
 	bool compressed;
 
 	ImageData();

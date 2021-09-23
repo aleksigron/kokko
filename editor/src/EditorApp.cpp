@@ -58,11 +58,9 @@ void EditorApp::Initialize(Engine* engine)
 
 	ImGui::StyleColorsDark();
 
-	Window* window = engine->GetMainWindow();
-	InputManager* inputManager = window->GetInputManager();
-	GLFWwindow* glfwWindow = window->GetGlfwWindow();
+	GLFWwindow* glfwWindow = engine->GetMainWindow()->GetGlfwWindow();
 
-	ImGui_ImplGlfw_InitForOpenGL(window->GetGlfwWindow(), true);
+	ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
 	ImGui_ImplOpenGL3_Init();
 
 	core->Initialize(engine);

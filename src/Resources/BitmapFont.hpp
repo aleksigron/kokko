@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
 
@@ -23,17 +25,17 @@ private:
 	unsigned int textureId;
 	Vec2f textureSize;
 
-	unsigned int* glyphSkipList;
-	static const unsigned int glyphSkipListStep = 16;
+	size_t* glyphSkipList;
+	static const size_t glyphSkipListStep = 16;
 
 	BitmapGlyph* glyphs;
 	unsigned int glyphCount;
 
 	Vec2i genericGlyphSize;
 
-	static unsigned int FindPrintable(StringRef string);
-	static unsigned int FindUnprintable(StringRef string);
-	static unsigned int FindSpacesInString(StringRef string, unsigned int* posOut, unsigned int maxPositions);
+	static size_t FindPrintable(StringRef string);
+	static size_t FindUnprintable(StringRef string);
+	static size_t FindSpacesInString(StringRef string, size_t* posOut, size_t maxPositions);
 	static int ParseInt(StringRef string);
 	static void ParseBitmapRow(StringRef line, unsigned int pixels, unsigned char* bitmapOut);
 	static Vec2f CalculateTextureSize(int glyphCount, Vec2f glyphSize);
