@@ -81,11 +81,11 @@ void DebugConsole::AddLogEntry(StringRef text, LogLevel level)
 
 	// Add into buffer
 
-	unsigned int charCount = EncodingUtf8::CountCharacters(inputValue.GetRef());
+	size_t charCount = EncodingUtf8::CountCharacters(inputValue.GetRef());
 
 	LogEntry& newEntry = entries.Push();
 	newEntry.text = StringRef();
-	newEntry.rows = textRenderer->GetRowCountForTextLength(charCount);
+	newEntry.rows = static_cast<int>(textRenderer->GetRowCountForTextLength(charCount));
 	newEntry.lengthWithPad = 0;
 	newEntry.level = level;
 
@@ -96,7 +96,7 @@ void DebugConsole::AddLogEntry(StringRef text, LogLevel level)
 
 	int currentRows = 0;
 
-	for (unsigned int i = 0, count = entries.GetCount(); i < count; ++i)
+	for (size_t i = 0, count = entries.GetCount(); i < count; ++i)
 		currentRows += entries[i].rows;
 
 	// Check if we can remove entries
@@ -119,13 +119,13 @@ void DebugConsole::AddLogEntry(StringRef text, LogLevel level)
 		}
 	}
 
-	unsigned int index = (stringDataFirst + stringDataUsed) % stringDataAllocated;
+	size_t index = (stringDataFirst + stringDataUsed) % stringDataAllocated;
 
 	// String would overrun end of memory
 	if (index + text.len > stringDataAllocated)
 	{
 		// Pad data to have the string start at the end of memory
-		unsigned int padding = stringDataAllocated - index;
+		size_t padding = stringDataAllocated - index;
 		stringDataUsed += padding;
 		newEntry.lengthWithPad += padding;
 
@@ -161,11 +161,11 @@ void DebugConsole::UpdateAndDraw()
 
 	if (input->GetKeyDown(KeyCode::Backspace))
 	{
-		unsigned currentLength = this->inputValue.GetLength();
+		size_t currentLength = this->inputValue.GetLength();
 
 		if (currentLength > 0)
 		{
-			unsigned int newLen = EncodingUtf8::FindLastCharacter(this->inputValue.GetRef());
+			size_t newLen = EncodingUtf8::FindLastCharacter(this->inputValue.GetRef());
 
 			if (newLen < currentLength)
 				this->inputValue.Resize(newLen);
@@ -202,7 +202,7 @@ void DebugConsole::UpdateAndDraw()
 
 	if (showCaret)
 	{
-		int chars = EncodingUtf8::CountCharacters(inputValue.GetRef());
+		size_t chars = EncodingUtf8::CountCharacters(inputValue.GetRef());
 
 		Rectanglef caretRectangle;
 		caretRectangle.position.x = static_cast<float>(chars * font->GetGlyphWidth());
@@ -217,9 +217,9 @@ void DebugConsole::UpdateAndDraw()
 	// Add them to the DebugTextRenderer
 	int rowsUsed = 1; // 1 row for input
 
-	for (int i = entries.GetCount() - 1; i >= 0; --i)
+	for (size_t end = entries.GetCount(); end > 0; --end)
 	{
-		LogEntry& entry = entries[i];
+		LogEntry& entry = entries[end - 1];
 
 		rowsUsed += entry.rows;
 

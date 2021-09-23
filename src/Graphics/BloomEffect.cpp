@@ -92,7 +92,7 @@ void BloomEffect::Initialize()
 
 	int aligment = 0;
 	renderDevice->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
-	uniformBlockStride = (maxBlockSize + aligment - 1) / aligment * aligment;
+	uniformBlockStride = static_cast<unsigned int>((maxBlockSize + aligment - 1) / aligment * aligment);
 
 	unsigned int blockCount = 32;
 	unsigned int bufferSize = uniformBlockStride * blockCount;
@@ -197,10 +197,12 @@ void BloomEffect::Render(unsigned int sourceTexture, unsigned int destinationFra
 
 	currentSource = currentDestination;
 
+	int iterCount = static_cast<int>(bloomParams.iterationCount);
+
 	// DOWNSAMPLE PASSES
 
 	int rtIdx = 1;
-	for (; rtIdx < bloomParams.iterationCount; ++rtIdx)
+	for (; rtIdx < iterCount; ++rtIdx)
 	{
 		size.x /= 2;
 		size.y /= 2;
@@ -325,7 +327,7 @@ void BloomEffect::CreateKernel(int kernelExtent)
 		}
 	}
 
-	float multiplier = 1.0 / sum;
+	float multiplier = 1.0f / sum;
 
 	for (unsigned int i = 0, count = kernelWidth * kernelWidth; i < count; ++i)
 		blurKernel[i] *= multiplier;

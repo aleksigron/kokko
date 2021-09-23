@@ -82,7 +82,7 @@ void EntityManager::SetDebugName(Entity entity, const char* name)
 
 	if (pair == nullptr)
 	{
-		unsigned int nameIndex;
+		uint32_t nameIndex;
 
 		if (debugNameFreelist.GetCount() > 0)
 		{
@@ -91,7 +91,7 @@ void EntityManager::SetDebugName(Entity entity, const char* name)
 		}
 		else
 		{
-			nameIndex = debugNames.GetCount();
+			nameIndex = static_cast<uint32_t>(debugNames.GetCount());
 			debugNames.PushBack(String(debugNameAllocator));
 		}
 

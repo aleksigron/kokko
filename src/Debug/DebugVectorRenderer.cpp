@@ -308,7 +308,7 @@ void DebugVectorRenderer::DrawLineScreen(const Vec2f& start, const Vec2f& end, c
 	}
 }
 
-void DebugVectorRenderer::DrawLineChainScreen(unsigned int count, const Vec3f* points, const Color& color)
+void DebugVectorRenderer::DrawLineChainScreen(size_t count, const Vec3f* points, const Color& color)
 {
 	if (primitiveCount < primitiveAllocated)
 	{
@@ -318,7 +318,7 @@ void DebugVectorRenderer::DrawLineChainScreen(unsigned int count, const Vec3f* p
 		prim->transform = Mat4x4f();
 		prim->color = color;
 
-		unsigned int requiredBufferSize = count * sizeof(points[0]);
+		size_t requiredBufferSize = count * sizeof(points[0]);
 
 		// Find or create dynamic mesh to use
 		DynamicMesh* mesh = GetDynamicMesh(requiredBufferSize);

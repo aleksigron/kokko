@@ -19,7 +19,7 @@ private:
 	struct LogEntry
 	{
 		StringRef text;
-		unsigned lengthWithPad;
+		size_t lengthWithPad;
 		int rows;
 		LogLevel level;
 	};
@@ -34,9 +34,9 @@ private:
 	Queue<LogEntry> entries;
 
 	char* stringData;
-	unsigned int stringDataFirst;
-	unsigned int stringDataUsed;
-	unsigned int stringDataAllocated;
+	size_t stringDataFirst;
+	size_t stringDataUsed;
+	size_t stringDataAllocated;
 
 	unsigned int totalWarningCount;
 	unsigned int totalErrorCount;

@@ -21,8 +21,8 @@ class DebugTextRenderer
 private:
 	struct DisplayData
 	{
-		unsigned int stringStart;
-		unsigned int stringLength;
+		size_t stringStart;
+		size_t stringLength;
 		Rectanglef area;
 	};
 
@@ -33,7 +33,7 @@ private:
 	MeshManager* meshManager;
 
 	BitmapFont* font;
-	unsigned int stringCharCount;
+	size_t stringCharCount;
 	Array<char> stringData;
 	Array<DisplayData> displayData;
 
@@ -65,7 +65,7 @@ public:
 
 	const BitmapFont* GetFont() const { return font; }
 
-	int GetRowCountForTextLength(unsigned int characterCount) const;
+	size_t GetRowCountForTextLength(size_t characterCount) const;
 
 	/**
 	 * Add a text to be rendered this frame at a specified normalized position.

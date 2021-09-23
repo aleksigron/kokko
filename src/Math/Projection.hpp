@@ -90,4 +90,5 @@ struct ProjectionParameters
 	}
 
 	void SetAspectRatio(float width, float height) { aspect = width / height; }
+	void SetAspectRatio(int width, int height) { aspect = width / static_cast<float>(height); }
 };

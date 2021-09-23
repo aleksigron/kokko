@@ -1,6 +1,7 @@
 #include "Debug/DebugTextRenderer.hpp"
 
 #include <cassert>
+#include <cstdint>
 
 #include "Core/Core.hpp"
 #include "Core/EncodingUtf8.hpp"
@@ -76,7 +77,7 @@ void DebugTextRenderer::SetScaleFactor(float scale)
 	scaledFrameSize = frameSize * (1.0f / scaleFactor);
 }
 
-int DebugTextRenderer::GetRowCountForTextLength(unsigned int characterCount) const
+size_t DebugTextRenderer::GetRowCountForTextLength(size_t characterCount) const
 {
 	int glyphWidth = font->GetGlyphWidth();
 	int screenWidth = static_cast<int>(scaledFrameSize.x);
@@ -125,7 +126,7 @@ void DebugTextRenderer::AddText(StringRef str, const Rectanglef& area)
 {
 	stringCharCount += EncodingUtf8::CountCharacters(str);
 
-	unsigned int stringPosition = stringData.GetCount();
+	size_t stringPosition = stringData.GetCount();
 	stringData.InsertBack(str.str, str.len);
 
 	DisplayData& dd = displayData.PushBack();
@@ -253,8 +254,8 @@ void DebugTextRenderer::CreateAndUploadData()
 		const char* strEnd = strItr + rd.stringLength;
 		while (strItr < strEnd)
 		{
-			unsigned int codepoint;
-			unsigned int bytesDecoded = EncodingUtf8::DecodeCodepoint(strItr, codepoint);
+			uint32_t codepoint;
+			size_t bytesDecoded = EncodingUtf8::DecodeCodepoint(strItr, codepoint);
 
 			if (bytesDecoded > 0)
 			{
@@ -280,8 +281,8 @@ void DebugTextRenderer::CreateAndUploadData()
 
 					for (unsigned int i = 0; i < verticesPerChar; ++i)
 					{
-						float x(i % 2);
-						float y(i / 2);
+						float x = static_cast<float>(i % 2);
+						float y = static_cast<float>(i / 2);
 
 						vertexItr[0] = (quadPos.x + x * quadRight) * scaledInvFrame.x - 1.0f;
 						vertexItr[1] = (quadPos.y + y * quadDown) * scaledInvFrame.y + 1.0f;

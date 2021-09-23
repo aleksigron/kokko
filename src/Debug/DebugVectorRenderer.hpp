@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "Core/Color.hpp"
 #include "Core/Optional.hpp"
 
@@ -40,7 +42,7 @@ private:
 	{
 		Mat4x4f transform;
 		Color color;
-		int dynamicMeshIndex;
+		size_t dynamicMeshIndex;
 		PrimitiveType type;
 		bool screenSpace;
 	};
@@ -85,7 +87,7 @@ public:
 	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
-	void DrawLineChainScreen(unsigned int count, const Vec3f* points, const Color& color);
+	void DrawLineChainScreen(size_t count, const Vec3f* points, const Color& color);
 	void DrawLine(const Vec3f& start, const Vec3f& end, const Color& color);
 
 	void DrawWireCube(const Mat4x4f& transform, const Color& color);
