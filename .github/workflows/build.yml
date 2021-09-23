@@ -1,4 +1,4 @@
-name: CMake
+name: CMake build
 
 on:
   push:
@@ -16,14 +16,14 @@ jobs:
       matrix:
         config:
           - {
-              name: "Windows Latest MSVC",
+              name: "Windows MSVC",
               os: windows-latest,
               build_type: Release,
               cc: "cl", cxx: "cl",
               dependencies: ""
             }
           - {
-              name: "Ubuntu Latest GCC",
+              name: "Linux GCC",
               os: ubuntu-latest,
               build_type: Release,
               cc: "gcc", cxx: "g++",
