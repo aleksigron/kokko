@@ -62,7 +62,7 @@ void EditorApp::Initialize(Engine* engine)
 	InputManager* inputManager = window->GetInputManager();
 	GLFWwindow* glfwWindow = window->GetGlfwWindow();
 
-	ImGui_ImplGlfw_InitForOpenGL(window->GetGlfwWindow(), false);
+	ImGui_ImplGlfw_InitForOpenGL(window->GetGlfwWindow(), true);
 	ImGui_ImplOpenGL3_Init();
 
 	core->Initialize(engine);
