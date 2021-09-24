@@ -1,4 +1,4 @@
-name: CMake build
+name: build
 
 on:
   push:
@@ -18,16 +18,18 @@ jobs:
           - {
               name: "Windows MSVC",
               os: windows-latest,
-              build_type: Release,
+              build_type: release,
               cc: "cl", cxx: "cl",
-              dependencies: ""
+              dependencies: "",
+              build_product: "kokko-editor.exe"
             }
           - {
               name: "Linux GCC",
               os: ubuntu-latest,
-              build_type: Release,
+              build_type: release,
               cc: "gcc", cxx: "g++",
-              dependencies: "sudo apt-get install xorg-dev"
+              dependencies: "sudo apt-get install xorg-dev",
+              build_product: "kokko-editor"
             }
 
     steps:
@@ -38,14 +40,18 @@ jobs:
     - name: Install dependencies
       run: ${{matrix.config.dependencies}}
 
-    - name: Configure CMake
+    - name: Configure
       env:
         CC: ${{matrix.config.cc}}
         CXX: ${{matrix.config.cxx}}
       run: |
-        mkdir ${{github.workspace}}/editor/build
-        cmake -B ${{github.workspace}}/editor/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
+        cd ${{github.workspace}}/editor
+        mkdir build
+        cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
 
     - name: Build
       # GitHub runners have 2 vCPU, run 3 parallel build jobs
       run: cmake --build ${{github.workspace}}/editor/build --config ${{matrix.config.build_type}} --parallel 3
+
+    - name: Run tests
+      run: ${{github.workspace}}/editor/build/bin/${{matrix.config.build_type}}/${{matrix.config.build_product}} --exit=true
