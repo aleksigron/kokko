@@ -1,8 +1,10 @@
 # Kokko Engine
 
-This is a personal project that lets me test out new ideas and learn some OpenGL programming in the process. I hope that little by little, this will become a good, small game engine that might offer some new ways to solve old problems.
+![Build status badge](https://github.com/aleksigron/kokko/actions/workflows/build.yml/badge.svg)
 
-![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20210429.jpg)
+A simple cross-platform game engine using OpenGL. I hope that little by little, this can become a good, small game engine that might offer some new ways to solve old problems.
+
+![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20210925.jpg)
 
 ## Features
 
