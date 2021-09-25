@@ -42,7 +42,7 @@ private:
 	{
 		Mat4x4f transform;
 		Color color;
-		size_t dynamicMeshIndex;
+		int dynamicMeshIndex;
 		PrimitiveType type;
 		bool screenSpace;
 	};
@@ -59,7 +59,7 @@ private:
 	struct DynamicMesh
 	{
 		MeshId meshId;
-		unsigned int bufferSize;
+		size_t bufferSize;
 		bool used;
 	};
 
@@ -77,7 +77,7 @@ private:
 	bool buffersInitialized;
 	unsigned int uniformBufferIds[2];
 
-	DynamicMesh* GetDynamicMesh(unsigned int byteSize);
+	DynamicMesh* GetDynamicMesh(size_t byteSize);
 
 public:
 	DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice);
