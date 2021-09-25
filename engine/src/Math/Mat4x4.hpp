@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstddef>
 
 #include "Math/Vec4.hpp"
 #include "Math/Mat3x3.hpp"
@@ -28,8 +29,8 @@ struct alignas(16) Mat4x4f
 	{
 	}
 	
-	float& operator[](std::size_t index) { return m[index]; }
-	const float& operator[](std::size_t index) const { return m[index]; }
+	float& operator[](size_t index) { return m[index]; }
+	const float& operator[](size_t index) const { return m[index]; }
 	
 	float* ValuePointer() { return m; }
 	const float* ValuePointer() const { return m; }

@@ -34,7 +34,7 @@ void TraceAllocator::Deallocate(void* ptr)
 {
 	if (ptr != nullptr)
 	{
-		int index = allocations.Find(AllocationInfo{ ptr, nullptr });
+		intptr_t index = allocations.Find(AllocationInfo{ ptr, nullptr });
 		assert(index >= 0);
 		allocations.Remove(index);
 	}

@@ -14,7 +14,7 @@ UniformTypeInfo::UniformTypeInfo(unsigned int size, unsigned int alignment,
 	isArray(isArray),
 	isTexture(isTexture)
 {
-	typeNameLength = std::strlen(typeName);
+	typeNameLength = static_cast<unsigned int>(std::strlen(typeName));
 }
 
 // Must match order with UniformDataType
@@ -286,7 +286,7 @@ UniformList::UniformList() :
 
 BufferUniform* UniformList::FindBufferUniformByName(StringRef name)
 {
-	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+	for (size_t i = 0, count = bufferUniformCount; i < count; ++i)
 		if (bufferUniforms[i].name.ValueEquals(name))
 			return &bufferUniforms[i];
 
@@ -295,7 +295,7 @@ BufferUniform* UniformList::FindBufferUniformByName(StringRef name)
 
 const BufferUniform* UniformList::FindBufferUniformByName(StringRef name) const
 {
-	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+	for (size_t i = 0, count = bufferUniformCount; i < count; ++i)
 		if (bufferUniforms[i].name.ValueEquals(name))
 			return &bufferUniforms[i];
 
@@ -304,7 +304,7 @@ const BufferUniform* UniformList::FindBufferUniformByName(StringRef name) const
 
 BufferUniform* UniformList::FindBufferUniformByNameHash(uint32_t nameHash)
 {
-	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+	for (size_t i = 0, count = bufferUniformCount; i < count; ++i)
 		if (bufferUniforms[i].nameHash == nameHash)
 			return &bufferUniforms[i];
 
@@ -313,7 +313,7 @@ BufferUniform* UniformList::FindBufferUniformByNameHash(uint32_t nameHash)
 
 const BufferUniform* UniformList::FindBufferUniformByNameHash(uint32_t nameHash) const
 {
-	for (unsigned int i = 0, count = bufferUniformCount; i < count; ++i)
+	for (size_t i = 0, count = bufferUniformCount; i < count; ++i)
 		if (bufferUniforms[i].nameHash == nameHash)
 			return &bufferUniforms[i];
 
@@ -322,7 +322,7 @@ const BufferUniform* UniformList::FindBufferUniformByNameHash(uint32_t nameHash)
 
 TextureUniform* UniformList::FindTextureUniformByName(StringRef name)
 {
-	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
+	for (size_t i = 0, count = textureUniformCount; i < count; ++i)
 		if (textureUniforms[i].name.ValueEquals(name))
 			return &textureUniforms[i];
 
@@ -331,7 +331,7 @@ TextureUniform* UniformList::FindTextureUniformByName(StringRef name)
 
 const TextureUniform* UniformList::FindTextureUniformByName(StringRef name) const
 {
-	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
+	for (size_t i = 0, count = textureUniformCount; i < count; ++i)
 		if (textureUniforms[i].name.ValueEquals(name))
 			return &textureUniforms[i];
 
@@ -340,7 +340,7 @@ const TextureUniform* UniformList::FindTextureUniformByName(StringRef name) cons
 
 TextureUniform* UniformList::FindTextureUniformByNameHash(uint32_t nameHash)
 {
-	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
+	for (size_t i = 0, count = textureUniformCount; i < count; ++i)
 		if (textureUniforms[i].nameHash == nameHash)
 			return &textureUniforms[i];
 
@@ -349,7 +349,7 @@ TextureUniform* UniformList::FindTextureUniformByNameHash(uint32_t nameHash)
 
 const TextureUniform* UniformList::FindTextureUniformByNameHash(uint32_t nameHash) const
 {
-	for (unsigned int i = 0, count = textureUniformCount; i < count; ++i)
+	for (size_t i = 0, count = textureUniformCount; i < count; ++i)
 		if (textureUniforms[i].nameHash == nameHash)
 			return &textureUniforms[i];
 

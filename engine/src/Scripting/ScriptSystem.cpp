@@ -32,7 +32,7 @@ void ScriptSystem::AddScriptInternal(Entity entity, NativeScriptComponent* scrip
 	scriptsToInit.PushBack(script);
 
 	auto* mapPair = entityMap.Insert(entity.id);
-	mapPair->second = scriptIndex;
+	mapPair->second = static_cast<unsigned int>(scriptIndex);
 }
 
 void ScriptSystem::UpdateScripts(World* world)

@@ -65,7 +65,7 @@ void MaterialManager::Reallocate(unsigned int required)
 	if (required <= data.allocated)
 		return;
 
-	required = Math::UpperPowerOfTwo(required);
+	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
 
 	InstanceData newData;
 	newData.buffer = allocator->Allocate((sizeof(unsigned int) + sizeof(MaterialData)) * required);
@@ -255,7 +255,7 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 	material.uniforms.bufferUniformCount = shader.uniforms.bufferUniformCount;
 	material.uniforms.textureUniformCount = shader.uniforms.textureUniformCount;
 
-	unsigned int uboSize = material.uniforms.uniformDataSize;
+	size_t uboSize = material.uniforms.uniformDataSize;
 	
 	if (material.uniforms.bufferUniformCount > 0 ||
 		material.uniforms.textureUniformCount > 0)
@@ -274,10 +274,10 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 		material.uniforms.textureUniforms = material.uniforms.textureUniformCount > 0 ? textureBuf : nullptr;
 		material.uniformData = material.uniforms.bufferUniformCount > 0 ? dataBuf : nullptr;
 
-		for (unsigned int i = 0, count = shader.uniforms.bufferUniformCount; i < count; ++i)
+		for (size_t i = 0, count = shader.uniforms.bufferUniformCount; i < count; ++i)
 			material.uniforms.bufferUniforms[i] = shader.uniforms.bufferUniforms[i];
 
-		for (unsigned int i = 0, count = shader.uniforms.textureUniformCount; i < count; ++i)
+		for (size_t i = 0, count = shader.uniforms.textureUniformCount; i < count; ++i)
 			material.uniforms.textureUniforms[i] = shader.uniforms.textureUniforms[i];
 	}
 	else
@@ -678,7 +678,7 @@ void MaterialManager::UpdateUniformsToGPU(MaterialId id)
 		else
 			uniformBuffer = static_cast<unsigned char*>(allocator->Allocate(material.uniforms.uniformBufferSize));
 
-		for (unsigned int i = 0, count = material.uniforms.bufferUniformCount; i < count; ++i)
+		for (size_t i = 0, count = material.uniforms.bufferUniformCount; i < count; ++i)
 			material.uniforms.bufferUniforms[i].UpdateToUniformBuffer(material.uniformData, uniformBuffer);
 
 		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);

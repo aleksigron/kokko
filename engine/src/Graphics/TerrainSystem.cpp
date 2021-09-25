@@ -125,15 +125,15 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 
 	// Create vertex data
 
-	size_t sideVerts = terrain.terrainResolution + 1;
-	size_t vertCount = sideVerts * sideVerts;
+	int sideVerts = terrain.terrainResolution + 1;
+	unsigned int vertCount = sideVerts * sideVerts;
 	size_t vertexComponents = 2;
 	size_t vertSize = sizeof(float) * vertexComponents;
 	float* vertexData = static_cast<float*>(allocator->Allocate(vertCount * vertSize));
 
-	size_t sideQuads = terrain.terrainResolution;
-	size_t quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
-	size_t indexCount = sideQuads * sideQuads * quadIndices;
+	int sideQuads = terrain.terrainResolution;
+	int quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
+	unsigned int indexCount = sideQuads * sideQuads * quadIndices;
 	uint16_t* indexData = static_cast<uint16_t*>(allocator->Allocate(indexCount * sizeof(uint16_t)));
 	// TODO: Use 32-bit index type if necessary
 
@@ -155,13 +155,13 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 	{
 		for (size_t x = 0; x < sideQuads; ++x)
 		{
-			size_t quad = y * sideQuads + x;
-			indexData[quad * quadIndices + 0] = y * sideVerts + x;
-			indexData[quad * quadIndices + 1] = (y + 1) * sideVerts + x;
-			indexData[quad * quadIndices + 2] = y * sideVerts + (x + 1);
-			indexData[quad * quadIndices + 3] = (y + 1) * sideVerts + x;
-			indexData[quad * quadIndices + 4] = (y + 1) * sideVerts + (x + 1);
-			indexData[quad * quadIndices + 5] = y * sideVerts + (x + 1);
+			size_t quadStart = (y * sideQuads + x) * quadIndices;
+			indexData[quadStart + 0] = static_cast<uint16_t>(y * sideVerts + x);
+			indexData[quadStart + 1] = static_cast<uint16_t>((y + 1) * sideVerts + x);
+			indexData[quadStart + 2] = static_cast<uint16_t>(y * sideVerts + (x + 1));
+			indexData[quadStart + 3] = static_cast<uint16_t>((y + 1) * sideVerts + x);
+			indexData[quadStart + 4] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 1));
+			indexData[quadStart + 5] = static_cast<uint16_t>(y * sideVerts + (x + 1));
 		}
 	}
 
@@ -229,7 +229,7 @@ void TerrainSystem::RenderTerrain(TerrainInstance& terrain, const MaterialData& 
 	uniforms.MV = viewport.view;
 	uniforms.textureScale = terrain.textureScale;
 	uniforms.terrainSize = terrain.terrainSize;
-	uniforms.terrainResolution = terrain.terrainResolution;
+	uniforms.terrainResolution = static_cast<float>(terrain.terrainResolution);
 	uniforms.minHeight = terrain.minHeight;
 	uniforms.maxHeight = terrain.maxHeight;
 

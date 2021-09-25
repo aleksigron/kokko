@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstddef>
 
 #include "Math/Vec3.hpp"
 
@@ -10,8 +11,8 @@ struct Mat3x3f
 
 	Mat3x3f(): m{ 1, 0, 0, 0, 1, 0, 0, 0, 1 } {}
 
-	float& operator[](unsigned int index) { return m[index]; }
-	const float& operator[](unsigned int index) const { return m[index]; }
+	float& operator[](size_t index) { return m[index]; }
+	const float& operator[](size_t index) const { return m[index]; }
 
 	float* ValuePointer() { return m; }
 	const float* ValuePointer() const { return m; }

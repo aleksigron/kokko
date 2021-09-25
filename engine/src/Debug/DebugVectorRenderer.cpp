@@ -331,7 +331,7 @@ void DebugVectorRenderer::DrawLineChainScreen(size_t count, const Vec3f* points,
 		data.primitiveMode = RenderPrimitiveMode::LineStrip;
 		data.usage = RenderBufferUsage::DynamicDraw;
 		data.vertexData = reinterpret_cast<const float*>(points);
-		data.vertexCount = count;
+		data.vertexCount = static_cast<unsigned int>(count);
 
 		meshManager->Upload(mesh->meshId, data);
 

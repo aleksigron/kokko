@@ -332,9 +332,9 @@ void DebugTextRenderer::CreateAndUploadData()
 	data.vertexFormat = format;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertexData = vertexData.GetData();
-	data.vertexCount = (vertexItr - vertexBegin) / componentCount;
+	data.vertexCount = static_cast<unsigned int>((vertexItr - vertexBegin) / componentCount);
 	data.indexData = indexData.GetData();
-	data.indexCount = indexData.GetCount();
+	data.indexCount = static_cast<unsigned int>(indexData.GetCount());
 	data.usage = RenderBufferUsage::DynamicDraw;
 
 	meshManager->UploadIndexed(meshId, data);

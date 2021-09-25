@@ -229,12 +229,12 @@ void Window::UnregisterFramebufferResizeCallback(FramebufferSizeCallbackFn callb
 {
 	int index = -1;
 
-	for (int i = 0, count = framebufferResizeCallbacks.GetCount(); i < count; ++i)
+	for (size_t i = 0, count = framebufferResizeCallbacks.GetCount(); i < count; ++i)
 	{
 		const FramebufferResizeCallbackInfo& cb = framebufferResizeCallbacks[i];
 		if (cb.function == callback && cb.userPointer == userPointer)
 		{
-			index = i;
+			index = static_cast<int>(i);
 			break;
 		}
 	}

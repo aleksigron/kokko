@@ -40,7 +40,7 @@ void Scene::Reallocate(unsigned int required)
 	if (required <= data.allocated)
 		return;
 
-	required = Math::UpperPowerOfTwo(required);
+	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
 
 	// Reserve same amount in entity map
 	entityMap.Reserve(required);

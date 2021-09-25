@@ -74,9 +74,9 @@ void Intersect::FrustumAABBMinSize(
 
 	for (int i = 0; i < 8; ++i)
 	{
-		boxCornerMultipliers[i].x = ((i % 2) * 2 - 1);
-		boxCornerMultipliers[i].y = (((i / 2) % 2) * 2 - 1);
-		boxCornerMultipliers[i].z = (((i / 4) % 2) * 2 - 1);
+		boxCornerMultipliers[i].x = ((i % 2) * 2.0f - 1.0f);
+		boxCornerMultipliers[i].y = (((i / 2) % 2) * 2.0f - 1.0f);
+		boxCornerMultipliers[i].z = (((i / 4) % 2) * 2.0f - 1.0f);
 	}
 
 	// For each axis aligned bounding box

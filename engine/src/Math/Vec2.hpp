@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstddef>
 
 template <typename T>
 struct Vec2
@@ -13,8 +14,8 @@ struct Vec2
 	T* ValuePointer() { return &x; }
 	const T* ValuePointer() const { return &x; }
 
-	T& operator[](std::size_t index) { return (&x)[index]; }
-	const T& operator[](std::size_t index) const { return (&x)[index]; }
+	T& operator[](size_t index) { return (&x)[index]; }
+	const T& operator[](size_t index) const { return (&x)[index]; }
 
 	template <typename CastType>
 	Vec2<CastType> As() const
