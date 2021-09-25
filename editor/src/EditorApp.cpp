@@ -1,5 +1,7 @@
 #include "EditorApp.hpp"
 
+#include <cmath>
+
 #include "imgui.h"
 #include "ImGuizmo.h"
 
@@ -17,6 +19,7 @@
 
 #include "Graphics/Scene.hpp"
 
+#include "Math/Math.hpp"
 #include "Math/Rectangle.hpp"
 
 #include "Memory/Allocator.hpp"
@@ -56,7 +59,28 @@ void EditorApp::Initialize(Engine* engine)
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
+	float scale = engine->GetMainWindow()->GetScreenCoordinateScale();
+
+	// TODO: Scale spacing values
+	// TODO: Update font size and spacing if window is moved to another screen
+
+	float fontSize = std::floor(15.0f * scale);
+	io.Fonts->AddFontFromFileTTF("res/fonts/roboto/Roboto-Regular.ttf", fontSize);
+
 	ImGui::StyleColorsDark();
+
+	// Update style colors to linear space
+	ImVec4* imguiColors = ImGui::GetStyle().Colors;
+	for (size_t i = 0; i < ImGuiCol_COUNT; ++i)
+	{
+		ImVec4 color = imguiColors[i];
+		color.x = Math::SrgbFloatToLinear(color.x);
+		color.y = Math::SrgbFloatToLinear(color.y);
+		color.z = Math::SrgbFloatToLinear(color.z);
+		// Leave alpha as is
+
+		imguiColors[i] = color;
+	}
 
 	GLFWwindow* glfwWindow = engine->GetMainWindow()->GetGlfwWindow();
 
@@ -126,7 +150,6 @@ void EditorApp::EndFrame()
 	{
 		KOKKO_PROFILE_SCOPE("Clear default framebuffer");
 
-		// Bind default framebuffer
 		renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
 
 		RenderCommandData::ClearColorData clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };

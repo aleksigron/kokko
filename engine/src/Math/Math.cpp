@@ -29,6 +29,19 @@ float Math::Lerp(float a, float b, float t)
 	}
 }
 
+float Math::SrgbFloatToLinear(float srgb)
+{
+	if (srgb > 0.04045f)
+		return std::pow((srgb + 0.055f) / 1.055f, 2.4f);
+	else
+		return srgb / 12.92f;
+}
+
+float Math::SrgbByteToLinear(uint8_t srgb)
+{
+	return SrgbFloatToLinear(srgb / 255.0f);
+}
+
 float Math::DampenMultiplier(float dampenPerSecond, float deltaTime)
 {
 	return std::pow(dampenPerSecond, deltaTime);

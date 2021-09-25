@@ -40,6 +40,9 @@ namespace Math
 
 	float Lerp(float a, float b, float t);
 
+	float SrgbFloatToLinear(float srgb);
+	float SrgbByteToLinear(uint8_t srgb);
+
 	float DampenMultiplier(float dampenPerSecond, float deltaTime);
 
 	bool IsPowerOfTwo(uint64_t v);
