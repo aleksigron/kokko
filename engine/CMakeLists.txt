@@ -7,30 +7,32 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(KOKKO_LIB kokko)
 
+set(ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
 include_directories(
 	src
-	deps/doctest
-	deps/fmt/include
-	deps/glad/include
-	deps/glfw/include
-	deps/rapidjson/include
-	deps/stb_image/include
-	deps/yaml-cpp/include
+	${ROOT_PATH}/deps/doctest
+	${ROOT_PATH}/deps/fmt/include
+	${ROOT_PATH}/deps/glad/include
+	${ROOT_PATH}/deps/glfw/include
+	${ROOT_PATH}/deps/rapidjson/include
+	${ROOT_PATH}/deps/stb_image/include
+	${ROOT_PATH}/deps/yaml-cpp/include
 )
 
 set (FMT_SOURCES
-	deps/fmt/src/format.cc
-	deps/fmt/src/os.cc
+	${ROOT_PATH}/deps/fmt/src/format.cc
+	${ROOT_PATH}/deps/fmt/src/os.cc
 )
 
 set (GLAD_SOURCES
-	deps/glad/include/glad/glad.h
-	deps/glad/src/glad.c
+	${ROOT_PATH}/deps/glad/include/glad/glad.h
+	${ROOT_PATH}/deps/glad/src/glad.c
 )
 
 set (STB_IMAGE_SOURCES
-	deps/stb_image/include/stb_image/stb_image.h
-	deps/stb_image/src/stb_image.cpp
+	${ROOT_PATH}/deps/stb_image/include/stb_image/stb_image.h
+	${ROOT_PATH}/deps/stb_image/src/stb_image.cpp
 )
 
 set (DEPS_SOURCES
@@ -265,12 +267,12 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(deps/glfw)
+add_subdirectory(${ROOT_PATH}/deps/glfw glfw-build)
 
 set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(deps/yaml-cpp)
+add_subdirectory(${ROOT_PATH}/deps/yaml-cpp yaml-cpp-build)
 
 find_package(OpenGL REQUIRED)
 
