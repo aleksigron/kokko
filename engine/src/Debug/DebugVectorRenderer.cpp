@@ -226,12 +226,12 @@ void DebugVectorRenderer::Deinitialize()
 	}
 }
 
-DebugVectorRenderer::DynamicMesh* DebugVectorRenderer::GetDynamicMesh(unsigned int byteSize)
+DebugVectorRenderer::DynamicMesh* DebugVectorRenderer::GetDynamicMesh(size_t byteSize)
 {
 	int bestFit = -1;
-	unsigned int bestFitSize;
+	size_t bestFitSize;
 	int largestUnused = -1;
-	unsigned int largestUnusedSize;
+	size_t largestUnusedSize;
 
 	for (unsigned int i = 0, count = dynamicMeshCount; i < count; ++i)
 	{
@@ -340,7 +340,7 @@ void DebugVectorRenderer::DrawLineChainScreen(size_t count, const Vec3f* points,
 
 		mesh->used = true;
 
-		prim->dynamicMeshIndex = mesh - dynamicMeshes;
+		prim->dynamicMeshIndex = static_cast<int>(mesh - dynamicMeshes);
 
 		++primitiveCount;
 	}
