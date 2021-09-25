@@ -98,7 +98,7 @@ struct TextureUniform : ShaderUniform
 struct UniformList
 {
 	size_t uniformDataSize; // CPU side
-	size_t uniformBufferSize; // GPU side
+	unsigned int uniformBufferSize; // GPU side
 
 	size_t bufferUniformCount;
 	size_t textureUniformCount;

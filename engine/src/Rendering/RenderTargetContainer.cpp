@@ -59,7 +59,7 @@ RenderTarget RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextur
 
 		TargetInfo& targetInfo = renderTargets[renderTargetCount];
 
-		targetInfo.target.id = renderTargetCount;
+		targetInfo.target.id = static_cast<unsigned int>(renderTargetCount);
 		targetInfo.target.size = size;
 		targetInfo.target.colorFormat = format;
 		targetInfo.target.colorTexture = texture;

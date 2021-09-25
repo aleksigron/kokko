@@ -49,7 +49,7 @@ void MeshManager::Reallocate(unsigned int required)
 	if (required <= data.allocated)
 		return;
 
-	required = Math::UpperPowerOfTwo(required);
+	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
 
 	size_t objectBytes = sizeof(unsigned int) * 2 + sizeof(MeshDrawData) +
 		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(MeshId) + sizeof(char*);
@@ -357,7 +357,7 @@ void MeshManager::CreateDrawData(unsigned int index, const VertexData& vdata)
 	MeshDrawData& drawData = data.drawData[index];
 	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = data.bufferData[index].vertexArrayObject;
-	drawData.count = vdata.vertexCount;
+	drawData.count = static_cast<int>(vdata.vertexCount);
 	drawData.indexType = RenderIndexType::None;
 }
 
@@ -366,7 +366,7 @@ void MeshManager::CreateDrawDataIndexed(unsigned int index, const IndexedVertexD
 	MeshDrawData& drawData = data.drawData[index];
 	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = data.bufferData[index].vertexArrayObject;
-	drawData.count = vdata.indexCount;
+	drawData.count = static_cast<int>(vdata.indexCount);
 	drawData.indexType = RenderIndexType::UnsignedShort;
 }
 

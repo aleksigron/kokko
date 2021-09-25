@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "Math/Vec3.hpp"
 
 template <typename T>
@@ -14,8 +16,8 @@ struct Vec4
 	T* ValuePointer() { return &x; }
 	const T* ValuePointer() const { return &x; }
 
-	T& operator[](std::size_t index) { return (&x)[index]; }
-	const T& operator[](std::size_t index) const { return (&x)[index]; }
+	T& operator[](size_t index) { return (&x)[index]; }
+	const T& operator[](size_t index) const { return (&x)[index]; }
 
 	Vec3<T> xyz() const { return Vec3<T>(x, y, z); }
 

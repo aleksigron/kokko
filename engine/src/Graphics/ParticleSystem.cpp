@@ -374,7 +374,7 @@ void ParticleSystem::ReallocateEmitters(unsigned int requiredCount)
 	if (requiredCount < MinAllocation)
 		requiredCount = MinAllocation;
 
-	requiredCount = Math::UpperPowerOfTwo(requiredCount);
+	requiredCount = static_cast<unsigned int>(Math::UpperPowerOfTwo(requiredCount));
 
 	// Reserve same amount in entity map
 	entityMap.Reserve(requiredCount);

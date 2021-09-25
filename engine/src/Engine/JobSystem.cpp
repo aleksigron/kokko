@@ -239,7 +239,7 @@ Job* JobSystem::GetJobToExecute()
 	const size_t lastQueueIndex = threadCount - 1;
 		
 	// Get start index by random number generation
-	size_t threadIndex = static_cast<size_t>(Random::Uint(0, lastQueueIndex));
+	size_t threadIndex = static_cast<size_t>(Random::Uint64(0, lastQueueIndex));
 
 	// Try to steal from each thread queue
 	for (size_t i = 0; i < threadCount; ++i)

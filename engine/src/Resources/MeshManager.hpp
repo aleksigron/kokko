@@ -33,7 +33,7 @@ struct VertexData
 	RenderPrimitiveMode primitiveMode;
 	RenderBufferUsage usage;
 
-	size_t vertexCount;
+	unsigned int vertexCount;
 	const void* vertexData;
 };
 
@@ -50,7 +50,7 @@ struct IndexedVertexData : VertexData
 	void SetIndexSizeInt() { indexSize = sizeof(unsigned int); }
 
 	const void* indexData;
-	size_t indexCount;
+	unsigned int indexCount;
 
 	unsigned int indexSize;
 };

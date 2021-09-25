@@ -97,7 +97,7 @@ void TextureManager::Reallocate(unsigned int required)
 	if (required <= data.allocated)
 		return;
 
-	required = Math::UpperPowerOfTwo(required);
+	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
 
 	size_t objectBytes = sizeof(unsigned int) + sizeof(TextureData);
 
@@ -325,8 +325,9 @@ void TextureManager::Upload_2D(TextureId id, const ImageData& image, const Textu
 	if (image.compressed)
 	{
 		RenderCommandData::SetTextureImageCompressed2D textureImage{
-			texture.textureTarget, 0, image.pixelFormat, image.imageSize.x,
-			image.imageSize.y, image.compressedSize, image.imageData
+			texture.textureTarget, 0, image.pixelFormat,
+			image.imageSize.x, image.imageSize.y, 
+			static_cast<unsigned int>(image.compressedSize), image.imageData
 		};
 
 		renderDevice->SetTextureImageCompressed2D(&textureImage);
@@ -385,8 +386,8 @@ void TextureManager::Upload_Cube(TextureId id, const ImageData* images, const Te
 		if (image.compressed)
 		{
 			RenderCommandData::SetTextureImageCompressed2D textureImage{
-				targetFace, 0, image.pixelFormat, image.imageSize.x,
-				image.imageSize.y, image.compressedSize, image.imageData
+				targetFace, 0, image.pixelFormat, image.imageSize.x, image.imageSize.y,
+				static_cast<unsigned int>(image.compressedSize), image.imageData
 			};
 
 			renderDevice->SetTextureImageCompressed2D(&textureImage);
