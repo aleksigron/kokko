@@ -99,19 +99,34 @@ void EditorCore::DrawMainMenuBar()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("New"))
-				world->ClearAllEntities();
+			if (ImGui::MenuItem("New project..."))
+			{
+				// TODO: Use file picker to select a directory
+			}
 
-			if (ImGui::MenuItem("Open..."))
+			if (ImGui::MenuItem("Open project..."))
+			{
+				// TODO: Use file picker to select a directory
+			}
+
+			ImGui::Separator();
+
+			if (ImGui::MenuItem("New level"))
+			{
+				// TODO: Make sure level changes have been saved
+				world->ClearAllEntities();
+			}
+
+			if (ImGui::MenuItem("Open level..."))
 				openLevel = true;
 
-			if (ImGui::MenuItem("Save as..."))
+			if (ImGui::MenuItem("Save level as..."))
 				saveLevel = true;
 
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("Exit"))
-				exitRequested;
+				exitRequested = true;
 
 			ImGui::EndMenu();
 		}

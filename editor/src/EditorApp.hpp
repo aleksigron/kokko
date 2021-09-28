@@ -1,6 +1,6 @@
 #pragma once
 
-struct GLFWwindow;
+#include "EditorProject.hpp"
 
 class Allocator;
 class EditorCore;
@@ -19,6 +19,8 @@ private:
 	RenderDevice* renderDevice;
 
 	EditorCore* core;
+
+	EditorProject project;
 
 public:
 	EditorApp(Allocator* allocator);
