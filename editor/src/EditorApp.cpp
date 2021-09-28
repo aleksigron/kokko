@@ -8,10 +8,11 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
-#include "Core/Core.hpp"
-
 #include "EditorCore.hpp"
+#include "EditorUserSettings.hpp"
 #include "FilePickerDialog.hpp"
+
+#include "Core/Core.hpp"
 
 #include "Engine/Engine.hpp"
 #include "Engine/EntityManager.hpp"
@@ -37,7 +38,9 @@
 
 EditorApp::EditorApp(Allocator* allocator) :
 	allocator(allocator),
-	renderDevice(nullptr)
+	renderDevice(nullptr),
+	core(nullptr),
+	project(allocator)
 {
 	core = allocator->MakeNew<EditorCore>(allocator);
 }
@@ -64,8 +67,12 @@ void EditorApp::Initialize(Engine* engine)
 	// TODO: Scale spacing values
 	// TODO: Update font size and spacing if window is moved to another screen
 
-	float fontSize = std::floor(15.0f * scale);
-	io.Fonts->AddFontFromFileTTF("res/fonts/roboto/Roboto-Regular.ttf", fontSize);
+	{
+		KOKKO_PROFILE_SCOPE("ImGui AddFontFromFileTTF()");
+
+		float fontSize = std::floor(15.0f * scale);
+		io.Fonts->AddFontFromFileTTF("res/fonts/roboto/Roboto-Regular.ttf", fontSize);
+	}
 
 	ImGui::StyleColorsDark();
 
@@ -84,8 +91,40 @@ void EditorApp::Initialize(Engine* engine)
 
 	GLFWwindow* glfwWindow = engine->GetMainWindow()->GetGlfwWindow();
 
-	ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
-	ImGui_ImplOpenGL3_Init();
+	{
+		KOKKO_PROFILE_SCOPE("ImGui_ImplGlfw_InitForOpenGL()");
+		ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
+	}
+
+	{
+		KOKKO_PROFILE_SCOPE("ImGui_ImplOpenGL3_Init()");
+		ImGui_ImplOpenGL3_Init();
+	}
+
+	EditorUserSettings userSettings;
+	if (userSettings.DeserializeFromFile("editor_user_settings.yml"))
+	{
+		if (userSettings.lastOpenedProject.empty())
+		{
+			KK_LOG_INFO("Last opened project is empty, should open project dialog.");
+		}
+		else if (project.DeserializeFromFile(userSettings.lastOpenedProject))
+		{
+			std::string path = project.GetRootPath();
+			const String& name = project.GetName();
+
+			KK_LOG_INFO("Opened editor project from {}, named {}", path.c_str(), name.GetCStr());
+		}
+		else
+		{
+			std::string pathStr = userSettings.lastOpenedProject.u8string();
+			KK_LOG_ERROR("Failed to open project.yml from path {}", pathStr.c_str());
+		}
+	}
+	else
+	{
+		KK_LOG_INFO("Failed to open editor_user_settings.yml, should open project dialog.");
+	}
 
 	core->Initialize(engine);
 }
@@ -132,6 +171,9 @@ void EditorApp::Update(EngineSettings* engineSettings, World* world, bool& shoul
 		firstRun = false;
 		world->LoadFromFile("res/scenes/default.level", "default.level");
 	}
+
+	if (core->IsExitRequested())
+		shouldExitOut = true;
 }
 
 void EditorApp::EndFrame()
