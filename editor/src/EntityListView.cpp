@@ -4,31 +4,32 @@
 
 #include "Core/Core.hpp"
 
-#include "EditorConstants.hpp"
-#include "EditorWindowInfo.hpp"
-#include "SelectionContext.hpp"
-
 #include "Engine/EntityFactory.hpp"
 #include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
 
+#include "EditorConstants.hpp"
+#include "EditorContext.hpp"
+
 EntityListView::EntityListView() :
+	EditorWindow("Entities"),
 	requestScrollToEntity(Entity::Null),
 	requestSetSceneObjectParent(SceneObjectId::Null, SceneObjectId::Null)
 {
 }
 
-void EntityListView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world)
+void EntityListView::Update(EditorContext& context)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	if (windowInfo.isOpen)
+	if (windowIsOpen)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen, windowFlags))
+		if (ImGui::Begin(windowTitle, &windowIsOpen, windowFlags))
 		{
+			World* world = context.world;
 			DrawEntityListButtons(world);
 
 			if (ImGui::BeginChild("EntityList"))
@@ -67,7 +68,7 @@ void EntityListView::Draw(EditorWindowInfo& windowInfo, SelectionContext& contex
 			ImGui::EndChild();
 		}
 
-		if (windowInfo.requestFocus)
+		if (requestFocus)
 			ImGui::SetWindowFocus();
 
 		ImGui::End();
@@ -108,7 +109,7 @@ void EntityListView::DrawEntityListButtons(World* world)
 	}
 }
 
-void EntityListView::DrawEntityNode(SelectionContext& context, World* world, Entity entity, SceneObjectId sceneObj)
+void EntityListView::DrawEntityNode(EditorContext& context, World* world, Entity entity, SceneObjectId sceneObj)
 {
 	EntityManager* entityManager = world->GetEntityManager();
 	Scene* scene = world->GetScene();

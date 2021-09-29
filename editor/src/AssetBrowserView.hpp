@@ -4,12 +4,14 @@
 
 #include "Core/String.hpp"
 
+#include "EditorWindow.hpp"
+
 class Allocator;
 class EditorImages;
 
 struct EditorWindowInfo;
 
-class AssetBrowserView
+class AssetBrowserView : public EditorWindow
 {
 public:
 	AssetBrowserView();
@@ -17,7 +19,7 @@ public:
 
 	void Initialize(const EditorImages* editorImages);
 
-	void Draw(EditorWindowInfo& windowInfo);
+	virtual void Update(EditorContext& context) override;
 
 private:
 	void SetUpColumns(int columnCount, float columnWidth);

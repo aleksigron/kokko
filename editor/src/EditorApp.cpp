@@ -8,10 +8,6 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
-#include "EditorCore.hpp"
-#include "EditorUserSettings.hpp"
-#include "FilePickerDialog.hpp"
-
 #include "Core/Core.hpp"
 
 #include "Engine/Engine.hpp"
@@ -36,11 +32,16 @@
 #include "System/InputManager.hpp"
 #include "System/Window.hpp"
 
+#include "EditorCore.hpp"
+#include "EditorUserSettings.hpp"
+#include "EditorWindow.hpp"
+
 EditorApp::EditorApp(Allocator* allocator) :
 	allocator(allocator),
 	renderDevice(nullptr),
 	core(nullptr),
-	project(allocator)
+	project(allocator),
+	exitRequested(false)
 {
 	core = allocator->MakeNew<EditorCore>(allocator);
 }
@@ -55,6 +56,7 @@ void EditorApp::Initialize(Engine* engine)
 	KOKKO_PROFILE_FUNCTION();
 
 	this->renderDevice = engine->GetRenderDevice();
+	this->world = engine->GetWorld();
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -160,8 +162,9 @@ void EditorApp::Update(EngineSettings* engineSettings, World* world, bool& shoul
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	core->SetWorld(world);
-	core->Update(engineSettings);
+	DrawMainMenuBar();
+
+	core->Update();
 
 	//ImGui::ShowDemoWindow();
 
@@ -172,7 +175,7 @@ void EditorApp::Update(EngineSettings* engineSettings, World* world, bool& shoul
 		world->LoadFromFile("res/scenes/default.level", "default.level");
 	}
 
-	if (core->IsExitRequested())
+	if (exitRequested)
 		shouldExitOut = true;
 }
 
@@ -180,7 +183,7 @@ void EditorApp::EndFrame()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	core->DrawSceneView();
+	core->LateUpdate();
 
 	core->EndFrame();
 
@@ -217,3 +220,103 @@ CameraParameters EditorApp::GetEditorCameraParameters() const
 	return core->GetEditorCameraParameters();
 }
 
+void EditorApp::DrawMainMenuBar()
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	bool openLevel = false, saveLevel = false;
+
+	if (ImGui::BeginMainMenuBar())
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("New project..."))
+			{
+				// TODO: Use file picker to select a directory
+			}
+
+			if (ImGui::MenuItem("Open project..."))
+			{
+				// TODO: Use file picker to select a directory
+			}
+
+			ImGui::Separator();
+
+			if (ImGui::MenuItem("New level"))
+			{
+				// TODO: Make sure level changes have been saved
+				world->ClearAllEntities();
+			}
+
+			if (ImGui::MenuItem("Open level..."))
+				openLevel = true;
+
+			if (ImGui::MenuItem("Save level as..."))
+				saveLevel = true;
+
+			ImGui::Separator();
+
+			if (ImGui::MenuItem("Exit"))
+				exitRequested = true;
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Edit"))
+		{
+			if (ImGui::MenuItem("Copy"))
+			{
+				core->CopyEntity();
+			}
+
+			if (ImGui::MenuItem("Paste"))
+			{
+				core->PasteEntity();
+			}
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("View"))
+		{
+			for (EditorWindow* window : core->GetWindows())
+			{
+				if (ImGui::MenuItem(window->windowTitle, nullptr))
+				{
+					window->windowIsOpen = true;
+					window->requestFocus = true;
+				}
+			}
+
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMainMenuBar();
+	}
+
+	if (openLevel)
+		filePicker.StartDialogFileOpen("Open level", "Open");
+
+	if (saveLevel)
+		filePicker.StartDialogFileSave("Save level as", "Save");
+
+	std::filesystem::path filePickerPathOut;
+	bool filePickerClosed = filePicker.Update(filePickerPathOut);
+
+	if (filePickerClosed && filePickerPathOut.empty() == false)
+	{
+		std::string pathStr = filePickerPathOut.u8string();
+		std::string filenameStr = filePickerPathOut.filename().u8string();
+
+		FilePickerDialog::DialogType type = filePicker.GetLastDialogType();
+		if (type == FilePickerDialog::DialogType::FileOpen)
+		{
+			world->ClearAllEntities();
+			world->LoadFromFile(pathStr.c_str(), filenameStr.c_str());
+		}
+		else if (type == FilePickerDialog::DialogType::FileSave)
+		{
+			world->WriteToFile(pathStr.c_str(), filenameStr.c_str());
+		}
+	}
+}

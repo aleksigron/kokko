@@ -7,13 +7,15 @@
 
 #include "Graphics/Scene.hpp"
 
+#include "EditorWindow.hpp"
+
 class World;
 
 struct SceneObjectId;
-struct SelectionContext;
+struct EditorContext;
 struct EditorWindowInfo;
 
-class EntityListView
+class EntityListView : public EditorWindow
 {
 private:
 	Entity requestScrollToEntity;
@@ -22,7 +24,7 @@ private:
 	Pair<SceneObjectId, SceneObjectId> requestSetSceneObjectParent;
 
 	void DrawEntityListButtons(World* world);
-	void DrawEntityNode(SelectionContext& context, World* world, Entity entity, SceneObjectId sceneObj);
+	void DrawEntityNode(EditorContext& context, World* world, Entity entity, SceneObjectId sceneObj);
 
 	static void ProcessSceneDragDropSource(SceneObjectId sceneObj, const char* entityName);
 	void ProcessSceneDragDropTarget(SceneObjectId parent);
@@ -30,5 +32,5 @@ private:
 public:
 	EntityListView();
 
-	void Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world);
+	virtual void Update(EditorContext& context) override;
 };

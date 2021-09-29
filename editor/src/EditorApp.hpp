@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EditorProject.hpp"
+#include "FilePickerDialog.hpp"
 
 class Allocator;
 class EditorCore;
@@ -9,19 +10,15 @@ class Framebuffer;
 class RenderDevice;
 class World;
 
+class EditorWindow;
+
 struct CameraParameters;
 struct EngineSettings;
 
+enum class EditorWindowType;
+
 class EditorApp
 {
-private:
-	Allocator* allocator;
-	RenderDevice* renderDevice;
-
-	EditorCore* core;
-
-	EditorProject project;
-
 public:
 	EditorApp(Allocator* allocator);
 	EditorApp(const EditorApp&) = delete;
@@ -41,4 +38,19 @@ public:
 	const Framebuffer& GetSceneViewFramebuffer();
 
 	CameraParameters GetEditorCameraParameters() const;
+
+private:
+	void DrawMainMenuBar();
+
+	Allocator* allocator;
+	RenderDevice* renderDevice;
+
+	EditorCore* core;
+	FilePickerDialog filePicker;
+
+	EditorProject project;
+
+	World* world;
+
+	bool exitRequested;
 };

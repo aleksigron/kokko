@@ -1,18 +1,20 @@
 #pragma once
 
+#include "EditorWindow.hpp"
+
 struct EditorWindowInfo;
 struct EngineSettings;
 
 class Debug;
 
-class DebugView
+class DebugView : public EditorWindow
 {
 public:
 	DebugView();
 
 	void Initialize(Debug* debug);
 
-	void Draw(EditorWindowInfo& windowInfo, EngineSettings* engineSettings);
+	virtual void Update(EditorContext& context) override;
 
 private:
 	Debug* debug;

@@ -5,10 +5,6 @@
 #include "Core/Core.hpp"
 #include "Core/CString.hpp"
 
-#include "EditorConstants.hpp"
-#include "EditorWindowInfo.hpp"
-#include "SelectionContext.hpp"
-
 #include "Engine/EntityFactory.hpp"
 #include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
@@ -24,7 +20,11 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 
+#include "EditorConstants.hpp"
+#include "EditorContext.hpp"
+
 EntityView::EntityView() :
+	EditorWindow("Properties"),
 	materialManager(nullptr),
 	meshManager(nullptr),
 	requestDestroyEntity(Entity::Null)
@@ -37,14 +37,15 @@ void EntityView::Initialize(MaterialManager* materialManager, MeshManager* meshM
 	this->meshManager = meshManager;
 }
 
-void EntityView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world)
+void EntityView::Update(EditorContext& context)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	if (windowInfo.isOpen)
+	if (windowIsOpen)
 	{
-		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen))
+		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
+			World* world = context.world;
 			EntityManager* entityManager = world->GetEntityManager();
 
 			if (context.selectedEntity != Entity::Null)
@@ -86,7 +87,7 @@ void EntityView::Draw(EditorWindowInfo& windowInfo, SelectionContext& context, W
 			}
 		}
 
-		if (windowInfo.requestFocus)
+		if (requestFocus)
 			ImGui::SetWindowFocus();
 
 		ImGui::End();
