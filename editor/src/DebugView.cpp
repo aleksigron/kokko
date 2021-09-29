@@ -6,13 +6,15 @@
 
 #include "Debug/Debug.hpp"
 
-#include "EditorWindowInfo.hpp"
-
 #include "Engine/EngineSettings.hpp"
 
 #include "System/Time.hpp"
 
-DebugView::DebugView() : debug(nullptr)
+#include "EditorContext.hpp"
+
+DebugView::DebugView() :
+	EditorWindow("Debug"),
+	debug(nullptr)
 {
 }
 
@@ -21,14 +23,16 @@ void DebugView::Initialize(Debug* debug)
 	this->debug = debug;
 }
 
-void DebugView::Draw(EditorWindowInfo& windowInfo, EngineSettings* engineSettings)
+void DebugView::Update(EditorContext& context)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	if (windowInfo.isOpen)
+	if (windowIsOpen)
 	{
-		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen))
+		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
+			EngineSettings* engineSettings = context.engineSettings;
+
 			float currentFrameTime = Time::GetDeltaTime();
 			ImGui::Text("Frametime: %.2f ms", currentFrameTime * 1000.0);
 
@@ -41,7 +45,7 @@ void DebugView::Draw(EditorWindowInfo& windowInfo, EngineSettings* engineSetting
 			}
 		}
 
-		if (windowInfo.requestFocus)
+		if (requestFocus)
 			ImGui::SetWindowFocus();
 
 		ImGui::End();

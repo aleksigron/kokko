@@ -13,192 +13,98 @@
 
 #include "System/Window.hpp"
 
+#include "AssetBrowserView.hpp"
+#include "DebugView.hpp"
+#include "EntityListView.hpp"
+#include "EntityView.hpp"
+#include "SceneView.hpp"
+
 EditorCore::EditorCore(Allocator* allocator) :
-	exitRequested(false),
-	world(nullptr),
+	allocator(allocator),
 	copiedEntity(allocator),
-	selectionContext{}
+	editorWindows(allocator),
+	sceneView(nullptr)
 {
-	editorWindows[EditorWindow_Entities] = EditorWindowInfo{ "Entities", true, false };
-	editorWindows[EditorWindow_Properties] = EditorWindowInfo{ "Properties", true, false };
-	editorWindows[EditorWindow_Scene] = EditorWindowInfo{ "Scene", true, false };
-	editorWindows[EditorWindow_AssetBrowser] = EditorWindowInfo{ "Asset Browser", true, false };
-	editorWindows[EditorWindow_Debug] = EditorWindowInfo{ "Debug", true, false };
+}
+
+EditorCore::~EditorCore()
+{
+	for (EditorWindow* window : editorWindows)
+		allocator->MakeDelete(window);
 }
 
 void EditorCore::Initialize(Engine* engine)
 {
+	editorContext.world = engine->GetWorld();
+	editorContext.engineSettings = engine->GetSettings();
+
 	images.LoadImages(engine->GetTextureManager());
 
-	entityView.Initialize(engine->GetMaterialManager(), engine->GetMeshManager());
-	sceneView.Initialize(engine->GetRenderDevice(), engine->GetMainWindow());
-	assetBrowserView.Initialize(&images);
-	debugView.Initialize(engine->GetDebug());
-}
+	EntityListView* entityListView = allocator->MakeNew<EntityListView>();
+	editorWindows.PushBack(entityListView);
 
-void EditorCore::SetWorld(World* world)
-{
-	this->world = world;
+	EntityView* entityView = allocator->MakeNew<EntityView>();
+	entityView->Initialize(engine->GetMaterialManager(), engine->GetMeshManager());
+	editorWindows.PushBack(entityView);
+
+	sceneView = allocator->MakeNew<SceneView>();
+	sceneView->Initialize(engine->GetRenderDevice(), engine->GetMainWindow());
+	editorWindows.PushBack(sceneView);
+
+	AssetBrowserView* assetBrowserView = allocator->MakeNew<AssetBrowserView>();
+	assetBrowserView->Initialize(&images);
+	editorWindows.PushBack(assetBrowserView);
+
+	DebugView* debugView = allocator->MakeNew<DebugView>();
+	debugView->Initialize(engine->GetDebug());
+	editorWindows.PushBack(debugView);
 }
 
 void EditorCore::ResizeSceneViewFramebufferIfRequested()
 {
-	sceneView.ResizeFramebufferIfRequested();
+	sceneView->ResizeFramebufferIfRequested();
 }
 
 const Framebuffer& EditorCore::GetSceneViewFramebuffer()
 {
-	return sceneView.GetFramebuffer();
-}
-
-SelectionContext& EditorCore::GetSelectionContext()
-{
-	return selectionContext;
+	return sceneView->GetFramebuffer();
 }
 
 CameraParameters EditorCore::GetEditorCameraParameters() const
 {
-	return sceneView.GetCameraParameters();
+	return sceneView->GetCameraParameters();
 }
 
-bool EditorCore::IsExitRequested() const
+ArrayView<EditorWindow*> EditorCore::GetWindows()
 {
-	return exitRequested;
+	return editorWindows.GetView();
 }
 
-void EditorCore::Update(EngineSettings* engineSettings)
+void EditorCore::Update()
 {
-	DrawMainMenuBar();
-
-	sceneView.Update();
-
-	entityListView.Draw(editorWindows[EditorWindow_Entities], selectionContext, world);
-	entityView.Draw(editorWindows[EditorWindow_Properties], selectionContext, world);
-	assetBrowserView.Draw(editorWindows[EditorWindow_AssetBrowser]);
-	debugView.Draw(editorWindows[EditorWindow_Debug], engineSettings);
+	for (EditorWindow* window : editorWindows)
+		window->Update(editorContext);
 }
 
-void EditorCore::DrawSceneView()
+void EditorCore::LateUpdate()
 {
-	sceneView.Draw(editorWindows[EditorWindow_Scene], world, selectionContext);
+	for (EditorWindow* window : editorWindows)
+		window->LateUpdate(editorContext);
 }
 
 void EditorCore::EndFrame()
 {
-	for (size_t i = 0; i < EditorWindow_COUNT; ++i)
-		editorWindows[i].requestFocus = false;
-}
-
-void EditorCore::DrawMainMenuBar()
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	bool openLevel = false, saveLevel = false;
-
-	if (ImGui::BeginMainMenuBar())
-	{
-		if (ImGui::BeginMenu("File"))
-		{
-			if (ImGui::MenuItem("New project..."))
-			{
-				// TODO: Use file picker to select a directory
-			}
-
-			if (ImGui::MenuItem("Open project..."))
-			{
-				// TODO: Use file picker to select a directory
-			}
-
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("New level"))
-			{
-				// TODO: Make sure level changes have been saved
-				world->ClearAllEntities();
-			}
-
-			if (ImGui::MenuItem("Open level..."))
-				openLevel = true;
-
-			if (ImGui::MenuItem("Save level as..."))
-				saveLevel = true;
-
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("Exit"))
-				exitRequested = true;
-
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Edit"))
-		{
-			if (ImGui::MenuItem("Copy"))
-			{
-				CopyEntity();
-			}
-
-			if (ImGui::MenuItem("Paste"))
-			{
-				PasteEntity();
-			}
-
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("View"))
-		{
-			for (size_t i = 0; i < EditorWindow_COUNT; ++i)
-			{
-				EditorWindowInfo& windowInfo = editorWindows[i];
-
-				if (ImGui::MenuItem(windowInfo.title, nullptr))
-				{
-					windowInfo.isOpen = true;
-					windowInfo.requestFocus = true;
-				}
-			}
-
-			ImGui::EndMenu();
-		}
-
-		ImGui::EndMainMenuBar();
-	}
-
-	if (openLevel)
-		filePicker.StartDialogFileOpen("Open level", "Open");
-
-	if (saveLevel)
-		filePicker.StartDialogFileSave("Save level as", "Save");
-
-	std::filesystem::path filePickerPathOut;
-	bool filePickerClosed = filePicker.Update(filePickerPathOut);
-
-	if (filePickerClosed && filePickerPathOut.empty() == false)
-	{
-		std::string pathStr = filePickerPathOut.u8string();
-		std::string filenameStr = filePickerPathOut.filename().u8string();
-
-		FilePickerDialog::DialogType type = filePicker.GetLastDialogType();
-		if (type == FilePickerDialog::DialogType::FileOpen)
-		{
-			world->ClearAllEntities();
-			world->LoadFromFile(pathStr.c_str(), filenameStr.c_str());
-		}
-		else if (type == FilePickerDialog::DialogType::FileSave)
-		{
-			world->WriteToFile(pathStr.c_str(), filenameStr.c_str());
-		}
-	}
+	for (EditorWindow* window : editorWindows)
+		window->requestFocus = false;
 }
 
 void EditorCore::CopyEntity()
 {
-	if (selectionContext.selectedEntity != Entity::Null)
+	if (editorContext.selectedEntity != Entity::Null)
 	{
-		LevelSerializer* serializer = world->GetSerializer();
+		LevelSerializer* serializer = editorContext.world->GetSerializer();
 
-		ArrayView<Entity> entities = ArrayView(&selectionContext.selectedEntity, 1);
+		ArrayView<Entity> entities = ArrayView(&editorContext.selectedEntity, 1);
 		serializer->SerializeEntitiesToString(entities, copiedEntity);
 
 		KK_LOG_DEBUG("Copied entity:\n{}", copiedEntity.GetCStr());
@@ -211,7 +117,7 @@ void EditorCore::PasteEntity()
 	{
 		KK_LOG_DEBUG("Pasting entity:\n{}", copiedEntity.GetCStr());
 
-		LevelSerializer* serializer = world->GetSerializer();
+		LevelSerializer* serializer = editorContext.world->GetSerializer();
 
 		SceneObjectId parent = SceneObjectId::Null;
 

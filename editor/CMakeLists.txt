@@ -52,6 +52,7 @@ set (EDITOR_SOURCES
 	src/EditorCamera.hpp
 	src/EditorConstants.cpp
 	src/EditorConstants.hpp
+	src/EditorContext.hpp
 	src/EditorCore.cpp
 	src/EditorCore.hpp
 	src/EditorImages.cpp
@@ -60,7 +61,8 @@ set (EDITOR_SOURCES
 	src/EditorProject.hpp
 	src/EditorUserSettings.cpp
 	src/EditorUserSettings.hpp
-	src/EditorWindowInfo.hpp
+	src/EditorWindow.cpp
+	src/EditorWindow.hpp
 	src/EntityListView.cpp
 	src/EntityListView.hpp
 	src/EntityView.cpp
@@ -69,7 +71,6 @@ set (EDITOR_SOURCES
 	src/FilePickerDialog.hpp
 	src/SceneView.cpp
 	src/SceneView.hpp
-	src/SelectionContext.hpp
 )
 
 source_group(Dependencies\\imgui FILES ${IMGUI_SOURCES})

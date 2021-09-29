@@ -5,11 +5,21 @@
 #include "Core/CString.hpp"
 #include "Core/String.hpp"
 
+FilePickerDialog* FilePickerDialog::singletonInstance = nullptr;
+
 FilePickerDialog::FilePickerDialog() :
 	dialogType(DialogType::Unknown),
 	currentTitle(nullptr),
 	currentActionText(nullptr)
 {
+}
+
+FilePickerDialog* FilePickerDialog::GetInstance()
+{
+	if (singletonInstance == nullptr)
+		singletonInstance = new FilePickerDialog();
+
+	return singletonInstance;
 }
 
 void FilePickerDialog::StartDialogFileOpen(const char* popupTitle, const char* actionText)

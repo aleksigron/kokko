@@ -5,15 +5,17 @@
 
 #include "Engine/Entity.hpp"
 
+#include "EditorWindow.hpp"
+
 class World;
 class MaterialManager;
 class MeshManager;
 
 struct ResourceManagers;
-struct SelectionContext;
+struct EditorContext;
 struct EditorWindowInfo;
 
-class EntityView
+class EntityView : public EditorWindow
 {
 private:
 	MaterialManager* materialManager;
@@ -35,5 +37,5 @@ public:
 
 	void Initialize(MaterialManager* materialManager, MeshManager* meshManager);
 
-	void Draw(EditorWindowInfo& windowInfo, SelectionContext& context, World* world);
+	virtual void Update(EditorContext& context) override;
 };

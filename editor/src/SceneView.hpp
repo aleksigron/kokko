@@ -6,22 +6,24 @@
 
 #include "Rendering/Framebuffer.hpp"
 
+#include "EditorWindow.hpp"
+
 class Window;
 class World;
 
 struct CameraParameters;
 struct EditorWindowInfo;
-struct SelectionContext;
+struct EditorContext;
 
-class SceneView
+class SceneView : public EditorWindow
 {
 public:
 	SceneView();
 
 	void Initialize(RenderDevice* renderDevice, Window* window);
 
-	void Update();
-	void Draw(EditorWindowInfo& windowInfo, World* world, SelectionContext& selectionContext);
+	virtual void Update(EditorContext&) override;
+	virtual void LateUpdate(EditorContext& context) override;
 
 	void ResizeFramebufferIfRequested();
 

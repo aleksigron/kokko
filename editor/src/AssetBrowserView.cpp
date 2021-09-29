@@ -4,9 +4,9 @@
 
 #include "EditorConstants.hpp"
 #include "EditorImages.hpp"
-#include "EditorWindowInfo.hpp"
 
-AssetBrowserView::AssetBrowserView()
+AssetBrowserView::AssetBrowserView() :
+	EditorWindow("Asset Browser")
 {
 	currentPath = std::filesystem::current_path();
 	selectedPath = std::filesystem::path();
@@ -21,13 +21,13 @@ void AssetBrowserView::Initialize(const EditorImages* editorImages)
 	this->editorImages = editorImages;
 }
 
-void AssetBrowserView::Draw(EditorWindowInfo& windowInfo)
+void AssetBrowserView::Update(EditorContext& context)
 {
 	namespace fs = std::filesystem;
 
-	if (windowInfo.isOpen)
+	if (windowIsOpen)
 	{
-		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen))
+		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
 			std::string curPathStr = currentPath.u8string();
 
@@ -75,7 +75,7 @@ void AssetBrowserView::Draw(EditorWindowInfo& windowInfo)
 			}
 		}
 
-		if (windowInfo.requestFocus)
+		if (requestFocus)
 			ImGui::SetWindowFocus();
 
 		ImGui::End();

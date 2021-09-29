@@ -3,74 +3,51 @@
 class Allocator;
 class Engine;
 class World;
+class Framebuffer;
 
+class EditorWindow;
+class SceneView;
+
+struct CameraParameters;
 struct EngineSettings;
 
+#include "Core/Array.hpp"
 #include "Core/String.hpp"
 
-#include "AssetBrowserView.hpp"
-#include "DebugView.hpp"
-#include "EditorWindowInfo.hpp"
-#include "EntityListView.hpp"
-#include "EntityView.hpp"
 #include "FilePickerDialog.hpp"
-#include "SceneView.hpp"
 
 #include "EditorImages.hpp"
-#include "SelectionContext.hpp"
+#include "EditorContext.hpp"
 
 class EditorCore
 {
 public:
 	EditorCore(Allocator* allocator);
+	~EditorCore();
 
 	void Initialize(Engine* engine);
 
-	void SetWorld(World* world);
-
 	void ResizeSceneViewFramebufferIfRequested();
 	const Framebuffer& GetSceneViewFramebuffer();
-	SelectionContext& GetSelectionContext();
 	CameraParameters GetEditorCameraParameters() const;
 
-	bool IsExitRequested() const;
+	ArrayView<EditorWindow*> GetWindows();
 
-	void Update(EngineSettings* engineSettings);
-	void DrawSceneView();
+	void Update();
+	void LateUpdate();
 	void EndFrame();
-
-private:
-	void DrawMainMenuBar();
 
 	void CopyEntity();
 	void PasteEntity();
 
-	enum EditorWindow
-	{
-		EditorWindow_Entities,
-		EditorWindow_Properties,
-		EditorWindow_Scene,
-		EditorWindow_AssetBrowser,
-		EditorWindow_Debug,
-
-		EditorWindow_COUNT
-	};
-
-	EditorWindowInfo editorWindows[EditorWindow_COUNT];
-
-	bool exitRequested;
-
-	World* world;
-	SelectionContext selectionContext;
+private:
+	Allocator* allocator;
+	EditorContext editorContext;
 	EditorImages images;
 
-	FilePickerDialog filePicker;
-
-	EntityListView entityListView;
-	EntityView entityView;
-	SceneView sceneView;
-	AssetBrowserView assetBrowserView;
-	DebugView debugView;
-
 	String copiedEntity;
+
+	Array<EditorWindow*> editorWindows;
+
+	SceneView* sceneView;
 };

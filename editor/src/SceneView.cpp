@@ -6,9 +6,6 @@
 
 #include "Core/Core.hpp"
 
-#include "EditorWindowInfo.hpp"
-#include "SelectionContext.hpp"
-
 #include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
@@ -16,7 +13,10 @@
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/RenderDeviceEnums.hpp"
 
+#include "EditorContext.hpp"
+
 SceneView::SceneView() :
+	EditorWindow("Scene"),
 	contentWidth(0),
 	contentHeight(0),
 	currentGizmoOperation(ImGuizmo::TRANSLATE),
@@ -36,7 +36,7 @@ void SceneView::Initialize(RenderDevice* renderDevice, Window* window)
 	editorCamera.SetWindow(window);
 }
 
-void SceneView::Update()
+void SceneView::Update(EditorContext&)
 {
 	if (contentWidth > 0 && contentHeight > 0)
 		editorCamera.SetAspectRatio(float(contentWidth), float(contentHeight));
@@ -44,12 +44,12 @@ void SceneView::Update()
 	editorCamera.Update(windowIsFocused || windowIsHovered);
 }
 
-void SceneView::Draw(EditorWindowInfo& windowInfo, World* world, SelectionContext& selectionContext)
+void SceneView::LateUpdate(EditorContext& context)
 {
-	if (windowInfo.isOpen)
+	if (windowIsOpen)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		if (ImGui::Begin(windowInfo.title, &windowInfo.isOpen))
+		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
 			ImVec2 size = ImGui::GetContentRegionAvail();
 			ImVec2 windowPos = ImGui::GetWindowPos();
@@ -104,10 +104,11 @@ void SceneView::Draw(EditorWindowInfo& windowInfo, World* world, SelectionContex
 			ImGuizmo::OPERATION op = static_cast<ImGuizmo::OPERATION>(currentGizmoOperation);
 			ImGuizmo::MODE mode = ImGuizmo::LOCAL;
 
-			Entity entity = selectionContext.selectedEntity;
+			Entity entity = context.selectedEntity;
 
 			if (entity != Entity::Null)
 			{
+				World* world = context.world;
 				Scene* scene = world->GetScene();
 				SceneObjectId sceneObj = scene->Lookup(entity);
 
@@ -146,7 +147,7 @@ void SceneView::Draw(EditorWindowInfo& windowInfo, World* world, SelectionContex
 			}
 		}
 
-		if (windowInfo.requestFocus)
+		if (requestFocus)
 			ImGui::SetWindowFocus();
 
 		windowIsFocused = ImGui::IsWindowFocused();

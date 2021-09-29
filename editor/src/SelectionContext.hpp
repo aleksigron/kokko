@@ -2,7 +2,7 @@
 
 #include "Engine/Entity.hpp"
 
-struct SelectionContext
+struct EditorContext
 {
 	Entity selectedEntity;
 };

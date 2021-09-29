@@ -14,6 +14,8 @@ public:
 
 	FilePickerDialog();
 
+	static FilePickerDialog* GetInstance();
+
 	void StartDialogFileOpen(const char* popupTitle, const char* actionText);
 	void StartDialogFileSave(const char* popupTitle, const char* actionText);
 
@@ -31,6 +33,8 @@ public:
 	DialogType GetLastDialogType();
 
 private:
+	static FilePickerDialog* singletonInstance;
+
 	std::filesystem::path currentPath;
 	std::filesystem::path selectedFilePath;
 
