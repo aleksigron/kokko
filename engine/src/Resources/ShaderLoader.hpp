@@ -21,7 +21,7 @@ namespace ShaderLoader
 {
 	bool LoadFromConfiguration(
 		ShaderData& shaderOut,
-		ArrayView<char> configuration,
+		StringRef configuration,
 		Allocator* allocator,
 		Filesystem* filesystem,
 		RenderDevice* renderDevice,

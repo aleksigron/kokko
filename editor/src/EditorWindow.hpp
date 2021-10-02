@@ -25,6 +25,10 @@ public:
 	{
 	}
 
+	virtual void OnEditorProjectChanged(const EditorContext& context)
+	{
+	}
+
 	// Called after frame update
 	virtual void Update(EditorContext& context)
 	{

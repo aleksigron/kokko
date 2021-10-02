@@ -148,7 +148,7 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	Array<char> file(allocator);
+	String file(allocator);
 	String pathStr(allocator, path);
 
 	if (filesystem->ReadText(pathStr.GetCStr(), file))
@@ -165,12 +165,12 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 
 		if (pathStr.GetRef().EndsWith(StringRef(".json")))
 		{
-			loadSuccess = ShaderLoader::LoadFromConfiguration(shader, file.GetView(),
+			loadSuccess = ShaderLoader::LoadFromConfiguration(shader, file.GetRef(),
 				allocator, filesystem, renderDevice, debugName);
 		}
 		else
 		{
-			StringRef fileString(file.GetData(), file.GetCount());
+			StringRef fileString(file.GetData(), file.GetLength());
 			ShaderFileLoader loader(allocator, filesystem, renderDevice);
 			loadSuccess = loader.LoadFromFile(shader, pathRef, fileString, debugName);
 		}

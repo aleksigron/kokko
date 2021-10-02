@@ -5,6 +5,7 @@ class Engine;
 class World;
 class Framebuffer;
 
+class EditorProject;
 class EditorWindow;
 class SceneView;
 
@@ -25,13 +26,15 @@ public:
 	EditorCore(Allocator* allocator);
 	~EditorCore();
 
-	void Initialize(Engine* engine);
+	void Initialize(Engine* engine, const EditorProject* editorProject);
 
 	void ResizeSceneViewFramebufferIfRequested();
 	const Framebuffer& GetSceneViewFramebuffer();
 	CameraParameters GetEditorCameraParameters() const;
 
 	ArrayView<EditorWindow*> GetWindows();
+
+	void NotifyProjectChanged();
 
 	void Update();
 	void LateUpdate();

@@ -33,8 +33,9 @@ EditorCore::~EditorCore()
 		allocator->MakeDelete(window);
 }
 
-void EditorCore::Initialize(Engine* engine)
+void EditorCore::Initialize(Engine* engine, const EditorProject* editorProject)
 {
+	editorContext.project = editorProject;
 	editorContext.world = engine->GetWorld();
 	editorContext.engineSettings = engine->GetSettings();
 
@@ -78,6 +79,12 @@ CameraParameters EditorCore::GetEditorCameraParameters() const
 ArrayView<EditorWindow*> EditorCore::GetWindows()
 {
 	return editorWindows.GetView();
+}
+
+void EditorCore::NotifyProjectChanged()
+{
+	for (EditorWindow* window : editorWindows)
+		window->OnEditorProjectChanged(editorContext);
 }
 
 void EditorCore::Update()

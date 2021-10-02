@@ -3,13 +3,13 @@
 #include "imgui.h"
 
 #include "EditorConstants.hpp"
+#include "EditorContext.hpp"
 #include "EditorImages.hpp"
+#include "EditorProject.hpp"
 
 AssetBrowserView::AssetBrowserView() :
 	EditorWindow("Asset Browser")
 {
-	currentPath = std::filesystem::current_path();
-	selectedPath = std::filesystem::path();
 }
 
 AssetBrowserView::~AssetBrowserView()
@@ -21,6 +21,12 @@ void AssetBrowserView::Initialize(const EditorImages* editorImages)
 	this->editorImages = editorImages;
 }
 
+void AssetBrowserView::OnEditorProjectChanged(const EditorContext& context)
+{
+	currentPath = context.project->GetRootPath();
+	selectedPath = std::filesystem::path();
+}
+
 void AssetBrowserView::Update(EditorContext& context)
 {
 	namespace fs = std::filesystem;
@@ -29,11 +35,9 @@ void AssetBrowserView::Update(EditorContext& context)
 	{
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
-			std::string curPathStr = currentPath.u8string();
+			const fs::path& root = context.project->GetRootPath();
 
-			// Directory path text
-
-			if (ImGui::Button("Go to parent"))
+			if (ImGui::Button("Go to parent") && currentPath != root)
 			{
 				// Move up a directory
 				currentPath = currentPath.parent_path();
@@ -41,6 +45,8 @@ void AssetBrowserView::Update(EditorContext& context)
 			}
 
 			ImGui::SameLine();
+
+			std::string curPathStr = currentPath.u8string();
 
 			ImGuiInputTextFlags dirTextFlags = ImGuiInputTextFlags_ReadOnly;
 			ImGui::SetNextItemWidth(-FLT_MIN);

@@ -54,6 +54,7 @@ private:
 
 	bool CreateProject(const std::filesystem::path& directory, StringRef name);
 	bool OpenProject(const std::filesystem::path& projectDir);
+	void NotifyProjectChanged();
 
 	Engine* engine;
 	Allocator* allocator;

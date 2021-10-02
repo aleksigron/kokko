@@ -61,7 +61,6 @@ set (EDITOR_SOURCES
 	src/EditorProject.hpp
 	src/EditorUserSettings.cpp
 	src/EditorUserSettings.hpp
-	src/EditorWindow.cpp
 	src/EditorWindow.hpp
 	src/EntityListView.cpp
 	src/EntityListView.hpp

@@ -5,6 +5,7 @@
 
 #include "Core/Core.hpp"
 #include "Core/EncodingUtf8.hpp"
+#include "Core/String.hpp"
 
 #include "Engine/Engine.hpp"
 
@@ -96,12 +97,12 @@ bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const cha
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Array<char> content(allocator);
+	String content(allocator);
 
 	if (filesystem->ReadText(filePath, content))
 	{
 		font = allocator->MakeNew<BitmapFont>(allocator);
-		return font->LoadFromBDF(textureManager, StringRef(content.GetData(), content.GetCount()));
+		return font->LoadFromBDF(textureManager, content.GetRef());
 	}
 	else
 		return false;

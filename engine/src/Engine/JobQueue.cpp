@@ -1,5 +1,7 @@
 #include "Engine/JobQueue.hpp"
 
+#include <cassert>
+
 #include "Core/Core.hpp"
 
 #include "Engine/Job.hpp"
@@ -49,6 +51,7 @@ Job* JobQueue::Pop()
 		if (t != b)
 		{
 			// There's still more than one item left in the queue
+			assert((void*)job != (void*)0xcdcdcdcdcdcdcdcd);
 			return job;
 		}
 
@@ -60,6 +63,7 @@ Job* JobQueue::Pop()
 		}
 
 		bottom.store(t + 1, std::memory_order_relaxed);
+		assert((void*)job != (void*)0xcdcdcdcdcdcdcdcd);
 		return job;
 	}
 	else

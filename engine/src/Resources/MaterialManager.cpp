@@ -180,7 +180,7 @@ MaterialId MaterialManager::GetIdByPath(StringRef path)
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	Array<char> file(allocator);
+	String file(allocator);
 	String pathStr(allocator, path);
 
 	if (filesystem->ReadText(pathStr.GetCStr(), file))

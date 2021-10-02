@@ -19,6 +19,8 @@ public:
 
 	void Initialize(const EditorImages* editorImages);
 
+	virtual void OnEditorProjectChanged(const EditorContext& context) override;
+
 	virtual void Update(EditorContext& context) override;
 
 private:

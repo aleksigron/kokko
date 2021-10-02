@@ -108,6 +108,8 @@ void EditorApp::Initialize(Engine* engine)
 		ImGui_ImplOpenGL3_Init();
 	}
 
+	core->Initialize(engine, &project);
+
 	EditorUserSettings userSettings;
 	if (userSettings.DeserializeFromFile("editor_user_settings.yml"))
 	{
@@ -125,8 +127,6 @@ void EditorApp::Initialize(Engine* engine)
 	{
 		KK_LOG_INFO("Failed to open editor_user_settings.yml, should open project dialog.");
 	}
-
-	core->Initialize(engine);
 }
 
 void EditorApp::Deinitialize()
@@ -405,15 +405,21 @@ bool EditorApp::OpenProject(const std::filesystem::path& projectDir)
 {
 	if (project.DeserializeFromFile(projectDir))
 	{
-		const String& path = project.GetRootPathString();
-		const String& name = project.GetName();
-
-		KK_LOG_INFO("Opened editor project from {}, named {}", path.GetCStr(), name.GetCStr());
-
-		engine->GetMainWindow()->SetWindowTitle(name.GetCStr());
+		NotifyProjectChanged();
 
 		return true;
 	}
 	
 	return false;
+}
+
+void EditorApp::NotifyProjectChanged()
+{
+	const String& name = project.GetName();
+
+	KK_LOG_INFO("Editor project changed to {}", name.GetCStr());
+
+	engine->GetMainWindow()->SetWindowTitle(name.GetCStr());
+
+	core->NotifyProjectChanged();
 }
