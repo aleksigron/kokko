@@ -1,46 +1,52 @@
 #pragma once
 
+#include <cstdint>
 #include <filesystem>
 
 class FilePickerDialog
 {
 public:
-	enum class DialogType
-	{
-		Unknown,
-		FileOpen,
-		FileSave
-	};
-
 	FilePickerDialog();
 
-	static FilePickerDialog* GetInstance();
+	static FilePickerDialog* Get();
 
-	void StartDialogFileOpen(const char* popupTitle, const char* actionText);
-	void StartDialogFileSave(const char* popupTitle, const char* actionText);
+	void Update();
 
 	/*
-	* Update file picker dialog UI.
-	* Returns true when the dialog has finished (when it has closed).
-	* Parameter pathOut is assigned the selected path, or an empty string,
+	* Returns true when a dialog with the specied ID has finished.
+	* If true, parameter pathOut is assigned the selected path, or an empty string,
 	* if the dialog was cancelled.
 	*/
-	bool Update(std::filesystem::path& pathOut);
+	bool GetDialogResult(uint32_t id, std::filesystem::path& pathOut);
 
-	/*
-	* Returns the dialog type of the current or last dialog that was open.
-	*/
-	DialogType GetLastDialogType();
+	uint32_t StartDialogFileOpen(const char* popupTitle, const char* actionText);
+	uint32_t StartDialogFileSave(const char* popupTitle, const char* actionText);
+	uint32_t StartDialogFolderOpen(const char* popupTitle, const char* actionText);
 
 private:
+	enum class DialogType
+	{
+		None,
+		FileOpen,
+		FileSave,
+		FolderOpen,
+	};
+
+	uint32_t StartDialogInternal(const char* title, const char* action, DialogType type);
+
 	static FilePickerDialog* singletonInstance;
 
 	std::filesystem::path currentPath;
 	std::filesystem::path selectedFilePath;
 
-	DialogType dialogType;
+	bool dialogClosed;
+	uint32_t closedTitleHash;
+	std::filesystem::path resultPath;
+
+	DialogType currentDialogType;
+	uint32_t currentTitleHash;
 	const char* currentTitle;
 	const char* currentActionText;
 
-	void CloseDialog();
+	void CloseDialog(bool canceled);
 };

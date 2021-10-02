@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 #include "EditorProject.hpp"
 #include "FilePickerDialog.hpp"
 
@@ -9,8 +11,6 @@ class Engine;
 class Framebuffer;
 class RenderDevice;
 class World;
-
-class EditorWindow;
 
 struct CameraParameters;
 struct EngineSettings;
@@ -40,17 +40,33 @@ public:
 	CameraParameters GetEditorCameraParameters() const;
 
 private:
-	void DrawMainMenuBar();
+	enum class MainMenuDialog
+	{
+		None,
+		CreateProject,
+		OpenProject,
+		OpenLevel,
+		SaveLevelAs
+	};
 
+	void DrawMainMenuBar();
+	void ResetMainMenuDialog();
+
+	bool CreateProject(const std::filesystem::path& directory, StringRef name);
+	bool OpenProject(const std::filesystem::path& projectDir);
+
+	Engine* engine;
 	Allocator* allocator;
 	RenderDevice* renderDevice;
+	World* world;
 
 	EditorCore* core;
 	FilePickerDialog filePicker;
 
 	EditorProject project;
 
-	World* world;
-
 	bool exitRequested;
+
+	MainMenuDialog currentMainMenuDialog;
+	uint32_t currentDialogId;
 };

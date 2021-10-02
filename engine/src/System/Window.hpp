@@ -61,6 +61,8 @@ public:
 	void SetSwapInterval(int swapInterval);
 	int GetSwapInterval() const;
 
+	void SetWindowTitle(const char* title);
+
 	void SetCursorMode(CursorMode mode);
 	CursorMode GetCursorMode() const;
 
