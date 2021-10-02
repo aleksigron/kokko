@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "Core/Core.hpp"
+#include "Core/String.hpp"
 
 bool FilesystemDefault::ReadBinary(const char* path, Array<unsigned char>& output)
 {
@@ -30,7 +31,7 @@ bool FilesystemDefault::ReadBinary(const char* path, Array<unsigned char>& outpu
 	return false;
 }
 
-bool FilesystemDefault::ReadText(const char* path, Array<char>& output)
+bool FilesystemDefault::ReadText(const char* path, String& output)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -44,15 +45,12 @@ bool FilesystemDefault::ReadText(const char* path, Array<char>& output)
 		std::rewind(fileHandle);
 
 		// Get the file contents
-		output.Resize(fileLength + 1);
+		output.Resize(fileLength);
 
 		size_t read = std::fread(output.GetData(), 1, fileLength, fileHandle);
-		output.Resize(read + 1);
+		output.Resize(read);
 
 		std::fclose(fileHandle);
-
-		// Null-terminate so it can be used as a c-string
-		output[fileLength] = '\0';
 
 		return true;
 	}

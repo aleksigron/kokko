@@ -12,6 +12,7 @@
 #include "Core/CString.hpp"
 #include "Core/Hash.hpp"
 #include "Core/Range.hpp"
+#include "Core/String.hpp"
 
 #include "Memory/Allocator.hpp"
 
@@ -103,7 +104,7 @@ static bool ProcessSource(
 	HashMap<uint32_t, ShaderLoader::FileString>& includeFileCache,
 	Allocator* allocator,
 	Filesystem* filesystem,
-	Array<char>& output)
+	String& output)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -133,7 +134,7 @@ static bool ProcessSource(
 		}
 	}
 
-	Array<char> mainFile(allocator);
+	String mainFile(allocator);
 
 	if (filesystem->ReadText(mainPath, mainFile) == false)
 	{
@@ -141,21 +142,16 @@ static bool ProcessSource(
 		return false;
 	}
 
-	totalLength += mainFile.GetCount();
+	totalLength += mainFile.GetLength();
 
-	output.Resize(totalLength);
+	output.Reserve(totalLength);
 
 	// Concatenate all files together
 
-	char* dest = output.GetData();
-	std::memcpy(dest, versionStr.str, versionStr.len);
-	dest += versionStr.len;
+	output.Append(versionStr);
 
 	if (uniformBlock.str != nullptr)
-	{
-		std::memcpy(dest, uniformBlock.str, uniformBlock.len);
-		dest += uniformBlock.len;
-	}
+		output.Append(uniformBlock);
 
 	if (includePaths != nullptr)
 	{
@@ -164,12 +160,11 @@ static bool ProcessSource(
 			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
 			auto* file = includeFileCache.Lookup(hash);
 
-			std::memcpy(dest, file->second.string, file->second.length);
-			dest += file->second.length;
+			output.Append(StringRef(file->second.string, file->second.length));
 		}
 	}
 
-	std::strcpy(dest, mainFile.GetData());
+	output.Append(mainFile);
 
 	return true;
 }
@@ -526,7 +521,7 @@ static bool CompileAndLink(
 
 bool ShaderLoader::LoadFromConfiguration(
 	ShaderData& shaderOut,
-	ArrayView<char> configuration,
+	StringRef configuration,
 	Allocator* allocator,
 	Filesystem* filesystem,
 	RenderDevice* renderDevice,
@@ -537,11 +532,8 @@ bool ShaderLoader::LoadFromConfiguration(
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 	using ValueItr = rapidjson::Value::ConstValueIterator;
 
-	char* data = configuration.GetData();
-	size_t size = configuration.GetCount();
-
 	rapidjson::Document config;
-	config.Parse(data, size);
+	config.Parse(configuration.str, configuration.len);
 
 	// Set default value
 	shaderOut.transparencyType = TransparencyType::Opaque;
@@ -715,9 +707,9 @@ bool ShaderLoader::LoadFromConfiguration(
 	bool processSuccess = true;
 
 	// TODO: Make this definition more robust
-	Array<char> sourceBuffers[MaxStageCount] = {
-		Array<char>(allocator),
-		Array<char>(allocator)
+	String sourceBuffers[MaxStageCount] = {
+		String(allocator),
+		String(allocator)
 	};
 
 	if (includeLoadSuccess)
@@ -745,7 +737,7 @@ bool ShaderLoader::LoadFromConfiguration(
 	for (size_t i = 0; i < stageCount; ++i)
 	{
 		stageSources[i].stage = stages[i].stage;
-		stageSources[i].source = StringRef(sourceBuffers[i].GetData(), sourceBuffers[i].GetCount());
+		stageSources[i].source = sourceBuffers[i].GetRef();
 	}
 
 	ArrayView<const StageSource> stageSourceRef(stageSources, stageCount);
