@@ -62,14 +62,14 @@ bool EditorProject::DeserializeFromFile(const std::filesystem::path& projectRoot
 	return false;
 }
 
-std::string EditorProject::GetRootPath() const
+const std::filesystem::path& EditorProject::GetRootPath() const
 {
-	return rootPath.u8string();
+	return rootPath;
 }
 
-const String& EditorProject::GetName() const
+const String& EditorProject::GetRootPathString() const
 {
-	return name;
+	return rootPathString;
 }
 
 void EditorProject::SetRootPath(const std::filesystem::path& path)
@@ -78,4 +78,14 @@ void EditorProject::SetRootPath(const std::filesystem::path& path)
 
 	std::string pathStr = rootPath.u8string();
 	rootPathString.Assign(StringRef(pathStr.c_str(), pathStr.size()));
+}
+
+const String& EditorProject::GetName() const
+{
+	return name;
+}
+
+void EditorProject::SetName(StringRef name)
+{
+	this->name.Assign(name);
 }

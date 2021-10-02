@@ -15,12 +15,14 @@ public:
 	// Tries to read project.yml file from the specified directory
 	bool DeserializeFromFile(const std::filesystem::path& projectDirectory);
 
-	std::string GetRootPath() const;
-	const String& GetName() const;
-
-private:
+	const std::filesystem::path& GetRootPath() const;
+	const String& GetRootPathString() const;
 	void SetRootPath(const std::filesystem::path& path);
 
+	const String& GetName() const;
+	void SetName(StringRef name);
+
+private:
 	std::filesystem::path rootPath;
 	String rootPathString;
 	String name;

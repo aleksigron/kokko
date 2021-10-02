@@ -194,6 +194,11 @@ int Window::GetSwapInterval() const
 	return currentSwapInterval;
 }
 
+void Window::SetWindowTitle(const char* title)
+{
+	glfwSetWindowTitle(windowHandle, title);
+}
+
 void Window::SetCursorMode(CursorMode mode)
 {
 	int cursorModeValue = GLFW_CURSOR_NORMAL;

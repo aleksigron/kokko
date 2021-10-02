@@ -37,11 +37,15 @@
 #include "EditorWindow.hpp"
 
 EditorApp::EditorApp(Allocator* allocator) :
+	engine(nullptr),
 	allocator(allocator),
 	renderDevice(nullptr),
+	world(nullptr),
 	core(nullptr),
 	project(allocator),
-	exitRequested(false)
+	exitRequested(false),
+	currentMainMenuDialog(MainMenuDialog::None),
+	currentDialogId(0)
 {
 	core = allocator->MakeNew<EditorCore>(allocator);
 }
@@ -55,6 +59,7 @@ void EditorApp::Initialize(Engine* engine)
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	this->engine = engine;
 	this->renderDevice = engine->GetRenderDevice();
 	this->world = engine->GetWorld();
 
@@ -110,14 +115,7 @@ void EditorApp::Initialize(Engine* engine)
 		{
 			KK_LOG_INFO("Last opened project is empty, should open project dialog.");
 		}
-		else if (project.DeserializeFromFile(userSettings.lastOpenedProject))
-		{
-			std::string path = project.GetRootPath();
-			const String& name = project.GetName();
-
-			KK_LOG_INFO("Opened editor project from {}, named {}", path.c_str(), name.GetCStr());
-		}
-		else
+		else if (OpenProject(userSettings.lastOpenedProject) == false)
 		{
 			std::string pathStr = userSettings.lastOpenedProject.u8string();
 			KK_LOG_ERROR("Failed to open project.yml from path {}", pathStr.c_str());
@@ -224,21 +222,20 @@ void EditorApp::DrawMainMenuBar()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	bool openLevel = false, saveLevel = false;
+	bool createProject = false;
+	bool openProject = false;
+	bool openLevel = false;
+	bool saveLevel = false;
 
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("New project..."))
-			{
-				// TODO: Use file picker to select a directory
-			}
+				createProject = true;
 
 			if (ImGui::MenuItem("Open project..."))
-			{
-				// TODO: Use file picker to select a directory
-			}
+				openProject = true;
 
 			ImGui::Separator();
 
@@ -294,29 +291,129 @@ void EditorApp::DrawMainMenuBar()
 		ImGui::EndMainMenuBar();
 	}
 
-	if (openLevel)
-		filePicker.StartDialogFileOpen("Open level", "Open");
-
-	if (saveLevel)
-		filePicker.StartDialogFileSave("Save level as", "Save");
+	if (createProject)
+	{
+		currentDialogId = filePicker.StartDialogFolderOpen("Create project", "Select directory");
+		currentMainMenuDialog = MainMenuDialog::CreateProject;
+	}
+	else if (openProject)
+	{
+		currentDialogId = filePicker.StartDialogFolderOpen("Open project", "Select directory");
+		currentMainMenuDialog = MainMenuDialog::OpenProject;
+	}
+	else if (openLevel)
+	{
+		currentDialogId = filePicker.StartDialogFileOpen("Open level", "Open");
+		currentMainMenuDialog = MainMenuDialog::OpenLevel;
+	}
+	else if (saveLevel)
+	{
+		currentDialogId = filePicker.StartDialogFileSave("Save level as", "Save");
+		currentMainMenuDialog = MainMenuDialog::SaveLevelAs;
+	}
+	
+	filePicker.Update();
 
 	std::filesystem::path filePickerPathOut;
-	bool filePickerClosed = filePicker.Update(filePickerPathOut);
 
-	if (filePickerClosed && filePickerPathOut.empty() == false)
+	if (currentMainMenuDialog == MainMenuDialog::CreateProject &&
+		filePicker.GetDialogResult(currentDialogId, filePickerPathOut))
 	{
-		std::string pathStr = filePickerPathOut.u8string();
-		std::string filenameStr = filePickerPathOut.filename().u8string();
+		ResetMainMenuDialog();
 
-		FilePickerDialog::DialogType type = filePicker.GetLastDialogType();
-		if (type == FilePickerDialog::DialogType::FileOpen)
+		if (filePickerPathOut.empty() == false)
 		{
+			std::string filenameStr = filePickerPathOut.filename().u8string();
+			CreateProject(filePickerPathOut, StringRef(filenameStr.c_str()));
+		}
+	}
+
+	if (currentMainMenuDialog == MainMenuDialog::OpenProject &&
+		filePicker.GetDialogResult(currentDialogId, filePickerPathOut))
+	{
+		ResetMainMenuDialog();
+
+		if (filePickerPathOut.empty() == false)
+		{
+			OpenProject(filePickerPathOut);
+		}
+	}
+
+	if (currentMainMenuDialog == MainMenuDialog::OpenLevel &&
+		filePicker.GetDialogResult(currentDialogId, filePickerPathOut))
+	{
+		ResetMainMenuDialog();
+
+		if (filePickerPathOut.empty() == false)
+		{
+			std::string pathStr = filePickerPathOut.u8string();
+			std::string filenameStr = filePickerPathOut.filename().u8string();
+
 			world->ClearAllEntities();
 			world->LoadFromFile(pathStr.c_str(), filenameStr.c_str());
 		}
-		else if (type == FilePickerDialog::DialogType::FileSave)
+	}
+
+	if (currentMainMenuDialog == MainMenuDialog::SaveLevelAs &&
+		filePicker.GetDialogResult(currentDialogId, filePickerPathOut))
+	{
+		ResetMainMenuDialog();
+
+		if (filePickerPathOut.empty() == false)
 		{
+			std::string pathStr = filePickerPathOut.u8string();
+			std::string filenameStr = filePickerPathOut.filename().u8string();
+
 			world->WriteToFile(pathStr.c_str(), filenameStr.c_str());
 		}
 	}
+}
+
+void EditorApp::ResetMainMenuDialog()
+{
+	currentMainMenuDialog = MainMenuDialog::None;
+	currentDialogId = 0;
+}
+
+bool EditorApp::CreateProject(const std::filesystem::path& directory, StringRef name)
+{
+	namespace fs = std::filesystem;
+
+	std::error_code err;
+	fs::file_status stat = fs::status(directory, err);
+
+	if (err)
+		return false;
+
+	if (fs::is_directory(stat) == false)
+		return false;
+
+	// TODO: Check that the directory is empty, or that there is no project.yml
+
+	project.SetRootPath(directory);
+	project.SetName(name);
+	
+	if (project.SerializeToFile() == false)
+		return false;
+
+	engine->GetMainWindow()->SetWindowTitle(project.GetName().GetCStr());
+
+	return true;
+}
+
+bool EditorApp::OpenProject(const std::filesystem::path& projectDir)
+{
+	if (project.DeserializeFromFile(projectDir))
+	{
+		const String& path = project.GetRootPathString();
+		const String& name = project.GetName();
+
+		KK_LOG_INFO("Opened editor project from {}, named {}", path.GetCStr(), name.GetCStr());
+
+		engine->GetMainWindow()->SetWindowTitle(name.GetCStr());
+
+		return true;
+	}
+	
+	return false;
 }

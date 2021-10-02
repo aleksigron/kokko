@@ -3,18 +3,22 @@
 #include "imgui.h"
 
 #include "Core/CString.hpp"
+#include "Core/Hash.hpp"
 #include "Core/String.hpp"
 
 FilePickerDialog* FilePickerDialog::singletonInstance = nullptr;
 
 FilePickerDialog::FilePickerDialog() :
-	dialogType(DialogType::Unknown),
+	dialogClosed(false),
+	closedTitleHash(0),
+	currentDialogType(DialogType::None),
+	currentTitleHash(0),
 	currentTitle(nullptr),
 	currentActionText(nullptr)
 {
 }
 
-FilePickerDialog* FilePickerDialog::GetInstance()
+FilePickerDialog* FilePickerDialog::Get()
 {
 	if (singletonInstance == nullptr)
 		singletonInstance = new FilePickerDialog();
@@ -22,43 +26,21 @@ FilePickerDialog* FilePickerDialog::GetInstance()
 	return singletonInstance;
 }
 
-void FilePickerDialog::StartDialogFileOpen(const char* popupTitle, const char* actionText)
-{
-	currentPath = std::filesystem::current_path();
-	selectedFilePath = std::filesystem::path();
-
-	dialogType = DialogType::FileOpen;
-
-	currentTitle = popupTitle;
-	currentActionText = actionText;
-
-	ImGui::OpenPopup(currentTitle);
-}
-
-void FilePickerDialog::StartDialogFileSave(const char* popupTitle, const char* actionText)
-{
-	currentPath = std::filesystem::current_path();
-	selectedFilePath = std::filesystem::path();
-
-	dialogType = DialogType::FileSave;
-
-	currentTitle = popupTitle;
-	currentActionText = actionText;
-
-	ImGui::OpenPopup(currentTitle);
-}
-
-bool FilePickerDialog::Update(std::filesystem::path& pathOut)
+void FilePickerDialog::Update()
 {
 	namespace fs = std::filesystem;
 
-	if (currentTitle == nullptr)
-		return false;
+	dialogClosed = false;
 
-	bool dialogClosed = false;
+	if (currentTitle == nullptr)
+		return;
 
 	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	
+	float fontSize = ImGui::GetFontSize();
+	ImVec2 initialSize(fontSize * 20.0f, fontSize * 15.0f);
+	ImGui::SetNextWindowSize(initialSize, ImGuiCond_FirstUseEver);
 
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 	if (ImGui::BeginPopupModal(currentTitle, nullptr, flags))
@@ -126,18 +108,33 @@ bool FilePickerDialog::Update(std::filesystem::path& pathOut)
 
 		char inputBuf[512];
 
-		// Selected file name input
+		ImGuiInputTextFlags inputFlags;
+		const char* inputTitle;
 
-		if (selectedFilePath.has_filename())
+		if (currentDialogType == DialogType::FolderOpen)
 		{
-			std::string fileName = selectedFilePath.filename().u8string();
+			inputFlags = ImGuiInputTextFlags_ReadOnly;
+			inputTitle = "Folder";
+
+			std::string fileName = currentPath.filename().u8string();
 			StringCopySafe(inputBuf, fileName.c_str());
 		}
 		else
-			SetEmptyString(inputBuf);
+		{
+			if (selectedFilePath.has_filename())
+			{
+				std::string fileName = selectedFilePath.filename().u8string();
+				StringCopySafe(inputBuf, fileName.c_str());
+			}
+			else
+				SetEmptyString(inputBuf);
+
+			inputFlags = ImGuiInputTextFlags_None;
+			inputTitle = "Filename";
+		}
 
 		ImGui::SetNextItemWidth(-FLT_MIN);
-		if (ImGui::InputText("Name", inputBuf, sizeof(inputBuf)))
+		if (ImGui::InputText(inputTitle, inputBuf, sizeof(inputBuf), inputFlags))
 		{
 			selectedFilePath = currentPath / fs::path(inputBuf);
 		}
@@ -149,13 +146,11 @@ bool FilePickerDialog::Update(std::filesystem::path& pathOut)
 
 		if (ImGui::Button(currentActionText, buttonSize))
 		{
-			if (existingFileIsSelected || dialogType == DialogType::FileSave)
+			if (existingFileIsSelected ||
+				currentDialogType == DialogType::FileSave ||
+				currentDialogType == DialogType::FolderOpen)
 			{
-				dialogClosed = true;
-
-				pathOut = selectedFilePath;
-
-				CloseDialog();
+				CloseDialog(false);
 			}
 			// TODO: Should make the button look disabled when there's no valid selection
 		}
@@ -165,25 +160,78 @@ bool FilePickerDialog::Update(std::filesystem::path& pathOut)
 
 		if (ImGui::Button("Cancel", buttonSize))
 		{
-			dialogClosed = true;
-
-			CloseDialog();
+			CloseDialog(true);
 		}
 
 		ImGui::EndPopup();
 	}
-
-	return dialogClosed;
 }
 
-FilePickerDialog::DialogType FilePickerDialog::GetLastDialogType()
+bool FilePickerDialog::GetDialogResult(uint32_t hash, std::filesystem::path& pathOut)
 {
-	return dialogType;
+	if (dialogClosed && hash == closedTitleHash)
+	{
+		pathOut = std::move(resultPath);
+		
+		resultPath = std::filesystem::path();
+		dialogClosed = false;
+		closedTitleHash = 0;
+
+		return true;
+	}
+
+	return false;
 }
 
-void FilePickerDialog::CloseDialog()
+uint32_t FilePickerDialog::StartDialogFileOpen(const char* popupTitle, const char* actionText)
 {
+	return StartDialogInternal(popupTitle, actionText, DialogType::FileOpen);
+}
+
+uint32_t FilePickerDialog::StartDialogFileSave(const char* popupTitle, const char* actionText)
+{
+	return StartDialogInternal(popupTitle, actionText, DialogType::FileSave);
+}
+
+uint32_t FilePickerDialog::StartDialogFolderOpen(const char* popupTitle, const char* actionText)
+{
+	return StartDialogInternal(popupTitle, actionText, DialogType::FolderOpen);
+}
+
+uint32_t FilePickerDialog::StartDialogInternal(const char* title, const char* action, DialogType type)
+{
+	currentPath = std::filesystem::current_path();
+	selectedFilePath = std::filesystem::path();
+
+	currentDialogType = type;
+	currentTitle = title;
+	currentActionText = action;
+	currentTitleHash = Hash::FNV1a_32(title, std::strlen(title));
+
+	ImGui::OpenPopup(currentTitle);
+
+	return currentTitleHash;
+}
+
+void FilePickerDialog::CloseDialog(bool canceled)
+{
+	// Results
+
+	dialogClosed = true;
+	closedTitleHash = currentTitleHash;
+
+	if (canceled)
+		resultPath = std::filesystem::path();
+	else if (currentDialogType == DialogType::FolderOpen)
+		resultPath = currentPath;
+	else
+		resultPath = selectedFilePath;
+
+	// Clear current info
+	currentDialogType = DialogType::None;
 	currentTitle = nullptr;
 	currentActionText = nullptr;
+	currentTitleHash = 0;
+
 	ImGui::CloseCurrentPopup();
 }
