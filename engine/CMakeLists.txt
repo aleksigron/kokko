@@ -238,9 +238,13 @@ set (KOKKO_SOURCES
 	src/Scripting/ScriptSystem.cpp
 	src/Scripting/ScriptSystem.hpp
 	src/System/DoctestImpl.cpp
+	src/System/Filesystem.hpp
 	src/System/FilesystemDefault.cpp
 	src/System/FilesystemDefault.hpp
-	src/System/Filesystem.hpp
+	src/System/FilesystemRelative.cpp
+	src/System/FilesystemRelative.hpp
+	src/System/FilesystemVirtual.cpp
+	src/System/FilesystemVirtual.hpp
 	src/System/IncludeOpenGL.hpp
 	src/System/IncludeGLFW.hpp
 	src/System/InputManager.cpp
