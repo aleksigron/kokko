@@ -1,9 +1,9 @@
 {
 	"cs": {
-		"main": "res/shaders/particles/particle_simulate.comp.glsl",
+		"main": "engine/shaders/particles/particle_simulate.comp.glsl",
 		"includes": [
-			"res/shaders/common/constants.glsl",
-			"res/shaders/particles/compute_common.glsl"
+			"engine/shaders/common/constants.glsl",
+			"engine/shaders/particles/compute_common.glsl"
 		]
 	}
 }

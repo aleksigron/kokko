@@ -12,8 +12,8 @@
 
 #stage vertex
 
-#include "res/shaders/common/constants.glsl"
-#include "res/shaders/deferred_lighting/lighting_ubo.glsl"
+#include "engine/shaders/common/constants.glsl"
+#include "engine/shaders/deferred_lighting/lighting_ubo.glsl"
 
 layout(location = 0) in vec3 ndc_pos;
 
@@ -33,9 +33,9 @@ void main()
 
 #stage fragment
 
-#include "res/shaders/common/constants.glsl"
-#include "res/shaders/common/g_buffer_io.glsl"
-#include "res/shaders/deferred_lighting/lighting_ubo.glsl"
+#include "engine/shaders/common/constants.glsl"
+#include "engine/shaders/common/g_buffer_io.glsl"
+#include "engine/shaders/deferred_lighting/lighting_ubo.glsl"
 
 in VS_TO_FS
 {

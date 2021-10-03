@@ -1,16 +1,16 @@
 {
 	"vs": {
-		"main": "res/shaders/preprocess/calc_brdf_lut.vert.glsl",
+		"main": "engine/shaders/preprocess/calc_brdf_lut.vert.glsl",
 		"includes": [
-			"res/shaders/common/constants.glsl",
-			"res/shaders/common/viewport_block.glsl"
+			"engine/shaders/common/constants.glsl",
+			"engine/shaders/common/viewport_block.glsl"
 		]
 	},
 	"fs": {
-		"main": "res/shaders/preprocess/calc_brdf_lut.frag.glsl",
+		"main": "engine/shaders/preprocess/calc_brdf_lut.frag.glsl",
 		"includes": [
-			"res/shaders/common/constants.glsl",
-			"res/shaders/preprocess/importance_sample.glsl"
+			"engine/shaders/common/constants.glsl",
+			"engine/shaders/preprocess/importance_sample.glsl"
 		]
 	},
 	"properties": [

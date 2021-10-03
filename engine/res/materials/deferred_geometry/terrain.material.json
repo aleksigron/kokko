@@ -1,8 +1,13 @@
 {
-	"shader": "res/shaders/deferred_geometry/terrain.glsl",
-	"variables":
-	[
-		{ "name": "metalness", "value": 0.0 },
-		{ "name": "roughness", "value": 0.8 }
+	"shader": "engine/shaders/deferred_geometry/terrain.glsl",
+	"variables": [
+		{
+			"name": "metalness",
+			"value": 0.0
+		},
+		{
+			"name": "roughness",
+			"value": 0.8
+		}
 	]
 }

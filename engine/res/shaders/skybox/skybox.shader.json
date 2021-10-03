@@ -1,13 +1,13 @@
 {
 	"vs": {
-		"main": "res/shaders/skybox/skybox.vert.glsl",
+		"main": "engine/shaders/skybox/skybox.vert.glsl",
 		"includes": [
-			"res/shaders/common/constants.glsl",
-			"res/shaders/common/transform_block.glsl"
+			"engine/shaders/common/constants.glsl",
+			"engine/shaders/common/transform_block.glsl"
 		]
 	},
 	"fs": {
-		"main": "res/shaders/skybox/skybox.frag.glsl"
+		"main": "engine/shaders/skybox/skybox.frag.glsl"
 	},
 	"transparencyType": "skybox",
 	"properties": [

@@ -1,3 +1,0 @@
-{
-	"shader": "res/shaders/deferred_geometry/shadow_depth.glsl"
-}
