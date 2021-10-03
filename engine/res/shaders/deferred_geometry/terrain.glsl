@@ -5,7 +5,7 @@
 #property roughness float
 
 #stage vertex
-#include "res/shaders/common/constants.glsl"
+#include "engine/shaders/common/constants.glsl"
 
 layout(std140, binding = BLOCK_BINDING_OBJECT) uniform TerrainBlock
 {
@@ -66,9 +66,9 @@ void main()
 }
 
 #stage fragment
-#include "res/shaders/common/constants.glsl"
-#include "res/shaders/common/deferred_frag_output.glsl"
-#include "res/shaders/common/g_buffer_io.glsl"
+#include "engine/shaders/common/constants.glsl"
+#include "engine/shaders/common/deferred_frag_output.glsl"
+#include "engine/shaders/common/g_buffer_io.glsl"
 
 in VS_TO_FS {
 	vec3 normal;

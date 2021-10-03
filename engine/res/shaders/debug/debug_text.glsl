@@ -2,7 +2,7 @@
 #property glyph_tex tex2d
 
 #stage vertex
-#include "res/shaders/common/constants.glsl"
+#include "engine/shaders/common/constants.glsl"
 layout(location = VERTEX_ATTR_INDEX_POS) in vec3 vert_pos;
 layout(location = VERTEX_ATTR_INDEX_UV0) in vec2 vert_tex;
 

@@ -1,15 +1,15 @@
 {
 	"vs": {
-		"main": "res/shaders/preprocess/calc_diffuse_irradiance.vert.glsl",
+		"main": "engine/shaders/preprocess/calc_diffuse_irradiance.vert.glsl",
 		"includes": [
-			"res/shaders/common/constants.glsl",
-			"res/shaders/common/viewport_block.glsl"
+			"engine/shaders/common/constants.glsl",
+			"engine/shaders/common/viewport_block.glsl"
 		]
 	},
 	"fs": {
-		"main": "res/shaders/preprocess/calc_diffuse_irradiance.frag.glsl",
+		"main": "engine/shaders/preprocess/calc_diffuse_irradiance.frag.glsl",
 		"includes": [
-			"res/shaders/common/constants.glsl"
+			"engine/shaders/common/constants.glsl"
 		]
 	},
 	"properties": [

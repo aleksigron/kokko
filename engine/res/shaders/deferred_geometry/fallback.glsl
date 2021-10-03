@@ -1,8 +1,8 @@
 #version 450
 
 #stage vertex
-#include "res/shaders/common/constants.glsl"
-#include "res/shaders/common/transform_block.glsl"
+#include "engine/shaders/common/constants.glsl"
+#include "engine/shaders/common/transform_block.glsl"
 
 layout(location = VERTEX_ATTR_INDEX_POS) in vec3 position;
 layout(location = VERTEX_ATTR_INDEX_NOR) in vec3 normal;
@@ -19,9 +19,9 @@ void main()
 }
 
 #stage fragment
-#include "res/shaders/common/constants.glsl"
-#include "res/shaders/common/g_buffer_io.glsl"
-#include "res/shaders/common/deferred_frag_output.glsl"
+#include "engine/shaders/common/constants.glsl"
+#include "engine/shaders/common/g_buffer_io.glsl"
+#include "engine/shaders/common/deferred_frag_output.glsl"
 
 in VS_TO_FS {
     vec3 N;

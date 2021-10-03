@@ -1,9 +1,0 @@
-{
-	"shader": "res/shaders/deferred_geometry/standard_opaque.glsl",
-	"variables":
-	[
-		{ "name": "color_tint", "value": [ 1.00, 0.71, 0.29 ]},
-		{ "name": "metalness", "value": 1.0 },
-		{ "name": "roughness", "value": 0.5 }
-	]
-}

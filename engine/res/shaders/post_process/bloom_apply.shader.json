@@ -1,11 +1,11 @@
 {
 	"vs": {
-		"main": "res/shaders/post_process/post_process.vert.glsl"
+		"main": "engine/shaders/post_process/post_process.vert.glsl"
 	},
 	"fs": {
-		"main": "res/shaders/post_process/bloom_apply.frag.glsl",
+		"main": "engine/shaders/post_process/bloom_apply.frag.glsl",
 		"includes": [
-			"res/shaders/common/constants.glsl"
+			"engine/shaders/common/constants.glsl"
 		]
 	},
 	"properties": [

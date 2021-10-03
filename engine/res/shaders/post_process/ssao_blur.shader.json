@@ -1,14 +1,14 @@
 {
 	"vs": {
-		"main": "res/shaders/post_process/ssao_blur.vert.glsl",
+		"main": "engine/shaders/post_process/ssao_blur.vert.glsl",
 		"includes": [
-            "res/shaders/common/constants.glsl"
+			"engine/shaders/common/constants.glsl"
 		]
 	},
 	"fs": {
-		"main": "res/shaders/post_process/ssao_blur.frag.glsl",
+		"main": "engine/shaders/post_process/ssao_blur.frag.glsl",
 		"includes": [
-            "res/shaders/common/constants.glsl"
+			"engine/shaders/common/constants.glsl"
 		]
 	},
 	"properties": [

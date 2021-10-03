@@ -1,9 +1,17 @@
 {
-	"shader": "res/shaders/skybox/skybox_sky.shader.json",
-	"variables":
-	[
-		{ "name": "color_zenith", "value": [ 0.00, 0.12, 0.42 ] },
-		{ "name": "color_horizon", "value": [ 0.66, 0.86, 0.98 ] },
-		{ "name": "color_below_horizon", "value": [ 0.2, 0.3, 0.4 ] }
+	"shader": "engine/shaders/skybox/skybox_sky.shader.json",
+	"variables": [
+		{
+			"name": "color_zenith",
+			"value": [ 0.00, 0.12, 0.42 ]
+		},
+		{
+			"name": "color_horizon",
+			"value": [ 0.66, 0.86, 0.98 ]
+		},
+		{
+			"name": "color_below_horizon",
+			"value": [ 0.2, 0.3, 0.4 ]
+		}
 	]
 }

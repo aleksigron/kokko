@@ -1,8 +1,8 @@
 #version 450
 
 #stage vertex
-#include "res/shaders/common/constants.glsl"
-#include "res/shaders/common/transform_block.glsl"
+#include "engine/shaders/common/constants.glsl"
+#include "engine/shaders/common/transform_block.glsl"
 
 layout(location = 0) in vec3 position;
 
