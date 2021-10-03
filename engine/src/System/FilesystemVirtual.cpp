@@ -46,7 +46,7 @@ void FilesystemVirtual::SetMountPoints(ArrayView<MountPoint> mounts)
 
 			if (valid)
 			{
-				pointIndices[mountPointCount] = 
+				pointIndices[mountPointCount] = mountPointCount;
 				mountPointCount += 1;
 				stringDataUsed += mount.mountName.len + mount.mountedPath.len;
 			}

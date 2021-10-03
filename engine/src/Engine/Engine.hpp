@@ -31,10 +31,11 @@ private:
 
 	EngineSettings settings;
 
+	Filesystem* filesystem;
+
 	InstanceAllocatorPair<Window> mainWindow;
 	Time* time;
 	RenderDevice* renderDevice;
-	Filesystem* filesystem;
 	InstanceAllocatorPair<Debug> debug;
 	InstanceAllocatorPair<MeshManager> meshManager;
 	InstanceAllocatorPair<TextureManager> textureManager;
@@ -44,7 +45,7 @@ private:
 	InstanceAllocatorPair<World> world;
 
 public:
-	Engine();
+	Engine(AllocatorManager* allocatorManager, Filesystem* filesystem);
 	~Engine();
 
 	bool Initialize();
@@ -56,7 +57,6 @@ public:
 
 	void SetAppPointer(void* app);
 
-	AllocatorManager* GetAllocatorManager() { return allocatorManager; }
 	EngineSettings* GetSettings() { return &settings; }
 	Window* GetMainWindow() { return mainWindow.instance; }
 	RenderDevice* GetRenderDevice() { return renderDevice; }

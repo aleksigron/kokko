@@ -130,11 +130,13 @@ bool World::WriteToFile(const char* path, const char* displayName)
 
 void World::ClearAllEntities()
 {
+	particleSystem.instance->RemoveAll();
+	terrainSystem.instance->RemoveAll();
+	// TODO: scriptSystem
 	cameraSystem.instance->RemoveAll();
 	lightManager.instance->RemoveAll();
 	renderer.instance->RemoveAll();
 	scene.instance->Clear();
-	// TODO: scriptSystem
 	entityManager.instance->ClearAll();
 
 	loadedLevelDisplayName.Assign(UnnamedLevelDisplayName);

@@ -29,6 +29,7 @@
 
 #include "Resources/ResourceManagers.hpp"
 
+#include "System/FilesystemVirtual.hpp"
 #include "System/InputManager.hpp"
 #include "System/Window.hpp"
 
@@ -36,8 +37,9 @@
 #include "EditorUserSettings.hpp"
 #include "EditorWindow.hpp"
 
-EditorApp::EditorApp(Allocator* allocator) :
+EditorApp::EditorApp(Allocator* allocator, FilesystemVirtual* filesystem) :
 	engine(nullptr),
+	virtualFilesystem(filesystem),
 	allocator(allocator),
 	renderDevice(nullptr),
 	world(nullptr),
@@ -78,7 +80,8 @@ void EditorApp::Initialize(Engine* engine)
 		KOKKO_PROFILE_SCOPE("ImGui AddFontFromFileTTF()");
 
 		float fontSize = std::floor(15.0f * scale);
-		io.Fonts->AddFontFromFileTTF("res/fonts/roboto/Roboto-Regular.ttf", fontSize);
+		// TODO: Read from virtual filesystem
+		io.Fonts->AddFontFromFileTTF("editor/res/fonts/roboto/Roboto-Regular.ttf", fontSize);
 	}
 
 	ImGui::StyleColorsDark();
@@ -156,7 +159,7 @@ void EditorApp::StartFrame()
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 }
 
-void EditorApp::Update(EngineSettings* engineSettings, World* world, bool& shouldExitOut)
+void EditorApp::Update(EngineSettings* engineSettings, bool& shouldExitOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -170,7 +173,7 @@ void EditorApp::Update(EngineSettings* engineSettings, World* world, bool& shoul
 	if (firstRun)
 	{
 		firstRun = false;
-		world->LoadFromFile("res/scenes/default.level", "default.level");
+		world->LoadFromFile("assets/scenes/default.level", "default.level");
 	}
 
 	if (exitRequested)
@@ -396,7 +399,7 @@ bool EditorApp::CreateProject(const std::filesystem::path& directory, StringRef 
 	if (project.SerializeToFile() == false)
 		return false;
 
-	engine->GetMainWindow()->SetWindowTitle(project.GetName().GetCStr());
+	OnProjectChanged();
 
 	return true;
 }
@@ -405,7 +408,7 @@ bool EditorApp::OpenProject(const std::filesystem::path& projectDir)
 {
 	if (project.DeserializeFromFile(projectDir))
 	{
-		NotifyProjectChanged();
+		OnProjectChanged();
 
 		return true;
 	}
@@ -413,8 +416,19 @@ bool EditorApp::OpenProject(const std::filesystem::path& projectDir)
 	return false;
 }
 
-void EditorApp::NotifyProjectChanged()
+void EditorApp::OnProjectChanged()
 {
+	std::filesystem::path assetPath = project.GetRootPath() / "assets";
+	std::string assetPathStr = assetPath.u8string();
+	StringRef assetPathRef(assetPathStr.c_str(), assetPathStr.length());
+
+	FilesystemVirtual::MountPoint mounts[] = {
+		FilesystemVirtual::MountPoint{ StringRef("engine"), StringRef("engine/res") },
+		FilesystemVirtual::MountPoint{ StringRef("editor"), StringRef("editor/res") },
+		FilesystemVirtual::MountPoint{ StringRef("assets"), assetPathRef }
+	};
+	virtualFilesystem->SetMountPoints(ArrayView(mounts, sizeof(mounts) / sizeof(mounts[0])));
+
 	const String& name = project.GetName();
 
 	KK_LOG_INFO("Editor project changed to {}", name.GetCStr());

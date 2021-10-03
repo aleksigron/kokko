@@ -63,7 +63,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 
 	// Initialize shaders
 
-	const char* shaderPath = "res/shaders/debug/debug_vector.glsl";
+	const char* shaderPath = "engine/shaders/debug/debug_vector.glsl";
 	shaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
 	// Initialize meshes

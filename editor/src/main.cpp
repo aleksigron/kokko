@@ -11,6 +11,7 @@
 
 #include "Rendering/CameraParameters.hpp"
 
+#include "System/FilesystemVirtual.hpp"
 #include "System/Window.hpp"
 
 int main(int argc, char** argv)
@@ -29,15 +30,33 @@ int main(int argc, char** argv)
 	instr.EndSession();
 	instr.BeginSession("startup_trace.json");
 
-	Engine engine;
+	// Memory
+
+	Memory::InitializeMemorySystem();
+	Allocator* defaultAlloc = Memory::GetDefaultAllocator();
+	AllocatorManager* allocManager = defaultAlloc->MakeNew<AllocatorManager>(defaultAlloc);
+
+	// Virtual filesystem
+	// Initial virtual mount points before editor project is loaded
+
+	Allocator* filesystemAllocator = allocManager->CreateAllocatorScope("Filesystem", defaultAlloc);
+	FilesystemVirtual filesystem(filesystemAllocator);
+
+	FilesystemVirtual::MountPoint mounts[] = {
+		FilesystemVirtual::MountPoint{ StringRef("engine"), StringRef("engine/res") },
+		FilesystemVirtual::MountPoint{ StringRef("editor"), StringRef("editor/res") }
+	};
+	filesystem.SetMountPoints(ArrayView(mounts, sizeof(mounts) / sizeof(mounts[0])));
+
+	// Engine
+
+	Engine engine(allocManager, &filesystem);
 
 	if (engine.Initialize())
 	{
-		AllocatorManager* am = engine.GetAllocatorManager();
-		Allocator* defaultAlloc = Memory::GetDefaultAllocator();
-		Allocator* appAllocator = am->CreateAllocatorScope("EditorApp", defaultAlloc);
+		Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
 
-		EditorApp editor(appAllocator);
+		EditorApp editor(appAllocator, &filesystem);
 		editor.Initialize(&engine);
 
 		engine.SetAppPointer(&editor);
@@ -54,7 +73,7 @@ int main(int argc, char** argv)
 			// Because editor can change the state of the world and systems,
 			// let's run those updates at the same part of the frame as other updates
 			bool editorWantsToExit = false;
-			editor.Update(engine.GetSettings(), engine.GetWorld(), editorWantsToExit);
+			editor.Update(engine.GetSettings(), editorWantsToExit);
 			if (editorWantsToExit)
 				engine.GetMainWindow()->SetShouldClose(true);
 
@@ -67,8 +86,13 @@ int main(int argc, char** argv)
 	else
 	{
 		instr.EndSession();
+
+		Memory::DeinitializeMemorySystem();
+
 		return -1;
 	}
+
+	Memory::DeinitializeMemorySystem();
 
 	return res;
 }

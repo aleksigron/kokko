@@ -13,12 +13,14 @@
 
 #include "Resources/ImageData.hpp"
 
+#include "System/Filesystem.hpp"
 #include "System/IncludeOpenGL.hpp"
 
 TextureId TextureId::Null = TextureId{ 0 };
 
-TextureManager::TextureManager(Allocator* allocator, RenderDevice* renderDevice) :
+TextureManager::TextureManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
 	allocator(allocator),
+	filesystem(filesystem),
 	renderDevice(renderDevice),
 	nameHashMap(allocator)
 {
@@ -217,9 +219,23 @@ bool TextureManager::LoadWithStbImage(TextureId id, const char* filePath, bool p
 	stbi_set_flip_vertically_on_load(false);
 	int width, height, nrComponents;
 	uint8_t* textureBytes;
+
 	{
-		KOKKO_PROFILE_SCOPE("void* stbi_loadf()");
-		textureBytes = stbi_load(filePath, &width, &height, &nrComponents, 0);
+		Array<uint8_t> fileBytes(allocator);
+
+		if (filesystem->ReadBinary(filePath, fileBytes) == false)
+		{
+			KK_LOG_ERROR("Couldn't read texture file {}", filePath);
+			return false;
+		}
+
+		{
+			KOKKO_PROFILE_SCOPE("stbi_load_from_memory()");
+
+			uint8_t* fileBytesPtr = fileBytes.GetData();
+			int length = static_cast<int>(fileBytes.GetCount());
+			textureBytes = stbi_load_from_memory(fileBytesPtr, length, &width, &height, &nrComponents, 0);
+		}
 	}
 
 	unsigned int textureObjectId = 0;

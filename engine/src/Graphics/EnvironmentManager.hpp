@@ -7,6 +7,7 @@
 #include "Resources/TextureId.hpp"
 
 class Allocator;
+class Filesystem;
 class RenderDevice;
 class ShaderManager;
 class MeshManager;
@@ -32,6 +33,7 @@ private:
 	static const size_t SpecularMipmapLevelCount = 6;
 
 	Allocator* allocator;
+	Filesystem* filesystem;
 	RenderDevice* renderDevice;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
@@ -53,7 +55,7 @@ private:
 	void LoadEmptyEnvironmentMap();
 
 public:
-	EnvironmentManager(Allocator* allocator, RenderDevice* renderDevice,
+	EnvironmentManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice,
 		ShaderManager* shaderManager, MeshManager* meshManager, TextureManager* textureManager);
 	EnvironmentManager(const EnvironmentManager&) = delete;
 	EnvironmentManager(EnvironmentManager&&) = delete;

@@ -7,6 +7,7 @@ class AllocatorManager;
 class RenderDevice;
 class MeshManager;
 class ShaderManager;
+class TextureManager;
 class Window;
 class Renderer;
 class World;
@@ -62,7 +63,8 @@ public:
 		Window* window, RenderDevice* renderDevice, Filesystem* filesystem);
 	~Debug();
 
-	void Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager);
+	void Initialize(Window* window, MeshManager* meshManager,
+		ShaderManager* shaderManager, TextureManager* textureManager);
 	void Deinitialize();
 	
 	void Render(World* world, const Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera);

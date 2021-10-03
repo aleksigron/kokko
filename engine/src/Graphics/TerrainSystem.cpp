@@ -60,7 +60,7 @@ void TerrainSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	StringRef path("res/materials/deferred_geometry/terrain.material.json");
+	StringRef path("engine/materials/deferred_geometry/terrain.material.json");
 	terrainMaterial = materialManager->GetIdByPath(path);
 }
 

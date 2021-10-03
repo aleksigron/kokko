@@ -8,6 +8,7 @@
 class Allocator;
 class EditorCore;
 class Engine;
+class FilesystemVirtual;
 class Framebuffer;
 class RenderDevice;
 class World;
@@ -20,7 +21,7 @@ enum class EditorWindowType;
 class EditorApp
 {
 public:
-	EditorApp(Allocator* allocator);
+	EditorApp(Allocator* allocator, FilesystemVirtual* filesystem);
 	EditorApp(const EditorApp&) = delete;
 	EditorApp(EditorApp&&) = delete;
 	~EditorApp();
@@ -32,7 +33,7 @@ public:
 	void Deinitialize();
 
 	void StartFrame();
-	void Update(EngineSettings* engineSettings, World* world, bool& shouldExitOut);
+	void Update(EngineSettings* engineSettings, bool& shouldExitOut);
 	void EndFrame();
 
 	const Framebuffer& GetSceneViewFramebuffer();
@@ -54,9 +55,10 @@ private:
 
 	bool CreateProject(const std::filesystem::path& directory, StringRef name);
 	bool OpenProject(const std::filesystem::path& projectDir);
-	void NotifyProjectChanged();
+	void OnProjectChanged();
 
 	Engine* engine;
+	FilesystemVirtual* virtualFilesystem;
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 	World* world;

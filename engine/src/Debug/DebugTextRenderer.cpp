@@ -56,10 +56,15 @@ DebugTextRenderer::~DebugTextRenderer()
 	}
 }
 
-void DebugTextRenderer::Initialize(ShaderManager* shaderManager, MeshManager* meshManager)
+void DebugTextRenderer::Initialize(ShaderManager* shaderManager,
+	MeshManager* meshManager, TextureManager* textureManager)
 {
 	this->shaderManager = shaderManager;
 	this->meshManager = meshManager;
+
+	const char* const debugFontFilename = "engine/fonts/gohufont-uni-14.bdf";
+	if (LoadBitmapFont(textureManager, debugFontFilename) == false)
+		KK_LOG_ERROR("Loading debug font failed: {}", debugFontFilename);
 }
 
 void DebugTextRenderer::SetFrameSize(const Vec2f& size)
@@ -165,7 +170,7 @@ void DebugTextRenderer::Render()
 
 		CreateAndUploadData();
 
-		const char* shaderPath = "res/shaders/debug/debug_text.glsl";
+		const char* shaderPath = "engine/shaders/debug/debug_text.glsl";
 		ShaderId shaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
 		if (shaderId == ShaderId::Null)
