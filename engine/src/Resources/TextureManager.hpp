@@ -12,6 +12,7 @@
 #include "Resources/TextureId.hpp"
 
 class Allocator;
+class Filesystem;
 class RenderDevice;
 struct ImageData;
 
@@ -35,7 +36,7 @@ class TextureManager
 {
 private:
 	Allocator* allocator;
-
+	Filesystem* filesystem;
 	RenderDevice* renderDevice;
 
 	struct InstanceData
@@ -68,7 +69,7 @@ private:
 	static int MipLevelsFromDimensions(int width, int height);
 
 public:
-	TextureManager(Allocator* allocator, RenderDevice* renderDevice);
+	TextureManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice);
 	~TextureManager();
 
 	void Initialize();

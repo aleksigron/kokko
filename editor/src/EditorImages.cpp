@@ -13,8 +13,8 @@ void EditorImages::LoadImages(TextureManager* textureManager)
 {
 	this->textureManager = textureManager;
 
-	folderIcon = textureManager->GetIdByPath(StringRef("res/textures/editor_folder_icon_256.png"));
-	genericFileIcon = textureManager->GetIdByPath(StringRef("res/textures/editor_generic_file_icon_256.png"));
+	folderIcon = textureManager->GetIdByPath(StringRef("editor/textures/editor_folder_icon_256.png"));
+	genericFileIcon = textureManager->GetIdByPath(StringRef("editor/textures/editor_generic_file_icon_256.png"));
 }
 
 void* EditorImages::GetImGuiTextureId(TextureId id) const

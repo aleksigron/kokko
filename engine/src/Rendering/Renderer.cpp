@@ -288,22 +288,22 @@ void Renderer::Initialize()
 	}
 	
 	{
-		const char* path = "res/materials/deferred_geometry/shadow_depth.material.json";
+		const char* path = "engine/materials/deferred_geometry/shadow_depth.material.json";
 		shadowMaterial = materialManager->GetIdByPath(StringRef(path));
 	}
 
 	{
-		const char* path = "res/materials/deferred_geometry/fallback.material.json";
+		const char* path = "engine/materials/deferred_geometry/fallback.material.json";
 		fallbackMeshMaterial = materialManager->GetIdByPath(StringRef(path));
 	}
 
 	{
-		const char* path = "res/shaders/deferred_lighting/lighting.glsl";
+		const char* path = "engine/shaders/deferred_lighting/lighting.glsl";
 		lightingShaderId = shaderManager->GetIdByPath(StringRef(path));
 	}
 
 	{
-		const char* path = "res/shaders/post_process/tonemap.shader.json";
+		const char* path = "engine/shaders/post_process/tonemap.shader.json";
 		tonemappingShaderId = shaderManager->GetIdByPath(StringRef(path));
 	}
 
@@ -342,7 +342,7 @@ void Renderer::Initialize()
 		RenderCommandData::ViewportData viewport{ 0, 0, LutSize, LutSize };
 		device->Viewport(&viewport);
 
-		const char* path = "res/shaders/preprocess/calc_brdf_lut.shader.json";
+		const char* path = "engine/shaders/preprocess/calc_brdf_lut.shader.json";
 		ShaderId calcBrdfShaderId = shaderManager->GetIdByPath(StringRef(path));
 		const ShaderData& calcBrdfShader = shaderManager->GetShaderData(calcBrdfShaderId);
 		device->UseShaderProgram(calcBrdfShader.driverId);
@@ -362,7 +362,7 @@ void Renderer::Initialize()
 		skyboxMeshId = meshManager->CreateMesh();
 		MeshPresets::UploadCube(meshManager, skyboxMeshId);
 
-		const char* shaderPath = "res/shaders/skybox/skybox.shader.json";
+		const char* shaderPath = "engine/shaders/skybox/skybox.shader.json";
 		skyboxShaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
 		device->CreateBuffers(1, &skyboxUniformBufferId);

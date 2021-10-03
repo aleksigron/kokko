@@ -21,6 +21,8 @@
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
+#include "System/Filesystem.hpp"
+
 struct CalcSpecularUniforms
 {
 	alignas(16) float roughness;
@@ -43,11 +45,13 @@ static RenderTextureTarget GetCubeTextureTarget(unsigned int index)
 
 EnvironmentManager::EnvironmentManager(
 	Allocator* allocator,
+	Filesystem* filesystem,
 	RenderDevice* renderDevice,
 	ShaderManager* shaderManager,
 	MeshManager* meshManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
+	filesystem(filesystem),
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
 	meshManager(meshManager),
@@ -250,9 +254,23 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	stbi_set_flip_vertically_on_load(true);
 	int equirectWidth, equirectHeight, nrComponents;
 	float* equirectData;
+
 	{
-		KOKKO_PROFILE_SCOPE("void* stbi_loadf()");
-		equirectData = stbi_loadf(equirectMapPath, &equirectWidth, &equirectHeight, &nrComponents, 0);
+		Array<uint8_t> fileBytes(allocator);
+
+		if (filesystem->ReadBinary(equirectMapPath, fileBytes) == false)
+		{
+			KK_LOG_ERROR("Couldn't read texture file {}", equirectMapPath);
+			return false;
+		}
+
+		{
+			KOKKO_PROFILE_SCOPE("stbi_loadf_from_memory()");
+
+			uint8_t* fileBytesPtr = fileBytes.GetData();
+			int length = static_cast<int>(fileBytes.GetCount());
+			equirectData = stbi_loadf_from_memory(fileBytesPtr, length, &equirectWidth, &equirectHeight, &nrComponents, 0);
+		}
 	}
 
 	unsigned int equirectTextureId = 0;
@@ -304,7 +322,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 
 	// Load shader
 
-	ShaderId equirectShaderId = shaderManager->GetIdByPath(StringRef("res/shaders/preprocess/equirect_to_cube.shader.json"));
+	ShaderId equirectShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/preprocess/equirect_to_cube.shader.json"));
 	const ShaderData& equirectShader = shaderManager->GetShaderData(equirectShaderId);
 
 	// Bind common resources
@@ -353,7 +371,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 
 	// Load shader
 
-	ShaderId calcDiffuseShaderId = shaderManager->GetIdByPath(StringRef("res/shaders/preprocess/calc_diffuse_irradiance.shader.json"));
+	ShaderId calcDiffuseShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/preprocess/calc_diffuse_irradiance.shader.json"));
 	const ShaderData& calcDiffuseShader = shaderManager->GetShaderData(calcDiffuseShaderId);
 
 	renderDevice->UseShaderProgram(calcDiffuseShader.driverId);
@@ -395,7 +413,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 
 	// Load shader
 
-	ShaderId calcSpecularShaderId = shaderManager->GetIdByPath(StringRef("res/shaders/preprocess/calc_specular_irradiance.shader.json"));
+	ShaderId calcSpecularShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/preprocess/calc_specular_irradiance.shader.json"));
 	const ShaderData& calcSpecularShader = shaderManager->GetShaderData(calcSpecularShaderId);
 
 	renderDevice->UseShaderProgram(calcSpecularShader.driverId);

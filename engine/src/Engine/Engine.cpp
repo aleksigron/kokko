@@ -38,11 +38,11 @@
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
-Engine::Engine()
+Engine::Engine(AllocatorManager* allocatorManager, Filesystem* filesystem) :
+	filesystem(filesystem)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Memory::InitializeMemorySystem();
 	Allocator* alloc = Memory::GetDefaultAllocator();
 
 	allocatorManager = alloc->MakeNew<AllocatorManager>(alloc);
@@ -53,11 +53,9 @@ Engine::Engine()
 	systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 	time = systemAllocator->MakeNew<Time>();
 	renderDevice = systemAllocator->MakeNew<RenderDeviceOpenGL>();
-	filesystem = systemAllocator->MakeNew<FilesystemDefault>();
 
 	debug.CreateScope(allocatorManager, "Debug", alloc);
-	debug.New(debug.allocator, allocatorManager, mainWindow.instance,
-		renderDevice, filesystem);
+	debug.New(debug.allocator, allocatorManager, mainWindow.instance, renderDevice, filesystem);
 
 	debugNameAllocator = allocatorManager->CreateAllocatorScope("EntityDebugNames", alloc);
 
@@ -65,7 +63,7 @@ Engine::Engine()
 	meshManager.New(meshManager.allocator, filesystem, renderDevice);
 
 	textureManager.CreateScope(allocatorManager, "TextureManager", alloc);
-	textureManager.New(textureManager.allocator, renderDevice);
+	textureManager.New(textureManager.allocator, filesystem, renderDevice);
 
 	shaderManager.CreateScope(allocatorManager, "ShaderManager", alloc);
 	shaderManager.New(shaderManager.allocator, filesystem, renderDevice);
@@ -75,7 +73,7 @@ Engine::Engine()
 		shaderManager.instance, textureManager.instance);
 
 	environmentManager.CreateScope(allocatorManager, "EnvironmentManager", alloc);
-	environmentManager.New(environmentManager.allocator, renderDevice,
+	environmentManager.New(environmentManager.allocator, filesystem, renderDevice,
 		shaderManager.instance, meshManager.instance, textureManager.instance);
 
 	ResourceManagers resManagers;
@@ -102,15 +100,12 @@ Engine::~Engine()
 	textureManager.Delete();
 	meshManager.Delete();
 	debug.Delete();
-	systemAllocator->MakeDelete(filesystem);
 	systemAllocator->MakeDelete(renderDevice);
 	systemAllocator->MakeDelete(time);
 	mainWindow.Delete();
 
 	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
 	defaultAllocator->MakeDelete(this->allocatorManager);
-
-	Memory::DeinitializeMemorySystem();
 }
 
 bool Engine::Initialize()
@@ -121,24 +116,11 @@ bool Engine::Initialize()
 
 	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko"))
 	{
-		ResourceManagers resManagers;
-		resManagers.meshManager = meshManager.instance;
-		resManagers.shaderManager = shaderManager.instance;
-		resManagers.materialManager = materialManager.instance;
-		resManagers.textureManager = textureManager.instance;
-		resManagers.environmentManager = environmentManager.instance;
-
-		const char* const logFilename = "log.txt";
-		const char* const debugFontFilename = "res/fonts/gohufont-uni-14.bdf";
-
 		DebugLog* debugLog = debug.instance->GetLog();
-		debugLog->OpenLogFile(logFilename, false);
+		debugLog->OpenLogFile("log.txt", false);
 
-		DebugTextRenderer* debugTextRenderer = debug.instance->GetTextRenderer();
-		if (debugTextRenderer->LoadBitmapFont(textureManager.instance, debugFontFilename) == false)
-			KK_LOG_ERROR("Loading debug font failed: {}", debugFontFilename);
-
-		debug.instance->Initialize(mainWindow.instance, meshManager.instance, shaderManager.instance);
+		debug.instance->Initialize(mainWindow.instance, meshManager.instance,
+			shaderManager.instance, textureManager.instance);
 
 		textureManager.instance->Initialize();
 		environmentManager.instance->Initialize();

@@ -49,13 +49,15 @@ private:
 
 	void CreateAndUploadData();
 
+	bool LoadBitmapFont(TextureManager* textureManager, const char* filePath);
+
 public:
 	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice, Filesystem* filesystem);
 	~DebugTextRenderer();
 
-	void Initialize(ShaderManager* shaderManager, MeshManager* meshManager);
+	void Initialize(ShaderManager* shaderManager,
+		MeshManager* meshManager, TextureManager* textureManager);
 
-	bool LoadBitmapFont(TextureManager* textureManager, const char* filePath);
 	bool HasValidFont() const { return font != nullptr; }
 
 	void SetFrameSize(const Vec2f& size);

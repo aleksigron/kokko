@@ -157,9 +157,7 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 		ShaderData& shader = data.shader[id.i];
 
 		StringRef pathRef = pathStr.GetRef();
-
-		const StringRef resFolder("res/");
-		StringRef debugName = pathRef.StartsWith(resFolder) ? pathRef.SubStr(resFolder.len) : pathRef;
+		StringRef debugName = pathRef;
 
 		bool loadSuccess = false;
 

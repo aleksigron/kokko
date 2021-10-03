@@ -83,7 +83,8 @@ Debug::~Debug()
 	allocator->MakeDelete(vectorRenderer);
 }
 
-void Debug::Initialize(Window* window, MeshManager* meshManager, ShaderManager* shaderManager)
+void Debug::Initialize(Window* window, MeshManager* meshManager,
+	ShaderManager* shaderManager, TextureManager* textureManager)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -94,7 +95,7 @@ void Debug::Initialize(Window* window, MeshManager* meshManager, ShaderManager* 
 
 	this->window = window;
 
-	textRenderer->Initialize(shaderManager, meshManager);
+	textRenderer->Initialize(shaderManager, meshManager, textureManager);
 	vectorRenderer->Initialize(meshManager, shaderManager);
 }
 

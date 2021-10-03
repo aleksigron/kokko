@@ -57,7 +57,7 @@ bool ImGuiPlatformBackend::Initialize(GLFWwindow* window, InputView* inputView)
 	// TODO: Update font size and spacing if window is moved to another screen
 
 	float fontSize(int(15.0f * xScale));
-	io.Fonts->AddFontFromFileTTF("res/fonts/roboto/Roboto-Regular.ttf", fontSize);
+	io.Fonts->AddFontFromFileTTF("editor/fonts/roboto/Roboto-Regular.ttf", fontSize);
 
 	// Keyboard mapping. Dear ImGui will use those indices to peek into the io.KeysDown[] array.
 	io.KeyMap[ImGuiKey_Tab] = static_cast<int>(KeyCode::Tab);
