@@ -103,9 +103,6 @@ Engine::~Engine()
 	systemAllocator->MakeDelete(renderDevice);
 	systemAllocator->MakeDelete(time);
 	mainWindow.Delete();
-
-	Allocator* defaultAllocator = Memory::GetDefaultAllocator();
-	defaultAllocator->MakeDelete(this->allocatorManager);
 }
 
 bool Engine::Initialize()

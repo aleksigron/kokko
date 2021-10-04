@@ -288,7 +288,7 @@ void Renderer::Initialize()
 	}
 	
 	{
-		const char* path = "engine/materials/deferred_geometry/shadow_depth.material.json";
+		const char* path = "engine/materials/forward/shadow_depth.material.json";
 		shadowMaterial = materialManager->GetIdByPath(StringRef(path));
 	}
 
