@@ -39,15 +39,6 @@ bool FilesystemRelative::ReadText(const char* path, String& output)
 	return result;
 }
 
-bool FilesystemRelative::ReadText(const char* path, Allocator* allocator, char*& strOut, size_t& lenOut)
-{
-	pathStore.Append(path);
-	bool result = defaultFs.ReadText(pathStore.GetCStr(), allocator, strOut, lenOut);
-	pathStore.Resize(basePathLength);
-
-	return result;
-}
-
 bool FilesystemRelative::Write(const char* path, ArrayView<char> content, bool append)
 {
 	pathStore.Append(path);

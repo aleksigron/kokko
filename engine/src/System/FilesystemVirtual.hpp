@@ -20,15 +20,12 @@ public:
 	};
 
 	FilesystemVirtual(Allocator* allocator);
-	~FilesystemVirtual() = default;
+	virtual ~FilesystemVirtual() = default;
 
 	void SetMountPoints(ArrayView<MountPoint> mounts);
 
 	virtual bool ReadBinary(const char* path, Array<uint8_t>& output) override;
-
 	virtual bool ReadText(const char* path, String& output) override;
-	virtual bool ReadText(const char* path, Allocator* allocator, char*& strOut, size_t& lenOut) override;
-
 	virtual bool Write(const char* path, ArrayView<char> content, bool append) override;
 
 private:
