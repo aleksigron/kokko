@@ -58,36 +58,6 @@ bool FilesystemDefault::ReadText(const char* path, String& output)
 	return false;
 }
 
-bool FilesystemDefault::ReadText(const char* path, Allocator* allocator, char*& strOut, size_t& lenOut)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	FILE* fileHandle = std::fopen(path, "rb");
-
-	if (fileHandle != nullptr)
-	{
-		// Find the size of the file
-		std::fseek(fileHandle, 0L, SEEK_END);
-		long fileLength = std::ftell(fileHandle);
-		std::rewind(fileHandle);
-
-		void* buffer = allocator->Allocate(static_cast<size_t>(fileLength) + 1);
-
-		size_t read = std::fread(buffer, 1, fileLength, fileHandle);
-		std::fclose(fileHandle);
-
-		// Null-terminate so it can be used as a c-string
-		static_cast<char*>(buffer)[read] = '\0';
-
-		strOut = static_cast<char*>(buffer);
-		lenOut = fileLength;
-
-		return true;
-	}
-
-	return false;
-}
-
 bool FilesystemDefault::Write(const char* path, ArrayView<char> content, bool append)
 {
 	KOKKO_PROFILE_FUNCTION();

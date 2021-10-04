@@ -101,18 +101,6 @@ bool FilesystemVirtual::ReadText(const char* path, String& output)
 	return false;
 }
 
-bool FilesystemVirtual::ReadText(const char* path, Allocator* allocator, char*& strOut, size_t& lenOut)
-{
-	if (FindMountedPath(path))
-	{
-		bool result = defaultFs.ReadText(pathStore.GetCStr(), allocator, strOut, lenOut);
-		pathStore.Clear();
-		return result;
-	}
-
-	return false;
-}
-
 bool FilesystemVirtual::Write(const char* path, ArrayView<char> content, bool append)
 {
 	if (FindMountedPath(path))

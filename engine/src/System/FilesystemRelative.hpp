@@ -11,15 +11,12 @@ class FilesystemRelative : public Filesystem
 {
 public:
 	FilesystemRelative(Allocator* allocator);
-	~FilesystemRelative() = default;
+	virtual ~FilesystemRelative() = default;
 
 	void SetBasePath(StringRef path);
 
 	virtual bool ReadBinary(const char* path, Array<uint8_t>& output) override;
-
 	virtual bool ReadText(const char* path, String& output) override;
-	virtual bool ReadText(const char* path, Allocator* allocator, char*& strOut, size_t& lenOut) override;
-
 	virtual bool Write(const char* path, ArrayView<char> content, bool append) override;
 
 private:

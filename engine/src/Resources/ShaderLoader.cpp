@@ -1,9 +1,10 @@
 #include "Resources/ShaderLoader.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstdio>
 #include <cstring>
-#include <algorithm>
+#include <utility>
 
 #include "rapidjson/document.h"
 
@@ -34,12 +35,6 @@ namespace ShaderLoader
 		StringRef source;
 	};
 
-	struct FileString
-	{
-		char* string;
-		size_t length;
-	};
-
 	struct AddUniforms_UniformData
 	{
 		StringRef name;
@@ -50,7 +45,7 @@ namespace ShaderLoader
 
 static bool LoadIncludes(
 	const rapidjson::Value& value,
-	HashMap<uint32_t, ShaderLoader::FileString>& includeFileCache,
+	HashMap<uint32_t, String>& includeFileCache,
 	Allocator* allocator,
 	Filesystem* filesystem)
 {
@@ -73,17 +68,12 @@ static bool LoadIncludes(
 			// File with this hash hasn't been read before, read it now
 			if (file == nullptr)
 			{
-				char* stringBuffer;
-				size_t stringLength;
-
-				if (filesystem->ReadText(itr->GetString(), allocator, stringBuffer, stringLength))
+				String fileContent(allocator);
+				
+				if (filesystem->ReadText(itr->GetString(), fileContent))
 				{
-					ShaderLoader::FileString str;
-					str.string = stringBuffer;
-					str.length = stringLength;
-
 					file = includeFileCache.Insert(hash);
-					file->second = str;
+					file->second = std::move(fileContent);
 				}
 				else
 					KK_LOG_ERROR("Shader include couldn't be read from file");
@@ -101,7 +91,7 @@ static bool ProcessSource(
 	StringRef versionStr,
 	StringRef uniformBlock,
 	const rapidjson::Value* includePaths,
-	HashMap<uint32_t, ShaderLoader::FileString>& includeFileCache,
+	HashMap<uint32_t, String>& includeFileCache,
 	Allocator* allocator,
 	Filesystem* filesystem,
 	String& output)
@@ -130,7 +120,7 @@ static bool ProcessSource(
 				return false;
 			}
 
-			totalLength += file->second.length;
+			totalLength += file->second.GetLength();
 		}
 	}
 
@@ -160,7 +150,7 @@ static bool ProcessSource(
 			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
 			auto* file = includeFileCache.Lookup(hash);
 
-			output.Append(StringRef(file->second.string, file->second.length));
+			output.Append(file->second);
 		}
 	}
 
@@ -685,7 +675,7 @@ bool ShaderLoader::LoadFromConfiguration(
 
 	// Load all include files, they can be shared between shader stages
 
-	HashMap<uint32_t, FileString> includeFileCache(allocator);
+	HashMap<uint32_t, String> includeFileCache(allocator);
 
 	bool includeLoadSuccess = true;
 
@@ -750,12 +740,6 @@ bool ShaderLoader::LoadFromConfiguration(
 		success = true;
 	}
 
-	// Release loaded include files
-	for (auto itr = includeFileCache.Begin(), end = includeFileCache.End(); itr != end; ++itr)
-	{
-		allocator->Deallocate(itr->second.string);
-	}
-
 	return success;
 }
 
@@ -780,11 +764,6 @@ ShaderFileLoader::ShaderFileLoader(Allocator* allocator, Filesystem* filesystem,
 
 ShaderFileLoader::~ShaderFileLoader()
 {
-	// Release loaded include files
-	for (auto itr = includeFileCache.Begin(), end = includeFileCache.End(); itr != end; ++itr)
-	{
-		allocator->Deallocate(itr->second.GetData());
-	}
 }
 
 bool ShaderFileLoader::LoadFromFile(
@@ -1088,15 +1067,12 @@ bool ShaderFileLoader::ProcessIncludes(
 			{
 				pathString.Assign(includePath);
 
-				char* stringBuffer;
-				size_t stringLength;
+				String fileContent(allocator);
 
-				if (filesystem->ReadText(pathString.GetCStr(), allocator, stringBuffer, stringLength))
+				if (filesystem->ReadText(pathString.GetCStr(), fileContent))
 				{
-					ArrayView<char> str(stringBuffer, stringLength);
-
 					file = includeFileCache.Insert(pathHash);
-					file->second = str;
+					file->second = std::move(fileContent);
 				}
 				else
 				{
@@ -1106,9 +1082,7 @@ bool ShaderFileLoader::ProcessIncludes(
 
 			if (file != nullptr)
 			{
-				StringRef includeFileContent(file->second.GetData(), file->second.GetCount());
-
-				if (ProcessIncludes(includeFileContent, pathHash, processedSourceOut) == false)
+				if (ProcessIncludes(file->second.GetRef(), pathHash, processedSourceOut) == false)
 				{
 					success = false;
 					break;

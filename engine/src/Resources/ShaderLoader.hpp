@@ -59,7 +59,7 @@ private:
 	Filesystem* filesystem;
 	RenderDevice* renderDevice;
 
-	HashMap<uint32_t, ArrayView<char>> includeFileCache;
+	HashMap<uint32_t, String> includeFileCache;
 	SortedArray<uint32_t> filesIncludedInStage;
 	String pathString;
 	String processedStageSources[MaxStageCount];
