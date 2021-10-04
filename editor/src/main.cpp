@@ -33,63 +33,64 @@ int main(int argc, char** argv)
 	// Memory
 
 	Memory::InitializeMemorySystem();
-	Allocator* defaultAlloc = Memory::GetDefaultAllocator();
-	AllocatorManager* allocManager = defaultAlloc->MakeNew<AllocatorManager>(defaultAlloc);
 
-	// Virtual filesystem
-	// Initial virtual mount points before editor project is loaded
-
-	Allocator* filesystemAllocator = allocManager->CreateAllocatorScope("Filesystem", defaultAlloc);
-	FilesystemVirtual filesystem(filesystemAllocator);
-
-	FilesystemVirtual::MountPoint mounts[] = {
-		FilesystemVirtual::MountPoint{ StringRef("engine"), StringRef("engine/res") },
-		FilesystemVirtual::MountPoint{ StringRef("editor"), StringRef("editor/res") }
-	};
-	filesystem.SetMountPoints(ArrayView(mounts, sizeof(mounts) / sizeof(mounts[0])));
-
-	// Engine
-
-	Engine engine(allocManager, &filesystem);
-
-	if (engine.Initialize())
 	{
-		Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
+		Allocator* defaultAlloc = Memory::GetDefaultAllocator();
+		AllocatorManager* allocManager = defaultAlloc->MakeNew<AllocatorManager>(defaultAlloc);
 
-		EditorApp editor(appAllocator, &filesystem);
-		editor.Initialize(&engine);
+		// Virtual filesystem
+		// Initial virtual mount points before editor project is loaded
 
-		engine.SetAppPointer(&editor);
+		Allocator* filesystemAllocator = allocManager->CreateAllocatorScope("Filesystem", defaultAlloc);
+		FilesystemVirtual filesystem(filesystemAllocator);
 
-		instr.EndSession();
+		FilesystemVirtual::MountPoint mounts[] = {
+			FilesystemVirtual::MountPoint{ StringRef("engine"), StringRef("engine/res") },
+			FilesystemVirtual::MountPoint{ StringRef("editor"), StringRef("editor/res") }
+		};
+		filesystem.SetMountPoints(ArrayView(mounts, sizeof(mounts) / sizeof(mounts[0])));
 
-		while (engine.GetMainWindow()->GetShouldClose() == false)
+		// Engine
+
+		Engine engine(allocManager, &filesystem);
+
+		if (engine.Initialize())
 		{
-			engine.StartFrame();
-			editor.StartFrame();
+			Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
 
-			engine.UpdateWorld();
+			EditorApp editor(appAllocator, &filesystem);
+			editor.Initialize(&engine);
 
-			// Because editor can change the state of the world and systems,
-			// let's run those updates at the same part of the frame as other updates
-			bool editorWantsToExit = false;
-			editor.Update(engine.GetSettings(), editorWantsToExit);
-			if (editorWantsToExit)
-				engine.GetMainWindow()->SetShouldClose(true);
+			engine.SetAppPointer(&editor);
 
-			engine.Render(editor.GetEditorCameraParameters(), editor.GetSceneViewFramebuffer());
+			instr.EndSession();
 
-			editor.EndFrame();
-			engine.EndFrame();
+			while (engine.GetMainWindow()->GetShouldClose() == false)
+			{
+				engine.StartFrame();
+				editor.StartFrame();
+
+				engine.UpdateWorld();
+
+				// Because editor can change the state of the world and systems,
+				// let's run those updates at the same part of the frame as other updates
+				bool editorWantsToExit = false;
+				editor.Update(engine.GetSettings(), editorWantsToExit);
+				if (editorWantsToExit)
+					engine.GetMainWindow()->SetShouldClose(true);
+
+				engine.Render(editor.GetEditorCameraParameters(), editor.GetSceneViewFramebuffer());
+
+				editor.EndFrame();
+				engine.EndFrame();
+			}
 		}
-	}
-	else
-	{
-		instr.EndSession();
+		else
+		{
+			instr.EndSession();
 
-		Memory::DeinitializeMemorySystem();
-
-		return -1;
+			res = -1;
+		}
 	}
 
 	Memory::DeinitializeMemorySystem();
