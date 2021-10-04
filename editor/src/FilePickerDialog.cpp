@@ -1,5 +1,7 @@
 #include "FilePickerDialog.hpp"
 
+#include <cstring>
+
 #include "imgui.h"
 
 #include "Core/CString.hpp"
