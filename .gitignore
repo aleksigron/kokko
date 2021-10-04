@@ -36,3 +36,9 @@ xcuserdata
 build/
 
 /log.txt
+
+imgui.ini
+unit_test_trace.json
+startup_trace.json
+runtime_trace.json
+editor_user_settings.yml
