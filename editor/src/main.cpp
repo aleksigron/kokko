@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 			FilesystemVirtual::MountPoint{ StringRef("engine"), StringRef("engine/res") },
 			FilesystemVirtual::MountPoint{ StringRef("editor"), StringRef("editor/res") }
 		};
-		filesystem.SetMountPoints(ArrayView(mounts, sizeof(mounts) / sizeof(mounts[0])));
+		filesystem.SetMountPoints(ArrayView(mounts));
 
 		// Engine
 
