@@ -35,8 +35,7 @@ xcuserdata
 # Ignore build directory
 build/
 
-/log.txt
-
+log.txt
 imgui.ini
 unit_test_trace.json
 startup_trace.json
