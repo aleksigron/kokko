@@ -2,9 +2,10 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstdio>
 #include <cstring>
 #include <utility>
+
+#include "fmt/format.h"
 
 #include "rapidjson/document.h"
 
@@ -174,10 +175,10 @@ static void AddUniforms(
 	KOKKO_PROFILE_FUNCTION();
 
 	static_assert(UniformBlockBinding::Material < 10, "Material uniform block binding point must be less than 10");
-	const char* blockStartFormat = "layout(std140, binding = %u) uniform MaterialBlock {\n";
-	const size_t blockStartPlaceholdersLen = 2;
+	const char* blockStartFormat = "layout(std140, binding = {}) uniform MaterialBlock {{\n";
+	const size_t blockStartPlaceholdersLen = 3;
 	const size_t blockStartLen = std::strlen(blockStartFormat) - blockStartPlaceholdersLen + 1;
-	const char* blockRowFormat = "%s %s;\n";
+	const char* blockRowFormat = "{} {};\n";
 	const size_t blockRowPlaceholdersLen = 4;
 	const size_t blockRowFixedMaxLen = std::strlen(blockRowFormat) - blockRowPlaceholdersLen;
 	const char* blockEnd = "};\n";
@@ -227,6 +228,7 @@ static void AddUniforms(
 	shaderOut.buffer = allocator->Allocate(shaderDataBytes);
 
 	char* namePtr = static_cast<char*>(shaderOut.buffer);
+	char* shaderDataEnd = namePtr + shaderDataBytes;
 	char* uniformBlockPtr = namePtr + nameBytes;
 	BufferUniform* bufferUniformPtr = reinterpret_cast<BufferUniform*>(uniformBlockPtr + uniformBlockBytes);
 	TextureUniform* textureUniformPtr = reinterpret_cast<TextureUniform*>(bufferUniformPtr + bufferUniformCount);
@@ -347,20 +349,29 @@ static void AddUniforms(
 	}
 	else
 	{
-		shaderOut.uniformBlockDefinition.str = uniformBlockPtr;
-		
-		int written = std::sprintf(uniformBlockPtr, blockStartFormat, UniformBlockBinding::Material);
-		assert(written > 0);
-		uniformBlockPtr += written;
+		{
+			shaderOut.uniformBlockDefinition.str = uniformBlockPtr;
+
+			auto bufLeft = shaderDataEnd - uniformBlockPtr;
+			uint32_t materialBind = UniformBlockBinding::Material;
+
+			auto formatRes = fmt::format_to_n(uniformBlockPtr, bufLeft, blockStartFormat, materialBind);
+			assert(formatRes.size <= bufLeft);
+			uniformBlockPtr += formatRes.size;
+		}
 
 		for (size_t i = 0, count = shaderOut.uniforms.bufferUniformCount; i < count; ++i)
 		{
 			const BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
 			const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
 
-			int written = std::sprintf(uniformBlockPtr, blockRowFormat, typeInfo.typeName, uniform.name.str);
-			assert(written > 0);
-			uniformBlockPtr += written;
+			auto bufLeft = shaderDataEnd - uniformBlockPtr;
+
+			// TODO: StringRef doesn't always refer to a null-terminated string, so fix this
+			auto formatRes = fmt::format_to_n(
+				uniformBlockPtr, bufLeft, blockRowFormat, typeInfo.typeName, uniform.name.str);
+			assert(formatRes.size <= bufLeft);
+			uniformBlockPtr += formatRes.size;
 		}
 
 		StringCopyN(uniformBlockPtr, blockEnd, blockEndLen + 1);
