@@ -427,7 +427,7 @@ void EditorApp::OnProjectChanged()
 		FilesystemVirtual::MountPoint{ StringRef("editor"), StringRef("editor/res") },
 		FilesystemVirtual::MountPoint{ StringRef("assets"), assetPathRef }
 	};
-	virtualFilesystem->SetMountPoints(ArrayView(mounts, sizeof(mounts) / sizeof(mounts[0])));
+	virtualFilesystem->SetMountPoints(ArrayView(mounts));
 
 	const String& name = project.GetName();
 

@@ -82,7 +82,7 @@ void EntityListView::DrawEntityListButtons(World* world)
 	{
 		if (ImGui::Selectable("Empty"))
 		{
-			EntityFactory::CreateEntity(world, ArrayView<EntityComponentType>(nullptr, 0));
+			EntityFactory::CreateEntity(world, ArrayView<EntityComponentType>());
 		}
 		if (ImGui::Selectable("Scene object"))
 		{
@@ -92,17 +92,17 @@ void EntityListView::DrawEntityListButtons(World* world)
 		if (ImGui::Selectable("Render object"))
 		{
 			EntityComponentType components[] = { EntityComponentType::Scene, EntityComponentType::Render };
-			EntityFactory::CreateEntity(world, ArrayView(components, 2));
+			EntityFactory::CreateEntity(world, ArrayView(components));
 		}
 		if (ImGui::Selectable("Camera"))
 		{
 			EntityComponentType components[] = { EntityComponentType::Scene, EntityComponentType::Camera };
-			EntityFactory::CreateEntity(world, ArrayView(components, 2));
+			EntityFactory::CreateEntity(world, ArrayView(components));
 		}
 		if (ImGui::Selectable("Light"))
 		{
 			EntityComponentType components[] = { EntityComponentType::Scene, EntityComponentType::Light };
-			EntityFactory::CreateEntity(world, ArrayView(components, 2));
+			EntityFactory::CreateEntity(world, ArrayView(components));
 		}
 
 		ImGui::EndCombo();

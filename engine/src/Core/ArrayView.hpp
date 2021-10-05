@@ -14,6 +14,11 @@ public:
 	{
 	}
 
+	template <size_t Count>
+	ArrayView(ValueType(&data)[Count]) : data(data), count(Count)
+	{
+	}
+
 	ValueType& operator[](size_t index) { return data[index]; }
 	const ValueType& operator[](size_t index) const { return data[index]; }
 
