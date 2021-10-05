@@ -2,6 +2,8 @@
 
 #include <cstdio>
 
+#include "fmt/printf.h"
+
 #include "Core/Color.hpp"
 #include "Resources/BitmapFont.hpp"
 
@@ -93,7 +95,7 @@ void DebugMemoryStats::UpdateAndDraw()
 			area.size.x = static_cast<float>(glyphWidth * columnWidth1);
 			area.size.y = static_cast<float>(lineHeight);
 
-			std::sprintf(buffer, "%llu", static_cast<unsigned long long>(allocCount));
+			fmt::format_to_n(buffer, sizeof(buffer), FMT_STRING("{}"), allocCount);
 			textRenderer->AddText(StringRef(buffer), area);
 		}
 
@@ -104,7 +106,7 @@ void DebugMemoryStats::UpdateAndDraw()
 			area.size.x = static_cast<float>(glyphWidth * columnWidth2);
 			area.size.y = static_cast<float>(lineHeight);
 
-			std::sprintf(buffer, "%llu", static_cast<unsigned long long>(allocSize));
+			fmt::format_to_n(buffer, sizeof(buffer), FMT_STRING("{}"), allocSize);
 			textRenderer->AddText(StringRef(buffer), area);
 		}
 	}
