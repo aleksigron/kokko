@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Engine/ComponentSystemDefaultImpl.hpp"
+#include <cstddef>
+
+#include "Core/HashMap.hpp"
 
 #include "Graphics/TerrainInstance.hpp"
 
@@ -15,11 +17,20 @@ class MaterialManager;
 class ShaderManager;
 class Renderer;
 
+struct Entity;
 struct MaterialData;
 
-using TerrainId = ComponentSystemDefaultImpl<TerrainInstance>::ComponentId;
+struct TerrainId
+{
+	unsigned int i;
 
-class TerrainSystem : public CustomRenderer, public ComponentSystemDefaultImpl<TerrainInstance>
+	bool operator==(TerrainId other) { return i == other.i; }
+	bool operator!=(TerrainId other) { return !operator==(other); }
+
+	static const TerrainId Null;
+};
+
+class TerrainSystem : public CustomRenderer
 {
 public:
 	TerrainSystem(Allocator* allocator, RenderDevice* renderDevice,
@@ -27,6 +38,17 @@ public:
 	~TerrainSystem();
 
 	void Initialize();
+
+	TerrainId Lookup(Entity e);
+
+	TerrainId AddTerrain(Entity entity);
+	void RemoveTerrain(TerrainId id);
+
+	void RemoveAll();
+
+	Entity GetEntity(TerrainId id) const;
+	const TerrainInstance& GetTerrainData(TerrainId id) const;
+	void SetTerrainData(TerrainId id, const TerrainInstance& instance);
 
 	void RegisterCustomRenderer(Renderer* renderer);
 
@@ -44,6 +66,21 @@ private:
 	ShaderManager* shaderManager;
 
 	MaterialId terrainMaterial;
+
+	HashMap<unsigned int, TerrainId> entityMap;
+
+	struct InstanceData
+	{
+		unsigned int count;
+		unsigned int allocated;
+		void* buffer;
+
+		Entity* entity;
+		TerrainInstance* data;
+	}
+	data;
+
+	void Reallocate(size_t required);
 
 	void RenderTerrain(TerrainInstance& terrain, const MaterialData& material, const RenderViewport& viewport);
 };

@@ -427,7 +427,7 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 	TerrainSystem* terrainSystem = world->GetTerrainSystem();
 	TerrainId terrainId = terrainSystem->Lookup(selectedEntity);
 
-	if (terrainId != TerrainId::Null())
+	if (terrainId != TerrainId::Null)
 	{
 		ImGui::Spacing();
 
@@ -436,7 +436,7 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
-			TerrainInstance terrain = terrainSystem->GetData(terrainId);
+			TerrainInstance terrain = terrainSystem->GetTerrainData(terrainId);
 			float heightRange = terrain.maxHeight - terrain.minHeight;
 
 			if (ImGui::DragFloat("Terrain size", &terrain.terrainSize, 1.0f, 1.0f))
@@ -458,10 +458,10 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 				edited = true;
 
 			if (edited)
-				terrainSystem->SetData(terrainId, terrain);
+				terrainSystem->SetTerrainData(terrainId, terrain);
 
 			if (componentVisible == false)
-				terrainSystem->RemoveComponent(terrainId);
+				terrainSystem->RemoveTerrain(terrainId);
 		}
 	}
 }

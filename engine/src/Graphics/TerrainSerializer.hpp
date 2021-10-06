@@ -48,20 +48,20 @@ public:
 		if (maxNode.IsDefined() && maxNode.IsScalar())
 			terrain.maxHeight = maxNode.as<float>();
 
-		TerrainId id = terrainSystem->AddComponentToEntity(entity);
-		terrainSystem->SetData(id, terrain);
+		TerrainId id = terrainSystem->AddTerrain(entity);
+		terrainSystem->SetTerrainData(id, terrain);
 		terrainSystem->InitializeTerrain(id);
 	}
 
 	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
 	{
 		TerrainId terrainId = terrainSystem->Lookup(entity);
-		if (terrainId != TerrainId::Null())
+		if (terrainId != TerrainId::Null)
 		{
 			out << YAML::BeginMap;
 			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "terrain";
 
-			const TerrainInstance& terrain = terrainSystem->GetData(terrainId);
+			const TerrainInstance& terrain = terrainSystem->GetTerrainData(terrainId);
 
 			out << YAML::Key << "terrain_size" << YAML::Value << terrain.terrainSize;
 			out << YAML::Key << "terrain_resolution" << YAML::Value << terrain.terrainResolution;

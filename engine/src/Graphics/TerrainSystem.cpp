@@ -1,5 +1,7 @@
 #include "Graphics/TerrainSystem.hpp"
 
+#include <cassert>
+
 #include "Core/Core.hpp"
 
 #include "Graphics/TerrainInstance.hpp"
@@ -19,6 +21,8 @@
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
+
+const TerrainId TerrainId::Null = TerrainId{ 0 };
 
 struct TerrainUniformBlock
 {
@@ -41,19 +45,23 @@ TerrainSystem::TerrainSystem(
 	MeshManager* meshManager,
 	MaterialManager* materialManager,
 	ShaderManager* shaderManager) :
-	ComponentSystemDefaultImpl(allocator),
 	allocator(allocator),
 	renderDevice(renderDevice),
 	meshManager(meshManager),
 	materialManager(materialManager),
-	shaderManager(shaderManager)
+	shaderManager(shaderManager),
+	terrainMaterial(MaterialId::Null),
+	entityMap(allocator)
 {
-	terrainMaterial = MaterialId::Null;
+	data = InstanceData{};
+	data.count = 1; // Reserve index 0 as TerrainId::Null value
+
+	this->Reallocate(16);
 }
 
 TerrainSystem::~TerrainSystem()
 {
-	// TODO: Release memory for terrain instances
+	RemoveAll();
 }
 
 void TerrainSystem::Initialize()
@@ -62,6 +70,81 @@ void TerrainSystem::Initialize()
 
 	StringRef path("engine/materials/deferred_geometry/terrain.material.json");
 	terrainMaterial = materialManager->GetIdByPath(path);
+}
+
+TerrainId TerrainSystem::Lookup(Entity e)
+{
+	auto* pair = entityMap.Lookup(e.id);
+	return pair != nullptr ? pair->second : TerrainId{};
+}
+
+TerrainId TerrainSystem::AddTerrain(Entity entity)
+{
+	if (data.count + 1 > data.allocated)
+		this->Reallocate(data.count + 1);
+
+	unsigned int id = data.count;
+
+	auto mapPair = entityMap.Insert(entity.id);
+	mapPair->second.i = id;
+
+	data.entity[id] = entity;
+	data.data[id] = TerrainInstance{};
+
+	data.count += 1;
+
+	return TerrainId{ id };
+}
+
+void TerrainSystem::RemoveTerrain(TerrainId id)
+{
+	assert(id != TerrainId::Null);
+	assert(id.i < data.count);
+
+	// Remove from entity map
+	Entity entity = data.entity[id.i];
+	auto* pair = entityMap.Lookup(entity.id);
+	if (pair != nullptr)
+		entityMap.Remove(pair);
+
+	if (data.count > 2 && id.i + 1 < data.count) // We need to swap another object
+	{
+		unsigned int swapIdx = data.count - 1;
+
+		// Update the swapped objects id in the entity map
+		auto* swapKv = entityMap.Lookup(data.entity[swapIdx].id);
+		if (swapKv != nullptr)
+			swapKv->second = id;
+
+		data.entity[id.i] = data.entity[swapIdx];
+		data.data[id.i] = data.data[swapIdx];
+	}
+
+	--data.count;
+}
+
+void TerrainSystem::RemoveAll()
+{
+	for (size_t i = 1; i < data.count; ++i)
+		DeinitializeTerrain(TerrainId{ static_cast<unsigned int>(i) });
+
+	entityMap.Clear();
+	data.count = 1;
+}
+
+Entity TerrainSystem::GetEntity(TerrainId id) const
+{
+	return data.entity[id.i];
+}
+
+const TerrainInstance& TerrainSystem::GetTerrainData(TerrainId id) const
+{
+	return data.data[id.i];
+}
+
+void TerrainSystem::SetTerrainData(TerrainId id, const TerrainInstance& instance)
+{
+	data.data[id.i] = instance;
 }
 
 void TerrainSystem::RegisterCustomRenderer(Renderer* renderer)
@@ -78,9 +161,10 @@ void TerrainSystem::RenderCustom(const CustomRenderer::RenderParams& params)
 {
 	const MaterialData& material = materialManager->GetMaterialData(terrainMaterial);
 
-	for (auto& terrainComponent : *this)
+	for (size_t i = 1; i < data.count; ++i)
 	{
-		RenderTerrain(terrainComponent.data, material, *params.viewport);
+		TerrainInstance& instance = data.data[i];
+		RenderTerrain(instance, material, *params.viewport);
 	}
 }
 
@@ -88,7 +172,7 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	TerrainInstance terrain = GetData(id);
+	TerrainInstance terrain = data.data[id.i];
 
 	// Create texture data
 
@@ -168,16 +252,16 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 	VertexAttribute vertexAttributes[] = { VertexAttribute::pos2 };
 	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
 
-	IndexedVertexData data;
-	data.vertexFormat = vertexFormatPos;
-	data.primitiveMode = RenderPrimitiveMode::Triangles;
-	data.vertexData = vertexData;
-	data.vertexCount = vertCount;
-	data.indexData = indexData;
-	data.indexCount = indexCount;
+	IndexedVertexData vertData;
+	vertData.vertexFormat = vertexFormatPos;
+	vertData.primitiveMode = RenderPrimitiveMode::Triangles;
+	vertData.vertexData = vertexData;
+	vertData.vertexCount = vertCount;
+	vertData.indexData = indexData;
+	vertData.indexCount = indexCount;
 
 	terrain.meshId = meshManager->CreateMesh();
-	meshManager->UploadIndexed(terrain.meshId, data);
+	meshManager->UploadIndexed(terrain.meshId, vertData);
 
 	float halfTerrainSize = terrain.terrainSize * 0.5f;
 
@@ -202,14 +286,14 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 	renderDevice->SetBufferStorage(&bufferStorage);
 
 	// Update terrain instance back into ComponentSystemDefaultImpl
-	SetData(id, terrain);
+	data.data[id.i] = terrain;
 }
 
 void TerrainSystem::DeinitializeTerrain(TerrainId id)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	TerrainInstance terrain = GetData(id);
+	TerrainInstance terrain = data.data[id.i];
 
 	allocator->Deallocate(terrain.heightData);
 
@@ -218,6 +302,37 @@ void TerrainSystem::DeinitializeTerrain(TerrainId id)
 
 	if (terrain.textureId != 0)
 		renderDevice->DestroyTextures(1, &terrain.textureId);
+}
+
+void TerrainSystem::Reallocate(size_t required)
+{
+	if (required <= data.allocated)
+		return;
+
+	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
+
+	// Reserve same amount in entity map
+	entityMap.Reserve(required);
+
+	InstanceData newData;
+	size_t bytes = required * (sizeof(Entity) + sizeof(TerrainInstance));
+
+	newData.buffer = allocator->Allocate(bytes);
+	newData.count = data.count;
+	newData.allocated = required;
+
+	newData.entity = static_cast<Entity*>(newData.buffer);
+	newData.data = reinterpret_cast<TerrainInstance*>(newData.entity + required);
+
+	if (data.buffer != nullptr)
+	{
+		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
+		std::memcpy(newData.data, data.data, data.count * sizeof(TerrainInstance));
+
+		allocator->Deallocate(data.buffer);
+	}
+
+	data = newData;
 }
 
 void TerrainSystem::RenderTerrain(TerrainInstance& terrain, const MaterialData& material, const RenderViewport& viewport)
