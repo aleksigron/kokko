@@ -30,6 +30,15 @@ struct TerrainId
 	static const TerrainId Null;
 };
 
+struct TerrainParameters
+{
+	int terrainResolution = 128;
+	float terrainSize = 64.0f;
+	Vec2f textureScale = Vec2f(0.25f, 0.25f);
+	float minHeight = -0.10f;
+	float maxHeight = 0.10f;
+};
+
 class TerrainSystem : public CustomRenderer
 {
 public:
@@ -41,22 +50,29 @@ public:
 
 	TerrainId Lookup(Entity e);
 
-	TerrainId AddTerrain(Entity entity);
+	TerrainId AddTerrain(Entity entity, const TerrainParameters& params);
 	void RemoveTerrain(TerrainId id);
 
 	void RemoveAll();
 
-	Entity GetEntity(TerrainId id) const;
-	const TerrainInstance& GetTerrainData(TerrainId id) const;
-	void SetTerrainData(TerrainId id, const TerrainInstance& instance);
+	int GetResolution(TerrainId id) const { return data.param[id.i].terrainResolution; }
+
+	float GetSize(TerrainId id) const { return data.param[id.i].terrainSize; }
+	void SetSize(TerrainId id, float size) { data.param[id.i].terrainSize = size; }
+
+	float GetMinHeight(TerrainId id) const { return data.param[id.i].minHeight; }
+	void SetMinHeight(TerrainId id, float minHeight) { data.param[id.i].minHeight = minHeight; }
+
+	float GetMaxHeight(TerrainId id) const { return data.param[id.i].maxHeight; }
+	void SetMaxHeight(TerrainId id, float maxHeight) { data.param[id.i].maxHeight = maxHeight; }
+
+	Vec2f GetTextureScale(TerrainId id) const { return data.param[id.i].textureScale; }
+	void SetTextureScale(TerrainId id, Vec2f scale) { data.param[id.i].textureScale = scale; }
 
 	void RegisterCustomRenderer(Renderer* renderer);
 
 	virtual void AddRenderCommands(const CustomRenderer::CommandParams& params) override final;
 	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
-
-	void InitializeTerrain(TerrainId id);
-	void DeinitializeTerrain(TerrainId id);
 
 private:
 	Allocator* allocator;
@@ -69,6 +85,15 @@ private:
 
 	HashMap<unsigned int, TerrainId> entityMap;
 
+	struct ResourceData
+	{
+		unsigned int vertexArrayId;
+		unsigned int uniformBufferId;
+		unsigned int textureId;
+		MeshId meshId;
+		uint16_t* heightData;
+	};
+
 	struct InstanceData
 	{
 		unsigned int count;
@@ -76,11 +101,15 @@ private:
 		void* buffer;
 
 		Entity* entity;
-		TerrainInstance* data;
+		TerrainParameters* param;
+		ResourceData* resource;
 	}
 	data;
 
+	void InitializeTerrain(TerrainId id);
+	void DeinitializeTerrain(TerrainId id);
+
 	void Reallocate(size_t required);
 
-	void RenderTerrain(TerrainInstance& terrain, const MaterialData& material, const RenderViewport& viewport);
+	void RenderTerrain(TerrainId id, const MaterialData& material, const RenderViewport& viewport);
 };
