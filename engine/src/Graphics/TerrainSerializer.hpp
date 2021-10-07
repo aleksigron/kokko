@@ -26,7 +26,7 @@ public:
 
 	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
 	{
-		TerrainInstance terrain;
+		TerrainParameters terrain;
 
 		YAML::Node sizeNode = map["terrain_size"];
 		if (sizeNode.IsDefined() && sizeNode.IsScalar())
@@ -48,9 +48,7 @@ public:
 		if (maxNode.IsDefined() && maxNode.IsScalar())
 			terrain.maxHeight = maxNode.as<float>();
 
-		TerrainId id = terrainSystem->AddTerrain(entity);
-		terrainSystem->SetTerrainData(id, terrain);
-		terrainSystem->InitializeTerrain(id);
+		TerrainId id = terrainSystem->AddTerrain(entity, terrain);
 	}
 
 	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
@@ -61,13 +59,17 @@ public:
 			out << YAML::BeginMap;
 			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "terrain";
 
-			const TerrainInstance& terrain = terrainSystem->GetTerrainData(terrainId);
+			int resolution = terrainSystem->GetResolution(terrainId);
+			float size = terrainSystem->GetSize(terrainId);
+			float minHeight = terrainSystem->GetMinHeight(terrainId);
+			float maxHeight = terrainSystem->GetMaxHeight(terrainId);
+			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
 
-			out << YAML::Key << "terrain_size" << YAML::Value << terrain.terrainSize;
-			out << YAML::Key << "terrain_resolution" << YAML::Value << terrain.terrainResolution;
-			out << YAML::Key << "texture_scale" << YAML::Value << terrain.textureScale;
-			out << YAML::Key << "min_height" << YAML::Value << terrain.minHeight;
-			out << YAML::Key << "max_height" << YAML::Value << terrain.maxHeight;
+			out << YAML::Key << "terrain_size" << YAML::Value << size;
+			out << YAML::Key << "terrain_resolution" << YAML::Value << resolution;
+			out << YAML::Key << "texture_scale" << YAML::Value << textureScale;
+			out << YAML::Key << "min_height" << YAML::Value << minHeight;
+			out << YAML::Key << "max_height" << YAML::Value << maxHeight;
 
 			out << YAML::EndMap;
 		}

@@ -87,8 +87,7 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 		TerrainId terrainId = terrainSystem->Lookup(entity);
 		if (terrainId == TerrainId::Null)
 		{
-			terrainId = terrainSystem->AddTerrain(entity);
-			terrainSystem->InitializeTerrain(terrainId);
+			terrainId = terrainSystem->AddTerrain(entity, TerrainParameters());
 		}
 		break;
 	}
@@ -147,7 +146,6 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 		TerrainId terrainId = terrainSystem->Lookup(entity);
 		if (terrainId != TerrainId::Null)
 		{
-			terrainSystem->DeinitializeTerrain(terrainId);
 			terrainSystem->RemoveTerrain(terrainId);
 		}
 		break;

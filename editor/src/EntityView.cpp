@@ -436,29 +436,36 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
-			TerrainInstance terrain = terrainSystem->GetTerrainData(terrainId);
-			float heightRange = terrain.maxHeight - terrain.minHeight;
 
-			if (ImGui::DragFloat("Terrain size", &terrain.terrainSize, 1.0f, 1.0f))
-				edited = true;
+			float minHeight = terrainSystem->GetMinHeight(terrainId);
+			float maxHeight = terrainSystem->GetMaxHeight(terrainId);
+			float heightRange = maxHeight - minHeight;
 
-			if (ImGui::DragFloat("Height origin", &terrain.minHeight, 0.1f))
+			float terrainSize = terrainSystem->GetSize(terrainId);
+			if (ImGui::DragFloat("Terrain size", &terrainSize, 1.0f, 1.0f))
+				terrainSystem->SetSize(terrainId, terrainSize);
+
+			if (ImGui::DragFloat("Height origin", &minHeight, 0.1f))
 			{
 				edited = true;
-				terrain.maxHeight = terrain.minHeight + heightRange;
+				maxHeight = minHeight + heightRange;
 			}
 
 			if (ImGui::DragFloat("Height range", &heightRange, 0.1f, 0.1f))
 			{
 				edited = true;
-				terrain.maxHeight = terrain.minHeight + heightRange;
+				maxHeight = minHeight + heightRange;
 			}
 
-			if (ImGui::DragFloat2("Texture scale", terrain.textureScale.ValuePointer(), 0.01f, 0.01f))
-				edited = true;
-
 			if (edited)
-				terrainSystem->SetTerrainData(terrainId, terrain);
+			{
+				terrainSystem->SetMinHeight(terrainId, minHeight);
+				terrainSystem->SetMaxHeight(terrainId, maxHeight);
+			}
+
+			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
+			if (ImGui::DragFloat2("Texture scale", textureScale.ValuePointer(), 0.01f, 0.01f))
+				terrainSystem->SetTextureScale(terrainId, textureScale);
 
 			if (componentVisible == false)
 				terrainSystem->RemoveTerrain(terrainId);
