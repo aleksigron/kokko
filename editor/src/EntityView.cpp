@@ -23,6 +23,11 @@
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 EntityView::EntityView() :
 	EditorWindow("Properties"),
 	materialManager(nullptr),
@@ -188,7 +193,7 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 
 			MeshId meshId = renderer->GetMeshId(renderObj);
 			const char* meshPath = nullptr;
-			
+
 			if (meshId != MeshId::Null)
 			{
 				meshPath = meshManager->GetPath(meshId);
@@ -494,4 +499,7 @@ void EntityView::DrawParticleComponent(Entity selectedEntity, World* world)
 				particleSystem->RemoveEmitter(emitterId);
 		}
 	}
+}
+
+}
 }

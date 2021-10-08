@@ -3,6 +3,11 @@
 #include <cstdint>
 #include <filesystem>
 
+namespace kokko
+{
+namespace editor
+{
+
 class FilePickerDialog
 {
 public:
@@ -50,3 +55,6 @@ private:
 
 	void CloseDialog(bool canceled);
 };
+
+}
+}

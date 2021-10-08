@@ -15,6 +15,11 @@
 
 #include "EditorContext.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 SceneView::SceneView() :
 	EditorWindow("Scene"),
 	contentWidth(0),
@@ -70,7 +75,7 @@ void SceneView::LateUpdate(EditorContext& context)
 
 				resizeRequested = true;
 			}
-			
+
 			ImVec2 startCursorPos = ImGui::GetCursorPos();
 
 			if (framebuffer.IsInitialized())
@@ -82,7 +87,7 @@ void SceneView::LateUpdate(EditorContext& context)
 
 				ImGui::Image(texId, size, uv0, uv1);
 			}
-			
+
 			// Draw tool buttons
 
 			// Start drawing on top of the image
@@ -90,7 +95,7 @@ void SceneView::LateUpdate(EditorContext& context)
 
 			if (ImGui::Button("Translate"))
 				currentGizmoOperation = ImGuizmo::TRANSLATE;
-					
+
 			ImGui::SameLine();
 			if (ImGui::Button("Rotate"))
 				currentGizmoOperation = ImGuizmo::ROTATE;
@@ -192,4 +197,7 @@ void SceneView::ResizeFramebuffer()
 
 	framebuffer.Create(contentWidth, contentHeight,
 		Optional<RenderTextureSizedFormat>(), ArrayView<RenderTextureSizedFormat>(&format, 1));
+}
+
+}
 }

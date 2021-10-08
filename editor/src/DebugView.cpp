@@ -12,6 +12,11 @@
 
 #include "EditorContext.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 DebugView::DebugView() :
 	EditorWindow("Debug"),
 	debug(nullptr)
@@ -50,4 +55,7 @@ void DebugView::Update(EditorContext& context)
 
 		ImGui::End();
 	}
+}
+
+}
 }

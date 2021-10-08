@@ -3,9 +3,15 @@
 #include "Engine/Entity.hpp"
 
 class World;
-class EditorProject;
 
 struct EngineSettings;
+
+namespace kokko
+{
+namespace editor
+{
+
+class EditorProject;
 
 struct EditorContext
 {
@@ -23,3 +29,6 @@ struct EditorContext
 	{
 	}
 };
+
+}
+}

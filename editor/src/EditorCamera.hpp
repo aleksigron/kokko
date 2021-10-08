@@ -9,6 +9,11 @@ struct CameraParameters;
 
 class Window;
 
+namespace kokko
+{
+namespace editor
+{
+
 class EditorCamera
 {
 private:
@@ -45,3 +50,6 @@ public:
 	ProjectionParameters GetProjectionParameters() const;
 	CameraParameters GetCameraParameters() const;
 };
+
+}
+}

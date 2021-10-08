@@ -9,6 +9,11 @@
 static const char ProjectFilename[] = "project.yml";
 static const char NameKey[] = "name";
 
+namespace kokko
+{
+namespace editor
+{
+
 EditorProject::EditorProject(Allocator* allocator) :
 	rootPathString(allocator),
 	name(allocator)
@@ -88,4 +93,7 @@ const String& EditorProject::GetName() const
 void EditorProject::SetName(StringRef name)
 {
 	this->name.Assign(name);
+}
+
+}
 }

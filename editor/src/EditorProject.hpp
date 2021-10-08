@@ -4,6 +4,11 @@
 
 #include "Core/String.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 class EditorProject
 {
 public:
@@ -27,3 +32,6 @@ private:
 	String rootPathString;
 	String name;
 };
+
+}
+}

@@ -4,6 +4,11 @@
 
 class TextureManager;
 
+namespace kokko
+{
+namespace editor
+{
+
 class EditorImages
 {
 public:
@@ -19,3 +24,6 @@ public:
 private:
 	TextureManager* textureManager;
 };
+
+}
+}

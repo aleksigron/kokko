@@ -1,17 +1,5 @@
 #pragma once
 
-class Allocator;
-class Engine;
-class World;
-class Framebuffer;
-
-class EditorProject;
-class EditorWindow;
-class SceneView;
-
-struct CameraParameters;
-struct EngineSettings;
-
 #include "Core/Array.hpp"
 #include "Core/String.hpp"
 
@@ -19,6 +7,23 @@ struct EngineSettings;
 
 #include "EditorImages.hpp"
 #include "EditorContext.hpp"
+
+class Allocator;
+class Engine;
+class World;
+class Framebuffer;
+
+struct CameraParameters;
+struct EngineSettings;
+
+namespace kokko
+{
+namespace editor
+{
+
+class EditorProject;
+class EditorWindow;
+class SceneView;
 
 class EditorCore
 {
@@ -54,3 +59,6 @@ private:
 
 	SceneView* sceneView;
 };
+
+}
+}

@@ -2,6 +2,11 @@
 
 #include <filesystem>
 
+namespace kokko
+{
+namespace editor
+{
+
 struct EditorUserSettings
 {
 	std::filesystem::path lastOpenedProject;
@@ -9,3 +14,6 @@ struct EditorUserSettings
 	bool SerializeToFile(const char* filePath);
 	bool DeserializeFromFile(const char* filePath);
 };
+
+}
+}

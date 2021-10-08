@@ -8,6 +8,11 @@
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 FilePickerDialog* FilePickerDialog::singletonInstance = nullptr;
 
 FilePickerDialog::FilePickerDialog() :
@@ -39,7 +44,7 @@ void FilePickerDialog::Update()
 
 	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-	
+
 	float fontSize = ImGui::GetFontSize();
 	ImVec2 initialSize(fontSize * 20.0f, fontSize * 15.0f);
 	ImGui::SetNextWindowSize(initialSize, ImGuiCond_FirstUseEver);
@@ -174,7 +179,7 @@ bool FilePickerDialog::GetDialogResult(uint32_t hash, std::filesystem::path& pat
 	if (dialogClosed && hash == closedTitleHash)
 	{
 		pathOut = std::move(resultPath);
-		
+
 		resultPath = std::filesystem::path();
 		dialogClosed = false;
 		closedTitleHash = 0;
@@ -236,4 +241,7 @@ void FilePickerDialog::CloseDialog(bool canceled)
 	currentTitleHash = 0;
 
 	ImGui::CloseCurrentPopup();
+}
+
+}
 }

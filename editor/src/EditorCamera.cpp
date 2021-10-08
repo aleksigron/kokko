@@ -10,6 +10,11 @@
 #include "System/Window.hpp"
 #include "System/KeyCode.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 EditorCamera::EditorCamera() :
 	window(nullptr),
 	cameraVelocity(),
@@ -157,4 +162,7 @@ Mat3x3f EditorCamera::GetOrientation(float yaw, float pitch)
 {
 	return Mat3x3f::RotateAroundAxis(Vec3f(0.0f, -1.0f, 0.0f), yaw) *
 		Mat3x3f::RotateAroundAxis(Vec3f(-1.0f, 0.0f, 0.0f), pitch);
+}
+
+}
 }

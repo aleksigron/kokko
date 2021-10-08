@@ -37,6 +37,11 @@
 #include "EditorUserSettings.hpp"
 #include "EditorWindow.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 EditorApp::EditorApp(Allocator* allocator, FilesystemVirtual* filesystem) :
 	engine(nullptr),
 	virtualFilesystem(filesystem),
@@ -314,7 +319,7 @@ void EditorApp::DrawMainMenuBar()
 		currentDialogId = filePicker.StartDialogFileSave("Save level as", "Save");
 		currentMainMenuDialog = MainMenuDialog::SaveLevelAs;
 	}
-	
+
 	filePicker.Update();
 
 	std::filesystem::path filePickerPathOut;
@@ -395,7 +400,7 @@ bool EditorApp::CreateProject(const std::filesystem::path& directory, StringRef 
 
 	project.SetRootPath(directory);
 	project.SetName(name);
-	
+
 	if (project.SerializeToFile() == false)
 		return false;
 
@@ -412,7 +417,7 @@ bool EditorApp::OpenProject(const std::filesystem::path& projectDir)
 
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -436,4 +441,7 @@ void EditorApp::OnProjectChanged()
 	engine->GetMainWindow()->SetWindowTitle(name.GetCStr());
 
 	core->NotifyProjectChanged();
+}
+
+}
 }
