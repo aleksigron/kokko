@@ -6,7 +6,6 @@
 #include "FilePickerDialog.hpp"
 
 class Allocator;
-class EditorCore;
 class Engine;
 class FilesystemVirtual;
 class Framebuffer;
@@ -15,6 +14,13 @@ class World;
 
 struct CameraParameters;
 struct EngineSettings;
+
+namespace kokko
+{
+namespace editor
+{
+
+class EditorCore;
 
 enum class EditorWindowType;
 
@@ -73,3 +79,6 @@ private:
 	MainMenuDialog currentMainMenuDialog;
 	uint32_t currentDialogId;
 };
+
+}
+}

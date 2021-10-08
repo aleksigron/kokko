@@ -1,5 +1,10 @@
 #pragma once
 
+namespace kokko
+{
+namespace editor
+{
+
 struct EditorContext;
 
 enum class EditorWindowType
@@ -33,7 +38,7 @@ public:
 	virtual void Update(EditorContext& context)
 	{
 	}
-	
+
 	// Called after frame render
 	virtual void LateUpdate(EditorContext& context)
 	{
@@ -43,3 +48,6 @@ public:
 	bool windowIsOpen;
 	bool requestFocus;
 };
+
+}
+}

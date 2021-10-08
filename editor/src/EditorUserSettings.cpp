@@ -8,6 +8,11 @@
 
 static const char LastProjectKey[] = "last_opened_project";
 
+namespace kokko
+{
+namespace editor
+{
+
 bool EditorUserSettings::SerializeToFile(const char* filePath)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -50,4 +55,7 @@ bool EditorUserSettings::DeserializeFromFile(const char* filePath)
 	}
 
 	return false;
+}
+
+}
 }

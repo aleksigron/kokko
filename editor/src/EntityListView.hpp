@@ -13,7 +13,11 @@ class World;
 
 struct SceneObjectId;
 struct EditorContext;
-struct EditorWindowInfo;
+
+namespace kokko
+{
+namespace editor
+{
 
 class EntityListView : public EditorWindow
 {
@@ -34,3 +38,6 @@ public:
 
 	virtual void Update(EditorContext& context) override;
 };
+
+}
+}

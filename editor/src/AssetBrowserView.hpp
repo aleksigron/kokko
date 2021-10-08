@@ -7,6 +7,12 @@
 #include "EditorWindow.hpp"
 
 class Allocator;
+
+namespace kokko
+{
+namespace editor
+{
+
 class EditorImages;
 
 struct EditorWindowInfo;
@@ -33,3 +39,6 @@ private:
 
 	const EditorImages* editorImages;
 };
+
+}
+}

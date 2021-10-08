@@ -15,6 +15,11 @@ struct CameraParameters;
 struct EditorWindowInfo;
 struct EditorContext;
 
+namespace kokko
+{
+namespace editor
+{
+
 class SceneView : public EditorWindow
 {
 public:
@@ -47,3 +52,6 @@ private:
 	EditorCamera editorCamera;
 	Framebuffer framebuffer;
 };
+
+}
+}

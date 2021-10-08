@@ -11,6 +11,11 @@
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 EntityListView::EntityListView() :
 	EditorWindow("Entities"),
 	requestScrollToEntity(Entity::Null),
@@ -196,4 +201,7 @@ void EntityListView::ProcessSceneDragDropTarget(SceneObjectId parent)
 
 		ImGui::EndDragDropTarget();
 	}
+}
+
+}
 }

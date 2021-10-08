@@ -12,6 +12,12 @@ class MaterialManager;
 class MeshManager;
 
 struct ResourceManagers;
+
+namespace kokko
+{
+namespace editor
+{
+
 struct EditorContext;
 struct EditorWindowInfo;
 
@@ -39,3 +45,6 @@ public:
 
 	virtual void Update(EditorContext& context) override;
 };
+
+}
+}

@@ -7,6 +7,11 @@ struct EngineSettings;
 
 class Debug;
 
+namespace kokko
+{
+namespace editor
+{
+
 class DebugView : public EditorWindow
 {
 public:
@@ -19,3 +24,6 @@ public:
 private:
 	Debug* debug;
 };
+
+}
+}

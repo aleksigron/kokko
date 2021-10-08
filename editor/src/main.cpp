@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 		{
 			Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
 
-			EditorApp editor(appAllocator, &filesystem);
+			kokko::editor::EditorApp editor(appAllocator, &filesystem);
 			editor.Initialize(&engine);
 
 			engine.SetAppPointer(&editor);

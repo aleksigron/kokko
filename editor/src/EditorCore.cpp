@@ -19,6 +19,11 @@
 #include "EntityView.hpp"
 #include "SceneView.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 EditorCore::EditorCore(Allocator* allocator) :
 	allocator(allocator),
 	copiedEntity(allocator),
@@ -130,4 +135,7 @@ void EditorCore::PasteEntity()
 
 		serializer->DeserializeEntitiesFromString(copiedEntity.GetCStr(), parent);
 	}
+}
+
+}
 }

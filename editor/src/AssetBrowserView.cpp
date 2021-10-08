@@ -7,6 +7,11 @@
 #include "EditorImages.hpp"
 #include "EditorProject.hpp"
 
+namespace kokko
+{
+namespace editor
+{
+
 AssetBrowserView::AssetBrowserView() :
 	EditorWindow("Asset Browser")
 {
@@ -173,4 +178,7 @@ void AssetBrowserView::DrawEntry(const std::filesystem::directory_iterator& entr
 
 void AssetBrowserView::UpdateDirectoryListing()
 {
+}
+
+}
 }
