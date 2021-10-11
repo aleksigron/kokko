@@ -62,12 +62,12 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 		{
 			KOKKO_PROFILE_SCOPE("GLFWwindow* glfwCreateWindow()");
 			windowHandle = glfwCreateWindow(width, height, windowTitle, NULL, NULL);
-
-			glfwGetFramebufferSize(windowHandle, &currentFramebufferSize.x, &currentFramebufferSize.y);
 		}
 		
 		if (windowHandle != nullptr)
 		{
+			glfwGetFramebufferSize(windowHandle, &currentFramebufferSize.x, &currentFramebufferSize.y);
+
 			inputManager = allocator->MakeNew<InputManager>(allocator);
 			inputManager->Initialize(windowHandle);
 
@@ -153,10 +153,12 @@ Vec2i Window::GetWindowSize()
 
 float Window::GetScreenCoordinateScale()
 {
-	Vec2i pixels = this->GetFrameBufferSize();
-	Vec2i screen = this->GetWindowSize();
-	
-	return pixels.x / static_cast<float>(screen.x);
+	float x, y;
+	glfwGetWindowContentScale(windowHandle, &x, &y);
+
+	(void)y;
+
+	return x;
 }
 
 Mat4x4f Window::GetScreenSpaceProjectionMatrix()
