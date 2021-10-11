@@ -2,6 +2,8 @@
 
 #include "imgui.h"
 
+#include "Core/Core.hpp"
+
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 #include "EditorImages.hpp"
@@ -78,7 +80,7 @@ void AssetBrowserView::Update(EditorContext& context)
 				for (fs::directory_iterator itr(currentPath), end; itr != end; ++itr, ++index)
 				{
 					ImGui::PushID(index);
-					DrawEntry(itr, columnWidth);
+					DrawEntry(context, itr, columnWidth);
 					ImGui::PopID();
 				}
 
@@ -111,7 +113,8 @@ void AssetBrowserView::SetUpColumns(int columnCount, float columnWidth)
 	}
 }
 
-void AssetBrowserView::DrawEntry(const std::filesystem::directory_iterator& entry, float columnWidth)
+void AssetBrowserView::DrawEntry(const EditorContext& context,
+	const std::filesystem::directory_iterator& entry, float columnWidth)
 {
 	namespace fs = std::filesystem;
 
@@ -157,10 +160,20 @@ void AssetBrowserView::DrawEntry(const std::filesystem::directory_iterator& entr
 		{
 			const char* type = EditorConstants::AssetDragDropType;
 
-			std::string pathStr = path.u8string();
-			ImGui::SetDragDropPayload(type, pathStr.c_str(), pathStr.size());
+			std::error_code err;
+			auto relative = std::filesystem::proximate(path, context.project->GetRootPath(), err);
 
-			ImGui::Text("%s", fileStr.c_str());
+			if (err)
+			{
+				KK_LOG_ERROR("std::filesystem::proximate failed. Message: {}", err.message().c_str());
+			}
+			else
+			{
+				std::string pathStr = relative.u8string();
+				ImGui::SetDragDropPayload(type, pathStr.c_str(), pathStr.size());
+
+				ImGui::Text("%s", fileStr.c_str());
+			}
 
 			ImGui::EndDragDropSource();
 		}

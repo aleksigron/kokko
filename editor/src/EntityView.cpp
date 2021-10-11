@@ -250,12 +250,12 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 					materialPath = "";
 
 				ImGuiInputTextFlags flags = ImGuiInputTextFlags_ReadOnly;
-				StringCopySafe(inputBuf, meshPath);
+				StringCopySafe(inputBuf, materialPath);
 				ImGui::InputText("Material path", inputBuf, sizeof(inputBuf), flags);
 
 				if (ImGui::BeginDragDropTarget())
 				{
-					const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+					const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
 					if (payload != nullptr)
 					{
 						StringRef assetPath(static_cast<const char*>(payload->Data), payload->DataSize);
