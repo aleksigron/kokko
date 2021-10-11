@@ -124,7 +124,7 @@ bool FilesystemVirtual::FindMountedPath(const char* path)
 		if (c == '\0')
 			return false;
 
-		if (c == '/')
+		if (c == '/' || c == '\\')
 		{
 			firstSlash = i;
 			break;
