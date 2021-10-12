@@ -4,11 +4,12 @@
 
 #include "Core/HashMap.hpp"
 
-#include "Graphics/TerrainInstance.hpp"
+#include "Graphics/TerrainQuadTree.hpp"
 
 #include "Rendering/CustomRenderer.hpp"
 
 #include "Resources/MaterialData.hpp"
+#include "Resources/MeshData.hpp"
 
 class Allocator;
 class RenderDevice;
@@ -80,6 +81,8 @@ private:
 	MeshManager* meshManager;
 	MaterialManager* materialManager;
 	ShaderManager* shaderManager;
+
+	kokko::TerrainQuadTree quadTree;
 
 	MaterialId terrainMaterial;
 
