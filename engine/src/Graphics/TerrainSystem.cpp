@@ -50,6 +50,7 @@ TerrainSystem::TerrainSystem(
 	meshManager(meshManager),
 	materialManager(materialManager),
 	shaderManager(shaderManager),
+	quadTree(allocator, renderDevice),
 	terrainMaterial(MaterialId::Null),
 	entityMap(allocator)
 {
@@ -67,6 +68,8 @@ TerrainSystem::~TerrainSystem()
 void TerrainSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	quadTree.Initialize(4);
 
 	StringRef path("engine/materials/deferred_geometry/terrain.material.json");
 	terrainMaterial = materialManager->GetIdByPath(path);
