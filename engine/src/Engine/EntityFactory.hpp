@@ -5,6 +5,9 @@
 class World;
 struct Entity;
 
+namespace kokko
+{
+
 enum class EntityComponentType
 {
 	Scene,
@@ -32,3 +35,5 @@ public:
 private:
 	static const char* const ComponentNames[ComponentTypeCount];
 };
+
+}

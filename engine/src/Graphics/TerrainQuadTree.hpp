@@ -11,33 +11,38 @@ namespace kokko
 
 struct TerrainTile
 {
-	static const int Resolution = 64;
+	static constexpr int Resolution = 64;
 
-	unsigned int textureId;
 	uint16_t heightData[Resolution * Resolution];
 };
 
 class TerrainQuadTree
 {
 public:
-	TerrainQuadTree(Allocator* allocator, RenderDevice* renderDevice);
-	~TerrainQuadTree();
+	TerrainQuadTree();
 
-	void Initialize(int levels);
+	void CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels);
+	void DestroyResources(Allocator* allocator, RenderDevice* renderDevice);
+
+	int GetLevelCount() const;
+
+	const TerrainTile* GetTile(int level, int x, int y);
+	unsigned int GetTileHeightTexture(int level, int x, int y);
 
 	static int GetTilesPerDimension(int level);
 	static int GetTileIndex(int level, int x, int y);
 	static int GetTileCountForLevelCount(int levelCount);
 
 private:
-	Allocator* allocator;
-	RenderDevice* renderDevice;
+	static void CreateTileTestData(TerrainTile& tile, float tileScale);
+
+	static uint16_t TestData(float x, float y);
 
 	TerrainTile* tiles;
 	uint32_t* tileTextureIds;
 
 	int treeLevels;
-	size_t tileCount;
+	int tileCount;
 };
 
 }

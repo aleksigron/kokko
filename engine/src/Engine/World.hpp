@@ -27,10 +27,14 @@ class Renderer;
 class LightManager;
 class CameraSystem;
 class ScriptSystem;
-class TerrainSystem;
 class ParticleSystem;
 
 class ComponentSerializer;
+
+namespace kokko
+{
+class TerrainSystem;
+}
 
 class World
 {
@@ -64,7 +68,7 @@ public:
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
 	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
-	TerrainSystem* GetTerrainSystem() { return terrainSystem.instance; }
+	kokko::TerrainSystem* GetTerrainSystem() { return terrainSystem.instance; }
 	ParticleSystem* GetParticleSystem() { return particleSystem.instance; }
 
 	LevelSerializer* GetSerializer() { return &levelSerializer; }
@@ -84,7 +88,7 @@ private:
 	InstanceAllocatorPair<Scene> scene;
 	InstanceAllocatorPair<Renderer> renderer;
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
-	InstanceAllocatorPair<TerrainSystem> terrainSystem;
+	InstanceAllocatorPair<kokko::TerrainSystem> terrainSystem;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
 
 	ResourceManagers resourceManagers;

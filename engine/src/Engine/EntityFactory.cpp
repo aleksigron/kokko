@@ -14,6 +14,9 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 
+namespace kokko
+{
+
 const char* const EntityFactory::ComponentNames[] = {
 	"Transform",
 	"Render object",
@@ -173,4 +176,6 @@ const char* EntityFactory::GetComponentTypeName(size_t typeIndex)
 const char* EntityFactory::GetComponentTypeName(EntityComponentType component)
 {
 	return GetComponentTypeName(static_cast<size_t>(component));
+}
+
 }
