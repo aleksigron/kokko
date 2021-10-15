@@ -21,6 +21,9 @@ class Renderer;
 struct Entity;
 struct MaterialData;
 
+namespace kokko
+{
+
 struct TerrainId
 {
 	unsigned int i;
@@ -33,7 +36,6 @@ struct TerrainId
 
 struct TerrainParameters
 {
-	int terrainResolution = 128;
 	float terrainSize = 64.0f;
 	Vec2f textureScale = Vec2f(0.25f, 0.25f);
 	float minHeight = -0.10f;
@@ -44,7 +46,7 @@ class TerrainSystem : public CustomRenderer
 {
 public:
 	TerrainSystem(Allocator* allocator, RenderDevice* renderDevice,
-		MeshManager* meshManager, MaterialManager* materialManager, ShaderManager* shaderManager);
+		MaterialManager * materialManager, ShaderManager* shaderManager);
 	~TerrainSystem();
 
 	void Initialize();
@@ -55,8 +57,6 @@ public:
 	void RemoveTerrain(TerrainId id);
 
 	void RemoveAll();
-
-	int GetResolution(TerrainId id) const { return data.param[id.i].terrainResolution; }
 
 	float GetSize(TerrainId id) const { return data.param[id.i].terrainSize; }
 	void SetSize(TerrainId id, float size) { data.param[id.i].terrainSize = size; }
@@ -78,29 +78,34 @@ public:
 private:
 	Allocator* allocator;
 	RenderDevice* renderDevice;
-	MeshManager* meshManager;
 	MaterialManager* materialManager;
 	ShaderManager* shaderManager;
-
-	kokko::TerrainQuadTree quadTree;
 
 	MaterialId terrainMaterial;
 
 	HashMap<unsigned int, TerrainId> entityMap;
 
+	struct VertexData
+	{
+		unsigned int vertexArray;
+		unsigned int vertexBuffer;
+		unsigned int indexBuffer;
+
+		int indexCount;
+	};
+	VertexData vertexData;
+
 	struct ResourceData
 	{
-		unsigned int vertexArrayId;
 		unsigned int uniformBufferId;
-		unsigned int textureId;
-		MeshId meshId;
-		uint16_t* heightData;
+
+		kokko::TerrainQuadTree quadTree;
 	};
 
 	struct InstanceData
 	{
-		unsigned int count;
-		unsigned int allocated;
+		size_t count;
+		size_t allocated;
 		void* buffer;
 
 		Entity* entity;
@@ -109,6 +114,8 @@ private:
 	}
 	data;
 
+	void CreateVertexData();
+
 	void InitializeTerrain(TerrainId id);
 	void DeinitializeTerrain(TerrainId id);
 
@@ -116,3 +123,5 @@ private:
 
 	void RenderTerrain(TerrainId id, const MaterialData& material, const RenderViewport& viewport);
 };
+
+}

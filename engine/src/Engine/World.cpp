@@ -63,7 +63,7 @@ World::World(AllocatorManager* allocManager,
 	scriptSystem.New(scriptSystem.allocator, inputManager);
 
 	terrainSystem.CreateScope(allocManager, "TerrainSystem", alloc);
-	terrainSystem.New(terrainSystem.allocator, renderDevice, resourceManagers.meshManager,
+	terrainSystem.New(terrainSystem.allocator, renderDevice,
 		resourceManagers.materialManager, resourceManagers.shaderManager);
 
 	particleSystem.CreateScope(allocManager, "ParticleEffects", alloc);

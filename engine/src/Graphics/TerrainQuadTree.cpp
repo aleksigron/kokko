@@ -1,6 +1,10 @@
 #include "Graphics/TerrainQuadTree.hpp"
 
+#include <cassert>
+
 #include "doctest/doctest.h"
+
+#include "Graphics/TerrainSystem.hpp"
 
 #include "Memory/Allocator.hpp"
 
@@ -9,9 +13,7 @@
 namespace kokko
 {
 
-TerrainQuadTree::TerrainQuadTree(Allocator* allocator, RenderDevice* renderDevice) :
-	allocator(allocator),
-	renderDevice(renderDevice),
+TerrainQuadTree::TerrainQuadTree() :
 	tiles(nullptr),
 	tileTextureIds(nullptr),
 	treeLevels(0),
@@ -19,20 +21,14 @@ TerrainQuadTree::TerrainQuadTree(Allocator* allocator, RenderDevice* renderDevic
 {
 }
 
-TerrainQuadTree::~TerrainQuadTree()
+void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels)
 {
-	allocator->Deallocate(tileTextureIds);
-	allocator->Deallocate(tiles);
-}
+	constexpr int tileResolution = TerrainTile::Resolution;
 
-void TerrainQuadTree::Initialize(int levels)
-{
 	treeLevels = levels;
 	tileCount = GetTileCountForLevelCount(levels);
 
 	float terrainSize = 1024.0f;
-	float tileRes = static_cast<float>(TerrainTile::Resolution);
-	int tileResi = static_cast<int>(TerrainTile::Resolution);
 
 	void* buffer = allocator->Allocate(tileCount * sizeof(TerrainTile));
 	tiles = static_cast<TerrainTile*>(buffer);
@@ -45,24 +41,11 @@ void TerrainQuadTree::Initialize(int levels)
 		{
 			for (int tileX = 0; tileX < tilesPerDimension; ++tileX)
 			{
+				float tileScale = terrainSize / tilesPerDimension;
 				int tileIdx = GetTileIndex(levelIdx, tileX, tileY);
 				TerrainTile& tile = tiles[tileIdx];
 
-				for (int pixY = 0; pixY < TerrainTile::Resolution; ++pixY)
-				{
-					for (int pixX = 0; pixX < TerrainTile::Resolution; ++pixX)
-					{
-						float tileScale = terrainSize / tilesPerDimension;
-						float cx = (pixX / tileRes) * tileScale;
-						float cy = (pixY / tileRes) * tileScale;
-
-						float normalized = 0.5f + std::sin(cx * 0.031415f) * 0.25f + std::sin(cy * 0.031415f) * 0.25f;
-						uint16_t height = static_cast<uint16_t>(normalized * UINT16_MAX);
-
-						size_t pixelIndex = pixY * TerrainTile::Resolution + pixX;
-						tile.heightData[pixelIndex] = height;
-					}
-				}
+				CreateTileTestData(tile, tileScale);
 			}
 		}
 	}
@@ -84,12 +67,13 @@ void TerrainQuadTree::Initialize(int levels)
 
 				RenderCommandData::SetTextureStorage2D textureStorage{
 					RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::R16,
-					tileResi, tileResi
+					tileResolution, tileResolution
 				};
 				renderDevice->SetTextureStorage2D(&textureStorage);
 
 				RenderCommandData::SetTextureSubImage2D subimage{
-					RenderTextureTarget::Texture2d, 0, 0, 0, tileResi, tileResi, RenderTextureBaseFormat::R,
+					RenderTextureTarget::Texture2d, 0, 0, 0,
+					tileResolution, tileResolution, RenderTextureBaseFormat::R,
 					RenderTextureDataType::UnsignedShort, tiles[tileIdx].heightData
 				};
 				renderDevice->SetTextureSubImage2D(&subimage);
@@ -98,14 +82,35 @@ void TerrainQuadTree::Initialize(int levels)
 	}
 }
 
+void TerrainQuadTree::DestroyResources(Allocator* allocator, RenderDevice* renderDevice)
+{
+	if (tileTextureIds != nullptr)
+		renderDevice->DestroyTextures(static_cast<unsigned int>(tileCount), tileTextureIds);
+
+	allocator->Deallocate(tiles);
+	allocator->Deallocate(tileTextureIds);
+}
+
+int TerrainQuadTree::GetLevelCount() const
+{
+	return treeLevels;
+}
+
+const TerrainTile* TerrainQuadTree::GetTile(int level, int x, int y)
+{
+	return &tiles[GetTileIndex(level, x, y)];
+}
+
+unsigned int TerrainQuadTree::GetTileHeightTexture(int level, int x, int y)
+{
+	return tileTextureIds[GetTileIndex(level, x, y)];
+}
+
 int TerrainQuadTree::GetTilesPerDimension(int level)
 {
-	int levelSize = 1;
-
-	for (int i = 0; i < level; ++i)
-		levelSize *= 2;
-
-	return levelSize;
+	assert(level >= 0);
+	assert(level < 31);
+	return 1 << level;
 }
 
 TEST_CASE("TerrainQuadTree.GetTilesPerDimension")
@@ -154,6 +159,30 @@ TEST_CASE("TerrainQuadTree.GetTileCountForLevelCount")
 	CHECK(TerrainQuadTree::GetTileCountForLevelCount(1) == 1);
 	CHECK(TerrainQuadTree::GetTileCountForLevelCount(2) == 5);
 	CHECK(TerrainQuadTree::GetTileCountForLevelCount(3) == 21);
+}
+
+void TerrainQuadTree::CreateTileTestData(TerrainTile& tile, float tileScale)
+{
+	constexpr int tileResolution = TerrainTile::Resolution;
+	float tileRes = static_cast<float>(tileResolution);
+
+	for (int pixY = 0; pixY < tileResolution; ++pixY)
+	{
+		for (int pixX = 0; pixX < tileResolution; ++pixX)
+		{
+			float cx = (pixX / tileRes) * tileScale;
+			float cy = (pixY / tileRes) * tileScale;
+
+			size_t pixelIndex = pixY * tileResolution + pixX;
+			tile.heightData[pixelIndex] = TestData(cx, cy);
+		}
+	}
+}
+
+uint16_t TerrainQuadTree::TestData(float x, float y)
+{
+	float normalized = 0.5f + std::sin(x * 0.31415f) * 0.25f + std::sin(y * 0.31415f) * 0.25f;
+	return static_cast<uint16_t>(normalized * UINT16_MAX);
 }
 
 }

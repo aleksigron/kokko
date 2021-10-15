@@ -418,4 +418,3 @@ void MeshManager::UploadIndexed(MeshId id, const IndexedVertexData& vdata)
 	CreateDrawDataIndexed(index, vdata);
 	SetVertexAttribPointers(vdata.vertexFormat);
 }
-

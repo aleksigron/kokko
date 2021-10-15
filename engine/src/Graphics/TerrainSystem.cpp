@@ -4,7 +4,7 @@
 
 #include "Core/Core.hpp"
 
-#include "Graphics/TerrainInstance.hpp"
+#include "Graphics/TerrainQuadTree.hpp"
 
 #include "Math/Mat4x4.hpp"
 #include "Math/Vec3.hpp"
@@ -21,6 +21,9 @@
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
+
+namespace kokko
+{
 
 const TerrainId TerrainId::Null = TerrainId{ 0 };
 
@@ -42,17 +45,15 @@ struct TerrainUniformBlock
 TerrainSystem::TerrainSystem(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
-	MeshManager* meshManager,
 	MaterialManager* materialManager,
 	ShaderManager* shaderManager) :
 	allocator(allocator),
 	renderDevice(renderDevice),
-	meshManager(meshManager),
 	materialManager(materialManager),
 	shaderManager(shaderManager),
-	quadTree(allocator, renderDevice),
 	terrainMaterial(MaterialId::Null),
-	entityMap(allocator)
+	entityMap(allocator),
+	vertexData(VertexData{})
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as TerrainId::Null value
@@ -63,16 +64,25 @@ TerrainSystem::TerrainSystem(
 TerrainSystem::~TerrainSystem()
 {
 	RemoveAll();
+
+	if (vertexData.indexBuffer != 0)
+		renderDevice->DestroyBuffers(1, &vertexData.indexBuffer);
+
+	if (vertexData.vertexBuffer != 0)
+		renderDevice->DestroyBuffers(1, &vertexData.vertexBuffer);
+
+	if (vertexData.vertexArray != 0)
+		renderDevice->DestroyVertexArrays(1, &vertexData.vertexArray);
 }
 
 void TerrainSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	quadTree.Initialize(4);
-
 	StringRef path("engine/materials/deferred_geometry/terrain.material.json");
 	terrainMaterial = materialManager->GetIdByPath(path);
+
+	CreateVertexData();
 }
 
 TerrainId TerrainSystem::Lookup(Entity e)
@@ -86,7 +96,7 @@ TerrainId TerrainSystem::AddTerrain(Entity entity, const TerrainParameters& para
 	if (data.count + 1 > data.allocated)
 		this->Reallocate(data.count + 1);
 
-	unsigned int id = data.count;
+	unsigned int id = static_cast<unsigned int>(data.count);
 
 	auto mapPair = entityMap.Insert(entity.id);
 	mapPair->second.i = id;
@@ -118,7 +128,7 @@ void TerrainSystem::RemoveTerrain(TerrainId id)
 
 	if (data.count > 2 && id.i + 1 < data.count) // We need to swap another object
 	{
-		unsigned int swapIdx = data.count - 1;
+		size_t swapIdx = data.count - 1;
 
 		// Update the swapped objects id in the entity map
 		auto* swapKv = entityMap.Lookup(data.entity[swapIdx].id);
@@ -162,61 +172,24 @@ void TerrainSystem::RenderCustom(const CustomRenderer::RenderParams& params)
 	}
 }
 
-void TerrainSystem::InitializeTerrain(TerrainId id)
+void TerrainSystem::CreateVertexData()
 {
-	KOKKO_PROFILE_FUNCTION();
-
-	const TerrainParameters& params = data.param[id.i];
-	ResourceData& res = data.resource[id.i];
-
-	// Create texture data
-
-	int texSize = static_cast<int>(params.terrainResolution);
-	float texSizeInv = 1.0f / texSize;
-	float scale = 64.0f;
-	size_t dataSizeBytes = texSize * texSize * sizeof(uint16_t);
-	res.heightData = static_cast<uint16_t*>(allocator->Allocate(dataSizeBytes));
-
-	for (size_t y = 0; y < texSize; ++y)
-	{
-		for (size_t x = 0; x < texSize; ++x)
-		{
-			size_t pixelIndex = y * texSize + x;
-			float normalized = 0.5f + std::sin(x * texSizeInv * scale) * 0.25f + std::sin(y * texSizeInv * scale) * 0.25f;
-			uint16_t height = static_cast<uint16_t>(normalized * UINT16_MAX);
-			res.heightData[pixelIndex] = height;
-		}
-	}
-
-	renderDevice->CreateTextures(1, &res.textureId);
-	renderDevice->BindTexture(RenderTextureTarget::Texture2d, res.textureId);
-
-	RenderCommandData::SetTextureStorage2D textureStorage{
-		RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::R16, texSize, texSize
-	};
-	renderDevice->SetTextureStorage2D(&textureStorage);
-
-	RenderCommandData::SetTextureSubImage2D subimage{
-		RenderTextureTarget::Texture2d, 0, 0, 0, texSize, texSize, RenderTextureBaseFormat::R,
-		RenderTextureDataType::UnsignedShort, res.heightData
-	};
-	renderDevice->SetTextureSubImage2D(&subimage);
-
 	// Create vertex data
 
-	int sideVerts = params.terrainResolution + 1;
+	int sideVerts = TerrainTile::Resolution + 1;
 	unsigned int vertCount = sideVerts * sideVerts;
 	size_t vertexComponents = 2;
 	size_t vertSize = sizeof(float) * vertexComponents;
-	float* vertexData = static_cast<float*>(allocator->Allocate(vertCount * vertSize));
+	unsigned int vertBytes = static_cast<unsigned int>(vertSize * vertCount);
+	float* vertexBuf = static_cast<float*>(allocator->Allocate(vertBytes));
 
-	int sideQuads = params.terrainResolution;
+	int sideQuads = TerrainTile::Resolution;
 	int quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
 	unsigned int indexCount = sideQuads * sideQuads * quadIndices;
-	uint16_t* indexData = static_cast<uint16_t*>(allocator->Allocate(indexCount * sizeof(uint16_t)));
-	// TODO: Use 32-bit index type if necessary
+	unsigned int indexBytes = indexCount * sizeof(uint16_t);
+	uint16_t* indexBuf = static_cast<uint16_t*>(allocator->Allocate(indexBytes));
 
-	float quadSize = 1.0f / params.terrainSize;
+	float quadSize = 1.0f / TerrainTile::Resolution;
 
 	// Set vertex data
 	for (size_t y = 0; y < sideVerts; ++y)
@@ -224,8 +197,8 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 		for (size_t x = 0; x < sideVerts; ++x)
 		{
 			size_t vertIndex = y * sideVerts + x;
-			vertexData[vertIndex * vertexComponents + 0] = x * quadSize;
-			vertexData[vertIndex * vertexComponents + 1] = y * quadSize;
+			vertexBuf[vertIndex * vertexComponents + 0] = x * quadSize;
+			vertexBuf[vertIndex * vertexComponents + 1] = y * quadSize;
 		}
 	}
 
@@ -235,38 +208,56 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 		for (size_t x = 0; x < sideQuads; ++x)
 		{
 			size_t quadStart = (y * sideQuads + x) * quadIndices;
-			indexData[quadStart + 0] = static_cast<uint16_t>(y * sideVerts + x);
-			indexData[quadStart + 1] = static_cast<uint16_t>((y + 1) * sideVerts + x);
-			indexData[quadStart + 2] = static_cast<uint16_t>(y * sideVerts + (x + 1));
-			indexData[quadStart + 3] = static_cast<uint16_t>((y + 1) * sideVerts + x);
-			indexData[quadStart + 4] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 1));
-			indexData[quadStart + 5] = static_cast<uint16_t>(y * sideVerts + (x + 1));
+			indexBuf[quadStart + 0] = static_cast<uint16_t>(y * sideVerts + x);
+			indexBuf[quadStart + 1] = static_cast<uint16_t>((y + 1) * sideVerts + x);
+			indexBuf[quadStart + 2] = static_cast<uint16_t>(y * sideVerts + (x + 1));
+			indexBuf[quadStart + 3] = static_cast<uint16_t>((y + 1) * sideVerts + x);
+			indexBuf[quadStart + 4] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 1));
+			indexBuf[quadStart + 5] = static_cast<uint16_t>(y * sideVerts + (x + 1));
 		}
 	}
+
+	renderDevice->CreateVertexArrays(1, &vertexData.vertexArray);
+	renderDevice->CreateBuffers(1, &vertexData.vertexBuffer);
+	renderDevice->CreateBuffers(1, &vertexData.indexBuffer);
+	vertexData.indexCount = indexCount;
+
+	renderDevice->BindVertexArray(vertexData.vertexArray);
+
+	RenderBufferUsage usage = RenderBufferUsage::StaticDraw;
+
+	// Bind and upload index buffer
+	renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, vertexData.indexBuffer);
+	renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, indexBytes, indexBuf, usage);
+
+	// Bind and upload vertex buffer
+	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, vertexData.vertexBuffer);
+	renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertexBuf, usage);
 
 	VertexAttribute vertexAttributes[] = { VertexAttribute::pos2 };
 	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
 
-	IndexedVertexData vertData;
-	vertData.vertexFormat = vertexFormatPos;
-	vertData.primitiveMode = RenderPrimitiveMode::Triangles;
-	vertData.vertexData = vertexData;
-	vertData.vertexCount = vertCount;
-	vertData.indexData = indexData;
-	vertData.indexCount = indexCount;
+	const VertexAttribute& attr = vertexAttributes[0];
+	renderDevice->EnableVertexAttribute(attr.attrIndex);
 
-	res.meshId = meshManager->CreateMesh();
-	meshManager->UploadIndexed(res.meshId, vertData);
+	int stride = static_cast<int>(vertexFormatPos.vertexSize);
 
-	float halfTerrainSize = params.terrainSize * 0.5f;
+	RenderCommandData::SetVertexAttributePointer data{
+		attr.attrIndex, attr.elemCount, attr.elemType, stride, attr.offset
+	};
 
-	BoundingBox bounds;
-	bounds.center = Vec3f(0.0f, 0.0f, 0.0f);
-	bounds.extents = Vec3f(halfTerrainSize, halfTerrainSize, halfTerrainSize);
-	meshManager->SetBoundingBox(res.meshId, bounds);
+	renderDevice->SetVertexAttributePointer(&data);
 
-	allocator->Deallocate(indexData);
-	allocator->Deallocate(vertexData);
+	allocator->Deallocate(indexBuf);
+	allocator->Deallocate(vertexBuf);
+}
+
+void TerrainSystem::InitializeTerrain(TerrainId id)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	const TerrainParameters& params = data.param[id.i];
+	ResourceData& res = data.resource[id.i];
 
 	// Create uniform buffer
 
@@ -279,21 +270,15 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 	bufferStorage.data = nullptr;
 	bufferStorage.dynamicStorage = true;
 	renderDevice->SetBufferStorage(&bufferStorage);
+
+	res.quadTree.CreateResources(allocator, renderDevice, 4);
 }
 
 void TerrainSystem::DeinitializeTerrain(TerrainId id)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	ResourceData& resources = data.resource[id.i];
-
-	allocator->Deallocate(resources.heightData);
-
-	if (resources.vertexArrayId != 0)
-		renderDevice->DestroyVertexArrays(1, &resources.vertexArrayId);
-
-	if (resources.textureId != 0)
-		renderDevice->DestroyTextures(1, &resources.textureId);
+	data.resource[id.i].quadTree.DestroyResources(allocator, renderDevice);
 }
 
 void TerrainSystem::Reallocate(size_t required)
@@ -307,7 +292,7 @@ void TerrainSystem::Reallocate(size_t required)
 	entityMap.Reserve(required);
 
 	InstanceData newData;
-	size_t bytes = required * (sizeof(Entity) + sizeof(TerrainInstance));
+	size_t bytes = required * (sizeof(Entity) + sizeof(TerrainParameters) + sizeof(ResourceData));
 
 	newData.buffer = allocator->Allocate(bytes);
 	newData.count = data.count;
@@ -340,7 +325,7 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 	uniforms.MV = viewport.view;
 	uniforms.textureScale = params.textureScale;
 	uniforms.terrainSize = params.terrainSize;
-	uniforms.terrainResolution = static_cast<float>(params.terrainResolution);
+	uniforms.terrainResolution = static_cast<float>(TerrainTile::Resolution);
 	uniforms.minHeight = params.minHeight;
 	uniforms.maxHeight = params.maxHeight;
 
@@ -358,31 +343,50 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 	const TextureUniform* albedoMap = material.uniforms.FindTextureUniformByNameHash("albedo_map"_hash);
 	const TextureUniform* roughMap = material.uniforms.FindTextureUniformByNameHash("roughness_map"_hash);
 
-	if (heightMap != nullptr)
+	TerrainQuadTree& quadTree = data.resource[id.i].quadTree;
+
+	int levels = quadTree.GetLevelCount();
+	int currentLevel = levels - 1;
+	int tilesPerDimension = TerrainQuadTree::GetTilesPerDimension(currentLevel);
+	int tileCount = tilesPerDimension * tilesPerDimension;
+
+	renderDevice->BindVertexArray(vertexData.vertexArray);
+
+	for (int x = 0; x < tilesPerDimension; ++x)
 	{
-		renderDevice->SetUniformInt(heightMap->uniformLocation, 0);
-		renderDevice->SetActiveTextureUnit(0);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, resources.textureId);
+		for (int y = 0; y < tilesPerDimension; ++y)
+		{
+			auto tile = quadTree.GetTile(currentLevel, x, y);
+
+			if (heightMap != nullptr)
+			{
+				unsigned int heigthTex = quadTree.GetTileHeightTexture(currentLevel, x, y);
+
+				renderDevice->SetUniformInt(heightMap->uniformLocation, 0);
+				renderDevice->SetActiveTextureUnit(0);
+				renderDevice->BindTexture(RenderTextureTarget::Texture2d, heigthTex);
+			}
+
+			if (albedoMap != nullptr)
+			{
+				renderDevice->SetUniformInt(albedoMap->uniformLocation, 1);
+				renderDevice->SetActiveTextureUnit(1);
+				renderDevice->BindTexture(RenderTextureTarget::Texture2d, albedoMap->textureObject);
+			}
+
+			if (roughMap != nullptr)
+			{
+				renderDevice->SetUniformInt(roughMap->uniformLocation, 2);
+				renderDevice->SetActiveTextureUnit(2);
+				renderDevice->BindTexture(RenderTextureTarget::Texture2d, roughMap->textureObject);
+			}
+
+			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, material.uniformBufferObject);
+
+			renderDevice->DrawIndexed(RenderPrimitiveMode::Triangles, vertexData.indexCount,
+				RenderIndexType::UnsignedShort);
+		}
 	}
+}
 
-	if (albedoMap != nullptr)
-	{
-		renderDevice->SetUniformInt(albedoMap->uniformLocation, 1);
-		renderDevice->SetActiveTextureUnit(1);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, albedoMap->textureObject);
-	}
-
-	if (roughMap != nullptr)
-	{
-		renderDevice->SetUniformInt(roughMap->uniformLocation, 2);
-		renderDevice->SetActiveTextureUnit(2);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, roughMap->textureObject);
-	}
-
-	// Bind material uniform block to shader
-	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, material.uniformBufferObject);
-
-	const MeshDrawData* draw = meshManager->GetDrawData(resources.meshId);
-	renderDevice->BindVertexArray(draw->vertexArrayObject);
-	renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 }
