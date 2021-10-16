@@ -11,9 +11,10 @@ namespace kokko
 
 struct TerrainTile
 {
-	static constexpr int Resolution = 64;
+	static constexpr int Resolution = 63;
+	static constexpr int ResolutionWithBorder = Resolution + 1;
 
-	uint16_t heightData[Resolution * Resolution];
+	uint16_t heightData[ResolutionWithBorder * ResolutionWithBorder];
 };
 
 class TerrainQuadTree
@@ -32,9 +33,11 @@ public:
 	static int GetTilesPerDimension(int level);
 	static int GetTileIndex(int level, int x, int y);
 	static int GetTileCountForLevelCount(int levelCount);
+	static float GetTileScale(int level);
+
+	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 
 private:
-	static void CreateTileTestData(TerrainTile& tile, float tileScale);
 
 	static uint16_t TestData(float x, float y);
 

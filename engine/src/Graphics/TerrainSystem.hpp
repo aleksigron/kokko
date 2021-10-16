@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
+#include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
 
 #include "Graphics/TerrainQuadTree.hpp"
@@ -76,10 +78,15 @@ public:
 	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
 
 private:
+	static constexpr int TileLevels = 4;
+
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 	MaterialManager* materialManager;
 	ShaderManager* shaderManager;
+	
+	unsigned int uniformBlockStride;
+	unsigned int uniformBufferId;
 
 	MaterialId terrainMaterial;
 
@@ -95,10 +102,10 @@ private:
 	};
 	VertexData vertexData;
 
+	unsigned int textureSampler;
+
 	struct ResourceData
 	{
-		unsigned int uniformBufferId;
-
 		kokko::TerrainQuadTree quadTree;
 	};
 
@@ -113,6 +120,17 @@ private:
 		ResourceData* resource;
 	}
 	data;
+
+	struct RenderTile
+	{
+		int level;
+		int x;
+		int y;
+	};
+
+	Array<RenderTile> tilesToRender;
+
+	Array<uint8_t> uniformStagingBuffer;
 
 	void CreateVertexData();
 
