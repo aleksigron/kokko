@@ -358,25 +358,9 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 	KOKKO_PROFILE_FUNCTION();
 
 	// Select tiles to render
-	// TODO: Add method to quadtree to select render tiles based on camera parameters
 
 	TerrainQuadTree& quadTree = data.resource[id.i].quadTree;
-	int levels = quadTree.GetLevelCount();
-	int currentLevel = levels - 1;
-	int tilesPerDimension = TerrainQuadTree::GetTilesPerDimension(currentLevel);
-
-	tilesToRender.Reserve(tilesPerDimension * tilesPerDimension);
-	for (int y = 0; y < tilesPerDimension; ++y)
-	{
-		for (int x = 0; x < tilesPerDimension; ++x)
-		{
-			RenderTile& tile = tilesToRender.PushBack();
-			
-			tile.level = currentLevel;
-			tile.x = x;
-			tile.y = y;
-		}
-	}
+	quadTree.GetTilesToRender(CameraParameters(), tilesToRender);
 
 	// Update uniform buffer
 
@@ -395,7 +379,6 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 
 	uniformStagingBuffer.Resize(tilesToRender.GetCount() * uniformBlockStride);
 
-	float halfTileCount = tilesPerDimension * 0.5f;
 	int blocksWritten = 0;
 	for (const auto& tile : tilesToRender)
 	{

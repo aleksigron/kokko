@@ -8,6 +8,7 @@
 
 #include "Memory/Allocator.hpp"
 
+#include "Rendering/CameraParameters.hpp"
 #include "Rendering/RenderDevice.hpp"
 
 namespace kokko
@@ -90,6 +91,24 @@ void TerrainQuadTree::DestroyResources(Allocator* allocator, RenderDevice* rende
 
 	allocator->Deallocate(tiles);
 	allocator->Deallocate(tileTextureIds);
+}
+
+void TerrainQuadTree::GetTilesToRender(const CameraParameters& camera, Array<TerrainTileId>& resultOut)
+{
+	int currentLevel = treeLevels - 1;
+	int tilesPerDimension = GetTilesPerDimension(currentLevel);
+	resultOut.Reserve(tilesPerDimension * tilesPerDimension);
+	for (int y = 0; y < tilesPerDimension; ++y)
+	{
+		for (int x = 0; x < tilesPerDimension; ++x)
+		{
+			TerrainTileId& tile = resultOut.PushBack();
+
+			tile.level = currentLevel;
+			tile.x = x;
+			tile.y = y;
+		}
+	}
 }
 
 int TerrainQuadTree::GetLevelCount() const
@@ -193,20 +212,17 @@ void TerrainQuadTree::CreateTileTestData(TerrainTile& tile, int tileX, int tileY
 	}
 }
 
-TEST_CASE("TerrainQuadTree.CreateTileTestData")
-{
-	TerrainTile tileA, tileB;
-	
-	TerrainQuadTree::CreateTileTestData(tileA, 0, 0, 0.5f);
-	TerrainQuadTree::CreateTileTestData(tileB, 1, 0, 0.5f);
-
-	CHECK(tileA.heightData[TerrainTile::ResolutionWithBorder - 1] == tileB.heightData[0]);
-}
-
 uint16_t TerrainQuadTree::TestData(float x, float y)
 {
-	float normalized = 0.5f + std::sin(x * 0.12f) * 0.25f + std::sin(y * 0.12f) * 0.25f;
-	return static_cast<uint16_t>(normalized * UINT16_MAX);
+	float f = 0.01f;
+	float a = 0.12f;
+
+	float sum = 0.5f;
+	for (int i = 1; i <= 6; i += 5)
+	{
+		sum += std::sin(x * f * i) * a / i + std::sin(y * f * i) * a / i;
+	}
+	return static_cast<uint16_t>(sum * UINT16_MAX);
 }
 
 }

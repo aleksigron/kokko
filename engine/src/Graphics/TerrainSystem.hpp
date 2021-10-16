@@ -7,6 +7,7 @@
 #include "Core/HashMap.hpp"
 
 #include "Graphics/TerrainQuadTree.hpp"
+#include "Graphics/TerrainTileId.hpp"
 
 #include "Rendering/CustomRenderer.hpp"
 
@@ -121,14 +122,7 @@ private:
 	}
 	data;
 
-	struct RenderTile
-	{
-		int level;
-		int x;
-		int y;
-	};
-
-	Array<RenderTile> tilesToRender;
+	Array<TerrainTileId> tilesToRender;
 
 	Array<uint8_t> uniformStagingBuffer;
 
