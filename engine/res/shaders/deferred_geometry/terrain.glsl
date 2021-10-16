@@ -12,6 +12,8 @@ layout(std140, binding = BLOCK_BINDING_OBJECT) uniform TerrainBlock
 	mat4x4 MVP;
 	mat4x4 MV;
 	vec2 texture_scale;
+	vec2 tile_offset;
+	float tile_scale;
 	float terrain_size;
 	float terrain_resolution;
 	float min_height;
@@ -57,7 +59,7 @@ void main()
 
 	vec3 w_normal = cross(normalize(z_tan), normalize(x_tan));
 
-	vec2 w_pos = (position - 0.5) * uniforms.terrain_size;
+	vec2 w_pos = (position + uniforms.tile_offset) * uniforms.terrain_size * uniforms.tile_scale;
 
 	gl_Position = uniforms.MVP * vec4(w_pos.x, uniforms.min_height + h0 * y_extent, w_pos.y, 1.0);
 

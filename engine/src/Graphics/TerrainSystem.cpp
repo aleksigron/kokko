@@ -1,6 +1,8 @@
 #include "Graphics/TerrainSystem.hpp"
 
 #include <cassert>
+#include <cmath>
+#include <cstring>
 
 #include "Core/Core.hpp"
 
@@ -36,6 +38,9 @@ struct TerrainUniformBlock
 
 	alignas(8) Vec2f textureScale;
 
+	alignas(8) Vec2f tileOffset;
+	alignas(4) float tileScale;
+
 	alignas(4) float terrainSize;
 	alignas(4) float terrainResolution;
 	alignas(4) float minHeight;
@@ -51,9 +56,14 @@ TerrainSystem::TerrainSystem(
 	renderDevice(renderDevice),
 	materialManager(materialManager),
 	shaderManager(shaderManager),
+	uniformBlockStride(0),
+	uniformBufferId(0),
 	terrainMaterial(MaterialId::Null),
 	entityMap(allocator),
-	vertexData(VertexData{})
+	vertexData(VertexData{}),
+	textureSampler(0),
+	tilesToRender(allocator),
+	uniformStagingBuffer(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as TerrainId::Null value
@@ -73,14 +83,56 @@ TerrainSystem::~TerrainSystem()
 
 	if (vertexData.vertexArray != 0)
 		renderDevice->DestroyVertexArrays(1, &vertexData.vertexArray);
+
+	if (uniformBufferId != 0)
+		renderDevice->DestroyBuffers(1, &uniformBufferId);
+
+	if (textureSampler != 0)
+		renderDevice->DestroySamplers(1, &textureSampler);
 }
 
 void TerrainSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	// Create uniform buffer
+
+	int aligment = 0;
+	renderDevice->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
+
+	uniformBlockStride = (sizeof(TerrainUniformBlock) + aligment - 1) / aligment * aligment;
+
+	int tileCount = TerrainQuadTree::GetTileCountForLevelCount(TileLevels);
+	int uniformBytes = uniformBlockStride * tileCount;
+
+	renderDevice->CreateBuffers(1, &uniformBufferId);
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
+
+	RenderCommandData::SetBufferStorage bufferStorage{};
+	bufferStorage.target = RenderBufferTarget::UniformBuffer;
+	bufferStorage.size = uniformBytes;
+	bufferStorage.data = nullptr;
+	bufferStorage.dynamicStorage = true;
+	renderDevice->SetBufferStorage(&bufferStorage);
+
+	// Material
+
 	StringRef path("engine/materials/deferred_geometry/terrain.material.json");
 	terrainMaterial = materialManager->GetIdByPath(path);
+
+	// Sampler
+
+	renderDevice->CreateSamplers(1, &textureSampler);
+
+	RenderCommandData::SetSamplerParameters samplerParams{
+		textureSampler, RenderTextureFilterMode::Nearest, RenderTextureFilterMode::Nearest,
+		RenderTextureWrapMode::ClampToEdge, RenderTextureWrapMode::ClampToEdge,
+		RenderTextureWrapMode::ClampToEdge, RenderTextureCompareMode::None,
+		RenderDepthCompareFunc::Always
+	};
+	renderDevice->SetSamplerParameters(&samplerParams);
+
+	// Vertex data
 
 	CreateVertexData();
 }
@@ -256,20 +308,7 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	const TerrainParameters& params = data.param[id.i];
 	ResourceData& res = data.resource[id.i];
-
-	// Create uniform buffer
-
-	renderDevice->CreateBuffers(1, &res.uniformBufferId);
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, res.uniformBufferId);
-
-	RenderCommandData::SetBufferStorage bufferStorage{};
-	bufferStorage.target = RenderBufferTarget::UniformBuffer;
-	bufferStorage.size = sizeof(TerrainUniformBlock);
-	bufferStorage.data = nullptr;
-	bufferStorage.dynamicStorage = true;
-	renderDevice->SetBufferStorage(&bufferStorage);
 
 	res.quadTree.CreateResources(allocator, renderDevice, 4);
 }
@@ -318,24 +357,67 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	// Select tiles to render
+	// TODO: Add method to quadtree to select render tiles based on camera parameters
+
+	TerrainQuadTree& quadTree = data.resource[id.i].quadTree;
+	int levels = quadTree.GetLevelCount();
+	int currentLevel = levels - 1;
+	int tilesPerDimension = TerrainQuadTree::GetTilesPerDimension(currentLevel);
+
+	tilesToRender.Reserve(tilesPerDimension * tilesPerDimension);
+	for (int y = 0; y < tilesPerDimension; ++y)
+	{
+		for (int x = 0; x < tilesPerDimension; ++x)
+		{
+			RenderTile& tile = tilesToRender.PushBack();
+			
+			tile.level = currentLevel;
+			tile.x = x;
+			tile.y = y;
+		}
+	}
+
+	// Update uniform buffer
+
 	const TerrainParameters& params = data.param[id.i];
 
 	TerrainUniformBlock uniforms;
 	uniforms.MVP = viewport.viewProjection;
 	uniforms.MV = viewport.view;
 	uniforms.textureScale = params.textureScale;
+	uniforms.tileOffset = Vec2f();
+	uniforms.tileScale = 1.0f;
 	uniforms.terrainSize = params.terrainSize;
 	uniforms.terrainResolution = static_cast<float>(TerrainTile::Resolution);
 	uniforms.minHeight = params.minHeight;
 	uniforms.maxHeight = params.maxHeight;
 
-	const ResourceData& resources = data.resource[id.i];
+	uniformStagingBuffer.Resize(tilesToRender.GetCount() * uniformBlockStride);
 
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, resources.uniformBufferId);
-	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TerrainUniformBlock), &uniforms);
+	float halfTileCount = tilesPerDimension * 0.5f;
+	int blocksWritten = 0;
+	for (const auto& tile : tilesToRender)
+	{
+		const float halfTileCount = 0.5f * TerrainQuadTree::GetTilesPerDimension(tile.level);
+		const Vec2f levelOrigin(-halfTileCount, -halfTileCount);
 
-	// Bind object transform uniform block to shader
-	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, resources.uniformBufferId);
+		uniforms.tileOffset = levelOrigin + Vec2f(tile.x, tile.y);
+		uniforms.tileScale = TerrainQuadTree::GetTileScale(tile.level);
+
+		uint8_t* dest = &uniformStagingBuffer[blocksWritten * uniformBlockStride];
+		std::memcpy(dest, &uniforms, sizeof(uniforms));
+
+		blocksWritten += 1;
+	}
+
+	unsigned int updateBytes = tilesToRender.GetCount() * uniformBlockStride;
+
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
+	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer,
+		0, updateBytes, uniformStagingBuffer.GetData());
+
+	// Draw
 
 	renderDevice->UseShaderProgram(material.cachedShaderDeviceId);
 
@@ -343,50 +425,56 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 	const TextureUniform* albedoMap = material.uniforms.FindTextureUniformByNameHash("albedo_map"_hash);
 	const TextureUniform* roughMap = material.uniforms.FindTextureUniformByNameHash("roughness_map"_hash);
 
-	TerrainQuadTree& quadTree = data.resource[id.i].quadTree;
+	if (albedoMap != nullptr)
+	{
+		renderDevice->SetUniformInt(albedoMap->uniformLocation, 1);
+		renderDevice->SetActiveTextureUnit(1);
+		renderDevice->BindTexture(RenderTextureTarget::Texture2d, albedoMap->textureObject);
+	}
 
-	int levels = quadTree.GetLevelCount();
-	int currentLevel = levels - 1;
-	int tilesPerDimension = TerrainQuadTree::GetTilesPerDimension(currentLevel);
-	int tileCount = tilesPerDimension * tilesPerDimension;
+	if (roughMap != nullptr)
+	{
+		renderDevice->SetUniformInt(roughMap->uniformLocation, 2);
+		renderDevice->SetActiveTextureUnit(2);
+		renderDevice->BindTexture(RenderTextureTarget::Texture2d, roughMap->textureObject);
+	}
 
 	renderDevice->BindVertexArray(vertexData.vertexArray);
 
-	for (int x = 0; x < tilesPerDimension; ++x)
+	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, material.uniformBufferObject);
+
+	// For height texture
+
+	renderDevice->BindSampler(0, textureSampler);
+
+	renderDevice->SetUniformInt(heightMap->uniformLocation, 0);
+	renderDevice->SetActiveTextureUnit(0);
+
+	int blocksUsed = 0;
+	for (const auto& tile : tilesToRender)
 	{
-		for (int y = 0; y < tilesPerDimension; ++y)
+		intptr_t rangeOffset = blocksUsed * uniformBlockStride;
+		blocksUsed += 1;
+
+		RenderCommandData::BindBufferRange bindRange{
+			RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId,
+			rangeOffset, uniformBlockStride
+		};
+
+		renderDevice->BindBufferRange(&bindRange);
+
+		if (heightMap != nullptr)
 		{
-			auto tile = quadTree.GetTile(currentLevel, x, y);
+			unsigned int heightTex = quadTree.GetTileHeightTexture(tile.level, tile.x, tile.y);
 
-			if (heightMap != nullptr)
-			{
-				unsigned int heigthTex = quadTree.GetTileHeightTexture(currentLevel, x, y);
-
-				renderDevice->SetUniformInt(heightMap->uniformLocation, 0);
-				renderDevice->SetActiveTextureUnit(0);
-				renderDevice->BindTexture(RenderTextureTarget::Texture2d, heigthTex);
-			}
-
-			if (albedoMap != nullptr)
-			{
-				renderDevice->SetUniformInt(albedoMap->uniformLocation, 1);
-				renderDevice->SetActiveTextureUnit(1);
-				renderDevice->BindTexture(RenderTextureTarget::Texture2d, albedoMap->textureObject);
-			}
-
-			if (roughMap != nullptr)
-			{
-				renderDevice->SetUniformInt(roughMap->uniformLocation, 2);
-				renderDevice->SetActiveTextureUnit(2);
-				renderDevice->BindTexture(RenderTextureTarget::Texture2d, roughMap->textureObject);
-			}
-
-			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, material.uniformBufferObject);
-
-			renderDevice->DrawIndexed(RenderPrimitiveMode::Triangles, vertexData.indexCount,
-				RenderIndexType::UnsignedShort);
+			renderDevice->BindTexture(RenderTextureTarget::Texture2d, heightTex);
 		}
+
+		renderDevice->DrawIndexed(RenderPrimitiveMode::Triangles, vertexData.indexCount,
+			RenderIndexType::UnsignedShort);
 	}
+
+	tilesToRender.Clear();
 }
 
 }

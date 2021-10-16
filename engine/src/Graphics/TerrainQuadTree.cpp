@@ -24,6 +24,7 @@ TerrainQuadTree::TerrainQuadTree() :
 void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels)
 {
 	constexpr int tileResolution = TerrainTile::Resolution;
+	constexpr int texResolution = TerrainTile::ResolutionWithBorder;
 
 	treeLevels = levels;
 	tileCount = GetTileCountForLevelCount(levels);
@@ -45,7 +46,7 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* render
 				int tileIdx = GetTileIndex(levelIdx, tileX, tileY);
 				TerrainTile& tile = tiles[tileIdx];
 
-				CreateTileTestData(tile, tileScale);
+				CreateTileTestData(tile, tileX, tileY, tileScale);
 			}
 		}
 	}
@@ -67,13 +68,13 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* render
 
 				RenderCommandData::SetTextureStorage2D textureStorage{
 					RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::R16,
-					tileResolution, tileResolution
+					texResolution, texResolution
 				};
 				renderDevice->SetTextureStorage2D(&textureStorage);
 
 				RenderCommandData::SetTextureSubImage2D subimage{
 					RenderTextureTarget::Texture2d, 0, 0, 0,
-					tileResolution, tileResolution, RenderTextureBaseFormat::R,
+					texResolution, texResolution, RenderTextureBaseFormat::R,
 					RenderTextureDataType::UnsignedShort, tiles[tileIdx].heightData
 				};
 				renderDevice->SetTextureSubImage2D(&subimage);
@@ -161,27 +162,50 @@ TEST_CASE("TerrainQuadTree.GetTileCountForLevelCount")
 	CHECK(TerrainQuadTree::GetTileCountForLevelCount(3) == 21);
 }
 
-void TerrainQuadTree::CreateTileTestData(TerrainTile& tile, float tileScale)
+float TerrainQuadTree::GetTileScale(int level)
 {
-	constexpr int tileResolution = TerrainTile::Resolution;
-	float tileRes = static_cast<float>(tileResolution);
+	return std::pow(2.0f, static_cast<float>(-level));
+}
 
-	for (int pixY = 0; pixY < tileResolution; ++pixY)
+TEST_CASE("TerrainQuadTree.GetTileScale")
+{
+	CHECK(TerrainQuadTree::GetTileScale(0) == doctest::Approx(1.0f));
+	CHECK(TerrainQuadTree::GetTileScale(1) == doctest::Approx(0.5f));
+	CHECK(TerrainQuadTree::GetTileScale(2) == doctest::Approx(0.25f));
+	CHECK(TerrainQuadTree::GetTileScale(3) == doctest::Approx(0.125f));
+}
+
+void TerrainQuadTree::CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale)
+{
+	constexpr int texResolution = TerrainTile::ResolutionWithBorder;
+	float tileRes = static_cast<float>(TerrainTile::Resolution);
+
+	for (int pixY = 0; pixY < texResolution; ++pixY)
 	{
-		for (int pixX = 0; pixX < tileResolution; ++pixX)
+		for (int pixX = 0; pixX < texResolution; ++pixX)
 		{
-			float cx = (pixX / tileRes) * tileScale;
-			float cy = (pixY / tileRes) * tileScale;
+			float cx = (pixX / tileRes + tileX) * tileScale;
+			float cy = (pixY / tileRes + tileY) * tileScale;
 
-			size_t pixelIndex = pixY * tileResolution + pixX;
+			size_t pixelIndex = pixY * texResolution + pixX;
 			tile.heightData[pixelIndex] = TestData(cx, cy);
 		}
 	}
 }
 
+TEST_CASE("TerrainQuadTree.CreateTileTestData")
+{
+	TerrainTile tileA, tileB;
+	
+	TerrainQuadTree::CreateTileTestData(tileA, 0, 0, 0.5f);
+	TerrainQuadTree::CreateTileTestData(tileB, 1, 0, 0.5f);
+
+	CHECK(tileA.heightData[TerrainTile::ResolutionWithBorder - 1] == tileB.heightData[0]);
+}
+
 uint16_t TerrainQuadTree::TestData(float x, float y)
 {
-	float normalized = 0.5f + std::sin(x * 0.31415f) * 0.25f + std::sin(y * 0.31415f) * 0.25f;
+	float normalized = 0.5f + std::sin(x * 0.12f) * 0.25f + std::sin(y * 0.12f) * 0.25f;
 	return static_cast<uint16_t>(normalized * UINT16_MAX);
 }
 
