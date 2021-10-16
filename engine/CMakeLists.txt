@@ -131,6 +131,7 @@ set (KOKKO_SOURCES
 	src/Graphics/TerrainInstance.hpp
 	src/Graphics/TerrainSystem.cpp
 	src/Graphics/TerrainSystem.hpp
+	src/Graphics/TerrainTileId.hpp
 	src/Graphics/TerrainQuadTree.cpp
 	src/Graphics/TerrainQuadTree.hpp
 	src/Graphics/TransformSerializer.hpp

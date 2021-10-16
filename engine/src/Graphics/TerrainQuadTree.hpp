@@ -3,8 +3,13 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "Core/Array.hpp"
+
 class Allocator;
 class RenderDevice;
+
+struct CameraParameters;
+struct TerrainTileId;
 
 namespace kokko
 {
@@ -25,6 +30,8 @@ public:
 	void CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels);
 	void DestroyResources(Allocator* allocator, RenderDevice* renderDevice);
 
+	void GetTilesToRender(const CameraParameters& camera, Array<TerrainTileId>& resultOut);
+
 	int GetLevelCount() const;
 
 	const TerrainTile* GetTile(int level, int x, int y);
@@ -35,9 +42,8 @@ public:
 	static int GetTileCountForLevelCount(int levelCount);
 	static float GetTileScale(int level);
 
-	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
-
 private:
+	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 
 	static uint16_t TestData(float x, float y);
 
