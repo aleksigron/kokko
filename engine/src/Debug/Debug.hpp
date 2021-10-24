@@ -28,6 +28,8 @@ struct CameraParameters;
 class Debug
 {
 private:
+	static Debug* singletonInstance;
+
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 
@@ -62,6 +64,8 @@ public:
 	Debug(Allocator* allocator, AllocatorManager* allocManager,
 		Window* window, RenderDevice* renderDevice, Filesystem* filesystem);
 	~Debug();
+
+	static Debug* Get() { return singletonInstance; }
 
 	void Initialize(Window* window, MeshManager* meshManager,
 		ShaderManager* shaderManager, TextureManager* textureManager);

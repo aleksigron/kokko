@@ -6,6 +6,8 @@
 
 #include "Graphics/TerrainSystem.hpp"
 
+#include "Math/Frustum.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/CameraParameters.hpp"
@@ -22,15 +24,14 @@ TerrainQuadTree::TerrainQuadTree() :
 {
 }
 
-void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels)
+void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels, float size)
 {
 	constexpr int tileResolution = TerrainTile::Resolution;
 	constexpr int texResolution = TerrainTile::ResolutionWithBorder;
 
 	treeLevels = levels;
 	tileCount = GetTileCountForLevelCount(levels);
-
-	float terrainSize = 1024.0f;
+	terrainSize = size;
 
 	void* buffer = allocator->Allocate(tileCount * sizeof(TerrainTile));
 	tiles = static_cast<TerrainTile*>(buffer);
@@ -93,20 +94,75 @@ void TerrainQuadTree::DestroyResources(Allocator* allocator, RenderDevice* rende
 	allocator->Deallocate(tileTextureIds);
 }
 
-void TerrainQuadTree::GetTilesToRender(const CameraParameters& camera, Array<TerrainTileId>& resultOut)
+void TerrainQuadTree::GetTilesToRender(const Mat4x4f& viewProj, Array<TerrainTileId>& resultOut)
 {
-	int currentLevel = treeLevels - 1;
-	int tilesPerDimension = GetTilesPerDimension(currentLevel);
-	resultOut.Reserve(tilesPerDimension * tilesPerDimension);
-	for (int y = 0; y < tilesPerDimension; ++y)
-	{
-		for (int x = 0; x < tilesPerDimension; ++x)
-		{
-			TerrainTileId& tile = resultOut.PushBack();
+	RenderTile(TerrainTileId{}, viewProj, resultOut);
+}
 
-			tile.level = currentLevel;
-			tile.x = x;
-			tile.y = y;
+void TerrainQuadTree::RenderTile(const TerrainTileId& id, const Mat4x4f& vp, Array<TerrainTileId>& resultOut)
+{
+	if (id.level + 1 == treeLevels)
+	{
+		resultOut.PushBack(id);
+		return;
+	}
+
+	float tileScale = GetTileScale(id.level);
+	float tileWidth = terrainSize * tileScale;
+	Vec3f tileMin(id.x * tileWidth, 0.0f, id.y * tileWidth);
+	Vec3f tileSize(tileWidth, 0.0f, tileWidth);
+	Vec3f extents = tileSize * 0.5f;
+	Vec3f center = tileMin + extents;
+	
+	constexpr float maximumSize = 0.5f;
+
+	static const Vec3f boxCorners[] = {
+		Vec3f(-1.0f, 0.0f, -1.0f),
+		Vec3f(1.0f, 0.0f, -1.0f),
+		Vec3f(-1.0f, 0.0f, 1.0f),
+		Vec3f(1.0f, 0.0f, 1.0f)
+	};
+
+	Vec2f min(1e9f, 1e9f);
+	Vec2f max(-1e9f, -1e9f);
+
+	for (unsigned cornerIdx = 0; cornerIdx < 4; ++cornerIdx)
+	{
+		Vec3f corner = Vec3f::Hadamard(extents, boxCorners[cornerIdx]);
+
+		Vec4f proj = vp * Vec4f(center + corner, 1.0f);
+		Vec3f scr = proj.xyz() * (1.0f / proj.w) * 0.5f + Vec3f(0.5f, 0.5f, 0.0f);
+
+		min.x = std::min(scr.x, min.x);
+		min.y = std::min(scr.y, min.y);
+		max.x = std::max(scr.x, max.x);
+		max.y = std::max(scr.y, max.y);
+	}
+
+	Vec2f size(max.x - min.x, max.y - min.y);
+	
+
+	//float depth = Vec3f::Dot(center - eyePos, eyeForward);
+
+	bool tileIsSmallEnough = std::max(size.x, size.y) < maximumSize;
+
+	if (tileIsSmallEnough)
+	{
+		resultOut.PushBack(id);
+	}
+	else
+	{
+		for (int y = 0; y < 2; ++y)
+		{
+			for (int x = 0; x < 2; ++x)
+			{
+				TerrainTileId tileId;
+				tileId.level = id.level + 1;
+				tileId.x = id.x * 2 + x;
+				tileId.y = id.y * 2 + y;
+
+				RenderTile(tileId, vp, resultOut);
+			}
 		}
 	}
 }
@@ -214,7 +270,7 @@ void TerrainQuadTree::CreateTileTestData(TerrainTile& tile, int tileX, int tileY
 
 uint16_t TerrainQuadTree::TestData(float x, float y)
 {
-	float f = 0.01f;
+	float f = 0.1f;
 	float a = 0.12f;
 
 	float sum = 0.5f;

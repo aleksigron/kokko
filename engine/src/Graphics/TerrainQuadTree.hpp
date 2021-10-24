@@ -8,6 +8,7 @@
 class Allocator;
 class RenderDevice;
 
+struct Mat4x4f;
 struct CameraParameters;
 struct TerrainTileId;
 
@@ -16,7 +17,7 @@ namespace kokko
 
 struct TerrainTile
 {
-	static constexpr int Resolution = 63;
+	static constexpr int Resolution = 31;
 	static constexpr int ResolutionWithBorder = Resolution + 1;
 
 	uint16_t heightData[ResolutionWithBorder * ResolutionWithBorder];
@@ -27,10 +28,10 @@ class TerrainQuadTree
 public:
 	TerrainQuadTree();
 
-	void CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels);
+	void CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels, float size);
 	void DestroyResources(Allocator* allocator, RenderDevice* renderDevice);
 
-	void GetTilesToRender(const CameraParameters& camera, Array<TerrainTileId>& resultOut);
+	void GetTilesToRender(const Mat4x4f& viewProj, Array<TerrainTileId>& resultOut);
 
 	int GetLevelCount() const;
 
@@ -43,6 +44,8 @@ public:
 	static float GetTileScale(int level);
 
 private:
+	void RenderTile(const TerrainTileId& id, const Mat4x4f& vp, Array<TerrainTileId>& resultOut);
+
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 
 	static uint16_t TestData(float x, float y);
@@ -52,6 +55,7 @@ private:
 
 	int treeLevels;
 	int tileCount;
+	float terrainSize;
 };
 
 }

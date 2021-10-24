@@ -176,7 +176,7 @@ void ParticleSystem::RenderCustom(const RenderParams& params)
 
 		TransformUniformBlock transformUniforms;
 		transformUniforms.M = Mat4x4f();
-		transformUniforms.MV = params.viewport->view;
+		transformUniforms.MV = params.viewport->view.inverse;
 		transformUniforms.MVP = params.viewport->viewProjection;
 
 		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, emitter.bufferIds[Buffer_RenderTransform]);
