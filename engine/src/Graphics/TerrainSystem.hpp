@@ -79,8 +79,6 @@ public:
 	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
 
 private:
-	static constexpr int TileLevels = 4;
-
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 	MaterialManager* materialManager;

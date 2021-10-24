@@ -880,7 +880,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 
 	// Set viewport transform matrices
 	uniformsOut.perspectiveMatrix = fsvp.projection;
-	uniformsOut.viewToWorld = fsvp.viewToWorld;
+	uniformsOut.viewToWorld = fsvp.view.forward;
 
 	size_t dirLightCount = directionalLights.GetCount();
 	uniformsOut.directionalLightCount = static_cast<int>(dirLightCount);
@@ -892,7 +892,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 
 		Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
 		Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
-		Vec4f vLightDir = fsvp.view * Vec4f(wLightDir, 0.0f);
+		Vec4f vLightDir = fsvp.view.inverse * Vec4f(wLightDir, 0.0f);
 		uniformsOut.lightDirections[i] = vLightDir;
 
 		uniformsOut.lightColors[i] = lightManager->GetColor(dirLightId);
@@ -940,7 +940,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 
 			Mat3x3f orientation = lightManager->GetOrientation(lightId);
 			Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
-			Vec4f vLightDir = fsvp.view * Vec4f(wLightDir, 0.0f);
+			Vec4f vLightDir = fsvp.view.inverse * Vec4f(wLightDir, 0.0f);
 			vLightDir.w = lightManager->GetSpotAngle(lightId);
 			uniformsOut.lightDirections[shaderLightIdx] = vLightDir;
 		}
@@ -951,7 +951,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 		}
 
 		Vec3f wLightPos = lightManager->GetPosition(lightId);
-		Vec3f vLightPos = (fsvp.view * Vec4f(wLightPos, 1.0f)).xyz();
+		Vec3f vLightPos = (fsvp.view.inverse * Vec4f(wLightPos, 1.0f)).xyz();
 
 		float radius = lightManager->GetRadius(lightId);
 		float inverseSquareRadius = 1.0f / (radius * radius);
@@ -981,7 +981,7 @@ void Renderer::UpdateLightingDataToUniformBuffer(
 	// Update transforms and split depths for each shadow cascade
 	for (size_t vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
 	{
-		Mat4x4f viewToLight = viewportData[vpIdx].viewProjection * fsvp.viewToWorld;
+		Mat4x4f viewToLight = viewportData[vpIdx].viewProjection * fsvp.view.forward;
 		Mat4x4f shadowMat = bias * viewToLight;
 
 		uniformsOut.shadowMatrices[vpIdx] = shadowMat;
@@ -1065,7 +1065,7 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 
 			const Mat4x4f& model = data.transform[objIdx];
 			tu->MVP = viewportData[vpIdx].viewProjection * model;
-			tu->MV = viewportData[vpIdx].view * model;
+			tu->MV = viewportData[vpIdx].view.inverse * model;
 			tu->M = model;
 
 			objectDrawsProcessed += 1;
@@ -1338,16 +1338,16 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 				vp.farMinusNear = lightProjections[cascade].orthographicFar - lightProjections[cascade].orthographicNear;
 				vp.minusNear = -lightProjections[cascade].orthographicNear;
 				vp.objectMinScreenSizePx = shadowViewportMinObjectSize;
-				vp.viewToWorld = forwardTransform;
-				vp.view = inverseTransform;
+				vp.view.forward = forwardTransform;
+				vp.view.inverse = inverseTransform;
 				vp.projection = lightProjections[cascade].GetProjectionMatrix(reverseDepth);
-				vp.viewProjection = vp.projection * vp.view;
+				vp.viewProjection = vp.projection * vp.view.inverse;
 				vp.viewportRectangle.size = shadowCascadeSize;
 				vp.viewportRectangle.position = Vec2i(cascade * shadowSide, 0);
 				vp.frustum.Update(lightProjections[cascade], forwardTransform);
 
 				viewportUniforms.VP = vp.viewProjection;
-				viewportUniforms.V = vp.view;
+				viewportUniforms.V = vp.view.inverse;
 				viewportUniforms.P = vp.projection;
 
 				device->BindBuffer(RenderBufferTarget::UniformBuffer, vp.uniformBlockObject);
@@ -1375,15 +1375,15 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		vp.farMinusNear = projectionParams.perspectiveFar - projectionParams.perspectiveNear;
 		vp.minusNear = -projectionParams.perspectiveNear;
 		vp.objectMinScreenSizePx = mainViewportMinObjectSize;
-		vp.viewToWorld = cameraTransforms.forward;
-		vp.view = cameraTransforms.inverse;
+		vp.view.forward = cameraTransforms.forward;
+		vp.view.inverse = cameraTransforms.inverse;
 		vp.projection = cameraProjection;
-		vp.viewProjection = vp.projection * vp.view;
+		vp.viewProjection = vp.projection * vp.view.inverse;
 		vp.viewportRectangle = viewportRect;
 		vp.frustum.Update(projectionParams, cullingTransform.forward);
 
 		viewportUniforms.VP = vp.viewProjection;
-		viewportUniforms.V = vp.view;
+		viewportUniforms.V = vp.view.inverse;
 		viewportUniforms.P = vp.projection;
 
 		device->BindBuffer(RenderBufferTarget::UniformBuffer, vp.uniformBlockObject);

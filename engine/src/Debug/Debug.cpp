@@ -33,6 +33,8 @@
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
+Debug* Debug::singletonInstance = nullptr;
+
 static void RenderDebugCallback(const RenderDevice::DebugMessage& message)
 {
 	if (message.severity != RenderDebugSeverity::Notification)
@@ -66,10 +68,14 @@ Debug::Debug(
 	Log::SetLogInstance(log);
 
 	memoryStats = allocator->MakeNew<DebugMemoryStats>(allocManager, textRenderer);
+
+	singletonInstance = this;
 }
 
 Debug::~Debug()
 {
+	singletonInstance = nullptr;
+
 	allocator->MakeDelete(memoryStats);
 
 	// Clear log instance in LogHelper

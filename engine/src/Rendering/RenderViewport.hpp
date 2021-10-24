@@ -14,8 +14,7 @@ struct RenderViewport
 	float minusNear;
 	float objectMinScreenSizePx;
 
-	Mat4x4f viewToWorld;
-	Mat4x4f view;
+	Mat4x4fBijection view;
 	Mat4x4f projection;
 	Mat4x4f viewProjection;
 

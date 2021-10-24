@@ -6,6 +6,9 @@
 
 #include "Core/Core.hpp"
 
+#include "Debug/Debug.hpp"
+#include "Debug/DebugVectorRenderer.hpp"
+
 #include "Graphics/TerrainQuadTree.hpp"
 
 #include "Math/Mat4x4.hpp"
@@ -102,7 +105,8 @@ void TerrainSystem::Initialize()
 
 	uniformBlockStride = (sizeof(TerrainUniformBlock) + aligment - 1) / aligment * aligment;
 
-	int tileCount = TerrainQuadTree::GetTileCountForLevelCount(TileLevels);
+	// TODO: recreate buffer based on tree levels and tile count
+	int tileCount = TerrainQuadTree::GetTileCountForLevelCount(6);
 	int uniformBytes = uniformBlockStride * tileCount;
 
 	renderDevice->CreateBuffers(1, &uniformBufferId);
@@ -155,6 +159,10 @@ TerrainId TerrainSystem::AddTerrain(Entity entity, const TerrainParameters& para
 
 	data.entity[id] = entity;
 	data.param[id] = params;
+
+	// TODO: fix terrain size setting
+	data.param[id].terrainSize = 64.0f;
+
 	data.resource[id] = ResourceData{};
 
 	data.count += 1;
@@ -310,7 +318,7 @@ void TerrainSystem::InitializeTerrain(TerrainId id)
 
 	ResourceData& res = data.resource[id.i];
 
-	res.quadTree.CreateResources(allocator, renderDevice, 4);
+	res.quadTree.CreateResources(allocator, renderDevice, 6, 64.0f);
 }
 
 void TerrainSystem::DeinitializeTerrain(TerrainId id)
@@ -360,7 +368,7 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 	// Select tiles to render
 
 	TerrainQuadTree& quadTree = data.resource[id.i].quadTree;
-	quadTree.GetTilesToRender(CameraParameters(), tilesToRender);
+	quadTree.GetTilesToRender(viewport.viewProjection, tilesToRender);
 
 	// Update uniform buffer
 
@@ -368,7 +376,7 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 
 	TerrainUniformBlock uniforms;
 	uniforms.MVP = viewport.viewProjection;
-	uniforms.MV = viewport.view;
+	uniforms.MV = viewport.view.inverse;
 	uniforms.textureScale = params.textureScale;
 	uniforms.tileOffset = Vec2f();
 	uniforms.tileScale = 1.0f;
@@ -377,7 +385,13 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 	uniforms.minHeight = params.minHeight;
 	uniforms.maxHeight = params.maxHeight;
 
+	float terrainSize = params.terrainSize;
+	float terrainHeight = params.maxHeight - params.minHeight;
+
 	uniformStagingBuffer.Resize(tilesToRender.GetCount() * uniformBlockStride);
+
+	auto vr = Debug::Get()->GetVectorRenderer();
+	Color col(1.0f, 0.0f, 1.0f);
 
 	int blocksWritten = 0;
 	for (const auto& tile : tilesToRender)
@@ -392,6 +406,19 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 		std::memcpy(dest, &uniforms, sizeof(uniforms));
 
 		blocksWritten += 1;
+
+		float tileSize = uniforms.tileScale * terrainSize;
+
+		Vec3f translate;
+		translate.x = tileSize * (uniforms.tileOffset.x + 0.5f);
+		translate.y = (params.minHeight + params.maxHeight) * 0.5f;
+		translate.z = tileSize * (uniforms.tileOffset.y + 0.5f);
+
+		Vec3f scale(tileSize, 0.0f, tileSize);
+
+		Mat4x4f transform = Mat4x4f::Translate(translate) * Mat4x4f::Scale(scale);
+
+		vr->DrawWireCube(transform, col);
 	}
 
 	unsigned int updateBytes = tilesToRender.GetCount() * uniformBlockStride;
