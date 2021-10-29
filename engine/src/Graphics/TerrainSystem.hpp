@@ -41,8 +41,8 @@ struct TerrainParameters
 {
 	float terrainSize = 64.0f;
 	Vec2f textureScale = Vec2f(0.25f, 0.25f);
-	float minHeight = -0.10f;
-	float maxHeight = 0.10f;
+	float heightOrigin = -1.0f;
+	float heightRange = 2.0f;
 };
 
 class TerrainSystem : public CustomRenderer
@@ -61,17 +61,17 @@ public:
 
 	void RemoveAll();
 
-	float GetSize(TerrainId id) const { return data.param[id.i].terrainSize; }
-	void SetSize(TerrainId id, float size) { data.param[id.i].terrainSize = size; }
+	float GetSize(TerrainId id) const { return data.quadTree[id.i].GetSize(); }
+	void SetSize(TerrainId id, float size) { data.quadTree[id.i].SetSize(size); }
 
-	float GetMinHeight(TerrainId id) const { return data.param[id.i].minHeight; }
-	void SetMinHeight(TerrainId id, float minHeight) { data.param[id.i].minHeight = minHeight; }
+	float GetBottom(TerrainId id) const { return data.quadTree[id.i].GetBottom(); }
+	void SetBottom(TerrainId id, float bottom) { data.quadTree[id.i].SetBottom(bottom); }
 
-	float GetMaxHeight(TerrainId id) const { return data.param[id.i].maxHeight; }
-	void SetMaxHeight(TerrainId id, float maxHeight) { data.param[id.i].maxHeight = maxHeight; }
+	float GetHeight(TerrainId id) const { return data.quadTree[id.i].GetHeight(); }
+	void SetHeight(TerrainId id, float height) { data.quadTree[id.i].SetHeight(height); }
 
-	Vec2f GetTextureScale(TerrainId id) const { return data.param[id.i].textureScale; }
-	void SetTextureScale(TerrainId id, Vec2f scale) { data.param[id.i].textureScale = scale; }
+	Vec2f GetTextureScale(TerrainId id) const { return data.textureScale[id.i]; }
+	void SetTextureScale(TerrainId id, Vec2f scale) { data.textureScale[id.i] = scale; }
 
 	void RegisterCustomRenderer(Renderer* renderer);
 
@@ -103,11 +103,6 @@ private:
 
 	unsigned int textureSampler;
 
-	struct ResourceData
-	{
-		kokko::TerrainQuadTree quadTree;
-	};
-
 	struct InstanceData
 	{
 		size_t count;
@@ -115,8 +110,8 @@ private:
 		void* buffer;
 
 		Entity* entity;
-		TerrainParameters* param;
-		ResourceData* resource;
+		Vec2f* textureScale;
+		TerrainQuadTree* quadTree;
 	}
 	data;
 
@@ -126,7 +121,7 @@ private:
 
 	void CreateVertexData();
 
-	void InitializeTerrain(TerrainId id);
+	void InitializeTerrain(TerrainId id, const TerrainParameters& params);
 	void DeinitializeTerrain(TerrainId id);
 
 	void Reallocate(size_t required);

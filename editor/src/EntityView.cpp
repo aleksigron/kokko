@@ -442,31 +442,18 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 		{
 			bool edited = false;
 
-			float minHeight = terrainSystem->GetMinHeight(terrainId);
-			float maxHeight = terrainSystem->GetMaxHeight(terrainId);
-			float heightRange = maxHeight - minHeight;
-
 			float terrainSize = terrainSystem->GetSize(terrainId);
+			float heightOrigin = terrainSystem->GetBottom(terrainId);
+			float heightRange = terrainSystem->GetHeight(terrainId);
+
 			if (ImGui::DragFloat("Terrain size", &terrainSize, 1.0f, 1.0f))
 				terrainSystem->SetSize(terrainId, terrainSize);
 
-			if (ImGui::DragFloat("Height origin", &minHeight, 0.1f))
-			{
-				edited = true;
-				maxHeight = minHeight + heightRange;
-			}
+			if (ImGui::DragFloat("Height origin", &heightOrigin, 0.1f))
+				terrainSystem->SetBottom(terrainId, heightOrigin);
 
 			if (ImGui::DragFloat("Height range", &heightRange, 0.1f, 0.1f))
-			{
-				edited = true;
-				maxHeight = minHeight + heightRange;
-			}
-
-			if (edited)
-			{
-				terrainSystem->SetMinHeight(terrainId, minHeight);
-				terrainSystem->SetMaxHeight(terrainId, maxHeight);
-			}
+				terrainSystem->SetHeight(terrainId, heightRange);
 
 			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
 			if (ImGui::DragFloat2("Texture scale", textureScale.ValuePointer(), 0.01f, 0.01f))

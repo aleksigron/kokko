@@ -10,7 +10,31 @@
 #include "Math/Mat4x4.hpp"
 #include "Math/Vec2.hpp"
 
-void Intersect::FrustumAABB(
+bool Intersect::FrustumAabb(const FrustumPlanes& frustum, const BoundingBox& bounds)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	// For each plane in view frustum
+	for (unsigned int planeIdx = 0; planeIdx < 6; ++planeIdx)
+	{
+		Vec3f planeNormalAbs(
+			std::abs(frustum.planes[planeIdx].normal.x),
+			std::abs(frustum.planes[planeIdx].normal.y),
+			std::abs(frustum.planes[planeIdx].normal.z));
+
+		const float d = Vec3f::Dot(bounds.center, frustum.planes[planeIdx].normal);
+		const float r = Vec3f::Dot(bounds.extents, planeNormalAbs);
+
+		if (d + r < -frustum.planes[planeIdx].distance)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void Intersect::FrustumAabbN(
 	const FrustumPlanes& frustum,
 	unsigned int count,
 	const BoundingBox* bounds,

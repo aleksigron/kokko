@@ -36,13 +36,13 @@ public:
 		if (scaleNode.IsDefined() && scaleNode.IsSequence())
 			terrain.textureScale = scaleNode.as<Vec2f>();
 
-		YAML::Node minNode = map["min_height"];
+		YAML::Node minNode = map["terrain_bottom"];
 		if (minNode.IsDefined() && minNode.IsScalar())
-			terrain.minHeight = minNode.as<float>();
+			terrain.heightOrigin = minNode.as<float>();
 
-		YAML::Node maxNode = map["max_height"];
+		YAML::Node maxNode = map["terrain_height"];
 		if (maxNode.IsDefined() && maxNode.IsScalar())
-			terrain.maxHeight = maxNode.as<float>();
+			terrain.heightRange = maxNode.as<float>();
 
 		kokko::TerrainId id = terrainSystem->AddTerrain(entity, terrain);
 	}
@@ -56,14 +56,14 @@ public:
 			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "terrain";
 
 			float size = terrainSystem->GetSize(terrainId);
-			float minHeight = terrainSystem->GetMinHeight(terrainId);
-			float maxHeight = terrainSystem->GetMaxHeight(terrainId);
+			float heightOrigin = terrainSystem->GetBottom(terrainId);
+			float heightRange = terrainSystem->GetHeight(terrainId);
 			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
 
 			out << YAML::Key << "terrain_size" << YAML::Value << size;
 			out << YAML::Key << "texture_scale" << YAML::Value << textureScale;
-			out << YAML::Key << "min_height" << YAML::Value << minHeight;
-			out << YAML::Key << "max_height" << YAML::Value << maxHeight;
+			out << YAML::Key << "terrain_bottom" << YAML::Value << heightOrigin;
+			out << YAML::Key << "terrain_height" << YAML::Value << heightRange;
 
 			out << YAML::EndMap;
 		}

@@ -69,16 +69,12 @@ void DebugTextRenderer::Initialize(ShaderManager* shaderManager,
 
 void DebugTextRenderer::SetFrameSize(const Vec2f& size)
 {
-	assert(displayData.GetCount() == 0);
-
 	frameSize = size;
 	scaledFrameSize = size * (1.0f / scaleFactor);
 }
 
 void DebugTextRenderer::SetScaleFactor(float scale)
 {
-	assert(displayData.GetCount() == 0);
-
 	scaleFactor = scale;
 	scaledFrameSize = frameSize * (1.0f / scaleFactor);
 }

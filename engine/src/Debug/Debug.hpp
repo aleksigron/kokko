@@ -2,6 +2,8 @@
 
 #include "Core/Optional.hpp"
 
+#include "Math/Vec2.hpp"
+
 class Allocator;
 class AllocatorManager;
 class RenderDevice;
@@ -70,7 +72,7 @@ public:
 	void Initialize(Window* window, MeshManager* meshManager,
 		ShaderManager* shaderManager, TextureManager* textureManager);
 	void Deinitialize();
-	
+
 	void Render(World* world, const Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera);
 
 	DebugLog* GetLog() { return log; }
