@@ -8,12 +8,15 @@
 class Allocator;
 class RenderDevice;
 
+struct FrustumPlanes;
 struct Mat4x4f;
 struct CameraParameters;
 struct TerrainTileId;
 
 namespace kokko
 {
+
+struct TerrainParameters;
 
 struct TerrainTile
 {
@@ -28,12 +31,23 @@ class TerrainQuadTree
 public:
 	TerrainQuadTree();
 
-	void CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels, float size);
+	void CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels,
+		const TerrainParameters& params);
 	void DestroyResources(Allocator* allocator, RenderDevice* renderDevice);
 
-	void GetTilesToRender(const Mat4x4f& viewProj, Array<TerrainTileId>& resultOut);
+	void GetTilesToRender(
+		const FrustumPlanes& frustum, const Mat4x4f& viewProj, Array<TerrainTileId>& resultOut);
 
 	int GetLevelCount() const;
+
+	float GetSize() const { return terrainWidth; }
+	void SetSize(float size) { terrainWidth = size; }
+
+	float GetBottom() const { return terrainBottom; }
+	void SetBottom(float bottom) { terrainBottom = bottom; }
+
+	float GetHeight() const { return terrainHeight; }
+	void SetHeight(float height) { terrainHeight = height; }
 
 	const TerrainTile* GetTile(int level, int x, int y);
 	unsigned int GetTileHeightTexture(int level, int x, int y);
@@ -44,7 +58,11 @@ public:
 	static float GetTileScale(int level);
 
 private:
-	void RenderTile(const TerrainTileId& id, const Mat4x4f& vp, Array<TerrainTileId>& resultOut);
+	void RenderTile(
+		const TerrainTileId& id,
+		const FrustumPlanes& frustum,
+		const Mat4x4f& vp,
+		Array<TerrainTileId>& resultOut);
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 
@@ -55,7 +73,9 @@ private:
 
 	int treeLevels;
 	int tileCount;
-	float terrainSize;
+	float terrainWidth;
+	float terrainBottom;
+	float terrainHeight;
 };
 
 }
