@@ -117,6 +117,11 @@ void Window::UpdateInput()
 
 void Window::ProcessEvents()
 {
+	{
+		KOKKO_PROFILE_SCOPE("glfwPollEvents()");
+		glfwPollEvents();
+	}
+
 	if (framebufferResizePending)
 	{
 		for (auto& callback : framebufferResizeCallbacks)
@@ -131,10 +136,6 @@ void Window::Swap()
 	{
 		KOKKO_PROFILE_SCOPE("glfwSwapBuffers()");
 		glfwSwapBuffers(windowHandle);
-	}
-	{
-		KOKKO_PROFILE_SCOPE("glfwPollEvents()");
-		glfwPollEvents();
 	}
 }
 

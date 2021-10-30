@@ -16,8 +16,8 @@ layout(std140, binding = BLOCK_BINDING_OBJECT) uniform TerrainBlock
 	float tile_scale;
 	float terrain_size;
 	float terrain_resolution;
-	float min_height;
-	float max_height;
+	float height_origin;
+	float height_range;
 }
 uniforms;
 
@@ -39,7 +39,7 @@ float sample_height(vec2 offset)
 void main()
 {
 	float offset_amount = 1.0 / uniforms.terrain_resolution;
-	float y_extent = uniforms.max_height - uniforms.min_height;
+	float y_extent = uniforms.height_range;
 	float w_offset = uniforms.terrain_size / uniforms.terrain_resolution * 2.0;
 
 	float h0 = sample_height(vec2(0.0, 0.0));
@@ -61,7 +61,7 @@ void main()
 
 	vec2 w_pos = (position + uniforms.tile_offset) * uniforms.terrain_size * uniforms.tile_scale;
 
-	gl_Position = uniforms.MVP * vec4(w_pos.x, uniforms.min_height + h0 * y_extent, w_pos.y, 1.0);
+	gl_Position = uniforms.MVP * vec4(w_pos.x, uniforms.height_origin + h0 * y_extent, w_pos.y, 1.0);
 
 	vs_out.normal = normalize(vec3(uniforms.MV * vec4(w_normal, 0.0)));
 	vs_out.tex_coord = w_pos * uniforms.texture_scale;
