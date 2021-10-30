@@ -43,8 +43,8 @@ struct TerrainUniformBlock
 
 	alignas(4) float terrainSize;
 	alignas(4) float terrainResolution;
-	alignas(4) float minHeight;
-	alignas(4) float maxHeight;
+	alignas(4) float heightOrigin;
+	alignas(4) float heightRange;
 };
 
 TerrainSystem::TerrainSystem(
@@ -311,7 +311,8 @@ void TerrainSystem::InitializeTerrain(TerrainId id, const TerrainParameters& par
 
 	kokko::TerrainQuadTree& quadTree = data.quadTree[id.i];
 
-	quadTree.CreateResources(allocator, renderDevice, 6, params);
+	constexpr int treeLevels = 7;
+	quadTree.CreateResources(allocator, renderDevice, treeLevels, params);
 }
 
 void TerrainSystem::DeinitializeTerrain(TerrainId id)
@@ -376,8 +377,8 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 	uniforms.tileScale = 1.0f;
 	uniforms.terrainSize = terrainWidth;
 	uniforms.terrainResolution = static_cast<float>(TerrainTile::Resolution);
-	uniforms.minHeight = quadTree.GetBottom();
-	uniforms.maxHeight = terrainHeight;
+	uniforms.heightOrigin = quadTree.GetBottom();
+	uniforms.heightRange = terrainHeight;
 
 	uniformStagingBuffer.Resize(tilesToRender.GetCount() * uniformBlockStride);
 
@@ -387,7 +388,7 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 		const float halfTileCount = 0.5f * TerrainQuadTree::GetTilesPerDimension(tile.level);
 		const Vec2f levelOrigin(-halfTileCount, -halfTileCount);
 
-		uniforms.tileOffset = levelOrigin + Vec2f(tile.x, tile.y);
+		uniforms.tileOffset = levelOrigin + Vec2f(static_cast<float>(tile.x), static_cast<float>(tile.y));
 		uniforms.tileScale = TerrainQuadTree::GetTileScale(tile.level);
 
 		uint8_t* dest = &uniformStagingBuffer[blocksWritten * uniformBlockStride];
@@ -396,7 +397,7 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 		blocksWritten += 1;
 	}
 
-	unsigned int updateBytes = tilesToRender.GetCount() * uniformBlockStride;
+	unsigned int updateBytes = static_cast<unsigned int>(tilesToRender.GetCount() * uniformBlockStride);
 
 	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
 	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer,

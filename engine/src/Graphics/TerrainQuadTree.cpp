@@ -161,7 +161,8 @@ void TerrainQuadTree::RenderTile(
 		Vec3f corner = Vec3f::Hadamard(tileBounds.extents, boxCorners[cornerIdx]);
 
 		Vec4f proj = vp * Vec4f(tileBounds.center + corner, 1.0f);
-		screenCoord = proj.xyz() * (1.0f / proj.w) * 0.5f + Vec3f(0.5f, 0.5f, 0.0f);
+		screenCoord = Vec3f::Hadamard(proj.xyz() * (1.0f / proj.w), Vec3f(0.5f, -0.5f, 0.5f)) +
+			Vec3f(0.5f, 0.5f, 0.5f);
 
 		min.x = std::min(screenCoord.x, min.x);
 		min.y = std::min(screenCoord.y, min.y);
@@ -170,9 +171,6 @@ void TerrainQuadTree::RenderTile(
 	}
 
 	Vec2f size(max.x - min.x, max.y - min.y);
-	
-
-	//float depth = Vec3f::Dot(center - eyePos, eyeForward);
 
 	float sizeMaxAxis = std::max(size.x, size.y);
 	bool tileIsSmallEnough = sizeMaxAxis < maximumSize;
@@ -185,19 +183,15 @@ void TerrainQuadTree::RenderTile(
 	{
 		resultOut.PushBack(id);
 
-		Vec3f translate;
-		translate.x = -halfTerrainSize + tileWidth * (id.x + 0.5f);
-		translate.y = 0.0f;
-		translate.z = -halfTerrainSize + tileWidth * (id.y + 0.5f);
+		Vec3f scale = tileSize;
+		scale.y = 0.0f;
 
-		Vec3f scale(tileWidth, 0.0f, tileWidth);
-
-		Mat4x4f transform = Mat4x4f::Translate(translate) * Mat4x4f::Scale(scale);
+		Mat4x4f transform = Mat4x4f::Translate(tileBounds.center) * Mat4x4f::Scale(scale);
 
 		vr->DrawWireCube(transform, col);
 
 		char buf[32];
-		auto [out, size] = fmt::format_to_n(buf, sizeof(buf), "{:.1f},{:.1f}", tileBounds.center.x, tileBounds.center.z);
+		auto [out, size] = fmt::format_to_n(buf, sizeof(buf), "{:.3f}", sizeMaxAxis);
 
 		tr->AddTextNormalized(StringRef(buf, size), screenCoord.xy());
 	}
@@ -321,11 +315,11 @@ void TerrainQuadTree::CreateTileTestData(TerrainTile& tile, int tileX, int tileY
 
 uint16_t TerrainQuadTree::TestData(float x, float y)
 {
-	float f = 0.1f;
+	float f = 0.02f;
 	float a = 0.12f;
 
 	float sum = 0.5f;
-	for (int i = 1; i <= 6; i += 5)
+	for (int i = 1; i <= 13; i += 6)
 	{
 		sum += std::sin(x * f * i) * a / i + std::sin(y * f * i) * a / i;
 	}
