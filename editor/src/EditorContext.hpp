@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Core/Optional.hpp"
+#include "Core/Uid.hpp"
+
 #include "Engine/Entity.hpp"
 
 class World;
@@ -20,6 +23,7 @@ struct EditorContext
 	World* world;
 	EngineSettings* engineSettings;
 	Entity selectedEntity;
+	Optional<Uid> selectedAsset;
 
 	EditorContext() :
 		project(nullptr),

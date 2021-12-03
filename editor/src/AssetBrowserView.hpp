@@ -31,9 +31,11 @@ public:
 
 private:
 	void SetUpColumns(int columnCount, float columnWidth);
-	void DrawEntry(const EditorContext& context,
-		const std::filesystem::directory_iterator& entry, float columnWidth);
+	void DrawEntry(EditorContext& context, const std::filesystem::directory_iterator& entry, float columnWidth);
 	void UpdateDirectoryListing();
+
+	void MoveToPath(EditorContext& context, const std::filesystem::path& path);
+	void SelectPath(EditorContext& context, const std::filesystem::path& path);
 
 	std::filesystem::path currentPath;
 	std::filesystem::path selectedPath;

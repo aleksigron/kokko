@@ -14,6 +14,7 @@
 #include "System/Window.hpp"
 
 #include "AssetBrowserView.hpp"
+#include "AssetView.hpp"
 #include "DebugView.hpp"
 #include "EntityListView.hpp"
 #include "EntityView.hpp"
@@ -60,6 +61,10 @@ void EditorCore::Initialize(Engine* engine, const EditorProject* editorProject)
 	AssetBrowserView* assetBrowserView = allocator->MakeNew<AssetBrowserView>();
 	assetBrowserView->Initialize(&images);
 	editorWindows.PushBack(assetBrowserView);
+
+	AssetView* assetView = allocator->MakeNew<AssetView>();
+	//assetView->Initialize(&images);
+	editorWindows.PushBack(assetView);
 
 	DebugView* debugView = allocator->MakeNew<DebugView>();
 	debugView->Initialize(engine->GetDebug());

@@ -15,7 +15,8 @@ namespace editor
 {
 
 AssetBrowserView::AssetBrowserView() :
-	EditorWindow("Asset Browser")
+	EditorWindow("Asset Browser"),
+	editorImages(nullptr)
 {
 }
 
@@ -46,9 +47,7 @@ void AssetBrowserView::Update(EditorContext& context)
 
 			if (ImGui::Button("Go to parent") && currentPath != root)
 			{
-				// Move up a directory
-				currentPath = currentPath.parent_path();
-				selectedPath = fs::path();
+				MoveToPath(context, currentPath.parent_path());
 			}
 
 			ImGui::SameLine();
@@ -113,8 +112,10 @@ void AssetBrowserView::SetUpColumns(int columnCount, float columnWidth)
 	}
 }
 
-void AssetBrowserView::DrawEntry(const EditorContext& context,
-	const std::filesystem::directory_iterator& entry, float columnWidth)
+void AssetBrowserView::DrawEntry(
+	EditorContext& context,
+	const std::filesystem::directory_iterator& entry,
+	float columnWidth)
 {
 	namespace fs = std::filesystem;
 
@@ -137,19 +138,17 @@ void AssetBrowserView::DrawEntry(const EditorContext& context,
 		if (isFile)
 		{
 			// Select file
-			selectedPath = path;
+			SelectPath(context, path);
 		}
 		else if (isDir)
 		{
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			{
-				// Move into directory
-				currentPath = path;
-				selectedPath = fs::path();
+				MoveToPath(context, path);
 			}
 			else
 			{
-				selectedPath = path;
+				SelectPath(context, path);
 			}
 		}
 	}
@@ -191,6 +190,21 @@ void AssetBrowserView::DrawEntry(const EditorContext& context,
 
 void AssetBrowserView::UpdateDirectoryListing()
 {
+}
+
+void AssetBrowserView::MoveToPath(EditorContext& context, const std::filesystem::path& path)
+{
+	currentPath = path;
+	selectedPath = std::filesystem::path();
+
+	context.selectedAsset = Optional<Uid>();
+}
+
+void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem::path& path)
+{
+	selectedPath = path;
+
+	context.selectedAsset = Uid::Create();
 }
 
 }
