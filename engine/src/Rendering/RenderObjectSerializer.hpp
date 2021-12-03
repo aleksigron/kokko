@@ -71,11 +71,20 @@ public:
 		if (renderObj != RenderObjectId::Null)
 		{
 			MeshId meshId = renderer->GetMeshId(renderObj);
-			const char* meshPath = resourceManagers.meshManager->GetPath(meshId);
+
+			const char* meshPath = nullptr;
+			if (meshId != MeshId::Null)
+			{
+				meshPath = resourceManagers.meshManager->GetPath(meshId);
+			}
 
 			MaterialId materialId = renderer->GetOrderData(renderObj).material;
-			const MaterialData& material = resourceManagers.materialManager->GetMaterialData(materialId);
-			const char* materialPath = material.materialPath;
+			const char* materialPath = nullptr;
+			if (materialId != MaterialId::Null)
+			{
+				const MaterialData& material = resourceManagers.materialManager->GetMaterialData(materialId);
+				materialPath = material.materialPath;
+			}
 
 			// We can't reference resources that have been created at runtime
 			if (meshPath != nullptr && materialPath != nullptr)
