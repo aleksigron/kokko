@@ -242,7 +242,7 @@ SceneObjectId LevelSerializer::CreateComponents(const YAML::Node& componentSeque
 			if (typeNode.IsDefined() && typeNode.IsScalar())
 			{
 				const std::string& typeStr = typeNode.Scalar();
-				uint32_t typeHash = Hash::FNV1a_32(typeStr.data(), typeStr.size());
+				uint32_t typeHash = kokko::HashString(typeStr.data(), typeStr.size());
 
 				if (typeHash == "transform"_hash)
 					createdTransform = transformSerializer->Deserialize(*itr, entity, parent);

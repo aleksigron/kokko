@@ -63,7 +63,7 @@ static bool LoadIncludes(
 	{
 		if (itr->IsString())
 		{
-			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
+			uint32_t hash = kokko::HashString(itr->GetString(), itr->GetStringLength());
 			auto* file = includeFileCache.Lookup(hash);
 
 			// File with this hash hasn't been read before, read it now
@@ -112,7 +112,7 @@ static bool ProcessSource(
 
 		for (auto itr = includePaths->Begin(), end = includePaths->End(); itr != end; ++itr)
 		{
-			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
+			uint32_t hash = kokko::HashString(itr->GetString(), itr->GetStringLength());
 			auto* file = includeFileCache.Lookup(hash);
 
 			if (file == nullptr)
@@ -148,7 +148,7 @@ static bool ProcessSource(
 	{
 		for (auto itr = includePaths->Begin(), end = includePaths->End(); itr != end; ++itr)
 		{
-			uint32_t hash = Hash::FNV1a_32(itr->GetString(), itr->GetStringLength());
+			uint32_t hash = kokko::HashString(itr->GetString(), itr->GetStringLength());
 			auto* file = includeFileCache.Lookup(hash);
 
 			output.Append(file->second);
@@ -294,7 +294,7 @@ static void AddUniforms(
 		namePtr += uniformName.len + 1;
 
 		// Compute uniform name hash
-		baseUniform->nameHash = Hash::FNV1a_32(baseUniform->name.str, baseUniform->name.len);
+		baseUniform->nameHash = kokko::HashString(baseUniform->name.str, baseUniform->name.len);
 		baseUniform->type = dataType;
 	}
 
@@ -547,7 +547,7 @@ bool ShaderLoader::LoadFromConfiguration(
 		renderTypeStr.str = renderTypeItr->value.GetString();
 		renderTypeStr.len = renderTypeItr->value.GetStringLength();
 
-		uint32_t renderTypeHash = Hash::FNV1a_32(renderTypeStr.str, renderTypeStr.len);
+		uint32_t renderTypeHash = kokko::HashString(renderTypeStr.str, renderTypeStr.len);
 
 		switch (renderTypeHash)
 		{
@@ -599,7 +599,7 @@ bool ShaderLoader::LoadFromConfiguration(
 
 				uniform.name = StringRef(nameItr->value.GetString(), nameItr->value.GetStringLength());
 
-				uint32_t typeHash = Hash::FNV1a_32(typeItr->value.GetString(), typeItr->value.GetStringLength());
+				uint32_t typeHash = kokko::HashString(typeItr->value.GetString(), typeItr->value.GetStringLength());
 
 				switch (typeHash)
 				{
@@ -911,7 +911,7 @@ void ShaderFileLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef
 		ShaderLoader::AddUniforms_UniformData& uniform = uniforms[uniformCount];
 		uniform.name = nameStr;
 
-		uint32_t typeHash = Hash::FNV1a_32(typeStr.str, typeStr.len);
+		uint32_t typeHash = kokko::HashString(typeStr.str, typeStr.len);
 
 		switch (typeHash)
 		{
@@ -1005,7 +1005,7 @@ bool ShaderFileLoader::ProcessStage(
 	if (uniformBlockDefinition.len > 0)
 		processedSourceOut.Append(uniformBlockDefinition);
 
-	uint32_t pathHash = Hash::FNV1a_32(mainFilePath.str, mainFilePath.len);
+	uint32_t pathHash = kokko::HashString(mainFilePath.str, mainFilePath.len);
 
 	if (ProcessIncludes(mainFileContent, pathHash, processedSourceOut) == false)
 		return false;
@@ -1066,7 +1066,7 @@ bool ShaderFileLoader::ProcessIncludes(
 		includeStatementEnd = secondQuote + 1;
 
 		StringRef includePath = sourceStr.SubStrPos(firstQuote + 1, secondQuote);
-		uint32_t pathHash = Hash::FNV1a_32(includePath.str, includePath.len);
+		uint32_t pathHash = kokko::HashString(includePath.str, includePath.len);
 
 		// Include file only if it hasn't been included yet in this shader stage
 		if (filesIncludedInStage.Contains(pathHash) == false)

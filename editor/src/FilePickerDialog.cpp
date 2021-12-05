@@ -213,7 +213,7 @@ uint32_t FilePickerDialog::StartDialogInternal(const char* title, const char* ac
 	currentDialogType = type;
 	currentTitle = title;
 	currentActionText = action;
-	currentTitleHash = Hash::FNV1a_32(title, std::strlen(title));
+	currentTitleHash = kokko::HashString(title, std::strlen(title));
 
 	ImGui::OpenPopup(currentTitle);
 

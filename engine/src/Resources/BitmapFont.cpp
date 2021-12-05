@@ -115,7 +115,7 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 		}
 
 		// Calculate hash of first token, usually the keyword
-		uint32_t hash = Hash::FNV1a_32(tokens[0].str, tokens[0].len);
+		uint32_t hash = kokko::HashString(tokens[0].str, tokens[0].len);
 
 		BitmapGlyph* currentGlyph = this->glyphs + readGlyphs;
 

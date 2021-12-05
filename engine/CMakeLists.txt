@@ -17,6 +17,7 @@ include_directories(
 	${ROOT_PATH}/deps/glfw/include
 	${ROOT_PATH}/deps/rapidjson/include
 	${ROOT_PATH}/deps/stb_image/include
+	${ROOT_PATH}/deps/xxhash
 	${ROOT_PATH}/deps/yaml-cpp/include
 )
 
@@ -35,10 +36,16 @@ set (STB_IMAGE_SOURCES
 	${ROOT_PATH}/deps/stb_image/src/stb_image.cpp
 )
 
+set (XXHASH_SOURCES
+	${ROOT_PATH}/deps/xxhash/xxhash.c
+	${ROOT_PATH}/deps/xxhash/xxhash.h
+)
+
 set (DEPS_SOURCES
 	${FMT_SOURCES}
 	${GLAD_SOURCES}
 	${STB_IMAGE_SOURCES}
+	${XXHASH_SOURCES}
 )
 
 set (KOKKO_SOURCES
@@ -55,6 +62,7 @@ set (KOKKO_SOURCES
 	src/Core/EncodingUtf8.cpp
 	src/Core/EncodingUtf8.hpp
 	src/Core/FixedArray.hpp
+	src/Core/Hash.cpp
 	src/Core/Hash.hpp
 	src/Core/HashMap.hpp
 	src/Core/Optional.hpp
@@ -268,6 +276,7 @@ set (KOKKO_SOURCES
 source_group(Dependencies\\fmt FILES ${FMT_SOURCES})
 source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
 source_group(Dependencies\\stb_image FILES ${STB_IMAGE_SOURCES})
+source_group(Dependencies\\xxhash FILES ${XXHASH_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})
 
 add_library(${KOKKO_LIB} OBJECT ${DEPS_SOURCES} ${KOKKO_SOURCES})
