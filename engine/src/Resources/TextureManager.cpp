@@ -184,7 +184,7 @@ void TextureManager::RemoveTexture(TextureId id)
 
 TextureId TextureManager::GetIdByPath(StringRef path)
 {
-	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
+	uint32_t hash = kokko::HashString(path.str, path.len);
 
 	auto* pair = nameHashMap.Lookup(hash);
 	if (pair != nullptr)

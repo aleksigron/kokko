@@ -91,7 +91,7 @@ private:
 			{
 				if (p->first) // Pair has value
 				{
-					for (size_t i = GetIndex(Hash::FNV1a_32(p->first));; i = GetIndex(i + 1))
+					for (size_t i = GetIndex(kokko::Hash32(p->first, 0));; i = GetIndex(i + 1))
 					{
 						if (!newData[i].first) // Insert here
 						{
@@ -147,7 +147,7 @@ public:
 			if (itr->first)
 			{
 				itr->second.~ValueType();
-				itr->first = 0;
+				itr->first = KeyType{};
 			}
 		}
 
@@ -193,7 +193,7 @@ public:
 		{
 			if (data != nullptr)
 			{
-				for (size_t i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
+				for (size_t i = GetIndex(kokko::Hash32(key, 0));; i = GetIndex(i + 1))
 				{
 					KeyValuePair* pair = data + i;
 
@@ -219,7 +219,7 @@ public:
 		if (key)
 		{
 			for (;;)
-			for (size_t i = GetIndex(Hash::FNV1a_32(key));; i = GetIndex(i + 1))
+			for (size_t i = GetIndex(kokko::Hash32(key, 0));; i = GetIndex(i + 1))
 			{
 				KeyValuePair* pair = data + i;
 
@@ -279,7 +279,7 @@ public:
 						return;
 					}
 
-					KeyValuePair* ideal = data + GetIndex(Hash::FNV1a_32(neighbor->first));
+					KeyValuePair* ideal = data + GetIndex(kokko::Hash32(neighbor->first, 0));
 					if (GetOffset(ideal, pair) < GetOffset(ideal, neighbor))
 					{
 						// Swap with neighbor, then make neighbor the new cell to remove.

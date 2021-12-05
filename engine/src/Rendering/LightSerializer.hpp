@@ -36,7 +36,7 @@ public:
 		if (typeNode.IsDefined() && typeNode.IsScalar())
 		{
 			const std::string& typeStr = typeNode.Scalar();
-			uint32_t typeHash = Hash::FNV1a_32(typeStr.data(), typeStr.size());
+			uint32_t typeHash = kokko::HashString(typeStr.data(), typeStr.size());
 
 			switch (typeHash)
 			{

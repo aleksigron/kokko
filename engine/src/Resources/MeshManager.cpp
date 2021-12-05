@@ -155,7 +155,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	uint32_t hash = Hash::FNV1a_32(path.str, path.len);
+	uint32_t hash = kokko::HashString(path.str, path.len);
 
 	auto* pair = pathHashMap.Lookup(hash);
 	if (pair != nullptr)
