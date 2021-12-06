@@ -43,7 +43,9 @@ A simple cross-platform game engine using OpenGL. I hope that little by little, 
 - C++17 compliant compiler
 - Blender for exporting mesh files
 
-### Creating a x64 Visual Studio solution on Windows
+## Getting started
+
+### Create a Visual Studio solution
 ```
 git submodule update --init --recursive
 cd editor
@@ -51,15 +53,12 @@ mkdir build
 cmake -B build -G "Visual Studio 16 2019" -A x64
 ```
 
-### Working directory
-You need to set a custom working directory in the IDE when running the project.
+You need to have the repository root as the working directory when running the project.
 
-In Visual Studio, go to project properties > _Configuration Properties_ > _Debugging_ and set _Working Directory_ to the repository root or some other directory where you store the resource files.
+The editor interface and workflow are in a very early state and are currently being worked on. There are known issues when it comes to creating projects and content files. Feel free to report issues on GitHub.
 
 ## Mesh format
-I'm using a proprietary model export script for Blender. More information in docs/mesh_file_format.md.
-
-The motivation behind using a custom format is to better understand the content pipeline. Also, I'm not aware of a simple format for meshes that is optimized for runtime load speed. Pretty much all simple formats I could find were text-based and that's not good for efficiency. I'm hoping to develop the format and export enough to release it as a separate repository with proper documentation and examples.
+I'm using a proprietary model export script for Blender. More information in docs/mesh_file_format.md. The motivation behind using a custom format is to better understand the content pipeline. At the time of making this decision, there was no widely used efficient format. I'm considering implementing support for glTF as a content format, as it is quite fit for the purpose.
 
 ## Tools
 [GLFW](https://github.com/glfw/glfw) is used to manage OpenGL context, windows and read input.
@@ -74,7 +73,6 @@ The motivation behind using a custom format is to better understand the content 
 
 [fmt](https://github.com/fmtlib/fmt) is used for logging formatting.
 
-[Gohufont](https://github.com/hchargois/gohufont) is used for debug text rendering.
+[xxHash](https://github.com/Cyan4973/xxHash) is used for content hashing.
 
-## Assets
-I've stopped storing assets in the code repository. While this makes it harder for people to test out the project, it removes the restrictions on asset sizes and licensing. It will make it easier to develop more advanced features and make sure performance issues don't arise when using more and bigger assets.
+[Gohufont](https://github.com/hchargois/gohufont) is used for debug text rendering.
