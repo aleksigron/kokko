@@ -25,8 +25,9 @@ namespace kokko
 namespace editor
 {
 
-EditorCore::EditorCore(Allocator* allocator) :
+EditorCore::EditorCore(Allocator* allocator, Filesystem* filesystem) :
 	allocator(allocator),
+	assetLibrary(allocator, filesystem),
 	copiedEntity(allocator),
 	editorWindows(allocator),
 	sceneView(nullptr)
@@ -39,9 +40,9 @@ EditorCore::~EditorCore()
 		allocator->MakeDelete(window);
 }
 
-void EditorCore::Initialize(Engine* engine, const EditorProject* editorProject)
+void EditorCore::Initialize(Engine* engine)
 {
-	editorContext.project = editorProject;
+	editorContext.project = nullptr;
 	editorContext.world = engine->GetWorld();
 	editorContext.engineSettings = engine->GetSettings();
 
@@ -63,7 +64,7 @@ void EditorCore::Initialize(Engine* engine, const EditorProject* editorProject)
 	editorWindows.PushBack(assetBrowserView);
 
 	AssetView* assetView = allocator->MakeNew<AssetView>();
-	//assetView->Initialize(&images);
+	assetView->Initialize(engine->GetMaterialManager());
 	editorWindows.PushBack(assetView);
 
 	DebugView* debugView = allocator->MakeNew<DebugView>();
@@ -91,8 +92,12 @@ ArrayView<EditorWindow*> EditorCore::GetWindows()
 	return editorWindows.GetView();
 }
 
-void EditorCore::NotifyProjectChanged()
+void EditorCore::NotifyProjectChanged(const EditorProject* editorProject)
 {
+	assetLibrary.Initialize(editorProject);
+
+	editorContext.project = editorProject;
+
 	for (EditorWindow* window : editorWindows)
 		window->OnEditorProjectChanged(editorContext);
 }

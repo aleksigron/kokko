@@ -19,6 +19,7 @@ AssetView::AssetView() :
 
 void AssetView::Initialize(MaterialManager* materialManager)
 {
+	this->materialManager = materialManager;
 }
 
 void AssetView::Update(EditorContext& context)
@@ -31,9 +32,11 @@ void AssetView::Update(EditorContext& context)
 		{
 			World* world = context.world;
 
-			if (context.selectedAsset)
+			if (context.selectedAsset.HasValue())
 			{
-				ImGui::Text("Asset is selected");
+				char buffer[64];
+				context.selectedAsset.GetValue().WriteToBuffer(buffer);
+				ImGui::Text("Selected asset UID: %s", buffer);
 			}
 		}
 

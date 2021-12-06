@@ -2,30 +2,44 @@
 
 #include <cstdint>
 
-class String;
+#include "Core/Optional.hpp"
+
+struct StringRef;
 
 namespace kokko
 {
 
 struct Uid
 {
-	uint64_t data[2];
+	uint64_t raw[2];
 
-	Uid() : data{ 0 }
+	static const size_t StringLength = sizeof(raw) * 2;
+
+	Uid() : raw{ 0 }
 	{
 	}
 
 	static Uid Create();
+	static Optional<Uid> FromString(StringRef str);
 
 	bool operator==(const Uid& other)
 	{
-		return data[0] == other.data[0] && data[1] == other.data[1];
+		return raw[0] == other.raw[0] && raw[1] == other.raw[1];
 	}
 
 	bool operator!=(const Uid& other)
 	{
 		return operator==(other) == false;
 	}
+
+	operator bool()
+	{
+		return raw[0] != 0 || raw[1] != 0;
+	}
+
+	void WriteToBuffer(char* out);
 };
+
+uint32_t Hash32(const Uid& uid, uint32_t seed);
 
 }

@@ -5,11 +5,13 @@
 
 #include "FilePickerDialog.hpp"
 
+#include "AssetLibrary.hpp"
 #include "EditorImages.hpp"
 #include "EditorContext.hpp"
 
 class Allocator;
 class Engine;
+class Filesystem;
 class World;
 class Framebuffer;
 
@@ -28,10 +30,10 @@ class SceneView;
 class EditorCore
 {
 public:
-	EditorCore(Allocator* allocator);
+	EditorCore(Allocator* allocator, Filesystem* filesystem);
 	~EditorCore();
 
-	void Initialize(Engine* engine, const EditorProject* editorProject);
+	void Initialize(Engine* engine);
 
 	void ResizeSceneViewFramebufferIfRequested();
 	const Framebuffer& GetSceneViewFramebuffer();
@@ -39,7 +41,7 @@ public:
 
 	ArrayView<EditorWindow*> GetWindows();
 
-	void NotifyProjectChanged();
+	void NotifyProjectChanged(const EditorProject* editorProject);
 
 	void Update();
 	void LateUpdate();
@@ -52,6 +54,8 @@ private:
 	Allocator* allocator;
 	EditorContext editorContext;
 	EditorImages images;
+
+	AssetLibrary assetLibrary;
 
 	String copiedEntity;
 

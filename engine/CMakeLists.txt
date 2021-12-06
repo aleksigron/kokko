@@ -77,6 +77,8 @@ set (KOKKO_SOURCES
 	src/Core/String.hpp
 	src/Core/StringRef.cpp
 	src/Core/StringRef.hpp
+	src/Core/StringUtil.cpp
+	src/Core/StringUtil.hpp
 	src/Core/Uid.cpp
 	src/Core/Uid.hpp
 	src/Debug/Debug.cpp
