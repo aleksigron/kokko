@@ -85,8 +85,10 @@ bool FilesystemVirtual::ReadBinary(const char* path, Array<uint8_t>& output)
 		pathStore.Clear();
 		return result;
 	}
-
-	return false;
+	else
+	{
+		return defaultFs.ReadBinary(path, output);
+	}
 }
 
 bool FilesystemVirtual::ReadText(const char* path, String& output)
@@ -97,20 +99,24 @@ bool FilesystemVirtual::ReadText(const char* path, String& output)
 		pathStore.Clear();
 		return result;
 	}
-
-	return false;
+	else
+	{
+		return defaultFs.ReadText(path, output);
+	}
 }
 
-bool FilesystemVirtual::Write(const char* path, ArrayView<char> content, bool append)
+bool FilesystemVirtual::WriteText(const char* path, ArrayView<const char> content, bool append)
 {
 	if (FindMountedPath(path))
 	{
-		bool result = defaultFs.Write(pathStore.GetCStr(), content, append);
+		bool result = defaultFs.WriteText(pathStore.GetCStr(), content, append);
 		pathStore.Clear();
 		return result;
 	}
-
-	return false;
+	else
+	{
+		return defaultFs.WriteText(path, content, append);
+	}
 }
 
 bool FilesystemVirtual::FindMountedPath(const char* path)
