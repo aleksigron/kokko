@@ -17,6 +17,7 @@ include_directories(
 	${ROOT_PATH}/deps/doctest
 	${ROOT_PATH}/deps/fmt/include
 	${ROOT_PATH}/deps/glad/include
+	${ROOT_PATH}/deps/rapidjson/include
 	${ROOT_PATH}/deps/imgui
 	${ROOT_PATH}/deps/imguizmo
 )
@@ -44,6 +45,8 @@ set (EDITOR_SOURCES
 	src/main.cpp
 	src/AssetBrowserView.cpp
 	src/AssetBrowserView.hpp
+	src/AssetLibrary.cpp
+	src/AssetLibrary.hpp
 	src/AssetView.cpp
 	src/AssetView.hpp
 	src/DebugView.cpp

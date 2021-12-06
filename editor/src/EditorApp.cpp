@@ -54,7 +54,7 @@ EditorApp::EditorApp(Allocator* allocator, FilesystemVirtual* filesystem) :
 	currentMainMenuDialog(MainMenuDialog::None),
 	currentDialogId(0)
 {
-	core = allocator->MakeNew<EditorCore>(allocator);
+	core = allocator->MakeNew<EditorCore>(allocator, filesystem);
 }
 
 EditorApp::~EditorApp()
@@ -116,7 +116,7 @@ void EditorApp::Initialize(Engine* engine)
 		ImGui_ImplOpenGL3_Init();
 	}
 
-	core->Initialize(engine, &project);
+	core->Initialize(engine);
 
 	EditorUserSettings userSettings;
 	if (userSettings.DeserializeFromFile("editor_user_settings.yml"))
@@ -397,6 +397,7 @@ bool EditorApp::CreateProject(const std::filesystem::path& directory, StringRef 
 		return false;
 
 	// TODO: Check that the directory is empty, or that there is no project.yml
+	// TODO: Create assets folder
 
 	project.SetRootPath(directory);
 	project.SetName(name);
@@ -440,7 +441,7 @@ void EditorApp::OnProjectChanged()
 
 	engine->GetMainWindow()->SetWindowTitle(name.GetCStr());
 
-	core->NotifyProjectChanged();
+	core->NotifyProjectChanged(&project);
 }
 
 }
