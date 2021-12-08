@@ -64,6 +64,7 @@ set (KOKKO_SOURCES
 	src/Core/FixedArray.hpp
 	src/Core/Hash.cpp
 	src/Core/Hash.hpp
+	src/Core/HashMap.cpp
 	src/Core/HashMap.hpp
 	src/Core/Optional.hpp
 	src/Core/Pair.hpp

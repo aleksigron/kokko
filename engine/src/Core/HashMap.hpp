@@ -21,7 +21,9 @@ public:
 	{
 	private:
 		KeyValuePair* current;
-		KeyValuePair* end; // We need end to know when to stop in operator++()
+		KeyValuePair* zero;
+		KeyValuePair* begin;
+		KeyValuePair* end;
 
 		friend class HashMap;
 
@@ -29,13 +31,19 @@ public:
 		KeyValuePair& operator*() { return *current; }
 		KeyValuePair* operator->() { return current; }
 
-		bool operator==(Iterator other) const { return this->current == other.current; }
-		bool operator!=(Iterator other) const { return operator==(other) == false; }
+		bool operator==(const Iterator& other) const { return this->current == other.current; }
+		bool operator!=(const Iterator& other) const { return operator==(other) == false; }
 
 		Iterator& operator++()
 		{
-			if (current == end)
+			if (current == nullptr || current == end)
+			{
 				return *this;
+			}
+			else if (current == zero)
+			{
+				current = begin - 1;
+			}
 
 			while (true)
 			{
@@ -89,11 +97,11 @@ private:
 
 			for (; p != end; ++p)
 			{
-				if (p->first) // Pair has value
+				if (p->first != KeyType{}) // Pair has value
 				{
 					for (size_t i = GetIndex(kokko::Hash32(p->first, 0));; i = GetIndex(i + 1))
 					{
-						if (!newData[i].first) // Insert here
+						if (newData[i].first == KeyType{}) // Insert here
 						{
 							newData[i] = *p;
 							break;
@@ -128,7 +136,7 @@ public:
 			KeyValuePair* itr = data;
 			KeyValuePair* end = data + allocated;
 			for (; itr != end; ++itr)
-				if (itr->first)
+				if (itr->first != KeyType{})
 					itr->second.~ValueType();
 
 			if (zeroUsed)
@@ -144,7 +152,7 @@ public:
 		KeyValuePair* end = data + allocated;
 		for (; itr != end; ++itr)
 		{
-			if (itr->first)
+			if (itr->first != KeyType{})
 			{
 				itr->second.~ValueType();
 				itr->first = KeyType{};
@@ -160,30 +168,49 @@ public:
 		}
 	}
 
-	Iterator Begin()
+	Iterator begin()
 	{
 		Iterator itr;
-		itr.end = this->data + this->allocated;
 
-		if (this->data != nullptr)
+		if (data != nullptr)
 		{
 			// Start at one before this->data
-			itr.current = this->data - 1;
+			itr.begin = data;
+			itr.end = itr.begin + allocated;
 
-			// Find first valid item with the real increment operator
-			++itr;
+			if (zeroUsed)
+			{
+				itr.current = &zeroPair;
+				itr.zero = &zeroPair;
+			}
+			else
+			{
+				itr.current = data - 1;
+				itr.zero = nullptr;
+
+				// Find first valid item with the real increment operator
+				++itr;
+			}
 		}
 		else
-			itr.current = itr.end;
+		{
+			itr.current = nullptr;
+			itr.zero = nullptr;
+			itr.begin = nullptr;
+			itr.end = nullptr;
+		}
 
 		return itr;
 	}
 
-	Iterator End()
+	Iterator end()
 	{
 		Iterator itr;
-		itr.end = this->data + this->allocated;
+		itr.begin = data;
+		itr.end = itr.begin + allocated;
 		itr.current = itr.end;
+		itr.zero = zeroUsed ? &zeroPair : nullptr;
+
 		return itr;
 	}
 
@@ -216,7 +243,7 @@ public:
 		if (data == nullptr)
 			ReserveInternal(16);
 
-		if (key)
+		if (key != KeyType{})
 		{
 			for (;;)
 			for (size_t i = GetIndex(kokko::Hash32(key, 0));; i = GetIndex(i + 1))
@@ -226,7 +253,7 @@ public:
 				if (pair->first == key) // Found
 					return pair;
 
-				if (pair->first == 0) // Insert here
+				if (pair->first == KeyType{}) // Insert here
 				{
 					if ((population + 1) * 4 >= allocated * 3)
 					{
