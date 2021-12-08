@@ -108,8 +108,8 @@ ShaderId ShaderManager::CreateShader()
 void ShaderManager::RemoveShader(ShaderId id)
 {
 	{
-		HashMap<uint32_t, ShaderId>::Iterator itr = nameHashMap.Begin();
-		HashMap<uint32_t, ShaderId>::Iterator end = nameHashMap.End();
+		HashMap<uint32_t, ShaderId>::Iterator itr = nameHashMap.begin();
+		HashMap<uint32_t, ShaderId>::Iterator end = nameHashMap.end();
 		for (; itr != end; ++itr)
 			if (itr->second == id)
 				break;
