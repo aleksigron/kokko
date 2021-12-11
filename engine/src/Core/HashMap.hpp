@@ -1,15 +1,15 @@
 #pragma once
 
+#include <new>
+
 #include "Core/Core.hpp"
-#include "Core/Pair.hpp"
 #include "Core/Hash.hpp"
+#include "Core/Pair.hpp"
+#include "Core/TypeTraits.hpp"
 
 #include "Math/Math.hpp"
 
 #include "Memory/Allocator.hpp"
-
-// Based on https://github.com/preshing/CompareIntegerMaps
-// TODO: Make sure iterator will also go through zero pair
 
 template <typename KeyType, typename ValueType>
 class HashMap
@@ -85,25 +85,37 @@ private:
 	{
 		size_t newSize = desiredCount * sizeof(KeyValuePair);
 		KeyValuePair* newData = static_cast<KeyValuePair*>(allocator->Allocate(newSize, KOKKO_FUNC_SIG));
-		std::memset(newData, 0, newSize);
+
+		if constexpr (kokko::IsZeroInitializable<KeyType>::Value)
+			std::memset(newData, 0, newSize);
+		else
+			for (size_t i = 0; i < desiredCount; ++i)
+				new (&newData[i].first) KeyType;
 
 		if (data != nullptr) // Old data exists
 		{
-			KeyValuePair* p = data;
-			KeyValuePair* end = p + allocated;
+			KeyValuePair* existing = data;
+			KeyValuePair* end = existing + allocated;
 
-			// this->allocated needs to be set here because GetIndex() uses it
+			// This needs to be set here because GetIndex() uses it
 			allocated = desiredCount;
 
-			for (; p != end; ++p)
+			for (; existing != end; ++existing)
 			{
-				if (p->first != KeyType{}) // Pair has value
+				if (existing->first != KeyType{}) // Pair has value
 				{
-					for (size_t i = GetIndex(kokko::Hash32(p->first, 0));; i = GetIndex(i + 1))
+					for (size_t i = GetIndex(kokko::Hash32(existing->first, 0));; i = GetIndex(i + 1))
 					{
 						if (newData[i].first == KeyType{}) // Insert here
 						{
-							newData[i] = *p;
+							newData[i].first = std::move(existing->first);
+							new (&newData[i].second) ValueType(std::move(existing->second));
+
+							if constexpr (std::is_trivially_destructible<KeyType>::value == false)
+								existing->first.~KeyType();
+							if constexpr (std::is_trivially_destructible<ValueType>::value == false)
+								existing->second.~ValueType();
+
 							break;
 						}
 					}
@@ -214,9 +226,9 @@ public:
 		return itr;
 	}
 
-	KeyValuePair* Lookup(KeyType key)
+	KeyValuePair* Lookup(const KeyType& key)
 	{
-		if (key)
+		if (key != KeyType{})
 		{
 			if (data != nullptr)
 			{
@@ -227,7 +239,7 @@ public:
 					if (pair->first == key)
 						return pair;
 
-					if (!pair->first)
+					if (pair->first == KeyType{})
 						return nullptr;
 				}
 			}
@@ -238,7 +250,7 @@ public:
 		return nullptr;
 	}
 
-	KeyValuePair* Insert(KeyType key)
+	KeyValuePair* Insert(const KeyType& key)
 	{
 		if (data == nullptr)
 			ReserveInternal(16);
@@ -262,7 +274,10 @@ public:
 					}
 
 					++population;
+
 					pair->first = key;
+					new (&pair->second) ValueType;
+
 					return pair;
 				}
 			}
