@@ -39,4 +39,12 @@ TEST_CASE("StringUtil.HexadecimalToInteger")
 
 	auto result4 = kokko::HexadecimalToInteger<uint32_t>("Qabcdef0");
 	CHECK(result4.HasValue() == false);
+
+	auto result5 = kokko::HexadecimalToInteger<uint64_t>("0123456789abcdef");
+	CHECK(result5.HasValue() == true);
+	CHECK(result5.GetValue() == 0x123456789abcdef);
+
+	auto result6 = kokko::HexadecimalToInteger<uint64_t>("ABCDabcd01234567");
+	CHECK(result6.HasValue() == true);
+	CHECK(result6.GetValue() == 0xABCDabcd01234567);
 }

@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "Core/Optional.hpp"
+#include "Core/ArrayView.hpp"
 
 struct StringRef;
 
@@ -20,14 +21,14 @@ struct Uid
 	}
 
 	static Uid Create();
-	static Optional<Uid> FromString(StringRef str);
+	static Optional<Uid> FromString(ArrayView<const char> str);
 
-	bool operator==(const Uid& other)
+	bool operator==(const Uid& other) const
 	{
 		return raw[0] == other.raw[0] && raw[1] == other.raw[1];
 	}
 
-	bool operator!=(const Uid& other)
+	bool operator!=(const Uid& other) const
 	{
 		return operator==(other) == false;
 	}
@@ -37,7 +38,7 @@ struct Uid
 		return raw[0] != 0 || raw[1] != 0;
 	}
 
-	void WriteToBuffer(char* out);
+	void WriteTo(ArrayView<char> out) const;
 };
 
 uint32_t Hash32(const Uid& uid, uint32_t seed);
