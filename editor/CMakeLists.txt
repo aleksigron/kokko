@@ -73,6 +73,7 @@ set (EDITOR_SOURCES
 	src/EntityView.hpp
 	src/FilePickerDialog.cpp
 	src/FilePickerDialog.hpp
+	src/Hash_StdFilesystem.hpp
 	src/SceneView.cpp
 	src/SceneView.hpp
 )

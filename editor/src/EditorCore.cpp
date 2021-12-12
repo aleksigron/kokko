@@ -97,6 +97,7 @@ void EditorCore::NotifyProjectChanged(const EditorProject* editorProject)
 	assetLibrary.Initialize(editorProject);
 
 	editorContext.project = editorProject;
+	editorContext.assetLibrary = &assetLibrary;
 
 	for (EditorWindow* window : editorWindows)
 		window->OnEditorProjectChanged(editorContext);

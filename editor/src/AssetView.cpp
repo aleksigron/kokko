@@ -4,6 +4,7 @@
 
 #include "Core/Core.hpp"
 
+#include "AssetLibrary.hpp"
 #include "EditorContext.hpp"
 
 namespace kokko
@@ -34,9 +35,11 @@ void AssetView::Update(EditorContext& context)
 
 			if (context.selectedAsset.HasValue())
 			{
-				char buffer[64];
-				context.selectedAsset.GetValue().WriteToBuffer(buffer);
-				ImGui::Text("Selected asset UID: %s", buffer);
+				char uidStr[Uid::StringLength + 1];
+				context.selectedAsset.GetValue().WriteTo(uidStr);
+				uidStr[Uid::StringLength] = '\0';
+
+				ImGui::Text("Selected asset UID: %s", uidStr);
 			}
 		}
 

@@ -6,6 +6,8 @@
 
 #include "Core/Core.hpp"
 
+#include "EditorConstants.hpp"
+
 static const char ProjectFilename[] = "project.yml";
 static const char NameKey[] = "name";
 
@@ -83,6 +85,13 @@ void EditorProject::SetRootPath(const std::filesystem::path& path)
 
 	std::string pathStr = rootPath.u8string();
 	rootPathString.Assign(StringRef(pathStr.c_str(), pathStr.size()));
+
+	assetPath = rootPath / EditorConstants::AssetDirectoryName;
+}
+
+const std::filesystem::path& EditorProject::GetAssetPath() const
+{
+	return assetPath;
 }
 
 const String& EditorProject::GetName() const

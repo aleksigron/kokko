@@ -4,6 +4,7 @@
 
 #include "Core/Core.hpp"
 
+#include "AssetLibrary.hpp"
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 #include "EditorImages.hpp"
@@ -31,7 +32,7 @@ void AssetBrowserView::Initialize(const EditorImages* editorImages)
 
 void AssetBrowserView::OnEditorProjectChanged(const EditorContext& context)
 {
-	currentPath = context.project->GetRootPath();
+	currentDirectory = std::filesystem::path();
 	selectedPath = std::filesystem::path();
 }
 
@@ -43,16 +44,16 @@ void AssetBrowserView::Update(EditorContext& context)
 	{
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
-			const fs::path& root = context.project->GetRootPath();
+			const fs::path& root = context.project->GetAssetPath();
 
-			if (ImGui::Button("Go to parent") && currentPath != root)
+			if (ImGui::Button("Go to parent") && currentDirectory != root)
 			{
-				MoveToPath(context, currentPath.parent_path());
+				MoveToPath(context, currentDirectory.parent_path());
 			}
 
 			ImGui::SameLine();
 
-			std::string curPathStr = currentPath.u8string();
+			std::string curPathStr = currentDirectory.u8string();
 
 			ImGuiInputTextFlags dirTextFlags = ImGuiInputTextFlags_ReadOnly;
 			ImGui::SetNextItemWidth(-FLT_MIN);
@@ -76,7 +77,8 @@ void AssetBrowserView::Update(EditorContext& context)
 				SetUpColumns(columnCount, columnWidth);
 
 				int index = 1;
-				for (fs::directory_iterator itr(currentPath), end; itr != end; ++itr, ++index)
+				fs::path currentDirAbsolute = context.project->GetAssetPath() / currentDirectory;
+				for (fs::directory_iterator itr(currentDirAbsolute), end; itr != end; ++itr, ++index)
 				{
 					ImGui::PushID(index);
 					DrawEntry(context, itr, columnWidth);
@@ -119,16 +121,25 @@ void AssetBrowserView::DrawEntry(
 {
 	namespace fs = std::filesystem;
 
-	ImGui::TableNextColumn();
-
 	bool isDir = entry->is_directory();
 	bool isFile = entry->is_regular_file();
 
-	const fs::path& path = entry->path();
-	std::string fileStr = path.filename().u8string();
+	if (isFile && entry->path().extension() == EditorConstants::MetadataExtension)
+		return;
+
+	ImGui::TableNextColumn();
+
+	std::error_code err;
+	std::filesystem::path relativePath = std::filesystem::relative(entry->path(), context.project->GetAssetPath(), err);
+
+	if (err)
+	{
+		KK_LOG_ERROR("std::filesystem::relative failed. Message: {}", err.message().c_str());
+		return;
+	}
 
 	ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
-	bool selected = path == selectedPath;
+	bool selected = relativePath == selectedPath;
 
 	ImVec2 buttonSize(columnWidth, columnWidth);
 	ImVec2 cursorStartPos = ImGui::GetCursorPos();
@@ -137,21 +148,22 @@ void AssetBrowserView::DrawEntry(
 	{
 		if (isFile)
 		{
-			// Select file
-			SelectPath(context, path);
+			SelectPath(context, relativePath);
 		}
 		else if (isDir)
 		{
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			{
-				MoveToPath(context, path);
+				MoveToPath(context, relativePath);
 			}
 			else
 			{
-				SelectPath(context, path);
+				SelectPath(context, relativePath);
 			}
 		}
 	}
+
+	std::string fileStr = relativePath.filename().u8string();
 
 	if (isFile)
 	{
@@ -159,20 +171,10 @@ void AssetBrowserView::DrawEntry(
 		{
 			const char* type = EditorConstants::AssetDragDropType;
 
-			std::error_code err;
-			auto relative = std::filesystem::proximate(path, context.project->GetRootPath(), err);
+			std::string pathStr = relativePath.u8string();
+			ImGui::SetDragDropPayload(type, pathStr.c_str(), pathStr.size());
 
-			if (err)
-			{
-				KK_LOG_ERROR("std::filesystem::proximate failed. Message: {}", err.message().c_str());
-			}
-			else
-			{
-				std::string pathStr = relative.u8string();
-				ImGui::SetDragDropPayload(type, pathStr.c_str(), pathStr.size());
-
-				ImGui::Text("%s", fileStr.c_str());
-			}
+			ImGui::Text("%s", fileStr.c_str());
 
 			ImGui::EndDragDropSource();
 		}
@@ -188,13 +190,9 @@ void AssetBrowserView::DrawEntry(
 	ImGui::Spacing();
 }
 
-void AssetBrowserView::UpdateDirectoryListing()
-{
-}
-
 void AssetBrowserView::MoveToPath(EditorContext& context, const std::filesystem::path& path)
 {
-	currentPath = path;
+	currentDirectory = path;
 	selectedPath = std::filesystem::path();
 
 	context.selectedAsset = Optional<Uid>();
@@ -204,7 +202,18 @@ void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem:
 {
 	selectedPath = path;
 
-	context.selectedAsset = Uid::Create();
+	if (path.empty() == false)
+	{
+		auto asset = context.assetLibrary->FindAssetByPath(path);
+
+		if (asset != nullptr)
+		{
+			context.selectedAsset = asset->uid;
+			return;
+		}
+	}
+
+	context.selectedAsset = Optional<Uid>();
 }
 
 }
