@@ -24,12 +24,17 @@ public:
 	const String& GetRootPathString() const;
 	void SetRootPath(const std::filesystem::path& path);
 
+	const std::filesystem::path& GetAssetPath() const;
+
 	const String& GetName() const;
 	void SetName(StringRef name);
 
 private:
 	std::filesystem::path rootPath;
 	String rootPathString;
+
+	std::filesystem::path assetPath;
+
 	String name;
 };
 

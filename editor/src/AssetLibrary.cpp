@@ -22,7 +22,9 @@ AssetLibrary::AssetLibrary(Allocator* allocator, Filesystem* filesystem) :
 	allocator(allocator),
 	filesystem(filesystem),
 	editorProject(nullptr),
-	uidMap(allocator),
+	uidToIndexMap(allocator),
+	pathToIndexMap(allocator),
+	assets(allocator),
 	materials(allocator)
 {
 }
@@ -33,7 +35,9 @@ AssetLibrary::~AssetLibrary()
 
 void AssetLibrary::Initialize(const EditorProject* project)
 {
-	uidMap.Clear();
+	uidToIndexMap.Clear();
+	pathToIndexMap.Clear();
+	assets.Clear();
 	materials.Clear();
 
 	editorProject = project;
@@ -46,7 +50,7 @@ void AssetLibrary::ScanAssets()
 	namespace fs = std::filesystem;
 
 	const fs::path assetDir = editorProject->GetRootPath() / EditorConstants::AssetDirectoryName;
-	const fs::path metaExtension(".meta");
+	const fs::path materialExtension(".material");
 
 	std::string assetPathStr;
 	std::string metaPathStr;
@@ -63,11 +67,11 @@ void AssetLibrary::ScanAssets()
 		KOKKO_PROFILE_SCOPE("Scan file");
 
 		const fs::path& currentPath = entry.path();
-		assetPathStr = currentPath.u8string();
-		if (entry.is_regular_file() == false || currentPath.extension() == metaExtension)
+		if (entry.is_regular_file() == false || currentPath.extension() == EditorConstants::MetadataExtension)
 			continue;
 		
 		// Open asset file
+		assetPathStr = currentPath.u8string();
 		if (filesystem->ReadBinary(assetPathStr.c_str(), fileContent) == false)
 		{
 			KK_LOG_ERROR("Couldn't read asset file: {}", assetPathStr.c_str());
@@ -79,7 +83,7 @@ void AssetLibrary::ScanAssets()
 
 		// Open meta file
 		fs::path metaPath = currentPath;
-		metaPath += metaExtension;
+		metaPath += EditorConstants::MetadataExtension;
 		metaPathStr = metaPath.u8string();
 
 		bool needsToWriteMetaFile = false;
@@ -95,7 +99,7 @@ void AssetLibrary::ScanAssets()
 				if (hashItr != document.MemberEnd() && hashItr->value.IsUint64() &&
 					uidItr != document.MemberEnd() && uidItr->value.IsString())
 				{
-					StringRef uidStr(uidItr->value.GetString(), uidItr->value.GetStringLength());
+					ArrayView<const char> uidStr(uidItr->value.GetString(), uidItr->value.GetStringLength());
 					auto uidParseResult = Uid::FromString(uidStr);
 					if (uidParseResult.HasValue())
 					{
@@ -123,7 +127,7 @@ void AssetLibrary::ScanAssets()
 			char uidStrBuf[Uid::StringLength];
 
 			assetUid = Uid::Create();
-			assetUid.WriteToBuffer(uidStrBuf);
+			assetUid.WriteTo(uidStrBuf);
 
 			rapidjson::Document::AllocatorType& alloc = document.GetAllocator();
 
@@ -153,11 +157,60 @@ void AssetLibrary::ScanAssets()
 			jsonStringBuffer.Clear();
 		}
 
-		auto uidPair = uidMap.Insert(assetUid);
+		bool assetTypeFound = true;
+		AssetType assetType;
+		uint32_t assetIndex = 0;
+		
+		if (currentPath.extension() == materialExtension)
+		{
+			assetType = AssetType::Material;
+			assetIndex = static_cast<uint32_t>(materials.GetCount());
+			materials.PushBack(MaterialInfo{});
+		}
+		else
+			assetTypeFound = false;
 
-		// TODO: Detect asset type and insert correct info
-		uidPair->second = AssetArrayRef{ 0 };
+		if (assetTypeFound)
+		{
+			std::error_code err;
+			auto relative = std::filesystem::relative(currentPath, assetDir, err);
+
+			if (err)
+			{
+				KK_LOG_ERROR("Asset path could not be made relative, error: {}", err.message().c_str());
+			}
+			else
+			{
+				uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
+				auto& assetInfo = assets.PushBack();
+				assetInfo.path = relative;
+				assetInfo.uid = assetUid;
+				assetInfo.type = assetType;
+				assetInfo.arrayIndex = assetIndex;
+
+				auto uidPair = uidToIndexMap.Insert(assetUid);
+				uidPair->second = assetRefIndex;
+
+				auto pathPair = pathToIndexMap.Insert(relative);
+				pathPair->second = assetRefIndex;
+			}
+		}
+		else
+		{
+			KK_LOG_ERROR("File didn't match known asset types: {}", assetPathStr.c_str());
+		}
 	}
+}
+
+const AssetLibrary::AssetInfo* AssetLibrary::FindAssetByPath(const std::filesystem::path& path)
+{
+	auto pair = pathToIndexMap.Lookup(path);
+	if (pair != nullptr)
+	{
+		return &assets[pair->second];
+	}
+	else
+		return nullptr;
 }
 
 }

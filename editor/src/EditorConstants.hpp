@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 namespace kokko
 {
 namespace editor
@@ -8,6 +10,8 @@ namespace editor
 class EditorConstants
 {
 public:
+	static const std::filesystem::path MetadataExtension;
+
 	static const char* const AssetDirectoryName;
 
 	static const char* const SceneDragDropType;
