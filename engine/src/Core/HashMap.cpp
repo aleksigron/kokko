@@ -6,7 +6,7 @@
 
 namespace kokko
 {
-uint32_t Hash32(const std::string& value, uint32_t seed)
+static uint32_t Hash32(const std::string& value, uint32_t seed)
 {
 	return kokko::Hash32(value.c_str(), value.length(), seed);
 }
@@ -36,19 +36,22 @@ TEST_CASE("HashMap.LookupNonTrivial")
 	Allocator* allocator = Allocator::GetDefault();
 	HashMap<std::string, std::string> map(allocator);
 
+	auto getString = [](int i) { return std::to_string(i); };
+
 	constexpr int count = 16;
 	for (int i = 0; i < count; ++i)
 	{
-		std::string s = std::to_string(i);
+		std::string s = getString(i);
 		auto* pair = map.Insert(s);
 		pair->second = s;
 	}
 
 	for (int i = 0; i < count; ++i)
 	{
-		auto pair = map.Lookup(std::to_string(i));
+		std::string s = getString(i);
+		auto pair = map.Lookup(s);
 		CHECK(pair != nullptr);
-		CHECK(pair->second == std::to_string(i));
+		CHECK(pair->second == s);
 	}
 }
 
