@@ -20,6 +20,7 @@ namespace kokko
 namespace editor
 {
 
+class AssetLibrary;
 class EditorCore;
 
 enum class EditorWindowType;
@@ -43,6 +44,8 @@ public:
 	void EndFrame();
 
 	const Framebuffer& GetSceneViewFramebuffer();
+
+	AssetLibrary* GetAssetLibrary();
 
 	CameraParameters GetEditorCameraParameters() const;
 

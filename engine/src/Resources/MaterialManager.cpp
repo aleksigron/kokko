@@ -6,8 +6,6 @@
 
 #include "Core/Array.hpp"
 #include "Core/Core.hpp"
-#include "Core/String.hpp"
-#include "Core/Hash.hpp"
 
 #include "Engine/Engine.hpp"
 
@@ -15,28 +13,29 @@
 
 #include "Rendering/RenderDevice.hpp"
 
+#include "Resources/AssetLoader.hpp"
 #include "Resources/TextureManager.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/ValueSerialization.hpp"
 
-#include "System/Filesystem.hpp"
 #include "System/IncludeOpenGL.hpp"
 
 const MaterialId MaterialId::Null = MaterialId{ 0 };
 
 MaterialManager::MaterialManager(
 	Allocator* allocator,
-	Filesystem* filesystem,
+	kokko::AssetLoader* assetLoader,
 	RenderDevice* renderDevice,
 	ShaderManager* shaderManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
-	filesystem(filesystem),
+	assetLoader(assetLoader),
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
 	textureManager(textureManager),
 	uniformScratchBuffer(allocator),
-	pathHashMap(allocator)
+	pathHashMap(allocator),
+	uidMap(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as Null instance
@@ -52,9 +51,6 @@ MaterialManager::~MaterialManager()
 	{
 		if (data.material[i].buffer != nullptr)
 			allocator->Deallocate(data.material[i].buffer);
-
-		if (data.material[i].materialPath != nullptr)
-			allocator->Deallocate(data.material[i].materialPath);
 	}
 
 	allocator->Deallocate(data.buffer);
@@ -106,6 +102,7 @@ MaterialId MaterialManager::CreateMaterial()
 		freeListFirst = data.freeList[freeListFirst];
 	}
 
+	data.material[id.i].uid = kokko::Uid();
 	data.material[id.i].transparency = TransparencyType::Opaque;
 	data.material[id.i].shaderId = ShaderId{};
 	data.material[id.i].cachedShaderDeviceId = 0;
@@ -113,7 +110,6 @@ MaterialId MaterialManager::CreateMaterial()
 	data.material[id.i].uniforms = UniformList{};
 	data.material[id.i].buffer = nullptr;
 	data.material[id.i].uniformData = nullptr;
-	data.material[id.i].materialPath = nullptr;
 
 	++data.count;
 
@@ -151,12 +147,6 @@ void MaterialManager::RemoveMaterial(MaterialId id)
 		data.material[id.i].buffer = nullptr;
 	}
 
-	if (data.material[id.i].materialPath != nullptr)
-	{
-		allocator->Deallocate(data.material[id.i].materialPath);
-		data.material[id.i].materialPath = nullptr;
-	}
-
 	// Material isn't the last one
 	if (id.i < data.count - 1)
 	{
@@ -167,55 +157,58 @@ void MaterialManager::RemoveMaterial(MaterialId id)
 	--data.count;
 }
 
-MaterialId MaterialManager::GetIdByPath(StringRef path)
+MaterialId MaterialManager::FindMaterialByUid(const kokko::Uid& uid)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	uint32_t hash = kokko::HashString(path.str, path.len);
-
-	auto* pair = pathHashMap.Lookup(hash);
+	auto* pair = uidMap.Lookup(uid);
 	if (pair != nullptr)
 		return pair->second;
 
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	String file(allocator);
-	String pathStr(allocator, path);
+	Array<uint8_t> file(allocator);
 
-	if (filesystem->ReadText(pathStr.GetCStr(), file))
+	if (assetLoader->LoadAsset(uid, file))
 	{
 		MaterialId id = CreateMaterial();
 
-		if (LoadFromConfiguration(id, file.GetData()))
-		{
-			pair = pathHashMap.Insert(hash);
-			pair->second = id;
+		StringRef fileStr(reinterpret_cast<const char*>(file.GetData()), file.GetCount());
 
-			// Copy path string
-			data.material[id.i].materialPath = static_cast<char*>(allocator->Allocate(path.len + 1));
-			std::memcpy(data.material[id.i].materialPath, path.str, path.len);
-			data.material[id.i].materialPath[path.len] = '\0';
+		if (LoadFromConfiguration(id, fileStr))
+		{
+			data.material[id.i].uid = uid;
+
+			pair = uidMap.Insert(uid);
+			pair->second = id;
 
 			return id;
 		}
 		else
 		{
-			KK_LOG_ERROR("Material failed to load: \"{}\"", pathStr.GetCStr());
+			KK_LOG_ERROR("Material failed to load correctly");
 
 			RemoveMaterial(id);
 		}
 	}
 	else
-		KK_LOG_ERROR("Material file couldn't be read: \"{}\"", pathStr.GetCStr());
+		KK_LOG_ERROR("AssetLoader couldn't load material asset");
 
 	return MaterialId::Null;
 }
 
-MaterialId MaterialManager::GetIdByPathHash(uint32_t pathHash)
+MaterialId MaterialManager::FindMaterialByPath(const StringRef& path)
 {
-	auto pair = pathHashMap.Lookup(pathHash);
-	return pair != nullptr ? pair->second : MaterialId{};
+	KOKKO_PROFILE_FUNCTION();
+
+	auto uidResult = assetLoader->GetAssetUidByVirtualPath(path);
+	if (uidResult.HasValue())
+	{
+		return FindMaterialByUid(uidResult.GetValue());
+	}
+
+	return MaterialId::Null;
 }
 
 const MaterialData& MaterialManager::GetMaterialData(MaterialId id) const
@@ -579,7 +572,7 @@ static void SetBufferUniformValue(
 	}
 }
 
-bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
+bool MaterialManager::LoadFromConfiguration(MaterialId id, StringRef config)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -587,7 +580,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, char* config)
 	using MemberItr = rapidjson::Value::ConstMemberIterator;
 
 	rapidjson::Document doc;
-	doc.ParseInsitu(config);
+	doc.Parse(config.str, config.len);
 
 	MemberItr shaderItr = doc.FindMember("shader");
 	if (shaderItr == doc.MemberEnd() || shaderItr->value.IsString() == false)

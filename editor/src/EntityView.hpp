@@ -32,7 +32,7 @@ private:
 	void DrawButtons(Entity selectedEntity, World* world);
 
 	void DrawSceneComponent(Entity selectedEntity, World* world);
-	void DrawRenderComponent(Entity selectedEntity, World* world);
+	void DrawRenderComponent(EditorContext& context);
 	void DrawCameraComponent(Entity selectedEntity, World* world);
 	void DrawLightComponent(Entity selectedEntity, World* world);
 	void DrawTerrainComponent(Entity selectedEntity, World* world);

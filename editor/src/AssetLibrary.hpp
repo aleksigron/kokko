@@ -6,6 +6,7 @@
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
+#include "Core/String.hpp"
 #include "Core/Uid.hpp"
 
 #include "Hash_StdFilesystem.hpp"
@@ -30,20 +31,24 @@ class AssetLibrary
 public:
 	struct AssetInfo
 	{
-		std::filesystem::path path;
+		StringRef virtualPath;
+		String filePath;
 		Uid uid;
 		AssetType type;
 		uint32_t arrayIndex;
+
+		String GetVirtualPath() const;
 	};
 
 public:
 	AssetLibrary(Allocator* allocator, Filesystem* filesystem);
 	~AssetLibrary();
 
-	void Initialize(const EditorProject* project);
-	void ScanAssets();
+	const AssetInfo* FindAssetByUid(const Uid& uid);
+	const AssetInfo* FindAssetByVirtualPath(const String& virtualPath);
 
-	const AssetInfo* FindAssetByPath(const std::filesystem::path& path);
+	void ScanEngineAssets();
+	void SetProject(const EditorProject* project);
 
 private:
 	struct MaterialInfo
@@ -51,12 +56,15 @@ private:
 	};
 
 private:
+	void ScanAssets(bool scanProject);
+
+private:
 	Allocator* allocator;
 	Filesystem* filesystem;
 	const EditorProject* editorProject;
 
 	HashMap<Uid, uint32_t> uidToIndexMap;
-	HashMap<std::filesystem::path, uint32_t> pathToIndexMap;
+	HashMap<String, uint32_t> pathToIndexMap;
 
 	Array<AssetInfo> assets;
 

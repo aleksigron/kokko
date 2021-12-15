@@ -5,6 +5,7 @@
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/StringRef.hpp"
+#include "Core/Uid.hpp"
 
 #include "Rendering/Uniform.hpp"
 #include "Rendering/TransparencyType.hpp"
@@ -12,14 +13,19 @@
 #include "Resources/MaterialData.hpp"
 #include "Resources/ShaderId.hpp"
 
+namespace kokko
+{
+class AssetLoader;
+}
+
 class Allocator;
-class Filesystem;
 class RenderDevice;
 class ShaderManager;
 class TextureManager;
 
 struct MaterialData
 {
+	kokko::Uid uid;
 	TransparencyType transparency;
 	ShaderId shaderId;
 	unsigned int cachedShaderDeviceId;
@@ -30,15 +36,13 @@ struct MaterialData
 	unsigned char* uniformData;
 
 	UniformList uniforms;
-
-	char* materialPath;
 };
 
 class MaterialManager
 {
 private:
 	Allocator* allocator;
-	Filesystem* filesystem;
+	kokko::AssetLoader* assetLoader;
 	RenderDevice* renderDevice;
 	ShaderManager* shaderManager;
 	TextureManager* textureManager;
@@ -58,17 +62,18 @@ private:
 
 	unsigned int freeListFirst;
 	HashMap<uint32_t, MaterialId> pathHashMap;
+	HashMap<kokko::Uid, MaterialId> uidMap;
 
 	void Reallocate(unsigned int required);
 
-	bool LoadFromConfiguration(MaterialId id, char* config);
+	bool LoadFromConfiguration(MaterialId id, StringRef config);
 
 	void SetShader(MaterialId id, ShaderId shaderId);
 
 public:
 	MaterialManager(
 		Allocator* allocator,
-		Filesystem* filesystem,
+		kokko::AssetLoader* assetLoader,
 		RenderDevice* renderDevice,
 		ShaderManager* shaderManager,
 		TextureManager* textureManager);
@@ -80,8 +85,8 @@ public:
 
 	MaterialId CreateCopy(MaterialId copyFrom);
 
-	MaterialId GetIdByPath(StringRef path);
-	MaterialId GetIdByPathHash(uint32_t pathHash);
+	MaterialId FindMaterialByUid(const kokko::Uid& uid);
+	MaterialId FindMaterialByPath(const StringRef& path);
 
 	const MaterialData& GetMaterialData(MaterialId id) const;
 	MaterialData& GetMaterialData(MaterialId id);

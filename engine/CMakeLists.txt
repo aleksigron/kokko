@@ -221,6 +221,7 @@ set (KOKKO_SOURCES
 	src/Rendering/UniformBuffer.hpp
 	src/Rendering/VertexFormat.cpp
 	src/Rendering/VertexFormat.hpp
+	src/Resources/AssetLoader.hpp
 	src/Resources/BitmapFont.cpp
 	src/Resources/BitmapFont.hpp
 	src/Resources/ImageData.cpp

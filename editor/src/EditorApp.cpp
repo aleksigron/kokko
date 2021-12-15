@@ -33,6 +33,7 @@
 #include "System/InputManager.hpp"
 #include "System/Window.hpp"
 
+#include "EditorConstants.hpp"
 #include "EditorCore.hpp"
 #include "EditorUserSettings.hpp"
 #include "EditorWindow.hpp"
@@ -219,6 +220,11 @@ void EditorApp::EndFrame()
 const Framebuffer& EditorApp::GetSceneViewFramebuffer()
 {
 	return core->GetSceneViewFramebuffer();
+}
+
+AssetLibrary* EditorApp::GetAssetLibrary()
+{
+	return core->GetAssetLibrary();
 }
 
 CameraParameters EditorApp::GetEditorCameraParameters() const
@@ -429,9 +435,9 @@ void EditorApp::OnProjectChanged()
 	StringRef assetPathRef(assetPathStr.c_str(), assetPathStr.length());
 
 	FilesystemVirtual::MountPoint mounts[] = {
-		FilesystemVirtual::MountPoint{ StringRef("engine"), StringRef("engine/res") },
-		FilesystemVirtual::MountPoint{ StringRef("editor"), StringRef("editor/res") },
-		FilesystemVirtual::MountPoint{ StringRef("assets"), assetPathRef }
+		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualPathEngine), StringRef("engine/res") },
+		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualPathEditor), StringRef("editor/res") },
+		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualPathAssets), assetPathRef }
 	};
 	virtualFilesystem->SetMountPoints(ArrayView(mounts));
 
