@@ -1,5 +1,3 @@
-#include "EditorApp.hpp"
-
 #include "doctest/doctest.h"
 
 #include "Debug/Instrumentation.hpp"
@@ -13,6 +11,11 @@
 
 #include "System/FilesystemVirtual.hpp"
 #include "System/Window.hpp"
+
+#include "AssetLibrary.hpp"
+#include "EditorApp.hpp"
+#include "EditorAssetLoader.hpp"
+#include "EditorConstants.hpp"
 
 int main(int argc, char** argv)
 {
@@ -44,21 +47,30 @@ int main(int argc, char** argv)
 		Allocator* filesystemAllocator = allocManager->CreateAllocatorScope("Filesystem", defaultAlloc);
 		FilesystemVirtual filesystem(filesystemAllocator);
 
+		using EditorConst = kokko::editor::EditorConstants;
+
 		FilesystemVirtual::MountPoint mounts[] = {
-			FilesystemVirtual::MountPoint{ StringRef("engine"), StringRef("engine/res") },
-			FilesystemVirtual::MountPoint{ StringRef("editor"), StringRef("editor/res") }
+			FilesystemVirtual::MountPoint{ StringRef(EditorConst::VirtualPathEngine), StringRef("engine/res") },
+			FilesystemVirtual::MountPoint{ StringRef(EditorConst::VirtualPathEditor), StringRef("editor/res") }
 		};
 		filesystem.SetMountPoints(ArrayView(mounts));
 
+		Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
+		kokko::editor::EditorApp editor(appAllocator, &filesystem);
+		kokko::editor::AssetLibrary* assetLibrary = editor.GetAssetLibrary();
+		kokko::editor::EditorAssetLoader assetLoader(appAllocator, &filesystem, assetLibrary);
+
+		// TODO: Make sure EditorApp GPU resources are released before Engine is destroyed
+		// 
+
 		// Engine
 
-		Engine engine(allocManager, &filesystem);
+		Engine engine(allocManager, &filesystem, &assetLoader);
+
+		assetLibrary->ScanEngineAssets();
 
 		if (engine.Initialize())
 		{
-			Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
-
-			kokko::editor::EditorApp editor(appAllocator, &filesystem);
 			editor.Initialize(&engine);
 
 			engine.SetAppPointer(&editor);

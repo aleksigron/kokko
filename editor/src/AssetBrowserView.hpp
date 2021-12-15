@@ -20,7 +20,7 @@ struct EditorWindowInfo;
 class AssetBrowserView : public EditorWindow
 {
 public:
-	AssetBrowserView();
+	AssetBrowserView(Allocator* allocator);
 	~AssetBrowserView();
 
 	void Initialize(const EditorImages* editorImages);
@@ -36,6 +36,9 @@ private:
 	void MoveToPath(EditorContext& context, const std::filesystem::path& path);
 	void SelectPath(EditorContext& context, const std::filesystem::path& path);
 
+	Allocator* allocator;
+
+	StringRef currentVirtualPath;
 	std::filesystem::path currentDirectory;
 	std::filesystem::path selectedPath;
 

@@ -53,6 +53,8 @@ set (EDITOR_SOURCES
 	src/DebugView.hpp
 	src/EditorApp.cpp
 	src/EditorApp.hpp
+	src/EditorAssetLoader.cpp
+	src/EditorAssetLoader.hpp
 	src/EditorCamera.cpp
 	src/EditorCamera.hpp
 	src/EditorConstants.cpp

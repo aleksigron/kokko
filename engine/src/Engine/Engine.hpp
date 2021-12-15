@@ -21,6 +21,11 @@ class EnvironmentManager;
 
 struct CameraParameters;
 
+namespace kokko
+{
+class AssetLoader;
+}
+
 class Engine
 {
 private:
@@ -32,6 +37,7 @@ private:
 	EngineSettings settings;
 
 	Filesystem* filesystem;
+	kokko::AssetLoader* assetLoader;
 
 	InstanceAllocatorPair<Window> mainWindow;
 	Time* time;
@@ -45,7 +51,10 @@ private:
 	InstanceAllocatorPair<World> world;
 
 public:
-	Engine(AllocatorManager* allocatorManager, Filesystem* filesystem);
+	Engine(
+		AllocatorManager* allocatorManager,
+		Filesystem* filesystem,
+		kokko::AssetLoader* assetLoader);
 	~Engine();
 
 	bool Initialize();

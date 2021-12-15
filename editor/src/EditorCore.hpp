@@ -41,6 +41,8 @@ public:
 
 	ArrayView<EditorWindow*> GetWindows();
 
+	AssetLibrary* GetAssetLibrary();
+
 	void NotifyProjectChanged(const EditorProject* editorProject);
 
 	void Update();

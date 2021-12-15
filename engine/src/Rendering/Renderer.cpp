@@ -288,13 +288,13 @@ void Renderer::Initialize()
 	}
 	
 	{
-		const char* path = "engine/materials/forward/shadow_depth.material.json";
-		shadowMaterial = materialManager->GetIdByPath(StringRef(path));
+		const char* path = "engine/materials/forward/shadow_depth.material";
+		shadowMaterial = materialManager->FindMaterialByPath(StringRef(path));
 	}
 
 	{
-		const char* path = "engine/materials/deferred_geometry/fallback.material.json";
-		fallbackMeshMaterial = materialManager->GetIdByPath(StringRef(path));
+		const char* path = "engine/materials/deferred_geometry/fallback.material";
+		fallbackMeshMaterial = materialManager->FindMaterialByPath(StringRef(path));
 	}
 
 	{

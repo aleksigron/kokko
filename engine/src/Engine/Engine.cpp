@@ -38,14 +38,16 @@
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
-Engine::Engine(AllocatorManager* allocatorManager, Filesystem* filesystem) :
-	filesystem(filesystem)
+Engine::Engine(
+	AllocatorManager* allocatorManager,
+	Filesystem* filesystem,
+	kokko::AssetLoader* assetLoader) :
+	filesystem(filesystem),
+	assetLoader(assetLoader)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	Allocator* alloc = Memory::GetDefaultAllocator();
-
-	allocatorManager = alloc->MakeNew<AllocatorManager>(alloc);
 
 	mainWindow.CreateScope(allocatorManager, "Window", alloc);
 	mainWindow.New(mainWindow.allocator);
@@ -69,7 +71,7 @@ Engine::Engine(AllocatorManager* allocatorManager, Filesystem* filesystem) :
 	shaderManager.New(shaderManager.allocator, filesystem, renderDevice);
 
 	materialManager.CreateScope(allocatorManager, "MaterialManager", alloc);
-	materialManager.New(materialManager.allocator, filesystem, renderDevice,
+	materialManager.New(materialManager.allocator, assetLoader, renderDevice,
 		shaderManager.instance, textureManager.instance);
 
 	environmentManager.CreateScope(allocatorManager, "EnvironmentManager", alloc);

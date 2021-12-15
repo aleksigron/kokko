@@ -35,11 +35,30 @@ void AssetView::Update(EditorContext& context)
 
 			if (context.selectedAsset.HasValue())
 			{
+				Uid uid = context.selectedAsset.GetValue();
+
 				char uidStr[Uid::StringLength + 1];
-				context.selectedAsset.GetValue().WriteTo(uidStr);
+				uid.WriteTo(uidStr);
 				uidStr[Uid::StringLength] = '\0';
 
 				ImGui::Text("Selected asset UID: %s", uidStr);
+
+				auto asset = context.assetLibrary->FindAssetByUid(uid);
+				if (asset == nullptr)
+				{
+					KK_LOG_ERROR("Asset with UID {} not found in AssetLibrary", uidStr);
+				}
+				else
+				{
+					if (asset->type == AssetType::Material)
+					{
+						ImGui::Text("Selected asset is a material");
+					}
+					else
+					{
+						ImGui::Text("Selected asset is an unknown asset type");
+					}
+				}
 			}
 		}
 

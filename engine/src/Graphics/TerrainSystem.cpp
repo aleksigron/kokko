@@ -118,8 +118,9 @@ void TerrainSystem::Initialize()
 
 	// Material
 
-	StringRef path("engine/materials/deferred_geometry/terrain.material.json");
-	terrainMaterial = materialManager->GetIdByPath(path);
+	StringRef path("engine/materials/deferred_geometry/terrain.material");
+	terrainMaterial = materialManager->FindMaterialByPath(path);
+	assert(terrainMaterial != MaterialId::Null);
 
 	// Sampler
 

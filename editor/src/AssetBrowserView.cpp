@@ -15,8 +15,10 @@ namespace kokko
 namespace editor
 {
 
-AssetBrowserView::AssetBrowserView() :
+AssetBrowserView::AssetBrowserView(Allocator* allocator) :
 	EditorWindow("Asset Browser"),
+	allocator(allocator),
+	currentVirtualPath(EditorConstants::VirtualPathAssets),
 	editorImages(nullptr)
 {
 }
@@ -44,6 +46,8 @@ void AssetBrowserView::Update(EditorContext& context)
 	{
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
+			// TODO: Allow user to select engine resources or project assets folders at the folder first level
+
 			const fs::path& root = context.project->GetAssetPath();
 
 			if (ImGui::Button("Go to parent") && currentDirectory != root)
@@ -204,7 +208,13 @@ void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem:
 
 	if (path.empty() == false)
 	{
-		auto asset = context.assetLibrary->FindAssetByPath(path);
+		auto pathStr = path.generic_u8string();
+		String virtualPath(allocator);
+		virtualPath.Append(currentVirtualPath);
+		virtualPath.Append('/');
+		virtualPath.Append(StringRef(pathStr.c_str(), pathStr.length()));
+
+		auto asset = context.assetLibrary->FindAssetByVirtualPath(virtualPath);
 
 		if (asset != nullptr)
 		{

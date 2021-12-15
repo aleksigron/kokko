@@ -59,7 +59,7 @@ void EditorCore::Initialize(Engine* engine)
 	sceneView->Initialize(engine->GetRenderDevice(), engine->GetMainWindow());
 	editorWindows.PushBack(sceneView);
 
-	AssetBrowserView* assetBrowserView = allocator->MakeNew<AssetBrowserView>();
+	AssetBrowserView* assetBrowserView = allocator->MakeNew<AssetBrowserView>(allocator);
 	assetBrowserView->Initialize(&images);
 	editorWindows.PushBack(assetBrowserView);
 
@@ -92,9 +92,14 @@ ArrayView<EditorWindow*> EditorCore::GetWindows()
 	return editorWindows.GetView();
 }
 
+AssetLibrary* EditorCore::GetAssetLibrary()
+{
+	return &assetLibrary;
+}
+
 void EditorCore::NotifyProjectChanged(const EditorProject* editorProject)
 {
-	assetLibrary.Initialize(editorProject);
+	assetLibrary.SetProject(editorProject);
 
 	editorContext.project = editorProject;
 	editorContext.assetLibrary = &assetLibrary;

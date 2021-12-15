@@ -20,6 +20,7 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 
+#include "AssetLibrary.hpp"
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 
@@ -73,7 +74,7 @@ void EntityView::Update(EditorContext& context)
 				DrawButtons(context.selectedEntity, world);
 
 				DrawSceneComponent(context.selectedEntity, world);
-				DrawRenderComponent(context.selectedEntity, world);
+				DrawRenderComponent(context);
 				DrawCameraComponent(context.selectedEntity, world);
 				DrawLightComponent(context.selectedEntity, world);
 				DrawTerrainComponent(context.selectedEntity, world);
@@ -173,12 +174,12 @@ void EntityView::DrawSceneComponent(Entity selectedEntity, World* world)
 	}
 }
 
-void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
+void EntityView::DrawRenderComponent(EditorContext& context)
 {
-	Scene* scene = world->GetScene();
-	Renderer* renderer = world->GetRenderer();
+	Scene* scene = context.world->GetScene();
+	Renderer* renderer = context.world->GetRenderer();
 
-	RenderObjectId renderObj = renderer->Lookup(selectedEntity);
+	RenderObjectId renderObj = renderer->Lookup(context.selectedEntity);
 	if (renderObj != RenderObjectId::Null)
 	{
 		ImGui::Spacing();
@@ -221,7 +222,7 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 						{
 							renderer->SetMeshId(renderObj, newMeshId);
 
-							SceneObjectId sceneObj = scene->Lookup(selectedEntity);
+							SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
 							if (sceneObj != SceneObjectId::Null)
 								scene->MarkUpdated(sceneObj);
 						}
@@ -240,7 +241,9 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 			if (materialId != MaterialId::Null)
 			{
 				const MaterialData& material = materialManager->GetMaterialData(materialId);
-				materialPath = material.materialPath;
+
+				if (auto asset = context.assetLibrary->FindAssetByUid(material.uid))
+					materialPath = asset->filePath.GetCStr();
 			}
 
 			// Allow editing if material is loaded from a file, or if there is no material set
@@ -251,16 +254,18 @@ void EntityView::DrawRenderComponent(Entity selectedEntity, World* world)
 
 				ImGuiInputTextFlags flags = ImGuiInputTextFlags_ReadOnly;
 				StringCopySafe(inputBuf, materialPath);
-				ImGui::InputText("Material path", inputBuf, sizeof(inputBuf), flags);
+				ImGui::InputText("Material", inputBuf, sizeof(inputBuf), flags);
 
 				if (ImGui::BeginDragDropTarget())
 				{
 					const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
 					if (payload != nullptr)
 					{
-						StringRef assetPath(static_cast<const char*>(payload->Data), payload->DataSize);
+						Uid assetUid;
+						std::memcpy(&assetUid, payload->Data, payload->DataSize);
 
-						MaterialId newMatId = materialManager->GetIdByPath(assetPath);
+						// TODO: Use AssetLibrary
+						MaterialId newMatId = materialManager->FindMaterialByUid(assetUid);
 						if (newMatId != MaterialId::Null && newMatId != materialId)
 						{
 							const MaterialData& material = materialManager->GetMaterialData(newMatId);
