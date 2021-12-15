@@ -79,6 +79,7 @@ public:
 
 	// To gain access to allocator
 	friend String operator+(const String& lhs, StringRef rhs);
+	friend String operator+(StringRef lhs, const String& rhs);
 };
 
 String operator+(const String& lhs, StringRef rhs);
@@ -89,6 +90,9 @@ String operator+(const String& lhs, const String& rhs);
 String operator+(const String& lhs, const char* rhs);
 String operator+(const char* lhs, const String& rhs);
 
+String operator+(const String& lhs, const char rhs);
+String operator+(const char lhs, const String& rhs);
+
 bool operator==(const String& lhs, const String& rhs);
 bool operator==(const String& lhs, const char* rhs);
 bool operator==(const char* lhs, const String& rhs);
@@ -96,3 +100,8 @@ bool operator==(const char* lhs, const String& rhs);
 bool operator!=(const String& lhs, const String& rhs);
 bool operator!=(const String& lhs, const char* rhs);
 bool operator!=(const char* lhs, const String& rhs);
+
+namespace kokko
+{
+uint32_t Hash32(const String& value, uint32_t seed);
+}

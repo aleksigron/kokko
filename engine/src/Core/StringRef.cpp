@@ -5,6 +5,8 @@
 
 #include "doctest/doctest.h"
 
+#include "Core/Hash.hpp"
+
 doctest::String toString(const StringRef& value)
 {
 	return doctest::String(value.str, static_cast<unsigned int>(value.len));
@@ -231,4 +233,12 @@ TEST_CASE("StringRef can find chars")
 	CHECK(str.FindFirstNotOf("str", 5) == 8);
 	CHECK(str.FindFirstNotOf("g", 10) < 0);
 	CHECK(str.FindFirstNotOf("T", 10) == 10);
+}
+
+namespace kokko
+{
+uint32_t Hash32(const StringRef& value, uint32_t seed)
+{
+	return Hash32(value.str, value.len, seed);
+}
 }
