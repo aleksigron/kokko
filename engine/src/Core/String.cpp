@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "Core/CString.hpp"
+#include "Core/Hash.hpp"
 
 #include "Memory/Allocator.hpp"
 
@@ -312,8 +313,19 @@ String operator+(const String& lhs, StringRef rhs)
 
 String operator+(StringRef lhs, const String& rhs)
 {
-	// Call with reversed arguments
-	return operator+(rhs, lhs);
+	String result(rhs.allocator);
+	size_t leftLength = lhs.len;
+	size_t rightLength = rhs.GetLength();
+	size_t combinedLength = leftLength + rightLength;
+
+	if (combinedLength > 0)
+	{
+		result.Resize(combinedLength);
+		std::memcpy(result.Begin(), lhs.str, leftLength);
+		std::memcpy(result.Begin() + leftLength, rhs.GetData(), rightLength);
+	}
+
+	return result;
 }
 
 String operator+(const String& lhs, const String& rhs)
@@ -328,18 +340,31 @@ String operator+(const String& lhs, const char* rhs)
 
 String operator+(const char* lhs, const String& rhs)
 {
-	// Call with reversed arguments
-	return operator+(rhs, StringRef(lhs));
+	return operator+(StringRef(lhs), rhs);
+}
+
+String operator+(const String& lhs, const char rhs)
+{
+	return operator+(lhs, StringRef(&rhs, 1));
+}
+
+String operator+(const char lhs, const String& rhs)
+{
+	return operator+(StringRef(&lhs, 1), rhs);
 }
 
 bool operator==(const String& lhs, const String& rhs)
 {
 	if (lhs.GetLength() == rhs.GetLength())
+	{
 		for (size_t i = 0, len = lhs.GetLength(); i < len; ++i)
 			if (lhs[i] != rhs[i])
 				return false;
 
-	return true;
+		return true;
+	}
+	else
+		return false;
 }
 
 bool operator==(const String& lhs, const char* rhs)
@@ -369,4 +394,9 @@ bool operator!=(const String& lhs, const char* rhs)
 bool operator!=(const char* lhs, const String& rhs)
 {
 	return operator==(lhs, rhs) == false;
+}
+
+uint32_t kokko::Hash32(const String& value, uint32_t seed)
+{
+	return kokko::Hash32(value.GetData(), value.GetLength(), seed);
 }

@@ -70,3 +70,8 @@ struct StringRef
 	intptr_t FindFirstOf(const char* chars, size_t startAt = 0) const;
 	intptr_t FindFirstNotOf(const char* chars, size_t startAt = 0) const;
 };
+
+namespace kokko
+{
+uint32_t Hash32(const StringRef& value, uint32_t seed);
+}
