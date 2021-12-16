@@ -2,15 +2,7 @@
 
 #include "doctest/doctest.h"
 
-#include <string>
-
-namespace kokko
-{
-static uint32_t Hash32(const std::string& value, uint32_t seed)
-{
-	return kokko::Hash32(value.c_str(), value.length(), seed);
-}
-}
+#include "Core/String.hpp"
 
 TEST_CASE("HashMap.Lookup")
 {
@@ -34,21 +26,27 @@ TEST_CASE("HashMap.Lookup")
 TEST_CASE("HashMap.LookupNonTrivial")
 {
 	Allocator* allocator = Allocator::GetDefault();
-	HashMap<std::string, std::string> map(allocator);
+	HashMap<String, String> map(allocator);
 
-	auto getString = [](int i) { return std::to_string(i); };
+	char buf[32];
+
+	auto getString = [&buf](int i)
+	{
+		std::snprintf(buf, sizeof(buf), "String %d", i);
+		return buf;
+	};
 
 	constexpr int count = 16;
 	for (int i = 0; i < count; ++i)
 	{
-		std::string s = getString(i);
+		String s(allocator, getString(i));
 		auto* pair = map.Insert(s);
 		pair->second = s;
 	}
 
 	for (int i = 0; i < count; ++i)
 	{
-		std::string s = getString(i);
+		String s(allocator, getString(i));
 		auto pair = map.Lookup(s);
 		CHECK(pair != nullptr);
 		CHECK(pair->second == s);
