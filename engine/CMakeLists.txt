@@ -256,6 +256,7 @@ set (KOKKO_SOURCES
 	src/Scripting/ScriptSystem.cpp
 	src/Scripting/ScriptSystem.hpp
 	src/System/DoctestImpl.cpp
+	src/System/EnablePerformanceGPU.cpp
 	src/System/Filesystem.hpp
 	src/System/FilesystemDefault.cpp
 	src/System/FilesystemDefault.hpp
