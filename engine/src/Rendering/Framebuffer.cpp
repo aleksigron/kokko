@@ -185,6 +185,12 @@ void Framebuffer::Destroy()
 
 	if (framebufferId != 0)
 	{
+		renderDevice->DestroyFramebuffers(1, &framebufferId);
+		framebufferId = 0;
+
+		width = 0;
+		height = 0;
+
 		if (colorTextureCount > 0)
 		{
 			renderDevice->DestroyTextures(static_cast<unsigned int>(colorTextureCount), colorTextureIds);
@@ -203,9 +209,6 @@ void Framebuffer::Destroy()
 			depthTextureId = 0;
 			depthTextureIsOwned = false;
 		}
-
-		renderDevice->DestroyFramebuffers(1, &framebufferId);
-		framebufferId = 0;
 	}
 }
 
