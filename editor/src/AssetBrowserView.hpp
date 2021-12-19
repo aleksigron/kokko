@@ -2,6 +2,7 @@
 
 #include <filesystem>
 
+#include "Core/Optional.hpp"
 #include "Core/String.hpp"
 
 #include "EditorWindow.hpp"
@@ -36,6 +37,10 @@ private:
 	void MoveToPath(EditorContext& context, const std::filesystem::path& path);
 	void SelectPath(EditorContext& context, const std::filesystem::path& path);
 
+	const String& ConvertPath(const std::filesystem::path& relativePath);
+	Optional<std::filesystem::path> MakePathRelative(
+		const EditorContext& context, const std::filesystem::path& absolute);
+
 	Allocator* allocator;
 
 	StringRef currentVirtualPath;
@@ -43,6 +48,8 @@ private:
 	std::filesystem::path selectedPath;
 
 	const EditorImages* editorImages;
+
+	String pathStore;
 };
 
 }
