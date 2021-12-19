@@ -19,7 +19,8 @@ AssetBrowserView::AssetBrowserView(Allocator* allocator) :
 	EditorWindow("Asset Browser"),
 	allocator(allocator),
 	currentVirtualPath(EditorConstants::VirtualPathAssets),
-	editorImages(nullptr)
+	editorImages(nullptr),
+	pathStore(allocator)
 {
 }
 
@@ -132,15 +133,12 @@ void AssetBrowserView::DrawEntry(
 		return;
 
 	ImGui::TableNextColumn();
-
-	std::error_code err;
-	std::filesystem::path relativePath = std::filesystem::relative(entry->path(), context.project->GetAssetPath(), err);
-
-	if (err)
-	{
-		KK_LOG_ERROR("std::filesystem::relative failed. Message: {}", err.message().c_str());
+	
+	auto relativeResult = MakePathRelative(context, entry->path());
+	if (relativeResult.HasValue() == false)
 		return;
-	}
+
+	const std::filesystem::path& relativePath = relativeResult.GetValue();
 
 	ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
 	bool selected = relativePath == selectedPath;
@@ -173,12 +171,18 @@ void AssetBrowserView::DrawEntry(
 	{
 		if (ImGui::BeginDragDropSource())
 		{
-			const char* type = EditorConstants::AssetDragDropType;
+			auto relativeResult = MakePathRelative(context, entry->path());
+			if (relativeResult.HasValue())
+			{
+				const std::filesystem::path& relativePath = relativeResult.GetValue();
 
-			std::string pathStr = relativePath.u8string();
-			ImGui::SetDragDropPayload(type, pathStr.c_str(), pathStr.size());
+				if (auto asset = context.assetLibrary->FindAssetByVirtualPath(ConvertPath(relativePath)))
+				{
+					ImGui::SetDragDropPayload(EditorConstants::AssetDragDropType, &asset->uid, sizeof(Uid));
 
-			ImGui::Text("%s", fileStr.c_str());
+					ImGui::Text("%s", fileStr.c_str());
+				}
+			}
 
 			ImGui::EndDragDropSource();
 		}
@@ -208,13 +212,7 @@ void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem:
 
 	if (path.empty() == false)
 	{
-		auto pathStr = path.generic_u8string();
-		String virtualPath(allocator);
-		virtualPath.Append(currentVirtualPath);
-		virtualPath.Append('/');
-		virtualPath.Append(StringRef(pathStr.c_str(), pathStr.length()));
-
-		auto asset = context.assetLibrary->FindAssetByVirtualPath(virtualPath);
+		auto asset = context.assetLibrary->FindAssetByVirtualPath(ConvertPath(path));
 
 		if (asset != nullptr)
 		{
@@ -224,6 +222,34 @@ void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem:
 	}
 
 	context.selectedAsset = Optional<Uid>();
+}
+
+const String& AssetBrowserView::ConvertPath(const std::filesystem::path& from)
+{
+	std::string pathStr = from.generic_u8string();
+	
+	pathStore.Clear();
+	pathStore.Append(currentVirtualPath);
+	pathStore.Append('/');
+	pathStore.Append(StringRef(pathStr.c_str(), pathStr.length()));
+
+	return pathStore;
+}
+
+Optional<std::filesystem::path> AssetBrowserView::MakePathRelative(const EditorContext& context, const std::filesystem::path& absolute)
+{
+	std::error_code err;
+	std::filesystem::path relativePath = std::filesystem::relative(absolute, context.project->GetAssetPath(), err);
+
+	if (!err)
+	{
+		return relativePath;
+	}
+	else
+	{
+		KK_LOG_ERROR("std::filesystem::relative failed. Message: {}", err.message().c_str());
+		return Optional<std::filesystem::path>();
+	}
 }
 
 }

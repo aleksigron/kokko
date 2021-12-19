@@ -1,15 +1,12 @@
 #pragma once
 
 #include <cstdint>
-#include <filesystem>
 
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
 #include "Core/String.hpp"
 #include "Core/Uid.hpp"
-
-#include "Hash_StdFilesystem.hpp"
 
 class Allocator;
 class Filesystem;

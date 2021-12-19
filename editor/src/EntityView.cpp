@@ -274,6 +274,8 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 							renderer->SetOrderData(renderObj, order);
 						}
 					}
+
+					ImGui::EndDragDropTarget();
 				}
 			}
 			else // We currently don't support editing materials that have created as a copy from another material
