@@ -15,6 +15,7 @@
 
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
+#include "Rendering/Uniform.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
@@ -205,7 +206,7 @@ void EnvironmentManager::Deinitialize()
 static void BindTexture(RenderDevice* renderDevice, const ShaderData& shader,
 	uint32_t uniformHash, RenderTextureTarget target, unsigned int textureId)
 {
-	const TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash(uniformHash);
+	const kokko::TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash(uniformHash);
 	if (uniform != nullptr)
 	{
 		renderDevice->SetUniformInt(uniform->uniformLocation, 0);

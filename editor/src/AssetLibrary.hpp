@@ -21,24 +21,24 @@ namespace editor
 
 class EditorProject;
 
-enum class AssetType : uint8_t
+enum class AssetType
 {
 	Material
+};
+
+struct AssetInfo
+{
+	StringRef virtualPath;
+	String filePath;
+	Uid uid;
+	AssetType type;
+
+	String GetVirtualPath() const;
 };
 
 class AssetLibrary
 {
 public:
-	struct AssetInfo
-	{
-		StringRef virtualPath;
-		String filePath;
-		Uid uid;
-		AssetType type;
-		uint32_t arrayIndex;
-
-		String GetVirtualPath() const;
-	};
 
 public:
 	AssetLibrary(Allocator* allocator, Filesystem* filesystem);
@@ -49,11 +49,6 @@ public:
 
 	void ScanEngineAssets();
 	void SetProject(const EditorProject* project);
-
-private:
-	struct MaterialInfo
-	{
-	};
 
 private:
 	void ScanAssets(bool scanProject);
@@ -67,8 +62,6 @@ private:
 	HashMap<String, uint32_t> pathToIndexMap;
 
 	Array<AssetInfo> assets;
-
-	Array<MaterialInfo> materials;
 };
 
 }

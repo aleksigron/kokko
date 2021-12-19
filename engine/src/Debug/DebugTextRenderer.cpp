@@ -12,6 +12,7 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderDeviceEnums.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
+#include "Rendering/Uniform.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/BitmapFont.hpp"
@@ -175,7 +176,7 @@ void DebugTextRenderer::Render()
 		const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
 		StringRef uniformName("glyph_tex");
-		const TextureUniform* textureUniform = shader.uniforms.FindTextureUniformByName(uniformName);
+		const kokko::TextureUniform* textureUniform = shader.uniforms.FindTextureUniformByName(uniformName);
 
 		renderDevice->DepthTestDisable();
 

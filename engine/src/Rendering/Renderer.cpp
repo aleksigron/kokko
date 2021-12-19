@@ -38,6 +38,7 @@
 #include "Rendering/RenderTargetContainer.hpp"
 #include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
+#include "Rendering/Uniform.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
@@ -543,18 +544,19 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 				if (matId != lastMaterialId)
 				{
 					lastMaterialId = matId;
-					const MaterialData& matData = materialManager->GetMaterialData(matId);
+					unsigned int matShaderId = materialManager->GetMaterialShaderDeviceId(matId);
+					unsigned int matUniformBuffer = materialManager->GetMaterialUniformBufferId(matId);
 
-					if (matData.cachedShaderDeviceId != lastShaderProgram)
+					if (matShaderId != lastShaderProgram)
 					{
-						device->UseShaderProgram(matData.cachedShaderDeviceId);
-						lastShaderProgram = matData.cachedShaderDeviceId;
+						device->UseShaderProgram(matShaderId);
+						lastShaderProgram = matShaderId;
 					}
 
-					BindMaterialTextures(matData);
+					BindMaterialTextures(materialManager->GetMaterialUniforms(matId));
 
 					// Bind material uniform block to shader
-					device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, matData.uniformBufferObject);
+					device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, matUniformBuffer);
 				}
 
 				// Bind object transform uniform block to shader
@@ -628,23 +630,21 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 	targetFramebufferId = 0;
 }
 
-void Renderer::BindMaterialTextures(const MaterialData& material) const
+void Renderer::BindMaterialTextures(const kokko::UniformData& materialUniforms) const
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	unsigned int usedTextures = 0;
 
-	for (unsigned uIndex = 0; uIndex < material.uniforms.textureUniformCount; ++uIndex)
+	for (auto& uniform : materialUniforms.GetTextureUniforms())
 	{
-		const TextureUniform& u = material.uniforms.textureUniforms[uIndex];
-
-		switch (u.type)
+		switch (uniform.type)
 		{
-		case UniformDataType::Tex2D:
-		case UniformDataType::TexCube:
+		case kokko::UniformDataType::Tex2D:
+		case kokko::UniformDataType::TexCube:
 			device->SetActiveTextureUnit(usedTextures);
-			device->BindTexture(u.textureTarget, u.textureObject);
-			device->SetUniformInt(u.uniformLocation, usedTextures);
+			device->BindTexture(uniform.textureTarget, uniform.textureObject);
+			device->SetUniformInt(uniform.uniformLocation, usedTextures);
 			++usedTextures;
 			break;
 
@@ -659,7 +659,7 @@ void Renderer::BindTextures(const ShaderData& shader, unsigned int count,
 {
 	for (unsigned int i = 0; i < count; ++i)
 	{
-		const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(nameHashes[i]);
+		const kokko::TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(nameHashes[i]);
 		if (tu != nullptr)
 		{
 			device->SetUniformInt(tu->uniformLocation, i);
@@ -785,7 +785,7 @@ void Renderer::RenderSkybox(const CustomRenderer::RenderParams& params)
 	const ShaderData& shader = shaderManager->GetShaderData(skyboxShaderId);
 	device->UseShaderProgram(shader.driverId);
 
-	const TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash("environment_map"_hash);
+	const kokko::TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash("environment_map"_hash);
 	if (uniform != nullptr)
 	{
 		device->SetActiveTextureUnit(0);

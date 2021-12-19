@@ -12,6 +12,8 @@
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/RenderDevice.hpp"
+#include "Rendering/Uniform.hpp"
+#include "Rendering/UniformData.hpp"
 
 #include "Resources/AssetLoader.hpp"
 #include "Resources/TextureManager.hpp"
@@ -49,8 +51,7 @@ MaterialManager::~MaterialManager()
 {
 	for (unsigned int i = 1; i < data.count; ++i)
 	{
-		if (data.material[i].buffer != nullptr)
-			allocator->Deallocate(data.material[i].buffer);
+		data.material[i].uniformData.Release();
 	}
 
 	allocator->Deallocate(data.buffer);
@@ -107,45 +108,16 @@ MaterialId MaterialManager::CreateMaterial()
 	data.material[id.i].shaderId = ShaderId{};
 	data.material[id.i].cachedShaderDeviceId = 0;
 	data.material[id.i].uniformBufferObject = 0;
-	data.material[id.i].uniforms = UniformList{};
-	data.material[id.i].buffer = nullptr;
-	data.material[id.i].uniformData = nullptr;
+	data.material[id.i].uniformData = kokko::UniformData(allocator);
 
 	++data.count;
 
 	return id;
 }
 
-MaterialId MaterialManager::CreateCopy(MaterialId copyFrom)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	const MaterialData& origMaterial = data.material[copyFrom.i];
-
-	MaterialId id = CreateMaterial();
-	SetShader(id, origMaterial.shaderId);
-	MaterialData& newMaterial = data.material[id.i];
-
-	// Copy buffer uniform data
-	std::memcpy(newMaterial.uniformData, origMaterial.uniformData, origMaterial.uniforms.uniformDataSize);
-
-	const TextureUniform* origTextures = origMaterial.uniforms.textureUniforms;
-	TextureUniform* newTextures = newMaterial.uniforms.textureUniforms;
-
-	// Copy texture object names
-	for (unsigned int uniformIdx = 0; uniformIdx < origMaterial.uniforms.textureUniformCount; ++uniformIdx)
-		newTextures[uniformIdx].textureObject = origTextures[uniformIdx].textureObject;
-
-	return id;
-}
-
 void MaterialManager::RemoveMaterial(MaterialId id)
 {
-	if (data.material[id.i].buffer != nullptr)
-	{
-		allocator->Deallocate(data.material[id.i].buffer);
-		data.material[id.i].buffer = nullptr;
-	}
+	data.material[id.i].uniformData.Release();
 
 	// Material isn't the last one
 	if (id.i < data.count - 1)
@@ -211,29 +183,33 @@ MaterialId MaterialManager::FindMaterialByPath(const StringRef& path)
 	return MaterialId::Null;
 }
 
-const MaterialData& MaterialManager::GetMaterialData(MaterialId id) const
+kokko::Uid MaterialManager::GetMaterialUid(MaterialId id) const
 {
-	assert(id != MaterialId::Null);
-	return data.material[id.i];
+	return data.material[id.i].uid;
 }
 
-MaterialData& MaterialManager::GetMaterialData(MaterialId id)
+TransparencyType MaterialManager::GetMaterialTransparency(MaterialId id) const
 {
-	assert(id != MaterialId::Null);
-	return data.material[id.i];
+	return data.material[id.i].transparency;
 }
 
-void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
+void MaterialManager::SetMaterialTransparency(MaterialId id, TransparencyType transparency)
+{
+	data.material[id.i].transparency = transparency;
+}
+
+ShaderId MaterialManager::GetMaterialShader(MaterialId id) const
+{
+	return data.material[id.i].shaderId;
+}
+
+void MaterialManager::SetMaterialShader(MaterialId id, ShaderId shaderId)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	MaterialData& material = data.material[id.i];
+	assert(shaderId != ShaderId::Null);
 
-	if (material.buffer != nullptr) // Release old uniform data
-	{
-		allocator->Deallocate(material.buffer);
-		material.buffer = nullptr;
-	}
+	MaterialData& material = data.material[id.i];
 
 	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
@@ -241,50 +217,12 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 	material.cachedShaderDeviceId = shader.driverId;
 	material.transparency = shader.transparencyType;
 
-	// Copy uniform information
-
-	material.uniforms.uniformDataSize = shader.uniforms.uniformDataSize;
-	material.uniforms.uniformBufferSize = shader.uniforms.uniformBufferSize;
-	material.uniforms.bufferUniformCount = shader.uniforms.bufferUniformCount;
-	material.uniforms.textureUniformCount = shader.uniforms.textureUniformCount;
-
-	size_t uboSize = material.uniforms.uniformDataSize;
-	
-	if (material.uniforms.bufferUniformCount > 0 ||
-		material.uniforms.textureUniformCount > 0)
-	{
-		size_t bufferSize = material.uniforms.bufferUniformCount * sizeof(BufferUniform) +
-			material.uniforms.textureUniformCount * sizeof(TextureUniform) +
-			material.uniforms.uniformDataSize;
-
-		material.buffer = allocator->Allocate(bufferSize);
-
-		BufferUniform* bufferBuf = static_cast<BufferUniform*>(material.buffer);
-		TextureUniform* textureBuf = reinterpret_cast<TextureUniform*>(bufferBuf + material.uniforms.bufferUniformCount);
-		unsigned char* dataBuf = reinterpret_cast<unsigned char*>(textureBuf + material.uniforms.textureUniformCount);
-
-		material.uniforms.bufferUniforms = material.uniforms.bufferUniformCount > 0 ? bufferBuf : nullptr;
-		material.uniforms.textureUniforms = material.uniforms.textureUniformCount > 0 ? textureBuf : nullptr;
-		material.uniformData = material.uniforms.bufferUniformCount > 0 ? dataBuf : nullptr;
-
-		for (size_t i = 0, count = shader.uniforms.bufferUniformCount; i < count; ++i)
-			material.uniforms.bufferUniforms[i] = shader.uniforms.bufferUniforms[i];
-
-		for (size_t i = 0, count = shader.uniforms.textureUniformCount; i < count; ++i)
-			material.uniforms.textureUniforms[i] = shader.uniforms.textureUniforms[i];
-	}
-	else
-	{
-		material.buffer = nullptr;
-		material.uniforms.bufferUniforms = nullptr;
-		material.uniforms.textureUniforms = nullptr;
-		material.uniformData = nullptr;
-	}
+	material.uniformData.Initialize(shader.uniforms);
 
 	if (material.uniformBufferObject != 0)
 		renderDevice->DestroyBuffers(1, &material.uniformBufferObject);
 
-	if (material.uniforms.bufferUniformCount > 0)
+	if (material.uniformData.GetBufferUniforms().GetCount() > 0)
 	{
 		// Create GPU uniform buffer and allocate storage
 
@@ -294,7 +232,7 @@ void MaterialManager::SetShader(MaterialId id, ShaderId shaderId)
 
 		RenderCommandData::SetBufferStorage bufferStorage{};
 		bufferStorage.target = RenderBufferTarget::UniformBuffer;
-		bufferStorage.size = material.uniforms.uniformBufferSize;
+		bufferStorage.size = material.uniformData.GetUniformBufferSize();
 		bufferStorage.data = nullptr;
 		bufferStorage.dynamicStorage = true;
 		renderDevice->SetBufferStorage(&bufferStorage);
@@ -353,8 +291,8 @@ static unsigned int PrepareUniformArray(const rapidjson::Value* jsonValue, unsig
 }
 
 static void SetBufferUniformValue(
-	const BufferUniform& uniform,
-	unsigned char* uniformData,
+	kokko::UniformData& uniformData,
+	const kokko::BufferUniform& uniform,
 	const rapidjson::Value* jsonValue,
 	Array<unsigned char>& cacheBuffer)
 {
@@ -364,18 +302,18 @@ static void SetBufferUniformValue(
 
 	switch (uniform.type)
 	{
-	case UniformDataType::Mat4x4:
+	case kokko::UniformDataType::Mat4x4:
 	{
 		Mat4x4f val;
 
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Mat4x4f(*jsonValue);
 
-		uniform.SetValueMat4x4f(uniformData, val);
+		uniformData.SetValueMat4x4f(uniform, val);
 		break;
 	}
 
-	case UniformDataType::Mat4x4Array:
+	case kokko::UniformDataType::Mat4x4Array:
 	{
 		cacheBuffer.Resize(uniform.arraySize * sizeof(Mat4x4f));
 		Mat4x4f* buffer = reinterpret_cast<Mat4x4f*>(cacheBuffer.GetData());
@@ -388,23 +326,23 @@ static void SetBufferUniformValue(
 		for (; i < uniform.arraySize; ++i)
 			buffer[i] = Mat4x4f();
 
-		uniform.SetArrayMat4x4f(uniformData, buffer, uniform.arraySize);
+		uniformData.SetArrayMat4x4f(uniform, buffer, uniform.arraySize);
 
 		break;
 	}
 
-	case UniformDataType::Mat3x3:
+	case kokko::UniformDataType::Mat3x3:
 	{
 		Mat3x3f val;
 
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Mat3x3f(*jsonValue);
 
-		uniform.SetValueMat3x3f(uniformData, val);
+		uniformData.SetValueMat3x3f(uniform, val);
 		break;
 	}
 
-	case UniformDataType::Mat3x3Array:
+	case kokko::UniformDataType::Mat3x3Array:
 	{
 		cacheBuffer.Resize(uniform.arraySize * sizeof(Mat3x3f));
 		Mat3x3f* buffer = reinterpret_cast<Mat3x3f*>(cacheBuffer.GetData());
@@ -417,23 +355,23 @@ static void SetBufferUniformValue(
 		for (; i < uniform.arraySize; ++i)
 			buffer[i] = Mat3x3f();
 
-		uniform.SetArrayMat3x3f(uniformData, buffer, uniform.arraySize);
+		uniformData.SetArrayMat3x3f(uniform, buffer, uniform.arraySize);
 
 		break;
 	}
 
-	case UniformDataType::Vec4:
+	case kokko::UniformDataType::Vec4:
 	{
 		Vec4f val;
 
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Vec4f(*jsonValue);
 
-		uniform.SetValueVec4f(uniformData, val);
+		uniformData.SetValueVec4f(uniform, val);
 		break;
 	}
 
-	case UniformDataType::Vec4Array:
+	case kokko::UniformDataType::Vec4Array:
 	{
 		cacheBuffer.Resize(uniform.arraySize * sizeof(Vec4f));
 		Vec4f* buffer = reinterpret_cast<Vec4f*>(cacheBuffer.GetData());
@@ -446,23 +384,23 @@ static void SetBufferUniformValue(
 		for (; i < uniform.arraySize; ++i)
 			buffer[i] = Vec4f();
 
-		uniform.SetArrayVec4f(uniformData, buffer, uniform.arraySize);
+		uniformData.SetArrayVec4f(uniform, buffer, uniform.arraySize);
 
 		break;
 	}
 
-	case UniformDataType::Vec3:
+	case kokko::UniformDataType::Vec3:
 	{
 		Vec3f val;
 
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Vec3f(*jsonValue);
 
-		uniform.SetValueVec3f(uniformData, val);
+		uniformData.SetValueVec3f(uniform, val);
 		break;
 	}
 
-	case UniformDataType::Vec3Array:
+	case kokko::UniformDataType::Vec3Array:
 	{
 		cacheBuffer.Resize(uniform.arraySize * sizeof(Vec3f));
 		Vec3f* buffer = reinterpret_cast<Vec3f*>(cacheBuffer.GetData());
@@ -475,23 +413,23 @@ static void SetBufferUniformValue(
 		for (; i < uniform.arraySize; ++i)
 			buffer[i] = Vec3f();
 
-		uniform.SetArrayVec3f(uniformData, buffer, uniform.arraySize);
+		uniformData.SetArrayVec3f(uniform, buffer, uniform.arraySize);
 
 		break;
 	}
 
-	case UniformDataType::Vec2:
+	case kokko::UniformDataType::Vec2:
 	{
 		Vec2f val;
 
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Vec2f(*jsonValue);
 
-		uniform.SetValueVec2f(uniformData, val);
+		uniformData.SetValueVec2f(uniform, val);
 		break;
 	}
 
-	case UniformDataType::Vec2Array:
+	case kokko::UniformDataType::Vec2Array:
 	{
 		cacheBuffer.Resize(uniform.arraySize * sizeof(Vec2f));
 		Vec2f* buffer = reinterpret_cast<Vec2f*>(cacheBuffer.GetData());
@@ -504,23 +442,23 @@ static void SetBufferUniformValue(
 		for (; i < uniform.arraySize; ++i)
 			buffer[i] = Vec2f();
 
-		uniform.SetArrayVec2f(uniformData, buffer, uniform.arraySize);
+		uniformData.SetArrayVec2f(uniform, buffer, uniform.arraySize);
 
 		break;
 	}
 
-	case UniformDataType::Float:
+	case kokko::UniformDataType::Float:
 	{
 		float val = 0.0f;
 
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Float(*jsonValue);
 
-		uniform.SetValueFloat(uniformData, val);
+		uniformData.SetValueFloat(uniform, val);
 		break;
 	}
 
-	case UniformDataType::FloatArray:
+	case kokko::UniformDataType::FloatArray:
 	{
 		cacheBuffer.Resize(uniform.arraySize * sizeof(float));
 		float* buffer = reinterpret_cast<float*>(cacheBuffer.GetData());
@@ -533,23 +471,23 @@ static void SetBufferUniformValue(
 		for (; i < uniform.arraySize; ++i)
 			buffer[i] = 0.0f;
 
-		uniform.SetArrayFloat(uniformData, buffer, uniform.arraySize);
+		uniformData.SetArrayFloat(uniform, buffer, uniform.arraySize);
 
 		break;
 	}
 
-	case UniformDataType::Int:
+	case kokko::UniformDataType::Int:
 	{
 		int val = 0;
 
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Int(*jsonValue);
 
-		uniform.SetValueInt(uniformData, val);
+		uniformData.SetValueInt(uniform, val);
 		break;
 	}
 
-	case UniformDataType::IntArray:
+	case kokko::UniformDataType::IntArray:
 	{
 		cacheBuffer.Resize(uniform.arraySize * sizeof(int));
 		int* buffer = reinterpret_cast<int*>(cacheBuffer.GetData());
@@ -562,7 +500,7 @@ static void SetBufferUniformValue(
 		for (; i < uniform.arraySize; ++i)
 			buffer[i] = 0;
 
-		uniform.SetArrayInt(uniformData, buffer, uniform.arraySize);
+		uniformData.SetArrayInt(uniform, buffer, uniform.arraySize);
 
 		break;
 	}
@@ -593,7 +531,7 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, StringRef config)
 		return false;
 
 	// This initializes material uniforms from the shader's data
-	SetShader(id, shaderId);
+	SetMaterialShader(id, shaderId);
 
 	MaterialData& material = data.material[id.i];
 	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
@@ -602,30 +540,24 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, StringRef config)
 	const rapidjson::Value* varValue = nullptr;
 	bool variablesArrayIsValid = variablesItr != doc.MemberEnd() && variablesItr->value.IsArray();
 
-	for (unsigned int uniformIdx = 0; uniformIdx < shader.uniforms.bufferUniformCount; ++uniformIdx)
+	for (auto& uniform : material.uniformData.GetBufferUniforms())
 	{
-		const BufferUniform& shaderUniform = shader.uniforms.bufferUniforms[uniformIdx];
-		const BufferUniform& materialUniform = material.uniforms.bufferUniforms[uniformIdx];
-		
 		if (variablesArrayIsValid)
-			varValue = FindVariableValue(variablesItr->value, shaderUniform.name);
+			varValue = FindVariableValue(variablesItr->value, uniform.name);
 		else
 			varValue = nullptr;
 
-		SetBufferUniformValue(materialUniform, material.uniformData, varValue, uniformScratchBuffer);
+		SetBufferUniformValue(material.uniformData, uniform, varValue, uniformScratchBuffer);
 	}
 
 	// TEXTURE UNIFORMS
 
-	for (unsigned int uniformIdx = 0; uniformIdx < shader.uniforms.textureUniformCount; ++uniformIdx)
+	for (auto& uniform : material.uniformData.GetTextureUniforms())
 	{
-		const TextureUniform& shaderUniform = shader.uniforms.textureUniforms[uniformIdx];
-		TextureUniform& materialUniform = material.uniforms.textureUniforms[uniformIdx];
-
 		TextureId textureId = TextureId{ 0 };
 
 		if (variablesArrayIsValid &&
-			(varValue = FindVariableValue(variablesItr->value, shaderUniform.name)) != nullptr &&
+			(varValue = FindVariableValue(variablesItr->value, uniform.name)) != nullptr &&
 			varValue->IsString())
 		{
 			StringRef path(varValue->GetString(), varValue->GetStringLength());
@@ -635,17 +567,17 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, StringRef config)
 		if (textureId == TextureId::Null)
 		{
 			// TODO: Find a more robust solution to find default values for textures
-			if (shaderUniform.name.StartsWith(StringRef("normal")))
+			if (uniform.name.StartsWith(StringRef("normal")))
 				textureId = textureManager->GetId_EmptyNormal();
 			else
 				textureId = textureManager->GetId_White2D();
 		}
 
-		materialUniform.textureId = textureId;
+		uniform.textureId = textureId;
 
 		const TextureData& texture = textureManager->GetTextureData(textureId);
 		assert(texture.textureObjectId != 0);
-		materialUniform.textureObject = texture.textureObjectId;
+		uniform.textureObject = texture.textureObjectId;
 	}
 
 	UpdateUniformsToGPU(id);
@@ -656,26 +588,28 @@ bool MaterialManager::LoadFromConfiguration(MaterialId id, StringRef config)
 void MaterialManager::UpdateUniformsToGPU(MaterialId id)
 {
 	KOKKO_PROFILE_FUNCTION();
+	
+	const MaterialData& material = data.material[id.i];
+	const kokko::UniformData& uniforms = material.uniformData;
 
-	MaterialData& material = data.material[id.i];
+	unsigned int uniformBufferSize = uniforms.GetUniformBufferSize();
 
 	// Update uniform buffer object on the GPU
-	if (material.uniforms.bufferUniformCount > 0)
+	if (uniformBufferSize > 0)
 	{
 		static const size_t stackBufferSize = 2048;
 		unsigned char stackBuffer[stackBufferSize];
 		unsigned char* uniformBuffer = nullptr;
 
-		if (material.uniforms.uniformBufferSize <= stackBufferSize)
+		if (uniformBufferSize <= stackBufferSize)
 			uniformBuffer = stackBuffer;
 		else
-			uniformBuffer = static_cast<unsigned char*>(allocator->Allocate(material.uniforms.uniformBufferSize));
+			uniformBuffer = static_cast<unsigned char*>(allocator->Allocate(uniformBufferSize));
 
-		for (size_t i = 0, count = material.uniforms.bufferUniformCount; i < count; ++i)
-			material.uniforms.bufferUniforms[i].UpdateToUniformBuffer(material.uniformData, uniformBuffer);
+		uniforms.WriteToUniformBuffer(uniformBuffer);
 
 		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
-		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, material.uniforms.uniformBufferSize, uniformBuffer);
+		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, uniformBufferSize, uniformBuffer);
 
 		if (uniformBuffer != stackBuffer)
 			allocator->Deallocate(uniformBuffer);

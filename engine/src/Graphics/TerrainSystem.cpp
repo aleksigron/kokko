@@ -19,6 +19,7 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
+#include "Rendering/Uniform.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/MaterialManager.hpp"
@@ -218,11 +219,9 @@ void TerrainSystem::AddRenderCommands(const CustomRenderer::CommandParams& param
 
 void TerrainSystem::RenderCustom(const CustomRenderer::RenderParams& params)
 {
-	const MaterialData& material = materialManager->GetMaterialData(terrainMaterial);
-
 	for (size_t i = 1; i < data.count; ++i)
 	{
-		RenderTerrain(TerrainId{ static_cast<unsigned int>(i) }, material, *params.viewport);
+		RenderTerrain(TerrainId{ static_cast<unsigned int>(i) }, *params.viewport);
 	}
 }
 
@@ -356,7 +355,7 @@ void TerrainSystem::Reallocate(size_t required)
 	data = newData;
 }
 
-void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, const RenderViewport& viewport)
+void TerrainSystem::RenderTerrain(TerrainId id, const RenderViewport& viewport)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -406,11 +405,13 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 
 	// Draw
 
-	renderDevice->UseShaderProgram(material.cachedShaderDeviceId);
+	renderDevice->UseShaderProgram(materialManager->GetMaterialShaderDeviceId(terrainMaterial));
 
-	const TextureUniform* heightMap = material.uniforms.FindTextureUniformByNameHash("height_map"_hash);
-	const TextureUniform* albedoMap = material.uniforms.FindTextureUniformByNameHash("albedo_map"_hash);
-	const TextureUniform* roughMap = material.uniforms.FindTextureUniformByNameHash("roughness_map"_hash);
+	const kokko::UniformData& materialUniforms = materialManager->GetMaterialUniforms(terrainMaterial);
+
+	const TextureUniform* heightMap = materialUniforms.FindTextureUniformByNameHash("height_map"_hash);
+	const TextureUniform* albedoMap = materialUniforms.FindTextureUniformByNameHash("albedo_map"_hash);
+	const TextureUniform* roughMap = materialUniforms.FindTextureUniformByNameHash("roughness_map"_hash);
 
 	if (albedoMap != nullptr)
 	{
@@ -428,7 +429,8 @@ void TerrainSystem::RenderTerrain(TerrainId id, const MaterialData& material, co
 
 	renderDevice->BindVertexArray(vertexData.vertexArray);
 
-	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, material.uniformBufferObject);
+	unsigned int matBufferId = materialManager->GetMaterialUniformBufferId(terrainMaterial);
+	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, matBufferId);
 
 	// For height texture
 

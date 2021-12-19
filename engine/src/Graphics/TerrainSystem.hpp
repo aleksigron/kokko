@@ -126,7 +126,7 @@ private:
 
 	void Reallocate(size_t required);
 
-	void RenderTerrain(TerrainId id, const MaterialData& material, const RenderViewport& viewport);
+	void RenderTerrain(TerrainId id, const RenderViewport& viewport);
 };
 
 }

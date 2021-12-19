@@ -15,6 +15,7 @@
 #include "Rendering/Renderer.hpp"
 #include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
+#include "Rendering/Uniform.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
@@ -215,7 +216,7 @@ void ParticleSystem::RenderCustom(const RenderParams& params)
 		const ShaderData& emitShader = shaderManager->GetShaderData(emitShaderId);
 		renderDevice->UseShaderProgram(emitShader.driverId);
 
-		const TextureUniform* tu = emitShader.uniforms.FindTextureUniformByNameHash("noise_texture"_hash);
+		const kokko::TextureUniform* tu = emitShader.uniforms.FindTextureUniformByNameHash("noise_texture"_hash);
 		if (tu != nullptr)
 		{
 			renderDevice->SetUniformInt(tu->uniformLocation, 0);

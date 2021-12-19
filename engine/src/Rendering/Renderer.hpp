@@ -58,6 +58,11 @@ struct LightingUniformBlock;
 struct PostProcessRenderPass;
 struct ResourceManagers;
 
+namespace kokko
+{
+struct UniformData;
+}
+
 class Renderer : public TransformUpdateReceiver, public CustomRenderer
 {
 private:
@@ -159,7 +164,7 @@ private:
 	void CreateResolutionDependentFramebuffers(int width, int height);
 	void DestroyResolutionDependentFramebuffers();
 
-	void BindMaterialTextures(const MaterialData& material) const;
+	void BindMaterialTextures(const kokko::UniformData& materialUniforms) const;
 	void BindTextures(const ShaderData& shader, unsigned int count,
 		const uint32_t* nameHashes, const unsigned int* textures);
 
