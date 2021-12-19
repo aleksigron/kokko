@@ -60,7 +60,7 @@ public:
 
 			RenderOrderData data;
 			data.material = materialId;
-			data.transparency = res.materialManager->GetMaterialData(materialId).transparency;
+			data.transparency = res.materialManager->GetMaterialTransparency(materialId);
 
 			renderer->SetOrderData(renderObj, data);
 		}
@@ -83,8 +83,7 @@ public:
 			kokko::Uid materialUid;
 			if (materialId != MaterialId::Null)
 			{
-				const MaterialData& material = res.materialManager->GetMaterialData(materialId);
-				materialUid = material.uid;
+				materialUid = res.materialManager->GetMaterialUid(materialId);
 			}
 
 			// We can't reference resources that have been created at runtime

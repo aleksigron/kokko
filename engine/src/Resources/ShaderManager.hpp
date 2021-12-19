@@ -6,7 +6,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/StringRef.hpp"
 
-#include "Rendering/Uniform.hpp"
+#include "Rendering/UniformList.hpp"
 #include "Rendering/TransparencyType.hpp"
 
 #include "Resources/ShaderId.hpp"
@@ -24,7 +24,7 @@ struct ShaderData
 
 	unsigned int driverId;
 
-	UniformList uniforms;
+	kokko::UniformList uniforms;
 };
 
 class ShaderManager

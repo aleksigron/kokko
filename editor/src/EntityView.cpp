@@ -240,9 +240,9 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 			MaterialId materialId = renderer->GetOrderData(renderObj).material;
 			if (materialId != MaterialId::Null)
 			{
-				const MaterialData& material = materialManager->GetMaterialData(materialId);
+				Uid materialUid = materialManager->GetMaterialUid(materialId);
 
-				if (auto asset = context.assetLibrary->FindAssetByUid(material.uid))
+				if (auto asset = context.assetLibrary->FindAssetByUid(materialUid))
 					materialPath = asset->filePath.GetCStr();
 			}
 
@@ -264,15 +264,12 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 						Uid assetUid;
 						std::memcpy(&assetUid, payload->Data, payload->DataSize);
 
-						// TODO: Use AssetLibrary
 						MaterialId newMatId = materialManager->FindMaterialByUid(assetUid);
 						if (newMatId != MaterialId::Null && newMatId != materialId)
 						{
-							const MaterialData& material = materialManager->GetMaterialData(newMatId);
-
 							RenderOrderData order;
 							order.material = newMatId;
-							order.transparency = material.transparency;
+							order.transparency = materialManager->GetMaterialTransparency(newMatId);
 
 							renderer->SetOrderData(renderObj, order);
 						}

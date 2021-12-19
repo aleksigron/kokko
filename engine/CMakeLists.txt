@@ -219,6 +219,10 @@ set (KOKKO_SOURCES
 	src/Rendering/Uniform.cpp
 	src/Rendering/Uniform.hpp
 	src/Rendering/UniformBuffer.hpp
+	src/Rendering/UniformData.cpp
+	src/Rendering/UniformData.hpp
+	src/Rendering/UniformList.cpp
+	src/Rendering/UniformList.hpp
 	src/Rendering/VertexFormat.cpp
 	src/Rendering/VertexFormat.hpp
 	src/Resources/AssetLoader.hpp

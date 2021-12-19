@@ -5,6 +5,7 @@
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderDevice.hpp"
+#include "Rendering/Uniform.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
@@ -113,7 +114,7 @@ void PostProcessRenderer::BindTextures(const ShaderData& shader, unsigned int co
 		if (samplers[i] != 0)
 			renderDevice->BindSampler(i, samplers[i]);
 
-		const TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(nameHashes[i]);
+		const kokko::TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(nameHashes[i]);
 		if (tu != nullptr)
 		{
 			renderDevice->SetUniformInt(tu->uniformLocation, i);

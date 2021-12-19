@@ -40,7 +40,7 @@ namespace ShaderLoader
 	{
 		StringRef name;
 		unsigned int arraySize;
-		UniformDataType type;
+		kokko::UniformDataType type;
 	};
 }
 
@@ -160,10 +160,10 @@ static bool ProcessSource(
 	return true;
 }
 
-static bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUniform& b)
+static bool BufferUniformSortPredicate(const kokko::BufferUniform& a, const kokko::BufferUniform& b)
 {
-	const UniformTypeInfo& aType = UniformTypeInfo::Types[static_cast<unsigned int>(a.type)];
-	const UniformTypeInfo& bType = UniformTypeInfo::Types[static_cast<unsigned int>(b.type)];
+	const kokko::UniformTypeInfo& aType = kokko::UniformTypeInfo::Types[static_cast<unsigned int>(a.type)];
+	const kokko::UniformTypeInfo& bType = kokko::UniformTypeInfo::Types[static_cast<unsigned int>(b.type)];
 	return aType.size > bType.size;
 }
 
@@ -199,7 +199,7 @@ static void AddUniforms(
 	for (size_t uIndex = 0, uCount = uniforms.GetCount(); uIndex < uCount; ++uIndex)
 	{
 		const ShaderLoader::AddUniforms_UniformData& uniform = uniforms[uIndex];
-		UniformTypeInfo type = UniformTypeInfo::FromType(uniform.type);
+		kokko::UniformTypeInfo type = kokko::UniformTypeInfo::FromType(uniform.type);
 
 		if (type.isTexture)
 		{
@@ -219,8 +219,8 @@ static void AddUniforms(
 	nameBytes = (nameBytes + shaderDataAlignment - 1) / shaderDataAlignment * shaderDataAlignment;
 	uniformBlockBytes = (uniformBlockBytes + shaderDataAlignment - 1) / shaderDataAlignment * shaderDataAlignment;
 
-	size_t bufferUniformBytes = sizeof(BufferUniform) * bufferUniformCount;
-	size_t textureUniformBytes = sizeof(TextureUniform) * textureUniformCount;
+	size_t bufferUniformBytes = sizeof(kokko::BufferUniform) * bufferUniformCount;
+	size_t textureUniformBytes = sizeof(kokko::TextureUniform) * textureUniformCount;
 	size_t shaderDataBytes = nameBytes + uniformBlockBytes + bufferUniformBytes + textureUniformBytes;
 
 	// Allocate memory
@@ -230,8 +230,8 @@ static void AddUniforms(
 	char* namePtr = static_cast<char*>(shaderOut.buffer);
 	char* shaderDataEnd = namePtr + shaderDataBytes;
 	char* uniformBlockPtr = namePtr + nameBytes;
-	BufferUniform* bufferUniformPtr = reinterpret_cast<BufferUniform*>(uniformBlockPtr + uniformBlockBytes);
-	TextureUniform* textureUniformPtr = reinterpret_cast<TextureUniform*>(bufferUniformPtr + bufferUniformCount);
+	kokko::BufferUniform* bufferUniformPtr = reinterpret_cast<kokko::BufferUniform*>(uniformBlockPtr + uniformBlockBytes);
+	kokko::TextureUniform* textureUniformPtr = reinterpret_cast<kokko::TextureUniform*>(bufferUniformPtr + bufferUniformCount);
 
 	shaderOut.uniforms.bufferUniforms = bufferUniformPtr;
 	shaderOut.uniforms.textureUniforms = textureUniformPtr;
@@ -243,13 +243,13 @@ static void AddUniforms(
 
 	for (size_t uIndex = 0, uCount = uniforms.GetCount(); uIndex < uCount; ++uIndex)
 	{
-		ShaderUniform* baseUniform = nullptr;
+		kokko::ShaderUniform* baseUniform = nullptr;
 
-		UniformDataType dataType = uniforms[uIndex].type;
+		kokko::UniformDataType dataType = uniforms[uIndex].type;
 
-		if (UniformTypeInfo::FromType(dataType).isTexture)
+		if (kokko::UniformTypeInfo::FromType(dataType).isTexture)
 		{
-			TextureUniform& uniform = shaderOut.uniforms.textureUniforms[textureUniformsCopied];
+			kokko::TextureUniform& uniform = shaderOut.uniforms.textureUniforms[textureUniformsCopied];
 
 			// Since shader is not compiled at this point, we can't know the uniform location
 			uniform.uniformLocation = -1;
@@ -257,10 +257,10 @@ static void AddUniforms(
 
 			switch (dataType)
 			{
-			case UniformDataType::Tex2D:
+			case kokko::UniformDataType::Tex2D:
 				uniform.textureTarget = RenderTextureTarget::Texture2d;
 				break;
-			case UniformDataType::TexCube:
+			case kokko::UniformDataType::TexCube:
 				uniform.textureTarget = RenderTextureTarget::TextureCubeMap;
 				break;
 			default:
@@ -270,18 +270,18 @@ static void AddUniforms(
 
 			++textureUniformsCopied;
 
-			baseUniform = static_cast<ShaderUniform*>(&uniform);
+			baseUniform = static_cast<kokko::ShaderUniform*>(&uniform);
 		}
 		else
 		{
-			BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[bufferUniformsCopied];
+			kokko::BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[bufferUniformsCopied];
 			uniform.dataOffset = 0;
 			uniform.bufferObjectOffset = 0;
 			uniform.arraySize = uniforms[uIndex].arraySize;
 
 			++bufferUniformsCopied;
 
-			baseUniform = static_cast<ShaderUniform*>(&uniform);
+			baseUniform = static_cast<kokko::ShaderUniform*>(&uniform);
 		}
 
 		// Copy uniform name
@@ -302,8 +302,8 @@ static void AddUniforms(
 	shaderOut.uniforms.textureUniformCount = textureUniformCount;
 
 	// Order buffer uniforms based on size
-	BufferUniform* begin = shaderOut.uniforms.bufferUniforms;
-	BufferUniform* end = begin + bufferUniformCount;
+	kokko::BufferUniform* begin = shaderOut.uniforms.bufferUniforms;
+	kokko::BufferUniform* end = begin + bufferUniformCount;
 	std::sort(begin, end, BufferUniformSortPredicate);
 
 	// Calculate CPU and GPU buffer offsets for buffer uniforms
@@ -313,8 +313,8 @@ static void AddUniforms(
 
 	for (size_t i = 0, count = bufferUniformCount; i < count; ++i)
 	{
-		BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
-		const UniformTypeInfo& type = UniformTypeInfo::FromType(uniform.type);
+		kokko::BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
+		const kokko::UniformTypeInfo& type = kokko::UniformTypeInfo::FromType(uniform.type);
 		
 		// Round up the offset to match type aligment
 		bufferObjectOffset = (bufferObjectOffset + type.alignment - 1) / type.alignment * type.alignment;
@@ -362,8 +362,8 @@ static void AddUniforms(
 
 		for (size_t i = 0, count = shaderOut.uniforms.bufferUniformCount; i < count; ++i)
 		{
-			const BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
-			const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
+			const kokko::BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
+			const kokko::UniformTypeInfo& typeInfo = kokko::UniformTypeInfo::FromType(uniform.type);
 
 			auto bufLeft = shaderDataEnd - uniformBlockPtr;
 
@@ -389,7 +389,7 @@ static void UpdateTextureUniformLocations(
 
 	for (size_t idx = 0, count = shaderInOut.uniforms.textureUniformCount; idx < count; ++idx)
 	{
-		TextureUniform& u = shaderInOut.uniforms.textureUniforms[idx];
+		kokko::TextureUniform& u = shaderInOut.uniforms.textureUniforms[idx];
 		u.uniformLocation = renderDevice->GetUniformLocation(shaderInOut.driverId, u.name.str);
 	}
 }
@@ -603,20 +603,20 @@ bool ShaderLoader::LoadFromConfiguration(
 
 				switch (typeHash)
 				{
-				case "tex2d"_hash: uniform.type = UniformDataType::Tex2D; break;
-				case "texCube"_hash: uniform.type = UniformDataType::TexCube; break;
-				case "mat4x4"_hash: uniform.type = UniformDataType::Mat4x4; break;
-				case "mat4x4Array"_hash: uniform.type = UniformDataType::Mat4x4Array; break;
-				case "vec4"_hash: uniform.type = UniformDataType::Vec4; break;
-				case "vec4Array"_hash: uniform.type = UniformDataType::Vec4Array; break;
-				case "vec3"_hash: uniform.type = UniformDataType::Vec3; break;
-				case "vec3Array"_hash: uniform.type = UniformDataType::Vec3Array; break;
-				case "vec2"_hash: uniform.type = UniformDataType::Vec2; break;
-				case "vec2Array"_hash: uniform.type = UniformDataType::Vec2Array; break;
-				case "float"_hash: uniform.type = UniformDataType::Float; break;
-				case "floatArray"_hash: uniform.type = UniformDataType::FloatArray; break;
-				case "int"_hash: uniform.type = UniformDataType::Int; break;
-				case "intArray"_hash: uniform.type = UniformDataType::IntArray; break;
+				case "tex2d"_hash: uniform.type = kokko::UniformDataType::Tex2D; break;
+				case "texCube"_hash: uniform.type = kokko::UniformDataType::TexCube; break;
+				case "mat4x4"_hash: uniform.type = kokko::UniformDataType::Mat4x4; break;
+				case "mat4x4Array"_hash: uniform.type = kokko::UniformDataType::Mat4x4Array; break;
+				case "vec4"_hash: uniform.type = kokko::UniformDataType::Vec4; break;
+				case "vec4Array"_hash: uniform.type = kokko::UniformDataType::Vec4Array; break;
+				case "vec3"_hash: uniform.type = kokko::UniformDataType::Vec3; break;
+				case "vec3Array"_hash: uniform.type = kokko::UniformDataType::Vec3Array; break;
+				case "vec2"_hash: uniform.type = kokko::UniformDataType::Vec2; break;
+				case "vec2Array"_hash: uniform.type = kokko::UniformDataType::Vec2Array; break;
+				case "float"_hash: uniform.type = kokko::UniformDataType::Float; break;
+				case "floatArray"_hash: uniform.type = kokko::UniformDataType::FloatArray; break;
+				case "int"_hash: uniform.type = kokko::UniformDataType::Int; break;
+				case "intArray"_hash: uniform.type = kokko::UniformDataType::IntArray; break;
 
 				default:
 					break;
@@ -624,7 +624,7 @@ bool ShaderLoader::LoadFromConfiguration(
 
 				uniform.arraySize = 0;
 
-				if (UniformTypeInfo::FromType(uniform.type).isArray)
+				if (kokko::UniformTypeInfo::FromType(uniform.type).isArray)
 				{
 					MemberItr sizeItr = uItr->FindMember("size");
 					if (sizeItr != uItr->MemberEnd() && sizeItr->value.IsInt())
@@ -915,20 +915,20 @@ void ShaderFileLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef
 
 		switch (typeHash)
 		{
-		case "tex2d"_hash: uniform.type = UniformDataType::Tex2D; break;
-		case "texCube"_hash: uniform.type = UniformDataType::TexCube; break;
-		case "mat4x4"_hash: uniform.type = UniformDataType::Mat4x4; break;
-		case "mat4x4Array"_hash: uniform.type = UniformDataType::Mat4x4Array; break;
-		case "vec4"_hash: uniform.type = UniformDataType::Vec4; break;
-		case "vec4Array"_hash: uniform.type = UniformDataType::Vec4Array; break;
-		case "vec3"_hash: uniform.type = UniformDataType::Vec3; break;
-		case "vec3Array"_hash: uniform.type = UniformDataType::Vec3Array; break;
-		case "vec2"_hash: uniform.type = UniformDataType::Vec2; break;
-		case "vec2Array"_hash: uniform.type = UniformDataType::Vec2Array; break;
-		case "float"_hash: uniform.type = UniformDataType::Float; break;
-		case "floatArray"_hash: uniform.type = UniformDataType::FloatArray; break;
-		case "int"_hash: uniform.type = UniformDataType::Int; break;
-		case "intArray"_hash: uniform.type = UniformDataType::IntArray; break;
+		case "tex2d"_hash: uniform.type = kokko::UniformDataType::Tex2D; break;
+		case "texCube"_hash: uniform.type = kokko::UniformDataType::TexCube; break;
+		case "mat4x4"_hash: uniform.type = kokko::UniformDataType::Mat4x4; break;
+		case "mat4x4Array"_hash: uniform.type = kokko::UniformDataType::Mat4x4Array; break;
+		case "vec4"_hash: uniform.type = kokko::UniformDataType::Vec4; break;
+		case "vec4Array"_hash: uniform.type = kokko::UniformDataType::Vec4Array; break;
+		case "vec3"_hash: uniform.type = kokko::UniformDataType::Vec3; break;
+		case "vec3Array"_hash: uniform.type = kokko::UniformDataType::Vec3Array; break;
+		case "vec2"_hash: uniform.type = kokko::UniformDataType::Vec2; break;
+		case "vec2Array"_hash: uniform.type = kokko::UniformDataType::Vec2Array; break;
+		case "float"_hash: uniform.type = kokko::UniformDataType::Float; break;
+		case "floatArray"_hash: uniform.type = kokko::UniformDataType::FloatArray; break;
+		case "int"_hash: uniform.type = kokko::UniformDataType::Int; break;
+		case "intArray"_hash: uniform.type = kokko::UniformDataType::IntArray; break;
 
 		default:
 			break;
@@ -936,7 +936,7 @@ void ShaderFileLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef
 
 		uniform.arraySize = 0;
 
-		if (UniformTypeInfo::FromType(uniform.type).isArray)
+		if (kokko::UniformTypeInfo::FromType(uniform.type).isArray)
 		{
 			// TODO: Implement array type size
 			KK_LOG_ERROR("Failed to parse shader because array uniforms aren't implemented");

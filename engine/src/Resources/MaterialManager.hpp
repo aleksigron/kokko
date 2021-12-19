@@ -7,7 +7,7 @@
 #include "Core/StringRef.hpp"
 #include "Core/Uid.hpp"
 
-#include "Rendering/Uniform.hpp"
+#include "Rendering/UniformData.hpp"
 #include "Rendering/TransparencyType.hpp"
 
 #include "Resources/MaterialData.hpp"
@@ -23,24 +23,21 @@ class RenderDevice;
 class ShaderManager;
 class TextureManager;
 
-struct MaterialData
-{
-	kokko::Uid uid;
-	TransparencyType transparency;
-	ShaderId shaderId;
-	unsigned int cachedShaderDeviceId;
-
-	unsigned int uniformBufferObject;
-
-	void* buffer;
-	unsigned char* uniformData;
-
-	UniformList uniforms;
-};
-
 class MaterialManager
 {
 private:
+	struct MaterialData
+	{
+		kokko::Uid uid;
+		TransparencyType transparency;
+		ShaderId shaderId;
+		unsigned int cachedShaderDeviceId;
+
+		unsigned int uniformBufferObject;
+
+		kokko::UniformData uniformData;
+	};
+
 	Allocator* allocator;
 	kokko::AssetLoader* assetLoader;
 	RenderDevice* renderDevice;
@@ -68,8 +65,6 @@ private:
 
 	bool LoadFromConfiguration(MaterialId id, StringRef config);
 
-	void SetShader(MaterialId id, ShaderId shaderId);
-
 public:
 	MaterialManager(
 		Allocator* allocator,
@@ -83,13 +78,26 @@ public:
 	MaterialId CreateMaterial();
 	void RemoveMaterial(MaterialId id);
 
-	MaterialId CreateCopy(MaterialId copyFrom);
-
 	MaterialId FindMaterialByUid(const kokko::Uid& uid);
 	MaterialId FindMaterialByPath(const StringRef& path);
 
-	const MaterialData& GetMaterialData(MaterialId id) const;
-	MaterialData& GetMaterialData(MaterialId id);
+	kokko::Uid GetMaterialUid(MaterialId id) const;
+
+	TransparencyType GetMaterialTransparency(MaterialId id) const;
+	void SetMaterialTransparency(MaterialId id, TransparencyType transparency);
+
+	ShaderId GetMaterialShader(MaterialId id) const;
+	void SetMaterialShader(MaterialId id, ShaderId shader);
+
+	const kokko::UniformData& GetMaterialUniforms(MaterialId id) const
+	{ return data.material[id.i].uniformData; }
+	kokko::UniformData& GetMaterialUniforms(MaterialId id)
+	{ return data.material[id.i].uniformData; }
+
+	unsigned int GetMaterialShaderDeviceId(MaterialId id) const
+	{ return data.material[id.i].cachedShaderDeviceId; }
+	unsigned int GetMaterialUniformBufferId(MaterialId id) const
+	{ return data.material[id.i].uniformBufferObject; }
 
 	void UpdateUniformsToGPU(MaterialId id);
 };
