@@ -13,7 +13,6 @@
 
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/Uniform.hpp"
-#include "Rendering/UniformData.hpp"
 
 #include "Resources/AssetLoader.hpp"
 #include "Resources/TextureManager.hpp"
@@ -278,9 +277,7 @@ static unsigned int PrepareUniformArray(const rapidjson::Value* jsonValue, unsig
 	{
 		valueCount = jsonValue->Size();
 
-		if (valueCount < uniformArraySize)
-			KK_LOG_WARN("JSON didn't provide enough values to fill array");
-		else if (valueCount > uniformArraySize)
+		if (valueCount > uniformArraySize)
 		{
 			KK_LOG_WARN("JSON array was longer than shader array");
 			valueCount = uniformArraySize;
@@ -309,24 +306,21 @@ static void SetBufferUniformValue(
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Mat4x4f(*jsonValue);
 
-		uniformData.SetValueMat4x4f(uniform, val);
+		uniformData.SetValue(uniform, val);
 		break;
 	}
 
 	case kokko::UniformDataType::Mat4x4Array:
 	{
-		cacheBuffer.Resize(uniform.arraySize * sizeof(Mat4x4f));
+		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
+
+		cacheBuffer.Resize(valueCount * sizeof(Mat4x4f));
 		Mat4x4f* buffer = reinterpret_cast<Mat4x4f*>(cacheBuffer.GetData());
 
-		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
-			
-		unsigned int i = 0;
-		for (; i < valueCount; ++i)
+		for (unsigned int i = 0; i < valueCount; ++i)
 			buffer[i] = ValueSerialization::Deserialize_Mat4x4f(jsonValue[i]);
-		for (; i < uniform.arraySize; ++i)
-			buffer[i] = Mat4x4f();
 
-		uniformData.SetArrayMat4x4f(uniform, buffer, uniform.arraySize);
+		uniformData.SetValueArray(uniform, valueCount, buffer);
 
 		break;
 	}
@@ -338,24 +332,21 @@ static void SetBufferUniformValue(
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Mat3x3f(*jsonValue);
 
-		uniformData.SetValueMat3x3f(uniform, val);
+		uniformData.SetValue(uniform, val);
 		break;
 	}
 
 	case kokko::UniformDataType::Mat3x3Array:
 	{
-		cacheBuffer.Resize(uniform.arraySize * sizeof(Mat3x3f));
-		Mat3x3f* buffer = reinterpret_cast<Mat3x3f*>(cacheBuffer.GetData());
-
 		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
 
-		unsigned int i = 0;
-		for (; i < valueCount; ++i)
-			buffer[i] = ValueSerialization::Deserialize_Mat3x3f(jsonValue[i]);
-		for (; i < uniform.arraySize; ++i)
-			buffer[i] = Mat3x3f();
+		cacheBuffer.Resize(valueCount * sizeof(Mat3x3f));
+		Mat3x3f* buffer = reinterpret_cast<Mat3x3f*>(cacheBuffer.GetData());
 
-		uniformData.SetArrayMat3x3f(uniform, buffer, uniform.arraySize);
+		for (unsigned int i = 0; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Mat3x3f(jsonValue[i]);
+
+		uniformData.SetValueArray(uniform, valueCount, buffer);
 
 		break;
 	}
@@ -367,24 +358,21 @@ static void SetBufferUniformValue(
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Vec4f(*jsonValue);
 
-		uniformData.SetValueVec4f(uniform, val);
+		uniformData.SetValue(uniform, val);
 		break;
 	}
 
 	case kokko::UniformDataType::Vec4Array:
 	{
-		cacheBuffer.Resize(uniform.arraySize * sizeof(Vec4f));
-		Vec4f* buffer = reinterpret_cast<Vec4f*>(cacheBuffer.GetData());
-
 		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
 
-		unsigned int i = 0;
-		for (; i < valueCount; ++i)
-			buffer[i] = ValueSerialization::Deserialize_Vec4f(jsonValue[i]);
-		for (; i < uniform.arraySize; ++i)
-			buffer[i] = Vec4f();
+		cacheBuffer.Resize(valueCount * sizeof(Vec4f));
+		Vec4f* buffer = reinterpret_cast<Vec4f*>(cacheBuffer.GetData());
 
-		uniformData.SetArrayVec4f(uniform, buffer, uniform.arraySize);
+		for (unsigned int i = 0; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Vec4f(jsonValue[i]);
+
+		uniformData.SetValueArray(uniform, valueCount, buffer);
 
 		break;
 	}
@@ -396,24 +384,21 @@ static void SetBufferUniformValue(
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Vec3f(*jsonValue);
 
-		uniformData.SetValueVec3f(uniform, val);
+		uniformData.SetValue(uniform, val);
 		break;
 	}
 
 	case kokko::UniformDataType::Vec3Array:
 	{
-		cacheBuffer.Resize(uniform.arraySize * sizeof(Vec3f));
-		Vec3f* buffer = reinterpret_cast<Vec3f*>(cacheBuffer.GetData());
-
 		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
 
-		unsigned int i = 0;
-		for (; i < valueCount; ++i)
-			buffer[i] = ValueSerialization::Deserialize_Vec3f(jsonValue[i]);
-		for (; i < uniform.arraySize; ++i)
-			buffer[i] = Vec3f();
+		cacheBuffer.Resize(valueCount * sizeof(Vec3f));
+		Vec3f* buffer = reinterpret_cast<Vec3f*>(cacheBuffer.GetData());
 
-		uniformData.SetArrayVec3f(uniform, buffer, uniform.arraySize);
+		for (unsigned int i = 0; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Vec3f(jsonValue[i]);
+
+		uniformData.SetValueArray(uniform, valueCount, buffer);
 
 		break;
 	}
@@ -425,24 +410,21 @@ static void SetBufferUniformValue(
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Vec2f(*jsonValue);
 
-		uniformData.SetValueVec2f(uniform, val);
+		uniformData.SetValue(uniform, val);
 		break;
 	}
 
 	case kokko::UniformDataType::Vec2Array:
 	{
-		cacheBuffer.Resize(uniform.arraySize * sizeof(Vec2f));
-		Vec2f* buffer = reinterpret_cast<Vec2f*>(cacheBuffer.GetData());
-
 		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
 
-		unsigned int i = 0;
-		for (; i < valueCount; ++i)
-			buffer[i] = ValueSerialization::Deserialize_Vec2f(jsonValue[i]);
-		for (; i < uniform.arraySize; ++i)
-			buffer[i] = Vec2f();
+		cacheBuffer.Resize(valueCount * sizeof(Vec2f));
+		Vec2f* buffer = reinterpret_cast<Vec2f*>(cacheBuffer.GetData());
 
-		uniformData.SetArrayVec2f(uniform, buffer, uniform.arraySize);
+		for (unsigned int i = 0; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Vec2f(jsonValue[i]);
+
+		uniformData.SetValueArray(uniform, valueCount, buffer);
 
 		break;
 	}
@@ -454,24 +436,21 @@ static void SetBufferUniformValue(
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Float(*jsonValue);
 
-		uniformData.SetValueFloat(uniform, val);
+		uniformData.SetValue(uniform, val);
 		break;
 	}
 
 	case kokko::UniformDataType::FloatArray:
 	{
-		cacheBuffer.Resize(uniform.arraySize * sizeof(float));
-		float* buffer = reinterpret_cast<float*>(cacheBuffer.GetData());
-
 		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
 
-		unsigned int i = 0;
-		for (; i < valueCount; ++i)
-			buffer[i] = ValueSerialization::Deserialize_Float(jsonValue[i]);
-		for (; i < uniform.arraySize; ++i)
-			buffer[i] = 0.0f;
+		cacheBuffer.Resize(valueCount * sizeof(float));
+		float* buffer = reinterpret_cast<float*>(cacheBuffer.GetData());
 
-		uniformData.SetArrayFloat(uniform, buffer, uniform.arraySize);
+		for (unsigned int i = 0; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Float(jsonValue[i]);
+
+		uniformData.SetValueArray(uniform, valueCount, buffer);
 
 		break;
 	}
@@ -483,24 +462,21 @@ static void SetBufferUniformValue(
 		if (jsonValue != nullptr)
 			val = ValueSerialization::Deserialize_Int(*jsonValue);
 
-		uniformData.SetValueInt(uniform, val);
+		uniformData.SetValue(uniform, val);
 		break;
 	}
 
 	case kokko::UniformDataType::IntArray:
 	{
-		cacheBuffer.Resize(uniform.arraySize * sizeof(int));
-		int* buffer = reinterpret_cast<int*>(cacheBuffer.GetData());
-
 		unsigned int valueCount = PrepareUniformArray(jsonValue, uniform.arraySize);
 
-		unsigned int i = 0;
-		for (; i < valueCount; ++i)
-			buffer[i] = ValueSerialization::Deserialize_Int(jsonValue[i]);
-		for (; i < uniform.arraySize; ++i)
-			buffer[i] = 0;
+		cacheBuffer.Resize(valueCount * sizeof(int));
+		int* buffer = reinterpret_cast<int*>(cacheBuffer.GetData());
 
-		uniformData.SetArrayInt(uniform, buffer, uniform.arraySize);
+		for (unsigned int i = 0; i < valueCount; ++i)
+			buffer[i] = ValueSerialization::Deserialize_Int(jsonValue[i]);
+
+		uniformData.SetValueArray(uniform, valueCount, buffer);
 
 		break;
 	}

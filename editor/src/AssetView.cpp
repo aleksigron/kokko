@@ -90,13 +90,18 @@ void AssetView::DrawMaterial(const AssetInfo* asset)
 
 	UniformData& uniforms = materialManager->GetMaterialUniforms(materialId);
 
+	bool edited = false;
+
 	if (ImGui::CollapsingHeader("Properties", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		for (auto& uniform : uniforms.GetBufferUniforms())
 		{
-			DrawMaterialProperty(uniforms, uniform);
+			edited |= DrawMaterialProperty(uniforms, uniform);
 		}
 	}
+
+	if (edited)
+		materialManager->UpdateUniformsToGPU(materialId);
 	
 	if (ImGui::CollapsingHeader("Textures", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -133,49 +138,116 @@ bool AssetView::DrawMaterialProperty(UniformData& uniforms, const BufferUniform&
 
 	textStore.Assign(prop.name);
 
-	const char* unsupportedPropertyType = "unknown";
+	const char* unsupportedPropertyType = nullptr;
 
 	switch (prop.type)
 	{
+	case UniformDataType::Tex2D:
+		unsupportedPropertyType = "Tex2D";
+		break;
+
+	case UniformDataType::TexCube:
+		unsupportedPropertyType = "TexCube";
+		break;
+
+	case UniformDataType::Mat4x4:
+		unsupportedPropertyType = "Mat4x4";
+		break;
+
+	case UniformDataType::Mat4x4Array:
+		unsupportedPropertyType = "Mat4x4Array";
+		break;
+
+	case UniformDataType::Mat3x3:
+		unsupportedPropertyType = "Mat3x3";
+		break;
+
+	case UniformDataType::Mat3x3Array:
+		unsupportedPropertyType = "Mat3x3Array";
+		break;
+
 	case UniformDataType::Vec4:
 	{
 		auto value = uniforms.GetValue<Vec4f>(prop);
-		edited = ImGui::InputFloat4(textStore.GetCStr(), value.ValuePointer());
+		if (ImGui::InputFloat4(textStore.GetCStr(), value.ValuePointer()))
+		{
+			uniforms.SetValue(prop, value);
+			edited = true;
+		}
 		break;
 	}
+
+	case UniformDataType::Vec4Array:
+		unsupportedPropertyType = "Vec4Array";
+		break;
 
 	case UniformDataType::Vec3:
 	{
 		auto value = uniforms.GetValue<Vec3f>(prop);
-		edited = ImGui::InputFloat3(textStore.GetCStr(), value.ValuePointer());
+		if (ImGui::InputFloat3(textStore.GetCStr(), value.ValuePointer()))
+		{
+			uniforms.SetValue(prop, value);
+			edited = true;
+		}
 		break;
 	}
+
+	case UniformDataType::Vec3Array:
+		unsupportedPropertyType = "Vec3Array";
+		break;
 
 	case UniformDataType::Vec2:
 	{
 		auto value = uniforms.GetValue<Vec2f>(prop);
-		edited = ImGui::InputFloat2(textStore.GetCStr(), value.ValuePointer());
+		if (ImGui::InputFloat2(textStore.GetCStr(), value.ValuePointer()))
+		{
+			uniforms.SetValue(prop, value);
+			edited = true;
+		}
 		break;
 	}
+
+	case UniformDataType::Vec2Array:
+		unsupportedPropertyType = "Vec2Array";
+		break;
 
 	case UniformDataType::Float:
 	{
 		auto value = uniforms.GetValue<float>(prop);
-		edited = ImGui::InputFloat(textStore.GetCStr(), &value);
+		if (ImGui::InputFloat(textStore.GetCStr(), &value))
+		{
+			uniforms.SetValue(prop, value);
+			edited = true;
+		}
 		break;
 	}
+
+	case UniformDataType::FloatArray:
+		unsupportedPropertyType = "FloatArray";
+		break;
 
 	case UniformDataType::Int:
 	{
 		auto value = uniforms.GetValue<int>(prop);
-		edited = ImGui::InputInt(textStore.GetCStr(), &value);
+		if (ImGui::InputInt(textStore.GetCStr(), &value))
+		{
+			uniforms.SetValue(prop, value);
+			edited = true;
+		}
 		break;
 	}
 
+	case UniformDataType::IntArray:
+		unsupportedPropertyType = "IntArray";
+		break;
+
 	default:
-		ImGui::Text("Unsupported property type: %s", unsupportedPropertyType);
+		unsupportedPropertyType = "unknown";
 		break;
 	}
+	
+	if (unsupportedPropertyType != nullptr)
+		ImGui::Text("Unsupported property type: %s", unsupportedPropertyType);
 
 	ImGui::Spacing();
 

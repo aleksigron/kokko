@@ -156,12 +156,14 @@ const TextureUniform* UniformData::FindTextureUniformByNameHash(uint32_t nameHas
 	return definitions.FindTextureUniformByNameHash(nameHash);
 }
 
-void UniformData::SetValueInt(const BufferUniform& uniform, int value) const
+template <>
+void UniformData::SetValue(const BufferUniform& uniform, const int& value)
 {
 	*reinterpret_cast<int*>(uniformDataBuffer + uniform.dataOffset) = value;
 }
 
-void UniformData::SetArrayInt(const BufferUniform& uniform, const int* values, unsigned int count) const
+template <>
+void UniformData::SetValueArray(const BufferUniform& uniform, unsigned int count, const int* values)
 {
 	assert(count <= uniform.arraySize);
 
@@ -172,12 +174,14 @@ void UniformData::SetArrayInt(const BufferUniform& uniform, const int* values, u
 		dataStart[i] = values[i];
 }
 
-void UniformData::SetValueFloat(const BufferUniform& uniform, float value) const
+template <>
+void UniformData::SetValue(const BufferUniform& uniform, const float& value)
 {
 	*reinterpret_cast<float*>(uniformDataBuffer + uniform.dataOffset) = value;
 }
 
-void UniformData::SetArrayFloat(const BufferUniform& uniform, const float* values, unsigned int count) const
+template <>
+void UniformData::SetValueArray(const BufferUniform& uniform, unsigned int count, const float* values)
 {
 	assert(count <= uniform.arraySize);
 
@@ -188,12 +192,14 @@ void UniformData::SetArrayFloat(const BufferUniform& uniform, const float* value
 		dataStart[i] = values[i];
 }
 
-void UniformData::SetValueVec2f(const BufferUniform& uniform, const Vec2f& value) const
+template <>
+void UniformData::SetValue(const BufferUniform& uniform, const Vec2f& value)
 {
 	SetValueFloatVec(uniform, 2, value.ValuePointer());
 }
 
-void UniformData::SetArrayVec2f(const BufferUniform& uniform, const Vec2f* values, unsigned int count) const
+template <>
+void UniformData::SetValueArray(const BufferUniform& uniform, unsigned int count, const Vec2f* values)
 {
 	assert(count <= uniform.arraySize);
 
@@ -207,12 +213,14 @@ void UniformData::SetArrayVec2f(const BufferUniform& uniform, const Vec2f* value
 	}
 }
 
-void UniformData::SetValueVec3f(const BufferUniform& uniform, const Vec3f& value) const
+template <>
+void UniformData::SetValue(const BufferUniform& uniform, const Vec3f& value)
 {
 	SetValueFloatVec(uniform, 3, value.ValuePointer());
 }
 
-void UniformData::SetArrayVec3f(const BufferUniform& uniform, const Vec3f* values, unsigned int count) const
+template <>
+void UniformData::SetValueArray(const BufferUniform& uniform, unsigned int count, const Vec3f* values)
 {
 	assert(count <= uniform.arraySize);
 
@@ -227,12 +235,14 @@ void UniformData::SetArrayVec3f(const BufferUniform& uniform, const Vec3f* value
 	}
 }
 
-void UniformData::SetValueVec4f(const BufferUniform& uniform, const Vec4f& value) const
+template <>
+void UniformData::SetValue(const BufferUniform& uniform, const Vec4f& value)
 {
 	SetValueFloatVec(uniform, 4, value.ValuePointer());
 }
 
-void UniformData::SetArrayVec4f(const BufferUniform& uniform, const Vec4f* values, unsigned int count) const
+template <>
+void UniformData::SetValueArray(const BufferUniform& uniform, unsigned int count, const Vec4f* values)
 {
 	assert(count <= uniform.arraySize);
 
@@ -248,12 +258,14 @@ void UniformData::SetArrayVec4f(const BufferUniform& uniform, const Vec4f* value
 	}
 }
 
-void UniformData::SetValueMat3x3f(const BufferUniform& uniform, const Mat3x3f& value) const
+template <>
+void UniformData::SetValue(const BufferUniform& uniform, const Mat3x3f& value)
 {
 	SetValueFloatVec(uniform, 9, value.ValuePointer());
 }
 
-void UniformData::SetArrayMat3x3f(const BufferUniform& uniform, const Mat3x3f* values, unsigned int count) const
+template <>
+void UniformData::SetValueArray(const BufferUniform& uniform, unsigned int count, const Mat3x3f* values)
 {
 	assert(count <= uniform.arraySize);
 
@@ -265,12 +277,14 @@ void UniformData::SetArrayMat3x3f(const BufferUniform& uniform, const Mat3x3f* v
 			dataStart[i * 9 + j] = values[i][j];
 }
 
-void UniformData::SetValueMat4x4f(const BufferUniform& uniform, const Mat4x4f& value) const
+template <>
+void UniformData::SetValue(const BufferUniform& uniform, const Mat4x4f& value)
 {
 	SetValueFloatVec(uniform, 16, value.ValuePointer());
 }
 
-void UniformData::SetArrayMat4x4f(const BufferUniform& uniform, const Mat4x4f* values, unsigned int count) const
+template <>
+void UniformData::SetValueArray(const BufferUniform& uniform, unsigned int count, const Mat4x4f* values)
 {
 	assert(count <= uniform.arraySize);
 
@@ -395,7 +409,7 @@ void UniformData::WriteToUniformBuffer(uint8_t* uniformBuffer) const
 void UniformData::SetValueFloatVec(const BufferUniform& uniform, unsigned int count, const float* values) const
 {
 	for (unsigned int i = 0; i < count; ++i)
-		*reinterpret_cast<float*>(uniformDataBuffer + uniform.dataOffset + i * 4) = values[i];
+		*reinterpret_cast<float*>(uniformDataBuffer + uniform.dataOffset + i * sizeof(float)) = values[i];
 }
 
 }
