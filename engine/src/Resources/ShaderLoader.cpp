@@ -356,7 +356,7 @@ static void AddUniforms(
 			uint32_t materialBind = UniformBlockBinding::Material;
 
 			auto formatRes = fmt::format_to_n(uniformBlockPtr, bufLeft, blockStartFormat, materialBind);
-			assert(formatRes.size <= bufLeft);
+			assert(static_cast<ptrdiff_t>(formatRes.size) <= bufLeft);
 			uniformBlockPtr += formatRes.size;
 		}
 
@@ -370,7 +370,7 @@ static void AddUniforms(
 			// TODO: StringRef doesn't always refer to a null-terminated string, so fix this
 			auto formatRes = fmt::format_to_n(
 				uniformBlockPtr, bufLeft, blockRowFormat, typeInfo.typeName, uniform.name.str);
-			assert(formatRes.size <= bufLeft);
+			assert(static_cast<ptrdiff_t>(formatRes.size) <= bufLeft);
 			uniformBlockPtr += formatRes.size;
 		}
 

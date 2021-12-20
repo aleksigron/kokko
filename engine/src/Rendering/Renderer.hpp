@@ -60,7 +60,7 @@ struct ResourceManagers;
 
 namespace kokko
 {
-struct UniformData;
+class UniformData;
 }
 
 class Renderer : public TransformUpdateReceiver, public CustomRenderer

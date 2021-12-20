@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 
 #include "Core/ArrayView.hpp"
@@ -25,6 +26,8 @@ public:
 
 	unsigned int GetUniformBufferSize() const;
 
+	// Access properties and textures
+
 	ArrayView<BufferUniform> GetBufferUniforms();
 	ArrayView<const BufferUniform> GetBufferUniforms() const;
 
@@ -42,6 +45,8 @@ public:
 
 	TextureUniform* FindTextureUniformByNameHash(uint32_t nameHash);
 	const TextureUniform* FindTextureUniformByNameHash(uint32_t nameHash) const;
+	
+	// Get property values
 
 	template <typename ValueType>
 	const ValueType* GetArray(const BufferUniform& uniform, unsigned int& countOut) const
@@ -56,26 +61,13 @@ public:
 		return *reinterpret_cast<const ValueType*>(uniformDataBuffer + uniform.dataOffset);
 	}
 
-	void SetValueInt(const BufferUniform& uniform, int value) const;
-	void SetArrayInt(const BufferUniform& uniform, const int* values, unsigned int count) const;
+	// Set property values
 
-	void SetValueFloat(const BufferUniform& uniform, float value) const;
-	void SetArrayFloat(const BufferUniform& uniform, const float* values, unsigned int count) const;
+	template <typename ValueType>
+	void SetValue(const BufferUniform& uniform, const ValueType& value);
 
-	void SetValueVec2f(const BufferUniform& uniform, const Vec2f& value) const;
-	void SetArrayVec2f(const BufferUniform& uniform, const Vec2f* values, unsigned int count) const;
-
-	void SetValueVec3f(const BufferUniform& uniform, const Vec3f& value) const;
-	void SetArrayVec3f(const BufferUniform& uniform, const Vec3f* values, unsigned int count) const;
-
-	void SetValueVec4f(const BufferUniform& uniform, const Vec4f& value) const;
-	void SetArrayVec4f(const BufferUniform& uniform, const Vec4f* values, unsigned int count) const;
-
-	void SetValueMat3x3f(const BufferUniform& uniform, const Mat3x3f& value) const;
-	void SetArrayMat3x3f(const BufferUniform& uniform, const Mat3x3f* values, unsigned int count) const;
-
-	void SetValueMat4x4f(const BufferUniform& uniform, const Mat4x4f& value) const;
-	void SetArrayMat4x4f(const BufferUniform& uniform, const Mat4x4f* values, unsigned int count) const;
+	template <typename ValueType>
+	void SetValueArray(const BufferUniform& uniform, unsigned int count, const ValueType* values);
 
 	void WriteToUniformBuffer(uint8_t* uniformBuffer) const;
 
