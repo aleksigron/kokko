@@ -232,9 +232,11 @@ set (KOKKO_SOURCES
 	src/Resources/ImageData.hpp
 	src/Resources/LevelSerializer.cpp
 	src/Resources/LevelSerializer.hpp
+	src/Resources/MaterialData.hpp
 	src/Resources/MaterialManager.cpp
 	src/Resources/MaterialManager.hpp
-	src/Resources/MaterialData.hpp
+	src/Resources/MaterialSerializer.cpp
+	src/Resources/MaterialSerializer.hpp
 	src/Resources/MeshData.hpp
 	src/Resources/MeshLoader.cpp
 	src/Resources/MeshLoader.hpp

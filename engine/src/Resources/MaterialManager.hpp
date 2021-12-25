@@ -16,6 +16,7 @@
 namespace kokko
 {
 class AssetLoader;
+class MaterialSerializer;
 }
 
 class Allocator;
@@ -44,8 +45,6 @@ private:
 	ShaderManager* shaderManager;
 	TextureManager* textureManager;
 
-	Array<unsigned char> uniformScratchBuffer;
-
 	struct InstanceData
 	{
 		unsigned int count;
@@ -63,7 +62,7 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	bool LoadFromConfiguration(MaterialId id, StringRef config);
+	friend class kokko::MaterialSerializer;
 
 public:
 	MaterialManager(
