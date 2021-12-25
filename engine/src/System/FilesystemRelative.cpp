@@ -1,5 +1,7 @@
 #include "System/FilesystemRelative.hpp"
 
+#include "Core/StringRef.hpp"
+
 FilesystemRelative::FilesystemRelative(Allocator* allocator) :
 	pathStore(allocator),
 	basePathLength(0)

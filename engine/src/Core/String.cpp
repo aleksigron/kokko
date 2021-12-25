@@ -5,6 +5,7 @@
 
 #include "Core/CString.hpp"
 #include "Core/Hash.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Memory/Allocator.hpp"
 
@@ -151,6 +152,11 @@ String& String::operator+=(const String& append)
 	this->Append(append.GetRef());
 
 	return *this;
+}
+
+StringRef String::GetRef() const
+{
+	return StringRef(string, length);
 }
 
 void String::Append(StringRef s)
@@ -396,7 +402,11 @@ bool operator!=(const char* lhs, const String& rhs)
 	return operator==(lhs, rhs) == false;
 }
 
-uint32_t kokko::Hash32(const String& value, uint32_t seed)
+namespace kokko {
+
+uint32_t Hash32(const String& value, uint32_t seed)
 {
-	return kokko::Hash32(value.GetData(), value.GetLength(), seed);
+	return Hash32(value.GetData(), value.GetLength(), seed);
+}
+
 }

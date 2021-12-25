@@ -5,6 +5,7 @@
 #include "yaml-cpp/yaml.h"
 
 #include "Core/Core.hpp"
+#include "Core/StringRef.hpp"
 
 #include "EditorConstants.hpp"
 

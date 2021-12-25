@@ -1,44 +1,38 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-project("Kokko Engine")
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(KOKKO_LIB kokko)
-
-set(ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/..")
-
 include_directories(
 	src
-	${ROOT_PATH}/deps/doctest
-	${ROOT_PATH}/deps/fmt/include
-	${ROOT_PATH}/deps/glad/include
-	${ROOT_PATH}/deps/glfw/include
-	${ROOT_PATH}/deps/rapidjson/include
-	${ROOT_PATH}/deps/stb_image/include
-	${ROOT_PATH}/deps/xxhash
-	${ROOT_PATH}/deps/yaml-cpp/include
+	${PROJECT_ROOT}/deps/doctest
+	${PROJECT_ROOT}/deps/fmt/include
+	${PROJECT_ROOT}/deps/glad/include
+	${PROJECT_ROOT}/deps/glfw/include
+	${PROJECT_ROOT}/deps/rapidjson/include
+	${PROJECT_ROOT}/deps/stb_image/include
+	${PROJECT_ROOT}/deps/xxhash
+	${PROJECT_ROOT}/deps/yaml-cpp/include
 )
 
 set (FMT_SOURCES
-	${ROOT_PATH}/deps/fmt/src/format.cc
-	${ROOT_PATH}/deps/fmt/src/os.cc
+	${PROJECT_ROOT}/deps/fmt/src/format.cc
+	${PROJECT_ROOT}/deps/fmt/src/os.cc
 )
 
 set (GLAD_SOURCES
-	${ROOT_PATH}/deps/glad/include/glad/glad.h
-	${ROOT_PATH}/deps/glad/src/glad.c
+	${PROJECT_ROOT}/deps/glad/include/glad/glad.h
+	${PROJECT_ROOT}/deps/glad/src/glad.c
 )
 
 set (STB_IMAGE_SOURCES
-	${ROOT_PATH}/deps/stb_image/include/stb_image/stb_image.h
-	${ROOT_PATH}/deps/stb_image/src/stb_image.cpp
+	${PROJECT_ROOT}/deps/stb_image/include/stb_image/stb_image.h
+	${PROJECT_ROOT}/deps/stb_image/src/stb_image.cpp
 )
 
 set (XXHASH_SOURCES
-	${ROOT_PATH}/deps/xxhash/xxhash.c
-	${ROOT_PATH}/deps/xxhash/xxhash.h
+	${PROJECT_ROOT}/deps/xxhash/xxhash.c
+	${PROJECT_ROOT}/deps/xxhash/xxhash.h
 )
 
 set (DEPS_SOURCES
@@ -297,12 +291,12 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(${ROOT_PATH}/deps/glfw glfw-build)
+add_subdirectory(${PROJECT_ROOT}/deps/glfw glfw-build)
 
 set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(${ROOT_PATH}/deps/yaml-cpp yaml-cpp-build)
+add_subdirectory(${PROJECT_ROOT}/deps/yaml-cpp yaml-cpp-build)
 
 find_package(OpenGL REQUIRED)
 

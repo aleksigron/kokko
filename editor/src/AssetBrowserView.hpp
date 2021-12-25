@@ -4,6 +4,7 @@
 
 #include "Core/Optional.hpp"
 #include "Core/String.hpp"
+#include "Core/StringRef.hpp"
 
 #include "EditorWindow.hpp"
 

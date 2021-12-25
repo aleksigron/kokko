@@ -1,44 +1,40 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-project("Kokko Editor")
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(EXECUTABLE_NAME kokko-editor)
-set(KOKKO_LIB kokko)
 
-set(ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/..")
-set(ENGINE_PATH "${ROOT_PATH}/engine")
+set(ENGINE_PATH "${PROJECT_ROOT}/engine")
 
 include_directories(
 	src
 	${ENGINE_PATH}/src
-	${ROOT_PATH}/deps/doctest
-	${ROOT_PATH}/deps/fmt/include
-	${ROOT_PATH}/deps/glad/include
-	${ROOT_PATH}/deps/rapidjson/include
-	${ROOT_PATH}/deps/imgui
-	${ROOT_PATH}/deps/imguizmo
+	${PROJECT_ROOT}/deps/doctest
+	${PROJECT_ROOT}/deps/fmt/include
+	${PROJECT_ROOT}/deps/glad/include
+	${PROJECT_ROOT}/deps/rapidjson/include
+	${PROJECT_ROOT}/deps/imgui
+	${PROJECT_ROOT}/deps/imguizmo
 )
 
 set (IMGUI_SOURCES
-	${ROOT_PATH}/deps/imgui/imconfig.h
-	${ROOT_PATH}/deps/imgui/imgui.cpp
-	${ROOT_PATH}/deps/imgui/imgui.h
-	${ROOT_PATH}/deps/imgui/imgui_demo.cpp
-	${ROOT_PATH}/deps/imgui/imgui_draw.cpp
-	${ROOT_PATH}/deps/imgui/imgui_tables.cpp
-	${ROOT_PATH}/deps/imgui/imgui_widgets.cpp
-	${ROOT_PATH}/deps/imgui/backends/imgui_impl_glfw.cpp
-	${ROOT_PATH}/deps/imgui/backends/imgui_impl_glfw.h
-	${ROOT_PATH}/deps/imgui/backends/imgui_impl_opengl3.cpp
-	${ROOT_PATH}/deps/imgui/backends/imgui_impl_opengl3.h
+	${PROJECT_ROOT}/deps/imgui/imconfig.h
+	${PROJECT_ROOT}/deps/imgui/imgui.cpp
+	${PROJECT_ROOT}/deps/imgui/imgui.h
+	${PROJECT_ROOT}/deps/imgui/imgui_demo.cpp
+	${PROJECT_ROOT}/deps/imgui/imgui_draw.cpp
+	${PROJECT_ROOT}/deps/imgui/imgui_tables.cpp
+	${PROJECT_ROOT}/deps/imgui/imgui_widgets.cpp
+	${PROJECT_ROOT}/deps/imgui/backends/imgui_impl_glfw.cpp
+	${PROJECT_ROOT}/deps/imgui/backends/imgui_impl_glfw.h
+	${PROJECT_ROOT}/deps/imgui/backends/imgui_impl_opengl3.cpp
+	${PROJECT_ROOT}/deps/imgui/backends/imgui_impl_opengl3.h
 )
 
 set (IMGUIZMO_SOURCES
-	${ROOT_PATH}/deps/imguizmo/ImGuizmo.cpp
-	${ROOT_PATH}/deps/imguizmo/ImGuizmo.h
+	${PROJECT_ROOT}/deps/imguizmo/ImGuizmo.cpp
+	${PROJECT_ROOT}/deps/imguizmo/ImGuizmo.h
 )
 
 set (EDITOR_SOURCES
@@ -93,16 +89,14 @@ set(SOURCES
 add_executable(${EXECUTABLE_NAME} $<TARGET_OBJECTS:${KOKKO_LIB}> ${SOURCES})
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/build/bin/release"
-	RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_CURRENT_SOURCE_DIR}/build/bin/relwithdebinfo"
-	RUNTIME_OUTPUT_DIRECTORY_RELMINSIZE "${CMAKE_CURRENT_SOURCE_DIR}/build/bin/relminsize"
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/build/bin/debug"
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_ROOT}/build/bin/release"
+	RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_ROOT}/build/bin/relwithdebinfo"
+	RUNTIME_OUTPUT_DIRECTORY_RELMINSIZE "${PROJECT_ROOT}/build/bin/relminsize"
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_ROOT}/build/bin/debug"
 )
 
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
 	IMGUI_IMPL_OPENGL_LOADER_GLAD
 )
-
-add_subdirectory(${ENGINE_PATH} kokko-build)
 
 target_link_libraries(${EXECUTABLE_NAME} ${KOKKO_LIB})

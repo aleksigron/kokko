@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstddef>
-
-#include "Core/StringRef.hpp"
+#include <cstdint>
 
 class Allocator;
+
+struct StringRef;
 
 class String
 {
@@ -53,7 +54,7 @@ public:
 	const char* End() const { return string + length; }
 
 	size_t GetLength() const { return length; }
-	StringRef GetRef() const { return StringRef(string, length); }
+	StringRef GetRef() const;
 
 	char& At(size_t index) { return string[index]; }
 	const char& At(size_t index) const { return string[index]; }
@@ -103,5 +104,5 @@ bool operator!=(const char* lhs, const String& rhs);
 
 namespace kokko
 {
-uint32_t Hash32(const String& value, uint32_t seed);
+uint32_t Hash32(const ::String& value, uint32_t seed);
 }
