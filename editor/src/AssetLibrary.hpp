@@ -6,6 +6,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
 #include "Core/String.hpp"
+#include "Core/StringRef.hpp"
 #include "Core/Uid.hpp"
 
 class Allocator;

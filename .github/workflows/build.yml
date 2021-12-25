@@ -45,13 +45,12 @@ jobs:
         CC: ${{matrix.config.cc}}
         CXX: ${{matrix.config.cxx}}
       run: |
-        cd ${{github.workspace}}/editor
         mkdir build
         cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
 
     - name: Build
       # GitHub runners have 2 vCPU, run 3 parallel build jobs
-      run: cmake --build ${{github.workspace}}/editor/build --config ${{matrix.config.build_type}} --parallel 3
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --parallel 3
 
     - name: Run tests
-      run: ${{github.workspace}}/editor/build/bin/${{matrix.config.build_type}}/${{matrix.config.build_product}} --exit=true
+      run: ${{github.workspace}}/build/bin/${{matrix.config.build_type}}/${{matrix.config.build_product}} --exit=true

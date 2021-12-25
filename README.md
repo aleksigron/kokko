@@ -48,7 +48,6 @@ A simple cross-platform game engine using OpenGL. I hope that little by little, 
 ### Create a Visual Studio solution
 ```
 git submodule update --init --recursive
-cd editor
 mkdir build
 cmake -B build -G "Visual Studio 16 2019" -A x64
 ```

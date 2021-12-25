@@ -2,6 +2,8 @@
 
 class Allocator;
 
+struct StringRef;
+
 #include "Core/String.hpp"
 
 #include "System/Filesystem.hpp"

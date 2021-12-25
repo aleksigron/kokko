@@ -4,6 +4,8 @@
 
 #include "Core/String.hpp"
 
+struct StringRef;
+
 namespace kokko
 {
 namespace editor
