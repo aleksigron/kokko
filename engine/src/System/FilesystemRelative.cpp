@@ -32,7 +32,7 @@ bool FilesystemRelative::ReadBinary(const char* path, Array<uint8_t>& output)
 	return result;
 }
 
-bool FilesystemRelative::ReadText(const char* path, String& output)
+bool FilesystemRelative::ReadText(const char* path, kokko::String& output)
 {
 	pathStore.Append(path);
 	bool result = defaultFs.ReadText(pathStore.GetCStr(), output);

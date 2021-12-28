@@ -126,7 +126,7 @@ void LevelSerializer::DeserializeEntitiesFromString(const char* data, SceneObjec
 	CreateObjects(node, parent);
 }
 
-void LevelSerializer::SerializeEntitiesToString(ArrayView<Entity> serializeEntities, String& serializedOut)
+void LevelSerializer::SerializeEntitiesToString(ArrayView<Entity> serializeEntities, kokko::String& serializedOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 

@@ -31,7 +31,7 @@ bool FilesystemDefault::ReadBinary(const char* path, Array<unsigned char>& outpu
 	return false;
 }
 
-bool FilesystemDefault::ReadText(const char* path, String& output)
+bool FilesystemDefault::ReadText(const char* path, kokko::String& output)
 {
 	KOKKO_PROFILE_FUNCTION();
 

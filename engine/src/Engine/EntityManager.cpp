@@ -92,14 +92,14 @@ void EntityManager::SetDebugName(Entity entity, const char* name)
 		else
 		{
 			nameIndex = static_cast<uint32_t>(debugNames.GetCount());
-			debugNames.PushBack(String(debugNameAllocator));
+			debugNames.PushBack(kokko::String(debugNameAllocator));
 		}
 
 		pair = debugNameMap.Insert(entity.id);
 		pair->second = nameIndex;
 	}
 
-	String& nameString = debugNames.At(pair->second);
+	kokko::String& nameString = debugNames.At(pair->second);
 	nameString.Clear();
 	nameString.Append(name);
 }

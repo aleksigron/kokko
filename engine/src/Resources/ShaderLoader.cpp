@@ -46,7 +46,7 @@ namespace ShaderLoader
 
 static bool LoadIncludes(
 	const rapidjson::Value& value,
-	HashMap<uint32_t, String>& includeFileCache,
+	HashMap<uint32_t, kokko::String>& includeFileCache,
 	Allocator* allocator,
 	Filesystem* filesystem)
 {
@@ -69,7 +69,7 @@ static bool LoadIncludes(
 			// File with this hash hasn't been read before, read it now
 			if (file == nullptr)
 			{
-				String fileContent(allocator);
+				kokko::String fileContent(allocator);
 				
 				if (filesystem->ReadText(itr->GetString(), fileContent))
 				{
@@ -92,10 +92,10 @@ static bool ProcessSource(
 	StringRef versionStr,
 	StringRef uniformBlock,
 	const rapidjson::Value* includePaths,
-	HashMap<uint32_t, String>& includeFileCache,
+	HashMap<uint32_t, kokko::String>& includeFileCache,
 	Allocator* allocator,
 	Filesystem* filesystem,
-	String& output)
+	kokko::String& output)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -125,7 +125,7 @@ static bool ProcessSource(
 		}
 	}
 
-	String mainFile(allocator);
+	kokko::String mainFile(allocator);
 
 	if (filesystem->ReadText(mainPath, mainFile) == false)
 	{
@@ -422,7 +422,7 @@ static bool Compile(
 
 		if (infoLogLength > 0)
 		{
-			String infoLog(allocator);
+			kokko::String infoLog(allocator);
 			infoLog.Resize(infoLogLength);
 
 			// Print out info log
@@ -505,7 +505,7 @@ static bool CompileAndLink(
 
 		if (infoLogLength > 0)
 		{
-			String infoLog(allocator);
+			kokko::String infoLog(allocator);
 			infoLog.Resize(infoLogLength);
 
 			// Get info log
@@ -686,7 +686,7 @@ bool ShaderLoader::LoadFromConfiguration(
 
 	// Load all include files, they can be shared between shader stages
 
-	HashMap<uint32_t, String> includeFileCache(allocator);
+	HashMap<uint32_t, kokko::String> includeFileCache(allocator);
 
 	bool includeLoadSuccess = true;
 
@@ -708,9 +708,9 @@ bool ShaderLoader::LoadFromConfiguration(
 	bool processSuccess = true;
 
 	// TODO: Make this definition more robust
-	String sourceBuffers[MaxStageCount] = {
-		String(allocator),
-		String(allocator)
+	kokko::String sourceBuffers[MaxStageCount] = {
+		kokko::String(allocator),
+		kokko::String(allocator)
 	};
 
 	if (includeLoadSuccess)
@@ -770,7 +770,7 @@ ShaderFileLoader::ShaderFileLoader(Allocator* allocator, Filesystem* filesystem,
 	pathString(allocator)
 {
 	for (size_t i = 0; i < MaxStageCount; ++i)
-		processedStageSources[i] = String(allocator);
+		processedStageSources[i] = kokko::String(allocator);
 }
 
 ShaderFileLoader::~ShaderFileLoader()
@@ -997,7 +997,7 @@ bool ShaderFileLoader::ProcessStage(
 	StringRef uniformBlockDefinition,
 	StringRef mainFilePath,
 	StringRef mainFileContent,
-	String& processedSourceOut)
+	kokko::String& processedSourceOut)
 {
 	processedSourceOut.Clear();
 	processedSourceOut.Append(versionStr);
@@ -1019,7 +1019,7 @@ bool ShaderFileLoader::ProcessStage(
 bool ShaderFileLoader::ProcessIncludes(
 	StringRef sourceStr,
 	uint32_t filePathHash,
-	String& processedSourceOut)
+	kokko::String& processedSourceOut)
 {
 	const StringRef includeDeclStr("#include ");
 
@@ -1078,7 +1078,7 @@ bool ShaderFileLoader::ProcessIncludes(
 			{
 				pathString.Assign(includePath);
 
-				String fileContent(allocator);
+				kokko::String fileContent(allocator);
 
 				if (filesystem->ReadText(pathString.GetCStr(), fileContent))
 				{

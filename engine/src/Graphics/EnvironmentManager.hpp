@@ -25,7 +25,7 @@ class EnvironmentManager
 private:
 	struct Environment
 	{
-		String sourcePath;
+		kokko::String sourcePath;
 		EnvironmentTextures textures;
 	};
 

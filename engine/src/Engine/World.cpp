@@ -100,7 +100,7 @@ bool World::LoadFromFile(const char* path, const char* displayName)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	String sceneConfig(allocator);
+	kokko::String sceneConfig(allocator);
 
 	if (filesystem->ReadText(path, sceneConfig))
 	{

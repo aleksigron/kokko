@@ -7,6 +7,9 @@ class Allocator;
 
 struct StringRef;
 
+namespace kokko
+{
+
 class String
 {
 private:
@@ -102,7 +105,6 @@ bool operator!=(const String& lhs, const String& rhs);
 bool operator!=(const String& lhs, const char* rhs);
 bool operator!=(const char* lhs, const String& rhs);
 
-namespace kokko
-{
-uint32_t Hash32(const ::String& value, uint32_t seed);
+uint32_t Hash32(const String& value, uint32_t seed);
+
 }

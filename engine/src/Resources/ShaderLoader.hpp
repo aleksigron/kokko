@@ -59,10 +59,10 @@ private:
 	Filesystem* filesystem;
 	RenderDevice* renderDevice;
 
-	HashMap<uint32_t, String> includeFileCache;
+	HashMap<uint32_t, kokko::String> includeFileCache;
 	SortedArray<uint32_t> filesIncludedInStage;
-	String pathString;
-	String processedStageSources[MaxStageCount];
+	kokko::String pathString;
+	kokko::String processedStageSources[MaxStageCount];
 
 	bool FindShaderSections(
 		StringRef shaderContents,
@@ -86,10 +86,10 @@ private:
 		StringRef uniformBlockDefinition,
 		StringRef mainFilePath,
 		StringRef mainFileContent,
-		String& processedSourceOut);
+		kokko::String& processedSourceOut);
 
 	bool ProcessIncludes(
 		StringRef sourceStr,
 		uint32_t filePathHash,
-		String& processedSourceOut);
+		kokko::String& processedSourceOut);
 };

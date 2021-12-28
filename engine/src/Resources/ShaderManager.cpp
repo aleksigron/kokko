@@ -148,8 +148,8 @@ ShaderId ShaderManager::GetIdByPath(StringRef path)
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	String file(allocator);
-	String pathStr(allocator, path);
+	kokko::String file(allocator);
+	kokko::String pathStr(allocator, path);
 
 	if (filesystem->ReadText(pathStr.GetCStr(), file))
 	{

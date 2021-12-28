@@ -41,7 +41,7 @@ private:
 	unsigned int totalWarningCount;
 	unsigned int totalErrorCount;
 
-	String inputValue;
+	kokko::String inputValue;
 	double lastTextInputTime;
 
 public:

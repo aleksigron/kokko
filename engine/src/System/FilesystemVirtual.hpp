@@ -25,7 +25,7 @@ public:
 	void SetMountPoints(ArrayView<MountPoint> mounts);
 
 	virtual bool ReadBinary(const char* path, Array<uint8_t>& output) override;
-	virtual bool ReadText(const char* path, String& output) override;
+	virtual bool ReadText(const char* path, kokko::String& output) override;
 	virtual bool WriteText(const char* path, ArrayView<const char> content, bool append) override;
 
 private:
@@ -39,6 +39,6 @@ private:
 	size_t mountPointCount;
 	char* mountStringBuffer;
 
-	String pathStore;
+	kokko::String pathStore;
 	FilesystemDefault defaultFs;
 };

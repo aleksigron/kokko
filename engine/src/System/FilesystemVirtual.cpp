@@ -91,7 +91,7 @@ bool FilesystemVirtual::ReadBinary(const char* path, Array<uint8_t>& output)
 	}
 }
 
-bool FilesystemVirtual::ReadText(const char* path, String& output)
+bool FilesystemVirtual::ReadText(const char* path, kokko::String& output)
 {
 	if (FindMountedPath(path))
 	{
