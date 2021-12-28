@@ -33,14 +33,7 @@ struct Uid
 		return operator==(other) == false;
 	}
 
-	operator bool()
-	{
-		return raw[0] != 0 || raw[1] != 0;
-	}
-
 	void WriteTo(ArrayView<char> out) const;
 };
-
-uint32_t Hash32(const Uid& uid, uint32_t seed);
 
 }
