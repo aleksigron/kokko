@@ -105,6 +105,4 @@ bool operator!=(const String& lhs, const String& rhs);
 bool operator!=(const String& lhs, const char* rhs);
 bool operator!=(const char* lhs, const String& rhs);
 
-uint32_t Hash32(const String& value, uint32_t seed);
-
 }

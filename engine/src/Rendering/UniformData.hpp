@@ -7,6 +7,7 @@
 
 #include "Math/Mat4x4.hpp"
 
+#include "Rendering/Uniform.hpp"
 #include "Rendering/UniformList.hpp"
 
 class Allocator;
