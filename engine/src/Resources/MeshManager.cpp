@@ -165,7 +165,7 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 		this->Reallocate(data.count + 1);
 
 	Array<unsigned char> file(allocator);
-	String pathStr(allocator, path);
+	kokko::String pathStr(allocator, path);
 
 	if (filesystem->ReadBinary(pathStr.GetCStr(), file))
 	{

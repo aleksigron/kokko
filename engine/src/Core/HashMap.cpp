@@ -26,7 +26,7 @@ TEST_CASE("HashMap.Lookup")
 TEST_CASE("HashMap.LookupNonTrivial")
 {
 	Allocator* allocator = Allocator::GetDefault();
-	HashMap<String, String> map(allocator);
+	HashMap<kokko::String, kokko::String> map(allocator);
 
 	char buf[32];
 
@@ -39,14 +39,14 @@ TEST_CASE("HashMap.LookupNonTrivial")
 	constexpr int count = 16;
 	for (int i = 0; i < count; ++i)
 	{
-		String s(allocator, getString(i));
+		kokko::String s(allocator, getString(i));
 		auto* pair = map.Insert(s);
 		pair->second = s;
 	}
 
 	for (int i = 0; i < count; ++i)
 	{
-		String s(allocator, getString(i));
+		kokko::String s(allocator, getString(i));
 		auto pair = map.Lookup(s);
 		CHECK(pair != nullptr);
 		CHECK(pair->second == s);

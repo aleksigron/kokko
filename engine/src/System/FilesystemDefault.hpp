@@ -6,6 +6,6 @@ class FilesystemDefault : public Filesystem
 {
 public:
 	virtual bool ReadBinary(const char* path, Array<uint8_t>& output) override;
-	virtual bool ReadText(const char* path, String& output) override;
+	virtual bool ReadText(const char* path, kokko::String& output) override;
 	virtual bool WriteText(const char* path, ArrayView<const char> content, bool append) override;
 };

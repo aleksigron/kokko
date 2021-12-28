@@ -99,7 +99,7 @@ bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const cha
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	String content(allocator);
+	kokko::String content(allocator);
 
 	if (filesystem->ReadText(filePath, content))
 	{

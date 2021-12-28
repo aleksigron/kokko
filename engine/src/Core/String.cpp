@@ -9,6 +9,9 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 String::String() :
 	allocator(nullptr),
 	string(nullptr),
@@ -401,8 +404,6 @@ bool operator!=(const char* lhs, const String& rhs)
 {
 	return operator==(lhs, rhs) == false;
 }
-
-namespace kokko {
 
 uint32_t Hash32(const String& value, uint32_t seed)
 {

@@ -25,7 +25,7 @@ private:
 	// Debug names array indices that are free to use
 	Array<unsigned int> debugNameFreelist;
 
-	Array<String> debugNames;
+	Array<kokko::String> debugNames;
 
 	FixedArray<char, 32> unnamedEntityBuffer;
 

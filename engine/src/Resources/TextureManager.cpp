@@ -193,7 +193,7 @@ TextureId TextureManager::GetIdByPath(StringRef path)
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	String pathStr(allocator, path);
+	kokko::String pathStr(allocator, path);
 
 	TextureId id = CreateTexture();
 

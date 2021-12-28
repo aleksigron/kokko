@@ -9,7 +9,6 @@ class Allocator;
 class World;
 class ComponentSerializer;
 class TransformSerializer;
-class String;
 
 struct Entity;
 struct SceneObjectId;
@@ -17,8 +16,13 @@ struct StringRef;
 
 namespace YAML
 {
-	class Emitter;
-	class Node;
+class Emitter;
+class Node;
+}
+
+namespace kokko
+{
+class String;
 }
 
 class LevelSerializer
@@ -33,7 +37,7 @@ public:
 	bool SerializeToFile(const char* filePath);
 
 	void DeserializeEntitiesFromString(const char* data, SceneObjectId parent);
-	void SerializeEntitiesToString(ArrayView<Entity> serializeEntities, String& serializedOut);
+	void SerializeEntitiesToString(ArrayView<Entity> serializeEntities, kokko::String& serializedOut);
 
 private:
 	Allocator* allocator;
