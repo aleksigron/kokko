@@ -89,11 +89,11 @@ void ParticleSystem::Initialize()
 	quadMeshId = meshManager->CreateMesh();
 	meshManager->Upload(quadMeshId, vertexData);
 
-	initUpdateShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_init_update.shader.json"));
-	emitShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_emit.shader.json"));
-	simulateShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_simulate.shader.json"));
-	finishUpdateShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_finish_update.shader.json"));
-	renderShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_render.shader.json"));
+	initUpdateShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_init_update.glsl"));
+	emitShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_emit.glsl"));
+	simulateShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_simulate.glsl"));
+	finishUpdateShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_finish_update.glsl"));
+	renderShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/particles/particle_render.glsl"));
 
 	// Create noise texture
 

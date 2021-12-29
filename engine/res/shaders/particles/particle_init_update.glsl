@@ -1,3 +1,8 @@
+#version 450
+
+#stage compute
+#include "engine/shaders/common/constants.glsl"
+#include "engine/shaders/particles/compute_common.glsl"
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 

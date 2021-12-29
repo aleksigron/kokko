@@ -1,3 +1,10 @@
+#version 450
+
+#stage vertex
+#include "engine/shaders/common/constants.glsl"
+#include "engine/shaders/common/transform_block.glsl"
+#include "engine/shaders/common/viewport_block.glsl"
+
 layout(location = 0) in vec3 vertex_pos;
 
 out VS_TO_FS
@@ -31,4 +38,21 @@ void main()
 	gl_Position = viewport.P * (v_pos + vec4(vertex_pos, 0.0) * scale);
 	vs_out.tex_coord = vertex_pos.xy + vec2(0.5);
 	vs_out.age = clamp(life.x / life.y, 0.0, 1.0);
+}
+
+#stage fragment
+
+in VS_TO_FS
+{
+	vec2 tex_coord;
+	float age;
+} fs_in;
+
+out vec4 color;
+
+void main()
+{
+	float age_alpha = 1.0 - (fs_in.age * fs_in.age * fs_in.age);
+	float pos_alpha = smoothstep(0.5, 0.0, length(fs_in.tex_coord - vec2(0.5)));
+	color = vec4(1.5, 1.5, 1.5, pos_alpha * age_alpha);
 }
