@@ -323,7 +323,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 
 	// Load shader
 
-	ShaderId equirectShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/preprocess/equirect_to_cube.shader.json"));
+	ShaderId equirectShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/preprocess/equirect_to_cube.glsl"));
 	const ShaderData& equirectShader = shaderManager->GetShaderData(equirectShaderId);
 
 	// Bind common resources
@@ -372,7 +372,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 
 	// Load shader
 
-	ShaderId calcDiffuseShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/preprocess/calc_diffuse_irradiance.shader.json"));
+	ShaderId calcDiffuseShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/preprocess/calc_diffuse_irradiance.glsl"));
 	const ShaderData& calcDiffuseShader = shaderManager->GetShaderData(calcDiffuseShaderId);
 
 	renderDevice->UseShaderProgram(calcDiffuseShader.driverId);
@@ -414,7 +414,7 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 
 	// Load shader
 
-	ShaderId calcSpecularShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/preprocess/calc_specular_irradiance.shader.json"));
+	ShaderId calcSpecularShaderId = shaderManager->GetIdByPath(StringRef("engine/shaders/preprocess/calc_specular_irradiance.glsl"));
 	const ShaderData& calcSpecularShader = shaderManager->GetShaderData(calcSpecularShaderId);
 
 	renderDevice->UseShaderProgram(calcSpecularShader.driverId);
