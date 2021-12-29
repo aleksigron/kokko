@@ -1,3 +1,9 @@
+#version 450
+#property noise_texture tex2d
+
+#stage compute
+#include "engine/shaders/common/constants.glsl"
+#include "engine/shaders/particles/compute_common.glsl"
 
 layout(local_size_x = GROUP_SIZE_EMIT) in;
 

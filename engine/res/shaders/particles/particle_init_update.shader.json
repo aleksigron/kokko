@@ -1,9 +1,0 @@
-{
-	"cs": {
-		"main": "engine/shaders/particles/particle_init_update.comp.glsl",
-		"includes": [
-			"engine/shaders/common/constants.glsl",
-			"engine/shaders/particles/compute_common.glsl"
-		]
-	}
-}
