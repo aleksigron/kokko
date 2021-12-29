@@ -343,7 +343,7 @@ void Renderer::Initialize()
 		RenderCommandData::ViewportData viewport{ 0, 0, LutSize, LutSize };
 		device->Viewport(&viewport);
 
-		const char* path = "engine/shaders/preprocess/calc_brdf_lut.shader.json";
+		const char* path = "engine/shaders/preprocess/calc_brdf_lut.glsl";
 		ShaderId calcBrdfShaderId = shaderManager->GetIdByPath(StringRef(path));
 		const ShaderData& calcBrdfShader = shaderManager->GetShaderData(calcBrdfShaderId);
 		device->UseShaderProgram(calcBrdfShader.driverId);
@@ -363,7 +363,7 @@ void Renderer::Initialize()
 		skyboxMeshId = meshManager->CreateMesh();
 		MeshPresets::UploadCube(meshManager, skyboxMeshId);
 
-		const char* shaderPath = "engine/shaders/skybox/skybox.shader.json";
+		const char* shaderPath = "engine/shaders/skybox/skybox.glsl";
 		skyboxShaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
 
 		device->CreateBuffers(1, &skyboxUniformBufferId);
