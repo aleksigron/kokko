@@ -26,150 +26,27 @@
 
 #include "System/Filesystem.hpp"
 
-static const size_t MaxStageCount = 2;
-
-namespace ShaderLoader
+namespace
 {
-	struct StageSource
-	{
-		RenderShaderStage stage;
-		StringRef source;
-	};
+const size_t MaxStageCount = 2;
 
-	struct AddUniforms_UniformData
-	{
-		StringRef name;
-		unsigned int arraySize;
-		kokko::UniformDataType type;
-	};
-}
-
-static bool LoadIncludes(
-	const rapidjson::Value& value,
-	HashMap<uint32_t, kokko::String>& includeFileCache,
-	Allocator* allocator,
-	Filesystem* filesystem)
+struct AddUniforms_UniformData
 {
-	KOKKO_PROFILE_FUNCTION();
+	StringRef name;
+	unsigned int arraySize;
+	kokko::UniformDataType type;
+};
 
-	if (value.IsArray() == false)
-	{
-		KK_LOG_ERROR("LoadIncludes: value is not an array");
-		return false;
-	}
-
-	using ValueItr = rapidjson::Value::ConstValueIterator;
-	for (ValueItr itr = value.Begin(), end = value.End(); itr != end; ++itr)
-	{
-		if (itr->IsString())
-		{
-			uint32_t hash = kokko::HashString(itr->GetString(), itr->GetStringLength());
-			auto* file = includeFileCache.Lookup(hash);
-
-			// File with this hash hasn't been read before, read it now
-			if (file == nullptr)
-			{
-				kokko::String fileContent(allocator);
-				
-				if (filesystem->ReadText(itr->GetString(), fileContent))
-				{
-					file = includeFileCache.Insert(hash);
-					file->second = std::move(fileContent);
-				}
-				else
-					KK_LOG_ERROR("Shader include couldn't be read from file");
-			}
-		}
-		else
-			KK_LOG_ERROR("Shader include isn't a string");
-	}
-
-	return true;
-}
-
-static bool ProcessSource(
-	const char* mainPath,
-	StringRef versionStr,
-	StringRef uniformBlock,
-	const rapidjson::Value* includePaths,
-	HashMap<uint32_t, kokko::String>& includeFileCache,
-	Allocator* allocator,
-	Filesystem* filesystem,
-	kokko::String& output)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	// Count include files length
-	std::size_t totalLength = versionStr.len + uniformBlock.len;
-
-	if (includePaths != nullptr)
-	{
-		if (includePaths->IsArray() == false)
-		{
-			KK_LOG_ERROR("ProcessSource: includePaths->value is not an array");
-			return false;
-		}
-
-		for (auto itr = includePaths->Begin(), end = includePaths->End(); itr != end; ++itr)
-		{
-			uint32_t hash = kokko::HashString(itr->GetString(), itr->GetStringLength());
-			auto* file = includeFileCache.Lookup(hash);
-
-			if (file == nullptr)
-			{
-				KK_LOG_ERROR("ProcessSource: include file source not found from includeFileCache map");
-				return false;
-			}
-
-			totalLength += file->second.GetLength();
-		}
-	}
-
-	kokko::String mainFile(allocator);
-
-	if (filesystem->ReadText(mainPath, mainFile) == false)
-	{
-		KK_LOG_ERROR("ProcessSource: failed to read main shader file");
-		return false;
-	}
-
-	totalLength += mainFile.GetLength();
-
-	output.Reserve(totalLength);
-
-	// Concatenate all files together
-
-	output.Append(versionStr);
-
-	if (uniformBlock.str != nullptr)
-		output.Append(uniformBlock);
-
-	if (includePaths != nullptr)
-	{
-		for (auto itr = includePaths->Begin(), end = includePaths->End(); itr != end; ++itr)
-		{
-			uint32_t hash = kokko::HashString(itr->GetString(), itr->GetStringLength());
-			auto* file = includeFileCache.Lookup(hash);
-
-			output.Append(file->second);
-		}
-	}
-
-	output.Append(mainFile);
-
-	return true;
-}
-
-static bool BufferUniformSortPredicate(const kokko::BufferUniform& a, const kokko::BufferUniform& b)
+bool BufferUniformSortPredicate(const kokko::BufferUniform& a, const kokko::BufferUniform& b)
 {
 	const kokko::UniformTypeInfo& aType = kokko::UniformTypeInfo::Types[static_cast<unsigned int>(a.type)];
 	const kokko::UniformTypeInfo& bType = kokko::UniformTypeInfo::Types[static_cast<unsigned int>(b.type)];
 	return aType.size > bType.size;
 }
 
-static void AddUniforms(
+void AddUniforms(
 	ShaderData& shaderOut,
-	ArrayView<const ShaderLoader::AddUniforms_UniformData> uniforms,
+	ArrayView<const AddUniforms_UniformData> uniforms,
 	Allocator* allocator)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -198,7 +75,7 @@ static void AddUniforms(
 
 	for (size_t uIndex = 0, uCount = uniforms.GetCount(); uIndex < uCount; ++uIndex)
 	{
-		const ShaderLoader::AddUniforms_UniformData& uniform = uniforms[uIndex];
+		const AddUniforms_UniformData& uniform = uniforms[uIndex];
 		kokko::UniformTypeInfo type = kokko::UniformTypeInfo::FromType(uniform.type);
 
 		if (type.isTexture)
@@ -381,7 +258,7 @@ static void AddUniforms(
 	}
 }
 
-static void UpdateTextureUniformLocations(
+void UpdateTextureUniformLocations(
 	ShaderData& shaderInOut,
 	RenderDevice* renderDevice)
 {
@@ -394,7 +271,7 @@ static void UpdateTextureUniformLocations(
 	}
 }
 
-static bool Compile(
+bool Compile(
 	ShaderData& shaderOut,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
@@ -435,7 +312,7 @@ static bool Compile(
 	return false;
 }
 
-static bool CompileAndLink(
+bool CompileAndLink(
 	ShaderData& shaderOut,
 	ArrayView<const ShaderLoader::StageSource> stages,
 	Allocator* allocator,
@@ -444,7 +321,7 @@ static bool CompileAndLink(
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	unsigned int stageObjects[MaxStageCount];
+	unsigned int stageObjects[MaxStageCount] = { 0 };
 
 	for (size_t i = 0, count = stages.GetCount(); i < stages.GetCount(); ++i)
 	{
@@ -520,248 +397,16 @@ static bool CompileAndLink(
 	}
 }
 
-bool ShaderLoader::LoadFromConfiguration(
-	ShaderData& shaderOut,
-	StringRef configuration,
-	Allocator* allocator,
-	Filesystem* filesystem,
-	RenderDevice* renderDevice,
-	StringRef debugName)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	using MemberItr = rapidjson::Value::ConstMemberIterator;
-	using ValueItr = rapidjson::Value::ConstValueIterator;
-
-	rapidjson::Document config;
-	config.Parse(configuration.str, configuration.len);
-
-	// Set default value
-	shaderOut.transparencyType = TransparencyType::Opaque;
-
-	MemberItr renderTypeItr = config.FindMember("transparencyType");
-
-	if (renderTypeItr != config.MemberEnd() && renderTypeItr->value.IsString())
-	{
-		StringRef renderTypeStr;
-		renderTypeStr.str = renderTypeItr->value.GetString();
-		renderTypeStr.len = renderTypeItr->value.GetStringLength();
-
-		uint32_t renderTypeHash = kokko::HashString(renderTypeStr.str, renderTypeStr.len);
-
-		switch (renderTypeHash)
-		{
-		case "opaque"_hash:
-			shaderOut.transparencyType = TransparencyType::Opaque;
-			break;
-
-		case "alphaTest"_hash:
-			shaderOut.transparencyType = TransparencyType::AlphaTest;
-			break;
-
-		case "skybox"_hash:
-			shaderOut.transparencyType = TransparencyType::Skybox;
-			break;
-
-		case "transparentMix"_hash:
-			shaderOut.transparencyType = TransparencyType::TransparentMix;
-			break;
-
-		case "transparentAdd"_hash:
-			shaderOut.transparencyType = TransparencyType::TransparentAdd;
-			break;
-
-		case "transparentSub"_hash:
-			shaderOut.transparencyType = TransparencyType::TransparentSub;
-			break;
-		}
-	}
-
-	static const size_t MaxUniformCount = 32;
-	AddUniforms_UniformData uniforms[MaxUniformCount];
-	unsigned int uniformCount = 0;
-
-	MemberItr uniformListItr = config.FindMember("properties");
-
-	if (uniformListItr != config.MemberEnd() && uniformListItr->value.IsArray())
-	{
-		ValueItr uItr = uniformListItr->value.Begin();
-		ValueItr uEnd = uniformListItr->value.End();
-		for (; uItr != uEnd; ++uItr)
-		{
-			MemberItr nameItr = uItr->FindMember("name");
-			MemberItr typeItr = uItr->FindMember("type");
-
-			if (nameItr != uItr->MemberEnd() && nameItr->value.IsString() &&
-				typeItr != uItr->MemberEnd() && typeItr->value.IsString())
-			{
-				AddUniforms_UniformData& uniform = uniforms[uniformCount];
-
-				uniform.name = StringRef(nameItr->value.GetString(), nameItr->value.GetStringLength());
-
-				uint32_t typeHash = kokko::HashString(typeItr->value.GetString(), typeItr->value.GetStringLength());
-
-				switch (typeHash)
-				{
-				case "tex2d"_hash: uniform.type = kokko::UniformDataType::Tex2D; break;
-				case "texCube"_hash: uniform.type = kokko::UniformDataType::TexCube; break;
-				case "mat4x4"_hash: uniform.type = kokko::UniformDataType::Mat4x4; break;
-				case "mat4x4Array"_hash: uniform.type = kokko::UniformDataType::Mat4x4Array; break;
-				case "vec4"_hash: uniform.type = kokko::UniformDataType::Vec4; break;
-				case "vec4Array"_hash: uniform.type = kokko::UniformDataType::Vec4Array; break;
-				case "vec3"_hash: uniform.type = kokko::UniformDataType::Vec3; break;
-				case "vec3Array"_hash: uniform.type = kokko::UniformDataType::Vec3Array; break;
-				case "vec2"_hash: uniform.type = kokko::UniformDataType::Vec2; break;
-				case "vec2Array"_hash: uniform.type = kokko::UniformDataType::Vec2Array; break;
-				case "float"_hash: uniform.type = kokko::UniformDataType::Float; break;
-				case "floatArray"_hash: uniform.type = kokko::UniformDataType::FloatArray; break;
-				case "int"_hash: uniform.type = kokko::UniformDataType::Int; break;
-				case "intArray"_hash: uniform.type = kokko::UniformDataType::IntArray; break;
-
-				default:
-					break;
-				}
-
-				uniform.arraySize = 0;
-
-				if (kokko::UniformTypeInfo::FromType(uniform.type).isArray)
-				{
-					MemberItr sizeItr = uItr->FindMember("size");
-					if (sizeItr != uItr->MemberEnd() && sizeItr->value.IsInt())
-						uniform.arraySize = sizeItr->value.GetInt();
-					else
-						KK_LOG_ERROR("Failed to parse shader array uniform because JSON didn't contain size");
-				}
-
-				uniformCount += 1;
-			}
-		}
-	}
-
-	ArrayView<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
-	AddUniforms(shaderOut, uniformBufferRef, allocator);
-
-	size_t stageCount = 0;
-	struct StageInfo
-	{
-		MemberItr stageItr;
-		MemberItr mainItr;
-		MemberItr includeItr;
-		RenderShaderStage stage;
-	}
-	stages[MaxStageCount];
-
-	MemberItr vsItr = config.FindMember("vs");
-	MemberItr fsItr = config.FindMember("fs");
-	MemberItr csItr = config.FindMember("cs");
-
-	if (vsItr != config.MemberEnd() && vsItr->value.IsObject() ||
-		fsItr != config.MemberEnd() && fsItr->value.IsObject())
-	{
-		stages[0].stageItr = vsItr;
-		stages[0].stage = RenderShaderStage::VertexShader;
-
-		stages[1].stageItr = fsItr;
-		stages[1].stage = RenderShaderStage::FragmentShader;
-
-		stageCount = 2;
-	}
-	else if (csItr != config.MemberEnd() && csItr->value.IsObject())
-	{
-		stages[0].stageItr = csItr;
-		stages[0].stage = RenderShaderStage::ComputeShader;
-
-		stageCount = 1;
-	}
-	else
-		return false;
-
-	for (size_t i = 0; i < stageCount; ++i)
-	{
-		stages[i].mainItr = stages[i].stageItr->value.FindMember("main");
-
-		if (stages[i].mainItr == stages[i].stageItr->value.MemberEnd() || !stages[i].mainItr->value.IsString())
-			return false;
-	}
-
-	// Load all include files, they can be shared between shader stages
-
-	HashMap<uint32_t, kokko::String> includeFileCache(allocator);
-
-	bool includeLoadSuccess = true;
-
-	for (size_t i = 0; i < stageCount; ++i)
-	{
-		stages[i].includeItr = stages[i].stageItr->value.FindMember("includes");
-		if (stages[i].includeItr != stages[i].stageItr->value.MemberEnd())
-		{
-			if (LoadIncludes(stages[i].includeItr->value, includeFileCache,
-				allocator, filesystem) == false)
-			{
-				includeLoadSuccess = false;
-			}
-		}
-	}
-
-	// Process included files into complete source
-
-	bool processSuccess = true;
-
-	// TODO: Make this definition more robust
-	kokko::String sourceBuffers[MaxStageCount] = {
-		kokko::String(allocator),
-		kokko::String(allocator)
-	};
-
-	if (includeLoadSuccess)
-	{
-		StringRef versionStr("#version 450\n");
-		StringRef uniformBlock = shaderOut.uniformBlockDefinition;
-
-		for (size_t i = 0; i < stageCount; ++i)
-		{
-			const char* stagePath = stages[i].mainItr->value.GetString();
-
-			const rapidjson::Value* includeVal = nullptr;
-			if (stages[i].includeItr != stages[i].stageItr->value.MemberEnd())
-				includeVal = &stages[i].includeItr->value;
-
-			if (ProcessSource(stagePath, versionStr, uniformBlock, includeVal, includeFileCache,
-				allocator, filesystem, sourceBuffers[i]) == false)
-				processSuccess = false;
-		}
-	}
-
-	bool success = false;
-	StageSource stageSources[MaxStageCount];
-
-	for (size_t i = 0; i < stageCount; ++i)
-	{
-		stageSources[i].stage = stages[i].stage;
-		stageSources[i].source = sourceBuffers[i].GetRef();
-	}
-
-	ArrayView<const StageSource> stageSourceRef(stageSources, stageCount);
-
-	if (processSuccess &&
-		CompileAndLink(shaderOut, stageSourceRef, allocator, renderDevice, debugName))
-	{
-		UpdateTextureUniformLocations(shaderOut, renderDevice);
-
-		success = true;
-	}
-
-	return success;
-}
+} // Anonymous namespace
 
 // ========================
-// === ShaderFileLoader ===
+// === ShaderLoader ===
 // ========================
 
-const char* const ShaderFileLoader::LineBreakChars = "\r\n";
-const char* const ShaderFileLoader::WhitespaceChars = " \t\r\n";
+const char* const ShaderLoader::LineBreakChars = "\r\n";
+const char* const ShaderLoader::WhitespaceChars = " \t\r\n";
 
-ShaderFileLoader::ShaderFileLoader(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
+ShaderLoader::ShaderLoader(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
 	allocator(allocator),
 	filesystem(filesystem),
 	renderDevice(renderDevice),
@@ -773,11 +418,11 @@ ShaderFileLoader::ShaderFileLoader(Allocator* allocator, Filesystem* filesystem,
 		processedStageSources[i] = kokko::String(allocator);
 }
 
-ShaderFileLoader::~ShaderFileLoader()
+ShaderLoader::~ShaderLoader()
 {
 }
 
-bool ShaderFileLoader::LoadFromFile(
+bool ShaderLoader::LoadFromFile(
 	ShaderData& shaderOut,
 	StringRef shaderPath,
 	StringRef shaderContent,
@@ -802,7 +447,7 @@ bool ShaderFileLoader::LoadFromFile(
 	return true;
 }
 
-bool ShaderFileLoader::FindShaderSections(
+bool ShaderLoader::FindShaderSections(
 	StringRef shaderContents,
 	StringRef& programSectionOut,
 	StageSource stageSectionsOut[MaxStageCount],
@@ -872,12 +517,12 @@ bool ShaderFileLoader::FindShaderSections(
 		return false;
 }
 
-void ShaderFileLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef programSection)
+void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef programSection)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	static const size_t MaxUniformCount = 32;
-	ShaderLoader::AddUniforms_UniformData uniforms[MaxUniformCount];
+	AddUniforms_UniformData uniforms[MaxUniformCount];
 	unsigned int uniformCount = 0;
 
 	const StringRef propertyStr("#property ");
@@ -908,7 +553,7 @@ void ShaderFileLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef
 		StringRef nameStr = nameAndType.SubStr(0, nameEnd);
 		StringRef typeStr = nameAndType.SubStr(nameEnd + 1);
 
-		ShaderLoader::AddUniforms_UniformData& uniform = uniforms[uniformCount];
+		AddUniforms_UniformData& uniform = uniforms[uniformCount];
 		uniform.name = nameStr;
 
 		uint32_t typeHash = kokko::HashString(typeStr.str, typeStr.len);
@@ -945,7 +590,7 @@ void ShaderFileLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef
 		uniformCount += 1;
 	}
 
-	ArrayView<const ShaderLoader::AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
+	ArrayView<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
 	AddUniforms(shaderOut, uniformBufferRef, allocator);
 
 	// Set default value
@@ -953,7 +598,7 @@ void ShaderFileLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef
 	// TODO: Read value from shader declaration
 }
 
-bool ShaderFileLoader::ProcessShaderStages(
+bool ShaderLoader::ProcessShaderStages(
 	ShaderData& shaderOut,
 	StringRef shaderPath,
 	ArrayView<const StageSource> stages,
@@ -975,12 +620,12 @@ bool ShaderFileLoader::ProcessShaderStages(
 
 	if (processSuccess)
 	{
-		ShaderLoader::StageSource stageSources[MaxStageCount];
+		StageSource stageSources[MaxStageCount];
 
 		for (size_t i = 0, count = stages.GetCount(); i < count; ++i)
-			stageSources[i] = ShaderLoader::StageSource{ stages[i].stage, processedStageSources[i].GetRef() };
+			stageSources[i] = StageSource{ stages[i].stage, processedStageSources[i].GetRef() };
 
-		ArrayView<const ShaderLoader::StageSource> stageSourceRef(stageSources, stages.GetCount());
+		ArrayView<const StageSource> stageSourceRef(stageSources, stages.GetCount());
 
 		if (CompileAndLink(shaderOut, stageSourceRef, allocator, renderDevice, debugName))
 		{
@@ -992,7 +637,7 @@ bool ShaderFileLoader::ProcessShaderStages(
 	return compileSuccess;
 }
 
-bool ShaderFileLoader::ProcessStage(
+bool ShaderLoader::ProcessStage(
 	StringRef versionStr,
 	StringRef uniformBlockDefinition,
 	StringRef mainFilePath,
@@ -1016,7 +661,7 @@ bool ShaderFileLoader::ProcessStage(
 	return true;
 }
 
-bool ShaderFileLoader::ProcessIncludes(
+bool ShaderLoader::ProcessIncludes(
 	StringRef sourceStr,
 	uint32_t filePathHash,
 	kokko::String& processedSourceOut)

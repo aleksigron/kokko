@@ -17,25 +17,20 @@ class RenderDevice;
 
 struct ShaderData;
 
-namespace ShaderLoader
-{
-	bool LoadFromConfiguration(
-		ShaderData& shaderOut,
-		StringRef configuration,
-		Allocator* allocator,
-		Filesystem* filesystem,
-		RenderDevice* renderDevice,
-		StringRef debugName);
-}
-
-class ShaderFileLoader
+class ShaderLoader
 {
 public:
-	ShaderFileLoader(Allocator* allocator,
+	struct StageSource
+	{
+		RenderShaderStage stage;
+		StringRef source;
+	};
+
+	ShaderLoader(Allocator* allocator,
 		Filesystem* filesystem,
 		RenderDevice* renderDevice);
 
-	~ShaderFileLoader();
+	~ShaderLoader();
 
 	bool LoadFromFile(
 		ShaderData& shaderOut,
@@ -44,11 +39,6 @@ public:
 		StringRef debugName);
 
 private:
-	struct StageSource
-	{
-		RenderShaderStage stage;
-		StringRef source;
-	};
 
 	static const size_t MaxStageCount = 2;
 
