@@ -97,8 +97,8 @@ void ScreenSpaceAmbientOcclusion::Initialize()
 	// Per pass resources
 
 	StringRef shaderPaths[] = {
-		StringRef("engine/shaders/post_process/ssao_occlusion.shader.json"),
-		StringRef("engine/shaders/post_process/ssao_blur.shader.json")
+		StringRef("engine/shaders/post_process/ssao_occlusion.glsl"),
+		StringRef("engine/shaders/post_process/ssao_blur.glsl")
 	};
 
 	size_t uniformSizes[] = {

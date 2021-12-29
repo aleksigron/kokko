@@ -304,7 +304,7 @@ void Renderer::Initialize()
 	}
 
 	{
-		const char* path = "engine/shaders/post_process/tonemap.shader.json";
+		const char* path = "engine/shaders/post_process/tonemap.glsl";
 		tonemappingShaderId = shaderManager->GetIdByPath(StringRef(path));
 	}
 
