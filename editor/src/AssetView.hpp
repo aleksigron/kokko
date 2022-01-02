@@ -43,7 +43,12 @@ private:
 
 	void DrawMaterial(EditorContext& context, const AssetInfo* asset);
 	bool DrawMaterialProperty(UniformData& uniforms, const BufferUniform& prop);
-	void TextureDragDropTarget(EditorContext& context, UniformData& uniforms, TextureUniform& texture);
+	void DrawMaterialTextureDropTarget(
+		EditorContext& context,
+		UniformData& uniforms,
+		TextureUniform& texture);
+
+	void DrawTexture(EditorContext& context, const AssetInfo* asset);
 };
 
 }

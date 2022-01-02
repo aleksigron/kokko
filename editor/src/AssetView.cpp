@@ -67,6 +67,10 @@ void AssetView::Update(EditorContext& context)
 					{
 						DrawMaterial(context, asset);
 					}
+					else if (asset->type == AssetType::Texture)
+					{
+						DrawTexture(context, asset);
+					}
 					else
 					{
 						ImGui::Text("Selected asset is an unknown asset type");
@@ -84,6 +88,9 @@ void AssetView::Update(EditorContext& context)
 
 void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 {
+	if (asset->type != AssetType::Material)
+		return;
+
 	MaterialId materialId = materialManager->FindMaterialByUid(asset->uid);
 	if (materialId == MaterialId::Null)
 	{
@@ -130,7 +137,7 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 
 				ImGui::Image(texId, size);
 
-				TextureDragDropTarget(context, uniforms, texture);
+				DrawMaterialTextureDropTarget(context, uniforms, texture);
 			}
 
 			ImGui::Spacing();
@@ -276,7 +283,10 @@ bool AssetView::DrawMaterialProperty(UniformData& uniforms, const BufferUniform&
 	return edited;
 }
 
-void AssetView::TextureDragDropTarget(EditorContext& context, UniformData& uniforms, TextureUniform& texture)
+void AssetView::DrawMaterialTextureDropTarget(
+	EditorContext& context,
+	UniformData& uniforms,
+	TextureUniform& texture)
 {
 	if (ImGui::BeginDragDropTarget())
 	{
@@ -301,6 +311,30 @@ void AssetView::TextureDragDropTarget(EditorContext& context, UniformData& unifo
 
 		ImGui::EndDragDropTarget();
 	}
+}
+
+void AssetView::DrawTexture(EditorContext& context, const AssetInfo* asset)
+{
+	if (asset->type != AssetType::Texture)
+		return;
+
+	TextureId textureId = textureManager->FindTextureByUid(asset->uid);
+	if (textureId == TextureId::Null)
+	{
+		ImGui::Text("Texture not found in TextureManager");
+		return;
+	}
+
+	ImGui::Text("%s", asset->filePath.GetCStr());
+
+	const TextureData& texture = textureManager->GetTextureData(textureId);
+
+	float side = ImGui::GetFontSize() * 10.0f;
+	ImVec2 size(side, side);
+
+	void* texId = reinterpret_cast<void*>(static_cast<size_t>(texture.textureObjectId));
+
+	ImGui::Image(texId, size);
 }
 
 }
