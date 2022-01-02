@@ -70,6 +70,10 @@ public:
 	template <typename ValueType>
 	void SetValueArray(const BufferUniform& uniform, unsigned int count, const ValueType* values);
 
+	// Set texture values
+
+	void SetTexture(TextureUniform& uniform, TextureId textureId, unsigned int textureObjectId);
+
 	void WriteToUniformBuffer(uint8_t* uniformBuffer) const;
 
 private:

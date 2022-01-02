@@ -150,7 +150,8 @@ void AssetBrowserView::DrawEntry(
 	{
 		if (isFile)
 		{
-			SelectPath(context, relativePath);
+			bool editAsset = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+			SelectPath(context, relativePath, editAsset);
 		}
 		else if (isDir)
 		{
@@ -160,7 +161,7 @@ void AssetBrowserView::DrawEntry(
 			}
 			else
 			{
-				SelectPath(context, relativePath);
+				SelectPath(context, relativePath, false);
 			}
 		}
 	}
@@ -206,7 +207,7 @@ void AssetBrowserView::MoveToPath(EditorContext& context, const std::filesystem:
 	context.selectedAsset = Optional<Uid>();
 }
 
-void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem::path& path)
+void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem::path& path, bool editAsset)
 {
 	selectedPath = path;
 
@@ -217,6 +218,10 @@ void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem:
 		if (asset != nullptr)
 		{
 			context.selectedAsset = asset->uid;
+
+			if (editAsset)
+				context.editingAsset = asset->uid;
+
 			return;
 		}
 	}
