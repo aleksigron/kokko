@@ -181,6 +181,12 @@ void AssetLibrary::ScanAssets(bool scanProject)
 		{
 			assetType = AssetType::Material;
 		}
+		else if (currentExt == textureJpgExt ||
+			currentExt == textureJpegExt ||
+			currentExt == texturePngExt)
+		{
+			assetType = AssetType::Texture;
+		}
 
 		if (assetType.HasValue() == false)
 		{

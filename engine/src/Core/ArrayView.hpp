@@ -43,6 +43,11 @@ public:
 	ValueType* end() { return &data[count]; }
 	const ValueType* end() const { return &data[count]; }
 
+	operator ArrayView<const ValueType>() const
+	{
+		return ArrayView<const ValueType>(data, count);
+	}
+
 private:
 	ValueType* data;
 	size_t count;
