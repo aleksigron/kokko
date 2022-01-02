@@ -27,6 +27,7 @@ struct EditorContext
 	Entity selectedEntity;
 
 	Optional<Uid> selectedAsset;
+	Optional<Uid> editingAsset;
 
 	EditorContext() :
 		project(nullptr),

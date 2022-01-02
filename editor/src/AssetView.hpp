@@ -14,6 +14,7 @@ namespace kokko
 class UniformData;
 
 struct BufferUniform;
+struct TextureUniform;
 
 namespace editor
 {
@@ -42,6 +43,7 @@ private:
 
 	void DrawMaterial(EditorContext& context, const AssetInfo* asset);
 	bool DrawMaterialProperty(UniformData& uniforms, const BufferUniform& prop);
+	void TextureDragDropTarget(EditorContext& context, UniformData& uniforms, TextureUniform& texture);
 };
 
 }

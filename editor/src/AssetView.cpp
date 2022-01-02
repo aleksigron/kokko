@@ -12,6 +12,7 @@
 #include "Resources/TextureManager.hpp"
 
 #include "AssetLibrary.hpp"
+#include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 
 namespace kokko
@@ -23,6 +24,7 @@ AssetView::AssetView(Allocator* allocator) :
 	EditorWindow("Asset"),
 	allocator(allocator),
 	materialManager(nullptr),
+	shaderManager(nullptr),
 	textureManager(nullptr),
 	textStore(allocator)
 {
@@ -46,9 +48,9 @@ void AssetView::Update(EditorContext& context)
 	{
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
-			if (context.selectedAsset.HasValue())
+			if (context.editingAsset.HasValue())
 			{
-				Uid uid = context.selectedAsset.GetValue();
+				Uid uid = context.editingAsset.GetValue();
 
 				auto asset = context.assetLibrary->FindAssetByUid(uid);
 				if (asset == nullptr)
@@ -121,15 +123,14 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 			}
 			else
 			{
-				ImVec2 uv0(0.0f, 1.0f);
-				ImVec2 uv1(1.0f, 0.0f);
-
 				float side = ImGui::GetFontSize() * 6.0f;
 				ImVec2 size(side, side);
 
 				void* texId = reinterpret_cast<void*>(static_cast<size_t>(texture.textureObject));
 
-				ImGui::Image(texId, size, uv0, uv1);
+				ImGui::Image(texId, size);
+
+				TextureDragDropTarget(context, uniforms, texture);
 			}
 
 			ImGui::Spacing();
@@ -273,6 +274,33 @@ bool AssetView::DrawMaterialProperty(UniformData& uniforms, const BufferUniform&
 	ImGui::Spacing();
 
 	return edited;
+}
+
+void AssetView::TextureDragDropTarget(EditorContext& context, UniformData& uniforms, TextureUniform& texture)
+{
+	if (ImGui::BeginDragDropTarget())
+	{
+		const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+		if (payload != nullptr)
+		{
+			Uid assetUid;
+			std::memcpy(&assetUid, payload->Data, payload->DataSize);
+
+			auto asset = context.assetLibrary->FindAssetByUid(assetUid);
+			if (asset != nullptr && asset->type == AssetType::Texture)
+			{
+				TextureId newTexId = textureManager->FindTextureByUid(assetUid);
+				if (newTexId != TextureId::Null && newTexId != texture.textureId)
+				{
+					const TextureData& newTexData = textureManager->GetTextureData(newTexId);
+
+					uniforms.SetTexture(texture, newTexId, newTexData.textureObjectId);
+				}
+			}
+		}
+
+		ImGui::EndDragDropTarget();
+	}
 }
 
 }

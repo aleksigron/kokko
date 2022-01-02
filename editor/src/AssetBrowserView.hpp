@@ -36,7 +36,7 @@ private:
 	void DrawEntry(EditorContext& context, const std::filesystem::directory_iterator& entry, float columnWidth);
 
 	void MoveToPath(EditorContext& context, const std::filesystem::path& path);
-	void SelectPath(EditorContext& context, const std::filesystem::path& path);
+	void SelectPath(EditorContext& context, const std::filesystem::path& path, bool editAsset);
 
 	const String& ConvertPath(const std::filesystem::path& relativePath);
 	Optional<std::filesystem::path> MakePathRelative(

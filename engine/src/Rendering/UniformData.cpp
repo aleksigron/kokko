@@ -296,6 +296,12 @@ void UniformData::SetValueArray(const BufferUniform& uniform, unsigned int count
 			dataStart[i * 16 + j] = values[i][j];
 }
 
+void UniformData::SetTexture(TextureUniform& uniform, TextureId textureId, unsigned int textureObjectId)
+{
+	uniform.textureId = textureId;
+	uniform.textureObject = textureObjectId;
+}
+
 void UniformData::WriteToUniformBuffer(uint8_t* uniformBuffer) const
 {
 	for (size_t i = 0, count = definitions.bufferUniformCount; i < count; ++i)
