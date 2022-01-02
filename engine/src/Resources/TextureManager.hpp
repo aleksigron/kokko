@@ -2,8 +2,10 @@
 
 #include <cstdint>
 
+#include "Core/ArrayView.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/StringRef.hpp"
+#include "Core/Uid.hpp"
 
 #include "Math/Vec2.hpp"
 
@@ -12,12 +14,17 @@
 #include "Resources/TextureId.hpp"
 
 class Allocator;
-class Filesystem;
 class RenderDevice;
 struct ImageData;
 
+namespace kokko
+{
+class AssetLoader;
+}
+
 struct TextureData
 {
+	kokko::Uid uid;
 	Vec2i textureSize;
 	unsigned int textureObjectId;
 	RenderTextureTarget textureTarget;
@@ -36,7 +43,7 @@ class TextureManager
 {
 private:
 	Allocator* allocator;
-	Filesystem* filesystem;
+	kokko::AssetLoader* assetLoader;
 	RenderDevice* renderDevice;
 
 	struct InstanceData
@@ -51,7 +58,7 @@ private:
 	data;
 
 	unsigned int freeListFirst;
-	HashMap<uint32_t, TextureId> nameHashMap;
+	HashMap<kokko::Uid, TextureId> uidMap;
 
 	enum ConstantTextures
 	{
@@ -66,10 +73,8 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	static int MipLevelsFromDimensions(int width, int height);
-
 public:
-	TextureManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice);
+	TextureManager(Allocator* allocator, kokko::AssetLoader* assetLoader, RenderDevice* renderDevice);
 	~TextureManager();
 
 	void Initialize();
@@ -77,12 +82,8 @@ public:
 	TextureId CreateTexture();
 	void RemoveTexture(TextureId id);
 	
-	TextureId GetIdByPath(StringRef path);
-	TextureId GetIdByPathHash(uint32_t pathHash)
-	{
-		auto pair = nameHashMap.Lookup(pathHash);
-		return pair != nullptr ? pair->second : TextureId{};
-	}
+	TextureId FindTextureByUid(const kokko::Uid& uid);
+	TextureId FindTextureByPath(const StringRef& path);
 
 	TextureId GetId_White2D() const { return constantTextures[ConstTex_White2D]; }
 	TextureId GetId_Black2D() const { return constantTextures[ConstTex_Black2D]; }
@@ -90,11 +91,12 @@ public:
 
 	const TextureData& GetTextureData(TextureId id) { return data.texture[id.i]; }
 
-	bool LoadWithStbImage(TextureId id, const char* filePath, bool preferLinear = false);
-
 	void Upload_2D(TextureId id, const ImageData& image, const TextureOptions& options);
 	void Upload_Cube(TextureId id, const ImageData* images, const TextureOptions& options);
 
 	void AllocateTextureStorage(TextureId id,
 		RenderTextureTarget target, RenderTextureSizedFormat format, int levels, Vec2i size);
+
+private:
+	bool LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool preferLinear = false);
 };

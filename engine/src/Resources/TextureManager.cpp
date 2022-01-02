@@ -11,18 +11,36 @@
 
 #include "Rendering/RenderDevice.hpp"
 
+#include "Resources/AssetLoader.hpp"
 #include "Resources/ImageData.hpp"
 
-#include "System/Filesystem.hpp"
 #include "System/IncludeOpenGL.hpp"
+
+namespace
+{
+int MipLevelsFromDimensions(int width, int height)
+{
+	if (Math::IsPowerOfTwo(static_cast<uint64_t>(width)) == false ||
+		Math::IsPowerOfTwo(static_cast<uint64_t>(height)) == false)
+		return 1;
+
+	unsigned int smaller = static_cast<unsigned int>(width > height ? height : width);
+
+	int levels = 1;
+	while ((smaller >>= 1) > 0)
+		levels += 1;
+
+	return levels;
+}
+}
 
 TextureId TextureId::Null = TextureId{ 0 };
 
-TextureManager::TextureManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
+TextureManager::TextureManager(Allocator* allocator, kokko::AssetLoader* assetLoader, RenderDevice* renderDevice) :
 	allocator(allocator),
-	filesystem(filesystem),
+	assetLoader(assetLoader),
 	renderDevice(renderDevice),
-	nameHashMap(allocator)
+	uidMap(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as Null instance
@@ -122,20 +140,6 @@ void TextureManager::Reallocate(unsigned int required)
 	data = newData;
 }
 
-int TextureManager::MipLevelsFromDimensions(int width, int height)
-{
-	if (Math::IsPowerOfTwo(static_cast<uint64_t>(width)) == false ||
-		Math::IsPowerOfTwo(static_cast<uint64_t>(height)) == false)
-		return 1;
-
-	unsigned int smaller = static_cast<unsigned int>(width > height ? height : width);
-
-	int levels = 1;
-	while ((smaller >>= 1) > 0)
-		levels += 1;
-
-	return levels;
-}
 
 TextureId TextureManager::CreateTexture()
 {
@@ -182,60 +186,70 @@ void TextureManager::RemoveTexture(TextureId id)
 	--data.count;
 }
 
-TextureId TextureManager::GetIdByPath(StringRef path)
+TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid)
 {
-	uint32_t hash = kokko::HashString(path.str, path.len);
+	KOKKO_PROFILE_FUNCTION();
 
-	auto* pair = nameHashMap.Lookup(hash);
+	auto* pair = uidMap.Lookup(uid);
 	if (pair != nullptr)
 		return pair->second;
 
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	kokko::String pathStr(allocator, path);
+	Array<uint8_t> file(allocator);
 
-	TextureId id = CreateTexture();
-
-	if (path.EndsWith(StringRef(".jpg")) ||
-		path.EndsWith(StringRef(".jpeg")) ||
-		path.EndsWith(StringRef(".png")))
+	if (assetLoader->LoadAsset(uid, file))
 	{
-		if (LoadWithStbImage(id, pathStr.GetCStr()))
+		TextureId id = CreateTexture();
+
+		if (LoadWithStbImage(id, file.GetView()))
 		{
-			pair = nameHashMap.Insert(hash);
+			data.texture[id.i].uid = uid;
+
+			pair = uidMap.Insert(uid);
 			pair->second = id;
 
 			return id;
 		}
-	}
+		else
+		{
+			KK_LOG_ERROR("Material failed to load correctly");
 
-	RemoveTexture(id);
+			RemoveTexture(id);
+		}
+	}
+	else
+		KK_LOG_ERROR("AssetLoader couldn't load material asset");
+
 	return TextureId::Null;
 }
 
-bool TextureManager::LoadWithStbImage(TextureId id, const char* filePath, bool preferLinear)
+TextureId TextureManager::FindTextureByPath(const StringRef& path)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	auto uidResult = assetLoader->GetAssetUidByVirtualPath(path);
+	if (uidResult.HasValue())
+	{
+		return FindTextureByUid(uidResult.GetValue());
+	}
+
+	return TextureId::Null;
+}
+
+bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool preferLinear)
 {
 	stbi_set_flip_vertically_on_load(false);
 	int width, height, nrComponents;
 	uint8_t* textureBytes;
 
 	{
-		Array<uint8_t> fileBytes(allocator);
+		KOKKO_PROFILE_SCOPE("stbi_load_from_memory()");
 
-		if (filesystem->ReadBinary(filePath, fileBytes) == false)
-		{
-			KK_LOG_ERROR("Couldn't read texture file {}", filePath);
-			return false;
-		}
-
-		{
-			KOKKO_PROFILE_SCOPE("stbi_load_from_memory()");
-
-			uint8_t* fileBytesPtr = fileBytes.GetData();
-			int length = static_cast<int>(fileBytes.GetCount());
-			textureBytes = stbi_load_from_memory(fileBytesPtr, length, &width, &height, &nrComponents, 0);
-		}
+		const uint8_t* fileBytesPtr = bytes.GetData();
+		int length = static_cast<int>(bytes.GetCount());
+		textureBytes = stbi_load_from_memory(fileBytesPtr, length, &width, &height, &nrComponents, 0);
 	}
 
 	unsigned int textureObjectId = 0;

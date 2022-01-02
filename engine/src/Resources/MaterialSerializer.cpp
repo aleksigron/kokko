@@ -2,7 +2,7 @@
 
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
+#include "rapidjson/prettywriter.h"
 
 #include "Core/Array.hpp"
 #include "Core/Core.hpp"
@@ -334,14 +334,16 @@ bool MaterialSerializer::DeserializeMaterial(MaterialId id, StringRef config)
 
 	for (auto& uniform : material.uniformData.GetTextureUniforms())
 	{
-		TextureId textureId = TextureId{ 0 };
+		TextureId textureId = TextureId::Null;
 
 		if (variablesArrayIsValid &&
 			(varValue = FindVariableValue(variablesItr->value, uniform.name)) != nullptr &&
 			varValue->IsString())
 		{
-			StringRef path(varValue->GetString(), varValue->GetStringLength());
-			textureId = textureManager->GetIdByPath(path);
+			auto uidParseResult = Uid::FromString(ArrayView(varValue->GetString(), varValue->GetStringLength()));
+
+			if (uidParseResult.HasValue())
+				textureId = textureManager->FindTextureByUid(uidParseResult.GetValue());
 		}
 
 		if (textureId == TextureId::Null)
@@ -369,6 +371,8 @@ void MaterialSerializer::SerializeToString(MaterialId id, String& out)
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	char uidStrBuffer[Uid::StringLength];
+
 	rapidjson::Document doc;
 	auto& alloc = doc.GetAllocator();
 	
@@ -394,7 +398,6 @@ void MaterialSerializer::SerializeToString(MaterialId id, String& out)
 		variables.PushBack(uniformValue, alloc);
 	}
 
-	/*
 	for (const auto& textureUniform : uniforms.GetTextureUniforms())
 	{
 		rapidjson::Value uniformValue(rapidjson::kObjectType);
@@ -403,21 +406,19 @@ void MaterialSerializer::SerializeToString(MaterialId id, String& out)
 		uniformValue.AddMember("name", name, alloc);
 
 		const TextureData& texture = textureManager->GetTextureData(textureUniform.textureId);
-		// TODO: Texture path
-		StringRef texturePath;
-		rapidjson::Value value(texturePath.str, texturePath.len);
+		texture.uid.WriteTo(uidStrBuffer);
+		rapidjson::Value value(uidStrBuffer, sizeof(uidStrBuffer), alloc);
 		uniformValue.AddMember("value", value, alloc);
 
 		variables.PushBack(uniformValue, alloc);
 	}
-	*/
 
 	doc.SetObject();
 	doc.AddMember("shader", shaderPath, alloc);
 	doc.AddMember("variables", variables, alloc);
 
 	rapidjson::StringBuffer jsonStringBuffer;
-	rapidjson::Writer<rapidjson::StringBuffer> writer(jsonStringBuffer);
+	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(jsonStringBuffer);
 	doc.Accept(writer);
 	
 	// TODO: Figure out how to avoid copying the value

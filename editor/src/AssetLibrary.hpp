@@ -21,7 +21,8 @@ class EditorProject;
 
 enum class AssetType
 {
-	Material
+	Material,
+	Texture
 };
 
 struct AssetInfo
