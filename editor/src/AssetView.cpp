@@ -8,6 +8,7 @@
 #include "Rendering/UniformData.hpp"
 
 #include "Resources/MaterialManager.hpp"
+#include "Resources/MaterialSerializer.hpp"
 #include "Resources/TextureManager.hpp"
 
 #include "AssetLibrary.hpp"
@@ -20,14 +21,20 @@ namespace editor
 
 AssetView::AssetView(Allocator* allocator) :
 	EditorWindow("Asset"),
+	allocator(allocator),
 	materialManager(nullptr),
+	textureManager(nullptr),
 	textStore(allocator)
 {
 }
 
-void AssetView::Initialize(MaterialManager* materialManager, TextureManager* textureManager)
+void AssetView::Initialize(
+	MaterialManager* materialManager,
+	ShaderManager* shaderManager,
+	TextureManager* textureManager)
 {
 	this->materialManager = materialManager;
+	this->shaderManager = shaderManager;
 	this->textureManager = textureManager;
 }
 
@@ -39,8 +46,6 @@ void AssetView::Update(EditorContext& context)
 	{
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
-			World* world = context.world;
-
 			if (context.selectedAsset.HasValue())
 			{
 				Uid uid = context.selectedAsset.GetValue();
@@ -58,7 +63,7 @@ void AssetView::Update(EditorContext& context)
 				{
 					if (asset->type == AssetType::Material)
 					{
-						DrawMaterial(asset);
+						DrawMaterial(context, asset);
 					}
 					else
 					{
@@ -75,7 +80,7 @@ void AssetView::Update(EditorContext& context)
 	}
 }
 
-void AssetView::DrawMaterial(const AssetInfo* asset)
+void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 {
 	MaterialId materialId = materialManager->FindMaterialByUid(asset->uid);
 	if (materialId == MaterialId::Null)
@@ -128,6 +133,22 @@ void AssetView::DrawMaterial(const AssetInfo* asset)
 			}
 
 			ImGui::Spacing();
+		}
+	}
+
+	if (edited)
+	{
+		// Serialize
+		MaterialSerializer serializer(allocator, materialManager, shaderManager, textureManager);
+
+		String serializedString(allocator);
+		serializer.SerializeToString(materialId, serializedString);
+
+		ArrayView<const char> view(serializedString.GetData(), serializedString.GetLength());
+
+		if (context.assetLibrary->UpdateAssetContent(asset->uid, view) == false)
+		{
+			KK_LOG_ERROR("Failed to update asset");
 		}
 	}
 }

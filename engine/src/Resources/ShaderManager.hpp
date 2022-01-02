@@ -19,6 +19,7 @@ struct ShaderData
 {
 	void* buffer;
 	StringRef uniformBlockDefinition;
+	StringRef path;
 
 	TransparencyType transparencyType;
 

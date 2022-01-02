@@ -29,6 +29,7 @@ struct AssetInfo
 	StringRef virtualPath;
 	String filePath;
 	Uid uid;
+	uint64_t contentHash;
 	AssetType type;
 
 	String GetVirtualPath() const;
@@ -37,13 +38,13 @@ struct AssetInfo
 class AssetLibrary
 {
 public:
-
-public:
 	AssetLibrary(Allocator* allocator, Filesystem* filesystem);
 	~AssetLibrary();
 
 	const AssetInfo* FindAssetByUid(const Uid& uid);
 	const AssetInfo* FindAssetByVirtualPath(const String& virtualPath);
+
+	bool UpdateAssetContent(const Uid& uid, ArrayView<const char> content);
 
 	void ScanEngineAssets();
 	void SetProject(const EditorProject* project);

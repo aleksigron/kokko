@@ -6,8 +6,8 @@
 
 class Allocator;
 class MaterialManager;
+class ShaderManager;
 class TextureManager;
-
 
 namespace kokko
 {
@@ -25,17 +25,22 @@ class AssetView : public EditorWindow
 public:
 	AssetView(Allocator* allocator);
 
-	void Initialize(MaterialManager* materialManager, TextureManager* textureManager);
+	void Initialize(
+		MaterialManager* materialManager,
+		ShaderManager* shaderManager,
+		TextureManager* textureManager);
 
 	virtual void Update(EditorContext& context) override;
 
 private:
+	Allocator* allocator;
 	MaterialManager* materialManager;
+	ShaderManager* shaderManager;
 	TextureManager* textureManager;
 
 	String textStore;
 
-	void DrawMaterial(const AssetInfo* asset);
+	void DrawMaterial(EditorContext& context, const AssetInfo* asset);
 	bool DrawMaterialProperty(UniformData& uniforms, const BufferUniform& prop);
 };
 

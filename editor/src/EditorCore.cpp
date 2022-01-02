@@ -64,7 +64,7 @@ void EditorCore::Initialize(Engine* engine)
 	editorWindows.PushBack(assetBrowserView);
 
 	AssetView* assetView = allocator->MakeNew<AssetView>(allocator);
-	assetView->Initialize(engine->GetMaterialManager(), engine->GetTextureManager());
+	assetView->Initialize(engine->GetMaterialManager(), engine->GetShaderManager(), engine->GetTextureManager());
 	editorWindows.PushBack(assetView);
 
 	DebugView* debugView = allocator->MakeNew<DebugView>();

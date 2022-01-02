@@ -11,6 +11,8 @@ struct StringRef;
 namespace kokko
 {
 
+class String;
+
 class MaterialSerializer
 {
 public:
@@ -22,6 +24,7 @@ public:
 	~MaterialSerializer();
 
 	bool DeserializeMaterial(MaterialId id, StringRef config);
+	void SerializeToString(MaterialId id, String& out);
 
 private:
 	Allocator* allocator;

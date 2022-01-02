@@ -247,6 +247,8 @@ set (KOKKO_SOURCES
 	src/Resources/TextureId.hpp
 	src/Resources/TextureManager.cpp
 	src/Resources/TextureManager.hpp
+	src/Resources/UniformSerialization.cpp
+	src/Resources/UniformSerialization.hpp
 	src/Resources/ValueSerialization.cpp
 	src/Resources/ValueSerialization.hpp
 	src/Resources/YamlCustomTypes.cpp

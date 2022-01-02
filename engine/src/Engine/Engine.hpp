@@ -72,6 +72,7 @@ public:
 	Debug* GetDebug() { return debug.instance; }
 	Filesystem* GetFilesystem() { return filesystem; }
 	MeshManager* GetMeshManager() { return meshManager.instance; }
+	ShaderManager* GetShaderManager() { return shaderManager.instance; }
 	TextureManager* GetTextureManager() { return textureManager.instance; }
 	MaterialManager* GetMaterialManager() { return materialManager.instance; }
 	EnvironmentManager* GetEnvironmentManager() { return environmentManager.instance; }
