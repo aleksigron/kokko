@@ -33,7 +33,6 @@ MaterialManager::MaterialManager(
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
 	textureManager(textureManager),
-	pathHashMap(allocator),
 	uidMap(allocator)
 {
 	data = InstanceData{};

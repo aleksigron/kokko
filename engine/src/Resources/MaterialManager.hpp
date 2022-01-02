@@ -57,7 +57,6 @@ private:
 	data;
 
 	unsigned int freeListFirst;
-	HashMap<uint32_t, MaterialId> pathHashMap;
 	HashMap<kokko::Uid, MaterialId> uidMap;
 
 	void Reallocate(unsigned int required);

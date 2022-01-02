@@ -11,7 +11,6 @@
 #include "Memory/Allocator.hpp"
 
 #include "Resources/ShaderLoader.hpp"
-#include "Resources/ValueSerialization.hpp"
 
 #include "System/Filesystem.hpp"
 
