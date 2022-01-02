@@ -4,7 +4,9 @@ namespace kokko
 {
 namespace editor
 {
-const std::filesystem::path EditorConstants::MetadataExtension = std::filesystem::path(".meta");
+const char* const EditorConstants::MetadataExtensionStr = ".meta";
+const std::filesystem::path EditorConstants::MetadataExtension = std::filesystem::path(EditorConstants::MetadataExtensionStr);
+
 const char* const EditorConstants::AssetDirectoryName = "Assets";
 
 const char* const EditorConstants::EngineResourcePath = "engine/res";

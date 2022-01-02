@@ -45,6 +45,9 @@ namespace Math
 
 	float DampenMultiplier(float dampenPerSecond, float deltaTime);
 
+	uint32_t RoundUpToMultiple(uint32_t value, uint32_t multiple);
+	uint64_t RoundUpToMultiple(uint64_t value, uint64_t multiple);
+
 	bool IsPowerOfTwo(uint64_t v);
 
 	constexpr uint64_t UpperPowerOfTwo(uint64_t v)

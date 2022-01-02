@@ -1,9 +1,12 @@
 #include "Resources/MaterialSerializer.hpp"
 
 #include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 #include "Core/Array.hpp"
 #include "Core/Core.hpp"
+#include "Core/String.hpp"
 #include "Core/StringRef.hpp"
 
 #include "Rendering/Uniform.hpp"
@@ -12,27 +15,11 @@
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 #include "Resources/ValueSerialization.hpp"
+#include "Resources/UniformSerialization.hpp"
 
-namespace kokko
-{
+namespace {
 
-MaterialSerializer::MaterialSerializer(
-	Allocator* allocator,
-	MaterialManager* materialManager,
-	ShaderManager* shaderManager,
-	TextureManager* textureManager) :
-	allocator(allocator),
-	materialManager(materialManager),
-	shaderManager(shaderManager),
-	textureManager(textureManager)
-{
-}
-
-MaterialSerializer::~MaterialSerializer()
-{
-}
-
-static const rapidjson::Value* FindVariableValue(const rapidjson::Value& variablesArray, const StringRef& name)
+const rapidjson::Value* FindVariableValue(const rapidjson::Value& variablesArray, const StringRef& name)
 {
 	if (variablesArray.IsArray())
 	{
@@ -59,7 +46,7 @@ static const rapidjson::Value* FindVariableValue(const rapidjson::Value& variabl
 	return nullptr;
 }
 
-static unsigned int PrepareUniformArray(const rapidjson::Value* jsonValue, unsigned int uniformArraySize)
+unsigned int PrepareUniformArray(const rapidjson::Value* jsonValue, unsigned int uniformArraySize)
 {
 	unsigned int valueCount = 0;
 
@@ -81,7 +68,7 @@ static unsigned int PrepareUniformArray(const rapidjson::Value* jsonValue, unsig
 	return valueCount;
 }
 
-static void SetBufferUniformValue(
+void SetBufferUniformValue(
 	kokko::UniformData& uniformData,
 	const kokko::BufferUniform& uniform,
 	const rapidjson::Value* jsonValue,
@@ -280,6 +267,27 @@ static void SetBufferUniformValue(
 	}
 }
 
+} // Anonymous namespace
+
+namespace kokko
+{
+
+MaterialSerializer::MaterialSerializer(
+	Allocator* allocator,
+	MaterialManager* materialManager,
+	ShaderManager* shaderManager,
+	TextureManager* textureManager) :
+	allocator(allocator),
+	materialManager(materialManager),
+	shaderManager(shaderManager),
+	textureManager(textureManager)
+{
+}
+
+MaterialSerializer::~MaterialSerializer()
+{
+}
+
 bool MaterialSerializer::DeserializeMaterial(MaterialId id, StringRef config)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -355,6 +363,65 @@ bool MaterialSerializer::DeserializeMaterial(MaterialId id, StringRef config)
 	materialManager->UpdateUniformsToGPU(id);
 
 	return true;
+}
+
+void MaterialSerializer::SerializeToString(MaterialId id, String& out)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	rapidjson::Document doc;
+	auto& alloc = doc.GetAllocator();
+	
+	ShaderId shaderId = materialManager->GetMaterialShader(id);
+	const UniformData& uniforms = materialManager->GetMaterialUniforms(id);
+	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
+
+	rapidjson::Value shaderPath(shader.path.str, shader.path.len);
+
+	rapidjson::Value variables(rapidjson::kArrayType);
+
+	for (const auto& bufferUniform : uniforms.GetBufferUniforms())
+	{
+		rapidjson::Value uniformValue(rapidjson::kObjectType);
+
+		rapidjson::Value name(bufferUniform.name.str, bufferUniform.name.len);
+		uniformValue.AddMember("name", name, alloc);
+
+		rapidjson::Value value;
+		SerializeUniformToJson(uniforms, bufferUniform, value, alloc);
+		uniformValue.AddMember("value", value, alloc);
+
+		variables.PushBack(uniformValue, alloc);
+	}
+
+	/*
+	for (const auto& textureUniform : uniforms.GetTextureUniforms())
+	{
+		rapidjson::Value uniformValue(rapidjson::kObjectType);
+
+		rapidjson::Value name(textureUniform.name.str, textureUniform.name.len);
+		uniformValue.AddMember("name", name, alloc);
+
+		const TextureData& texture = textureManager->GetTextureData(textureUniform.textureId);
+		// TODO: Texture path
+		StringRef texturePath;
+		rapidjson::Value value(texturePath.str, texturePath.len);
+		uniformValue.AddMember("value", value, alloc);
+
+		variables.PushBack(uniformValue, alloc);
+	}
+	*/
+
+	doc.SetObject();
+	doc.AddMember("shader", shaderPath, alloc);
+	doc.AddMember("variables", variables, alloc);
+
+	rapidjson::StringBuffer jsonStringBuffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(jsonStringBuffer);
+	doc.Accept(writer);
+	
+	// TODO: Figure out how to avoid copying the value
+	out.Assign(StringRef(jsonStringBuffer.GetString(), jsonStringBuffer.GetLength()));
 }
 
 }

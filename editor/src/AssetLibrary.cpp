@@ -13,6 +13,44 @@
 #include "EditorConstants.hpp"
 #include "EditorProject.hpp"
 
+namespace
+{
+
+void CreateMetadataJson(rapidjson::Document& document, uint64_t hash, const kokko::Uid& uid)
+{
+	char uidStrBuf[kokko::Uid::StringLength];
+	uid.WriteTo(uidStrBuf);
+
+	rapidjson::Document::AllocatorType& alloc = document.GetAllocator();
+	document.SetObject();
+
+	rapidjson::Value hashValue(hash);
+	document.AddMember("hash", hashValue, alloc);
+
+	rapidjson::Value uidValue(uidStrBuf, kokko::Uid::StringLength, alloc);
+	document.AddMember("uid", uidValue, alloc);
+}
+
+bool WriteDocumentToFile(
+	Filesystem* filesystem,
+	const char* path,
+	const rapidjson::Document& document,
+	rapidjson::StringBuffer& stringBuffer)
+{
+	rapidjson::Writer<rapidjson::StringBuffer> writer(stringBuffer);
+	document.Accept(writer);
+
+	ArrayView<const char> jsonView(stringBuffer.GetString(), stringBuffer.GetLength());
+
+	bool result = filesystem->WriteText(path, jsonView, false);
+
+	stringBuffer.Clear();
+
+	return result;
+}
+
+} // Anonymous namespace
+
 namespace kokko
 {
 namespace editor
@@ -52,6 +90,47 @@ const AssetInfo* AssetLibrary::FindAssetByVirtualPath(const String& virtualPath)
 	}
 	else
 		return nullptr;
+}
+
+bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const char> content)
+{
+	auto pair = uidToIndexMap.Lookup(uid);
+	if (pair == nullptr)
+		return false;
+
+	AssetInfo& asset = assets[pair->second];
+
+	uint64_t calculatedHash = Hash64(content.GetData(), content.GetCount(), 0);
+
+	if (calculatedHash != asset.contentHash)
+	{
+		// Update in-memory data
+		asset.contentHash = calculatedHash;
+
+		// Update metadata file
+		rapidjson::Document document;
+		CreateMetadataJson(document, calculatedHash, asset.uid);
+
+		String assetVirtualPath = asset.GetVirtualPath();
+		String metaVirtualPath = assetVirtualPath + EditorConstants::MetadataExtensionStr;
+
+		rapidjson::StringBuffer jsonStringBuffer;
+		if (WriteDocumentToFile(filesystem, metaVirtualPath.GetCStr(), document, jsonStringBuffer) == false)
+		{
+			KK_LOG_ERROR("Couldn't write asset meta file: {}", metaVirtualPath.GetCStr());
+			return false;
+		}
+
+		// Update asset file
+
+		if (filesystem->WriteText(assetVirtualPath.GetCStr(), content, false) == false)
+		{
+			KK_LOG_ERROR("Couldn't write asset file: {}", assetVirtualPath.GetCStr());
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void AssetLibrary::ScanEngineAssets()
@@ -164,37 +243,17 @@ void AssetLibrary::ScanAssets(bool scanProject)
 		}
 		else // Meta file couldn't be read
 		{
-			char uidStrBuf[Uid::StringLength];
-
 			assetUid = Uid::Create();
-			assetUid.WriteTo(uidStrBuf);
 
-			rapidjson::Document::AllocatorType& alloc = document.GetAllocator();
-
-			auto hashValue = rapidjson::Value();
-			hashValue.SetUint64(calculatedHash);
-
-			auto uidValue = rapidjson::Value();
-			uidValue.SetString(uidStrBuf, Uid::StringLength);
-
-			document.SetObject();
-			document.AddMember("hash", hashValue, alloc);
-			document.AddMember("uid", uidValue, alloc);
+			CreateMetadataJson(document, calculatedHash, assetUid);
 
 			needsToWriteMetaFile = true;
 		}
 
 		if (needsToWriteMetaFile)
 		{
-			rapidjson::Writer<rapidjson::StringBuffer> writer(jsonStringBuffer);
-			document.Accept(writer);
-
-			ArrayView<const char> jsonView(jsonStringBuffer.GetString(), jsonStringBuffer.GetLength());
-
-			if (filesystem->WriteText(metaPathStr.c_str(), jsonView, false) == false)
+			if (WriteDocumentToFile(filesystem, metaPathStr.c_str(), document, jsonStringBuffer) == false)
 				KK_LOG_ERROR("Couldn't write asset meta file: {}", metaPathStr.c_str());
-
-			jsonStringBuffer.Clear();
 		}
 
 		std::error_code err;
@@ -213,6 +272,7 @@ void AssetLibrary::ScanAssets(bool scanProject)
 		assetInfo.virtualPath = virtualPath;
 		assetInfo.filePath = String(allocator, StringRef(relativeStdStr.c_str(), relativeStdStr.length()));
 		assetInfo.uid = assetUid;
+		assetInfo.contentHash = calculatedHash;
 		assetInfo.type = assetType.GetValue();
 
 		auto uidPair = uidToIndexMap.Insert(assetUid);

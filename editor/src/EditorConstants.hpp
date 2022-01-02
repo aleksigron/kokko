@@ -12,6 +12,7 @@ class EditorConstants
 public:
 	// Asset Library
 
+	static const char* const MetadataExtensionStr;
 	static const std::filesystem::path MetadataExtension;
 
 	static const char* const AssetDirectoryName;

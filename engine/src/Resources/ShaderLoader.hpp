@@ -62,7 +62,8 @@ private:
 
 	void ProcessProgramProperties(
 		ShaderData& shaderOut,
-		StringRef programSection);
+		StringRef programSection,
+		StringRef shaderPath);
 
 	bool ProcessShaderStages(
 		ShaderData& shaderOut,

@@ -44,9 +44,10 @@ bool BufferUniformSortPredicate(const kokko::BufferUniform& a, const kokko::Buff
 	return aType.size > bType.size;
 }
 
-void AddUniforms(
+void AddUniformsAndShaderPath(
 	ShaderData& shaderOut,
 	ArrayView<const AddUniforms_UniformData> uniforms,
+	StringRef shaderPath,
 	Allocator* allocator)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -66,6 +67,7 @@ void AddUniforms(
 	// - Uniform block definition
 	// - Buffer uniform definitions
 	// - Texture uniform definitions
+	// - Shader path string
 
 	size_t nameBytes = 0;
 	size_t uniformBlockBytes = blockStartLen + blockEndLen + 1;
@@ -93,12 +95,15 @@ void AddUniforms(
 	}
 
 	const size_t shaderDataAlignment = 8;
-	nameBytes = (nameBytes + shaderDataAlignment - 1) / shaderDataAlignment * shaderDataAlignment;
-	uniformBlockBytes = (uniformBlockBytes + shaderDataAlignment - 1) / shaderDataAlignment * shaderDataAlignment;
+	nameBytes = Math::RoundUpToMultiple(nameBytes, shaderDataAlignment);
+	uniformBlockBytes = Math::RoundUpToMultiple(uniformBlockBytes, shaderDataAlignment);
+	size_t shaderPathBytes = Math::RoundUpToMultiple(shaderPath.len + 1, shaderDataAlignment);
 
 	size_t bufferUniformBytes = sizeof(kokko::BufferUniform) * bufferUniformCount;
 	size_t textureUniformBytes = sizeof(kokko::TextureUniform) * textureUniformCount;
-	size_t shaderDataBytes = nameBytes + uniformBlockBytes + bufferUniformBytes + textureUniformBytes;
+
+	size_t shaderDataBytes =
+		nameBytes + uniformBlockBytes + shaderPathBytes + bufferUniformBytes + textureUniformBytes;
 
 	// Allocate memory
 
@@ -107,7 +112,8 @@ void AddUniforms(
 	char* namePtr = static_cast<char*>(shaderOut.buffer);
 	char* shaderDataEnd = namePtr + shaderDataBytes;
 	char* uniformBlockPtr = namePtr + nameBytes;
-	kokko::BufferUniform* bufferUniformPtr = reinterpret_cast<kokko::BufferUniform*>(uniformBlockPtr + uniformBlockBytes);
+	char* shaderPathPtr = uniformBlockPtr + uniformBlockBytes;
+	kokko::BufferUniform* bufferUniformPtr = reinterpret_cast<kokko::BufferUniform*>(shaderPathPtr + shaderPathBytes);
 	kokko::TextureUniform* textureUniformPtr = reinterpret_cast<kokko::TextureUniform*>(bufferUniformPtr + bufferUniformCount);
 
 	shaderOut.uniforms.bufferUniforms = bufferUniformPtr;
@@ -175,6 +181,11 @@ void AddUniforms(
 		baseUniform->type = dataType;
 	}
 
+	// Copy shader path
+	std::memcpy(shaderPathPtr, shaderPath.str, shaderPath.len);
+	shaderPathPtr[shaderPath.len] = '\0';
+	shaderOut.path = StringRef(shaderPathPtr, shaderPath.len);
+
 	shaderOut.uniforms.bufferUniformCount = bufferUniformCount;
 	shaderOut.uniforms.textureUniformCount = textureUniformCount;
 
@@ -194,7 +205,7 @@ void AddUniforms(
 		const kokko::UniformTypeInfo& type = kokko::UniformTypeInfo::FromType(uniform.type);
 		
 		// Round up the offset to match type aligment
-		bufferObjectOffset = (bufferObjectOffset + type.alignment - 1) / type.alignment * type.alignment;
+		bufferObjectOffset = Math::RoundUpToMultiple(bufferObjectOffset, type.alignment);
 
 		uniform.dataOffset = dataBufferOffset;
 		uniform.bufferObjectOffset = bufferObjectOffset;
@@ -216,7 +227,7 @@ void AddUniforms(
 	const unsigned int bufferSizeUnit = 16;
 
 	shaderOut.uniforms.uniformDataSize = dataBufferOffset;
-	shaderOut.uniforms.uniformBufferSize = (bufferObjectOffset + bufferSizeUnit - 1) / bufferSizeUnit * bufferSizeUnit;
+	shaderOut.uniforms.uniformBufferSize = Math::RoundUpToMultiple(bufferObjectOffset, bufferSizeUnit);
 
 	// Generate uniform block definition
 
@@ -400,7 +411,7 @@ bool CompileAndLink(
 } // Anonymous namespace
 
 // ========================
-// === ShaderLoader ===
+// ===== ShaderLoader =====
 // ========================
 
 const char* const ShaderLoader::LineBreakChars = "\r\n";
@@ -437,7 +448,7 @@ bool ShaderLoader::LoadFromFile(
 	if (FindShaderSections(shaderContent, programSection, stageSections, stageCount) == false)
 		return false;
 
-	ProcessProgramProperties(shaderOut, programSection);
+	ProcessProgramProperties(shaderOut, programSection, shaderPath);
 
 	StringRef versionStr("#version 450\n");
 	ArrayView<const StageSource> stages(stageSections, stageCount);
@@ -517,7 +528,7 @@ bool ShaderLoader::FindShaderSections(
 		return false;
 }
 
-void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef programSection)
+void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef programSection, StringRef shaderPath)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -591,7 +602,7 @@ void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef pro
 	}
 
 	ArrayView<const AddUniforms_UniformData> uniformBufferRef(uniforms, uniformCount);
-	AddUniforms(shaderOut, uniformBufferRef, allocator);
+	AddUniformsAndShaderPath(shaderOut, uniformBufferRef, shaderPath, allocator);
 
 	// Set default value
 	shaderOut.transparencyType = TransparencyType::Opaque;
