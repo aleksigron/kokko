@@ -191,9 +191,11 @@ void AssetBrowserView::DrawEntry(
 
 	TextureId texId = isDir ? editorImages->folderIcon : editorImages->genericFileIcon;
 	void* image = editorImages->GetImGuiTextureId(texId);
+	ImVec2 uv0(0.0f, 1.0f);
+	ImVec2 uv1(1.0f, 0.0f);
 
 	ImGui::SetCursorPos(cursorStartPos);
-	ImGui::Image(image, buttonSize);
+	ImGui::Image(image, buttonSize, uv0, uv1);
 
 	ImGui::TextWrapped("%s", fileStr.c_str());
 	ImGui::Spacing();

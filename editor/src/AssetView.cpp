@@ -98,6 +98,8 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 		return;
 	}
 
+	ImGui::Text("%s", asset->filePath.GetCStr());
+
 	ShaderId shaderId = materialManager->GetMaterialShader(materialId);
 
 	ImGui::Text("Shader ID: %u", shaderId.i);
@@ -134,10 +136,12 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 				ImVec2 size(side, side);
 
 				void* texId = reinterpret_cast<void*>(static_cast<size_t>(texture.textureObject));
+				ImVec2 uv0(0.0f, 1.0f);
+				ImVec2 uv1(1.0f, 0.0f);
 
-				ImGui::Image(texId, size);
+				ImGui::Image(texId, size, uv0, uv1);
 
-				DrawMaterialTextureDropTarget(context, uniforms, texture);
+				edited |= DrawMaterialTextureDropTarget(context, uniforms, texture);
 			}
 
 			ImGui::Spacing();
@@ -283,7 +287,7 @@ bool AssetView::DrawMaterialProperty(UniformData& uniforms, const BufferUniform&
 	return edited;
 }
 
-void AssetView::DrawMaterialTextureDropTarget(
+bool AssetView::DrawMaterialTextureDropTarget(
 	EditorContext& context,
 	UniformData& uniforms,
 	TextureUniform& texture)
@@ -305,12 +309,16 @@ void AssetView::DrawMaterialTextureDropTarget(
 					const TextureData& newTexData = textureManager->GetTextureData(newTexId);
 
 					uniforms.SetTexture(texture, newTexId, newTexData.textureObjectId);
+
+					return true;
 				}
 			}
 		}
 
 		ImGui::EndDragDropTarget();
 	}
+
+	return false;
 }
 
 void AssetView::DrawTexture(EditorContext& context, const AssetInfo* asset)
@@ -333,8 +341,10 @@ void AssetView::DrawTexture(EditorContext& context, const AssetInfo* asset)
 	ImVec2 size(side, side);
 
 	void* texId = reinterpret_cast<void*>(static_cast<size_t>(texture.textureObjectId));
+	ImVec2 uv0(0.0f, 1.0f);
+	ImVec2 uv1(1.0f, 0.0f);
 
-	ImGui::Image(texId, size);
+	ImGui::Image(texId, size, uv0, uv1);
 }
 
 }

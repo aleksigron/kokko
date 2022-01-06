@@ -186,7 +186,7 @@ void TextureManager::RemoveTexture(TextureId id)
 	--data.count;
 }
 
-TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid)
+TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid, bool preferLinear)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -203,7 +203,7 @@ TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid)
 	{
 		TextureId id = CreateTexture();
 
-		if (LoadWithStbImage(id, file.GetView()))
+		if (LoadWithStbImage(id, file.GetView(), preferLinear))
 		{
 			data.texture[id.i].uid = uid;
 
@@ -225,14 +225,14 @@ TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid)
 	return TextureId::Null;
 }
 
-TextureId TextureManager::FindTextureByPath(const StringRef& path)
+TextureId TextureManager::FindTextureByPath(const StringRef& path, bool preferLinear)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	auto uidResult = assetLoader->GetAssetUidByVirtualPath(path);
 	if (uidResult.HasValue())
 	{
-		return FindTextureByUid(uidResult.GetValue());
+		return FindTextureByUid(uidResult.GetValue(), preferLinear);
 	}
 
 	return TextureId::Null;
@@ -240,7 +240,7 @@ TextureId TextureManager::FindTextureByPath(const StringRef& path)
 
 bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool preferLinear)
 {
-	stbi_set_flip_vertically_on_load(false);
+	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrComponents;
 	uint8_t* textureBytes;
 

@@ -256,6 +256,14 @@ void AssetLibrary::ScanAssets(bool scanProject)
 			needsToWriteMetaFile = true;
 		}
 
+		if (auto existingPair = uidToIndexMap.Lookup(assetUid))
+		{
+			auto& existing = assets[existingPair->second];
+			KK_LOG_ERROR("Asset with duplicate UID found: {}\nExisting asset: {}",
+				assetPathStr.c_str(), existing.GetVirtualPath().GetCStr());
+			return;
+		}
+
 		if (needsToWriteMetaFile)
 		{
 			if (WriteDocumentToFile(filesystem, metaPathStr.c_str(), document, jsonStringBuffer) == false)
@@ -274,6 +282,7 @@ void AssetLibrary::ScanAssets(bool scanProject)
 		auto relativeStdStr = relative.generic_u8string();
 
 		uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
+
 		auto& assetInfo = assets.PushBack();
 		assetInfo.virtualPath = virtualPath;
 		assetInfo.filePath = String(allocator, StringRef(relativeStdStr.c_str(), relativeStdStr.length()));

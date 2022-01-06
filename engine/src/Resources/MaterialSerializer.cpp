@@ -112,6 +112,9 @@ bool MaterialSerializer::DeserializeMaterial(MaterialId id, StringRef config)
 
 	for (auto& uniform : material.uniformData.GetTextureUniforms())
 	{
+		// TODO: Find a more robust solution to find default values for textures
+		bool isNormalTexture = uniform.name.StartsWith(StringRef("normal"));
+
 		TextureId textureId = TextureId::Null;
 
 		const rapidjson::Value* varValue = nullptr;
@@ -123,13 +126,12 @@ bool MaterialSerializer::DeserializeMaterial(MaterialId id, StringRef config)
 			auto uidParseResult = Uid::FromString(ArrayView(varValue->GetString(), varValue->GetStringLength()));
 
 			if (uidParseResult.HasValue())
-				textureId = textureManager->FindTextureByUid(uidParseResult.GetValue());
+				textureId = textureManager->FindTextureByUid(uidParseResult.GetValue(), isNormalTexture);
 		}
 
 		if (textureId == TextureId::Null)
 		{
-			// TODO: Find a more robust solution to find default values for textures
-			if (uniform.name.StartsWith(StringRef("normal")))
+			if (isNormalTexture)
 				textureId = textureManager->GetId_EmptyNormal();
 			else
 				textureId = textureManager->GetId_White2D();
