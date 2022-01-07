@@ -46,6 +46,7 @@ void AssetView::Update(EditorContext& context)
 
 	if (windowIsOpen)
 	{
+		ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
 			if (context.editingAsset.HasValue())
