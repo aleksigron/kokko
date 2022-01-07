@@ -45,52 +45,57 @@ void AssetBrowserView::Update(EditorContext& context)
 
 	if (windowIsOpen)
 	{
+		ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
 			// TODO: Allow user to select engine resources or project assets folders at the folder first level
 
-			const fs::path& root = context.project->GetAssetPath();
-
-			if (ImGui::Button("Go to parent") && currentDirectory != root)
+			if (context.project != nullptr)
 			{
-				MoveToPath(context, currentDirectory.parent_path());
-			}
+				const fs::path& root = context.project->GetAssetPath();
 
-			ImGui::SameLine();
-
-			std::string curPathStr = currentDirectory.u8string();
-
-			ImGuiInputTextFlags dirTextFlags = ImGuiInputTextFlags_ReadOnly;
-			ImGui::SetNextItemWidth(-FLT_MIN);
-			ImGui::InputText("##AssetBrowserPath", curPathStr.data(), curPathStr.length(), dirTextFlags);
-
-			ImGuiStyle& style = ImGui::GetStyle();
-			float scrollbarWidth = style.ScrollbarSize;
-
-			float fontSize = ImGui::GetFontSize();
-			float columnWidth = fontSize * 8.0f;
-			float cellWidth = columnWidth + style.CellPadding.x * 2.0f;
-
-			float availableWidth = ImGui::GetContentRegionAvail().x - scrollbarWidth;
-			int columnCount = static_cast<int>(availableWidth / cellWidth);
-
-			if (columnCount < 1)
-				columnCount = 1;
-
-			if (ImGui::BeginTable("AssetBrowserTable", columnCount, ImGuiTableFlags_ScrollY))
-			{
-				SetUpColumns(columnCount, columnWidth);
-
-				int index = 1;
-				fs::path currentDirAbsolute = context.project->GetAssetPath() / currentDirectory;
-				for (fs::directory_iterator itr(currentDirAbsolute), end; itr != end; ++itr, ++index)
+				if (ImGui::Button("Go to parent") && currentDirectory != root)
 				{
-					ImGui::PushID(index);
-					DrawEntry(context, itr, columnWidth);
-					ImGui::PopID();
+					MoveToPath(context, currentDirectory.parent_path());
 				}
 
-				ImGui::EndTable();
+				ImGui::SameLine();
+
+				std::string curPathStr = currentDirectory.u8string();
+
+				ImGuiInputTextFlags dirTextFlags = ImGuiInputTextFlags_ReadOnly;
+				ImGui::SetNextItemWidth(-FLT_MIN);
+				ImGui::InputText("##AssetBrowserPath", curPathStr.data(), curPathStr.length(), dirTextFlags);
+
+				ImGuiStyle& style = ImGui::GetStyle();
+				float scrollbarWidth = style.ScrollbarSize;
+
+				float fontSize = ImGui::GetFontSize();
+				float columnWidth = fontSize * 8.0f;
+				float cellWidth = columnWidth + style.CellPadding.x * 2.0f;
+
+				float availableWidth = ImGui::GetContentRegionAvail().x - scrollbarWidth;
+				int columnCount = static_cast<int>(availableWidth / cellWidth);
+
+				if (columnCount < 1)
+					columnCount = 1;
+
+				if (ImGui::BeginTable("AssetBrowserTable", columnCount, ImGuiTableFlags_ScrollY))
+				{
+					SetUpColumns(columnCount, columnWidth);
+
+					int index = 1;
+					fs::path currentDirAbsolute = context.project->GetAssetPath() / currentDirectory;
+					for (fs::directory_iterator itr(currentDirAbsolute), end; itr != end; ++itr, ++index)
+					{
+						ImGui::PushID(index);
+						DrawEntry(context, itr, columnWidth);
+						ImGui::PopID();
+					}
+
+					ImGui::EndTable();
+				}
 			}
 		}
 

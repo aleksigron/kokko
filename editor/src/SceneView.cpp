@@ -53,6 +53,7 @@ void SceneView::LateUpdate(EditorContext& context)
 {
 	if (windowIsOpen)
 	{
+		ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
