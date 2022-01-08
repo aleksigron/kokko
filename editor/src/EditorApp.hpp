@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "EditorProject.hpp"
+#include "EditorUserSettings.hpp"
 #include "FilePickerDialog.hpp"
 
 class Allocator;
@@ -76,6 +77,7 @@ private:
 	FilePickerDialog filePicker;
 
 	EditorProject project;
+	EditorUserSettings userSettings;
 
 	bool exitRequested;
 

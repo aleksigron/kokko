@@ -35,7 +35,6 @@
 
 #include "EditorConstants.hpp"
 #include "EditorCore.hpp"
-#include "EditorUserSettings.hpp"
 #include "EditorWindow.hpp"
 
 namespace kokko
@@ -119,8 +118,7 @@ void EditorApp::Initialize(Engine* engine)
 
 	core->Initialize(engine);
 
-	EditorUserSettings userSettings;
-	if (userSettings.DeserializeFromFile("editor_user_settings.yml"))
+	if (userSettings.DeserializeFromFile(EditorConstants::UserSettingsFilePath))
 	{
 		if (userSettings.lastOpenedProject.empty())
 		{
@@ -402,14 +400,23 @@ bool EditorApp::CreateProject(const std::filesystem::path& directory, StringRef 
 	if (fs::is_directory(stat) == false)
 		return false;
 
-	// TODO: Check that the directory is empty, or that there is no project.yml
-	// TODO: Create assets folder
+	// Check that the directory is empty
+	for (const auto& entry : fs::directory_iterator(directory))
+		return false;
+
+	// Create assets folder
+	if (fs::create_directory(directory / EditorConstants::AssetDirectoryName) == false)
+		return false;
 
 	project.SetRootPath(directory);
 	project.SetName(name);
 
 	if (project.SerializeToFile() == false)
+	{
+		project.SetRootPath(fs::path());
+		project.SetName(StringRef());
 		return false;
+	}
 
 	OnProjectChanged();
 
@@ -430,6 +437,10 @@ bool EditorApp::OpenProject(const std::filesystem::path& projectDir)
 
 void EditorApp::OnProjectChanged()
 {
+	userSettings.lastOpenedProject = project.GetRootPath();
+	if (userSettings.SerializeToFile(EditorConstants::UserSettingsFilePath) == false)
+		KK_LOG_ERROR("Failed to save settings to {}", EditorConstants::UserSettingsFilePath);
+
 	std::filesystem::path assetPath = project.GetRootPath() / "assets";
 	std::string assetPathStr = assetPath.u8string();
 	StringRef assetPathRef(assetPathStr.c_str(), assetPathStr.length());
