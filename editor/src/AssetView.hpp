@@ -8,6 +8,7 @@ class Allocator;
 class MaterialManager;
 class ShaderManager;
 class TextureManager;
+struct MaterialId;
 
 namespace kokko
 {
@@ -43,6 +44,7 @@ private:
 
 	void DrawMaterial(EditorContext& context, const AssetInfo* asset);
 	bool DrawMaterialProperty(UniformData& uniforms, const BufferUniform& prop);
+	bool DrawMaterialShaderDropTarget(EditorContext& context, MaterialId materialId);
 	bool DrawMaterialTextureDropTarget(
 		EditorContext& context,
 		UniformData& uniforms,
