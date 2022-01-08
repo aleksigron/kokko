@@ -68,7 +68,7 @@ Engine::Engine(
 	textureManager.New(textureManager.allocator, assetLoader, renderDevice);
 
 	shaderManager.CreateScope(allocatorManager, "ShaderManager", alloc);
-	shaderManager.New(shaderManager.allocator, filesystem, renderDevice);
+	shaderManager.New(shaderManager.allocator, filesystem, assetLoader, renderDevice);
 
 	materialManager.CreateScope(allocatorManager, "MaterialManager", alloc);
 	materialManager.New(materialManager.allocator, assetLoader, renderDevice,

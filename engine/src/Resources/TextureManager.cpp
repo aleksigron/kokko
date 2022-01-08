@@ -169,6 +169,12 @@ TextureId TextureManager::CreateTexture()
 
 void TextureManager::RemoveTexture(TextureId id)
 {
+	assert(id != TextureId::Null);
+
+	auto mapPair = uidMap.Lookup(data.texture[id.i].uid);
+	if (mapPair != nullptr)
+		uidMap.Remove(mapPair);
+
 	// Mesh isn't the last one
 	if (id.i < data.count - 1)
 	{

@@ -113,6 +113,12 @@ MaterialId MaterialManager::CreateMaterial()
 
 void MaterialManager::RemoveMaterial(MaterialId id)
 {
+	assert(id != MaterialId::Null);
+
+	auto mapPair = uidMap.Lookup(data.material[id.i].uid);
+	if (mapPair != nullptr)
+		uidMap.Remove(mapPair);
+
 	data.material[id.i].uniformData.Release();
 
 	// Material isn't the last one

@@ -22,6 +22,7 @@ class EditorProject;
 enum class AssetType
 {
 	Material,
+	Shader,
 	Texture
 };
 

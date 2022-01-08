@@ -18,8 +18,7 @@ EditorAssetLoader::EditorAssetLoader(Allocator* allocator, Filesystem* filesyste
 
 bool EditorAssetLoader::LoadAsset(const Uid& uid, Array<uint8_t>& output)
 {
-	auto asset = assetLibrary->FindAssetByUid(uid);
-	if (asset != nullptr)
+	if (auto asset = assetLibrary->FindAssetByUid(uid))
 	{
 		auto pathStr = asset->GetVirtualPath();
 		if (filesystem->ReadBinary(pathStr.GetCStr(), output))
@@ -39,6 +38,14 @@ Optional<Uid> EditorAssetLoader::GetAssetUidByVirtualPath(const StringRef& path)
 		return asset->uid;
 
 	return Optional<Uid>();
+}
+
+Optional<String> EditorAssetLoader::GetAssetVirtualPath(const Uid& uid)
+{
+	if (auto asset = assetLibrary->FindAssetByUid(uid))
+		return asset->GetVirtualPath();
+
+	return Optional<String>();
 }
 
 }

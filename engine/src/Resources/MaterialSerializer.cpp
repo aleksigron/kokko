@@ -81,7 +81,7 @@ bool MaterialSerializer::DeserializeMaterial(MaterialId id, StringRef config)
 		return false;
 
 	StringRef path(shaderItr->value.GetString(), shaderItr->value.GetStringLength());
-	ShaderId shaderId = shaderManager->GetIdByPath(path);
+	ShaderId shaderId = shaderManager->FindShaderByPath(path);
 
 	if (shaderId == ShaderId::Null)
 		return false;

@@ -82,10 +82,10 @@ void BloomEffect::Initialize()
 	StringRef upsamplePath("engine/shaders/post_process/bloom_upsample.glsl");
 	StringRef applyPath("engine/shaders/post_process/bloom_apply.glsl");
 
-	extractShaderId = shaderManager->GetIdByPath(extractPath);
-	downsampleShaderId = shaderManager->GetIdByPath(downsamplePath);
-	upsampleShaderId = shaderManager->GetIdByPath(upsamplePath);
-	applyShaderId = shaderManager->GetIdByPath(applyPath);
+	extractShaderId = shaderManager->FindShaderByPath(extractPath);
+	downsampleShaderId = shaderManager->FindShaderByPath(downsamplePath);
+	upsampleShaderId = shaderManager->FindShaderByPath(upsamplePath);
+	applyShaderId = shaderManager->FindShaderByPath(applyPath);
 
 	size_t maxBlockSize = std::max({
 		sizeof(ExtractUniforms), sizeof(DownsampleUniforms), sizeof(UpsampleUniforms), sizeof(ApplyUniforms)});

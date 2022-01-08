@@ -303,8 +303,9 @@ public:
 		if (pair != &zeroPair)
 		{
 			if (data != nullptr &&
-				pair >= data && pair < data + allocated &&
-				pair->first)
+				pair >= data &&
+				pair < data + allocated &&
+				pair->first != KeyType{})
 			{
 				// Remove this cell by shuffling neighboring cells
 				// so there are no gaps in anyone's probe chain
@@ -312,7 +313,7 @@ public:
 				{
 					KeyValuePair* neighbor = data + i;
 
-					if (!neighbor->first)
+					if (neighbor->first == KeyType{})
 					{
 						// There's nobody to swap with. Go ahead and clear this cell, then return
 						pair->first = KeyType{};

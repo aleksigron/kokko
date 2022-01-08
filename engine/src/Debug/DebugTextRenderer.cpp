@@ -168,7 +168,7 @@ void DebugTextRenderer::Render()
 		CreateAndUploadData();
 
 		const char* shaderPath = "engine/shaders/debug/debug_text.glsl";
-		ShaderId shaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
+		ShaderId shaderId = shaderManager->FindShaderByPath(StringRef(shaderPath));
 
 		if (shaderId == ShaderId::Null)
 			return;
