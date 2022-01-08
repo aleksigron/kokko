@@ -9,6 +9,7 @@
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MaterialSerializer.hpp"
+#include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
 #include "AssetLibrary.hpp"
@@ -99,15 +100,27 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 		return;
 	}
 
+	bool edited = false;
+
 	ImGui::Text("%s", asset->filePath.GetCStr());
 
 	ShaderId shaderId = materialManager->GetMaterialShader(materialId);
 
-	ImGui::Text("Shader ID: %u", shaderId.i);
+	textStore.Assign("No shader");
+	if (shaderId != ShaderId::Null)
+	{
+		const ShaderData& shader = shaderManager->GetShaderData(shaderId);
+		auto shaderAsset = context.assetLibrary->FindAssetByUid(shader.uid);
+		if (shaderAsset != nullptr)
+		{
+			textStore = shaderAsset->filePath;
+		}
+	}
+
+	ImGui::InputText("Shader", textStore.GetData(), textStore.GetLength() + 1, ImGuiInputTextFlags_ReadOnly);
+	edited |= DrawMaterialShaderDropTarget(context, materialId);
 
 	UniformData& uniforms = materialManager->GetMaterialUniforms(materialId);
-
-	bool edited = false;
 
 	if (ImGui::CollapsingHeader("Properties", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -288,6 +301,35 @@ bool AssetView::DrawMaterialProperty(UniformData& uniforms, const BufferUniform&
 	return edited;
 }
 
+bool AssetView::DrawMaterialShaderDropTarget(EditorContext& context, MaterialId materialId)
+{
+	if (ImGui::BeginDragDropTarget())
+	{
+		const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+		if (payload != nullptr && payload->DataSize == sizeof(Uid))
+		{
+			Uid assetUid;
+			std::memcpy(&assetUid, payload->Data, payload->DataSize);
+
+			auto asset = context.assetLibrary->FindAssetByUid(assetUid);
+			if (asset != nullptr && asset->type == AssetType::Shader)
+			{
+				ShaderId shaderId = shaderManager->FindShaderByUid(assetUid);
+				if (shaderId != ShaderId::Null)
+				{
+					materialManager->SetMaterialShader(materialId, shaderId);
+
+					return true;
+				}
+			}
+		}
+
+		ImGui::EndDragDropTarget();
+	}
+
+	return false;
+}
+
 bool AssetView::DrawMaterialTextureDropTarget(
 	EditorContext& context,
 	UniformData& uniforms,
@@ -296,7 +338,7 @@ bool AssetView::DrawMaterialTextureDropTarget(
 	if (ImGui::BeginDragDropTarget())
 	{
 		const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
-		if (payload != nullptr)
+		if (payload != nullptr && payload->DataSize == sizeof(Uid))
 		{
 			Uid assetUid;
 			std::memcpy(&assetUid, payload->Data, payload->DataSize);
