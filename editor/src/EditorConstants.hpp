@@ -26,6 +26,10 @@ public:
 	static const char* const VirtualPathEditor;
 	static const char* const VirtualPathAssets;
 
+	// Editor settings
+
+	static const char* const UserSettingsFilePath;
+
 	// UI
 
 	static const char* const SceneDragDropType;

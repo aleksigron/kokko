@@ -16,6 +16,8 @@ const char* const EditorConstants::VirtualPathEngine = "engine";
 const char* const EditorConstants::VirtualPathEditor = "editor";
 const char* const EditorConstants::VirtualPathAssets = "assets";
 
+const char* const EditorConstants::UserSettingsFilePath = "editor_user_settings.yml";
+
 const char* const EditorConstants::SceneDragDropType = "SceneObject";
 const char* const EditorConstants::AssetDragDropType = "Asset";
 const char* const EditorConstants::MaterialDragDropType = "Material";
