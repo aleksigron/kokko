@@ -1,5 +1,5 @@
 {
-	"shader": "engine/shaders/deferred_geometry/standard_opaque.glsl",
+	"shader": "beefdc5ec8726697d0282955735586ec",
 	"variables": [
 		{
 			"name": "color_tint",

@@ -80,14 +80,20 @@ bool MaterialSerializer::DeserializeMaterial(MaterialId id, StringRef config)
 	if (shaderItr == doc.MemberEnd() || shaderItr->value.IsString() == false)
 		return false;
 
-	StringRef path(shaderItr->value.GetString(), shaderItr->value.GetStringLength());
-	ShaderId shaderId = shaderManager->FindShaderByPath(path);
+	ShaderId shaderId = ShaderId::Null;
 
-	if (shaderId == ShaderId::Null)
-		return false;
+	auto uidResult = Uid::FromString(ArrayView(shaderItr->value.GetString(), shaderItr->value.GetStringLength()));
+	if (uidResult.HasValue())
+	{
+		Uid shaderUid = uidResult.GetValue();
+		shaderId = shaderManager->FindShaderByUid(shaderUid);
+	}
 
 	// This initializes material uniforms from the shader's data
 	materialManager->SetMaterialShader(id, shaderId);
+
+	if (shaderId == ShaderId::Null)
+		return false;
 
 	MaterialManager::MaterialData& material = materialManager->data.material[id.i];
 	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
@@ -162,7 +168,9 @@ void MaterialSerializer::SerializeToString(MaterialId id, String& out)
 	const UniformData& uniforms = materialManager->GetMaterialUniforms(id);
 	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
-	rapidjson::Value shaderPath(shader.path.str, shader.path.len);
+	char shaderUid[Uid::StringLength];
+	shader.uid.WriteTo(ArrayView(shaderUid));
+	rapidjson::Value shaderUidValue(shaderUid, Uid::StringLength);
 
 	rapidjson::Value variables(rapidjson::kArrayType);
 
@@ -196,7 +204,7 @@ void MaterialSerializer::SerializeToString(MaterialId id, String& out)
 	}
 
 	doc.SetObject();
-	doc.AddMember("shader", shaderPath, alloc);
+	doc.AddMember("shader", shaderUidValue, alloc);
 	doc.AddMember("variables", variables, alloc);
 
 	rapidjson::StringBuffer jsonStringBuffer;
