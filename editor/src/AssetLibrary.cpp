@@ -152,6 +152,7 @@ void AssetLibrary::ScanAssets(bool scanProject)
 	namespace fs = std::filesystem;
 
 	const fs::path materialExtension(".material");
+	const fs::path shaderExt(".glsl");
 	const fs::path textureJpgExt(".jpg");
 	const fs::path textureJpegExt(".jpeg");
 	const fs::path texturePngExt(".png");
@@ -180,6 +181,10 @@ void AssetLibrary::ScanAssets(bool scanProject)
 		if (currentExt == materialExtension)
 		{
 			assetType = AssetType::Material;
+		}
+		else if (currentExt == shaderExt)
+		{
+			assetType = AssetType::Shader;
 		}
 		else if (currentExt == textureJpgExt ||
 			currentExt == textureJpegExt ||

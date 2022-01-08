@@ -300,12 +300,12 @@ void Renderer::Initialize()
 
 	{
 		const char* path = "engine/shaders/deferred_lighting/lighting.glsl";
-		lightingShaderId = shaderManager->GetIdByPath(StringRef(path));
+		lightingShaderId = shaderManager->FindShaderByPath(StringRef(path));
 	}
 
 	{
 		const char* path = "engine/shaders/post_process/tonemap.glsl";
-		tonemappingShaderId = shaderManager->GetIdByPath(StringRef(path));
+		tonemappingShaderId = shaderManager->FindShaderByPath(StringRef(path));
 	}
 
 	{
@@ -344,7 +344,7 @@ void Renderer::Initialize()
 		device->Viewport(&viewport);
 
 		const char* path = "engine/shaders/preprocess/calc_brdf_lut.glsl";
-		ShaderId calcBrdfShaderId = shaderManager->GetIdByPath(StringRef(path));
+		ShaderId calcBrdfShaderId = shaderManager->FindShaderByPath(StringRef(path));
 		const ShaderData& calcBrdfShader = shaderManager->GetShaderData(calcBrdfShaderId);
 		device->UseShaderProgram(calcBrdfShader.driverId);
 
@@ -364,7 +364,7 @@ void Renderer::Initialize()
 		MeshPresets::UploadCube(meshManager, skyboxMeshId);
 
 		const char* shaderPath = "engine/shaders/skybox/skybox.glsl";
-		skyboxShaderId = shaderManager->GetIdByPath(StringRef(shaderPath));
+		skyboxShaderId = shaderManager->FindShaderByPath(StringRef(shaderPath));
 
 		device->CreateBuffers(1, &skyboxUniformBufferId);
 		device->BindBuffer(RenderBufferTarget::UniformBuffer, skyboxUniformBufferId);

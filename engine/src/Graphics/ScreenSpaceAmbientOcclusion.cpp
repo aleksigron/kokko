@@ -263,6 +263,6 @@ void ScreenSpaceAmbientOcclusion::CreatePassResources(size_t passCount, const St
 
 		// Shader
 
-		shaderIds[i] = shaderManager->GetIdByPath(shaderPaths[i]);
+		shaderIds[i] = shaderManager->FindShaderByPath(shaderPaths[i]);
 	}
 }

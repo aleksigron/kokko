@@ -5,11 +5,17 @@
 
 #include "Core/HashMap.hpp"
 #include "Core/StringRef.hpp"
+#include "Core/Uid.hpp"
 
 #include "Rendering/UniformList.hpp"
 #include "Rendering/TransparencyType.hpp"
 
 #include "Resources/ShaderId.hpp"
+
+namespace kokko
+{
+	class AssetLoader;
+}
 
 class Allocator;
 class Filesystem;
@@ -17,6 +23,8 @@ class RenderDevice;
 
 struct ShaderData
 {
+	kokko::Uid uid;
+
 	void* buffer;
 	StringRef uniformBlockDefinition;
 	StringRef path;
@@ -33,6 +41,7 @@ class ShaderManager
 private:
 	Allocator* allocator;
 	Filesystem* filesystem;
+	kokko::AssetLoader* assetLoader;
 	RenderDevice* renderDevice;
 
 	struct InstanceData
@@ -47,23 +56,23 @@ private:
 	data;
 
 	unsigned int freeListFirst;
-	HashMap<uint32_t, ShaderId> nameHashMap;
+	HashMap<kokko::Uid, ShaderId> uidMap;
 
 	void Reallocate(size_t required);
 
 public:
-	ShaderManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice);
+	ShaderManager(
+		Allocator* allocator,
+		Filesystem* filesystem,
+		kokko::AssetLoader* assetLoader,
+		RenderDevice* renderDevice);
 	~ShaderManager();
 
 	ShaderId CreateShader();
 	void RemoveShader(ShaderId id);
 
-	ShaderId GetIdByPath(StringRef path);
-	ShaderId GetIdByPathHash(uint32_t pathHash)
-	{
-		auto pair = nameHashMap.Lookup(pathHash);
-		return pair != nullptr ? pair->second : ShaderId{};
-	}
+	ShaderId FindShaderByUid(const kokko::Uid& uid);
+	ShaderId FindShaderByPath(const StringRef& path);
 
 	const ShaderData& GetShaderData(ShaderId id) const
 	{

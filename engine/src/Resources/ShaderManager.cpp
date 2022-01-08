@@ -10,18 +10,22 @@
 
 #include "Memory/Allocator.hpp"
 
+#include "Resources/AssetLoader.hpp"
 #include "Resources/ShaderLoader.hpp"
-
-#include "System/Filesystem.hpp"
 
 const ShaderId ShaderId::Null = ShaderId{ 0 };
 
-ShaderManager::ShaderManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
+ShaderManager::ShaderManager(
+	Allocator* allocator,
+	Filesystem* filesystem,
+	kokko::AssetLoader* assetLoader,
+	RenderDevice* renderDevice) :
 	allocator(allocator),
 	filesystem(filesystem),
+	assetLoader(assetLoader),
 	renderDevice(renderDevice),
 	freeListFirst(0),
-	nameHashMap(allocator)
+	uidMap(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as Null instance
@@ -106,24 +110,18 @@ ShaderId ShaderManager::CreateShader()
 
 void ShaderManager::RemoveShader(ShaderId id)
 {
-	{
-		HashMap<uint32_t, ShaderId>::Iterator itr = nameHashMap.begin();
-		HashMap<uint32_t, ShaderId>::Iterator end = nameHashMap.end();
-		for (; itr != end; ++itr)
-			if (itr->second == id)
-				break;
+	assert(id != ShaderId::Null);
 
-		// TODO: Fix this hack, make removing by value easier
-		if (itr != end)
-			nameHashMap.Remove(&*itr);
-	}
+	auto mapPair = uidMap.Lookup(data.shader[id.i].uid);
+	if (mapPair != nullptr)
+		uidMap.Remove(mapPair);
 
 	if (data.shader[id.i].buffer != nullptr)
 	{
 		allocator->Deallocate(data.shader[id.i].buffer);
 		data.shader[id.i].buffer = nullptr;
 	}
-
+	 
 	// If material isn't the last one, add it to the freelist
 	if (id.i < data.count - 1)
 	{
@@ -134,46 +132,61 @@ void ShaderManager::RemoveShader(ShaderId id)
 	--data.count;
 }
 
-ShaderId ShaderManager::GetIdByPath(StringRef path)
+ShaderId ShaderManager::FindShaderByUid(const kokko::Uid& uid)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	uint32_t hash = kokko::HashString(path.str, path.len);
-
-	auto* pair = nameHashMap.Lookup(hash);
+	auto* pair = uidMap.Lookup(uid);
 	if (pair != nullptr)
 		return pair->second;
 
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	kokko::String file(allocator);
-	kokko::String pathStr(allocator, path);
+	Array<uint8_t> file(allocator);
 
-	if (filesystem->ReadText(pathStr.GetCStr(), file))
+	if (assetLoader->LoadAsset(uid, file))
 	{
+		auto virtualPathResult = assetLoader->GetAssetVirtualPath(uid);
+		const kokko::String& virtualPath = virtualPathResult.GetValue();
+
 		ShaderId id = CreateShader();
 		ShaderData& shader = data.shader[id.i];
 
-		StringRef pathRef = pathStr.GetRef();
-		StringRef debugName = pathRef;
-
-		StringRef fileString(file.GetData(), file.GetLength());
+		StringRef fileString(reinterpret_cast<char*>(file.GetData()), file.GetCount());
 		ShaderLoader loader(allocator, filesystem, renderDevice);
-		bool loadSuccess = loader.LoadFromFile(shader, pathRef, fileString, debugName);
 
-		if (loadSuccess)
+		if (loader.LoadFromFile(shader, virtualPath.GetRef(), fileString, virtualPath.GetRef()))
 		{
-			pair = nameHashMap.Insert(hash);
+			data.shader[id.i].uid = uid;
+
+			pair = uidMap.Insert(uid);
 			pair->second = id;
 
 			return id;
 		}
 		else
 		{
+			KK_LOG_ERROR("Material failed to load correctly");
+
 			RemoveShader(id);
 		}
 	}
-	
-	return ShaderId{};
+	else
+		KK_LOG_ERROR("AssetLoader couldn't load material asset");
+
+	return ShaderId::Null;
+}
+
+ShaderId ShaderManager::FindShaderByPath(const StringRef& path)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	auto uidResult = assetLoader->GetAssetUidByVirtualPath(path);
+	if (uidResult.HasValue())
+	{
+		return FindShaderByUid(uidResult.GetValue());
+	}
+
+	return ShaderId::Null;
 }
