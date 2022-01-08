@@ -210,9 +210,21 @@ void MaterialManager::SetMaterialShader(MaterialId id, ShaderId shaderId)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	assert(shaderId != ShaderId::Null);
+	assert(id != MaterialId::Null);
 
 	MaterialData& material = data.material[id.i];
+
+	if (material.uniformBufferObject != 0)
+		renderDevice->DestroyBuffers(1, &material.uniformBufferObject);
+
+	if (shaderId == ShaderId::Null)
+	{
+		material.shaderId = ShaderId::Null;
+		material.cachedShaderDeviceId = 0;
+		material.transparency = TransparencyType::Opaque;
+		material.uniformData.Release();
+		return;
+	}
 
 	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
@@ -221,9 +233,6 @@ void MaterialManager::SetMaterialShader(MaterialId id, ShaderId shaderId)
 	material.transparency = shader.transparencyType;
 
 	material.uniformData.Initialize(shader.uniforms);
-
-	if (material.uniformBufferObject != 0)
-		renderDevice->DestroyBuffers(1, &material.uniformBufferObject);
 
 	if (material.uniformData.GetBufferUniforms().GetCount() > 0)
 	{

@@ -1,5 +1,5 @@
 {
-	"shader": "engine/shaders/deferred_geometry/terrain.glsl",
+	"shader": "62205cec36c6413a9e0603081a64a160",
 	"variables": [
 		{
 			"name": "metalness",
