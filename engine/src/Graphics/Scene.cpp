@@ -19,7 +19,6 @@ Scene::Scene(Allocator* allocator):
 	entityMap(allocator),
 	updatedEntities(allocator),
 	updatedTransforms(allocator),
-	environmentId(-1),
 	activeCamera(Entity::Null)
 {
 	data = InstanceData{};
@@ -216,7 +215,6 @@ void Scene::Clear()
 {
 	entityMap.Clear();
 	data.count = 1;
-	environmentId = -1;
 }
 
 void Scene::SetParent(SceneObjectId id, SceneObjectId parent)

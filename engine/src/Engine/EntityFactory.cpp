@@ -7,6 +7,7 @@
 #include "Engine/EntityManager.hpp"
 
 #include "Graphics/Scene.hpp"
+#include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/TerrainSystem.hpp"
 #include "Graphics/ParticleSystem.hpp"
 
@@ -23,7 +24,8 @@ const char* const EntityFactory::ComponentNames[] = {
 	"Camera",
 	"Light",
 	"Terrain",
-	"Particle emitter"
+	"Particle emitter",
+	"Environment"
 };
 
 Entity EntityFactory::CreateEntity(World* world, ArrayView<EntityComponentType> components)
@@ -89,9 +91,7 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 		TerrainSystem* terrainSystem = world->GetTerrainSystem();
 		TerrainId terrainId = terrainSystem->Lookup(entity);
 		if (terrainId == TerrainId::Null)
-		{
 			terrainId = terrainSystem->AddTerrain(entity, TerrainParameters());
-		}
 		break;
 	}
 	case EntityComponentType::Particle:
@@ -100,6 +100,14 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 		ParticleEmitterId emitterId = particleSystem->Lookup(entity);
 		if (emitterId == ParticleEmitterId::Null)
 			emitterId = particleSystem->AddEmitter(entity);
+		break;
+	}
+	case EntityComponentType::Environment:
+	{
+		kokko::EnvironmentSystem* environmentSystem = world->GetEnvironmentSystem();
+		EnvironmentId envId = environmentSystem->Lookup(entity);
+		if (envId == EnvironmentId::Null)
+			envId = environmentSystem->AddComponent(entity);
 		break;
 	}
 	default:
@@ -148,9 +156,7 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 		TerrainSystem* terrainSystem = world->GetTerrainSystem();
 		TerrainId terrainId = terrainSystem->Lookup(entity);
 		if (terrainId != TerrainId::Null)
-		{
 			terrainSystem->RemoveTerrain(terrainId);
-		}
 		break;
 	}
 	case EntityComponentType::Particle:
@@ -159,6 +165,14 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 		ParticleEmitterId emitterId = particleSystem->Lookup(entity);
 		if (emitterId != ParticleEmitterId::Null)
 			particleSystem->RemoveEmitter(emitterId);
+		break;
+	}
+	case EntityComponentType::Environment:
+	{
+		kokko::EnvironmentSystem* environmentSystem = world->GetEnvironmentSystem();
+		EnvironmentId envId = environmentSystem->Lookup(entity);
+		if (envId != EnvironmentId::Null)
+			environmentSystem->RemoveComponent(envId);
 		break;
 	}
 	default:

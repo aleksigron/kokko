@@ -67,8 +67,6 @@ private:
 	SortedArray<unsigned int> updatedEntities;
 	Array<Mat4x4f> updatedTransforms;
 
-	int environmentId;
-
 	Entity activeCamera;
 
 	void Reallocate(unsigned int required);
@@ -128,9 +126,6 @@ public:
 	void MarkUpdated(SceneObjectId id);
 
 	void NotifyUpdatedTransforms(size_t receiverCount, TransformUpdateReceiver** updateReceivers);
-
-	void SetEnvironmentId(int environmentId) { this->environmentId = environmentId; }
-	int GetEnvironmentId() const { return this->environmentId; }
 
 	void SetActiveCameraEntity(Entity camera) { activeCamera = camera; }
 	Entity GetActiveCameraEntity() const { return activeCamera; }

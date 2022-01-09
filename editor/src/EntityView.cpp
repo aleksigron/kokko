@@ -9,6 +9,7 @@
 #include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
 
+#include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/ParticleSystem.hpp"
 #include "Graphics/Scene.hpp"
 #include "Graphics/TerrainSystem.hpp"
@@ -80,6 +81,7 @@ void EntityView::Update(EditorContext& context)
 				DrawLightComponent(context.selectedEntity, world);
 				DrawTerrainComponent(context.selectedEntity, world);
 				DrawParticleComponent(context.selectedEntity, world);
+				DrawEnvironmentComponent(context, world);
 
 				ImGui::Spacing();
 			}
@@ -489,6 +491,61 @@ void EntityView::DrawParticleComponent(Entity selectedEntity, World* world)
 
 			if (componentVisible == false)
 				particleSystem->RemoveEmitter(emitterId);
+		}
+	}
+}
+
+void EntityView::DrawEnvironmentComponent(EditorContext& context, World* world)
+{
+	EnvironmentSystem* envSystem = world->GetEnvironmentSystem();
+	EnvironmentId envId = envSystem->Lookup(context.selectedEntity);
+	
+	if (envId != EnvironmentId::Null)
+	{
+		ImGui::Spacing();
+
+		bool componentVisible = true;
+		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Environment);
+		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			String& texName = context.temporaryString;
+			texName.Assign("No texture");
+
+			Optional<Uid> textureUidOpt = envSystem->GetSourceTextureUid(envId);
+			if (textureUidOpt.HasValue())
+			{
+				if (auto asset = context.assetLibrary->FindAssetByUid(textureUidOpt.GetValue()))
+				{
+					texName.Assign(asset->filePath);
+				}
+			}
+
+			ImGui::InputText("Source texture", texName.GetData(), texName.GetLength() + 1, ImGuiInputTextFlags_ReadOnly);
+
+			if (ImGui::BeginDragDropTarget())
+			{
+				const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+				if (payload != nullptr && payload->DataSize == sizeof(Uid))
+				{
+					Uid assetUid;
+					std::memcpy(&assetUid, payload->Data, payload->DataSize);
+
+					if (auto newAsset = context.assetLibrary->FindAssetByUid(assetUid))
+					{
+						if (newAsset->type == AssetType::Texture &&
+							textureUidOpt.HasValue() == false ||
+							assetUid != textureUidOpt.GetValue())
+						{
+							envSystem->SetEnvironmentTexture(envId, assetUid);
+						}
+					}
+				}
+
+				ImGui::EndDragDropTarget();
+			}
+
+			if (componentVisible == false)
+				envSystem->RemoveComponent(envId);
 		}
 	}
 }

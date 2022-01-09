@@ -14,7 +14,7 @@
 #include "Rendering/LightSerializer.hpp"
 #include "Rendering/RenderObjectSerializer.hpp"
 
-#include "Graphics/EnvironmentManager.hpp"
+#include "Graphics/EnvironmentSerializer.hpp"
 #include "Graphics/Scene.hpp"
 
 #include "Resources/YamlCustomTypes.hpp"
@@ -50,27 +50,14 @@ void LevelSerializer::Initialize(World* world, const ResourceManagers& resourceM
 	componentSerializers.PushBack(allocator->MakeNew<CameraSerializer>(world->GetCameraSystem()));
 	componentSerializers.PushBack(allocator->MakeNew<ParticleEmitterSerializer>(world->GetParticleSystem()));
 	componentSerializers.PushBack(allocator->MakeNew<TerrainSerializer>(world->GetTerrainSystem()));
+	componentSerializers.PushBack(allocator->MakeNew<kokko::EnvironmentSerializer>(world->GetEnvironmentSystem()));
 }
 
 void LevelSerializer::DeserializeFromString(const char* data)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Scene* scene = world->GetScene();
-
 	YAML::Node node = YAML::Load(data);
-
-	const YAML::Node environment = node["environment"];
-	if (environment.IsDefined() && environment.IsScalar())
-	{
-		int envId = resourceManagers.environmentManager->LoadHdrEnvironmentMap(environment.Scalar().c_str());
-
-		assert(envId >= 0);
-
-		scene->SetEnvironmentId(envId);
-	}
-	else
-		scene->SetEnvironmentId(-1);
 
 	const YAML::Node objects = node["objects"];
 	if (objects.IsDefined() && objects.IsSequence())
@@ -92,15 +79,9 @@ bool LevelSerializer::SerializeToFile(const char* filePath)
 
 	EntityManager* entityManager = world->GetEntityManager();
 	Scene* scene = world->GetScene();
+	kokko::EnvironmentSystem* envSystem = world->GetEnvironmentSystem();
 
 	out << YAML::BeginMap;
-
-	int environmentId = scene->GetEnvironmentId();
-	if (environmentId >= 0)
-	{
-		const char* sourcePath = resourceManagers.environmentManager->GetEnvironmentSourcePath(environmentId);
-		out << YAML::Key << "environment" << YAML::Value << sourcePath;
-	}
 
 	out << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
 

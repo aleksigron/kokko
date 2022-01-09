@@ -17,7 +17,6 @@ class MeshManager;
 class ShaderManager;
 class MaterialManager;
 class TextureManager;
-class EnvironmentManager;
 
 struct CameraParameters;
 
@@ -29,8 +28,6 @@ class AssetLoader;
 class Engine
 {
 private:
-	AllocatorManager* allocatorManager;
-
 	Allocator* systemAllocator;
 	Allocator* debugNameAllocator;
 
@@ -47,7 +44,6 @@ private:
 	InstanceAllocatorPair<TextureManager> textureManager;
 	InstanceAllocatorPair<ShaderManager> shaderManager;
 	InstanceAllocatorPair<MaterialManager> materialManager;
-	InstanceAllocatorPair<EnvironmentManager> environmentManager;
 	InstanceAllocatorPair<World> world;
 
 public:
@@ -75,6 +71,5 @@ public:
 	ShaderManager* GetShaderManager() { return shaderManager.instance; }
 	TextureManager* GetTextureManager() { return textureManager.instance; }
 	MaterialManager* GetMaterialManager() { return materialManager.instance; }
-	EnvironmentManager* GetEnvironmentManager() { return environmentManager.instance; }
 	World* GetWorld() { return world.instance; }
 };

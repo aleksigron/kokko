@@ -15,10 +15,8 @@
 
 #include "Engine/EntityManager.hpp"
 
-#include "Graphics/EnvironmentManager.hpp"
 #include "Graphics/Scene.hpp"
 
-#include "Memory/AllocatorManager.hpp"
 #include "Memory/Memory.hpp"
 
 #include "Rendering/CameraSystem.hpp"
@@ -74,20 +72,15 @@ Engine::Engine(
 	materialManager.New(materialManager.allocator, assetLoader, renderDevice,
 		shaderManager.instance, textureManager.instance);
 
-	environmentManager.CreateScope(allocatorManager, "EnvironmentManager", alloc);
-	environmentManager.New(environmentManager.allocator, filesystem, renderDevice,
-		shaderManager.instance, meshManager.instance, textureManager.instance);
-
 	ResourceManagers resManagers;
 	resManagers.meshManager = meshManager.instance;
 	resManagers.shaderManager = shaderManager.instance;
 	resManagers.materialManager = materialManager.instance;
 	resManagers.textureManager = textureManager.instance;
-	resManagers.environmentManager = environmentManager.instance;
 
 	world.CreateScope(allocatorManager, "World", alloc);
 	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice,
-		filesystem, mainWindow.instance->GetInputManager(), resManagers);
+		filesystem, assetLoader, mainWindow.instance->GetInputManager(), resManagers);
 }
 
 Engine::~Engine()
@@ -96,7 +89,6 @@ Engine::~Engine()
 	debug.instance->Deinitialize();
 
 	world.Delete();
-	environmentManager.Delete();
 	materialManager.Delete();
 	shaderManager.Delete();
 	textureManager.Delete();
@@ -122,7 +114,6 @@ bool Engine::Initialize()
 			shaderManager.instance, textureManager.instance);
 
 		textureManager.instance->Initialize();
-		environmentManager.instance->Initialize();
 
 		world.instance->Initialize();
 

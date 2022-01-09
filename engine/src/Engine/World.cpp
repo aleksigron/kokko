@@ -7,6 +7,7 @@
 #include "Engine/EngineSettings.hpp"
 #include "Engine/EntityManager.hpp"
 
+#include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/ParticleSystem.hpp"
 #include "Graphics/Scene.hpp"
 #include "Graphics/TerrainSystem.hpp"
@@ -32,10 +33,12 @@ World::World(AllocatorManager* allocManager,
 	Allocator* debugNameAllocator,
 	RenderDevice* renderDevice,
 	Filesystem* filesystem,
+	kokko::AssetLoader* assetLoader,
 	InputManager* inputManager,
 	const ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	filesystem(filesystem),
+	assetLoader(assetLoader),
 	levelSerializer(allocator),
 	loadedLevelDisplayName(allocator, UnnamedLevelDisplayName),
 	loadedLevelFilePath(allocator),
@@ -55,9 +58,13 @@ World::World(AllocatorManager* allocManager,
 	scene.CreateScope(allocManager, "Scene", alloc);
 	scene.New(scene.allocator);
 
+	environmentSystem.CreateScope(allocManager, "EnvironmentSystem", alloc);
+	environmentSystem.New(environmentSystem.allocator, assetLoader, renderDevice,
+		resourceManagers.shaderManager, resourceManagers.meshManager, resourceManagers.textureManager);
+
 	renderer.CreateScope(allocManager, "Renderer", alloc);
 	renderer.New(renderer.allocator, renderDevice, scene.instance, cameraSystem.instance,
-		lightManager.instance, resourceManagers);
+		lightManager.instance, environmentSystem.instance, resourceManagers);
 
 	scriptSystem.CreateScope(allocManager, "ScriptSystem", alloc);
 	scriptSystem.New(scriptSystem.allocator, inputManager);
@@ -68,7 +75,6 @@ World::World(AllocatorManager* allocManager,
 
 	particleSystem.CreateScope(allocManager, "ParticleEffects", alloc);
 	particleSystem.New(particleSystem.allocator, renderDevice, resourceManagers.shaderManager, resourceManagers.meshManager);
-
 	levelSerializer.Initialize(this, resourceManagers);
 }
 
@@ -79,6 +85,7 @@ World::~World()
 	scriptSystem.Delete();
 	renderer.Delete();
 	scene.Delete();
+	environmentSystem.Delete();
 	cameraSystem.Delete();
 	lightManager.Delete();
 	entityManager.Delete();
@@ -89,6 +96,7 @@ void World::Initialize()
 	renderer.instance->Initialize();
 	terrainSystem.instance->Initialize();
 	particleSystem.instance->Initialize();
+	environmentSystem.instance->Initialize();
 }
 
 void World::Deinitialize()
@@ -130,6 +138,7 @@ bool World::WriteToFile(const char* path, const char* displayName)
 
 void World::ClearAllEntities()
 {
+	environmentSystem.instance->RemoveAll();
 	particleSystem.instance->RemoveAll();
 	terrainSystem.instance->RemoveAll();
 	// TODO: scriptSystem

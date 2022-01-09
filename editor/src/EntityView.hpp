@@ -34,6 +34,7 @@ private:
 	void DrawLightComponent(Entity selectedEntity, World* world);
 	void DrawTerrainComponent(Entity selectedEntity, World* world);
 	void DrawParticleComponent(Entity selectedEntity, World* world);
+	void DrawEnvironmentComponent(EditorContext& context, World* world);
 
 public:
 	EntityView();

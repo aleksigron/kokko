@@ -27,6 +27,7 @@ namespace editor
 
 EditorCore::EditorCore(Allocator* allocator, Filesystem* filesystem) :
 	allocator(allocator),
+	editorContext(allocator),
 	assetLibrary(allocator, filesystem),
 	copiedEntity(allocator),
 	editorWindows(allocator),
