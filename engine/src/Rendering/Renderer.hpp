@@ -43,7 +43,6 @@ class DebugVectorRenderer;
 class CustomRenderer;
 class ScreenSpaceAmbientOcclusion;
 class BloomEffect;
-class EnvironmentManager;
 class PostProcessRenderer;
 class RenderTargetContainer;
 class Framebuffer;
@@ -60,6 +59,7 @@ struct ResourceManagers;
 
 namespace kokko
 {
+class EnvironmentSystem;
 class UniformData;
 }
 
@@ -139,11 +139,11 @@ private:
 	Scene* scene;
 	CameraSystem* cameraSystem;
 	LightManager* lightManager;
+	kokko::EnvironmentSystem* environmentSystem;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
 	MaterialManager* materialManager;
 	TextureManager* textureManager;
-	EnvironmentManager* environmentManager;
 
 	bool lockCullingCamera;
 	Mat4x4fBijection lockCullingCameraTransform;
@@ -195,6 +195,7 @@ public:
 		Scene* scene,
 		CameraSystem* cameraSystem,
 		LightManager* lightManager,
+		kokko::EnvironmentSystem* environmentSystem,
 		const ResourceManagers& resourceManagers);
 	~Renderer();
 

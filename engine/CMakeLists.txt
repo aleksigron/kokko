@@ -128,8 +128,9 @@ set (KOKKO_SOURCES
 	src/Engine/World.hpp
 	src/Graphics/BloomEffect.cpp
 	src/Graphics/BloomEffect.hpp
-	src/Graphics/EnvironmentManager.cpp
-	src/Graphics/EnvironmentManager.hpp
+	src/Graphics/EnvironmentSerializer.hpp
+	src/Graphics/EnvironmentSystem.cpp
+	src/Graphics/EnvironmentSystem.hpp
 	src/Graphics/ParticleSystem.cpp
 	src/Graphics/ParticleSystem.hpp
 	src/Graphics/ParticleEmitterSerializer.hpp

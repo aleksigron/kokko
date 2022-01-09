@@ -1,5 +1,6 @@
-#include "EnvironmentManager.hpp"
+#include "Graphics/EnvironmentSystem.hpp"
 
+#include <cassert>
 #include <cstdint>
 
 #include "stb_image/stb_image.h"
@@ -17,12 +18,16 @@
 #include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/Uniform.hpp"
 
+#include "Resources/AssetLoader.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
-#include "System/Filesystem.hpp"
+namespace kokko
+{
+
+const EnvironmentId EnvironmentId::Null = EnvironmentId{ 0 };
 
 struct CalcSpecularUniforms
 {
@@ -44,21 +49,21 @@ static RenderTextureTarget GetCubeTextureTarget(unsigned int index)
 	return cubeTextureTargets[index];
 }
 
-EnvironmentManager::EnvironmentManager(
+EnvironmentSystem::EnvironmentSystem(
 	Allocator* allocator,
-	Filesystem* filesystem,
+	kokko::AssetLoader* assetLoader,
 	RenderDevice* renderDevice,
 	ShaderManager* shaderManager,
 	MeshManager* meshManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
-	filesystem(filesystem),
+	assetLoader(assetLoader),
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
 	meshManager(meshManager),
 	textureManager(textureManager),
 	environmentMaps(allocator),
-	emptyEnvironmentMap{ TextureId::Null, TextureId::Null, TextureId::Null },
+	entityMap(allocator),
 	viewportBlockStride(0),
 	specularBlockStride(0),
 	framebufferId(0),
@@ -67,14 +72,16 @@ EnvironmentManager::EnvironmentManager(
 	samplerId(0),
 	cubeMeshId(MeshId::Null)
 {
+	environmentMaps.Reserve(4);
+	environmentMaps.PushBack(); // Reserve index 0 as EnvironmentId::Null
 }
 
-EnvironmentManager::~EnvironmentManager()
+EnvironmentSystem::~EnvironmentSystem()
 {
 	Deinitialize();
 }
 
-void EnvironmentManager::Initialize()
+void EnvironmentSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -170,7 +177,7 @@ void EnvironmentManager::Initialize()
 	LoadEmptyEnvironmentMap();
 }
 
-void EnvironmentManager::Deinitialize()
+void EnvironmentSystem::Deinitialize()
 {
 	if (samplerId != 0)
 	{
@@ -201,6 +208,82 @@ void EnvironmentManager::Deinitialize()
 		meshManager->RemoveMesh(cubeMeshId);
 		cubeMeshId = MeshId::Null;
 	}
+
+	for (size_t i = 1, count = environmentMaps.GetCount(); i < count; ++i)
+	{
+		textureManager->RemoveTexture(environmentMaps[i].textures.environmentTexture);
+		textureManager->RemoveTexture(environmentMaps[i].textures.diffuseIrradianceTexture);
+		textureManager->RemoveTexture(environmentMaps[i].textures.specularIrradianceTexture);
+	}
+}
+
+EnvironmentId EnvironmentSystem::Lookup(Entity entity)
+{
+	auto* pair = entityMap.Lookup(entity.id);
+	return pair != nullptr ? pair->second : EnvironmentId{};
+}
+
+EnvironmentId EnvironmentSystem::AddComponent(Entity entity)
+{
+	EnvironmentId id{ static_cast<unsigned int>(environmentMaps.GetCount()) };
+
+	auto mapPair = entityMap.Insert(entity.id);
+	mapPair->second = id;
+
+	environmentMaps.PushBack();
+	environmentMaps[id.i].entity = entity;
+
+	return id;
+}
+
+void EnvironmentSystem::RemoveComponent(EnvironmentId id)
+{
+	assert(id != EnvironmentId::Null);
+	assert(id.i < environmentMaps.GetCount());
+
+	// Release textures
+	textureManager->RemoveTexture(environmentMaps[id.i].textures.environmentTexture);
+	textureManager->RemoveTexture(environmentMaps[id.i].textures.diffuseIrradianceTexture);
+	textureManager->RemoveTexture(environmentMaps[id.i].textures.specularIrradianceTexture);
+
+	environmentMaps[id.i].textures = EnvironmentTextures();
+
+	// Remove from entity map
+	Entity entity = environmentMaps[id.i].entity;
+	auto* pair = entityMap.Lookup(entity.id);
+	if (pair != nullptr)
+		entityMap.Remove(pair);
+
+	if (environmentMaps.GetCount() > 2 && id.i + 1 < environmentMaps.GetCount()) // We need to swap another object
+	{
+		size_t swapIdx = environmentMaps.GetCount() - 1;
+
+		// Update the swapped objects id in the entity map
+		auto* swapKv = entityMap.Lookup(environmentMaps[swapIdx].entity.id);
+		if (swapKv != nullptr)
+			swapKv->second = id;
+
+		environmentMaps[id.i].entity = environmentMaps[swapIdx].entity;
+		environmentMaps[id.i].sourceTextureUid = environmentMaps[swapIdx].sourceTextureUid;
+		environmentMaps[id.i].textures = environmentMaps[swapIdx].textures;
+	}
+
+	environmentMaps.PopBack();
+}
+
+void EnvironmentSystem::RemoveAll()
+{
+	for (size_t i = 1, count = environmentMaps.GetCount(); i < count; ++i)
+	{
+		textureManager->RemoveTexture(environmentMaps[i].textures.environmentTexture);
+		textureManager->RemoveTexture(environmentMaps[i].textures.diffuseIrradianceTexture);
+		textureManager->RemoveTexture(environmentMaps[i].textures.specularIrradianceTexture);
+
+		environmentMaps[i].textures = EnvironmentTextures();
+	}
+
+	environmentMaps.Resize(1);
+	entityMap.Clear();
 }
 
 static void BindTexture(RenderDevice* renderDevice, const ShaderData& shader,
@@ -236,17 +319,15 @@ static void AttachFramebufferTexture(RenderDevice* renderDevice, unsigned int fa
 	renderDevice->AttachFramebufferTexture2D(&attachFramebufferTexture);
 }
 
-int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
+void EnvironmentSystem::SetEnvironmentTexture(EnvironmentId id, const kokko::Uid& textureUid)
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	assert(id != EnvironmentId::Null);
 
 	static const int EnvironmentTextureSize = 1024;
 	static const int SpecularTextureSize = 256;
 	static const int DiffuseTextureSize = 32;
-
-	for (unsigned int i = 0; i < environmentMaps.GetCount(); ++i)
-		if (environmentMaps[i].sourcePath == equirectMapPath)
-			return i;
 
 	RenderTextureSizedFormat sizedFormat = RenderTextureSizedFormat::RGB16F;
 
@@ -259,10 +340,10 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	{
 		Array<uint8_t> fileBytes(allocator);
 
-		if (filesystem->ReadBinary(equirectMapPath, fileBytes) == false)
+		if (assetLoader->LoadAsset(textureUid, fileBytes) == false)
 		{
-			KK_LOG_ERROR("Couldn't read texture file {}", equirectMapPath);
-			return false;
+			KK_LOG_ERROR("Couldn't read source texture for environment map");
+			return;
 		}
 
 		{
@@ -274,38 +355,35 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 		}
 	}
 
+	if (equirectData == nullptr)
+	{
+		KK_LOG_ERROR("Couldn't load source texture for environment map");
+		return;
+	}
+
 	unsigned int equirectTextureId = 0;
 
-	if (equirectData)
 	{
-		{
-			KOKKO_PROFILE_SCOPE("Upload equirectangular environment map");
+		KOKKO_PROFILE_SCOPE("Upload equirectangular environment map");
 
-			renderDevice->CreateTextures(1, &equirectTextureId);
-			renderDevice->BindTexture(RenderTextureTarget::Texture2d, equirectTextureId);
+		renderDevice->CreateTextures(1, &equirectTextureId);
+		renderDevice->BindTexture(RenderTextureTarget::Texture2d, equirectTextureId);
 
-			RenderCommandData::SetTextureStorage2D textureStorage{
-				RenderTextureTarget::Texture2d, 1, sizedFormat, equirectWidth, equirectHeight,
-			};
-			renderDevice->SetTextureStorage2D(&textureStorage);
+		RenderCommandData::SetTextureStorage2D textureStorage{
+			RenderTextureTarget::Texture2d, 1, sizedFormat, equirectWidth, equirectHeight,
+		};
+		renderDevice->SetTextureStorage2D(&textureStorage);
 
-			RenderCommandData::SetTextureSubImage2D textureImage{
-				RenderTextureTarget::Texture2d, 0, 0, 0, equirectWidth, equirectHeight,
-				RenderTextureBaseFormat::RGB, RenderTextureDataType::Float, equirectData
-			};
-			renderDevice->SetTextureSubImage2D(&textureImage);
-		}
-
-		{
-			KOKKO_PROFILE_SCOPE("void stbi_image_free()");
-			stbi_image_free(equirectData);
-		}
+		RenderCommandData::SetTextureSubImage2D textureImage{
+			RenderTextureTarget::Texture2d, 0, 0, 0, equirectWidth, equirectHeight,
+			RenderTextureBaseFormat::RGB, RenderTextureDataType::Float, equirectData
+		};
+		renderDevice->SetTextureSubImage2D(&textureImage);
 	}
-	else
-	{
-		KK_LOG_ERROR("Couldn't load HDR texture file");
 
-		return -1;
+	{
+		KOKKO_PROFILE_SCOPE("void stbi_image_free()");
+		stbi_image_free(equirectData);
 	}
 
 	// Create result cubemap texture
@@ -449,37 +527,46 @@ int EnvironmentManager::LoadHdrEnvironmentMap(const char* equirectMapPath)
 	}
 
 	renderDevice->BindSampler(0, 0);
-
-	size_t envIndex = environmentMaps.GetCount();
 	
-	Environment& environment = environmentMaps.PushBack();
+	EnvironmentComponent& environment = environmentMaps[id.i];
 
-	environment.sourcePath.SetAllocator(allocator);
-	environment.sourcePath.Append(equirectMapPath);
+	environmentMaps[id.i].textures.environmentTexture = envMapTextureId;
+	environmentMaps[id.i].textures.diffuseIrradianceTexture = diffuseMapTextureId;
+	environmentMaps[id.i].textures.specularIrradianceTexture = specMapTextureId;
+	environmentMaps[id.i].sourceTextureUid = textureUid;
 
-	environment.textures.environmentTexture = envMapTextureId;
-	environment.textures.diffuseIrradianceTexture = diffuseMapTextureId;
-	environment.textures.specularIrradianceTexture = specMapTextureId;
-
-	return static_cast<int>(envIndex);
+	return;
 }
 
-EnvironmentTextures EnvironmentManager::GetEnvironmentMap(int environmentId) const
+EnvironmentId EnvironmentSystem::FindActiveEnvironment()
 {
-	return environmentMaps[environmentId].textures;
+	for (size_t i = 1, count = environmentMaps.GetCount(); i < count; ++i)
+	{
+		if (environmentMaps[i].sourceTextureUid.HasValue())
+			return EnvironmentId{ static_cast<unsigned int>(i) };
+	}
+
+	return EnvironmentId::Null;
 }
 
-const char* EnvironmentManager::GetEnvironmentSourcePath(int environmentId) const
+EnvironmentTextures EnvironmentSystem::GetEnvironmentMap(EnvironmentId id) const
 {
-	return environmentMaps[environmentId].sourcePath.GetCStr();
+	assert(id != EnvironmentId::Null);
+	return environmentMaps[id.i].textures;
 }
 
-EnvironmentTextures EnvironmentManager::GetEmptyEnvironmentMap() const
+Optional<Uid> EnvironmentSystem::GetSourceTextureUid(EnvironmentId id) const
+{
+	assert(id != EnvironmentId::Null);
+	return environmentMaps[id.i].sourceTextureUid;
+}
+
+EnvironmentTextures EnvironmentSystem::GetEmptyEnvironmentMap() const
 {
 	return emptyEnvironmentMap;
 }
 
-void EnvironmentManager::LoadEmptyEnvironmentMap()
+void EnvironmentSystem::LoadEmptyEnvironmentMap()
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -548,5 +635,9 @@ void EnvironmentManager::LoadEmptyEnvironmentMap()
 		}
 	}
 
-	emptyEnvironmentMap = EnvironmentTextures{ envMapTextureId, diffuseMapTextureId, specMapTextureId };
+	emptyEnvironmentMap.environmentTexture = envMapTextureId;
+	emptyEnvironmentMap.diffuseIrradianceTexture = diffuseMapTextureId;
+	emptyEnvironmentMap.specularIrradianceTexture = specMapTextureId;
+}
+
 }

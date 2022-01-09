@@ -156,6 +156,7 @@ void AssetLibrary::ScanAssets(bool scanProject)
 	const fs::path textureJpgExt(".jpg");
 	const fs::path textureJpegExt(".jpeg");
 	const fs::path texturePngExt(".png");
+	const fs::path textureHdrExt(".hdr");
 
 	std::string assetPathStr;
 	std::string metaPathStr;
@@ -188,7 +189,8 @@ void AssetLibrary::ScanAssets(bool scanProject)
 		}
 		else if (currentExt == textureJpgExt ||
 			currentExt == textureJpegExt ||
-			currentExt == texturePngExt)
+			currentExt == texturePngExt ||
+			currentExt == textureHdrExt)
 		{
 			assetType = AssetType::Texture;
 		}

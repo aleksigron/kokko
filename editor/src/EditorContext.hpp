@@ -2,9 +2,11 @@
 
 #include "Core/Optional.hpp"
 #include "Core/Uid.hpp"
+#include "Core/String.hpp"
 
 #include "Engine/Entity.hpp"
 
+class Allocator;
 class World;
 
 struct EngineSettings;
@@ -29,12 +31,15 @@ struct EditorContext
 	Optional<Uid> selectedAsset;
 	Optional<Uid> editingAsset;
 
-	EditorContext() :
+	String temporaryString;
+
+	explicit EditorContext(Allocator* allocator) :
 		project(nullptr),
 		assetLibrary(nullptr),
 		world(nullptr),
 		engineSettings(nullptr),
-		selectedEntity(Entity::Null)
+		selectedEntity(Entity::Null),
+		temporaryString(allocator)
 	{
 	}
 };

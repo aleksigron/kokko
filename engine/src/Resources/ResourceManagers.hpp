@@ -4,7 +4,6 @@ class MeshManager;
 class ShaderManager;
 class MaterialManager;
 class TextureManager;
-class EnvironmentManager;
 
 struct ResourceManagers
 {
@@ -12,5 +11,4 @@ struct ResourceManagers
 	ShaderManager* shaderManager;
 	MaterialManager* materialManager;
 	TextureManager* textureManager;
-	EnvironmentManager* environmentManager;
 };

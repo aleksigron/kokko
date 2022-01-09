@@ -33,7 +33,9 @@ class ComponentSerializer;
 
 namespace kokko
 {
+class AssetLoader;
 class TerrainSystem;
+class EnvironmentSystem;
 }
 
 class World
@@ -44,6 +46,7 @@ public:
 		Allocator* debugNameAllocator,
 		RenderDevice* renderDevice,
 		Filesystem* filesystem,
+		kokko::AssetLoader* assetLoader,
 		InputManager* inputManager,
 		const ResourceManagers& resourceManagers);
 	~World();
@@ -67,6 +70,7 @@ public:
 	Renderer* GetRenderer() { return renderer.instance; }
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
+	kokko::EnvironmentSystem* GetEnvironmentSystem() { return environmentSystem.instance; }
 	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
 	kokko::TerrainSystem* GetTerrainSystem() { return terrainSystem.instance; }
 	ParticleSystem* GetParticleSystem() { return particleSystem.instance; }
@@ -76,6 +80,7 @@ public:
 private:
 	Allocator* allocator;
 	Filesystem* filesystem;
+	kokko::AssetLoader* assetLoader;
 
 	LevelSerializer levelSerializer;
 
@@ -85,6 +90,7 @@ private:
 	InstanceAllocatorPair<EntityManager> entityManager;
 	InstanceAllocatorPair<LightManager> lightManager;
 	InstanceAllocatorPair<CameraSystem> cameraSystem;
+	InstanceAllocatorPair<kokko::EnvironmentSystem> environmentSystem;
 	InstanceAllocatorPair<Scene> scene;
 	InstanceAllocatorPair<Renderer> renderer;
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;

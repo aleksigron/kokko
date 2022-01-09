@@ -16,7 +16,7 @@
 
 #include "Graphics/BloomEffect.hpp"
 #include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
-#include "Graphics/EnvironmentManager.hpp"
+#include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/Scene.hpp"
 
 #include "Math/Rectangle.hpp"
@@ -96,6 +96,7 @@ Renderer::Renderer(
 	Scene* scene,
 	CameraSystem* cameraSystem,
 	LightManager* lightManager,
+	kokko::EnvironmentSystem* environmentSystem,
 	const ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	device(renderDevice),
@@ -113,11 +114,11 @@ Renderer::Renderer(
 	scene(scene),
 	cameraSystem(cameraSystem),
 	lightManager(lightManager),
+	environmentSystem(environmentSystem),
 	shaderManager(resourceManagers.shaderManager),
 	meshManager(resourceManagers.meshManager),
 	materialManager(resourceManagers.materialManager),
 	textureManager(resourceManagers.textureManager),
-	environmentManager(resourceManagers.environmentManager),
 	lockCullingCamera(false),
 	commandList(allocator),
 	objectVisibility(allocator),
@@ -708,12 +709,12 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	ssaoRenderParams.projection = projParams;
 	ssao->Render(ssaoRenderParams);
 
-	EnvironmentTextures envMap;
-	int environmentId = scene->GetEnvironmentId();
-	if (environmentId >= 0)
-		envMap = environmentManager->GetEnvironmentMap(environmentId);
+	kokko::EnvironmentTextures envMap;
+	kokko::EnvironmentId envId = environmentSystem->FindActiveEnvironment();
+	if (envId != kokko::EnvironmentId::Null)
+		envMap = environmentSystem->GetEnvironmentMap(envId);
 	else
-		envMap = environmentManager->GetEmptyEnvironmentMap();
+		envMap = environmentSystem->GetEmptyEnvironmentMap();
 
 	const TextureData& diffIrrTexture = textureManager->GetTextureData(envMap.diffuseIrradianceTexture);
 	const TextureData& specIrrTexture = textureManager->GetTextureData(envMap.specularIrradianceTexture);
@@ -773,12 +774,12 @@ void Renderer::RenderSkybox(const CustomRenderer::RenderParams& params)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	EnvironmentTextures envMap;
-	int environmentId = scene->GetEnvironmentId();
-	if (environmentId >= 0)
-		envMap = environmentManager->GetEnvironmentMap(environmentId);
+	kokko::EnvironmentTextures envMap;
+	kokko::EnvironmentId envId = environmentSystem->FindActiveEnvironment();
+	if (envId != kokko::EnvironmentId::Null)
+		envMap = environmentSystem->GetEnvironmentMap(envId);
 	else
-		envMap = environmentManager->GetEmptyEnvironmentMap();
+		envMap = environmentSystem->GetEmptyEnvironmentMap();
 
 	const TextureData& envTexture = textureManager->GetTextureData(envMap.environmentTexture);
 
