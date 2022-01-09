@@ -24,6 +24,26 @@
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
+namespace
+{
+
+void ReleaseEnvTextures(TextureManager* textureManager, kokko::EnvironmentTextures& textures)
+{
+	auto releaseTexture = [textureManager](TextureId& texture)
+	{
+		if (texture != TextureId::Null)
+		{
+			textureManager->RemoveTexture(texture);
+			texture = TextureId::Null;
+		}
+	};
+
+	releaseTexture(textures.environmentTexture);
+	releaseTexture(textures.diffuseIrradianceTexture);
+	releaseTexture(textures.specularIrradianceTexture);
+}
+} // Anonymous namespace
+
 namespace kokko
 {
 
@@ -211,9 +231,7 @@ void EnvironmentSystem::Deinitialize()
 
 	for (size_t i = 1, count = environmentMaps.GetCount(); i < count; ++i)
 	{
-		textureManager->RemoveTexture(environmentMaps[i].textures.environmentTexture);
-		textureManager->RemoveTexture(environmentMaps[i].textures.diffuseIrradianceTexture);
-		textureManager->RemoveTexture(environmentMaps[i].textures.specularIrradianceTexture);
+		ReleaseEnvTextures(textureManager, environmentMaps[i].textures);
 	}
 }
 
@@ -275,11 +293,7 @@ void EnvironmentSystem::RemoveAll()
 {
 	for (size_t i = 1, count = environmentMaps.GetCount(); i < count; ++i)
 	{
-		textureManager->RemoveTexture(environmentMaps[i].textures.environmentTexture);
-		textureManager->RemoveTexture(environmentMaps[i].textures.diffuseIrradianceTexture);
-		textureManager->RemoveTexture(environmentMaps[i].textures.specularIrradianceTexture);
-
-		environmentMaps[i].textures = EnvironmentTextures();
+		ReleaseEnvTextures(textureManager, environmentMaps[i].textures);
 	}
 
 	environmentMaps.Resize(1);
@@ -324,6 +338,13 @@ void EnvironmentSystem::SetEnvironmentTexture(EnvironmentId id, const kokko::Uid
 	KOKKO_PROFILE_FUNCTION();
 
 	assert(id != EnvironmentId::Null);
+
+	if (environmentMaps[id.i].sourceTextureUid.HasValue() &&
+		environmentMaps[id.i].sourceTextureUid.GetValue() == textureUid)
+		return;
+
+	// Release previous environment textures
+	ReleaseEnvTextures(textureManager, environmentMaps[id.i].textures);
 
 	static const int EnvironmentTextureSize = 1024;
 	static const int SpecularTextureSize = 256;
