@@ -8,6 +8,7 @@
 #include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
 
+#include "AssetLibrary.hpp"
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 
@@ -43,10 +44,20 @@ void EntityListView::Update(EditorContext& context)
 				EntityManager* entityManager = world->GetEntityManager();
 				Scene* scene = world->GetScene();
 
+				context.temporaryString.Assign("Unnamed level");
+				if (context.loadedLevel.HasValue())
+				{
+					auto levelAsset = context.assetLibrary->FindAssetByUid(context.loadedLevel.GetValue());
+					if (levelAsset != nullptr)
+					{
+						context.temporaryString.Assign(levelAsset->GetFilename());
+					}
+				}
+
 				ImGuiTreeNodeFlags levelNodeFlags = ImGuiTreeNodeFlags_SpanAvailWidth |
 					ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_DefaultOpen;
 
-				if (ImGui::TreeNodeEx(world->GetLoadedLevelFilename().GetCStr(), levelNodeFlags))
+				if (ImGui::TreeNodeEx(context.temporaryString.GetCStr(), levelNodeFlags))
 				{
 					ProcessSceneDragDropTarget(SceneObjectId::Null);
 

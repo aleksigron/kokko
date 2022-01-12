@@ -65,11 +65,11 @@ void AssetView::Update(EditorContext& context)
 				}
 				else
 				{
-					if (asset->type == AssetType::Material)
+					if (asset->GetType() == AssetType::Material)
 					{
 						DrawMaterial(context, asset);
 					}
-					else if (asset->type == AssetType::Texture)
+					else if (asset->GetType() == AssetType::Texture)
 					{
 						DrawTexture(context, asset);
 					}
@@ -90,10 +90,10 @@ void AssetView::Update(EditorContext& context)
 
 void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 {
-	if (asset->type != AssetType::Material)
+	if (asset->GetType() != AssetType::Material)
 		return;
 
-	MaterialId materialId = materialManager->FindMaterialByUid(asset->uid);
+	MaterialId materialId = materialManager->FindMaterialByUid(asset->GetUid());
 	if (materialId == MaterialId::Null)
 	{
 		ImGui::Text("Material not found in MaterialManager");
@@ -102,7 +102,8 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 
 	bool edited = false;
 
-	ImGui::Text("%s", asset->filePath.GetCStr());
+	textStore.Assign(asset->GetFilename());
+	ImGui::Text("%s", textStore.GetCStr());
 
 	ShaderId shaderId = materialManager->GetMaterialShader(materialId);
 
@@ -113,7 +114,7 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 		auto shaderAsset = context.assetLibrary->FindAssetByUid(shader.uid);
 		if (shaderAsset != nullptr)
 		{
-			textStore = shaderAsset->filePath;
+			textStore.Assign(asset->GetFilename());
 		}
 	}
 
@@ -167,12 +168,12 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 		// Serialize
 		MaterialSerializer serializer(allocator, materialManager, shaderManager, textureManager);
 
-		String serializedString(allocator);
-		serializer.SerializeToString(materialId, serializedString);
+		String serialized(allocator);
+		serializer.SerializeToString(materialId, serialized);
 
-		ArrayView<const char> view(serializedString.GetData(), serializedString.GetLength());
+		ArrayView<const uint8_t> view(reinterpret_cast<const uint8_t*>(serialized.GetData()), serialized.GetLength());
 
-		if (context.assetLibrary->UpdateAssetContent(asset->uid, view) == false)
+		if (context.assetLibrary->UpdateAssetContent(asset->GetUid(), view) == false)
 		{
 			KK_LOG_ERROR("Failed to update asset");
 		}
@@ -312,7 +313,7 @@ bool AssetView::DrawMaterialShaderDropTarget(EditorContext& context, MaterialId 
 			std::memcpy(&assetUid, payload->Data, payload->DataSize);
 
 			auto asset = context.assetLibrary->FindAssetByUid(assetUid);
-			if (asset != nullptr && asset->type == AssetType::Shader)
+			if (asset != nullptr && asset->GetType() == AssetType::Shader)
 			{
 				ShaderId shaderId = shaderManager->FindShaderByUid(assetUid);
 				if (shaderId != ShaderId::Null)
@@ -344,7 +345,7 @@ bool AssetView::DrawMaterialTextureDropTarget(
 			std::memcpy(&assetUid, payload->Data, payload->DataSize);
 
 			auto asset = context.assetLibrary->FindAssetByUid(assetUid);
-			if (asset != nullptr && asset->type == AssetType::Texture)
+			if (asset != nullptr && asset->GetType() == AssetType::Texture)
 			{
 				TextureId newTexId = textureManager->FindTextureByUid(assetUid);
 				if (newTexId != TextureId::Null && newTexId != texture.textureId)
@@ -366,17 +367,18 @@ bool AssetView::DrawMaterialTextureDropTarget(
 
 void AssetView::DrawTexture(EditorContext& context, const AssetInfo* asset)
 {
-	if (asset->type != AssetType::Texture)
+	if (asset->GetType() != AssetType::Texture)
 		return;
 
-	TextureId textureId = textureManager->FindTextureByUid(asset->uid);
+	TextureId textureId = textureManager->FindTextureByUid(asset->GetUid());
 	if (textureId == TextureId::Null)
 	{
 		ImGui::Text("Texture not found in TextureManager");
 		return;
 	}
 
-	ImGui::Text("%s", asset->filePath.GetCStr());
+	textStore.Assign(asset->GetFilename());
+	ImGui::Text("%s", textStore.GetCStr());
 
 	const TextureData& texture = textureManager->GetTextureData(textureId);
 

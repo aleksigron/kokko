@@ -235,6 +235,38 @@ TEST_CASE("StringRef can find chars")
 	CHECK(str.FindFirstNotOf("T", 10) == 10);
 }
 
+intptr_t StringRef::FindLast(const StringRef& find) const
+{
+	for (intptr_t sourceIdx = len - find.len; sourceIdx >= 0; --sourceIdx)
+	{
+		bool match = true;
+
+		for (intptr_t findIdx = 0; findIdx < find.len; ++findIdx)
+		{
+			if (str[sourceIdx + find.len - findIdx - 1] != find.str[find.len - findIdx - 1])
+			{
+				match = false;
+				break;
+			}
+		}
+
+		if (match)
+			return sourceIdx;
+	}
+
+	return -1;
+}
+
+TEST_CASE("StringRef can find last substring")
+{
+	StringRef str("Test str str");
+
+	CHECK(str.FindLast(StringRef("Test")) == 0);
+	CHECK(str.FindLast(StringRef("str")) == 9);
+	CHECK(str.FindLast(StringRef("str ")) == 5);
+	CHECK(str.FindLast(StringRef("ing")) < 0);
+}
+
 namespace kokko
 {
 uint32_t Hash32(const StringRef& value, uint32_t seed)

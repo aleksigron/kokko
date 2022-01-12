@@ -11,11 +11,13 @@
 
 #include "Resources/LevelSerializer.hpp"
 
+#include "System/Filesystem.hpp"
 #include "System/Window.hpp"
 
 #include "AssetBrowserView.hpp"
 #include "AssetView.hpp"
 #include "DebugView.hpp"
+#include "EditorConstants.hpp"
 #include "EntityListView.hpp"
 #include "EntityView.hpp"
 #include "SceneView.hpp"
@@ -27,6 +29,7 @@ namespace editor
 
 EditorCore::EditorCore(Allocator* allocator, Filesystem* filesystem) :
 	allocator(allocator),
+	filesystem(filesystem),
 	editorContext(allocator),
 	assetLibrary(allocator, filesystem),
 	copiedEntity(allocator),
@@ -98,6 +101,11 @@ AssetLibrary* EditorCore::GetAssetLibrary()
 	return &assetLibrary;
 }
 
+Optional<Uid> EditorCore::GetLoadedLevelUid() const
+{
+	return editorContext.loadedLevel;
+}
+
 void EditorCore::NotifyProjectChanged(const EditorProject* editorProject)
 {
 	assetLibrary.SetProject(editorProject);
@@ -111,6 +119,17 @@ void EditorCore::NotifyProjectChanged(const EditorProject* editorProject)
 
 void EditorCore::Update()
 {
+	if (editorContext.requestLoadLevel.HasValue())
+	{
+		if (editorContext.loadedLevel.HasValue() == false ||
+			editorContext.requestLoadLevel.GetValue() != editorContext.loadedLevel.GetValue())
+		{
+			OpenLevel(editorContext.requestLoadLevel.GetValue());
+		}
+
+		editorContext.requestLoadLevel = Optional<Uid>();
+	}
+
 	for (EditorWindow* window : editorWindows)
 		window->Update(editorContext);
 }
@@ -125,6 +144,69 @@ void EditorCore::EndFrame()
 {
 	for (EditorWindow* window : editorWindows)
 		window->requestFocus = false;
+}
+
+void EditorCore::OpenLevel(Uid levelAssetUid)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	if (auto asset = editorContext.assetLibrary->FindAssetByUid(levelAssetUid))
+	{
+		String sceneConfig(allocator);
+
+		if (filesystem->ReadText(asset->GetVirtualPath().GetCStr(), sceneConfig))
+		{
+			editorContext.world->GetSerializer()->DeserializeFromString(sceneConfig.GetData());
+
+			editorContext.loadedLevel = levelAssetUid;
+			return;
+		}
+	}
+
+	KK_LOG_ERROR("EditorCore: Couldn't load level");
+}
+
+void EditorCore::SaveLevelAs(const std::filesystem::path& pathRelativeToAssets)
+{
+	String levelContent(allocator);
+	editorContext.world->GetSerializer()->SerializeToString(levelContent);
+	ArrayView<const uint8_t> contentView(reinterpret_cast<const uint8_t*>(levelContent.GetData()), levelContent.GetLength());
+
+	// TODO: Extract to a function
+	std::string pathStdStr = EditorConstants::VirtualMountAssets + ('/' + pathRelativeToAssets.generic_u8string());
+	String pathStr(allocator);
+	pathStr.Assign(StringRef(pathStdStr.c_str(), pathStdStr.length()));
+
+	auto asset = editorContext.assetLibrary->FindAssetByVirtualPath(pathStr);
+	Optional<Uid> assetUid;
+
+	if (asset != nullptr)
+	{
+		if (asset->GetType() != AssetType::Level)
+		{
+			KK_LOG_ERROR("EditorCore: Couldn't overwrite asset {} because it is not a level asset.", asset->GetVirtualPath().GetCStr());
+			return;
+		}
+
+		assetUid = asset->GetUid();
+
+		// Update asset
+		editorContext.assetLibrary->UpdateAssetContent(asset->GetUid(), contentView);
+	}
+	else
+	{
+		std::string relativePath = pathRelativeToAssets.generic_u8string();
+		StringRef relativePathRef(relativePath.c_str(), relativePath.length());
+
+		// Create asset
+		assetUid = editorContext.assetLibrary->CreateAsset(AssetType::Level, relativePathRef, contentView);
+
+		if (assetUid.HasValue() == false)
+			KK_LOG_ERROR("EditorCore: Failed to create new level asset");
+	}
+
+	if (assetUid.HasValue())
+		editorContext.loadedLevel = assetUid.GetValue();
 }
 
 void EditorCore::CopyEntity()

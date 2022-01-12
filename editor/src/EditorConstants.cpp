@@ -12,9 +12,9 @@ const char* const EditorConstants::AssetDirectoryName = "Assets";
 const char* const EditorConstants::EngineResourcePath = "engine/res";
 const char* const EditorConstants::EditorResourcePath = "editor/res";
 
-const char* const EditorConstants::VirtualPathEngine = "engine";
-const char* const EditorConstants::VirtualPathEditor = "editor";
-const char* const EditorConstants::VirtualPathAssets = "assets";
+const char* const EditorConstants::VirtualMountEngine = "engine";
+const char* const EditorConstants::VirtualMountEditor = "editor";
+const char* const EditorConstants::VirtualMountAssets = "assets";
 
 const char* const EditorConstants::UserSettingsFilePath = "editor_user_settings.yml";
 

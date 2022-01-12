@@ -40,9 +40,9 @@ bool WriteDocumentToFile(
 	rapidjson::Writer<rapidjson::StringBuffer> writer(stringBuffer);
 	document.Accept(writer);
 
-	ArrayView<const char> jsonView(stringBuffer.GetString(), stringBuffer.GetLength());
+	ArrayView<const uint8_t> jsonView(reinterpret_cast<const uint8_t*>(stringBuffer.GetString()), stringBuffer.GetLength());
 
-	bool result = filesystem->WriteText(path, jsonView, false);
+	bool result = filesystem->Write(path, jsonView, false);
 
 	stringBuffer.Clear();
 
@@ -92,7 +92,43 @@ const AssetInfo* AssetLibrary::FindAssetByVirtualPath(const String& virtualPath)
 		return nullptr;
 }
 
-bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const char> content)
+Optional<Uid> AssetLibrary::CreateAsset(AssetType type, StringRef pathRelativeToAssets, ArrayView<const uint8_t> content)
+{
+	Uid assetUid = Uid::Create();
+	uint64_t calculatedHash = Hash64(content.GetData(), content.GetCount(), 0);
+	uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
+	StringRef mount = StringRef(EditorConstants::VirtualMountAssets);
+
+	assets.PushBack(AssetInfo(allocator, mount, pathRelativeToAssets, assetUid, calculatedHash, type));
+	const String& virtualPath = assets.GetBack().GetVirtualPath();
+
+	if (filesystem->Write(virtualPath.GetCStr(), content, false) == false)
+	{
+		assets.PopBack();
+		KK_LOG_ERROR("New asset couldn't be written to path {}", virtualPath.GetCStr());
+		return Optional<Uid>();
+	}
+
+	rapidjson::Document document;
+	CreateMetadataJson(document, calculatedHash, assetUid);
+
+	String metaPath = virtualPath + EditorConstants::MetadataExtensionStr;
+	rapidjson::StringBuffer jsonStringBuffer;
+	if (WriteDocumentToFile(filesystem, metaPath.GetCStr(), document, jsonStringBuffer) == false)
+	{
+		KK_LOG_ERROR("Couldn't write asset meta file: {}", metaPath.GetCStr());
+	}
+
+	auto uidPair = uidToIndexMap.Insert(assetUid);
+	uidPair->second = assetRefIndex;
+
+	auto pathPair = pathToIndexMap.Insert(assets.GetBack().GetVirtualPath());
+	pathPair->second = assetRefIndex;
+
+	return assetUid;
+}
+
+bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> content)
 {
 	auto pair = uidToIndexMap.Lookup(uid);
 	if (pair == nullptr)
@@ -123,7 +159,7 @@ bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const char> cont
 
 		// Update asset file
 
-		if (filesystem->WriteText(assetVirtualPath.GetCStr(), content, false) == false)
+		if (filesystem->Write(assetVirtualPath.GetCStr(), content, false) == false)
 		{
 			KK_LOG_ERROR("Couldn't write asset file: {}", assetVirtualPath.GetCStr());
 			return false;
@@ -151,7 +187,8 @@ void AssetLibrary::ScanAssets(bool scanProject)
 {
 	namespace fs = std::filesystem;
 
-	const fs::path materialExtension(".material");
+	const fs::path levelExt(".level");
+	const fs::path materialExt(".material");
 	const fs::path shaderExt(".glsl");
 	const fs::path textureJpgExt(".jpg");
 	const fs::path textureJpegExt(".jpeg");
@@ -167,7 +204,7 @@ void AssetLibrary::ScanAssets(bool scanProject)
 	rapidjson::Document document;
 	rapidjson::StringBuffer jsonStringBuffer;
 
-	auto processEntry = [&](StringRef virtualPath, const fs::path& root, const fs::directory_entry& entry)
+	auto processEntry = [&](StringRef virtualMount, const fs::path& root, const fs::directory_entry& entry)
 	{
 		KOKKO_PROFILE_SCOPE("Scan file");
 
@@ -179,7 +216,11 @@ void AssetLibrary::ScanAssets(bool scanProject)
 		assetPathStr = currentPath.generic_u8string();
 
 		Optional<AssetType> assetType;
-		if (currentExt == materialExtension)
+		if (currentExt == levelExt)
+		{
+			assetType = AssetType::Level;
+		}
+		else if (currentExt == materialExt)
 		{
 			assetType = AssetType::Material;
 		}
@@ -290,47 +331,58 @@ void AssetLibrary::ScanAssets(bool scanProject)
 
 		uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
 
-		auto& assetInfo = assets.PushBack();
-		assetInfo.virtualPath = virtualPath;
-		assetInfo.filePath = String(allocator, StringRef(relativeStdStr.c_str(), relativeStdStr.length()));
-		assetInfo.uid = assetUid;
-		assetInfo.contentHash = calculatedHash;
-		assetInfo.type = assetType.GetValue();
+		assets.PushBack(AssetInfo(
+			allocator, virtualMount, StringRef(relativeStdStr.c_str(), relativeStdStr.length()),
+			assetUid, calculatedHash, assetType.GetValue()));
 
 		auto uidPair = uidToIndexMap.Insert(assetUid);
 		uidPair->second = assetRefIndex;
 
-		auto pathPair = pathToIndexMap.Insert(assetInfo.GetVirtualPath());
+		auto pathPair = pathToIndexMap.Insert(assets.GetBack().GetVirtualPath());
 		pathPair->second = assetRefIndex;
 	};
 
 	if (scanProject)
 	{
-		const fs::path assetDir = editorProject->GetRootPath() / EditorConstants::AssetDirectoryName;
-		const StringRef virtualPathAssets(EditorConstants::VirtualPathAssets);
+		const fs::path& assetDir = editorProject->GetAssetPath();
+		const StringRef virtualMountAssets(EditorConstants::VirtualMountAssets);
 
 		for (const auto& entry : fs::recursive_directory_iterator(assetDir))
-			processEntry(virtualPathAssets, assetDir, entry);
+			processEntry(virtualMountAssets, assetDir, entry);
 	}
 	else
 	{
 		const fs::path engineResDir = fs::absolute(EditorConstants::EngineResourcePath);
 		const fs::path editorResDir = fs::absolute(EditorConstants::EditorResourcePath);
-		const StringRef virtualPathEngine(EditorConstants::VirtualPathEngine);
-		const StringRef virtualPathEditor(EditorConstants::VirtualPathEditor);
+		const StringRef virtualMountEngine(EditorConstants::VirtualMountEngine);
+		const StringRef virtualMountEditor(EditorConstants::VirtualMountEditor);
 
 		for (const auto& entry : fs::recursive_directory_iterator(engineResDir))
-			processEntry(virtualPathEngine, engineResDir, entry);
+			processEntry(virtualMountEngine, engineResDir, entry);
 
 		for (const auto& entry : fs::recursive_directory_iterator(editorResDir))
-			processEntry(virtualPathEditor, editorResDir, entry);
+			processEntry(virtualMountEditor, editorResDir, entry);
 	}
 
 }
 
-String AssetInfo::GetVirtualPath() const
+AssetInfo::AssetInfo(Allocator* allocator, StringRef virtualMount, StringRef relativePath,
+	Uid uid, uint64_t contentHash, AssetType type) :
+	virtualPath(allocator),
+	uid(uid),
+	contentHash(contentHash),
+	type(type)
 {
-	return virtualPath + ('/' + filePath);
+	virtualPath.Reserve(virtualMount.len + 1 + relativePath.len);
+	virtualPath.Append(virtualMount);
+	virtualPath.Append('/');
+	virtualPath.Append(relativePath);
+
+	this->virtualMount = virtualPath.GetRef().SubStr(0, virtualMount.len);
+	this->pathRelativeToMount = virtualPath.GetRef().SubStr(virtualMount.len + 1);
+	
+	intptr_t lastSlash = this->pathRelativeToMount.FindLast(StringRef("/", 1));
+	this->filename = virtualPath.GetRef().SubStr(lastSlash + 1);
 }
 
 }

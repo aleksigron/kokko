@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstddef>
 #include <new>
+#include <utility>
 
 #include "Core/Core.hpp"
 #include "Core/ArrayView.hpp"
@@ -109,29 +110,36 @@ public:
 	}
 
 	/**
-	 * Add an item to the back of the array
+	 * Add an item to the back of the array by copying
 	 */
 	void PushBack(const ValueType& value)
 	{
-		this->Reserve(this->count + 1);
+		Reserve(count + 1);
+		new (data + count) ValueType(value);
+		++count;
+	}
 
-		ValueType* ptr = new (this->data + this->count) ValueType;
-		*ptr = value;
-
-		++(this->count);
+	/**
+	 * Add an item to the back of the array by moving
+	 */
+	void PushBack(ValueType&& value)
+	{
+		Reserve(count + 1);
+		new (data + count) ValueType(std::move(value));
+		++count;
 	}
 
 	/**
 	 * Insert the specified items to the back of the array
 	 */
-	void InsertBack(const ValueType* items, size_t count)
+	void InsertBack(const ValueType* items, size_t numItems)
 	{
-		this->Reserve(this->count + count);
+		this->Reserve(count + numItems);
 
-		for (size_t i = 0; i < count; ++i)
+		for (size_t i = 0; i < numItems; ++i)
 		{
-			this->data[this->count] = items[i];
-			++(this->count);
+			new (data + count) ValueType(items[i]);
+			++count;
 		}
 	}
 

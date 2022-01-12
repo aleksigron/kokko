@@ -58,7 +58,7 @@ bool FilesystemDefault::ReadText(const char* path, kokko::String& output)
 	return false;
 }
 
-bool FilesystemDefault::WriteText(const char* path, ArrayView<const char> content, bool append)
+bool FilesystemDefault::Write(const char* path, ArrayView<const uint8_t> content, bool append)
 {
 	KOKKO_PROFILE_FUNCTION();
 

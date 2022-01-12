@@ -18,6 +18,9 @@ struct EngineSettings;
 
 namespace kokko
 {
+
+struct Uid;
+
 namespace editor
 {
 
@@ -56,7 +59,6 @@ private:
 		None,
 		CreateProject,
 		OpenProject,
-		OpenLevel,
 		SaveLevelAs
 	};
 
@@ -82,7 +84,7 @@ private:
 	bool exitRequested;
 
 	MainMenuDialog currentMainMenuDialog;
-	uint32_t currentDialogId;
+	uint64_t currentDialogId;
 };
 
 }

@@ -7,6 +7,7 @@
 #include "Core/Core.hpp"
 
 static const char LastProjectKey[] = "last_opened_project";
+static const char LastLevelKey[] = "last_opened_level";
 
 namespace kokko
 {
@@ -25,8 +26,19 @@ bool EditorUserSettings::SerializeToFile(const char* filePath)
 	YAML::Emitter out(outStream);
 
 	out << YAML::BeginMap;
+
 	out << YAML::Key << LastProjectKey;
 	out << YAML::Value << lastOpenedProject.u8string();
+
+	if (lastOpenedLevel.HasValue())
+	{
+		char levelUidBuf[Uid::StringLength + 1];
+		lastOpenedLevel.GetValue().WriteTo(ArrayView(levelUidBuf));
+
+		out << YAML::Key << LastLevelKey;
+		out << YAML::Value << levelUidBuf;
+	}
+
 	out << YAML::EndMap;
 
 	return true;
@@ -45,6 +57,17 @@ bool EditorUserSettings::DeserializeFromFile(const char* filePath)
 
 	if (node.IsMap())
 	{
+		const YAML::Node levelNode = node[LastLevelKey];
+		if (levelNode.IsDefined() && levelNode.IsScalar())
+		{
+			const std::string& levelString = levelNode.Scalar();
+			auto uidResult = Uid::FromString(ArrayView(levelString.c_str(), levelString.length()));
+			if (uidResult.HasValue())
+			{
+				lastOpenedLevel = uidResult.GetValue();
+			}
+		}
+
 		const YAML::Node projectPathNode = node[LastProjectKey];
 		if (projectPathNode.IsDefined() && projectPathNode.IsScalar())
 		{

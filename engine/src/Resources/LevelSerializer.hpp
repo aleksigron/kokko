@@ -34,7 +34,7 @@ public:
 	void Initialize(World* world, const ResourceManagers& resourceManagers);
 
 	void DeserializeFromString(const char* data);
-	bool SerializeToFile(const char* filePath);
+	void SerializeToString(kokko::String& out);
 
 	void DeserializeEntitiesFromString(const char* data, SceneObjectId parent);
 	void SerializeEntitiesToString(ArrayView<Entity> serializeEntities, kokko::String& serializedOut);
