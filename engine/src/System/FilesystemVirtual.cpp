@@ -105,17 +105,17 @@ bool FilesystemVirtual::ReadText(const char* path, kokko::String& output)
 	}
 }
 
-bool FilesystemVirtual::WriteText(const char* path, ArrayView<const char> content, bool append)
+bool FilesystemVirtual::Write(const char* path, ArrayView<const uint8_t> content, bool append)
 {
 	if (FindMountedPath(path))
 	{
-		bool result = defaultFs.WriteText(pathStore.GetCStr(), content, append);
+		bool result = defaultFs.Write(pathStore.GetCStr(), content, append);
 		pathStore.Clear();
 		return result;
 	}
 	else
 	{
-		return defaultFs.WriteText(path, content, append);
+		return defaultFs.Write(path, content, append);
 	}
 }
 

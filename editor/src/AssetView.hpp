@@ -20,7 +20,7 @@ struct TextureUniform;
 namespace editor
 {
 
-struct AssetInfo;
+class AssetInfo;
 
 class AssetView : public EditorWindow
 {

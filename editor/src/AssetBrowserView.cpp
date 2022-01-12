@@ -18,7 +18,7 @@ namespace editor
 AssetBrowserView::AssetBrowserView(Allocator* allocator) :
 	EditorWindow("Asset Browser"),
 	allocator(allocator),
-	currentVirtualPath(EditorConstants::VirtualPathAssets),
+	currentVirtualPath(EditorConstants::VirtualMountAssets),
 	editorImages(nullptr),
 	pathStore(allocator)
 {
@@ -55,7 +55,7 @@ void AssetBrowserView::Update(EditorContext& context)
 			{
 				const fs::path& root = context.project->GetAssetPath();
 
-				if (ImGui::Button("Go to parent") && currentDirectory != root)
+				if (ImGui::Button("Go to parent"))
 				{
 					MoveToPath(context, currentDirectory.parent_path());
 				}
@@ -184,7 +184,8 @@ void AssetBrowserView::DrawEntry(
 
 				if (auto asset = context.assetLibrary->FindAssetByVirtualPath(ConvertPath(relativePath)))
 				{
-					ImGui::SetDragDropPayload(EditorConstants::AssetDragDropType, &asset->uid, sizeof(Uid));
+					Uid uid = asset->GetUid();
+					ImGui::SetDragDropPayload(EditorConstants::AssetDragDropType, &uid, sizeof(Uid));
 
 					ImGui::Text("%s", fileStr.c_str());
 				}
@@ -224,10 +225,15 @@ void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem:
 
 		if (asset != nullptr)
 		{
-			context.selectedAsset = asset->uid;
+			context.selectedAsset = asset->GetUid();
 
 			if (editAsset)
-				context.editingAsset = asset->uid;
+			{
+				if (asset->GetType() == AssetType::Level)
+					context.requestLoadLevel = asset->GetUid();
+				else
+					context.editingAsset = asset->GetUid();
+			}
 
 			return;
 		}

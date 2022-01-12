@@ -69,6 +69,8 @@ struct StringRef
 
 	intptr_t FindFirstOf(const char* chars, size_t startAt = 0) const;
 	intptr_t FindFirstNotOf(const char* chars, size_t startAt = 0) const;
+
+	intptr_t FindLast(const StringRef& str) const;
 };
 
 namespace kokko

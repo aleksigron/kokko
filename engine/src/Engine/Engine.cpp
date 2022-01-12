@@ -80,7 +80,7 @@ Engine::Engine(
 
 	world.CreateScope(allocatorManager, "World", alloc);
 	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice,
-		filesystem, assetLoader, mainWindow.instance->GetInputManager(), resManagers);
+		assetLoader, mainWindow.instance->GetInputManager(), resManagers);
 }
 
 Engine::~Engine()

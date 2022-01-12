@@ -1,6 +1,6 @@
 #include "Resources/LevelSerializer.hpp"
 
-#include <fstream>
+#include <sstream>
 
 #include "Engine/ComponentSerializer.hpp"
 #include "Engine/EntityManager.hpp"
@@ -66,36 +66,32 @@ void LevelSerializer::DeserializeFromString(const char* data)
 	}
 }
 
-bool LevelSerializer::SerializeToFile(const char* filePath)
+void LevelSerializer::SerializeToString(kokko::String& out)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	std::ofstream outStream(filePath);
-
-	if (outStream.is_open() == false)
-		return false;
-
-	YAML::Emitter out(outStream);
+	std::stringstream outStream;
+	YAML::Emitter emitter(outStream);
 
 	EntityManager* entityManager = world->GetEntityManager();
 	Scene* scene = world->GetScene();
-	kokko::EnvironmentSystem* envSystem = world->GetEnvironmentSystem();
 
-	out << YAML::BeginMap;
+	emitter << YAML::BeginMap;
 
-	out << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
+	emitter << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
 
 	for (Entity entity : *entityManager)
 	{
 		SceneObjectId sceneObj = scene->Lookup(entity);
 		if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
-			WriteEntity(out, entity, sceneObj);
+			WriteEntity(emitter, entity, sceneObj);
 	}
-	out << YAML::EndSeq; // objects
+	emitter << YAML::EndSeq; // objects
 
-	out << YAML::EndMap;
+	emitter << YAML::EndMap;
 
-	return true;
+	std::string str = outStream.str();
+	out.Assign(StringRef(str.c_str(), str.length()));
 }
 
 void LevelSerializer::DeserializeEntitiesFromString(const char* data, SceneObjectId parent)

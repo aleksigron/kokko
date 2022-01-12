@@ -50,8 +50,8 @@ int main(int argc, char** argv)
 		using EditorConst = kokko::editor::EditorConstants;
 
 		FilesystemVirtual::MountPoint mounts[] = {
-			FilesystemVirtual::MountPoint{ StringRef(EditorConst::VirtualPathEngine), StringRef("engine/res") },
-			FilesystemVirtual::MountPoint{ StringRef(EditorConst::VirtualPathEditor), StringRef("editor/res") }
+			FilesystemVirtual::MountPoint{ StringRef(EditorConst::VirtualMountEngine), StringRef("engine/res") },
+			FilesystemVirtual::MountPoint{ StringRef(EditorConst::VirtualMountEditor), StringRef("editor/res") }
 		};
 		filesystem.SetMountPoints(ArrayView(mounts));
 

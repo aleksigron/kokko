@@ -22,9 +22,9 @@ public:
 
 	// Virtual filesystem
 
-	static const char* const VirtualPathEngine;
-	static const char* const VirtualPathEditor;
-	static const char* const VirtualPathAssets;
+	static const char* const VirtualMountEngine;
+	static const char* const VirtualMountEditor;
+	static const char* const VirtualMountAssets;
 
 	// Editor settings
 

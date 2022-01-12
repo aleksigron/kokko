@@ -194,6 +194,7 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			char inputBuf[256];
+			ImGuiInputTextFlags roFlags = ImGuiInputTextFlags_ReadOnly;
 
 			MeshId meshId = renderer->GetMeshId(renderObj);
 			const char* meshPath = nullptr;
@@ -209,9 +210,8 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 				if (meshPath == nullptr)
 					meshPath = "";
 
-				ImGuiInputTextFlags flags = ImGuiInputTextFlags_ReadOnly;
 				StringCopySafe(inputBuf, meshPath);
-				ImGui::InputText("Mesh path", inputBuf, sizeof(inputBuf), flags);
+				ImGui::InputText("Mesh path", inputBuf, sizeof(inputBuf), roFlags);
 
 				if (ImGui::BeginDragDropTarget())
 				{
@@ -239,51 +239,45 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 				ImGui::Text("Code-generated mesh %u", meshId.i);
 			}
 
-			const char* materialPath = nullptr;
+			context.temporaryString.Assign("No material");
 			MaterialId materialId = renderer->GetOrderData(renderObj).material;
 			if (materialId != MaterialId::Null)
 			{
 				Uid materialUid = materialManager->GetMaterialUid(materialId);
 
 				if (auto asset = context.assetLibrary->FindAssetByUid(materialUid))
-					materialPath = asset->filePath.GetCStr();
+					context.temporaryString.Assign(asset->GetFilename());
 			}
 
-			// Allow editing if material is loaded from a file, or if there is no material set
-			if (materialPath != nullptr || materialId == MaterialId::Null)
+			ImGui::InputText("Material", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);
+
+			if (ImGui::BeginDragDropTarget())
 			{
-				if (materialPath == nullptr)
-					materialPath = "";
-
-				ImGuiInputTextFlags flags = ImGuiInputTextFlags_ReadOnly;
-				StringCopySafe(inputBuf, materialPath);
-				ImGui::InputText("Material", inputBuf, sizeof(inputBuf), flags);
-
-				if (ImGui::BeginDragDropTarget())
+				const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+				if (payload != nullptr && payload->DataSize == sizeof(Uid))
 				{
-					const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
-					if (payload != nullptr)
+					Uid assetUid;
+					std::memcpy(&assetUid, payload->Data, payload->DataSize);
+
+					if (auto newAsset = context.assetLibrary->FindAssetByUid(assetUid))
 					{
-						Uid assetUid;
-						std::memcpy(&assetUid, payload->Data, payload->DataSize);
-
-						MaterialId newMatId = materialManager->FindMaterialByUid(assetUid);
-						if (newMatId != MaterialId::Null && newMatId != materialId)
+						if (newAsset->GetType() == AssetType::Material)
 						{
-							RenderOrderData order;
-							order.material = newMatId;
-							order.transparency = materialManager->GetMaterialTransparency(newMatId);
+							MaterialId newMatId = materialManager->FindMaterialByUid(assetUid);
+							if (newMatId != MaterialId::Null && newMatId != materialId)
+							{
+								RenderOrderData order;
+								order.material = newMatId;
+								order.transparency = materialManager->GetMaterialTransparency(newMatId);
 
-							renderer->SetOrderData(renderObj, order);
+								renderer->SetOrderData(renderObj, order);
+							}
 						}
 					}
 
-					ImGui::EndDragDropTarget();
 				}
-			}
-			else // We currently don't support editing materials that have created as a copy from another material
-			{
-				ImGui::Text("Copied material %u", materialId.i);
+
+				ImGui::EndDragDropTarget();
 			}
 
 			if (componentVisible == false)
@@ -516,7 +510,7 @@ void EntityView::DrawEnvironmentComponent(EditorContext& context, World* world)
 			{
 				if (auto asset = context.assetLibrary->FindAssetByUid(textureUidOpt.GetValue()))
 				{
-					texName.Assign(asset->filePath);
+					texName.Assign(asset->GetFilename());
 				}
 			}
 
@@ -532,7 +526,7 @@ void EntityView::DrawEnvironmentComponent(EditorContext& context, World* world)
 
 					if (auto newAsset = context.assetLibrary->FindAssetByUid(assetUid))
 					{
-						if (newAsset->type == AssetType::Texture &&
+						if (newAsset->GetType() == AssetType::Texture &&
 							textureUidOpt.HasValue() == false ||
 							assetUid != textureUidOpt.GetValue())
 						{

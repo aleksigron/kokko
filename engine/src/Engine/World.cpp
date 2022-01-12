@@ -21,27 +21,21 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/Renderer.hpp"
 
+#include "Resources/AssetLoader.hpp"
+
 #include "Scripting/ScriptSystem.hpp"
 
-#include "System/Filesystem.hpp"
 #include "System/Window.hpp"
-
-static const char* const UnnamedLevelDisplayName = "Unnamed level";
 
 World::World(AllocatorManager* allocManager,
 	Allocator* allocator,
 	Allocator* debugNameAllocator,
 	RenderDevice* renderDevice,
-	Filesystem* filesystem,
 	kokko::AssetLoader* assetLoader,
 	InputManager* inputManager,
 	const ResourceManagers& resourceManagers) :
 	allocator(allocator),
-	filesystem(filesystem),
-	assetLoader(assetLoader),
 	levelSerializer(allocator),
-	loadedLevelDisplayName(allocator, UnnamedLevelDisplayName),
-	loadedLevelFilePath(allocator),
 	resourceManagers(resourceManagers)
 {
 	Allocator* alloc = Memory::GetDefaultAllocator();
@@ -104,38 +98,6 @@ void World::Deinitialize()
 	renderer.instance->Deinitialize();
 }
 
-bool World::LoadFromFile(const char* path, const char* displayName)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	kokko::String sceneConfig(allocator);
-
-	if (filesystem->ReadText(path, sceneConfig))
-	{
-		levelSerializer.DeserializeFromString(sceneConfig.GetData());
-
-		loadedLevelDisplayName.Assign(displayName);
-		loadedLevelFilePath.Assign(path);
-
-		return true;
-	}
-
-	return false;
-}
-
-bool World::WriteToFile(const char* path, const char* displayName)
-{
-	if (levelSerializer.SerializeToFile(path))
-	{
-		loadedLevelDisplayName.Assign(displayName);
-		loadedLevelFilePath.Assign(path);
-
-		return true;
-	}
-	else
-		return false;
-}
-
 void World::ClearAllEntities()
 {
 	environmentSystem.instance->RemoveAll();
@@ -147,9 +109,6 @@ void World::ClearAllEntities()
 	renderer.instance->RemoveAll();
 	scene.instance->Clear();
 	entityManager.instance->ClearAll();
-
-	loadedLevelDisplayName.Assign(UnnamedLevelDisplayName);
-	loadedLevelFilePath.Clear();
 }
 
 void World::Update()

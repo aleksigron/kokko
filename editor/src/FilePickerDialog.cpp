@@ -4,43 +4,34 @@
 
 #include "imgui.h"
 
+#include "Core/Core.hpp"
 #include "Core/CString.hpp"
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
+
+#include "EditorConstants.hpp"
 
 namespace kokko
 {
 namespace editor
 {
 
-FilePickerDialog* FilePickerDialog::singletonInstance = nullptr;
-
 FilePickerDialog::FilePickerDialog() :
 	dialogClosed(false),
 	closedTitleHash(0),
-	currentDialogType(DialogType::None),
 	currentTitleHash(0),
-	currentTitle(nullptr),
-	currentActionText(nullptr)
+	descriptor{}
 {
-}
-
-FilePickerDialog* FilePickerDialog::Get()
-{
-	if (singletonInstance == nullptr)
-		singletonInstance = new FilePickerDialog();
-
-	return singletonInstance;
 }
 
 void FilePickerDialog::Update()
 {
+	if (descriptor.popupTitle == nullptr)
+		return;
+
 	namespace fs = std::filesystem;
 
 	dialogClosed = false;
-
-	if (currentTitle == nullptr)
-		return;
 
 	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -50,13 +41,15 @@ void FilePickerDialog::Update()
 	ImGui::SetNextWindowSize(initialSize, ImGuiCond_FirstUseEver);
 
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-	if (ImGui::BeginPopupModal(currentTitle, nullptr, flags))
+	if (ImGui::BeginPopupModal(descriptor.popupTitle, nullptr, flags))
 	{
 		bool existingFileIsSelected = false;
 
 		ImGui::Text("Select where to save the level");
 
-		std::string currentPathStr = currentPath.u8string();
+		std::string currentPathStr;
+		if (descriptor.relativeToAssetPath)
+			currentPathStr = (EditorConstants::AssetDirectoryName / currentPath).u8string();
 
 		// Directory path text
 
@@ -71,17 +64,28 @@ void FilePickerDialog::Update()
 		{
 			if (ImGui::Selectable(".."))
 			{
-				// Move up a directory
-				currentPath = currentPath.parent_path();
-				selectedFilePath = fs::path();
+				if (descriptor.relativeToAssetPath == false ||
+					currentPath.empty() == false)
+				{
+					currentPath = currentPath.parent_path();
+					selectedFilePath = fs::path();
+				}
 			}
 
-			for (fs::directory_iterator itr(currentPath), end; itr != end; ++itr)
+			fs::path currentDirAbsolute;
+			
+			if (descriptor.relativeToAssetPath)
+				currentDirAbsolute = descriptor.assetPath / currentPath;
+			else
+				currentDirAbsolute = currentPath;
+
+			for (fs::directory_iterator itr(currentDirAbsolute), end; itr != end; ++itr)
 			{
 				bool isDir = itr->is_directory();
 				bool isFile = itr->is_regular_file();
 
-				fs::path path = itr->path();
+				const fs::path& path = itr->path();
+
 				std::string pathStr = path.filename().u8string();
 
 				ImGuiSelectableFlags entryFlags = ImGuiSelectableFlags_AllowDoubleClick;
@@ -100,13 +104,13 @@ void FilePickerDialog::Update()
 					if (isDir)
 					{
 						// Move into directory
-						currentPath = path;
+						currentPath = ConvertPath(path);
 						selectedFilePath = fs::path();
 					}
 					else if (isFile)
 					{
 						// Select file
-						selectedFilePath = path;
+						selectedFilePath = ConvertPath(path);
 					}
 				}
 			}
@@ -118,7 +122,7 @@ void FilePickerDialog::Update()
 		ImGuiInputTextFlags inputFlags;
 		const char* inputTitle;
 
-		if (currentDialogType == DialogType::FolderOpen)
+		if (descriptor.dialogType == Type::FolderOpen)
 		{
 			inputFlags = ImGuiInputTextFlags_ReadOnly;
 			inputTitle = "Folder";
@@ -151,11 +155,11 @@ void FilePickerDialog::Update()
 		float fontSize = ImGui::GetFontSize();
 		ImVec2 buttonSize(fontSize * 7.0f, 0.0f);
 
-		if (ImGui::Button(currentActionText, buttonSize))
+		if (ImGui::Button(descriptor.actionButtonText, buttonSize))
 		{
 			if (existingFileIsSelected ||
-				currentDialogType == DialogType::FileSave ||
-				currentDialogType == DialogType::FolderOpen)
+				descriptor.dialogType == Type::FileSave ||
+				descriptor.dialogType == Type::FolderOpen)
 			{
 				CloseDialog(false);
 			}
@@ -174,7 +178,7 @@ void FilePickerDialog::Update()
 	}
 }
 
-bool FilePickerDialog::GetDialogResult(uint32_t hash, std::filesystem::path& pathOut)
+bool FilePickerDialog::GetDialogResult(uint64_t hash, std::filesystem::path& pathOut)
 {
 	if (dialogClosed && hash == closedTitleHash)
 	{
@@ -190,32 +194,19 @@ bool FilePickerDialog::GetDialogResult(uint32_t hash, std::filesystem::path& pat
 	return false;
 }
 
-uint32_t FilePickerDialog::StartDialogFileOpen(const char* popupTitle, const char* actionText)
+uint64_t FilePickerDialog::StartDialog(const Descriptor& descriptor)
 {
-	return StartDialogInternal(popupTitle, actionText, DialogType::FileOpen);
-}
+	if (descriptor.relativeToAssetPath)
+		currentPath = std::filesystem::path();
+	else
+		currentPath = std::filesystem::current_path();
 
-uint32_t FilePickerDialog::StartDialogFileSave(const char* popupTitle, const char* actionText)
-{
-	return StartDialogInternal(popupTitle, actionText, DialogType::FileSave);
-}
-
-uint32_t FilePickerDialog::StartDialogFolderOpen(const char* popupTitle, const char* actionText)
-{
-	return StartDialogInternal(popupTitle, actionText, DialogType::FolderOpen);
-}
-
-uint32_t FilePickerDialog::StartDialogInternal(const char* title, const char* action, DialogType type)
-{
-	currentPath = std::filesystem::current_path();
 	selectedFilePath = std::filesystem::path();
 
-	currentDialogType = type;
-	currentTitle = title;
-	currentActionText = action;
-	currentTitleHash = kokko::HashString(title, std::strlen(title));
+	this->descriptor = descriptor;
+	currentTitleHash = kokko::Hash64(descriptor.popupTitle, std::strlen(descriptor.popupTitle), 0);
 
-	ImGui::OpenPopup(currentTitle);
+	ImGui::OpenPopup(descriptor.popupTitle);
 
 	return currentTitleHash;
 }
@@ -229,18 +220,37 @@ void FilePickerDialog::CloseDialog(bool canceled)
 
 	if (canceled)
 		resultPath = std::filesystem::path();
-	else if (currentDialogType == DialogType::FolderOpen)
+	if (descriptor.dialogType == Type::FolderOpen)
 		resultPath = currentPath;
 	else
 		resultPath = selectedFilePath;
 
 	// Clear current info
-	currentDialogType = DialogType::None;
-	currentTitle = nullptr;
-	currentActionText = nullptr;
+	currentPath = std::filesystem::path();
+	selectedFilePath = std::filesystem::path();
 	currentTitleHash = 0;
+	descriptor = Descriptor{};
 
 	ImGui::CloseCurrentPopup();
+}
+
+std::filesystem::path FilePickerDialog::ConvertPath(const std::filesystem::path& path)
+{
+	if (descriptor.relativeToAssetPath)
+	{
+		std::error_code err;
+		auto relative = std::filesystem::relative(path, descriptor.assetPath, err);
+
+		if (err)
+		{
+			KK_LOG_ERROR("FilePickerDialog: path could not be made relative, error: {}", err.message().c_str());
+			return std::filesystem::path();
+		}
+		else
+			return relative;
+	}
+	else
+		return path;
 }
 
 }

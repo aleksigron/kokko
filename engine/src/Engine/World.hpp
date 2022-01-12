@@ -45,7 +45,6 @@ public:
 		Allocator* allocator,
 		Allocator* debugNameAllocator,
 		RenderDevice* renderDevice,
-		Filesystem* filesystem,
 		kokko::AssetLoader* assetLoader,
 		InputManager* inputManager,
 		const ResourceManagers& resourceManagers);
@@ -54,16 +53,11 @@ public:
 	void Initialize();
 	void Deinitialize();
 
-	bool LoadFromFile(const char* path, const char* displayName);
-	bool WriteToFile(const char* path, const char* displayName);
-
 	void ClearAllEntities();
 
 	void Update();
 	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
 	void DebugRender(EngineSettings* engineSettings, DebugVectorRenderer* vectorRenderer);
-
-	const kokko::String& GetLoadedLevelFilename() { return loadedLevelDisplayName; }
 
 	EntityManager* GetEntityManager() { return entityManager.instance; }
 	Scene* GetScene() { return scene.instance; }
@@ -79,13 +73,8 @@ public:
 
 private:
 	Allocator* allocator;
-	Filesystem* filesystem;
-	kokko::AssetLoader* assetLoader;
 
 	LevelSerializer levelSerializer;
-
-	kokko::String loadedLevelDisplayName;
-	kokko::String loadedLevelFilePath;
 
 	InstanceAllocatorPair<EntityManager> entityManager;
 	InstanceAllocatorPair<LightManager> lightManager;

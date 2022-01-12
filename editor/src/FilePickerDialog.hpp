@@ -11,9 +11,26 @@ namespace editor
 class FilePickerDialog
 {
 public:
-	FilePickerDialog();
+	enum class Type
+	{
+		FileOpen,
+		FileSave,
+		FolderOpen,
+	};
 
-	static FilePickerDialog* Get();
+	struct Descriptor
+	{
+		const char* popupTitle;
+		const char* descriptionText;
+		const char* actionButtonText;
+
+		Type dialogType;
+
+		bool relativeToAssetPath;
+		std::filesystem::path assetPath;
+	};
+
+	FilePickerDialog();
 
 	void Update();
 
@@ -22,38 +39,25 @@ public:
 	* If true, parameter pathOut is assigned the selected path, or an empty string,
 	* if the dialog was cancelled.
 	*/
-	bool GetDialogResult(uint32_t id, std::filesystem::path& pathOut);
+	bool GetDialogResult(uint64_t id, std::filesystem::path& pathOut);
 
-	uint32_t StartDialogFileOpen(const char* popupTitle, const char* actionText);
-	uint32_t StartDialogFileSave(const char* popupTitle, const char* actionText);
-	uint32_t StartDialogFolderOpen(const char* popupTitle, const char* actionText);
+	uint64_t StartDialog(const Descriptor& descriptor);
 
 private:
-	enum class DialogType
-	{
-		None,
-		FileOpen,
-		FileSave,
-		FolderOpen,
-	};
+	void CloseDialog(bool canceled);
 
-	uint32_t StartDialogInternal(const char* title, const char* action, DialogType type);
-
-	static FilePickerDialog* singletonInstance;
+	std::filesystem::path ConvertPath(const std::filesystem::path& path);
 
 	std::filesystem::path currentPath;
 	std::filesystem::path selectedFilePath;
 
 	bool dialogClosed;
-	uint32_t closedTitleHash;
+	uint64_t closedTitleHash;
 	std::filesystem::path resultPath;
 
-	DialogType currentDialogType;
-	uint32_t currentTitleHash;
-	const char* currentTitle;
-	const char* currentActionText;
+	uint64_t currentTitleHash;
 
-	void CloseDialog(bool canceled);
+	Descriptor descriptor;
 };
 
 }

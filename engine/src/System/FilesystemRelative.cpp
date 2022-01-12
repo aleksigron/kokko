@@ -41,10 +41,10 @@ bool FilesystemRelative::ReadText(const char* path, kokko::String& output)
 	return result;
 }
 
-bool FilesystemRelative::WriteText(const char* path, ArrayView<const char> content, bool append)
+bool FilesystemRelative::Write(const char* path, ArrayView<const uint8_t> content, bool append)
 {
 	pathStore.Append(path);
-	bool result = defaultFs.WriteText(pathStore.GetCStr(), content, append);
+	bool result = defaultFs.Write(pathStore.GetCStr(), content, append);
 	pathStore.Resize(basePathLength);
 
 	return result;

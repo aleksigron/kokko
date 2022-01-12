@@ -35,7 +35,7 @@ Optional<Uid> EditorAssetLoader::GetAssetUidByVirtualPath(const StringRef& path)
 	pathString.Assign(path);
 
 	if (auto asset = assetLibrary->FindAssetByVirtualPath(pathString))
-		return asset->uid;
+		return asset->GetUid();
 
 	return Optional<Uid>();
 }

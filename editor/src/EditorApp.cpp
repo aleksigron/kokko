@@ -118,21 +118,28 @@ void EditorApp::Initialize(Engine* engine)
 
 	core->Initialize(engine);
 
-	if (userSettings.DeserializeFromFile(EditorConstants::UserSettingsFilePath))
-	{
-		if (userSettings.lastOpenedProject.empty())
-		{
-			KK_LOG_INFO("Last opened project is empty, should open project dialog.");
-		}
-		else if (OpenProject(userSettings.lastOpenedProject) == false)
-		{
-			std::string pathStr = userSettings.lastOpenedProject.u8string();
-			KK_LOG_ERROR("Failed to open project.yml from path {}", pathStr.c_str());
-		}
-	}
-	else
+	if (userSettings.DeserializeFromFile(EditorConstants::UserSettingsFilePath) == false)
 	{
 		KK_LOG_INFO("Failed to open editor_user_settings.yml, should open project dialog.");
+		return;
+	}
+
+	if (userSettings.lastOpenedProject.empty())
+	{
+		KK_LOG_INFO("Last opened project is empty, should open project dialog.");
+		return;
+	}
+
+	if (OpenProject(userSettings.lastOpenedProject) == false)
+	{
+		std::string pathStr = userSettings.lastOpenedProject.u8string();
+		KK_LOG_ERROR("Failed to open project.yml from path {}", pathStr.c_str());
+		return;
+	}
+
+	if (userSettings.lastOpenedLevel.HasValue())
+	{
+		core->OpenLevel(userSettings.lastOpenedLevel.GetValue());
 	}
 }
 
@@ -173,13 +180,6 @@ void EditorApp::Update(EngineSettings* engineSettings, bool& shouldExitOut)
 
 	//ImGui::ShowDemoWindow();
 
-	static bool firstRun = true;
-	if (firstRun)
-	{
-		firstRun = false;
-		world->LoadFromFile("assets/scenes/default.level", "default.level");
-	}
-
 	if (exitRequested)
 		shouldExitOut = true;
 }
@@ -213,6 +213,15 @@ void EditorApp::EndFrame()
 		KOKKO_PROFILE_SCOPE("ImGuiRenderBackend::RenderDrawData()");
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
+
+	Optional<Uid> loadedLevel = core->GetLoadedLevelUid();
+	if (loadedLevel.HasValue() &&
+		(userSettings.lastOpenedLevel.HasValue() == false ||
+		userSettings.lastOpenedLevel.GetValue() != loadedLevel.GetValue()))
+	{
+		userSettings.lastOpenedLevel = loadedLevel.GetValue();
+		userSettings.SerializeToFile(EditorConstants::UserSettingsFilePath);
+	}
 }
 
 const Framebuffer& EditorApp::GetSceneViewFramebuffer()
@@ -236,8 +245,7 @@ void EditorApp::DrawMainMenuBar()
 
 	bool createProject = false;
 	bool openProject = false;
-	bool openLevel = false;
-	bool saveLevel = false;
+	bool saveLevelAs = false;
 
 	if (ImGui::BeginMainMenuBar())
 	{
@@ -257,11 +265,8 @@ void EditorApp::DrawMainMenuBar()
 				world->ClearAllEntities();
 			}
 
-			if (ImGui::MenuItem("Open level..."))
-				openLevel = true;
-
 			if (ImGui::MenuItem("Save level as..."))
-				saveLevel = true;
+				saveLevelAs = true;
 
 			ImGui::Separator();
 
@@ -305,22 +310,39 @@ void EditorApp::DrawMainMenuBar()
 
 	if (createProject)
 	{
-		currentDialogId = filePicker.StartDialogFolderOpen("Create project", "Select directory");
+		auto descriptor = FilePickerDialog::Descriptor{
+			"Create project",
+			"Select where to create the new project. The directory must be empty.",
+			"Select directory",
+			FilePickerDialog::Type::FolderOpen,
+			false,
+		};
+		currentDialogId = filePicker.StartDialog(descriptor);
 		currentMainMenuDialog = MainMenuDialog::CreateProject;
 	}
 	else if (openProject)
 	{
-		currentDialogId = filePicker.StartDialogFolderOpen("Open project", "Select directory");
+		auto descriptor = FilePickerDialog::Descriptor{
+			"Open project",
+			"Select a project directory.",
+			"Select directory",
+			FilePickerDialog::Type::FolderOpen,
+			false,
+		};
+		currentDialogId = filePicker.StartDialog(descriptor);
 		currentMainMenuDialog = MainMenuDialog::OpenProject;
 	}
-	else if (openLevel)
+	else if (saveLevelAs)
 	{
-		currentDialogId = filePicker.StartDialogFileOpen("Open level", "Open");
-		currentMainMenuDialog = MainMenuDialog::OpenLevel;
-	}
-	else if (saveLevel)
-	{
-		currentDialogId = filePicker.StartDialogFileSave("Save level as", "Save");
+		auto descriptor = FilePickerDialog::Descriptor{
+			"Save level as",
+			"Select where to save the level.",
+			"Save",
+			FilePickerDialog::Type::FileSave,
+			true,
+			project.GetAssetPath()
+		};
+		currentDialogId = filePicker.StartDialog(descriptor);
 		currentMainMenuDialog = MainMenuDialog::SaveLevelAs;
 	}
 
@@ -336,7 +358,7 @@ void EditorApp::DrawMainMenuBar()
 		if (filePickerPathOut.empty() == false)
 		{
 			std::string filenameStr = filePickerPathOut.filename().u8string();
-			CreateProject(filePickerPathOut, StringRef(filenameStr.c_str()));
+			CreateProject(filePickerPathOut, StringRef(filenameStr.c_str(), filenameStr.length()));
 		}
 	}
 
@@ -351,21 +373,6 @@ void EditorApp::DrawMainMenuBar()
 		}
 	}
 
-	if (currentMainMenuDialog == MainMenuDialog::OpenLevel &&
-		filePicker.GetDialogResult(currentDialogId, filePickerPathOut))
-	{
-		ResetMainMenuDialog();
-
-		if (filePickerPathOut.empty() == false)
-		{
-			std::string pathStr = filePickerPathOut.u8string();
-			std::string filenameStr = filePickerPathOut.filename().u8string();
-
-			world->ClearAllEntities();
-			world->LoadFromFile(pathStr.c_str(), filenameStr.c_str());
-		}
-	}
-
 	if (currentMainMenuDialog == MainMenuDialog::SaveLevelAs &&
 		filePicker.GetDialogResult(currentDialogId, filePickerPathOut))
 	{
@@ -373,10 +380,7 @@ void EditorApp::DrawMainMenuBar()
 
 		if (filePickerPathOut.empty() == false)
 		{
-			std::string pathStr = filePickerPathOut.u8string();
-			std::string filenameStr = filePickerPathOut.filename().u8string();
-
-			world->WriteToFile(pathStr.c_str(), filenameStr.c_str());
+			core->SaveLevelAs(filePickerPathOut);
 		}
 	}
 }
@@ -446,9 +450,9 @@ void EditorApp::OnProjectChanged()
 	StringRef assetPathRef(assetPathStr.c_str(), assetPathStr.length());
 
 	FilesystemVirtual::MountPoint mounts[] = {
-		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualPathEngine), StringRef("engine/res") },
-		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualPathEditor), StringRef("editor/res") },
-		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualPathAssets), assetPathRef }
+		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualMountEngine), StringRef("engine/res") },
+		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualMountEditor), StringRef("editor/res") },
+		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualMountAssets), assetPathRef }
 	};
 	virtualFilesystem->SetMountPoints(ArrayView(mounts));
 

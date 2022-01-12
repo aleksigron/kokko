@@ -28,6 +28,9 @@ struct EditorContext
 	EngineSettings* engineSettings;
 	Entity selectedEntity;
 
+	Optional<Uid> loadedLevel;
+	Optional<Uid> requestLoadLevel;
+
 	Optional<Uid> selectedAsset;
 	Optional<Uid> editingAsset;
 

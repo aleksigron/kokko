@@ -1,6 +1,9 @@
 #pragma once
 
+#include <filesystem>
+
 #include "Core/Array.hpp"
+#include "Core/Optional.hpp"
 #include "Core/String.hpp"
 
 #include "FilePickerDialog.hpp"
@@ -20,6 +23,9 @@ struct EngineSettings;
 
 namespace kokko
 {
+
+struct Uid;
+
 namespace editor
 {
 
@@ -42,6 +48,7 @@ public:
 	ArrayView<EditorWindow*> GetWindows();
 
 	AssetLibrary* GetAssetLibrary();
+	Optional<Uid> GetLoadedLevelUid() const;
 
 	void NotifyProjectChanged(const EditorProject* editorProject);
 
@@ -49,11 +56,15 @@ public:
 	void LateUpdate();
 	void EndFrame();
 
+	void OpenLevel(Uid levelAssetUid);
+	void SaveLevelAs(const std::filesystem::path& pathRelativeToAssets);
+
 	void CopyEntity();
 	void PasteEntity();
 
 private:
 	Allocator* allocator;
+	Filesystem* filesystem;
 	EditorContext editorContext;
 	EditorImages images;
 

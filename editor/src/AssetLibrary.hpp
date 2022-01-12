@@ -21,20 +21,36 @@ class EditorProject;
 
 enum class AssetType
 {
+	Level,
 	Material,
 	Shader,
 	Texture
 };
 
-struct AssetInfo
+class AssetInfo
 {
-	StringRef virtualPath;
-	String filePath;
+public:
+	AssetInfo(Allocator* allocator, StringRef virtualMount, StringRef relativePath,
+		Uid uid, uint64_t contentHash, AssetType type);
+
+	const String& GetVirtualPath() const { return virtualPath; }
+	StringRef GetFilename() const { return filename; }
+	Uid GetUid() const { return uid; }
+	AssetType GetType() const { return type; }
+
+private:
+	friend class AssetLibrary;
+
+	// Holds complete virtual path, lower members are referencing parts of this string
+	String virtualPath;
+
+	StringRef virtualMount;
+	StringRef pathRelativeToMount;
+	StringRef filename;
+
 	Uid uid;
 	uint64_t contentHash;
 	AssetType type;
-
-	String GetVirtualPath() const;
 };
 
 class AssetLibrary
@@ -46,7 +62,8 @@ public:
 	const AssetInfo* FindAssetByUid(const Uid& uid);
 	const AssetInfo* FindAssetByVirtualPath(const String& virtualPath);
 
-	bool UpdateAssetContent(const Uid& uid, ArrayView<const char> content);
+	Optional<Uid> CreateAsset(AssetType type, StringRef pathRelativeToAssets, ArrayView<const uint8_t> content);
+	bool UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> content);
 
 	void ScanEngineAssets();
 	void SetProject(const EditorProject* project);
