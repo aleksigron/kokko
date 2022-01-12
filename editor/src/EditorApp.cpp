@@ -245,6 +245,7 @@ void EditorApp::DrawMainMenuBar()
 
 	bool createProject = false;
 	bool openProject = false;
+	bool saveLevel = false;
 	bool saveLevelAs = false;
 
 	if (ImGui::BeginMainMenuBar())
@@ -264,6 +265,9 @@ void EditorApp::DrawMainMenuBar()
 				// TODO: Make sure level changes have been saved
 				world->ClearAllEntities();
 			}
+
+			if (ImGui::MenuItem("Save level"))
+				saveLevel = true;
 
 			if (ImGui::MenuItem("Save level as..."))
 				saveLevelAs = true;
@@ -308,6 +312,12 @@ void EditorApp::DrawMainMenuBar()
 		ImGui::EndMainMenuBar();
 	}
 
+	if (saveLevel && core->GetLoadedLevelUid().HasValue() == false)
+	{
+		saveLevel = false;
+		saveLevelAs = true;
+	}
+
 	if (createProject)
 	{
 		auto descriptor = FilePickerDialog::Descriptor{
@@ -344,6 +354,10 @@ void EditorApp::DrawMainMenuBar()
 		};
 		currentDialogId = filePicker.StartDialog(descriptor);
 		currentMainMenuDialog = MainMenuDialog::SaveLevelAs;
+	}
+	else if (saveLevel)
+	{
+		core->SaveLevel();
 	}
 
 	filePicker.Update();

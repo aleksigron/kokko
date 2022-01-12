@@ -57,6 +57,7 @@ public:
 	void EndFrame();
 
 	void OpenLevel(Uid levelAssetUid);
+	void SaveLevel();
 	void SaveLevelAs(const std::filesystem::path& pathRelativeToAssets);
 
 	void CopyEntity();

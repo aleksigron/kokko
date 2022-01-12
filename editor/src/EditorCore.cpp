@@ -166,11 +166,31 @@ void EditorCore::OpenLevel(Uid levelAssetUid)
 	KK_LOG_ERROR("EditorCore: Couldn't load level");
 }
 
+void EditorCore::SaveLevel()
+{
+	if (editorContext.loadedLevel.HasValue() == false)
+		return;
+
+	auto asset = editorContext.assetLibrary->FindAssetByUid(editorContext.loadedLevel.GetValue());
+
+	if (asset == nullptr)
+		return;
+
+	String content(allocator);
+	editorContext.world->GetSerializer()->SerializeToString(content);
+	ArrayView<const uint8_t> contentView(reinterpret_cast<const uint8_t*>(content.GetData()), content.GetLength());
+
+	if (editorContext.assetLibrary->UpdateAssetContent(asset->GetUid(), contentView) == false)
+	{
+		KK_LOG_ERROR("EditorCore: Failed to update level asset content");
+	}
+}
+
 void EditorCore::SaveLevelAs(const std::filesystem::path& pathRelativeToAssets)
 {
-	String levelContent(allocator);
-	editorContext.world->GetSerializer()->SerializeToString(levelContent);
-	ArrayView<const uint8_t> contentView(reinterpret_cast<const uint8_t*>(levelContent.GetData()), levelContent.GetLength());
+	String content(allocator);
+	editorContext.world->GetSerializer()->SerializeToString(content);
+	ArrayView<const uint8_t> contentView(reinterpret_cast<const uint8_t*>(content.GetData()), content.GetLength());
 
 	// TODO: Extract to a function
 	std::string pathStdStr = EditorConstants::VirtualMountAssets + ('/' + pathRelativeToAssets.generic_u8string());
@@ -184,14 +204,18 @@ void EditorCore::SaveLevelAs(const std::filesystem::path& pathRelativeToAssets)
 	{
 		if (asset->GetType() != AssetType::Level)
 		{
-			KK_LOG_ERROR("EditorCore: Couldn't overwrite asset {} because it is not a level asset.", asset->GetVirtualPath().GetCStr());
+			KK_LOG_ERROR("EditorCore: Couldn't overwrite asset {} because it is not a level asset.",
+				asset->GetVirtualPath().GetCStr());
 			return;
 		}
 
 		assetUid = asset->GetUid();
 
 		// Update asset
-		editorContext.assetLibrary->UpdateAssetContent(asset->GetUid(), contentView);
+		if (editorContext.assetLibrary->UpdateAssetContent(asset->GetUid(), contentView) == false)
+		{
+			KK_LOG_ERROR("EditorCore: Failed to update level asset content");
+		}
 	}
 	else
 	{
