@@ -4,6 +4,7 @@
 
 #include "Core/HashMap.hpp"
 #include "Core/StringRef.hpp"
+#include "Core/Uid.hpp"
 
 #include "Math/BoundingBox.hpp"
 
@@ -11,6 +12,11 @@
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/MeshData.hpp"
+
+namespace kokko
+{
+class AssetLoader;
+}
 
 struct BoundingBox;
 
@@ -78,7 +84,7 @@ class MeshManager
 {
 private:
 	Allocator* allocator;
-	Filesystem* filesystem;
+	kokko::AssetLoader* assetLoader;
 	RenderDevice* renderDevice;
 
 	struct InstanceData
@@ -104,12 +110,12 @@ private:
 		MeshBufferData* bufferData;
 		BoundingBox* bounds;
 		MeshId* meshId;
-		char** pathString;
+		kokko::Uid* uid;
 	}
 	data;
 
 	unsigned int freeListFirst;
-	HashMap<uint32_t, MeshId> pathHashMap;
+	HashMap<kokko::Uid, MeshId> uidMap;
 
 	void Reallocate(unsigned int required);
 
@@ -129,16 +135,16 @@ private:
 	unsigned int GetIndex(MeshId meshId) const;
 
 public:
-	MeshManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice);
+	MeshManager(Allocator* allocator, kokko::AssetLoader* assetLoader, RenderDevice* renderDevice);
 	~MeshManager();
 
 	MeshId CreateMesh();
 	void RemoveMesh(MeshId id);
-	
-	MeshId GetIdByPath(StringRef path);
-	MeshId GetIdByPathHash(uint32_t pathHash);
 
-	const char* GetPath(MeshId id) const;
+	MeshId FindModelByUid(const kokko::Uid& uid);
+	MeshId FindModelByPath(const StringRef& path);
+	
+	kokko::Uid GetUid(MeshId id) const;
 
 	const BoundingBox* GetBoundingBox(MeshId id) const;
 	void SetBoundingBox(MeshId id, const BoundingBox& bounds);

@@ -60,7 +60,7 @@ Engine::Engine(
 	debugNameAllocator = allocatorManager->CreateAllocatorScope("EntityDebugNames", alloc);
 
 	meshManager.CreateScope(allocatorManager, "MeshManager", alloc);
-	meshManager.New(meshManager.allocator, filesystem, renderDevice);
+	meshManager.New(meshManager.allocator, assetLoader, renderDevice);
 
 	textureManager.CreateScope(allocatorManager, "TextureManager", alloc);
 	textureManager.New(textureManager.allocator, assetLoader, renderDevice);

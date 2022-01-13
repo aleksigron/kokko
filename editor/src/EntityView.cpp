@@ -193,50 +193,46 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Render);
 		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			char inputBuf[256];
 			ImGuiInputTextFlags roFlags = ImGuiInputTextFlags_ReadOnly;
 
+			context.temporaryString.Assign("No mesh");
 			MeshId meshId = renderer->GetMeshId(renderObj);
-			const char* meshPath = nullptr;
-
 			if (meshId != MeshId::Null)
 			{
-				meshPath = meshManager->GetPath(meshId);
+				Uid meshUid = meshManager->GetUid(meshId);
+
+				if (auto asset = context.assetLibrary->FindAssetByUid(meshUid))
+					context.temporaryString.Assign(asset->GetFilename());
 			}
 
-			// Allow editing if mesh is loaded from a file, or if there is no mesh set
-			if (meshPath != nullptr || meshId == MeshId::Null)
+			ImGui::InputText("Mesh", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);
+
+			if (ImGui::BeginDragDropTarget())
 			{
-				if (meshPath == nullptr)
-					meshPath = "";
-
-				StringCopySafe(inputBuf, meshPath);
-				ImGui::InputText("Mesh path", inputBuf, sizeof(inputBuf), roFlags);
-
-				if (ImGui::BeginDragDropTarget())
+				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+				if (payload != nullptr && payload->DataSize == sizeof(Uid))
 				{
-					const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
-					if (payload != nullptr)
+					Uid assetUid;
+					std::memcpy(&assetUid, payload->Data, payload->DataSize);
+
+					if (auto newAsset = context.assetLibrary->FindAssetByUid(assetUid))
 					{
-						StringRef assetPath(static_cast<const char*>(payload->Data), payload->DataSize);
-
-						MeshId newMeshId = meshManager->GetIdByPath(assetPath);
-						if (newMeshId != MeshId::Null && newMeshId != meshId)
+						if (newAsset->GetType() == AssetType::Model)
 						{
-							renderer->SetMeshId(renderObj, newMeshId);
+							MeshId newMeshId = meshManager->FindModelByUid(newAsset->GetUid());
+							if (newMeshId != MeshId::Null)
+							{
+								renderer->SetMeshId(renderObj, newMeshId);
 
-							SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
-							if (sceneObj != SceneObjectId::Null)
-								scene->MarkUpdated(sceneObj);
+								SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
+								if (sceneObj != SceneObjectId::Null)
+									scene->MarkUpdated(sceneObj);
+							}
 						}
 					}
-
-					ImGui::EndDragDropTarget();
 				}
-			}
-			else // We currently don't support editing meshes that have been created directly from code
-			{
-				ImGui::Text("Code-generated mesh %u", meshId.i);
+
+				ImGui::EndDragDropTarget();
 			}
 
 			context.temporaryString.Assign("No material");

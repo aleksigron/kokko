@@ -43,26 +43,29 @@ public:
 		{
 			RenderObjectId renderObj = renderer->AddRenderObject(entity);
 
-			const std::string& meshStr = meshNode.Scalar();
-			StringRef meshPath(meshStr.data(), meshStr.size());
-			MeshId meshId = res.meshManager->GetIdByPath(meshPath);
+			const std::string& meshUidStr = meshNode.Scalar();
+			auto meshUid = kokko::Uid::FromString(ArrayView(meshUidStr.c_str(), meshUidStr.length()));
 
-			assert(meshId != MeshId::Null);
+			if (meshUid.HasValue())
+			{
+				MeshId meshId = res.meshManager->FindModelByUid(meshUid.GetValue());
 
-			renderer->SetMeshId(renderObj, meshId);
+				renderer->SetMeshId(renderObj, meshId);
+			}
 
-			const std::string& material = materialNode.Scalar();
-			auto uidResult = kokko::Uid::FromString(ArrayView(material.c_str(), material.length()));
-			assert(uidResult.HasValue());
+			const std::string& matUidStr = materialNode.Scalar();
+			auto materialUid = kokko::Uid::FromString(ArrayView(matUidStr.c_str(), matUidStr.length()));
 
-			MaterialId materialId = res.materialManager->FindMaterialByUid(uidResult.GetValue());
-			assert(materialId != MaterialId::Null);
+			if (materialUid.HasValue())
+			{
+				MaterialId materialId = res.materialManager->FindMaterialByUid(materialUid.GetValue());
 
-			RenderOrderData data;
-			data.material = materialId;
-			data.transparency = res.materialManager->GetMaterialTransparency(materialId);
+				RenderOrderData data;
+				data.material = materialId;
+				data.transparency = res.materialManager->GetMaterialTransparency(materialId);
 
-			renderer->SetOrderData(renderObj, data);
+				renderer->SetOrderData(renderObj, data);
+			}
 		}
 	}
 
@@ -73,32 +76,28 @@ public:
 		{
 			MeshId meshId = renderer->GetMeshId(renderObj);
 
-			const char* meshPath = nullptr;
+			kokko::Uid meshUid;
 			if (meshId != MeshId::Null)
-			{
-				meshPath = res.meshManager->GetPath(meshId);
-			}
+				meshUid = res.meshManager->GetUid(meshId);
+
+			char meshUidStr[kokko::Uid::StringLength + 1];
+			meshUid.WriteTo(meshUidStr);
+			meshUidStr[kokko::Uid::StringLength] = '\0';
 
 			MaterialId materialId = renderer->GetOrderData(renderObj).material;
 			kokko::Uid materialUid;
 			if (materialId != MaterialId::Null)
-			{
 				materialUid = res.materialManager->GetMaterialUid(materialId);
-			}
 
-			// We can't reference resources that have been created at runtime
-			if (meshPath != nullptr)
-			{
-				char materialUidStr[kokko::Uid::StringLength + 1];
-				materialUid.WriteTo(materialUidStr);
-				materialUidStr[kokko::Uid::StringLength] = '\0';
+			char materialUidStr[kokko::Uid::StringLength + 1];
+			materialUid.WriteTo(materialUidStr);
+			materialUidStr[kokko::Uid::StringLength] = '\0';
 
-				out << YAML::BeginMap;
-				out << YAML::Key << GetComponentTypeKey() << YAML::Value << "render";
-				out << YAML::Key << "mesh" << YAML::Value << meshPath;
-				out << YAML::Key << "material" << YAML::Value << materialUidStr;
-				out << YAML::EndMap;
-			}
+			out << YAML::BeginMap;
+			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "render";
+			out << YAML::Key << "mesh" << YAML::Value << meshUidStr;
+			out << YAML::Key << "material" << YAML::Value << materialUidStr;
+			out << YAML::EndMap;
 		}
 	}
 };
