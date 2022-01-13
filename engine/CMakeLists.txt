@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include_directories(
 	src
 	${PROJECT_ROOT}/deps/doctest
+	${PROJECT_ROOT}/deps/cgltf/include
 	${PROJECT_ROOT}/deps/fmt/include
 	${PROJECT_ROOT}/deps/glad/include
 	${PROJECT_ROOT}/deps/glfw/include
@@ -13,6 +14,11 @@ include_directories(
 	${PROJECT_ROOT}/deps/stb_image/include
 	${PROJECT_ROOT}/deps/xxhash
 	${PROJECT_ROOT}/deps/yaml-cpp/include
+)
+
+set (CGLTF_SOURCES
+	${PROJECT_ROOT}/deps/cgltf/include/cgltf/cgltf.h
+	${PROJECT_ROOT}/deps/cgltf/src/cgltf.c
 )
 
 set (FMT_SOURCES
@@ -36,6 +42,7 @@ set (XXHASH_SOURCES
 )
 
 set (DEPS_SOURCES
+	${CGLTF_SOURCES}
 	${FMT_SOURCES}
 	${GLAD_SOURCES}
 	${STB_IMAGE_SOURCES}
@@ -280,6 +287,7 @@ set (KOKKO_SOURCES
 	src/System/Window.hpp
 )
 
+source_group(Dependencies\\cgltf FILES ${CGLTF_SOURCES})
 source_group(Dependencies\\fmt FILES ${FMT_SOURCES})
 source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
 source_group(Dependencies\\stb_image FILES ${STB_IMAGE_SOURCES})
