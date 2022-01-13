@@ -23,6 +23,7 @@ enum class AssetType
 {
 	Level,
 	Material,
+	Model,
 	Shader,
 	Texture
 };

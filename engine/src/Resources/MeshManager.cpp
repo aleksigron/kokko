@@ -8,17 +8,16 @@
 
 #include "Rendering/RenderDevice.hpp"
 
+#include "Resources/AssetLoader.hpp"
 #include "Resources/MeshLoader.hpp"
-
-#include "System/Filesystem.hpp"
 
 const MeshId MeshId::Null = MeshId{ 0 };
 
-MeshManager::MeshManager(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
+MeshManager::MeshManager(Allocator* allocator, kokko::AssetLoader* assetLoader, RenderDevice* renderDevice) :
 	allocator(allocator),
-	filesystem(filesystem),
+	assetLoader(assetLoader),
 	renderDevice(renderDevice),
-	pathHashMap(allocator)
+	uidMap(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as Null instance
@@ -32,8 +31,6 @@ MeshManager::~MeshManager()
 {
 	for (unsigned int i = 1; i < data.count; ++i)
 	{
-		allocator->Deallocate(data.pathString[i]);
-
 		// DeleteBuffers will not double-delete,
 		// so it's safe to call for every element
 		DeleteBuffers(data.bufferData[i]);
@@ -52,7 +49,7 @@ void MeshManager::Reallocate(unsigned int required)
 	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
 
 	size_t objectBytes = sizeof(unsigned int) * 2 + sizeof(MeshDrawData) +
-		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(MeshId) + sizeof(char*);
+		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(MeshId) + sizeof(kokko::Uid);
 
 	InstanceData newData;
 	newData.buffer = allocator->Allocate(required * objectBytes);
@@ -65,7 +62,7 @@ void MeshManager::Reallocate(unsigned int required)
 	newData.bufferData = reinterpret_cast<MeshBufferData*>(newData.drawData + newData.allocated);
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.bufferData + newData.allocated);
 	newData.meshId = reinterpret_cast<MeshId*>(newData.bounds + newData.allocated);
-	newData.pathString = reinterpret_cast<char**>(newData.meshId + newData.allocated);
+	newData.uid = reinterpret_cast<kokko::Uid*>(newData.meshId + newData.allocated);
 
 	if (data.buffer != nullptr)
 	{
@@ -79,7 +76,7 @@ void MeshManager::Reallocate(unsigned int required)
 		std::memcpy(newData.bufferData, data.bufferData, data.count * sizeof(MeshBufferData));
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
 		std::memcpy(newData.meshId, data.meshId, data.count * sizeof(MeshId));
-		std::memcpy(newData.pathString, data.pathString, data.count * sizeof(char*));
+		std::memcpy(newData.uid, data.uid, data.count * sizeof(kokko::Uid));
 
 		allocator->Deallocate(data.buffer);
 	}
@@ -110,7 +107,6 @@ MeshId MeshManager::CreateMesh()
 
 	data.bufferData[index] = MeshBufferData{};
 	data.meshId[index] = id;
-	data.pathString[index] = nullptr;
 
 	++data.count;
 
@@ -124,9 +120,6 @@ void MeshManager::RemoveMesh(MeshId id)
 	freeListFirst = id.i;
 
 	unsigned int index = GetIndex(id);
-
-	allocator->Deallocate(data.pathString[index]);
-	data.pathString[index] = nullptr;
 
 	DeleteBuffers(data.bufferData[index]);
 
@@ -142,7 +135,7 @@ void MeshManager::RemoveMesh(MeshId id)
 		data.bufferData[index] = data.bufferData[lastIndex];
 		data.bounds[index] = data.bounds[lastIndex];
 		data.meshId[index] = lastMeshId;
-		data.pathString[index] = data.pathString[lastIndex];
+		data.uid[index] = data.uid[lastIndex];
 
 		// Update index list
 		data.indexList[lastMeshId.i] = index;
@@ -151,23 +144,20 @@ void MeshManager::RemoveMesh(MeshId id)
 	--data.count;
 }
 
-MeshId MeshManager::GetIdByPath(StringRef path)
+MeshId MeshManager::FindModelByUid(const kokko::Uid& uid)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	uint32_t hash = kokko::HashString(path.str, path.len);
-
-	auto* pair = pathHashMap.Lookup(hash);
+	auto* pair = uidMap.Lookup(uid);
 	if (pair != nullptr)
 		return pair->second;
 
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	Array<unsigned char> file(allocator);
-	kokko::String pathStr(allocator, path);
+	Array<uint8_t> file(allocator);
 
-	if (filesystem->ReadBinary(pathStr.GetCStr(), file))
+	if (assetLoader->LoadAsset(uid, file))
 	{
 		MeshId id = CreateMesh();
 		MeshLoader loader(this);
@@ -175,15 +165,10 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 		MeshLoader::Status status = loader.LoadFromBuffer(id, file.GetView());
 		if (status == MeshLoader::Status::Success)
 		{
-			pair = pathHashMap.Insert(hash);
+			pair = uidMap.Insert(uid);
 			pair->second = id;
 
-			// Copy path string
-			data.pathString[id.i] = static_cast<char*>(allocator->Allocate(path.len + 1));
-			std::memcpy(data.pathString[id.i], path.str, path.len);
-			data.pathString[id.i][path.len] = '\0';
-
-			renderDevice->SetObjectLabel(RenderObjectType::VertexArray, data.bufferData[id.i].vertexArrayObject, path);
+			data.uid[GetIndex(id)] = uid;
 
 			return id;
 		}
@@ -196,10 +181,17 @@ MeshId MeshManager::GetIdByPath(StringRef path)
 	return MeshId{};
 }
 
-MeshId MeshManager::GetIdByPathHash(uint32_t pathHash)
+MeshId MeshManager::FindModelByPath(const StringRef& path)
 {
-	auto pair = pathHashMap.Lookup(pathHash);
-	return pair != nullptr ? pair->second : MeshId{};
+	KOKKO_PROFILE_FUNCTION();
+
+	auto uidResult = assetLoader->GetAssetUidByVirtualPath(path);
+	if (uidResult.HasValue())
+	{
+		return FindModelByUid(uidResult.GetValue());
+	}
+
+	return MeshId::Null;
 }
 
 unsigned int MeshManager::GetIndex(MeshId meshId) const
@@ -209,9 +201,9 @@ unsigned int MeshManager::GetIndex(MeshId meshId) const
 	return index;
 }
 
-const char* MeshManager::GetPath(MeshId id) const
+kokko::Uid MeshManager::GetUid(MeshId id) const
 {
-	return data.pathString[GetIndex(id)];
+	return data.uid[GetIndex(id)];
 }
 
 const BoundingBox* MeshManager::GetBoundingBox(MeshId id) const

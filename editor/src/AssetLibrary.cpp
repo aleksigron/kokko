@@ -189,6 +189,9 @@ void AssetLibrary::ScanAssets(bool scanProject)
 
 	const fs::path levelExt(".level");
 	const fs::path materialExt(".material");
+	const fs::path modelGltfExt(".gltf");
+	const fs::path modelGlbExt(".glb");
+	const fs::path modelMeshExt(".mesh");
 	const fs::path shaderExt(".glsl");
 	const fs::path textureJpgExt(".jpg");
 	const fs::path textureJpegExt(".jpeg");
@@ -215,26 +218,24 @@ void AssetLibrary::ScanAssets(bool scanProject)
 
 		assetPathStr = currentPath.generic_u8string();
 
+		// TODO: Make extension detection case-independent
+
 		Optional<AssetType> assetType;
 		if (currentExt == levelExt)
-		{
 			assetType = AssetType::Level;
-		}
+		else if (currentExt == modelGltfExt ||
+			currentExt == modelGlbExt ||
+			currentExt == modelMeshExt)
+			assetType = AssetType::Model;
 		else if (currentExt == materialExt)
-		{
 			assetType = AssetType::Material;
-		}
 		else if (currentExt == shaderExt)
-		{
 			assetType = AssetType::Shader;
-		}
 		else if (currentExt == textureJpgExt ||
 			currentExt == textureJpegExt ||
 			currentExt == texturePngExt ||
 			currentExt == textureHdrExt)
-		{
 			assetType = AssetType::Texture;
-		}
 
 		if (assetType.HasValue() == false)
 		{
