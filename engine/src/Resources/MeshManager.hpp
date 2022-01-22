@@ -11,7 +11,7 @@
 #include "Rendering/RenderDeviceEnums.hpp"
 #include "Rendering/VertexFormat.hpp"
 
-#include "Resources/MeshData.hpp"
+#include "Resources/MeshId.hpp"
 
 namespace kokko
 {

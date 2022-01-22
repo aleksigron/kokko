@@ -4,7 +4,7 @@
 
 #include "Math/Vec2.hpp"
 
-#include "Resources/MeshData.hpp"
+#include "Resources/MeshId.hpp"
 
 struct TerrainInstance
 {

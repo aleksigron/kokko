@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "Resources/MeshData.hpp"
+#include "Resources/MeshId.hpp"
 
 class RenderDevice;
 class MeshManager;

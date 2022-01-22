@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Resources/MeshData.hpp"
-
+struct MeshId;
 class MeshManager;
 
 namespace MeshPresets
