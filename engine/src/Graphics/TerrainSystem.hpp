@@ -12,7 +12,6 @@
 #include "Rendering/CustomRenderer.hpp"
 
 #include "Resources/MaterialData.hpp"
-#include "Resources/MeshData.hpp"
 
 class Allocator;
 class RenderDevice;

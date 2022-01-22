@@ -8,7 +8,7 @@
 #include "Rendering/CustomRenderer.hpp"
 #include "Graphics/TransformUpdateReceiver.hpp"
 
-#include "Resources/MeshData.hpp"
+#include "Resources/MeshId.hpp"
 #include "Resources/ShaderId.hpp"
 
 class Allocator;

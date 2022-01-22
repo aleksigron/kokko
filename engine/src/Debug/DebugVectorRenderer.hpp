@@ -11,7 +11,7 @@
 #include "Math/Rectangle.hpp"
 #include "Math/Projection.hpp"
 
-#include "Resources/MeshData.hpp"
+#include "Resources/MeshId.hpp"
 #include "Resources/ShaderId.hpp"
 
 struct Entity;

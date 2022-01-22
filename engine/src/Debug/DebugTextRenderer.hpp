@@ -6,7 +6,7 @@
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
 
-#include "Resources/MeshData.hpp"
+#include "Resources/MeshId.hpp"
 
 class Allocator;
 class RenderDevice;

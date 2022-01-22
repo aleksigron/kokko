@@ -8,7 +8,7 @@
 
 #include "Engine/Entity.hpp"
 
-#include "Resources/MeshData.hpp"
+#include "Resources/MeshId.hpp"
 #include "Resources/TextureId.hpp"
 
 class Allocator;
