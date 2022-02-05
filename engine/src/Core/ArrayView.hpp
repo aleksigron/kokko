@@ -27,14 +27,43 @@ public:
 	ValueType* GetData() { return data; }
 	const ValueType* GetData() const { return data; }
 
-	ArrayView<ValueType> GetSubView(size_t start, size_t end)
+	ArrayView<ValueType> GetSubView(size_t start, size_t end) const
 	{
 		return ArrayView(&data[start], end - start);
 	}
 
-	ArrayView<const ValueType> GetSubView(size_t start, size_t end) const
+	ArrayView<ValueType>& TrimBeginning(size_t amount)
 	{
-		return ArrayView(&data[start], end - start);
+		data += amount;
+		count -= amount;
+		return *this;
+	}
+	
+	ArrayView<ValueType>& TrimEnd(size_t amount)
+	{
+		count -= amount;
+		return *this;
+	}
+
+	ValueType* Find(const ValueType& value) const
+	{
+		ValueType* itr = begin();
+		ValueType* end_ = end();
+		for (; itr != end_; ++itr)
+			if (*itr == value)
+				return itr;
+	}
+
+	template <typename Compare>
+	ValueType* FindIf(const Compare& compare)
+	{
+		ValueType* itr = begin();
+		ValueType* end_ = end();
+		for (; itr != end_; ++itr)
+			if (compare(*itr))
+				return itr;
+
+		return nullptr;
 	}
 
 	ValueType* begin() { return data; }

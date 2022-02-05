@@ -29,14 +29,16 @@ void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 
 	VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
 	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
+	vertexFormatPos.CalcOffsetsAndSizeInterleaved();
 
 	IndexedVertexData data;
 	data.vertexFormat = vertexFormatPos;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertexData = vertexData;
-	data.vertexCount = sizeof(vertexData) / (sizeof(float) * 3);
+	data.vertexDataSize = sizeof(vertexData);
 	data.indexData = indexData;
-	data.indexCount = sizeof(indexData) / sizeof(unsigned short);
+	data.indexDataSize = sizeof(indexData);
+	data.indexCount = sizeof(indexData) / sizeof(indexData[0]);
 
 	meshManager->UploadIndexed(meshId, data);
 
@@ -59,13 +61,15 @@ void MeshPresets::UploadPlane(MeshManager* meshManager, MeshId meshId)
 
 	VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
 	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
+	vertexFormatPos.CalcOffsetsAndSizeInterleaved();
 
 	IndexedVertexData data;
 	data.vertexFormat = vertexFormatPos;
 	data.vertexData = vertexData;
-	data.vertexCount = sizeof(vertexData) / (sizeof(float) * 3);
+	data.vertexDataSize = sizeof(vertexData);
 	data.indexData = indexData;
-	data.indexCount = sizeof(indexData) / sizeof(unsigned short);
+	data.indexDataSize = sizeof(indexData);
+	data.indexCount = sizeof(indexData) / sizeof(indexData[0]);
 
 	meshManager->UploadIndexed(meshId, data);
 }

@@ -24,9 +24,10 @@
 #include "Rendering/RenderDeviceOpenGL.hpp"
 #include "Rendering/Renderer.hpp"
 
-#include "Resources/MeshManager.hpp"
-#include "Resources/ShaderManager.hpp"
 #include "Resources/MaterialManager.hpp"
+#include "Resources/MeshManager.hpp"
+#include "Resources/ModelManager.hpp"
+#include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
 #include "Scripting/ScriptSystem.hpp"
@@ -62,6 +63,9 @@ Engine::Engine(
 	meshManager.CreateScope(allocatorManager, "MeshManager", alloc);
 	meshManager.New(meshManager.allocator, assetLoader, renderDevice);
 
+	modelManager.CreateScope(allocatorManager, "ModelManager", alloc);
+	modelManager.New(modelManager.allocator, assetLoader, meshManager.instance);
+
 	textureManager.CreateScope(allocatorManager, "TextureManager", alloc);
 	textureManager.New(textureManager.allocator, assetLoader, renderDevice);
 
@@ -72,8 +76,9 @@ Engine::Engine(
 	materialManager.New(materialManager.allocator, assetLoader, renderDevice,
 		shaderManager.instance, textureManager.instance);
 
-	ResourceManagers resManagers;
+	kokko::ResourceManagers resManagers;
 	resManagers.meshManager = meshManager.instance;
+	resManagers.modelManager = modelManager.instance;
 	resManagers.shaderManager = shaderManager.instance;
 	resManagers.materialManager = materialManager.instance;
 	resManagers.textureManager = textureManager.instance;

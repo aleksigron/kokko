@@ -97,7 +97,7 @@ Renderer::Renderer(
 	CameraSystem* cameraSystem,
 	LightManager* lightManager,
 	kokko::EnvironmentSystem* environmentSystem,
-	const ResourceManagers& resourceManagers) :
+	const kokko::ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	device(renderDevice),
 	renderTargetContainer(nullptr),

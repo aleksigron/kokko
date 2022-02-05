@@ -55,12 +55,15 @@ struct ShaderData;
 struct ProjectionParameters;
 struct LightingUniformBlock;
 struct PostProcessRenderPass;
-struct ResourceManagers;
 
 namespace kokko
 {
+
 class EnvironmentSystem;
 class UniformData;
+
+struct ResourceManagers;
+
 }
 
 class Renderer : public TransformUpdateReceiver, public CustomRenderer
@@ -196,7 +199,7 @@ public:
 		CameraSystem* cameraSystem,
 		LightManager* lightManager,
 		kokko::EnvironmentSystem* environmentSystem,
-		const ResourceManagers& resourceManagers);
+		const kokko::ResourceManagers& resourceManagers);
 	~Renderer();
 
 	void Initialize();

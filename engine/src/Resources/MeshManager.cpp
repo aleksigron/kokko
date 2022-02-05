@@ -63,20 +63,24 @@ void MeshManager::Reallocate(unsigned int required)
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.bufferData + newData.allocated);
 	newData.meshId = reinterpret_cast<MeshId*>(newData.bounds + newData.allocated);
 	newData.uid = reinterpret_cast<kokko::Uid*>(newData.meshId + newData.allocated);
+	newData.uidExists = reinterpret_cast<bool*>(newData.uid + newData.allocated);
 
 	if (data.buffer != nullptr)
 	{
-		std::memcpy(newData.freeList, data.freeList, data.allocated * sizeof(unsigned int));
-		std::memset(newData.freeList + data.allocated, 0, (newData.allocated - data.allocated) * sizeof(unsigned int));
+		constexpr size_t uintSize = sizeof(unsigned int);
 
-		std::memcpy(newData.indexList, data.indexList, data.allocated * sizeof(unsigned int));
-		std::memset(newData.indexList + data.allocated, 0, (newData.allocated - data.allocated) * sizeof(unsigned int));
+		std::memcpy(newData.freeList, data.freeList, data.allocated * uintSize);
+		std::memset(newData.freeList + data.allocated, 0, (newData.allocated - data.allocated) * uintSize);
+
+		std::memcpy(newData.indexList, data.indexList, data.allocated * uintSize);
+		std::memset(newData.indexList + data.allocated, 0, (newData.allocated - data.allocated) * uintSize);
 
 		std::memcpy(newData.drawData, data.drawData, data.count * sizeof(MeshDrawData));
 		std::memcpy(newData.bufferData, data.bufferData, data.count * sizeof(MeshBufferData));
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
 		std::memcpy(newData.meshId, data.meshId, data.count * sizeof(MeshId));
 		std::memcpy(newData.uid, data.uid, data.count * sizeof(kokko::Uid));
+		std::memcpy(newData.uidExists, data.uidExists, data.count * sizeof(bool));
 
 		allocator->Deallocate(data.buffer);
 	}
@@ -101,12 +105,16 @@ MeshId MeshManager::CreateMesh()
 		id.i = freeListFirst;
 		freeListFirst = data.freeList[freeListFirst];
 	}
-	
+
 	unsigned int index = data.count;
 	data.indexList[id.i] = index;
 
+	data.drawData[index] = MeshDrawData{};
 	data.bufferData[index] = MeshBufferData{};
+	data.bounds[index] = BoundingBox();
 	data.meshId[index] = id;
+	data.uid[index] = kokko::Uid();
+	data.uidExists[index] = false;
 
 	++data.count;
 
@@ -136,62 +144,13 @@ void MeshManager::RemoveMesh(MeshId id)
 		data.bounds[index] = data.bounds[lastIndex];
 		data.meshId[index] = lastMeshId;
 		data.uid[index] = data.uid[lastIndex];
+		data.uidExists[index] = data.uidExists[lastIndex];
 
 		// Update index list
 		data.indexList[lastMeshId.i] = index;
 	}
 
 	--data.count;
-}
-
-MeshId MeshManager::FindModelByUid(const kokko::Uid& uid)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	auto* pair = uidMap.Lookup(uid);
-	if (pair != nullptr)
-		return pair->second;
-
-	if (data.count == data.allocated)
-		this->Reallocate(data.count + 1);
-
-	Array<uint8_t> file(allocator);
-
-	if (assetLoader->LoadAsset(uid, file))
-	{
-		MeshId id = CreateMesh();
-		MeshLoader loader(this);
-
-		MeshLoader::Status status = loader.LoadFromBuffer(id, file.GetView());
-		if (status == MeshLoader::Status::Success)
-		{
-			pair = uidMap.Insert(uid);
-			pair->second = id;
-
-			data.uid[GetIndex(id)] = uid;
-
-			return id;
-		}
-		else
-		{
-			RemoveMesh(id);
-		}
-	}
-
-	return MeshId{};
-}
-
-MeshId MeshManager::FindModelByPath(const StringRef& path)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	auto uidResult = assetLoader->GetAssetUidByVirtualPath(path);
-	if (uidResult.HasValue())
-	{
-		return FindModelByUid(uidResult.GetValue());
-	}
-
-	return MeshId::Null;
 }
 
 unsigned int MeshManager::GetIndex(MeshId meshId) const
@@ -201,9 +160,18 @@ unsigned int MeshManager::GetIndex(MeshId meshId) const
 	return index;
 }
 
-kokko::Uid MeshManager::GetUid(MeshId id) const
+Optional<kokko::Uid> MeshManager::GetUid(MeshId id) const
 {
-	return data.uid[GetIndex(id)];
+	if (data.uidExists[GetIndex(id)])
+		return data.uid[GetIndex(id)];
+	else
+		return Optional<kokko::Uid>();
+}
+
+void MeshManager::SetUid(MeshId id, const kokko::Uid& uid)
+{
+	data.uid[GetIndex(id)] = uid;
+	data.uidExists[GetIndex(id)] = true;
 }
 
 const BoundingBox* MeshManager::GetBoundingBox(MeshId id) const
@@ -221,12 +189,7 @@ const MeshDrawData* MeshManager::GetDrawData(MeshId id) const
 	return &data.drawData[GetIndex(id)];
 }
 
-const MeshBufferData* MeshManager::GetBufferData(MeshId id) const
-{
-	return &data.bufferData[GetIndex(id)];
-}
-
-void MeshManager::UpdateBuffers(unsigned int index, const void* vertBuf, unsigned int vertBytes, RenderBufferUsage usage)
+void MeshManager::UpdateBuffers(unsigned int index, const NonIndexedVertexData& vdata)
 {
 	MeshBufferData& bufferData = data.bufferData[index];
 
@@ -243,9 +206,13 @@ void MeshManager::UpdateBuffers(unsigned int index, const void* vertBuf, unsigne
 		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = 0;
 
 		// Bind and upload vertex buffer
-		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
-		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertBuf, usage);
-		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vertBytes;
+		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer,
+			bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+
+		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer,
+			vdata.vertexDataSize, vdata.vertexData, vdata.vertexBufferUsage);
+
+		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vdata.vertexDataSize;
 	}
 	else
 	{
@@ -254,23 +221,23 @@ void MeshManager::UpdateBuffers(unsigned int index, const void* vertBuf, unsigne
 		// Bind and update vertex buffer
 		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
 
-		if (vertBytes <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
+		if (vdata.vertexDataSize <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
 		{
 			// Only update the part of the buffer we need
-			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vertBytes, vertBuf);
+			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer,
+				0, vdata.vertexDataSize, vdata.vertexData);
 		}
 		else
 		{
 			// SetBufferData reallocates storage when needed
-			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertBuf, usage);
-			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vertBytes;
+			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer,
+				vdata.vertexDataSize, vdata.vertexData, vdata.vertexBufferUsage);
+			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vdata.vertexDataSize;
 		}
 	}
 }
 
-void MeshManager::UpdateIndexedBuffers(
-	unsigned int index, const void* vertBuf, unsigned int vertBytes,
-	const void* idxBuf, unsigned int idxBytes, RenderBufferUsage usage)
+void MeshManager::UpdateBuffersIndexed(unsigned int index, const IndexedVertexData& vdata)
 {
 	MeshBufferData& bufferData = data.bufferData[index];
 
@@ -284,14 +251,18 @@ void MeshManager::UpdateIndexedBuffers(
 		renderDevice->CreateBuffers(2, bufferData.bufferObjects);
 
 		// Bind and upload index buffer
-		renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
-		renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, idxBytes, idxBuf, usage);
-		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = idxBytes;
+		renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer,
+			bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
+		renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer,
+			vdata.indexDataSize, vdata.indexData, vdata.indexBufferUsage);
+		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = vdata.indexDataSize;
 
 		// Bind and upload vertex buffer
-		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
-		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertBuf, usage);
-		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vertBytes;
+		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer,
+			bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer,
+			vdata.vertexDataSize, vdata.vertexData, vdata.vertexBufferUsage);
+		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vdata.vertexDataSize;
 	}
 	else
 	{
@@ -300,31 +271,35 @@ void MeshManager::UpdateIndexedBuffers(
 		// Bind and update index buffer
 		renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
 
-		if (idxBytes <= bufferData.bufferSizes[MeshBufferData::IndexBuffer])
+		if (vdata.vertexDataSize <= bufferData.bufferSizes[MeshBufferData::IndexBuffer])
 		{
 			// Only update the part of the buffer we need
-			renderDevice->SetBufferSubData(RenderBufferTarget::IndexBuffer, 0, idxBytes, idxBuf);
+			renderDevice->SetBufferSubData(RenderBufferTarget::IndexBuffer,
+				0, vdata.indexDataSize, vdata.indexData);
 		}
 		else
 		{
 			// SetBufferData reallocates storage when needed
-			renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, idxBytes, idxBuf, usage);
-			bufferData.bufferSizes[MeshBufferData::IndexBuffer] = idxBytes;
+			renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer,
+				vdata.indexDataSize, vdata.indexData, vdata.indexBufferUsage);
+			bufferData.bufferSizes[MeshBufferData::IndexBuffer] = vdata.vertexDataSize;
 		}
 
 		// Bind and update vertex buffer
 		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
 
-		if (vertBytes <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
+		if (vdata.vertexDataSize <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
 		{
 			// Only update the part of the buffer we need
-			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer, 0, vertBytes, vertBuf);
+			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer,
+				0, vdata.vertexDataSize, vdata.vertexData);
 		}
 		else
 		{
 			// SetBufferData reallocates storage when needed
-			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertBuf, usage);
-			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vertBytes;
+			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer,
+				vdata.vertexDataSize, vdata.vertexData, vdata.vertexBufferUsage);
+			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vdata.vertexDataSize;
 		}
 	}
 }
@@ -344,7 +319,7 @@ void MeshManager::DeleteBuffers(MeshBufferData& bufferDataInOut) const
 	}
 }
 
-void MeshManager::CreateDrawData(unsigned int index, const VertexData& vdata)
+void MeshManager::CreateDrawData(unsigned int index, const NonIndexedVertexData& vdata)
 {
 	MeshDrawData& drawData = data.drawData[index];
 	drawData.primitiveMode = vdata.primitiveMode;
@@ -364,33 +339,31 @@ void MeshManager::CreateDrawDataIndexed(unsigned int index, const IndexedVertexD
 
 void MeshManager::SetVertexAttribPointers(const VertexFormat& vertexFormat)
 {
+	assert(vertexFormat.attributes != nullptr && vertexFormat.attributeCount > 0);
+
 	for (unsigned int i = 0; i < vertexFormat.attributeCount; ++i)
 	{
 		const VertexAttribute& attr = vertexFormat.attributes[i];
 
 		renderDevice->EnableVertexAttribute(attr.attrIndex);
 
-		int stride = static_cast<int>(vertexFormat.vertexSize);
-
 		RenderCommandData::SetVertexAttributePointer data{
-			attr.attrIndex, attr.elemCount, attr.elemType, stride, attr.offset
+			attr.attrIndex, attr.elemCount, attr.elemType, attr.stride, attr.offset
 		};
 
 		renderDevice->SetVertexAttributePointer(&data);
 	}
 }
 
-void MeshManager::Upload(MeshId id, const VertexData& vdata)
+void MeshManager::Upload(MeshId id, const NonIndexedVertexData& vdata)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	assert(vdata.vertexFormat.attributes != nullptr && vdata.vertexFormat.attributeCount > 0);
-
-	unsigned int vsize = vdata.vertexFormat.vertexSize * vdata.vertexCount;
+	assert(vdata.vertexDataSize != 0 && vdata.vertexCount != 0);
 
 	unsigned int index = GetIndex(id);
 
-	UpdateBuffers(index, vdata.vertexData, vsize, vdata.usage);
+	UpdateBuffers(index, vdata);
 	CreateDrawData(index, vdata);
 	SetVertexAttribPointers(vdata.vertexFormat);
 }
@@ -399,14 +372,11 @@ void MeshManager::UploadIndexed(MeshId id, const IndexedVertexData& vdata)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	assert(vdata.vertexFormat.attributes != nullptr && vdata.vertexFormat.attributeCount > 0);
-
-	unsigned int vsize = vdata.vertexFormat.vertexSize * vdata.vertexCount;
-	unsigned int isize = vdata.indexSize * vdata.indexCount;
+	assert(vdata.indexDataSize != 0 && vdata.indexCount != 0);
 
 	unsigned int index = GetIndex(id);
 
-	UpdateIndexedBuffers(index, vdata.vertexData, vsize, vdata.indexData, isize, vdata.usage);
+	UpdateBuffersIndexed(index, vdata);
 	CreateDrawDataIndexed(index, vdata);
 	SetVertexAttribPointers(vdata.vertexFormat);
 }

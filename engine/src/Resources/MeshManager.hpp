@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "Core/HashMap.hpp"
+#include "Core/Optional.hpp"
 #include "Core/StringRef.hpp"
 #include "Core/Uid.hpp"
 
@@ -27,38 +28,48 @@ class RenderDevice;
 struct VertexData
 {
 	VertexData() :
+		vertexBufferUsage(RenderBufferUsage::StaticDraw),
 		primitiveMode(RenderPrimitiveMode::Triangles),
-		usage(RenderBufferUsage::StaticDraw),
 		vertexData(nullptr),
-		vertexCount(0)
+		vertexDataSize(0)
 	{
 	}
 
 	VertexFormat vertexFormat;
+	RenderBufferUsage vertexBufferUsage;
 
 	RenderPrimitiveMode primitiveMode;
-	RenderBufferUsage usage;
 
-	unsigned int vertexCount;
 	const void* vertexData;
+	unsigned int vertexDataSize;
 };
 
 struct IndexedVertexData : VertexData
 {
 	IndexedVertexData() :
+		indexBufferUsage(RenderBufferUsage::StaticDraw),
 		indexData(nullptr),
-		indexCount(0),
-		indexSize(sizeof(unsigned short))
+		indexDataSize(0),
+		indexCount(0)
 	{
 	}
 
-	void SetIndexSizeShort() { indexSize = sizeof(unsigned short); }
-	void SetIndexSizeInt() { indexSize = sizeof(unsigned int); }
+	RenderBufferUsage indexBufferUsage;
 
 	const void* indexData;
-	unsigned int indexCount;
+	unsigned int indexDataSize;
 
-	unsigned int indexSize;
+	unsigned int indexCount;
+};
+
+struct NonIndexedVertexData : VertexData
+{
+	NonIndexedVertexData() :
+		vertexCount(0)
+	{
+	}
+
+	unsigned int vertexCount;
 };
 
 struct MeshDrawData
@@ -111,6 +122,7 @@ private:
 		BoundingBox* bounds;
 		MeshId* meshId;
 		kokko::Uid* uid;
+		bool* uidExists;
 	}
 	data;
 
@@ -119,15 +131,12 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	void UpdateBuffers(unsigned int index, const void* vertBuf, unsigned int vertBytes,
-		RenderBufferUsage usage);
-
-	void UpdateIndexedBuffers(unsigned int index, const void* vertBuf, unsigned int vertBytes,
-		const void* idxBuf, unsigned int idxBytes, RenderBufferUsage usage);
+	void UpdateBuffers(unsigned int index, const NonIndexedVertexData& vdata);
+	void UpdateBuffersIndexed(unsigned int index, const IndexedVertexData& vdata);
 
 	void DeleteBuffers(MeshBufferData& buffers) const;
 
-	void CreateDrawData(unsigned int index, const VertexData& vdata);
+	void CreateDrawData(unsigned int index, const NonIndexedVertexData& vdata);
 	void CreateDrawDataIndexed(unsigned int index, const IndexedVertexData& vdata);
 
 	void SetVertexAttribPointers(const VertexFormat& vertexFormat);
@@ -141,18 +150,14 @@ public:
 	MeshId CreateMesh();
 	void RemoveMesh(MeshId id);
 
-	MeshId FindModelByUid(const kokko::Uid& uid);
-	MeshId FindModelByPath(const StringRef& path);
-	
-	kokko::Uid GetUid(MeshId id) const;
+	Optional<kokko::Uid> GetUid(MeshId id) const;
+	void SetUid(MeshId id, const kokko::Uid& uid);
 
 	const BoundingBox* GetBoundingBox(MeshId id) const;
 	void SetBoundingBox(MeshId id, const BoundingBox& bounds);
 
 	const MeshDrawData* GetDrawData(MeshId id) const;
 
-	const MeshBufferData* GetBufferData(MeshId id) const;
-
-	void Upload(MeshId id, const VertexData& vdata);
+	void Upload(MeshId id, const NonIndexedVertexData& vdata);
 	void UploadIndexed(MeshId id, const IndexedVertexData& vdata);
 };
