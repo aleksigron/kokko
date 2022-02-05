@@ -20,6 +20,8 @@
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
+#include "Resources/ModelManager.hpp"
+#include "Resources/MeshUid.hpp"
 
 #include "AssetLibrary.hpp"
 #include "EditorConstants.hpp"
@@ -38,10 +40,14 @@ EntityView::EntityView() :
 {
 }
 
-void EntityView::Initialize(MaterialManager* materialManager, MeshManager* meshManager)
+void EntityView::Initialize(
+	MaterialManager* materialManager,
+	MeshManager* meshManager,
+	ModelManager* modelManager)
 {
 	this->materialManager = materialManager;
 	this->meshManager = meshManager;
+	this->modelManager = modelManager;
 }
 
 void EntityView::Update(EditorContext& context)
@@ -199,36 +205,94 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 			MeshId meshId = renderer->GetMeshId(renderObj);
 			if (meshId != MeshId::Null)
 			{
-				Uid meshUid = meshManager->GetUid(meshId);
+				Optional<Uid> modelUid = meshManager->GetUid(meshId);
 
-				if (auto asset = context.assetLibrary->FindAssetByUid(meshUid))
-					context.temporaryString.Assign(asset->GetFilename());
+				if (modelUid.HasValue())
+				{
+					ModelId modelId = modelManager->FindModelByUid(modelUid.GetValue());
+
+					if (modelId != ModelId::Null)
+					{
+						auto modelMeshes = modelManager->GetModelMeshes(modelId);
+						auto modelMesh = modelMeshes.FindIf(
+							[meshId](auto& val) { return val.meshId == meshId; });
+
+						if (modelMesh != nullptr)
+						{
+							if (auto asset = context.assetLibrary->FindAssetByUid(modelUid.GetValue()))
+							{
+								context.temporaryString.Clear();
+								context.temporaryString.Append(asset->GetFilename());
+								context.temporaryString.Append('/');
+
+								if (modelMesh->name != nullptr)
+									context.temporaryString.Append(modelMesh->name);
+								else
+									context.temporaryString.Append("Unnamed mesh");
+							}
+							else
+								KK_LOG_ERROR("Model not found in asset library");
+						}
+						else
+							KK_LOG_ERROR("Mesh not found in model");
+					}
+					else
+						KK_LOG_ERROR("Mesh's original model not found");
+				}
+				else
+				{
+					context.temporaryString.Assign("Runtime-generated mesh");
+				}
 			}
 
 			ImGui::InputText("Mesh", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);
 
 			if (ImGui::BeginDragDropTarget())
 			{
-				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
-				if (payload != nullptr && payload->DataSize == sizeof(Uid))
+				Optional<Uid> modelUid;
+				size_t meshIndex = 0;
+
+				const ImGuiPayload* modelMeshPayload =
+					ImGui::AcceptDragDropPayload(EditorConstants::ModelMeshDragDropType);
+
+				if (modelMeshPayload != nullptr && modelMeshPayload->DataSize == sizeof(MeshUid))
 				{
-					Uid assetUid;
-					std::memcpy(&assetUid, payload->Data, payload->DataSize);
+					MeshUid meshUid;
+					std::memcpy(&meshUid, modelMeshPayload->Data, modelMeshPayload->DataSize);
+					modelUid = meshUid.modelUid;
+					meshIndex = meshUid.meshIndex;
+				}
+				else 
+				{
+					const ImGuiPayload* modelPayload = 
+						ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
 
-					if (auto newAsset = context.assetLibrary->FindAssetByUid(assetUid))
+					if (modelPayload != nullptr && modelPayload->DataSize == sizeof(Uid))
 					{
-						if (newAsset->GetType() == AssetType::Model)
-						{
-							MeshId newMeshId = meshManager->FindModelByUid(newAsset->GetUid());
-							if (newMeshId != MeshId::Null)
-							{
-								renderer->SetMeshId(renderObj, newMeshId);
+						Uid assetUid;
+						std::memcpy(&assetUid, modelPayload->Data, modelPayload->DataSize);
+						modelUid = assetUid;
+						meshIndex = 0; // If user drops a model asset directly, we use the first mesh
+					}
+				}
 
-								SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
-								if (sceneObj != SceneObjectId::Null)
-									scene->MarkUpdated(sceneObj);
-							}
-						}
+				const AssetInfo* newAsset = nullptr;
+				ModelId newModelId = ModelId::Null;
+
+				if (modelUid.HasValue() &&
+					(newAsset = context.assetLibrary->FindAssetByUid(modelUid.GetValue())) != nullptr &&
+					newAsset->GetType() == AssetType::Model &&
+					(newModelId = modelManager->FindModelByUid(modelUid.GetValue())) != ModelId::Null)
+				{
+					auto modelMeshes = modelManager->GetModelMeshes(newModelId);
+
+					if (modelMeshes.GetCount() > meshIndex)
+					{
+						renderer->SetMeshId(renderObj, modelMeshes[meshIndex].meshId);
+
+						SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
+						if (sceneObj != SceneObjectId::Null)
+							scene->MarkUpdated(sceneObj);
 					}
 				}
 

@@ -24,7 +24,7 @@ static const char* const ComponentTypeKey = "component_type";
 LevelSerializer::LevelSerializer(Allocator* allocator) :
 	allocator(allocator),
 	world(nullptr),
-	resourceManagers(ResourceManagers{}),
+	resourceManagers(kokko::ResourceManagers{}),
 	transformSerializer(nullptr),
 	componentSerializers(allocator)
 {
@@ -38,7 +38,7 @@ LevelSerializer::~LevelSerializer()
 	allocator->MakeDelete(transformSerializer);
 }
 
-void LevelSerializer::Initialize(World* world, const ResourceManagers& resourceManagers)
+void LevelSerializer::Initialize(World* world, const kokko::ResourceManagers& resourceManagers)
 {
 	this->world = world;
 	this->resourceManagers = resourceManagers;

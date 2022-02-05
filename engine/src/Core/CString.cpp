@@ -7,7 +7,7 @@
 
 #include "Core/EncodingUtf8.hpp"
 
-void StringCopyN(char* destination, const char* source, size_t destBufferCount)
+size_t StringCopyN(char* destination, const char* source, size_t destBufferCount)
 {
 	assert(destBufferCount > 0);
 
@@ -22,35 +22,38 @@ void StringCopyN(char* destination, const char* source, size_t destBufferCount)
 			break;
 	}
 
+	if (i < destBufferCount)
+		return i + 1;
+
 	// String needs to be truncated
-	if (i == destBufferCount)
+	// Make sure no UTF-8 characters are broken up
+
+	StringRef destRef(destination, i);
+	size_t lastCharPos = EncodingUtf8::FindLastCharacter(destRef);
+
+	// We found a valid character
+	if (lastCharPos != destRef.len)
 	{
-		// Make sure no UTF-8 characters are broken up
+		uint32_t codepoint;
 
-		StringRef destRef(destination, i);
-		size_t lastCharPos = EncodingUtf8::FindLastCharacter(destRef);
+		// Check how many bytes the character takes
+		size_t codepointBytes = EncodingUtf8::DecodeCodepoint(&destination[lastCharPos], codepoint);
 
-		// We found a valid character
-		if (lastCharPos != destRef.len)
+		if (lastCharPos + codepointBytes >= destBufferCount)
 		{
-			uint32_t codepoint;
-
-			// Check how many bytes the character takes
-			size_t codepointBytes = EncodingUtf8::DecodeCodepoint(&destination[lastCharPos], codepoint);
-
-			if (lastCharPos + codepointBytes >= destBufferCount)
-			{
-				destination[lastCharPos] = '\0';
-			}
-			else
-			{
-				destination[destBufferCount - 1] = '\0';
-			}
+			destination[lastCharPos] = '\0';
+			return lastCharPos + 1;
 		}
-		else // Couldn't find any valid characters
+		else
 		{
-			destination[0] = '\0';
+			destination[destBufferCount - 1] = '\0';
+			return destBufferCount;
 		}
+	}
+	else // Couldn't find any valid characters
+	{
+		destination[0] = '\0';
+		return 1;
 	}
 }
 
@@ -68,7 +71,7 @@ TEST_CASE("StringCopyN")
 {
 	char dest[8];
 
-	StringCopyN(dest, "Str", sizeof(dest));
+	CHECK(StringCopyN(dest, "Str", sizeof(dest)) == 4);
 	CHECK(dest[0] == 'S');
 	CHECK(dest[1] == 't');
 	CHECK(dest[2] == 'r');
@@ -76,7 +79,7 @@ TEST_CASE("StringCopyN")
 
 	memset(dest, 0, sizeof(dest));
 
-	StringCopyN(dest, "StrStrStr", sizeof(dest));
+	CHECK(StringCopyN(dest, "StrStrStr", sizeof(dest)) == 8);
 	CHECK(dest[6] == 'S');
 	CHECK(dest[7] == '\0');
 
@@ -84,7 +87,7 @@ TEST_CASE("StringCopyN")
 
 	char utf8buf[] = u8"Tëstiä";
 
-	StringCopyN(dest, utf8buf, sizeof(dest));
+	CHECK(StringCopyN(dest, utf8buf, sizeof(dest)) == 7);
 	CHECK(dest[5] == utf8buf[5]);
 	CHECK(dest[6] == '\0');
 }
@@ -93,7 +96,7 @@ TEST_CASE("StringCopySafe")
 {
 	char dest[8];
 
-	StringCopySafe(dest, "Str");
+	CHECK(StringCopySafe(dest, "Str") == 4);
 	CHECK(dest[0] == 'S');
 	CHECK(dest[1] == 't');
 	CHECK(dest[2] == 'r');
@@ -101,7 +104,7 @@ TEST_CASE("StringCopySafe")
 
 	memset(dest, 0, sizeof(dest));
 
-	StringCopySafe(dest, "StrStrStr");
+	CHECK(StringCopySafe(dest, "StrStrStr") == 8);
 	CHECK(dest[6] == 'S');
 	CHECK(dest[7] == '\0');
 
@@ -109,7 +112,7 @@ TEST_CASE("StringCopySafe")
 
 	char utf8buf[] = u8"Tëstiä";
 
-	StringCopySafe(dest, utf8buf);
+	CHECK(StringCopySafe(dest, utf8buf) == 7);
 	CHECK(dest[5] == utf8buf[5]);
 	CHECK(dest[6] == '\0');
 }

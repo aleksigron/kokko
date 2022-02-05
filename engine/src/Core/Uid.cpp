@@ -62,7 +62,6 @@ uint32_t Hash32(const Uid& uid, uint32_t seed)
 
 TEST_CASE("Uid.Serialization")
 {
-
 	// Check serialization and deserialization with 20 random generated values
 	for (int i = 0; i < 20; ++i)
 	{

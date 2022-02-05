@@ -12,6 +12,9 @@ struct ResourceManagers;
 
 namespace kokko
 {
+
+class ModelManager;
+
 namespace editor
 {
 
@@ -23,6 +26,7 @@ class EntityView : public EditorWindow
 private:
 	MaterialManager* materialManager;
 	MeshManager* meshManager;
+	ModelManager* modelManager;
 
 	Entity requestDestroyEntity;
 
@@ -39,7 +43,10 @@ private:
 public:
 	EntityView();
 
-	void Initialize(MaterialManager* materialManager, MeshManager* meshManager);
+	void Initialize(
+		MaterialManager* materialManager,
+		MeshManager* meshManager,
+		ModelManager* modelManager);
 
 	virtual void Update(EditorContext& context) override;
 };

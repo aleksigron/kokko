@@ -29,6 +29,7 @@ struct VertexAttribute
 	unsigned int attrIndex;
 	int elemCount;
 	uintptr_t offset;
+	int stride;
 	RenderVertexElemType elemType;
 
 	static VertexAttribute pos2;
@@ -59,24 +60,20 @@ struct VertexFormat
 {
 	VertexFormat() :
 		attributes(nullptr),
-		attributeCount(0),
-		vertexSize(0)
+		attributeCount(0)
 	{
 	}
 
 	VertexFormat(VertexAttribute* attributes, unsigned int attributeCount) :
 		attributes(attributes),
-		attributeCount(attributeCount),
-		vertexSize(0)
+		attributeCount(attributeCount)
 	{
-		CalculateSizeAndOffsets();
 	}
 
 	VertexAttribute* attributes;
 	unsigned int attributeCount;
-	unsigned int vertexSize;
 
-	void CalculateSizeAndOffsets()
+	void CalcOffsetsAndSizeInterleaved()
 	{
 		unsigned int size = 0;
 
@@ -86,7 +83,10 @@ struct VertexFormat
 			size += attributes[i].elemCount * sizeof(float);
 		}
 
-		vertexSize = size;
+		for (unsigned int i = 0; i < attributeCount; ++i)
+		{
+			attributes[i].stride = static_cast<int>(size);
+		}
 	}
 
 	enum AttributeIndex

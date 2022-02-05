@@ -293,10 +293,8 @@ void TerrainSystem::CreateVertexData()
 	const VertexAttribute& attr = vertexAttributes[0];
 	renderDevice->EnableVertexAttribute(attr.attrIndex);
 
-	int stride = static_cast<int>(vertexFormatPos.vertexSize);
-
 	RenderCommandData::SetVertexAttributePointer data{
-		attr.attrIndex, attr.elemCount, attr.elemType, stride, attr.offset
+		attr.attrIndex, attr.elemCount, attr.elemType, attr.stride, attr.offset
 	};
 
 	renderDevice->SetVertexAttributePointer(&data);

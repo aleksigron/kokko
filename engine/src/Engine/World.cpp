@@ -33,7 +33,7 @@ World::World(AllocatorManager* allocManager,
 	RenderDevice* renderDevice,
 	kokko::AssetLoader* assetLoader,
 	InputManager* inputManager,
-	const ResourceManagers& resourceManagers) :
+	const kokko::ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	levelSerializer(allocator),
 	resourceManagers(resourceManagers)

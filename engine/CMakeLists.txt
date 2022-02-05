@@ -246,6 +246,12 @@ set (KOKKO_SOURCES
 	src/Resources/MeshManager.hpp
 	src/Resources/MeshPresets.cpp
 	src/Resources/MeshPresets.hpp
+	src/Resources/MeshUid.cpp
+	src/Resources/MeshUid.hpp
+	src/Resources/ModelLoader.cpp
+	src/Resources/ModelLoader.hpp
+	src/Resources/ModelManager.cpp
+	src/Resources/ModelManager.hpp
 	src/Resources/ResourceManagers.hpp
 	src/Resources/ShaderId.hpp
 	src/Resources/ShaderLoader.cpp

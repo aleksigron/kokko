@@ -23,6 +23,7 @@ struct CameraParameters;
 namespace kokko
 {
 class AssetLoader;
+class ModelManager;
 }
 
 class Engine
@@ -41,6 +42,7 @@ private:
 	RenderDevice* renderDevice;
 	InstanceAllocatorPair<Debug> debug;
 	InstanceAllocatorPair<MeshManager> meshManager;
+	InstanceAllocatorPair<kokko::ModelManager> modelManager;
 	InstanceAllocatorPair<TextureManager> textureManager;
 	InstanceAllocatorPair<ShaderManager> shaderManager;
 	InstanceAllocatorPair<MaterialManager> materialManager;
@@ -68,6 +70,7 @@ public:
 	Debug* GetDebug() { return debug.instance; }
 	Filesystem* GetFilesystem() { return filesystem; }
 	MeshManager* GetMeshManager() { return meshManager.instance; }
+	kokko::ModelManager* GetModelManager() { return modelManager.instance; }
 	ShaderManager* GetShaderManager() { return shaderManager.instance; }
 	TextureManager* GetTextureManager() { return textureManager.instance; }
 	MaterialManager* GetMaterialManager() { return materialManager.instance; }

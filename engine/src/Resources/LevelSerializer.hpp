@@ -31,7 +31,7 @@ public:
 	LevelSerializer(Allocator* allocator);
 	~LevelSerializer();
 
-	void Initialize(World* world, const ResourceManagers& resourceManagers);
+	void Initialize(World* world, const kokko::ResourceManagers& resourceManagers);
 
 	void DeserializeFromString(const char* data);
 	void SerializeToString(kokko::String& out);
@@ -42,7 +42,7 @@ public:
 private:
 	Allocator* allocator;
 	World* world;
-	ResourceManagers resourceManagers;
+	kokko::ResourceManagers resourceManagers;
 
 	TransformSerializer* transformSerializer;
 	Array<ComponentSerializer*> componentSerializers;

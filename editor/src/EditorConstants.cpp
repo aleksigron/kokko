@@ -20,7 +20,7 @@ const char* const EditorConstants::UserSettingsFilePath = "editor_user_settings.
 
 const char* const EditorConstants::SceneDragDropType = "SceneObject";
 const char* const EditorConstants::AssetDragDropType = "Asset";
-const char* const EditorConstants::MaterialDragDropType = "Material";
+const char* const EditorConstants::ModelMeshDragDropType = "ModelMesh";
 
 
 }

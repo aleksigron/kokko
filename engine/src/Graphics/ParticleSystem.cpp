@@ -80,11 +80,15 @@ void ParticleSystem::Initialize()
 	};
 
 	VertexAttribute vertexAttr[] = { VertexAttribute::pos3 };
-	VertexData vertexData;
-	vertexData.vertexFormat = VertexFormat(vertexAttr, sizeof(vertexAttr) / sizeof(vertexAttr[0]));
+	VertexFormat format(vertexAttr, sizeof(vertexAttr) / sizeof(vertexAttr[0]));
+	format.CalcOffsetsAndSizeInterleaved();
+
+	NonIndexedVertexData vertexData;
+	vertexData.vertexFormat = format;
 	vertexData.primitiveMode = RenderPrimitiveMode::TriangleStrip;
 	vertexData.vertexData = vertexBuffer;
-	vertexData.vertexCount = 4;
+	vertexData.vertexDataSize = sizeof(vertexBuffer);
+	vertexData.vertexCount = sizeof(vertexBuffer) / sizeof(vertexBuffer[0]);
 
 	quadMeshId = meshManager->CreateMesh();
 	meshManager->Upload(quadMeshId, vertexData);

@@ -19,7 +19,6 @@ class Framebuffer;
 
 struct CameraParameters;
 struct EngineSettings;
-struct ResourceManagers;
 
 class EntityManager;
 class Scene;
@@ -47,7 +46,7 @@ public:
 		RenderDevice* renderDevice,
 		kokko::AssetLoader* assetLoader,
 		InputManager* inputManager,
-		const ResourceManagers& resourceManagers);
+		const kokko::ResourceManagers& resourceManagers);
 	~World();
 
 	void Initialize();
@@ -86,5 +85,5 @@ private:
 	InstanceAllocatorPair<kokko::TerrainSystem> terrainSystem;
 	InstanceAllocatorPair<ParticleSystem> particleSystem;
 
-	ResourceManagers resourceManagers;
+	kokko::ResourceManagers resourceManagers;
 };

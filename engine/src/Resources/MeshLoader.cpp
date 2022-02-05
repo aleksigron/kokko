@@ -100,6 +100,7 @@ MeshLoader::Status MeshLoader::LoadFromBuffer(MeshId meshId, ArrayView<uint8_t> 
 	}
 
 	VertexFormat format(attributes, attributeCount);
+	format.CalcOffsetsAndSizeInterleaved();
 
 	size_t vertexDataSize = vertexCount * vertexSize;
 	size_t indexDataSize = indexCount * indexSize;
@@ -126,11 +127,11 @@ MeshLoader::Status MeshLoader::LoadFromBuffer(MeshId meshId, ArrayView<uint8_t> 
 
 	IndexedVertexData data;
 	data.vertexFormat = format;
-	data.usage = RenderBufferUsage::StaticDraw;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertexData = vertexData;
-	data.vertexCount = vertexCount;
+	data.vertexDataSize = vertexDataSize;
 	data.indexData = indexData;
+	data.indexDataSize = indexDataSize;
 	data.indexCount = indexCount;
 
 	meshManager->UploadIndexed(meshId, data);

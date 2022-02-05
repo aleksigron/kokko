@@ -56,7 +56,7 @@ void EditorCore::Initialize(Engine* engine)
 	editorWindows.PushBack(entityListView);
 
 	EntityView* entityView = allocator->MakeNew<EntityView>();
-	entityView->Initialize(engine->GetMaterialManager(), engine->GetMeshManager());
+	entityView->Initialize(engine->GetMaterialManager(), engine->GetMeshManager(), engine->GetModelManager());
 	editorWindows.PushBack(entityView);
 
 	sceneView = allocator->MakeNew<SceneView>();

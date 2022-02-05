@@ -34,7 +34,10 @@ public:
 
 	static const char* const SceneDragDropType;
 	static const char* const AssetDragDropType;
-	static const char* const MaterialDragDropType;
+
+	// Model mesh needs its own type because its payload contains
+	// the model UID as well as the mesh index
+	static const char* const ModelMeshDragDropType;
 };
 
 }

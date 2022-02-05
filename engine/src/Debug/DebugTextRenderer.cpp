@@ -330,15 +330,18 @@ void DebugTextRenderer::CreateAndUploadData()
 		VertexAttribute::uv0
 	};
 	VertexFormat format(attributes, sizeof(attributes) / sizeof(attributes[0]));
+	format.CalcOffsetsAndSizeInterleaved();
 
 	IndexedVertexData data;
 	data.vertexFormat = format;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertexData = vertexData.GetData();
-	data.vertexCount = static_cast<unsigned int>((vertexItr - vertexBegin) / componentCount);
+	data.vertexDataSize = vertexData.GetCount() * sizeof(vertexData[0]);
+	data.vertexBufferUsage = RenderBufferUsage::DynamicDraw;
 	data.indexData = indexData.GetData();
+	data.indexDataSize = indexData.GetCount() * sizeof(indexData[0]);
 	data.indexCount = static_cast<unsigned int>(indexData.GetCount());
-	data.usage = RenderBufferUsage::DynamicDraw;
+	data.indexBufferUsage = RenderBufferUsage::DynamicDraw;
 
 	meshManager->UploadIndexed(meshId, data);
 }
