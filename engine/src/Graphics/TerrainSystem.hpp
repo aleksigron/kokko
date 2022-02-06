@@ -12,6 +12,7 @@
 #include "Rendering/CustomRenderer.hpp"
 
 #include "Resources/MaterialData.hpp"
+#include "Resources/TextureId.hpp"
 
 class Allocator;
 class RenderDevice;
@@ -48,7 +49,7 @@ class TerrainSystem : public CustomRenderer
 {
 public:
 	TerrainSystem(Allocator* allocator, RenderDevice* renderDevice,
-		MaterialManager * materialManager, ShaderManager* shaderManager);
+		MaterialManager* materialManager, ShaderManager* shaderManager);
 	~TerrainSystem();
 
 	void Initialize();
@@ -71,6 +72,12 @@ public:
 
 	Vec2f GetTextureScale(TerrainId id) const { return data.textureScale[id.i]; }
 	void SetTextureScale(TerrainId id, Vec2f scale) { data.textureScale[id.i] = scale; }
+
+	TextureId GetAlbedoTextureId(TerrainId id) const;
+	void SetAlbedoTexture(TerrainId id, TextureId textureId, unsigned int textureObject);
+
+	TextureId GetRoughnessTextureId(TerrainId id) const;
+	void SetRoughnessTexture(TerrainId id, TextureId textureId, unsigned int textureObject);
 
 	void RegisterCustomRenderer(Renderer* renderer);
 
@@ -102,6 +109,18 @@ private:
 
 	unsigned int textureSampler;
 
+	struct TextureInfo
+	{
+		TextureId textureId;
+		unsigned int textureObjectId;
+	};
+
+	struct TerrainTextures
+	{
+		TextureInfo albedoTexture;
+		TextureInfo roughnessTexture;
+	};
+
 	struct InstanceData
 	{
 		size_t count;
@@ -110,6 +129,7 @@ private:
 
 		Entity* entity;
 		Vec2f* textureScale;
+		TerrainTextures* textures;
 		TerrainQuadTree* quadTree;
 	}
 	data;

@@ -24,6 +24,7 @@
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
+#include "Resources/TextureManager.hpp"
 
 namespace kokko
 {
@@ -158,6 +159,7 @@ TerrainId TerrainSystem::AddTerrain(Entity entity, const TerrainParameters& para
 
 	data.entity[id] = entity;
 	data.textureScale[id] = params.textureScale;
+	data.textures[id] = TerrainTextures{};
 	data.quadTree[id] = TerrainQuadTree();
 
 	data.count += 1;
@@ -205,6 +207,28 @@ void TerrainSystem::RemoveAll()
 
 	entityMap.Clear();
 	data.count = 1;
+}
+
+TextureId TerrainSystem::GetAlbedoTextureId(TerrainId id) const
+{
+	return data.textures[id.i].albedoTexture.textureId;
+}
+
+void TerrainSystem::SetAlbedoTexture(TerrainId id, TextureId textureId, unsigned int textureObject)
+{
+	data.textures[id.i].albedoTexture.textureId = textureId;
+	data.textures[id.i].albedoTexture.textureObjectId = textureObject;
+}
+
+TextureId TerrainSystem::GetRoughnessTextureId(TerrainId id) const
+{
+	return data.textures[id.i].roughnessTexture.textureId;
+}
+
+void TerrainSystem::SetRoughnessTexture(TerrainId id, TextureId textureId, unsigned int textureObject)
+{
+	data.textures[id.i].roughnessTexture.textureId = textureId;
+	data.textures[id.i].roughnessTexture.textureObjectId = textureObject;
 }
 
 void TerrainSystem::RegisterCustomRenderer(Renderer* renderer)
@@ -339,12 +363,14 @@ void TerrainSystem::Reallocate(size_t required)
 
 	newData.entity = static_cast<Entity*>(newData.buffer);
 	newData.textureScale = reinterpret_cast<Vec2f*>(newData.entity + required);
-	newData.quadTree = reinterpret_cast<TerrainQuadTree*>(newData.textureScale + required);
+	newData.textures = reinterpret_cast<TerrainTextures*>(newData.textureScale + required);
+	newData.quadTree = reinterpret_cast<TerrainQuadTree*>(newData.textures + required);
 
 	if (data.buffer != nullptr)
 	{
 		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
 		std::memcpy(newData.textureScale, data.textureScale, data.count * sizeof(Vec2f));
+		std::memcpy(newData.textures, data.textures, data.count * sizeof(TerrainTextures));
 		std::memcpy(newData.quadTree, data.quadTree, data.count * sizeof(TerrainQuadTree));
 
 		allocator->Deallocate(data.buffer);
@@ -413,16 +439,24 @@ void TerrainSystem::RenderTerrain(TerrainId id, const RenderViewport& viewport)
 
 	if (albedoMap != nullptr)
 	{
+		unsigned int textureObjectId = albedoMap->textureObject;
+		if (data.textures[id.i].albedoTexture.textureObjectId != 0)
+			textureObjectId = data.textures[id.i].albedoTexture.textureObjectId;
+
 		renderDevice->SetUniformInt(albedoMap->uniformLocation, 1);
 		renderDevice->SetActiveTextureUnit(1);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, albedoMap->textureObject);
+		renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureObjectId);
 	}
 
 	if (roughMap != nullptr)
 	{
+		unsigned int textureObjectId = albedoMap->textureObject;
+		if (data.textures[id.i].roughnessTexture.textureObjectId != 0)
+			textureObjectId = data.textures[id.i].roughnessTexture.textureObjectId;
+
 		renderDevice->SetUniformInt(roughMap->uniformLocation, 2);
 		renderDevice->SetActiveTextureUnit(2);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, roughMap->textureObject);
+		renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureObjectId);
 	}
 
 	renderDevice->BindVertexArray(vertexData.vertexArray);

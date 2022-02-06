@@ -22,6 +22,7 @@
 #include "Resources/MeshManager.hpp"
 #include "Resources/ModelManager.hpp"
 #include "Resources/MeshUid.hpp"
+#include "Resources/TextureManager.hpp"
 
 #include "AssetLibrary.hpp"
 #include "EditorConstants.hpp"
@@ -36,18 +37,18 @@ EntityView::EntityView() :
 	EditorWindow("Properties"),
 	materialManager(nullptr),
 	meshManager(nullptr),
+	modelManager(nullptr),
+	textureManager(nullptr),
 	requestDestroyEntity(Entity::Null)
 {
 }
 
-void EntityView::Initialize(
-	MaterialManager* materialManager,
-	MeshManager* meshManager,
-	ModelManager* modelManager)
+void EntityView::Initialize(const ResourceManagers& resourceManagers)
 {
-	this->materialManager = materialManager;
-	this->meshManager = meshManager;
-	this->modelManager = modelManager;
+	materialManager = resourceManagers.materialManager;
+	meshManager = resourceManagers.meshManager;
+	modelManager = resourceManagers.modelManager;
+	textureManager = resourceManagers.textureManager;
 }
 
 void EntityView::Update(EditorContext& context)
@@ -85,7 +86,7 @@ void EntityView::Update(EditorContext& context)
 				DrawRenderComponent(context);
 				DrawCameraComponent(context.selectedEntity, world);
 				DrawLightComponent(context.selectedEntity, world);
-				DrawTerrainComponent(context.selectedEntity, world);
+				DrawTerrainComponent(context, world);
 				DrawParticleComponent(context.selectedEntity, world);
 				DrawEnvironmentComponent(context, world);
 
@@ -276,23 +277,25 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 					}
 				}
 
-				const AssetInfo* newAsset = nullptr;
-				ModelId newModelId = ModelId::Null;
-
-				if (modelUid.HasValue() &&
-					(newAsset = context.assetLibrary->FindAssetByUid(modelUid.GetValue())) != nullptr &&
-					newAsset->GetType() == AssetType::Model &&
-					(newModelId = modelManager->FindModelByUid(modelUid.GetValue())) != ModelId::Null)
+				if (modelUid.HasValue())
 				{
-					auto modelMeshes = modelManager->GetModelMeshes(newModelId);
-
-					if (modelMeshes.GetCount() > meshIndex)
+					if (auto newAsset = context.assetLibrary->FindAssetByUid(modelUid.GetValue());
+						newAsset != nullptr && newAsset->GetType() == AssetType::Model)
 					{
-						renderer->SetMeshId(renderObj, modelMeshes[meshIndex].meshId);
+						if (ModelId newModelId = modelManager->FindModelByUid(modelUid.GetValue());
+							newModelId != ModelId::Null)
+						{
+							auto modelMeshes = modelManager->GetModelMeshes(newModelId);
 
-						SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
-						if (sceneObj != SceneObjectId::Null)
-							scene->MarkUpdated(sceneObj);
+							if (modelMeshes.GetCount() > meshIndex)
+							{
+								renderer->SetMeshId(renderObj, modelMeshes[meshIndex].meshId);
+
+								SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
+								if (sceneObj != SceneObjectId::Null)
+									scene->MarkUpdated(sceneObj);
+							}
+						}
 					}
 				}
 
@@ -488,10 +491,10 @@ void EntityView::DrawLightComponent(Entity selectedEntity, World* world)
 	}
 }
 
-void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
+void EntityView::DrawTerrainComponent(EditorContext& context, World* world)
 {
 	TerrainSystem* terrainSystem = world->GetTerrainSystem();
-	TerrainId terrainId = terrainSystem->Lookup(selectedEntity);
+	TerrainId terrainId = terrainSystem->Lookup(context.selectedEntity);
 
 	if (terrainId != TerrainId::Null)
 	{
@@ -520,10 +523,93 @@ void EntityView::DrawTerrainComponent(Entity selectedEntity, World* world)
 			if (ImGui::DragFloat2("Texture scale", textureScale.ValuePointer(), 0.01f, 0.01f))
 				terrainSystem->SetTextureScale(terrainId, textureScale);
 
+			auto albedoOpt = DrawTerrainTexture(context,
+				terrainSystem->GetAlbedoTextureId(terrainId), "Albedo");
+			if (albedoOpt.HasValue())
+			{
+				const TextureData& texture = textureManager->GetTextureData(albedoOpt.GetValue());
+				terrainSystem->SetAlbedoTexture(terrainId, albedoOpt.GetValue(), texture.textureObjectId);
+			}
+
+			auto roughOpt = DrawTerrainTexture(context,
+				terrainSystem->GetRoughnessTextureId(terrainId), "Roughness");
+			if (roughOpt.HasValue())
+			{
+				const TextureData& texture = textureManager->GetTextureData(roughOpt.GetValue());
+				terrainSystem->SetRoughnessTexture(terrainId, roughOpt.GetValue(), texture.textureObjectId);
+			}
+
 			if (componentVisible == false)
 				terrainSystem->RemoveTerrain(terrainId);
 		}
 	}
+}
+
+Optional<TextureId> EntityView::DrawTerrainTexture(
+	EditorContext& context, TextureId textureId, const char* label)
+{
+	auto result = Optional<TextureId>();
+
+	context.temporaryString.Assign("No texture");
+
+	unsigned int textureObjectId = 0;
+
+	if (textureId != TextureId::Null)
+	{
+		const TextureData& texture = textureManager->GetTextureData(textureId);
+		textureObjectId = texture.textureObjectId;
+
+		if (auto textureAsset = context.assetLibrary->FindAssetByUid(texture.uid))
+			context.temporaryString.Assign(textureAsset->GetFilename());
+	}
+	else
+	{
+		TextureId defaultId = textureManager->GetId_White2D();
+		const TextureData& defaultTexture = textureManager->GetTextureData(defaultId);
+		textureObjectId = defaultTexture.textureObjectId;
+	}
+
+	ImGui::InputText(label, context.temporaryString.GetData(), context.temporaryString.GetLength(),
+		ImGuiInputTextFlags_ReadOnly);
+
+	if (textureObjectId != 0)
+	{
+		float side = ImGui::GetFontSize() * 6.0f;
+		ImVec2 size(side, side);
+
+		void* texId = reinterpret_cast<void*>(static_cast<size_t>(textureObjectId));
+		ImVec2 uv0(0.0f, 1.0f);
+		ImVec2 uv1(1.0f, 0.0f);
+
+		ImGui::Image(texId, size, uv0, uv1);
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+			if (payload != nullptr && payload->DataSize == sizeof(Uid))
+			{
+				Uid assetUid;
+				std::memcpy(&assetUid, payload->Data, payload->DataSize);
+
+				auto asset = context.assetLibrary->FindAssetByUid(assetUid);
+				if (asset != nullptr && asset->GetType() == AssetType::Texture)
+				{
+					TextureId newTexId = textureManager->FindTextureByUid(assetUid);
+					if (newTexId != TextureId::Null && newTexId != textureId)
+					{
+						result = newTexId;
+					}
+				}
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
+	}
+
+	ImGui::Spacing();
+
+	return result;
 }
 
 void EntityView::DrawParticleComponent(Entity selectedEntity, World* world)
