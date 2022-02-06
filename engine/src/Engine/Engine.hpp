@@ -24,6 +24,7 @@ namespace kokko
 {
 class AssetLoader;
 class ModelManager;
+struct ResourceManagers;
 }
 
 class Engine
@@ -75,4 +76,6 @@ public:
 	TextureManager* GetTextureManager() { return textureManager.instance; }
 	MaterialManager* GetMaterialManager() { return materialManager.instance; }
 	World* GetWorld() { return world.instance; }
+
+	kokko::ResourceManagers GetResourceManagers();
 };

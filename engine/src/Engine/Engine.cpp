@@ -76,12 +76,7 @@ Engine::Engine(
 	materialManager.New(materialManager.allocator, assetLoader, renderDevice,
 		shaderManager.instance, textureManager.instance);
 
-	kokko::ResourceManagers resManagers;
-	resManagers.meshManager = meshManager.instance;
-	resManagers.modelManager = modelManager.instance;
-	resManagers.shaderManager = shaderManager.instance;
-	resManagers.materialManager = materialManager.instance;
-	resManagers.textureManager = textureManager.instance;
+	kokko::ResourceManagers resManagers = GetResourceManagers();
 
 	world.CreateScope(allocatorManager, "World", alloc);
 	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice,
@@ -169,4 +164,15 @@ void Engine::EndFrame()
 void Engine::SetAppPointer(void* app)
 {
 	world.instance->GetScriptSystem()->SetAppPointer(app);
+}
+
+kokko::ResourceManagers Engine::GetResourceManagers()
+{
+	kokko::ResourceManagers resManagers;
+	resManagers.meshManager = meshManager.instance;
+	resManagers.modelManager = modelManager.instance;
+	resManagers.shaderManager = shaderManager.instance;
+	resManagers.materialManager = materialManager.instance;
+	resManagers.textureManager = textureManager.instance;
+	return resManagers;
 }
