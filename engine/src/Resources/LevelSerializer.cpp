@@ -49,7 +49,8 @@ void LevelSerializer::Initialize(World* world, const kokko::ResourceManagers& re
 	componentSerializers.PushBack(allocator->MakeNew<LightSerializer>(world->GetLightManager()));
 	componentSerializers.PushBack(allocator->MakeNew<CameraSerializer>(world->GetCameraSystem()));
 	componentSerializers.PushBack(allocator->MakeNew<ParticleEmitterSerializer>(world->GetParticleSystem()));
-	componentSerializers.PushBack(allocator->MakeNew<TerrainSerializer>(world->GetTerrainSystem()));
+	componentSerializers.PushBack(allocator->MakeNew<TerrainSerializer>(
+		world->GetTerrainSystem(), resourceManagers.textureManager));
 	componentSerializers.PushBack(allocator->MakeNew<kokko::EnvironmentSerializer>(world->GetEnvironmentSystem()));
 }
 
