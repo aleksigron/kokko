@@ -169,9 +169,9 @@ bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> c
 	return true;
 }
 
-void AssetLibrary::ScanEngineAssets()
+bool AssetLibrary::ScanEngineAssets()
 {
-	ScanAssets(false);
+	return ScanAssets(true, false);
 }
 
 void AssetLibrary::SetProject(const EditorProject* project)
@@ -180,10 +180,10 @@ void AssetLibrary::SetProject(const EditorProject* project)
 
 	editorProject = project;
 
-	ScanAssets(true);
+	ScanAssets(false, true);
 }
 
-void AssetLibrary::ScanAssets(bool scanProject)
+bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 {
 	namespace fs = std::filesystem;
 
@@ -343,28 +343,54 @@ void AssetLibrary::ScanAssets(bool scanProject)
 		pathPair->second = assetRefIndex;
 	};
 
-	if (scanProject)
-	{
-		const fs::path& assetDir = editorProject->GetAssetPath();
-		const StringRef virtualMountAssets(EditorConstants::VirtualMountAssets);
-
-		for (const auto& entry : fs::recursive_directory_iterator(assetDir))
-			processEntry(virtualMountAssets, assetDir, entry);
-	}
-	else
+	if (scanEngineAndEditor)
 	{
 		const fs::path engineResDir = fs::absolute(EditorConstants::EngineResourcePath);
 		const fs::path editorResDir = fs::absolute(EditorConstants::EditorResourcePath);
 		const StringRef virtualMountEngine(EditorConstants::VirtualMountEngine);
 		const StringRef virtualMountEditor(EditorConstants::VirtualMountEditor);
 
-		for (const auto& entry : fs::recursive_directory_iterator(engineResDir))
+		std::error_code engineItrError;
+		auto engineItr = fs::recursive_directory_iterator(engineResDir, engineItrError);
+		if (engineItrError)
+		{
+			KK_LOG_ERROR("Engine assets couldn't be processed, please check the current working directory.");
+			return false;
+		}
+
+		std::error_code editorItrError;
+		auto editorItr = fs::recursive_directory_iterator(editorResDir, editorItrError);
+		if (editorItrError)
+		{
+			KK_LOG_ERROR("Editor assets couldn't be processed, please check the current working directory.");
+			return false;
+		}
+
+		for (const auto& entry : engineItr)
 			processEntry(virtualMountEngine, engineResDir, entry);
 
-		for (const auto& entry : fs::recursive_directory_iterator(editorResDir))
+		for (const auto& entry : editorItr)
 			processEntry(virtualMountEditor, editorResDir, entry);
 	}
 
+	if (scanProject)
+	{
+		const fs::path& assetDir = editorProject->GetAssetPath();
+		const StringRef virtualMountAssets(EditorConstants::VirtualMountAssets);
+
+		std::error_code projectItrError;
+		auto projectItr = fs::recursive_directory_iterator(assetDir, projectItrError);
+		if (projectItrError)
+		{
+			KK_LOG_ERROR("Project assets couldn't be processed: {}", projectItrError.message().c_str());
+			return false;
+		}
+
+		for (const auto& entry : projectItr)
+			processEntry(virtualMountAssets, assetDir, entry);
+	}
+
+	return true;
 }
 
 AssetInfo::AssetInfo(Allocator* allocator, StringRef virtualMount, StringRef relativePath,

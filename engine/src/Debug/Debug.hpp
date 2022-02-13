@@ -69,7 +69,7 @@ public:
 
 	static Debug* Get() { return singletonInstance; }
 
-	void Initialize(Window* window, MeshManager* meshManager,
+	bool Initialize(Window* window, MeshManager* meshManager,
 		ShaderManager* shaderManager, TextureManager* textureManager);
 	void Deinitialize();
 

@@ -91,6 +91,8 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 		
 		glfwTerminate();
 	}
+
+	KK_LOG_ERROR("GLFW window couldn't be initialized");
 	
 	return false;
 }

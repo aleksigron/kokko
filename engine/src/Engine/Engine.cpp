@@ -105,24 +105,22 @@ bool Engine::Initialize()
 
 	Vec2i windowSize(1920, 1080);
 
-	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko"))
-	{
-		DebugLog* debugLog = debug.instance->GetLog();
-		debugLog->OpenLogFile("log.txt", false);
-
-		debug.instance->Initialize(mainWindow.instance, meshManager.instance,
-			shaderManager.instance, textureManager.instance);
-
-		textureManager.instance->Initialize();
-
-		world.instance->Initialize();
-
-		return true;
-	}
-	else
-	{
+	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko") == false)
 		return false;
-	}
+
+	DebugLog* debugLog = debug.instance->GetLog();
+	if (debugLog->OpenLogFile("log.txt", false) == false)
+		return false;
+
+	if (debug.instance->Initialize(mainWindow.instance, meshManager.instance,
+		shaderManager.instance, textureManager.instance) == false)
+		return false;
+
+	textureManager.instance->Initialize();
+
+	world.instance->Initialize();
+
+	return true;
 }
 
 void Engine::StartFrame()
