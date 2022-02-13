@@ -45,7 +45,7 @@ void FilePickerDialog::Update()
 	{
 		bool existingFileIsSelected = false;
 
-		ImGui::Text("Select where to save the level");
+		ImGui::Text(descriptor.descriptionText);
 
 		std::string currentPathStr;
 		if (descriptor.relativeToAssetPath)
