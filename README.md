@@ -4,7 +4,9 @@
 
 A simple cross-platform game engine using OpenGL. I hope that little by little, this can become a good, small game engine that might offer some new ways to solve old problems.
 
-![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20210925.jpg)
+Build and tests are being run on CI with Windows and Linux. Windows is tested much more regularly, so if you run into issues with Linux support, please report them with GitHub issues.
+
+![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20220213.jpg)
 
 ## Features
 
@@ -27,7 +29,7 @@ A simple cross-platform game engine using OpenGL. I hope that little by little, 
 - Asset files are JSON or YAML for readability and mergeability
   - Scenes
   - Materials
-- Mesh files are using a custom binary format
+- Mesh files can be loaded from glTF (early support)
 
 ### Debugging
 - Logging
@@ -54,10 +56,9 @@ cmake -B build -G "Visual Studio 16 2019" -A x64
 
 You need to have the repository root as the working directory when running the project.
 
-The editor interface and workflow are in a very early state and are currently being worked on. There are known issues when it comes to creating projects and content files. Feel free to report issues on GitHub.
+The `kokko` target builds the static library containing the engine code. The `kokko-editor` target builds an editor executable that uses that engine library.
 
-## Mesh format
-I'm using a proprietary model export script for Blender. More information in docs/mesh_file_format.md. The motivation behind using a custom format is to better understand the content pipeline. At the time of making this decision, there was no widely used efficient format. I'm considering implementing support for glTF as a content format, as it is quite fit for the purpose.
+The editor interface and workflow are in an early state and are currently being worked on. There are known issues when it comes to creating projects and content files. Feel free to report issues on GitHub.
 
 ## Tools
 [GLFW](https://github.com/glfw/glfw) is used to manage OpenGL context, windows and read input.
@@ -73,5 +74,7 @@ I'm using a proprietary model export script for Blender. More information in doc
 [fmt](https://github.com/fmtlib/fmt) is used for logging formatting.
 
 [xxHash](https://github.com/Cyan4973/xxHash) is used for content hashing.
+
+[cgltf](https://github.com/jkuhlmann/cgltf) is used for glTF model loading.
 
 [Gohufont](https://github.com/hchargois/gohufont) is used for debug text rendering.
