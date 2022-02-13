@@ -55,7 +55,7 @@ public:
 	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice, Filesystem* filesystem);
 	~DebugTextRenderer();
 
-	void Initialize(ShaderManager* shaderManager,
+	bool Initialize(ShaderManager* shaderManager,
 		MeshManager* meshManager, TextureManager* textureManager);
 
 	bool HasValidFont() const { return font != nullptr; }

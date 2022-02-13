@@ -40,6 +40,7 @@ bool DebugLog::OpenLogFile(const char* filePath, bool append)
 		}
 	}
 
+	KK_LOG_ERROR("Debug log file couldn't be opened for writing");
 	return false;
 }
 

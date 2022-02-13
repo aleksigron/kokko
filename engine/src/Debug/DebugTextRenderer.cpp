@@ -57,7 +57,7 @@ DebugTextRenderer::~DebugTextRenderer()
 	}
 }
 
-void DebugTextRenderer::Initialize(ShaderManager* shaderManager,
+bool DebugTextRenderer::Initialize(ShaderManager* shaderManager,
 	MeshManager* meshManager, TextureManager* textureManager)
 {
 	this->shaderManager = shaderManager;
@@ -65,7 +65,12 @@ void DebugTextRenderer::Initialize(ShaderManager* shaderManager,
 
 	const char* const debugFontFilename = "engine/fonts/gohufont-uni-14.bdf";
 	if (LoadBitmapFont(textureManager, debugFontFilename) == false)
+	{
 		KK_LOG_ERROR("Loading debug font failed: {}", debugFontFilename);
+		return false;
+	}
+
+	return true;
 }
 
 void DebugTextRenderer::SetFrameSize(const Vec2f& size)

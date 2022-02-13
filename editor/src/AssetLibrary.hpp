@@ -66,11 +66,11 @@ public:
 	Optional<Uid> CreateAsset(AssetType type, StringRef pathRelativeToAssets, ArrayView<const uint8_t> content);
 	bool UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> content);
 
-	void ScanEngineAssets();
+	bool ScanEngineAssets();
 	void SetProject(const EditorProject* project);
 
 private:
-	void ScanAssets(bool scanProject);
+	bool ScanAssets(bool scanEngineAndEditor, bool scanProject);
 
 private:
 	Allocator* allocator;

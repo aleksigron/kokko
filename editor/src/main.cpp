@@ -67,9 +67,13 @@ int main(int argc, char** argv)
 
 		Engine engine(allocManager, &filesystem, &assetLoader);
 
-		assetLibrary->ScanEngineAssets();
+		if (assetLibrary->ScanEngineAssets() == false)
+		{
+			instr.EndSession();
 
-		if (engine.Initialize())
+			res = -1;
+		}
+		else if (engine.Initialize())
 		{
 			editor.Initialize(&engine);
 

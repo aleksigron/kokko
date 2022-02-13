@@ -55,7 +55,7 @@ TextureManager::TextureManager(Allocator* allocator, kokko::AssetLoader* assetLo
 
 TextureManager::~TextureManager()
 {
-	for (unsigned int i = 0; i < data.allocated; ++i)
+	for (unsigned int i = 1; i < data.allocated; ++i)
 		if (data.texture[i].textureObjectId != 0)
 			renderDevice->DestroyTextures(1, &(data.texture[i].textureObjectId));
 
@@ -135,6 +135,11 @@ void TextureManager::Reallocate(unsigned int required)
 		std::memcpy(newData.texture, data.texture, data.count * sizeof(TextureData));
 
 		allocator->Deallocate(data.buffer);
+	}
+
+	for (unsigned int i = data.allocated, end = newData.allocated; i < end; ++i)
+	{
+		newData.texture[i].textureObjectId = 0;
 	}
 
 	data = newData;
