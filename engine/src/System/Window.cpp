@@ -6,6 +6,7 @@
 
 #include "System/IncludeOpenGL.hpp"
 #include "System/InputManager.hpp"
+#include "System/WindowSettings.hpp"
 
 static void OnGlfwError(int errorCode, const char* description)
 {
@@ -17,8 +18,13 @@ Window::Window(Allocator* allocator) :
 	windowHandle(nullptr),
 	inputManager(nullptr),
 	framebufferResizeCallbacks(allocator),
+	windowResizeCallbacks(allocator),
+	maximizeCallbacks(allocator),
 	currentSwapInterval(-1),
-	framebufferResizePending(false)
+	currentMaximizeState(false),
+	framebufferResizePending(false),
+	windowResizePending(false),
+	maximizeChangePending(false)
 {
 }
 
@@ -33,7 +39,7 @@ Window::~Window()
 	}
 }
 
-bool Window::Initialize(int width, int height, const char* windowTitle)
+bool Window::Initialize(const kokko::WindowSettings& settings)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -59,14 +65,19 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 		glfwWindowHint(GLFW_DEPTH_BITS, 0);
 		glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
+		glfwWindowHint(GLFW_MAXIMIZED, settings.maximized ? GLFW_TRUE : GLFW_FALSE);
+
 		{
 			KOKKO_PROFILE_SCOPE("GLFWwindow* glfwCreateWindow()");
-			windowHandle = glfwCreateWindow(width, height, windowTitle, NULL, NULL);
+			windowHandle = glfwCreateWindow(settings.width, settings.height, settings.title, NULL, NULL);
 		}
 		
 		if (windowHandle != nullptr)
 		{
 			glfwGetFramebufferSize(windowHandle, &currentFramebufferSize.x, &currentFramebufferSize.y);
+			glfwGetWindowSize(windowHandle, &currentWindowSize.x, &currentWindowSize.y);
+			int maximized = glfwGetWindowAttrib(windowHandle, GLFW_MAXIMIZED);
+			currentMaximizeState = maximized == GLFW_TRUE;
 
 			inputManager = allocator->MakeNew<InputManager>(allocator);
 			inputManager->Initialize(windowHandle);
@@ -74,6 +85,8 @@ bool Window::Initialize(int width, int height, const char* windowTitle)
 			glfwSetWindowUserPointer(windowHandle, this);
 
 			glfwSetFramebufferSizeCallback(windowHandle, _GlfwFramebufferSizeCallback);
+			glfwSetWindowSizeCallback(windowHandle, _GlfwWindowSizeCallback);
+			glfwSetWindowMaximizeCallback(windowHandle, _GlfwMaximizeCallback);
 
 			{
 				KOKKO_PROFILE_SCOPE("void glfwMakeContextCurrent()");
@@ -127,9 +140,25 @@ void Window::ProcessEvents()
 	if (framebufferResizePending)
 	{
 		for (auto& callback : framebufferResizeCallbacks)
-			callback.function(callback.userPointer, this, currentFramebufferSize);
+			callback.first(callback.second, this, currentFramebufferSize);
 
 		framebufferResizePending = false;
+	}
+
+	if (windowResizePending)
+	{
+		for (auto& callback : windowResizeCallbacks)
+			callback.first(callback.second, this, currentWindowSize);
+
+		windowResizePending = false;
+	}
+
+	if (maximizeChangePending)
+	{
+		for (auto& callback : maximizeCallbacks)
+			callback.first(callback.second, this, currentMaximizeState);
+
+		maximizeChangePending = false;
 	}
 }
 
@@ -230,19 +259,50 @@ Window::CursorMode Window::GetCursorMode() const
 	return mode;
 }
 
-void Window::RegisterFramebufferResizeCallback(FramebufferSizeCallbackFn callback, void* userPointer)
+void Window::RegisterFramebufferResizeCallback(ResizeCallbackFn callback, void* userPointer)
 {
-	framebufferResizeCallbacks.PushBack(FramebufferResizeCallbackInfo{ callback, userPointer });
+	framebufferResizeCallbacks.PushBack(Pair(callback, userPointer));
 }
 
-void Window::UnregisterFramebufferResizeCallback(FramebufferSizeCallbackFn callback, void* userPointer)
+void Window::UnregisterFramebufferResizeCallback(ResizeCallbackFn callback, void* userPointer)
+{
+	UnregisterCallback(framebufferResizeCallbacks, callback, userPointer);
+}
+
+void Window::RegisterWindowResizeCallback(ResizeCallbackFn callback, void* userPointer)
+{
+	windowResizeCallbacks.PushBack(Pair(callback, userPointer));
+}
+
+void Window::UnregisterWindowResizeCallback(ResizeCallbackFn callback, void* userPointer)
+{
+	UnregisterCallback(windowResizeCallbacks, callback, userPointer);
+}
+
+void Window::RegisterMaximizeCallback(ToggleCallbackFn callback, void* userPointer)
+{
+	maximizeCallbacks.PushBack(Pair(callback, userPointer));
+}
+
+void Window::UnregisterMaximizeCallback(ToggleCallbackFn callback, void* userPointer)
+{
+	UnregisterCallback(maximizeCallbacks, callback, userPointer);
+}
+
+Window* Window::GetWindowObject(GLFWwindow* windowHandle)
+{
+	return static_cast<Window*>(glfwGetWindowUserPointer(windowHandle));
+}
+
+template <typename CallbackType>
+void Window::UnregisterCallback(Array<Pair<CallbackType, void*>>& arr, CallbackType callback, void* userPtr)
 {
 	int index = -1;
 
-	for (size_t i = 0, count = framebufferResizeCallbacks.GetCount(); i < count; ++i)
+	for (size_t i = 0, count = arr.GetCount(); i < count; ++i)
 	{
-		const FramebufferResizeCallbackInfo& cb = framebufferResizeCallbacks[i];
-		if (cb.function == callback && cb.userPointer == userPointer)
+		const auto& cb = arr[i];
+		if (cb.first == callback && cb.second == userPtr)
 		{
 			index = static_cast<int>(i);
 			break;
@@ -252,21 +312,26 @@ void Window::UnregisterFramebufferResizeCallback(FramebufferSizeCallbackFn callb
 	if (index >= 0)
 	{
 		// Swap the last item into the removed item's place
-		if (static_cast<size_t>(index) < framebufferResizeCallbacks.GetCount() - 1)
-			framebufferResizeCallbacks[index] = framebufferResizeCallbacks.GetBack();
+		if (static_cast<size_t>(index) < arr.GetCount() - 1)
+			arr[index] = arr.GetBack();
 
-		framebufferResizeCallbacks.PopBack();
+		arr.PopBack();
 	}
-}
-
-Window* Window::GetWindowObject(GLFWwindow* windowHandle)
-{
-	return static_cast<Window*>(glfwGetWindowUserPointer(windowHandle));
 }
 
 void Window::_GlfwFramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	GetWindowObject(window)->GlfwFramebufferSizeCallback(width, height);
+}
+
+void Window::_GlfwWindowSizeCallback(GLFWwindow* window, int width, int height)
+{
+	GetWindowObject(window)->GlfwWindowSizeCallback(width, height);
+}
+
+void Window::_GlfwMaximizeCallback(GLFWwindow* window, int maximized)
+{
+	GetWindowObject(window)->GlfwMaximizeCallback(maximized);
 }
 
 void Window::GlfwFramebufferSizeCallback(int width, int height)
@@ -278,5 +343,27 @@ void Window::GlfwFramebufferSizeCallback(int width, int height)
 
 		currentFramebufferSize.x = width;
 		currentFramebufferSize.y = height;
+	}
+}
+
+void Window::GlfwWindowSizeCallback(int width, int height)
+{
+	if ((width != 0 && height != 0) &&
+		(width != currentWindowSize.x || height != currentWindowSize.y))
+	{
+		windowResizePending = true;
+
+		currentWindowSize.x = width;
+		currentWindowSize.y = height;
+	}
+}
+
+void Window::GlfwMaximizeCallback(int maximized)
+{
+	if ((maximized == GLFW_TRUE) != currentMaximizeState)
+	{
+		maximizeChangePending = true;
+
+		currentMaximizeState = maximized == GLFW_TRUE;
 	}
 }

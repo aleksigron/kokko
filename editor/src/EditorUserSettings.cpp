@@ -8,6 +8,9 @@
 
 static const char LastProjectKey[] = "last_opened_project";
 static const char LastLevelKey[] = "last_opened_level";
+static const char WindowMaximizedKey[] = "window_maximized";
+static const char WindowWidthKey[] = "window_width";
+static const char WindowHeightKey[] = "window_height";
 
 namespace kokko
 {
@@ -27,8 +30,11 @@ bool EditorUserSettings::SerializeToFile(const char* filePath)
 
 	out << YAML::BeginMap;
 
-	out << YAML::Key << LastProjectKey;
-	out << YAML::Value << lastOpenedProject.u8string();
+	if (lastOpenedProject.empty() == false)
+	{
+		out << YAML::Key << LastProjectKey;
+		out << YAML::Value << lastOpenedProject.u8string();
+	}
 
 	if (lastOpenedLevel.HasValue())
 	{
@@ -39,6 +45,10 @@ bool EditorUserSettings::SerializeToFile(const char* filePath)
 		out << YAML::Key << LastLevelKey;
 		out << YAML::Value << levelUidBuf;
 	}
+
+	out << YAML::Key << WindowMaximizedKey << YAML::Value << windowMaximized;
+	out << YAML::Key << WindowWidthKey << YAML::Value << windowWidth;
+	out << YAML::Key << WindowHeightKey << YAML::Value << windowHeight;
 
 	out << YAML::EndMap;
 
@@ -56,29 +66,37 @@ bool EditorUserSettings::DeserializeFromFile(const char* filePath)
 
 	YAML::Node node = YAML::Load(inStream);
 
-	if (node.IsMap())
+	if (node.IsMap() == false)
+		return false;
+
+	const YAML::Node projectPathNode = node[LastProjectKey];
+	if (projectPathNode.IsDefined() && projectPathNode.IsScalar())
+		lastOpenedProject = std::filesystem::u8path(projectPathNode.Scalar());
+
+	const YAML::Node levelNode = node[LastLevelKey];
+	if (levelNode.IsDefined() && levelNode.IsScalar())
 	{
-		const YAML::Node levelNode = node[LastLevelKey];
-		if (levelNode.IsDefined() && levelNode.IsScalar())
+		const std::string& levelString = levelNode.Scalar();
+		auto uidResult = Uid::FromString(ArrayView(levelString.c_str(), levelString.length()));
+		if (uidResult.HasValue())
 		{
-			const std::string& levelString = levelNode.Scalar();
-			auto uidResult = Uid::FromString(ArrayView(levelString.c_str(), levelString.length()));
-			if (uidResult.HasValue())
-			{
-				lastOpenedLevel = uidResult.GetValue();
-			}
-		}
-
-		const YAML::Node projectPathNode = node[LastProjectKey];
-		if (projectPathNode.IsDefined() && projectPathNode.IsScalar())
-		{
-			lastOpenedProject = std::filesystem::u8path(projectPathNode.Scalar());
-
-			return true;
+			lastOpenedLevel = uidResult.GetValue();
 		}
 	}
 
-	return false;
+	const YAML::Node windowMaximizedNode = node[WindowMaximizedKey];
+	if (windowMaximizedNode.IsDefined() && windowMaximizedNode.IsScalar())
+		windowMaximized = windowMaximizedNode.as<bool>();
+
+	const YAML::Node windowWidthNode = node[WindowWidthKey];
+	if (windowWidthNode.IsDefined() && windowWidthNode.IsScalar())
+		windowWidth = windowWidthNode.as<int>();
+
+	const YAML::Node windowHeightNode = node[WindowHeightKey];
+	if (windowHeightNode.IsDefined() && windowHeightNode.IsScalar())
+		windowHeight = windowHeightNode.as<int>();
+
+	return true;
 }
 
 }

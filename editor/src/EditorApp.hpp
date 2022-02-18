@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include "Math/Vec2.hpp"
+
 #include "EditorProject.hpp"
 #include "EditorUserSettings.hpp"
 #include "FilePickerDialog.hpp"
@@ -12,6 +14,7 @@ class FilesystemVirtual;
 class Framebuffer;
 class RenderDevice;
 class World;
+class Window;
 
 struct CameraParameters;
 struct EngineSettings;
@@ -39,6 +42,9 @@ public:
 
 	EditorApp& operator=(const EditorApp&) = delete;
 	EditorApp& operator=(EditorApp&&) = delete;
+
+	void LoadUserSettings();
+	const EditorUserSettings& GetUserSettings() const;
 
 	void Initialize(Engine* engine);
 	void Deinitialize();
@@ -68,6 +74,9 @@ private:
 	bool CreateProject(const std::filesystem::path& directory, StringRef name);
 	bool OpenProject(const std::filesystem::path& projectDir);
 	void OnProjectChanged();
+
+	static void OnWindowResize(void* app, Window* window, Vec2i size);
+	static void OnWindowMaximize(void* app, Window* window, bool maximized);
 
 	Engine* engine;
 	FilesystemVirtual* virtualFilesystem;

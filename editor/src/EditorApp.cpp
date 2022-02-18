@@ -62,6 +62,26 @@ EditorApp::~EditorApp()
 	allocator->MakeDelete(core);
 }
 
+void EditorApp::LoadUserSettings()
+{
+	if (userSettings.DeserializeFromFile(EditorConstants::UserSettingsFilePath) == false)
+	{
+		KK_LOG_INFO("Failed to open editor_user_settings.yml, should open project dialog.");
+		return;
+	}
+
+	if (userSettings.lastOpenedProject.empty())
+	{
+		KK_LOG_INFO("Last opened project is empty, should open project dialog.");
+		return;
+	}
+}
+
+const EditorUserSettings& EditorApp::GetUserSettings() const
+{
+	return userSettings;
+}
+
 void EditorApp::Initialize(Engine* engine)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -70,13 +90,17 @@ void EditorApp::Initialize(Engine* engine)
 	this->renderDevice = engine->GetRenderDevice();
 	this->world = engine->GetWorld();
 
+	Window* window = engine->GetMainWindow();
+	window->RegisterWindowResizeCallback(OnWindowResize, this);
+	window->RegisterMaximizeCallback(OnWindowMaximize, this);
+
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-	float scale = engine->GetMainWindow()->GetScreenCoordinateScale();
+	float scale = window->GetScreenCoordinateScale();
 
 	// TODO: Scale spacing values
 	// TODO: Update font size and spacing if window is moved to another screen
@@ -118,17 +142,8 @@ void EditorApp::Initialize(Engine* engine)
 
 	core->Initialize(engine);
 
-	if (userSettings.DeserializeFromFile(EditorConstants::UserSettingsFilePath) == false)
-	{
-		KK_LOG_INFO("Failed to open editor_user_settings.yml, should open project dialog.");
-		return;
-	}
-
 	if (userSettings.lastOpenedProject.empty())
-	{
-		KK_LOG_INFO("Last opened project is empty, should open project dialog.");
 		return;
-	}
 
 	if (OpenProject(userSettings.lastOpenedProject) == false)
 	{
@@ -282,12 +297,12 @@ void EditorApp::DrawMainMenuBar()
 
 		if (ImGui::BeginMenu("Edit"))
 		{
-			if (ImGui::MenuItem("Copy"))
+			if (ImGui::MenuItem("Copy entity"))
 			{
 				core->CopyEntity();
 			}
 
-			if (ImGui::MenuItem("Paste"))
+			if (ImGui::MenuItem("Paste entity"))
 			{
 				core->PasteEntity();
 			}
@@ -477,6 +492,21 @@ void EditorApp::OnProjectChanged()
 	engine->GetMainWindow()->SetWindowTitle(name.GetCStr());
 
 	core->NotifyProjectChanged(&project);
+}
+
+void EditorApp::OnWindowResize(void* app, Window* window, Vec2i size)
+{
+	EditorApp* editorApp = static_cast<EditorApp*>(app);
+	editorApp->userSettings.windowWidth = size.x;
+	editorApp->userSettings.windowHeight = size.y;
+	editorApp->userSettings.SerializeToFile(EditorConstants::UserSettingsFilePath);
+}
+
+void EditorApp::OnWindowMaximize(void* app, Window* window, bool maximized)
+{
+	EditorApp* editorApp = static_cast<EditorApp*>(app);
+	editorApp->userSettings.windowMaximized = maximized;
+	editorApp->userSettings.SerializeToFile(EditorConstants::UserSettingsFilePath);
 }
 
 }
