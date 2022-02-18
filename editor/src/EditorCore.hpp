@@ -56,6 +56,7 @@ public:
 	void LateUpdate();
 	void EndFrame();
 
+	void NewLevel();
 	void OpenLevel(Uid levelAssetUid);
 	void SaveLevel();
 	void SaveLevelAs(const std::filesystem::path& pathRelativeToAssets);

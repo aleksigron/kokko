@@ -34,6 +34,7 @@ bool EditorUserSettings::SerializeToFile(const char* filePath)
 	{
 		char levelUidBuf[Uid::StringLength + 1];
 		lastOpenedLevel.GetValue().WriteTo(ArrayView(levelUidBuf));
+		levelUidBuf[Uid::StringLength] = '\0';
 
 		out << YAML::Key << LastLevelKey;
 		out << YAML::Value << levelUidBuf;
