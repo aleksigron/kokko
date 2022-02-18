@@ -263,7 +263,7 @@ void EditorApp::DrawMainMenuBar()
 			if (ImGui::MenuItem("New level"))
 			{
 				// TODO: Make sure level changes have been saved
-				world->ClearAllEntities();
+				core->NewLevel();
 			}
 
 			if (ImGui::MenuItem("Save level"))

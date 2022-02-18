@@ -146,6 +146,12 @@ void EditorCore::EndFrame()
 		window->requestFocus = false;
 }
 
+void EditorCore::NewLevel()
+{
+	editorContext.world->ClearAllEntities();
+	editorContext.loadedLevel = Optional<Uid>();
+}
+
 void EditorCore::OpenLevel(Uid levelAssetUid)
 {
 	KOKKO_PROFILE_FUNCTION();
