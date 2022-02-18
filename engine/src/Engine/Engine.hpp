@@ -25,6 +25,7 @@ namespace kokko
 class AssetLoader;
 class ModelManager;
 struct ResourceManagers;
+struct WindowSettings;
 }
 
 class Engine
@@ -56,7 +57,7 @@ public:
 		kokko::AssetLoader* assetLoader);
 	~Engine();
 
-	bool Initialize();
+	bool Initialize(const kokko::WindowSettings& windowSettings);
 
 	void StartFrame();
 	void UpdateWorld();

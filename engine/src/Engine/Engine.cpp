@@ -99,13 +99,11 @@ Engine::~Engine()
 	mainWindow.Delete();
 }
 
-bool Engine::Initialize()
+bool Engine::Initialize(const kokko::WindowSettings& windowSettings)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Vec2i windowSize(1920, 1080);
-
-	if (mainWindow.instance->Initialize(windowSize.x, windowSize.y, "Kokko") == false)
+	if (mainWindow.instance->Initialize(windowSettings) == false)
 		return false;
 
 	DebugLog* debugLog = debug.instance->GetLog();

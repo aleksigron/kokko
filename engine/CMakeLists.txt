@@ -291,6 +291,7 @@ set (KOKKO_SOURCES
 	src/System/Time.hpp
 	src/System/Window.cpp
 	src/System/Window.hpp
+	src/System/WindowSettings.hpp
 )
 
 source_group(Dependencies\\cgltf FILES ${CGLTF_SOURCES})

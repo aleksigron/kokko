@@ -11,11 +11,41 @@
 
 #include "System/FilesystemVirtual.hpp"
 #include "System/Window.hpp"
+#include "System/WindowSettings.hpp"
 
 #include "AssetLibrary.hpp"
 #include "EditorApp.hpp"
 #include "EditorAssetLoader.hpp"
 #include "EditorConstants.hpp"
+
+namespace
+{
+kokko::WindowSettings GetWindowSettings(const kokko::editor::EditorUserSettings& userSettings)
+{
+	kokko::WindowSettings windowSettings;
+	windowSettings.width = userSettings.windowWidth;
+	windowSettings.height = userSettings.windowHeight;
+	windowSettings.maximized = userSettings.windowMaximized;
+	windowSettings.title = "Kokko Editor";
+
+	if (windowSettings.width == 0)
+		windowSettings.width = 1920;
+	if (windowSettings.width < 600)
+		windowSettings.width = 600;
+	if (windowSettings.width > (1 << 14))
+		windowSettings.width = (1 << 14);
+
+	if (windowSettings.height == 0)
+		windowSettings.height = 1080;
+	if (windowSettings.height < 400)
+		windowSettings.height = 400;
+	if (windowSettings.height > (1 << 14))
+		windowSettings.height = (1 << 14);
+
+	return windowSettings;
+}
+
+}
 
 int main(int argc, char** argv)
 {
@@ -60,6 +90,9 @@ int main(int argc, char** argv)
 		kokko::editor::AssetLibrary* assetLibrary = editor.GetAssetLibrary();
 		kokko::editor::EditorAssetLoader assetLoader(appAllocator, &filesystem, assetLibrary);
 
+		editor.LoadUserSettings();
+		kokko::WindowSettings windowSettings = GetWindowSettings(editor.GetUserSettings());
+
 		// TODO: Make sure EditorApp GPU resources are released before Engine is destroyed
 		// 
 
@@ -73,7 +106,7 @@ int main(int argc, char** argv)
 
 			res = -1;
 		}
-		else if (engine.Initialize())
+		else if (engine.Initialize(windowSettings))
 		{
 			editor.Initialize(&engine);
 
