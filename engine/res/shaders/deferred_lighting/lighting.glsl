@@ -156,32 +156,35 @@ void main()
 
 	for (int end = dir_count; light_idx < end; ++light_idx)
 	{
-		float view_z = surface_pos.z;
-
-		// Select correct shadow cascade
-		int cascade_index = 0;
-		for (int i = 0; i < shadow_casc_count; ++i)
-			if (shadow_splits[i] <= -view_z && shadow_splits[i + 1] > -view_z)
-				cascade_index = i;
-
+		float shadow_coeff = 1.0;
 		vec3 L = -light_dir[light_idx].xyz;
 		
-		float shadow_coeff = 1.0;
-
 		if (light_shadow[light_idx] == true)
 		{
-			// Get shadow depth
-			vec4 shadow_coord = shadow_mats[cascade_index] * vec4(surface_pos, 1.0);
-			shadow_coord.x = (cascade_index + shadow_coord.x) / shadow_casc_count;
-			float NdotL = max(dot(N, L), 0.0);
-			shadow_coord.z += shadow_bias_offset + clamp(shadow_bias_factor * tan(acos(NdotL)), 0.0, shadow_bias_clamp);
+			float view_depth = -surface_pos.z;
 
-			shadow_coeff = 0.0;
-			for (float y = -1.5; y <= 1.5; y += 1.0)
-				for (float x = -1.5; x <= 1.5; x += 1.0)
-					shadow_coeff += offset_lookup(shadow_map, shadow_coord, vec2(x, y)); 
-					
-			shadow_coeff /= 16.0;
+			// Select correct shadow cascade
+			int cascade_index = -1;
+			for (int i = 0; i < shadow_casc_count; ++i)
+				if (shadow_splits[i] <= view_depth && shadow_splits[i + 1] > view_depth)
+					cascade_index = i;
+
+			if (cascade_index >= 0)
+			{
+
+				// Get shadow depth
+				vec4 shadow_coord = shadow_mats[cascade_index] * vec4(surface_pos, 1.0);
+				shadow_coord.x = (cascade_index + shadow_coord.x) / shadow_casc_count;
+				float NdotL = max(dot(N, L), 0.0);
+				shadow_coord.z += shadow_bias_offset + clamp(shadow_bias_factor * tan(acos(NdotL)), 0.0, shadow_bias_clamp);
+
+				shadow_coeff = 0.0;
+				for (float y = -1.5; y <= 1.5; y += 1.0)
+					for (float x = -1.5; x <= 1.5; x += 1.0)
+						shadow_coeff += offset_lookup(shadow_map, shadow_coord, vec2(x, y)); 
+						
+				shadow_coeff /= 16.0;
+			}
 		}
 		
 		Lo += calc_light(F0, N, V, L, albedo, light_col[light_idx], metalness, roughness) * shadow_coeff;
@@ -209,14 +212,14 @@ void main()
 		Lo += calc_light(F0, N, V, L, albedo, light_col[light_idx], metalness, roughness) * direction_att * distance_att;
 	}
 
-    vec3 F = fresnel_schlick_roughness(max(dot(N, V), 0.0), F0, roughness);
-    vec3 kD = (1.0 - F) * (1.0 - metalness);
+	vec3 F = fresnel_schlick_roughness(max(dot(N, V), 0.0), F0, roughness);
+	vec3 kD = (1.0 - F) * (1.0 - metalness);
 	
 	vec3 v_reflect = reflect(-V, N);
 	vec3 w_reflect = (view_to_world * vec4(v_reflect, 0.0)).xyz;
 
-    const float MAX_REFLECTION_LOD = 5.0;
-    vec3 spec_color = textureLod(spec_irradiance_map, w_reflect, roughness * MAX_REFLECTION_LOD).rgb;
+	const float MAX_REFLECTION_LOD = 5.0;
+	vec3 spec_color = textureLod(spec_irradiance_map, w_reflect, roughness * MAX_REFLECTION_LOD).rgb;
 	vec2 env_brdf = texture(brdf_lut, vec2(max(dot(N, V), 0.0), roughness)).rg;
 	vec3 spec_irr = spec_color * (F * env_brdf.x + env_brdf.y);
 
