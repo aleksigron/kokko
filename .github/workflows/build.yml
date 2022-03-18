@@ -28,7 +28,7 @@ jobs:
               os: ubuntu-latest,
               build_type: release,
               cc: "gcc", cxx: "g++",
-              dependencies: "sudo apt-get install xorg-dev",
+              dependencies: "sudo apt-get update && sudo apt-get install xorg-dev",
               build_product: "kokko-editor"
             }
 
