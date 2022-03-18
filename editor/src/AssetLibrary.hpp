@@ -72,6 +72,8 @@ public:
 private:
 	bool ScanAssets(bool scanEngineAndEditor, bool scanProject);
 
+	uint64_t CalculateHash(AssetType type, ArrayView<const uint8_t> content);
+
 private:
 	Allocator* allocator;
 	Filesystem* filesystem;
