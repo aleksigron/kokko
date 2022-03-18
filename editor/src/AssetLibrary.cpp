@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include "doctest/doctest.h"
+
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
@@ -13,6 +15,10 @@
 #include "EditorConstants.hpp"
 #include "EditorProject.hpp"
 
+namespace kokko
+{
+namespace editor
+{
 namespace
 {
 
@@ -49,12 +55,69 @@ bool WriteDocumentToFile(
 	return result;
 }
 
-} // Anonymous namespace
+bool IsTextAsset(AssetType type)
+{
+	switch (type)
+	{
+	case AssetType::Level:
+	case AssetType::Material:
+	case AssetType::Shader:
+		return true;
+	case AssetType::Model:
+	case AssetType::Texture:
+		return false;
+	default:
+		return false;
+	}
+}
 
-namespace kokko
+void NormalizeLineEndings(ArrayView<const uint8_t> bytes, String& resultOut)
 {
-namespace editor
+	static const StringRef crlf("\r\n");
+
+	size_t count = bytes.GetCount();
+	resultOut.Reserve(count);
+
+	const char* chars = reinterpret_cast<const char*>(bytes.GetData());
+	size_t charIdx = 0;
+	while (charIdx < count)
+	{
+		bool match = false;
+
+		if (charIdx + crlf.len <= count)
+		{
+			match = true;
+			for (size_t i = 0; i < crlf.len; ++i)
+				if (chars[charIdx + i] != crlf[i])
+					match = false;
+		}
+
+		if (match)
+		{
+			resultOut.Append('\n');
+			charIdx += crlf.len;
+		}
+		else
+		{
+			resultOut.Append(chars[charIdx]);
+			charIdx += 1;
+		}
+	}
+}
+
+TEST_CASE("AssetLibrary.NormalizeLineEndings")
 {
+	String result(Allocator::GetDefault());
+
+	const char source[] = "yes\r\nno\nmmaybe\r\n\tnever\r";
+	const char expected[] = "yes\nno\nmmaybe\n\tnever\r";
+	ArrayView<const uint8_t> view(reinterpret_cast<const uint8_t*>(source), sizeof(source) - 1);
+
+	NormalizeLineEndings(view, result);
+	CHECK(std::strcmp(result.GetCStr(), expected) == 0);
+}
+
+} // Anonymous namespace
 
 AssetLibrary::AssetLibrary(Allocator* allocator, Filesystem* filesystem) :
 	allocator(allocator),
@@ -95,7 +158,7 @@ const AssetInfo* AssetLibrary::FindAssetByVirtualPath(const String& virtualPath)
 Optional<Uid> AssetLibrary::CreateAsset(AssetType type, StringRef pathRelativeToAssets, ArrayView<const uint8_t> content)
 {
 	Uid assetUid = Uid::Create();
-	uint64_t calculatedHash = Hash64(content.GetData(), content.GetCount(), 0);
+	uint64_t calculatedHash = CalculateHash(type, content);
 	uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
 	StringRef mount = StringRef(EditorConstants::VirtualMountAssets);
 
@@ -136,7 +199,7 @@ bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> c
 
 	AssetInfo& asset = assets[pair->second];
 
-	uint64_t calculatedHash = Hash64(content.GetData(), content.GetCount(), 0);
+	uint64_t calculatedHash = CalculateHash(asset.type, content);
 
 	if (calculatedHash != asset.contentHash)
 	{
@@ -249,7 +312,7 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 			return;
 		}
 
-		uint64_t calculatedHash = Hash64(fileContent.GetData(), fileContent.GetCount(), 0);
+		uint64_t calculatedHash = CalculateHash(assetType.GetValue(), fileContent.GetView());
 		Uid assetUid;
 
 		// Open meta file
@@ -391,6 +454,22 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 	}
 
 	return true;
+}
+
+uint64_t AssetLibrary::CalculateHash(AssetType type, ArrayView<const uint8_t> content)
+{
+	uint64_t hash = 0;
+	if (IsTextAsset(type))
+	{
+		String normalized(allocator);
+		NormalizeLineEndings(content, normalized);
+		hash = Hash64(normalized.GetData(), normalized.GetLength(), 0);
+	}
+	else
+	{
+		hash = Hash64(content.GetData(), content.GetCount(), 0);
+	}
+	return hash;
 }
 
 AssetInfo::AssetInfo(Allocator* allocator, StringRef virtualMount, StringRef relativePath,
