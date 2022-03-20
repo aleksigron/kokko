@@ -10,10 +10,12 @@
 #include "Core/Uid.hpp"
 
 class Allocator;
-class Filesystem;
 
 namespace kokko
 {
+
+class Filesystem;
+
 namespace editor
 {
 

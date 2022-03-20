@@ -10,7 +10,6 @@
 
 class Allocator;
 class Engine;
-class FilesystemVirtual;
 class Framebuffer;
 class RenderDevice;
 class World;
@@ -21,6 +20,9 @@ struct EngineSettings;
 
 namespace kokko
 {
+
+class Filesystem;
+class FilesystemResolverVirtual;
 
 struct Uid;
 
@@ -35,7 +37,7 @@ enum class EditorWindowType;
 class EditorApp
 {
 public:
-	EditorApp(Allocator* allocator, FilesystemVirtual* filesystem);
+	EditorApp(Allocator* allocator, Filesystem* filesystem, FilesystemResolverVirtual* resolver);
 	EditorApp(const EditorApp&) = delete;
 	EditorApp(EditorApp&&) = delete;
 	~EditorApp();
@@ -79,7 +81,7 @@ private:
 	static void OnWindowMaximize(void* app, Window* window, bool maximized);
 
 	Engine* engine;
-	FilesystemVirtual* virtualFilesystem;
+	FilesystemResolverVirtual* filesystemResolver;
 	Allocator* allocator;
 	RenderDevice* renderDevice;
 	World* world;

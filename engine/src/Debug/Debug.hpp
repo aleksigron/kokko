@@ -14,7 +14,6 @@ class Window;
 class Renderer;
 class World;
 class Framebuffer;
-class Filesystem;
 
 class DebugVectorRenderer;
 class DebugTextRenderer;
@@ -26,6 +25,13 @@ class DebugMemoryStats;
 
 struct ViewRectangle;
 struct CameraParameters;
+
+namespace kokko
+{
+
+class Filesystem;
+
+}
 
 class Debug
 {
@@ -64,7 +70,7 @@ private:
 
 public:
 	Debug(Allocator* allocator, AllocatorManager* allocManager,
-		Window* window, RenderDevice* renderDevice, Filesystem* filesystem);
+		Window* window, RenderDevice* renderDevice, kokko::Filesystem* filesystem);
 	~Debug();
 
 	static Debug* Get() { return singletonInstance; }

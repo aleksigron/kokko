@@ -12,10 +12,16 @@
 #include "Rendering/RenderDeviceEnums.hpp"
 
 class Allocator;
-class Filesystem;
 class RenderDevice;
 
 struct ShaderData;
+
+namespace kokko
+{
+
+class Filesystem;
+
+}
 
 class ShaderLoader
 {
@@ -27,7 +33,7 @@ public:
 	};
 
 	ShaderLoader(Allocator* allocator,
-		Filesystem* filesystem,
+		kokko::Filesystem* filesystem,
 		RenderDevice* renderDevice);
 
 	~ShaderLoader();
@@ -46,7 +52,7 @@ private:
 	static const char* const WhitespaceChars;
 
 	Allocator* allocator;
-	Filesystem* filesystem;
+	kokko::Filesystem* filesystem;
 	RenderDevice* renderDevice;
 
 	HashMap<uint32_t, kokko::String> includeFileCache;

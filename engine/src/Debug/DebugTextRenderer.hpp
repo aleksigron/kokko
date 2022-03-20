@@ -10,11 +10,17 @@
 
 class Allocator;
 class RenderDevice;
-class Filesystem;
 class BitmapFont;
 class ShaderManager;
 class MeshManager;
 class TextureManager;
+
+namespace kokko
+{
+
+class Filesystem;
+
+}
 
 class DebugTextRenderer
 {
@@ -28,7 +34,7 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* renderDevice;
-	Filesystem* filesystem;
+	kokko::Filesystem* filesystem;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
 
@@ -52,7 +58,7 @@ private:
 	bool LoadBitmapFont(TextureManager* textureManager, const char* filePath);
 
 public:
-	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice, Filesystem* filesystem);
+	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice, kokko::Filesystem* filesystem);
 	~DebugTextRenderer();
 
 	bool Initialize(ShaderManager* shaderManager,

@@ -32,14 +32,13 @@
 
 #include "Scripting/ScriptSystem.hpp"
 
-#include "System/FilesystemDefault.hpp"
 #include "System/InputManager.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
 Engine::Engine(
 	AllocatorManager* allocatorManager,
-	Filesystem* filesystem,
+	kokko::Filesystem* filesystem,
 	kokko::AssetLoader* assetLoader) :
 	filesystem(filesystem),
 	assetLoader(assetLoader)

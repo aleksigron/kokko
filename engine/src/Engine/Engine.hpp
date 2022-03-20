@@ -6,7 +6,6 @@
 class Allocator;
 class AllocatorManager;
 class Debug;
-class Filesystem;
 class Framebuffer;
 class RenderDevice;
 class Time;
@@ -23,6 +22,7 @@ struct CameraParameters;
 namespace kokko
 {
 class AssetLoader;
+class Filesystem;
 class ModelManager;
 struct ResourceManagers;
 struct WindowSettings;
@@ -36,7 +36,7 @@ private:
 
 	EngineSettings settings;
 
-	Filesystem* filesystem;
+	kokko::Filesystem* filesystem;
 	kokko::AssetLoader* assetLoader;
 
 	InstanceAllocatorPair<Window> mainWindow;
@@ -53,7 +53,7 @@ private:
 public:
 	Engine(
 		AllocatorManager* allocatorManager,
-		Filesystem* filesystem,
+		kokko::Filesystem* filesystem,
 		kokko::AssetLoader* assetLoader);
 	~Engine();
 
@@ -70,7 +70,7 @@ public:
 	Window* GetMainWindow() { return mainWindow.instance; }
 	RenderDevice* GetRenderDevice() { return renderDevice; }
 	Debug* GetDebug() { return debug.instance; }
-	Filesystem* GetFilesystem() { return filesystem; }
+	kokko::Filesystem* GetFilesystem() { return filesystem; }
 	MeshManager* GetMeshManager() { return meshManager.instance; }
 	kokko::ModelManager* GetModelManager() { return modelManager.instance; }
 	ShaderManager* GetShaderManager() { return shaderManager.instance; }

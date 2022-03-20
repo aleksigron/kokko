@@ -46,7 +46,7 @@ Debug::Debug(
 	AllocatorManager* allocManager,
 	Window* window,
 	RenderDevice* renderDevice,
-	Filesystem* filesystem) :
+	kokko::Filesystem* filesystem) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	window(nullptr),

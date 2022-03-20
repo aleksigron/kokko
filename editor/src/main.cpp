@@ -9,7 +9,8 @@
 
 #include "Rendering/CameraParameters.hpp"
 
-#include "System/FilesystemVirtual.hpp"
+#include "System/Filesystem.hpp"
+#include "System/FilesystemResolverVirtual.hpp"
 #include "System/Window.hpp"
 #include "System/WindowSettings.hpp"
 
@@ -75,18 +76,20 @@ int main(int argc, char** argv)
 		// Initial virtual mount points before editor project is loaded
 
 		Allocator* filesystemAllocator = allocManager->CreateAllocatorScope("Filesystem", defaultAlloc);
-		FilesystemVirtual filesystem(filesystemAllocator);
+		kokko::FilesystemResolverVirtual resolver(filesystemAllocator);
+		kokko::Filesystem filesystem(filesystemAllocator, &resolver);
 
 		using EditorConst = kokko::editor::EditorConstants;
 
-		FilesystemVirtual::MountPoint mounts[] = {
-			FilesystemVirtual::MountPoint{ StringRef(EditorConst::VirtualMountEngine), StringRef("engine/res") },
-			FilesystemVirtual::MountPoint{ StringRef(EditorConst::VirtualMountEditor), StringRef("editor/res") }
+		using MountPoint = kokko::FilesystemResolverVirtual::MountPoint;
+		MountPoint mounts[] = {
+			MountPoint{ StringRef(EditorConst::VirtualMountEngine), StringRef("engine/res") },
+			MountPoint{ StringRef(EditorConst::VirtualMountEditor), StringRef("editor/res") }
 		};
-		filesystem.SetMountPoints(ArrayView(mounts));
+		resolver.SetMountPoints(ArrayView(mounts));
 
 		Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
-		kokko::editor::EditorApp editor(appAllocator, &filesystem);
+		kokko::editor::EditorApp editor(appAllocator, &filesystem, &resolver);
 		kokko::editor::AssetLibrary* assetLibrary = editor.GetAssetLibrary();
 		kokko::editor::EditorAssetLoader assetLoader(appAllocator, &filesystem, assetLibrary);
 
