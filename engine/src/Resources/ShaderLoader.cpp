@@ -417,7 +417,7 @@ bool CompileAndLink(
 const char* const ShaderLoader::LineBreakChars = "\r\n";
 const char* const ShaderLoader::WhitespaceChars = " \t\r\n";
 
-ShaderLoader::ShaderLoader(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
+ShaderLoader::ShaderLoader(Allocator* allocator, kokko::Filesystem* filesystem, RenderDevice* renderDevice) :
 	allocator(allocator),
 	filesystem(filesystem),
 	renderDevice(renderDevice),

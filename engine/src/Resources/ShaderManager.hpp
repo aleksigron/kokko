@@ -12,14 +12,16 @@
 
 #include "Resources/ShaderId.hpp"
 
+class Allocator;
+class RenderDevice;
+
 namespace kokko
 {
-	class AssetLoader;
-}
 
-class Allocator;
+class AssetLoader;
 class Filesystem;
-class RenderDevice;
+
+}
 
 struct ShaderData
 {
@@ -40,7 +42,7 @@ class ShaderManager
 {
 private:
 	Allocator* allocator;
-	Filesystem* filesystem;
+	kokko::Filesystem* filesystem;
 	kokko::AssetLoader* assetLoader;
 	RenderDevice* renderDevice;
 
@@ -63,7 +65,7 @@ private:
 public:
 	ShaderManager(
 		Allocator* allocator,
-		Filesystem* filesystem,
+		kokko::Filesystem* filesystem,
 		kokko::AssetLoader* assetLoader,
 		RenderDevice* renderDevice);
 	~ShaderManager();

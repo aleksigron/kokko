@@ -17,7 +17,7 @@ const ShaderId ShaderId::Null = ShaderId{ 0 };
 
 ShaderManager::ShaderManager(
 	Allocator* allocator,
-	Filesystem* filesystem,
+	kokko::Filesystem* filesystem,
 	kokko::AssetLoader* assetLoader,
 	RenderDevice* renderDevice) :
 	allocator(allocator),

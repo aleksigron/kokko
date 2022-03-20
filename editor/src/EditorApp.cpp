@@ -29,7 +29,8 @@
 
 #include "Resources/ResourceManagers.hpp"
 
-#include "System/FilesystemVirtual.hpp"
+#include "System/Filesystem.hpp"
+#include "System/FilesystemResolverVirtual.hpp"
 #include "System/InputManager.hpp"
 #include "System/Window.hpp"
 
@@ -42,9 +43,9 @@ namespace kokko
 namespace editor
 {
 
-EditorApp::EditorApp(Allocator* allocator, FilesystemVirtual* filesystem) :
+EditorApp::EditorApp(Allocator* allocator, Filesystem* filesystem, FilesystemResolverVirtual* resolver) :
 	engine(nullptr),
-	virtualFilesystem(filesystem),
+	filesystemResolver(resolver),
 	allocator(allocator),
 	renderDevice(nullptr),
 	world(nullptr),
@@ -478,12 +479,13 @@ void EditorApp::OnProjectChanged()
 	std::string assetPathStr = assetPath.u8string();
 	StringRef assetPathRef(assetPathStr.c_str(), assetPathStr.length());
 
-	FilesystemVirtual::MountPoint mounts[] = {
-		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualMountEngine), StringRef("engine/res") },
-		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualMountEditor), StringRef("editor/res") },
-		FilesystemVirtual::MountPoint{ StringRef(EditorConstants::VirtualMountAssets), assetPathRef }
+	using MountPoint = FilesystemResolverVirtual::MountPoint;
+	MountPoint mounts[] = {
+		MountPoint{ StringRef(EditorConstants::VirtualMountEngine), StringRef("engine/res") },
+		MountPoint{ StringRef(EditorConstants::VirtualMountEditor), StringRef("editor/res") },
+		MountPoint{ StringRef(EditorConstants::VirtualMountAssets), assetPathRef }
 	};
-	virtualFilesystem->SetMountPoints(ArrayView(mounts));
+	filesystemResolver->SetMountPoints(ArrayView(mounts));
 
 	const String& name = project.GetName();
 

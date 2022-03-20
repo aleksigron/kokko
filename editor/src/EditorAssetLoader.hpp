@@ -5,10 +5,12 @@
 #include "Resources/AssetLoader.hpp"
 
 class Allocator;
-class Filesystem;
 
 namespace kokko
 {
+
+class Filesystem;
+
 namespace editor
 {
 

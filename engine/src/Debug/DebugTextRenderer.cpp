@@ -29,7 +29,7 @@ struct UniformBlock
 DebugTextRenderer::DebugTextRenderer(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
-	Filesystem* filesystem) :
+	kokko::Filesystem* filesystem) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	filesystem(filesystem),
