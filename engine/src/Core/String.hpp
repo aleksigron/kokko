@@ -36,19 +36,10 @@ public:
 
 	void SetAllocator(Allocator* allocator);
 
-	const char* GetCStr() const
-	{
-		if (string != nullptr)
-			return string;
-		else
-		{
-			// Return pointer to null character even when no memory is allocated
-			return reinterpret_cast<const char*>(&length);
-		}
-	}
+	const char* GetCStr() const { return GetData(); }
 
-	char* GetData() { return string; }
-	const char* GetData() const { return string; }
+	char* GetData() { return string != nullptr ? string : reinterpret_cast<char*>(&length); }
+	const char* GetData() const { return string != nullptr ? string : reinterpret_cast<const char*>(&length); }
 
 	char* Begin() { return string; }
 	const char* Begin() const { return string; }
@@ -94,15 +85,19 @@ String operator+(const String& lhs, const String& rhs);
 String operator+(const String& lhs, const char* rhs);
 String operator+(const char* lhs, const String& rhs);
 
-String operator+(const String& lhs, const char rhs);
-String operator+(const char lhs, const String& rhs);
+String operator+(const String& lhs, char rhs);
+String operator+(char lhs, const String& rhs);
 
 bool operator==(const String& lhs, const String& rhs);
 bool operator==(const String& lhs, const char* rhs);
 bool operator==(const char* lhs, const String& rhs);
+bool operator==(const String& lhs, StringRef rhs);
+bool operator==(StringRef lhs, const String& rhs);
 
 bool operator!=(const String& lhs, const String& rhs);
 bool operator!=(const String& lhs, const char* rhs);
 bool operator!=(const char* lhs, const String& rhs);
+bool operator!=(const String& lhs, StringRef rhs);
+bool operator!=(StringRef lhs, const String& rhs);
 
 }
