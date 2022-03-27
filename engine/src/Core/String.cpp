@@ -3,11 +3,18 @@
 #include <cassert>
 #include <cstring>
 
+#include "doctest/doctest.h"
+
 #include "Core/CString.hpp"
 #include "Core/Hash.hpp"
 #include "Core/StringRef.hpp"
 
 #include "Memory/Allocator.hpp"
+
+doctest::String toString(const kokko::String& value)
+{
+	return doctest::String(value.GetCStr(), static_cast<unsigned int>(value.GetLength()));
+}
 
 namespace kokko
 {
@@ -164,23 +171,26 @@ StringRef String::GetRef() const
 
 void String::Append(StringRef s)
 {
-	size_t requiredLength = length + s.len;
-
-	if (allocated < requiredLength)
+	if (s.len != 0)
 	{
-		size_t newAllocated = CalculateAllocationSize(allocated, requiredLength);
+		size_t requiredLength = length + s.len;
 
-		char* newString = static_cast<char*>(allocator->Allocate(newAllocated + 1));
-		std::memcpy(newString, string, length);
-		allocator->Deallocate(string);
+		if (allocated < requiredLength)
+		{
+			size_t newAllocated = CalculateAllocationSize(allocated, requiredLength);
 
-		string = newString;
-		allocated = newAllocated;
+			char* newString = static_cast<char*>(allocator->Allocate(newAllocated + 1));
+			std::memcpy(newString, string, length);
+			allocator->Deallocate(string);
+
+			string = newString;
+			allocated = newAllocated;
+		}
+
+		std::memcpy(string + length, s.str, s.len);
+		string[requiredLength] = '\0';
+		length = requiredLength;
 	}
-
-	std::memcpy(string + length, s.str, s.len);
-	string[requiredLength] = '\0';
-	length = requiredLength;
 }
 
 void String::Append(const String& s)
@@ -320,6 +330,17 @@ String operator+(const String& lhs, StringRef rhs)
 	return result;
 }
 
+TEST_CASE("String.operator+(const String&, StringRef)")
+{
+	Allocator* a = Allocator::GetDefault();
+
+	CHECK((String(a) + StringRef("")).GetLength() == 0);
+	CHECK((String(a, "") + StringRef("")).GetLength() == 0);
+	CHECK(String(a, "Test") + StringRef("") == String(a, "Test"));
+	CHECK(String(a) + StringRef("Test") == String(a, "Test"));
+	CHECK(String(a, "Test ") + StringRef("string") == String(a, "Test string"));
+}
+
 String operator+(StringRef lhs, const String& rhs)
 {
 	String result(rhs.allocator);
@@ -335,6 +356,17 @@ String operator+(StringRef lhs, const String& rhs)
 	}
 
 	return result;
+}
+
+TEST_CASE("String.operator+(StringRef, const String&)")
+{
+	Allocator* a = Allocator::GetDefault();
+
+	CHECK((StringRef("") + String(a)).GetLength() == 0);
+	CHECK((StringRef("") + String(a, "")).GetLength() == 0);
+	CHECK(StringRef("") + String(a, "Test") == String(a, "Test"));
+	CHECK(StringRef("Test") + String(a) == String(a, "Test"));
+	CHECK(StringRef("Test ") + String(a, "string") == String(a, "Test string"));
 }
 
 String operator+(const String& lhs, const String& rhs)
@@ -357,37 +389,72 @@ String operator+(const String& lhs, const char rhs)
 	return operator+(lhs, StringRef(&rhs, 1));
 }
 
-String operator+(const char lhs, const String& rhs)
+String operator+(char lhs, const String& rhs)
 {
 	return operator+(StringRef(&lhs, 1), rhs);
 }
 
 bool operator==(const String& lhs, const String& rhs)
 {
-	if (lhs.GetLength() == rhs.GetLength())
-	{
-		for (size_t i = 0, len = lhs.GetLength(); i < len; ++i)
-			if (lhs[i] != rhs[i])
-				return false;
-
-		return true;
-	}
-	else
-		return false;
+	return operator==(lhs.GetRef(), rhs);
 }
 
 bool operator==(const String& lhs, const char* rhs)
 {
-	for (size_t i = 0, len = lhs.GetLength(); i < len; ++i)
-		if (lhs[i] != rhs[i] || lhs[i] == '\0')
-			return false;
-
-	return true;
+	return lhs == StringRef(rhs);
 }
 
 bool operator==(const char* lhs, const String& rhs)
 {
 	return operator==(rhs, lhs); // Swap arguments
+}
+
+bool operator==(const String& lhs, StringRef rhs)
+{
+	return operator==(rhs, lhs);
+}
+
+bool operator==(StringRef lhs, const String& rhs)
+{
+	size_t length = rhs.GetLength();
+
+	if (lhs.len != length)
+		return false;
+
+	for (size_t i = 0; i < length; ++i)
+		if (lhs[i] != rhs[i])
+			return false;
+
+	return true;
+}
+
+TEST_CASE("String.operator==")
+{
+	Allocator* a = Allocator::GetDefault();
+
+	CHECK(String() == String());
+	CHECK(String(a) == String(a));
+	CHECK(String(a, "") == String(a, ""));
+	CHECK(String(a, "") == String());
+
+	CHECK((String(a, "T") == String(a, "T")) == true);
+	CHECK((String(a, "T") == String(a, "")) == false);
+
+	CHECK((String(a, "Test") == String(a, "Test")) == true);
+	CHECK((String(a, "Test") == String(a, "Tes ")) == false);
+	CHECK((String(a, "Test") == String(a, "Tes")) == false);
+	CHECK((String(a, "Test") == String(a, "Tests")) == false);
+
+	String testStr(a, "Test string");
+	CHECK((testStr == StringRef("Test string")) == true);
+	CHECK((testStr == StringRef("")) == false);
+	CHECK((testStr == StringRef("Test strin")) == false);
+	CHECK((testStr == StringRef("Test strings")) == false);
+
+	String emptyStr(a);
+	CHECK((emptyStr == "") == true);
+	CHECK((emptyStr == "T") == false);
+	CHECK((emptyStr == "Test string") == false);
 }
 
 bool operator!=(const String& lhs, const String& rhs)
@@ -401,6 +468,16 @@ bool operator!=(const String& lhs, const char* rhs)
 }
 
 bool operator!=(const char* lhs, const String& rhs)
+{
+	return operator==(lhs, rhs) == false;
+}
+
+bool operator!=(const String& lhs, StringRef rhs)
+{
+	return operator==(lhs, rhs) == false;
+}
+
+bool operator!=(StringRef lhs, const String& rhs)
 {
 	return operator==(lhs, rhs) == false;
 }
