@@ -10,6 +10,10 @@
 
 class Allocator;
 
+struct TextureId;
+
+struct ImVec2;
+
 namespace kokko
 {
 namespace editor
@@ -33,20 +37,29 @@ public:
 
 private:
 	void SetUpColumns(int columnCount, float columnWidth);
-	void DrawEntry(EditorContext& context, const std::filesystem::directory_iterator& entry, float columnWidth);
+	void DrawRootEntry(EditorContext& context, float columnWidth, const char* name);
+	void DrawEntry(
+		EditorContext& context,
+		const std::filesystem::directory_entry& entry,
+		float columnWidth,
+		const char* overrideName);
+
+	void DrawIconAndName(ImVec2 startPos, TextureId icon, float iconSize, const char* name);
 
 	void MoveToPath(EditorContext& context, const std::filesystem::path& path);
 	void SelectPath(EditorContext& context, const std::filesystem::path& path, bool editAsset);
 
-	const String& ConvertPath(const std::filesystem::path& relativePath);
-	Optional<std::filesystem::path> MakePathRelative(
-		const EditorContext& context, const std::filesystem::path& absolute);
+	// Absolute path is any path that comes from std::filesystem::directory_entry
+	Optional<String> AbsolutePathToVirtual(EditorContext& context, StringRef absolute);
+	Optional<StringRef> AbsolutePathToRelative(EditorContext& context, StringRef absolute);
+	String RelativePathToVirtual(StringRef path) const;
 
 	Allocator* allocator;
 
-	StringRef currentVirtualPath;
-	std::filesystem::path currentDirectory;
-	std::filesystem::path selectedPath;
+	String currentVirtualRoot;
+	String currentDirectory;
+	String selectedPath;
+	std::filesystem::path selectedPathFs; // Used to simplify checking for selected file
 
 	const EditorImages* editorImages;
 

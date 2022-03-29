@@ -4,6 +4,8 @@
 
 #include "Core/Core.hpp"
 
+#include "System/FilesystemResolver.hpp"
+
 #include "AssetLibrary.hpp"
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
@@ -18,7 +20,9 @@ namespace editor
 AssetBrowserView::AssetBrowserView(Allocator* allocator) :
 	EditorWindow("Asset Browser"),
 	allocator(allocator),
-	currentVirtualPath(EditorConstants::VirtualMountAssets),
+	currentVirtualRoot(allocator),
+	currentDirectory(allocator),
+	selectedPath(allocator),
 	editorImages(nullptr),
 	pathStore(allocator)
 {
@@ -35,8 +39,9 @@ void AssetBrowserView::Initialize(const EditorImages* editorImages)
 
 void AssetBrowserView::OnEditorProjectChanged(const EditorContext& context)
 {
-	currentDirectory = std::filesystem::path();
-	selectedPath = std::filesystem::path();
+	currentVirtualRoot.Clear();
+	currentDirectory.Clear();
+	selectedPath.Clear();
 }
 
 void AssetBrowserView::Update(EditorContext& context)
@@ -49,24 +54,40 @@ void AssetBrowserView::Update(EditorContext& context)
 
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
-			// TODO: Allow user to select engine resources or project assets folders at the folder first level
-
 			if (context.project != nullptr)
 			{
 				const fs::path& root = context.project->GetAssetPath();
 
 				if (ImGui::Button("Go to parent"))
 				{
-					MoveToPath(context, currentDirectory.parent_path());
+					if (currentDirectory.GetLength() == 0)
+						currentVirtualRoot.Clear();
+					else
+					{
+						intptr_t slash = currentDirectory.GetRef().FindLast(StringRef("/"));
+
+						if (slash > 0)
+							currentDirectory.Resize(slash);
+						else
+							currentDirectory.Clear();
+					}
+					selectedPath.Clear();
+					selectedPathFs.clear();
 				}
 
 				ImGui::SameLine();
 
-				std::string curPathStr = currentDirectory.u8string();
+				String curDirStr(allocator);
+				curDirStr.Append(currentVirtualRoot);
+				if (currentDirectory.GetLength() != 0)
+				{
+					curDirStr.Append('/');
+					curDirStr.Append(currentDirectory);
+				}
 
 				ImGuiInputTextFlags dirTextFlags = ImGuiInputTextFlags_ReadOnly;
 				ImGui::SetNextItemWidth(-FLT_MIN);
-				ImGui::InputText("##AssetBrowserPath", curPathStr.data(), curPathStr.length(), dirTextFlags);
+				ImGui::InputText("##AssetBrowserPath", curDirStr.GetData(), curDirStr.GetLength() + 1, dirTextFlags);
 
 				ImGuiStyle& style = ImGui::GetStyle();
 				float scrollbarWidth = style.ScrollbarSize;
@@ -85,13 +106,45 @@ void AssetBrowserView::Update(EditorContext& context)
 				{
 					SetUpColumns(columnCount, columnWidth);
 
-					int index = 1;
-					fs::path currentDirAbsolute = context.project->GetAssetPath() / currentDirectory;
-					for (fs::directory_iterator itr(currentDirAbsolute), end; itr != end; ++itr, ++index)
+					if (currentVirtualRoot.GetLength() == 0)
 					{
-						ImGui::PushID(index);
-						DrawEntry(context, itr, columnWidth);
-						ImGui::PopID();
+						static const char* const mounts[] = { "engine", "assets" };
+						
+						size_t count = sizeof(mounts) / sizeof(mounts[0]);
+						for (size_t i = 0; i < count; ++i)
+						{
+							ImGui::PushID(static_cast<int>(i));
+							DrawRootEntry(context, columnWidth, mounts[i]);
+							ImGui::PopID();
+						}
+					}
+					else
+					{
+						String virtualPath = RelativePathToVirtual(currentDirectory.GetRef());
+
+						int index = 1;
+						FilesystemResolver* resolver = context.filesystemResolver;
+						if (resolver->ResolvePath(virtualPath.GetCStr(), context.temporaryString))
+						{
+							fs::path currentDirAbsolute = context.temporaryString.GetCStr();
+							for (fs::directory_iterator itr(currentDirAbsolute), end; itr != end; ++itr, ++index)
+							{
+								ImGui::PushID(index);
+								DrawEntry(context, *itr, columnWidth, nullptr);
+								ImGui::PopID();
+							}
+						}
+
+						/*
+						* Notes
+						* 1. Root virtual folders engine and assets
+						* 2. Root virtual folder doesn't need to get resolved to display in a list
+						* 3. Once a root virtual folder is moved into, it needs to be resolved to real path in order to iterate through it's children
+						* 4. currentDirectory and selectedPath need to be stored as virtual paths
+						* 5. When a directory entry is shown it can use the full path from the entry
+						* 6. Moving into one of the directories or selecting a file or directory requires us to convert the full patch to a virtual path
+						* 7. How to find the correct virtual root? Maybe save the virtual root folder when we enter it. 
+						*/
 					}
 
 					ImGui::EndTable();
@@ -124,29 +177,49 @@ void AssetBrowserView::SetUpColumns(int columnCount, float columnWidth)
 	}
 }
 
+void AssetBrowserView::DrawRootEntry(EditorContext& context, float columnWidth, const char* name)
+{
+	ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
+	bool selected = selectedPath == name;
+	ImGui::TableNextColumn();
+	ImVec2 buttonSize(columnWidth, columnWidth);
+	ImVec2 cursorStartPos = ImGui::GetCursorPos();
+	if (ImGui::Selectable("##AssetBrowserItem", selected, selectableFlags, buttonSize))
+	{
+		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+		{
+			currentVirtualRoot.Assign(name);
+			selectedPath.Clear();
+		}
+		else
+		{
+			selectedPath.Assign(name);
+		}
+	}
+
+	DrawIconAndName(cursorStartPos, editorImages->folderIcon, columnWidth, name);
+}
+
 void AssetBrowserView::DrawEntry(
 	EditorContext& context,
-	const std::filesystem::directory_iterator& entry,
-	float columnWidth)
+	const std::filesystem::directory_entry& entry,
+	float columnWidth,
+	const char* overrideName)
 {
 	namespace fs = std::filesystem;
 
-	bool isDir = entry->is_directory();
-	bool isFile = entry->is_regular_file();
+	bool isDir = entry.is_directory();
+	bool isFile = entry.is_regular_file();
 
-	if (isFile && entry->path().extension() == EditorConstants::MetadataExtension)
+	if (isFile && entry.path().extension() == EditorConstants::MetadataExtension)
 		return;
 
-	ImGui::TableNextColumn();
-	
-	auto relativeResult = MakePathRelative(context, entry->path());
-	if (relativeResult.HasValue() == false)
-		return;
-
-	const std::filesystem::path& relativePath = relativeResult.GetValue();
+	const std::filesystem::path& entryPath = entry.path();
 
 	ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
-	bool selected = relativePath == selectedPath;
+	bool selected = entryPath == selectedPathFs;
+	
+	ImGui::TableNextColumn();
 
 	ImVec2 buttonSize(columnWidth, columnWidth);
 	ImVec2 cursorStartPos = ImGui::GetCursorPos();
@@ -156,33 +229,37 @@ void AssetBrowserView::DrawEntry(
 		if (isFile)
 		{
 			bool editAsset = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-			SelectPath(context, relativePath, editAsset);
+			SelectPath(context, entryPath, editAsset);
 		}
 		else if (isDir)
 		{
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			{
-				MoveToPath(context, relativePath);
+				MoveToPath(context, entryPath);
 			}
 			else
 			{
-				SelectPath(context, relativePath, false);
+				SelectPath(context, entryPath, false);
 			}
 		}
 	}
 
-	std::string fileStr = relativePath.filename().u8string();
+	std::string fileStr;
+	
+	if (overrideName)
+		fileStr = overrideName;
+	else
+		fileStr = entryPath.filename().u8string();
 
 	if (isFile)
 	{
 		if (ImGui::BeginDragDropSource())
 		{
-			auto relativeResult = MakePathRelative(context, entry->path());
-			if (relativeResult.HasValue())
+			std::string absolutePath = entryPath.u8string();
+			auto result = AbsolutePathToVirtual(context, StringRef(absolutePath.c_str(), absolutePath.length()));
+			if (result.HasValue())
 			{
-				const std::filesystem::path& relativePath = relativeResult.GetValue();
-
-				if (auto asset = context.assetLibrary->FindAssetByVirtualPath(ConvertPath(relativePath)))
+				if (auto asset = context.assetLibrary->FindAssetByVirtualPath(result.GetValue()))
 				{
 					Uid uid = asset->GetUid();
 					ImGui::SetDragDropPayload(EditorConstants::AssetDragDropType, &uid, sizeof(Uid));
@@ -196,78 +273,109 @@ void AssetBrowserView::DrawEntry(
 	}
 
 	TextureId texId = isDir ? editorImages->folderIcon : editorImages->genericFileIcon;
-	void* image = editorImages->GetImGuiTextureId(texId);
+	DrawIconAndName(cursorStartPos, texId, columnWidth, fileStr.c_str());
+}
+
+void AssetBrowserView::DrawIconAndName(ImVec2 startPos, TextureId icon, float iconSize, const char* name)
+{
+	void* image = editorImages->GetImGuiTextureId(icon);
 	ImVec2 uv0(0.0f, 1.0f);
 	ImVec2 uv1(1.0f, 0.0f);
 
-	ImGui::SetCursorPos(cursorStartPos);
-	ImGui::Image(image, buttonSize, uv0, uv1);
+	ImGui::SetCursorPos(startPos);
+	ImGui::Image(image, ImVec2(iconSize, iconSize), uv0, uv1);
 
-	ImGui::TextWrapped("%s", fileStr.c_str());
+	ImGui::TextWrapped(name);
 	ImGui::Spacing();
 }
 
 void AssetBrowserView::MoveToPath(EditorContext& context, const std::filesystem::path& path)
 {
-	currentDirectory = path;
-	selectedPath = std::filesystem::path();
+	std::string absolutePath = path.u8string();
+	auto result = AbsolutePathToRelative(context, StringRef(absolutePath.c_str(), absolutePath.length()));
+	if (result.HasValue() == false)
+		return;
 
-	context.selectedAsset = Optional<Uid>();
+	currentDirectory.Assign(result.GetValue());
+	currentDirectory.Replace('\\', '/');
+
+	selectedPath.Clear();
+	selectedPathFs.clear();
 }
 
 void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem::path& path, bool editAsset)
 {
-	selectedPath = path;
-
-	if (path.empty() == false)
+	std::string absolutePath = path.u8string();
+	auto result = AbsolutePathToRelative(context, StringRef(absolutePath.c_str(), absolutePath.length()));
+	if (result.HasValue())
 	{
-		auto asset = context.assetLibrary->FindAssetByVirtualPath(ConvertPath(path));
+		selectedPath.Assign(result.GetValue());
+		selectedPathFs = path;
 
-		if (asset != nullptr)
+		if (selectedPath.GetLength() != 0)
 		{
-			context.selectedAsset = asset->GetUid();
+			String virtualPath = RelativePathToVirtual(selectedPath.GetRef());
+			auto asset = context.assetLibrary->FindAssetByVirtualPath(virtualPath);
 
-			if (editAsset)
+			if (asset != nullptr)
 			{
-				if (asset->GetType() == AssetType::Level)
-					context.requestLoadLevel = asset->GetUid();
-				else
-					context.editingAsset = asset->GetUid();
-			}
+				context.selectedAsset = asset->GetUid();
 
-			return;
+				if (editAsset)
+				{
+					if (asset->GetType() == AssetType::Level)
+						context.requestLoadLevel = asset->GetUid();
+					else
+						context.editingAsset = asset->GetUid();
+				}
+			}
 		}
 	}
 
 	context.selectedAsset = Optional<Uid>();
 }
 
-const String& AssetBrowserView::ConvertPath(const std::filesystem::path& from)
+Optional<String> AssetBrowserView::AbsolutePathToVirtual(EditorContext& context, StringRef absolute)
 {
-	std::string pathStr = from.generic_u8string();
-	
-	pathStore.Clear();
-	pathStore.Append(currentVirtualPath);
-	pathStore.Append('/');
-	pathStore.Append(StringRef(pathStr.c_str(), pathStr.length()));
+	auto result = AbsolutePathToRelative(context, absolute);
+	if (result.HasValue())
+		return RelativePathToVirtual(result.GetValue());
 
-	return pathStore;
+	return Optional<String>();
 }
 
-Optional<std::filesystem::path> AssetBrowserView::MakePathRelative(const EditorContext& context, const std::filesystem::path& absolute)
+Optional<StringRef> AssetBrowserView::AbsolutePathToRelative(EditorContext& context, StringRef absolute)
 {
-	std::error_code err;
-	std::filesystem::path relativePath = std::filesystem::relative(absolute, context.project->GetAssetPath(), err);
+	String& realRoot = pathStore;
 
-	if (!err)
-	{
-		return relativePath;
-	}
+	// Convert current virtual root to real root
+	if (context.filesystemResolver->ResolvePath(currentVirtualRoot.GetCStr(), realRoot) == false)
+		KK_LOG_ERROR("Current virtual root could not be resolved to real root.");
+	
+	intptr_t first = absolute.FindFirst(realRoot.GetRef());
+
+	if (first == 0)
+		return absolute.SubStr(realRoot.GetLength() + 1);
+	else if (first < 0)
+		KK_LOG_ERROR("Current real root was not found in path.");
 	else
+		KK_LOG_ERROR("Current real root was not at the start of the path.");
+
+	return Optional<StringRef>();
+}
+
+String AssetBrowserView::RelativePathToVirtual(StringRef path) const
+{
+	String str(allocator);
+	str.Append(currentVirtualRoot);
+	if (path.len != 0)
 	{
-		KK_LOG_ERROR("std::filesystem::relative failed. Message: {}", err.message().c_str());
-		return Optional<std::filesystem::path>();
+		str.Append('/');
+		str.Append(path);
+		str.Replace('\\', '/');
 	}
+
+	return str;
 }
 
 }

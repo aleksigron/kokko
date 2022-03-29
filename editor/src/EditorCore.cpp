@@ -27,10 +27,10 @@ namespace kokko
 namespace editor
 {
 
-EditorCore::EditorCore(Allocator* allocator, Filesystem* filesystem) :
+EditorCore::EditorCore(Allocator* allocator, Filesystem* filesystem, FilesystemResolver* resolver) :
 	allocator(allocator),
 	filesystem(filesystem),
-	editorContext(allocator),
+	editorContext(allocator, resolver),
 	assetLibrary(allocator, filesystem),
 	copiedEntity(allocator),
 	editorWindows(allocator),

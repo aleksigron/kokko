@@ -55,7 +55,7 @@ EditorApp::EditorApp(Allocator* allocator, Filesystem* filesystem, FilesystemRes
 	currentMainMenuDialog(MainMenuDialog::None),
 	currentDialogId(0)
 {
-	core = allocator->MakeNew<EditorCore>(allocator, filesystem);
+	core = allocator->MakeNew<EditorCore>(allocator, filesystem, resolver);
 }
 
 EditorApp::~EditorApp()

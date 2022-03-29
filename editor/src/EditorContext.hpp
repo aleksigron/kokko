@@ -13,6 +13,9 @@ struct EngineSettings;
 
 namespace kokko
 {
+
+class FilesystemResolver;
+
 namespace editor
 {
 
@@ -23,6 +26,7 @@ struct EditorContext
 {
 	const EditorProject* project;
 	AssetLibrary* assetLibrary;
+	FilesystemResolver* filesystemResolver;
 
 	World* world;
 	EngineSettings* engineSettings;
@@ -36,9 +40,10 @@ struct EditorContext
 
 	String temporaryString;
 
-	explicit EditorContext(Allocator* allocator) :
+	explicit EditorContext(Allocator* allocator, FilesystemResolver* filesystemResolver) :
 		project(nullptr),
 		assetLibrary(nullptr),
+		filesystemResolver(filesystemResolver),
 		world(nullptr),
 		engineSettings(nullptr),
 		selectedEntity(Entity::Null),
