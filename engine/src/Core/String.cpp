@@ -314,6 +314,13 @@ void String::Clear()
 	}
 }
 
+void String::Replace(char replace, char with)
+{
+	for (size_t i = 0; i < length; ++i)
+		if (string[i] == replace)
+			string[i] = with;
+}
+
 String operator+(const String& lhs, StringRef rhs)
 {
 	String result(lhs.allocator);

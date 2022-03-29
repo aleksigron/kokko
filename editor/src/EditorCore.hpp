@@ -36,7 +36,7 @@ class SceneView;
 class EditorCore
 {
 public:
-	EditorCore(Allocator* allocator, Filesystem* filesystem);
+	EditorCore(Allocator* allocator, Filesystem* filesystem, FilesystemResolver* resolver);
 	~EditorCore();
 
 	void Initialize(Engine* engine);

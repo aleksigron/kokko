@@ -72,6 +72,8 @@ public:
 
 	void Clear();
 
+	void Replace(char replace, char with);
+
 	// To gain access to allocator
 	friend String operator+(const String& lhs, StringRef rhs);
 	friend String operator+(StringRef lhs, const String& rhs);
