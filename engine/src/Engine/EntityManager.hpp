@@ -5,11 +5,11 @@
 #include "Core/HashMap.hpp"
 #include "Core/SortedArray.hpp"
 #include "Core/String.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Engine/Entity.hpp"
 
 class Allocator;
-struct StringRef;
 
 class EntityManager
 {

@@ -2,10 +2,9 @@
 
 #include <cstdint>
 
-#include "Core/Optional.hpp"
 #include "Core/ArrayView.hpp"
-
-struct StringRef;
+#include "Core/Optional.hpp"
+#include "Core/StringRef.hpp"
 
 namespace kokko
 {

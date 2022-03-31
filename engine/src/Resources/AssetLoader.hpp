@@ -4,8 +4,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/Optional.hpp"
-
-struct StringRef;
+#include "Core/StringRef.hpp"
 
 namespace kokko
 {

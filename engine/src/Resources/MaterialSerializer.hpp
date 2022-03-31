@@ -1,12 +1,13 @@
 #pragma once
 
+#include "Core/StringRef.hpp"
+
 class Allocator;
 class MaterialManager;
 class ShaderManager;
 class TextureManager;
 
 struct MaterialId;
-struct StringRef;
 
 namespace kokko
 {

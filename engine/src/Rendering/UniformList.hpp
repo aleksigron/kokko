@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-struct StringRef;
+#include "Core/StringRef.hpp"
 
 namespace kokko
 {

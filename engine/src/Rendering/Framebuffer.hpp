@@ -4,12 +4,11 @@
 
 #include "Core/ArrayView.hpp"
 #include "Core/Optional.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Math/Vec2.hpp"
 
 class RenderDevice;
-
-struct StringRef;
 
 enum class RenderTextureSizedFormat;
 enum class RenderTextureCompareMode;

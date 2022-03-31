@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Optional.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Math/Vec2.hpp"
 

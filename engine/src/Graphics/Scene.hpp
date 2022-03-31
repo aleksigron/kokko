@@ -3,6 +3,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/Array.hpp"
 #include "Core/SortedArray.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Engine/Entity.hpp"
 
@@ -11,8 +12,6 @@
 class Camera;
 class Allocator;
 class TransformUpdateReceiver;
-
-struct StringRef;
 
 struct SceneObjectId
 {

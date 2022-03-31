@@ -3,9 +3,9 @@
 #include <cstddef>
 #include <cstdint>
 
-class Allocator;
+#include "Core/StringRef.hpp"
 
-struct StringRef;
+class Allocator;
 
 namespace kokko
 {

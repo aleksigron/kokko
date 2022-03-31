@@ -1,5 +1,7 @@
 #include "Debug/DebugCulling.hpp"
 
+#include "Core/StringRef.hpp"
+
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
