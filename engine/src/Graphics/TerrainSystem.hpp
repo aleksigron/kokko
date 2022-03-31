@@ -5,6 +5,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Graphics/TerrainQuadTree.hpp"
 #include "Graphics/TerrainTileId.hpp"

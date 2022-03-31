@@ -3,8 +3,7 @@
 #include <filesystem>
 
 #include "Core/String.hpp"
-
-struct StringRef;
+#include "Core/StringRef.hpp"
 
 namespace kokko
 {

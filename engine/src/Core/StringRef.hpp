@@ -3,48 +3,53 @@
 #include <cstddef>
 #include <cstdint>
 
-struct StringRef
+template <typename CharType>
+struct StringRefBase
 {
-	const char* str;
+	CharType* str;
 	size_t len;
 
 	// Create a empty StringRef instance
-	StringRef();
+	StringRefBase();
 
 	// Create a StringRef instance from char pointer and length
-	StringRef(const char* string, size_t length);
+	StringRefBase(CharType* string, size_t length);
 
 	// Create a StringRef instance from a c-string
-	explicit StringRef(const char* string);
+	explicit StringRefBase(CharType* string);
 
-	const char& operator[](size_t index) const { return str[index]; }
+	CharType& operator[](size_t index) { return str[index]; }
+	const CharType& operator[](size_t index) const { return str[index]; }
 
 	// Does the other StringRef object reference the same area in memory
-	bool ReferenceEquals(const StringRef& other) const;
+	bool ReferenceEquals(const StringRefBase<CharType>& other) const;
 
 	// Does the other StringRef object contain the same value
-	bool ValueEquals(const StringRef& other) const;
+	bool ValueEquals(const StringRefBase<CharType>& other) const;
 	bool ValueEquals(const char* cstring) const;
 
-	bool operator==(const StringRef& other) const;
-	bool operator!=(const StringRef& other) const;
+	bool operator==(const StringRefBase<CharType>& other) const;
+	bool operator!=(const StringRefBase<CharType>& other) const;
 
 	// Clear this object
 	void Clear();
 
-	bool StartsWith(const StringRef& other) const;
-	bool EndsWith(const StringRef& other) const;
+	bool StartsWith(const StringRefBase<CharType>& other) const;
+	bool EndsWith(const StringRefBase<CharType>& other) const;
 
-	StringRef SubStr(size_t startPos, size_t length = 0) const;
-	StringRef SubStrPos(size_t startPos, intptr_t endPos) const;
+	StringRefBase<CharType> SubStr(size_t startPos, size_t length = 0) const;
+	StringRefBase<CharType> SubStrPos(size_t startPos, intptr_t endPos) const;
 
-	intptr_t FindFirst(const StringRef& str, size_t startAt = 0) const;
+	intptr_t FindFirst(StringRefBase<const CharType> str, size_t startAt = 0) const;
 
 	intptr_t FindFirstOf(const char* chars, size_t startAt = 0) const;
 	intptr_t FindFirstNotOf(const char* chars, size_t startAt = 0) const;
 
-	intptr_t FindLast(const StringRef& str) const;
+	intptr_t FindLast(StringRefBase<const CharType> str) const;
 };
+
+using MutableStringRef = StringRefBase<char>;
+using StringRef = StringRefBase<const char>;
 
 namespace kokko
 {

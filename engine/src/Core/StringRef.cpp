@@ -7,22 +7,25 @@
 
 #include "Core/Hash.hpp"
 
-doctest::String toString(const StringRef& value)
+doctest::String toString(const StringRefBase<const char>& value)
 {
 	return doctest::String(value.str, static_cast<unsigned int>(value.len));
 }
 
-StringRef::StringRef() :
+template <typename CharType>
+StringRefBase<CharType>::StringRefBase() :
 	str(nullptr), len(0)
 {
 }
 
-StringRef::StringRef(const char* string, size_t length) :
+template <typename CharType>
+StringRefBase<CharType>::StringRefBase(CharType* string, size_t length) :
 	str(string), len(length)
 {
 }
 
-StringRef::StringRef(const char* string) :
+template <typename CharType>
+StringRefBase<CharType>::StringRefBase(CharType* string) :
 	str(string)
 {
 	while (*string != '\0')
@@ -31,12 +34,14 @@ StringRef::StringRef(const char* string) :
 	len = static_cast<size_t>(string - str);
 }
 
-bool StringRef::ReferenceEquals(const StringRef& other) const
+template <typename CharType>
+bool StringRefBase<CharType>::ReferenceEquals(const StringRefBase<CharType>& other) const
 {
 	return this->str == other.str && this->len == other.len;
 }
 
-bool StringRef::ValueEquals(const StringRef& other) const
+template <typename CharType>
+bool StringRefBase<CharType>::ValueEquals(const StringRefBase<CharType>& other) const
 {
 	if (len != other.len || str == nullptr || other.str == nullptr)
 		return false;
@@ -48,7 +53,8 @@ bool StringRef::ValueEquals(const StringRef& other) const
 	return true;
 }
 
-bool StringRef::ValueEquals(const char* cstring) const
+template <typename CharType>
+bool StringRefBase<CharType>::ValueEquals(const char* cstring) const
 {
 	if (str == nullptr || cstring == nullptr)
 		return false;
@@ -62,22 +68,24 @@ bool StringRef::ValueEquals(const char* cstring) const
 		++i;
 	}
 
-	// The strings match for the length of this StringRef
+	// The strings match for the length of this StringRefBase
 	// If cstring too ends here, the strings are equal
 	return cstring[i] == '\0';
 }
 
-bool StringRef::operator==(const StringRef& other) const
+template <typename CharType>
+bool StringRefBase<CharType>::operator==(const StringRefBase<CharType>& other) const
 {
 	return this->ValueEquals(other);
 }
 
-bool StringRef::operator!=(const StringRef& other) const
+template <typename CharType>
+bool StringRefBase<CharType>::operator!=(const StringRefBase<CharType>& other) const
 {
 	return this->ValueEquals(other) == false;
 }
 
-TEST_CASE("StringRef can test for equality")
+TEST_CASE("StringRefBase can test for equality")
 {
 	const char* str1 = "Test string";
 	const char* str2 = "Test string";
@@ -99,13 +107,15 @@ TEST_CASE("StringRef can test for equality")
 	CHECK(ref3.ReferenceEquals(ref4) == false);
 }
 
-void StringRef::Clear()
+template <typename CharType>
+void StringRefBase<CharType>::Clear()
 {
 	str = nullptr;
 	len = 0;
 }
 
-bool StringRef::StartsWith(const StringRef& other) const
+template <typename CharType>
+bool StringRefBase<CharType>::StartsWith(const StringRefBase& other) const
 {
 	if (this->len < other.len)
 		return false;
@@ -117,7 +127,8 @@ bool StringRef::StartsWith(const StringRef& other) const
 	return true;
 }
 
-bool StringRef::EndsWith(const StringRef& other) const
+template <typename CharType>
+bool StringRefBase<CharType>::EndsWith(const StringRefBase& other) const
 {
 	if (len < other.len)
 		return false;
@@ -129,7 +140,7 @@ bool StringRef::EndsWith(const StringRef& other) const
 	return true;
 }
 
-TEST_CASE("StringRef can match string start and end")
+TEST_CASE("StringRefBase can match string start and end")
 {
 	StringRef str("Test string");
 
@@ -142,17 +153,19 @@ TEST_CASE("StringRef can match string start and end")
 	CHECK(str.EndsWith(StringRef("tin")) == false);
 }
 
-StringRef StringRef::SubStr(size_t startPos, size_t length) const
+template <typename CharType>
+StringRefBase<CharType> StringRefBase<CharType>::SubStr(size_t startPos, size_t length) const
 {
 	assert(startPos < len || (startPos == len && length == 0));
 
 	if (length == 0)
 		length = len - startPos;
 
-	return StringRef(str + startPos, length);
+	return StringRefBase<CharType>(str + startPos, length);
 }
 
-StringRef StringRef::SubStrPos(size_t startPos, intptr_t end) const
+template <typename CharType>
+StringRefBase<CharType> StringRefBase<CharType>::SubStrPos(size_t startPos, intptr_t end) const
 {
 	assert(startPos < len || startPos == end);
 	assert(end <= (intptr_t)len);
@@ -160,12 +173,12 @@ StringRef StringRef::SubStrPos(size_t startPos, intptr_t end) const
 	size_t endPos = (end < 0) ? len + end : end;
 	
 	if (endPos < startPos)
-		return StringRef();
+		return StringRefBase();
 
-	return StringRef(str + startPos, endPos - startPos);
+	return StringRefBase<CharType>(str + startPos, endPos - startPos);
 }
 
-TEST_CASE("StringRef can return substrings")
+TEST_CASE("StringRefBase can return substrings")
 {
 	StringRef testString("Test test string");
 
@@ -186,7 +199,8 @@ TEST_CASE("StringRef can return substrings")
 	CHECK(testString.SubStrPos(5, -7) == StringRef("test"));
 }
 
-intptr_t StringRef::FindFirst(const StringRef& find, size_t startAt) const
+template <typename CharType>
+intptr_t StringRefBase<CharType>::FindFirst(StringRefBase<const CharType> find, size_t startAt) const
 {
 	for (size_t sourceIdx = startAt; sourceIdx < len; ++sourceIdx)
 	{
@@ -211,7 +225,7 @@ intptr_t StringRef::FindFirst(const StringRef& find, size_t startAt) const
 	return -1;
 }
 
-TEST_CASE("StringRef can find substrings")
+TEST_CASE("StringRefBase can find substrings")
 {
 	StringRef str("Test string");
 
@@ -221,7 +235,8 @@ TEST_CASE("StringRef can find substrings")
 	CHECK(str.FindFirst(StringRef("ing"), 8) == 8);
 }
 
-intptr_t StringRef::FindFirstOf(const char* chars, size_t startAt) const
+template <typename CharType>
+intptr_t StringRefBase<CharType>::FindFirstOf(const char* chars, size_t startAt) const
 {
 	size_t charCount = std::strlen(chars);
 
@@ -233,7 +248,8 @@ intptr_t StringRef::FindFirstOf(const char* chars, size_t startAt) const
 	return -1;
 }
 
-intptr_t StringRef::FindFirstNotOf(const char* chars, size_t startAt) const
+template <typename CharType>
+intptr_t StringRefBase<CharType>::FindFirstNotOf(const char* chars, size_t startAt) const
 {
 	size_t charCount = std::strlen(chars);
 
@@ -252,7 +268,7 @@ intptr_t StringRef::FindFirstNotOf(const char* chars, size_t startAt) const
 	return -1;
 }
 
-TEST_CASE("StringRef can find chars")
+TEST_CASE("StringRefBase can find chars")
 {
 	StringRef str("Test string");
 
@@ -275,7 +291,8 @@ TEST_CASE("StringRef can find chars")
 	CHECK(str.FindFirstNotOf("T", 10) == 10);
 }
 
-intptr_t StringRef::FindLast(const StringRef& find) const
+template <typename CharType>
+intptr_t StringRefBase<CharType>::FindLast(StringRefBase<const CharType> find) const
 {
 	for (intptr_t sourceIdx = len - find.len; sourceIdx >= 0; --sourceIdx)
 	{
@@ -297,7 +314,7 @@ intptr_t StringRef::FindLast(const StringRef& find) const
 	return -1;
 }
 
-TEST_CASE("StringRef can find last substring")
+TEST_CASE("StringRefBase can find last substring")
 {
 	StringRef str("Test str str");
 
@@ -314,3 +331,6 @@ uint32_t Hash32(const StringRef& value, uint32_t seed)
 	return Hash32(value.str, value.len, seed);
 }
 }
+
+template class StringRefBase<char>;
+template class StringRefBase<const char>;

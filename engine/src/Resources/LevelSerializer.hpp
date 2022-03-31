@@ -2,6 +2,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/ArrayView.hpp"
+#include "Core/StringRef.hpp"
 
 #include "Resources/ResourceManagers.hpp"
 
@@ -12,7 +13,6 @@ class TransformSerializer;
 
 struct Entity;
 struct SceneObjectId;
-struct StringRef;
 
 namespace YAML
 {

@@ -2,13 +2,13 @@
 
 #include <cstddef>
 
+#include "Core/StringRef.hpp"
+
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
 
 class Allocator;
 class TextureManager;
-
-struct StringRef;
 
 struct BitmapGlyph
 {

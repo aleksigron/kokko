@@ -4,6 +4,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
+#include "Core/StringRef.hpp"
 #include "Core/Uid.hpp"
 
 #include "Math/Mat4x4.hpp"
@@ -12,7 +13,6 @@
 
 class Allocator;
 class MeshManager;
-struct StringRef;
 
 namespace kokko
 {
