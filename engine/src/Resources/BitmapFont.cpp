@@ -85,7 +85,7 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 	size_t spacesInLine[7];
 	StringRef tokens[8];
 
-	while (line.IsNonNull())
+	while (line.str != nullptr)
 	{
 		// Find spaces in the line
 
