@@ -41,11 +41,11 @@ public:
 	char* GetData() { return string != nullptr ? string : reinterpret_cast<char*>(&length); }
 	const char* GetData() const { return string != nullptr ? string : reinterpret_cast<const char*>(&length); }
 
-	char* Begin() { return string; }
-	const char* Begin() const { return string; }
+	char* begin() { return string; }
+	const char* begin() const { return string; }
 
-	char* End() { return string + length; }
-	const char* End() const { return string + length; }
+	char* end() { return string + length; }
+	const char* end() const { return string + length; }
 
 	size_t GetLength() const { return length; }
 	StringRef GetRef() const;

@@ -330,8 +330,8 @@ String operator+(const String& lhs, StringRef rhs)
 	if (combinedLength > 0)
 	{
 		result.Resize(combinedLength);
-		std::memcpy(result.Begin(), lhs.Begin(), leftLength);
-		std::memcpy(result.Begin() + leftLength, rhs.str, rhs.len);
+		std::memcpy(result.GetData(), lhs.begin(), leftLength);
+		std::memcpy(result.GetData() + leftLength, rhs.str, rhs.len);
 	}
 
 	return result;
@@ -358,8 +358,8 @@ String operator+(StringRef lhs, const String& rhs)
 	if (combinedLength > 0)
 	{
 		result.Resize(combinedLength);
-		std::memcpy(result.Begin(), lhs.str, leftLength);
-		std::memcpy(result.Begin() + leftLength, rhs.GetData(), rightLength);
+		std::memcpy(result.GetData(), lhs.str, leftLength);
+		std::memcpy(result.GetData() + leftLength, rhs.GetData(), rightLength);
 	}
 
 	return result;

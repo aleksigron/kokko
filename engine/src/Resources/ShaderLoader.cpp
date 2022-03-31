@@ -314,7 +314,7 @@ bool Compile(
 			infoLog.Resize(infoLogLength);
 
 			// Print out info log
-			renderDevice->GetShaderStageInfoLog(shaderId, infoLogLength, infoLog.Begin());
+			renderDevice->GetShaderStageInfoLog(shaderId, infoLogLength, infoLog.GetData());
 
 			KK_LOG_ERROR("Shader stage compilation failed:\n{}\nSource:\n{}", infoLog.GetCStr(), source.str);
 		}
@@ -397,7 +397,7 @@ bool CompileAndLink(
 			infoLog.Resize(infoLogLength);
 
 			// Get info log
-			renderDevice->GetShaderProgramInfoLog(programId, infoLogLength, infoLog.Begin());
+			renderDevice->GetShaderProgramInfoLog(programId, infoLogLength, infoLog.GetData());
 
 			KK_LOG_ERROR("Shader program link failed\n{}\n", infoLog.GetCStr());
 		}
