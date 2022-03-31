@@ -205,21 +205,19 @@ void String::Append(const char* s)
 
 void String::Append(char c)
 {
-	if (allocated < length + 1)
-	{
-		size_t newAllocated = CalculateAllocationSize(this->allocated, length + 1);
+	this->Append(StringRef(&c, 1));
+}
 
-		char* newString = static_cast<char*>(allocator->Allocate(newAllocated + 1));
-		std::memcpy(newString, string, length);
-		allocator->Deallocate(string);
+TEST_CASE("String.Append")
+{
+	String str(Allocator::GetDefault());
 
-		string = newString;
-		allocated = newAllocated;
-	}
+	str.Append("test");
+	str.Append(' ');
+	str.Append(StringRef("test "));
+	str.Append(String(Allocator::GetDefault(), "test "));
 
-	string[length] = c;
-	++length;
-	string[length] = '\0';
+	CHECK(str == "test test test ");
 }
 
 void String::Assign(StringRef s)
@@ -238,6 +236,20 @@ void String::Assign(const char* s)
 {
 	Clear();
 	Append(s);
+}
+
+TEST_CASE("String.Assign")
+{
+	String str(Allocator::GetDefault());
+
+	str.Assign("Test");
+	CHECK(str == "Test");
+
+	str.Assign(StringRef("Stuff"));
+	CHECK(str == "Stuff");
+
+	str.Assign(String(Allocator::GetDefault(), "Long string that is long"));
+	CHECK(str == "Long string that is long");
 }
 
 void String::Reserve(size_t reserveLength)
@@ -309,16 +321,25 @@ void String::Clear()
 	length = 0;
 
 	if (string != nullptr)
-	{
 		string[length] = '\0';
-	}
 }
 
 void String::Replace(char replace, char with)
 {
-	for (size_t i = 0; i < length; ++i)
-		if (string[i] == replace)
-			string[i] = with;
+	for (char& c : *this)
+		if (c == replace)
+			c = with;
+}
+
+TEST_CASE("String.Replace")
+{
+	String str1(Allocator::GetDefault(), " test str ");
+	str1.Replace(' ', '_');
+	CHECK(str1 == "_test_str_");
+
+	String str2(Allocator::GetDefault(), " ");
+	str2.Replace(' ', '_');
+	CHECK(str2 == "_");
 }
 
 String operator+(const String& lhs, StringRef rhs)
