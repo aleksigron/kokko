@@ -12,6 +12,30 @@ doctest::String toString(const StringRef& value)
 	return doctest::String(value.str, static_cast<unsigned int>(value.len));
 }
 
+StringRef::StringRef() :
+	str(nullptr), len(0)
+{
+}
+
+StringRef::StringRef(const char* string, size_t length) :
+	str(string), len(length)
+{
+}
+
+StringRef::StringRef(const char* string) :
+	str(string)
+{
+	while (*string != '\0')
+		++string;
+
+	len = static_cast<size_t>(string - str);
+}
+
+bool StringRef::ReferenceEquals(const StringRef& other) const
+{
+	return this->str == other.str && this->len == other.len;
+}
+
 bool StringRef::ValueEquals(const StringRef& other) const
 {
 	if (len != other.len || str == nullptr || other.str == nullptr)
@@ -43,6 +67,16 @@ bool StringRef::ValueEquals(const char* cstring) const
 	return cstring[i] == '\0';
 }
 
+bool StringRef::operator==(const StringRef& other) const
+{
+	return this->ValueEquals(other);
+}
+
+bool StringRef::operator!=(const StringRef& other) const
+{
+	return this->ValueEquals(other) == false;
+}
+
 TEST_CASE("StringRef can test for equality")
 {
 	const char* str1 = "Test string";
@@ -63,6 +97,12 @@ TEST_CASE("StringRef can test for equality")
 	CHECK(ref1.ValueEquals(ref3) == false);
 	CHECK(ref3.ValueEquals(ref4) == true);
 	CHECK(ref3.ReferenceEquals(ref4) == false);
+}
+
+void StringRef::Clear()
+{
+	str = nullptr;
+	len = 0;
 }
 
 bool StringRef::StartsWith(const StringRef& other) const
