@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 namespace EncodingUtf8
 {
@@ -23,11 +23,11 @@ namespace EncodingUtf8
 	/**
 	 * Counts how many unicode characters are in a UTF-8 encoded string.
 	 */
-	size_t CountCharacters(StringRef input);
+	size_t CountCharacters(ConstStringView input);
 
 	/**
 	 * Returns the byte index for the first byte of the last character in a UTF-8
 	 * encoded string. Returns input.len if no valid characters are present.
 	 */
-	size_t FindLastCharacter(StringRef input);
+	size_t FindLastCharacter(ConstStringView input);
 }

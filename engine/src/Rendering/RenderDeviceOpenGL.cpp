@@ -389,7 +389,7 @@ static void DebugMessageCallback(
 		ConvertDebugType(type),
 		id,
 		ConvertDebugSeverity(severity),
-		StringRef(msg, static_cast<unsigned int>(length))
+		ConstStringView(msg, static_cast<unsigned int>(length))
 	};
 
 	if (data->callback)
@@ -407,12 +407,12 @@ void RenderDeviceOpenGL::SetDebugMessageCallback(DebugCallbackFn callback)
 	glDebugMessageCallback(DebugMessageCallback, &debugUserData);
 }
 
-void RenderDeviceOpenGL::SetObjectLabel(RenderObjectType type, unsigned int object, StringRef label)
+void RenderDeviceOpenGL::SetObjectLabel(RenderObjectType type, unsigned int object, ConstStringView label)
 {
 	glObjectLabel(ConvertObjectType(type), object, static_cast<GLsizei>(label.len), label.str);
 }
 
-void RenderDeviceOpenGL::SetObjectPtrLabel(void* ptr, StringRef label)
+void RenderDeviceOpenGL::SetObjectPtrLabel(void* ptr, ConstStringView label)
 {
 	glObjectPtrLabel(ptr, static_cast<GLsizei>(label.len), label.str);
 }
@@ -422,7 +422,7 @@ void RenderDeviceOpenGL::GetIntegerValue(RenderDeviceParameter parameter, int* v
 	glGetIntegerv(ConvertDeviceParameter(parameter), valueOut);
 }
 
-void RenderDeviceOpenGL::PushDebugGroup(unsigned int id, StringRef message)
+void RenderDeviceOpenGL::PushDebugGroup(unsigned int id, ConstStringView message)
 {
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, static_cast<GLsizei>(message.len), message.str);
 }

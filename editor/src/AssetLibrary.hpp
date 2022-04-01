@@ -6,7 +6,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
 #include "Core/String.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 #include "Core/Uid.hpp"
 
 class Allocator;
@@ -33,11 +33,11 @@ enum class AssetType
 class AssetInfo
 {
 public:
-	AssetInfo(Allocator* allocator, StringRef virtualMount, StringRef relativePath,
+	AssetInfo(Allocator* allocator, ConstStringView virtualMount, ConstStringView relativePath,
 		Uid uid, uint64_t contentHash, AssetType type);
 
 	const String& GetVirtualPath() const { return virtualPath; }
-	StringRef GetFilename() const { return filename; }
+	ConstStringView GetFilename() const { return filename; }
 	Uid GetUid() const { return uid; }
 	AssetType GetType() const { return type; }
 
@@ -47,9 +47,9 @@ private:
 	// Holds complete virtual path, lower members are referencing parts of this string
 	String virtualPath;
 
-	StringRef virtualMount;
-	StringRef pathRelativeToMount;
-	StringRef filename;
+	ConstStringView virtualMount;
+	ConstStringView pathRelativeToMount;
+	ConstStringView filename;
 
 	Uid uid;
 	uint64_t contentHash;
@@ -65,7 +65,7 @@ public:
 	const AssetInfo* FindAssetByUid(const Uid& uid);
 	const AssetInfo* FindAssetByVirtualPath(const String& virtualPath);
 
-	Optional<Uid> CreateAsset(AssetType type, StringRef pathRelativeToAssets, ArrayView<const uint8_t> content);
+	Optional<Uid> CreateAsset(AssetType type, ConstStringView pathRelativeToAssets, ArrayView<const uint8_t> content);
 	bool UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> content);
 
 	bool ScanEngineAssets();

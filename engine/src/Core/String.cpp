@@ -7,7 +7,7 @@
 
 #include "Core/CString.hpp"
 #include "Core/Hash.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Memory/Allocator.hpp"
 
@@ -83,7 +83,7 @@ String::String(Allocator* allocator, const char* s) :
 		string = nullptr;
 }
 
-String::String(Allocator* allocator, StringRef s) :
+String::String(Allocator* allocator, ConstStringView s) :
 	allocator(allocator)
 {
 	length = s.len;
@@ -164,12 +164,12 @@ String& String::operator+=(const String& append)
 	return *this;
 }
 
-StringRef String::GetRef() const
+ConstStringView String::GetRef() const
 {
-	return StringRef(string, length);
+	return ConstStringView(string, length);
 }
 
-void String::Append(StringRef s)
+void String::Append(ConstStringView s)
 {
 	if (s.len != 0)
 	{
@@ -200,12 +200,12 @@ void String::Append(const String& s)
 
 void String::Append(const char* s)
 {
-	this->Append(StringRef(s));
+	this->Append(ConstStringView(s));
 }
 
 void String::Append(char c)
 {
-	this->Append(StringRef(&c, 1));
+	this->Append(ConstStringView(&c, 1));
 }
 
 TEST_CASE("String.Append")
@@ -214,13 +214,13 @@ TEST_CASE("String.Append")
 
 	str.Append("test");
 	str.Append(' ');
-	str.Append(StringRef("test "));
+	str.Append(ConstStringView("test "));
 	str.Append(String(Allocator::GetDefault(), "test "));
 
 	CHECK(str == "test test test ");
 }
 
-void String::Assign(StringRef s)
+void String::Assign(ConstStringView s)
 {
 	Clear();
 	Append(s);
@@ -245,7 +245,7 @@ TEST_CASE("String.Assign")
 	str.Assign("Test");
 	CHECK(str == "Test");
 
-	str.Assign(StringRef("Stuff"));
+	str.Assign(ConstStringView("Stuff"));
 	CHECK(str == "Stuff");
 
 	str.Assign(String(Allocator::GetDefault(), "Long string that is long"));
@@ -342,7 +342,7 @@ TEST_CASE("String.Replace")
 	CHECK(str2 == "_");
 }
 
-String operator+(const String& lhs, StringRef rhs)
+String operator+(const String& lhs, ConstStringView rhs)
 {
 	String result(lhs.allocator);
 	size_t leftLength = lhs.GetLength();
@@ -358,18 +358,18 @@ String operator+(const String& lhs, StringRef rhs)
 	return result;
 }
 
-TEST_CASE("String.operator+(const String&, StringRef)")
+TEST_CASE("String.operator+(const String&, ConstStringView)")
 {
 	Allocator* a = Allocator::GetDefault();
 
-	CHECK((String(a) + StringRef("")).GetLength() == 0);
-	CHECK((String(a, "") + StringRef("")).GetLength() == 0);
-	CHECK(String(a, "Test") + StringRef("") == String(a, "Test"));
-	CHECK(String(a) + StringRef("Test") == String(a, "Test"));
-	CHECK(String(a, "Test ") + StringRef("string") == String(a, "Test string"));
+	CHECK((String(a) + ConstStringView("")).GetLength() == 0);
+	CHECK((String(a, "") + ConstStringView("")).GetLength() == 0);
+	CHECK(String(a, "Test") + ConstStringView("") == String(a, "Test"));
+	CHECK(String(a) + ConstStringView("Test") == String(a, "Test"));
+	CHECK(String(a, "Test ") + ConstStringView("string") == String(a, "Test string"));
 }
 
-String operator+(StringRef lhs, const String& rhs)
+String operator+(ConstStringView lhs, const String& rhs)
 {
 	String result(rhs.allocator);
 	size_t leftLength = lhs.len;
@@ -386,15 +386,15 @@ String operator+(StringRef lhs, const String& rhs)
 	return result;
 }
 
-TEST_CASE("String.operator+(StringRef, const String&)")
+TEST_CASE("String.operator+(ConstStringView, const String&)")
 {
 	Allocator* a = Allocator::GetDefault();
 
-	CHECK((StringRef("") + String(a)).GetLength() == 0);
-	CHECK((StringRef("") + String(a, "")).GetLength() == 0);
-	CHECK(StringRef("") + String(a, "Test") == String(a, "Test"));
-	CHECK(StringRef("Test") + String(a) == String(a, "Test"));
-	CHECK(StringRef("Test ") + String(a, "string") == String(a, "Test string"));
+	CHECK((ConstStringView("") + String(a)).GetLength() == 0);
+	CHECK((ConstStringView("") + String(a, "")).GetLength() == 0);
+	CHECK(ConstStringView("") + String(a, "Test") == String(a, "Test"));
+	CHECK(ConstStringView("Test") + String(a) == String(a, "Test"));
+	CHECK(ConstStringView("Test ") + String(a, "string") == String(a, "Test string"));
 }
 
 String operator+(const String& lhs, const String& rhs)
@@ -404,22 +404,22 @@ String operator+(const String& lhs, const String& rhs)
 
 String operator+(const String& lhs, const char* rhs)
 {
-	return operator+(lhs, StringRef(rhs));
+	return operator+(lhs, ConstStringView(rhs));
 }
 
 String operator+(const char* lhs, const String& rhs)
 {
-	return operator+(StringRef(lhs), rhs);
+	return operator+(ConstStringView(lhs), rhs);
 }
 
 String operator+(const String& lhs, const char rhs)
 {
-	return operator+(lhs, StringRef(&rhs, 1));
+	return operator+(lhs, ConstStringView(&rhs, 1));
 }
 
 String operator+(char lhs, const String& rhs)
 {
-	return operator+(StringRef(&lhs, 1), rhs);
+	return operator+(ConstStringView(&lhs, 1), rhs);
 }
 
 bool operator==(const String& lhs, const String& rhs)
@@ -429,7 +429,7 @@ bool operator==(const String& lhs, const String& rhs)
 
 bool operator==(const String& lhs, const char* rhs)
 {
-	return lhs == StringRef(rhs);
+	return lhs == ConstStringView(rhs);
 }
 
 bool operator==(const char* lhs, const String& rhs)
@@ -437,12 +437,12 @@ bool operator==(const char* lhs, const String& rhs)
 	return operator==(rhs, lhs); // Swap arguments
 }
 
-bool operator==(const String& lhs, StringRef rhs)
+bool operator==(const String& lhs, ConstStringView rhs)
 {
 	return operator==(rhs, lhs);
 }
 
-bool operator==(StringRef lhs, const String& rhs)
+bool operator==(ConstStringView lhs, const String& rhs)
 {
 	size_t length = rhs.GetLength();
 
@@ -474,10 +474,10 @@ TEST_CASE("String.operator==")
 	CHECK((String(a, "Test") == String(a, "Tests")) == false);
 
 	String testStr(a, "Test string");
-	CHECK((testStr == StringRef("Test string")) == true);
-	CHECK((testStr == StringRef("")) == false);
-	CHECK((testStr == StringRef("Test strin")) == false);
-	CHECK((testStr == StringRef("Test strings")) == false);
+	CHECK((testStr == ConstStringView("Test string")) == true);
+	CHECK((testStr == ConstStringView("")) == false);
+	CHECK((testStr == ConstStringView("Test strin")) == false);
+	CHECK((testStr == ConstStringView("Test strings")) == false);
 
 	String emptyStr(a);
 	CHECK((emptyStr == "") == true);
@@ -500,12 +500,12 @@ bool operator!=(const char* lhs, const String& rhs)
 	return operator==(lhs, rhs) == false;
 }
 
-bool operator!=(const String& lhs, StringRef rhs)
+bool operator!=(const String& lhs, ConstStringView rhs)
 {
 	return operator==(lhs, rhs) == false;
 }
 
-bool operator!=(StringRef lhs, const String& rhs)
+bool operator!=(ConstStringView lhs, const String& rhs)
 {
 	return operator==(lhs, rhs) == false;
 }

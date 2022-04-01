@@ -7,7 +7,7 @@
 #include "Core/Array.hpp"
 #include "Core/Core.hpp"
 #include "Core/String.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Rendering/Uniform.hpp"
 
@@ -18,7 +18,7 @@
 
 namespace {
 
-const rapidjson::Value* FindVariableValue(const rapidjson::Value& variablesArray, const StringRef& name)
+const rapidjson::Value* FindVariableValue(const rapidjson::Value& variablesArray, const ConstStringView& name)
 {
 	if (variablesArray.IsArray())
 	{
@@ -31,7 +31,7 @@ const rapidjson::Value* FindVariableValue(const rapidjson::Value& variablesArray
 
 			if (nameItr != varItr->MemberEnd() &&
 				nameItr->value.IsString() &&
-				StringRef(nameItr->value.GetString(), nameItr->value.GetStringLength()).ValueEquals(name))
+				ConstStringView(nameItr->value.GetString(), nameItr->value.GetStringLength()).ValueEquals(name))
 			{
 				rapidjson::Value::ConstMemberIterator valueItr = varItr->FindMember("value");
 				if (valueItr != varItr->MemberEnd())
@@ -66,7 +66,7 @@ MaterialSerializer::~MaterialSerializer()
 {
 }
 
-bool MaterialSerializer::DeserializeMaterial(MaterialId id, StringRef config)
+bool MaterialSerializer::DeserializeMaterial(MaterialId id, ConstStringView config)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -119,7 +119,7 @@ bool MaterialSerializer::DeserializeMaterial(MaterialId id, StringRef config)
 	for (auto& uniform : material.uniformData.GetTextureUniforms())
 	{
 		// TODO: Find a more robust solution to find default values for textures
-		bool isNormalTexture = uniform.name.StartsWith(StringRef("normal"));
+		bool isNormalTexture = uniform.name.StartsWith(ConstStringView("normal"));
 
 		TextureId textureId = TextureId::Null;
 
@@ -212,7 +212,7 @@ void MaterialSerializer::SerializeToString(MaterialId id, String& out)
 	doc.Accept(writer);
 	
 	// TODO: Figure out how to avoid copying the value
-	out.Assign(StringRef(jsonStringBuffer.GetString(), jsonStringBuffer.GetLength()));
+	out.Assign(ConstStringView(jsonStringBuffer.GetString(), jsonStringBuffer.GetLength()));
 }
 
 }

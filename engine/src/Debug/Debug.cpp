@@ -273,7 +273,7 @@ void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<
 	char buffer[128];
 	const char* format = "E: %-3u W: %-3u [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile  [F8]Vsync: %c, %.1f fps";
 	std::snprintf(buffer, sizeof(buffer), format, errs, wrns, logChar, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
-	textRenderer->AddText(StringRef(buffer), Vec2f(0.0f, 0.0f));
+	textRenderer->AddText(ConstStringView(buffer), Vec2f(0.0f, 0.0f));
 
 	// Add frame time to debug graph
 	graph->AddDataPoint(Time::GetDeltaTime());

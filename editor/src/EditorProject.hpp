@@ -3,7 +3,7 @@
 #include <filesystem>
 
 #include "Core/String.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 namespace kokko
 {
@@ -28,7 +28,7 @@ public:
 	const std::filesystem::path& GetAssetPath() const;
 
 	const String& GetName() const;
-	void SetName(StringRef name);
+	void SetName(ConstStringView name);
 
 private:
 	std::filesystem::path rootPath;

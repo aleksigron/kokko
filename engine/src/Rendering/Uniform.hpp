@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
@@ -40,7 +40,7 @@ enum class UniformDataType
 
 struct ShaderUniform
 {
-	StringRef name;
+	ConstStringView name;
 	uint32_t nameHash;
 	UniformDataType type;
 };

@@ -32,8 +32,8 @@ public:
 	ArrayView<BufferUniform> GetBufferUniforms();
 	ArrayView<const BufferUniform> GetBufferUniforms() const;
 
-	BufferUniform* FindBufferUniformByName(StringRef name);
-	const BufferUniform* FindBufferUniformByName(StringRef name) const;
+	BufferUniform* FindBufferUniformByName(ConstStringView name);
+	const BufferUniform* FindBufferUniformByName(ConstStringView name) const;
 
 	BufferUniform* FindBufferUniformByNameHash(uint32_t nameHash);
 	const BufferUniform* FindBufferUniformByNameHash(uint32_t nameHash) const;
@@ -41,8 +41,8 @@ public:
 	ArrayView<TextureUniform> GetTextureUniforms();
 	ArrayView<const TextureUniform> GetTextureUniforms() const;
 
-	TextureUniform* FindTextureUniformByName(StringRef name);
-	const TextureUniform* FindTextureUniformByName(StringRef name) const;
+	TextureUniform* FindTextureUniformByName(ConstStringView name);
+	const TextureUniform* FindTextureUniformByName(ConstStringView name) const;
 
 	TextureUniform* FindTextureUniformByNameHash(uint32_t nameHash);
 	const TextureUniform* FindTextureUniformByNameHash(uint32_t nameHash) const;

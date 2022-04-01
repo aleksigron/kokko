@@ -3,7 +3,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/Array.hpp"
 #include "Core/SortedArray.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Engine/Entity.hpp"
 

@@ -113,7 +113,7 @@ bool FilesystemResolverVirtual::ResolvePath(const char* path, String& resultOut)
 
 	for (size_t i = 0; i < mountPointCount; ++i)
 	{
-		const StringRef& mountName = mountPoints[i].mountName;
+		const ConstStringView& mountName = mountPoints[i].mountName;
 		if (mountName.len == length)
 		{
 			bool match = true;

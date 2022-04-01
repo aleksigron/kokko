@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/ArrayView.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "System/FilesystemResolver.hpp"
 
@@ -15,8 +15,8 @@ class FilesystemResolverVirtual : public FilesystemResolver
 public:
 	struct MountPoint
 	{
-		StringRef mountName;
-		StringRef mountedPath;
+		ConstStringView mountName;
+		ConstStringView mountedPath;
 	};
 
 	FilesystemResolverVirtual(Allocator* allocator);

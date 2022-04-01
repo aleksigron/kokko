@@ -4,7 +4,7 @@
 
 #include "Core/Optional.hpp"
 #include "Core/String.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "EditorWindow.hpp"
 
@@ -50,9 +50,9 @@ private:
 	void SelectPath(EditorContext& context, const std::filesystem::path& path, bool editAsset);
 
 	// Absolute path is any path that comes from std::filesystem::directory_entry
-	Optional<String> AbsolutePathToVirtual(EditorContext& context, StringRef absolute);
-	Optional<StringRef> AbsolutePathToRelative(EditorContext& context, StringRef absolute);
-	String RelativePathToVirtual(StringRef path) const;
+	Optional<String> AbsolutePathToVirtual(EditorContext& context, ConstStringView absolute);
+	Optional<ConstStringView> AbsolutePathToRelative(EditorContext& context, ConstStringView absolute);
+	String RelativePathToVirtual(ConstStringView path) const;
 
 	Allocator* allocator;
 

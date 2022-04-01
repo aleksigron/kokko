@@ -4,7 +4,7 @@
 
 #include "Core/ArrayView.hpp"
 #include "Core/Optional.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Math/Vec2.hpp"
 
@@ -46,7 +46,7 @@ public:
 	void AttachExternalDepthTexture(unsigned int textureId);
 	void SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDepthCompareFunc func);
 
-	void SetDebugLabel(StringRef label);
+	void SetDebugLabel(ConstStringView label);
 
 private:
 	void CreateTexture(RenderTextureSizedFormat format, int width, int height);

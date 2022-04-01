@@ -1,4 +1,4 @@
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include <cassert>
 #include <cstring>
@@ -7,25 +7,25 @@
 
 #include "Core/Hash.hpp"
 
-doctest::String toString(const StringRefBase<const char>& value)
+doctest::String toString(const StringView<const char>& value)
 {
 	return doctest::String(value.str, static_cast<unsigned int>(value.len));
 }
 
 template <typename CharType>
-StringRefBase<CharType>::StringRefBase() :
+StringView<CharType>::StringView() :
 	str(nullptr), len(0)
 {
 }
 
 template <typename CharType>
-StringRefBase<CharType>::StringRefBase(CharType* string, size_t length) :
+StringView<CharType>::StringView(CharType* string, size_t length) :
 	str(string), len(length)
 {
 }
 
 template <typename CharType>
-StringRefBase<CharType>::StringRefBase(CharType* string) :
+StringView<CharType>::StringView(CharType* string) :
 	str(string)
 {
 	while (*string != '\0')
@@ -35,13 +35,13 @@ StringRefBase<CharType>::StringRefBase(CharType* string) :
 }
 
 template <typename CharType>
-bool StringRefBase<CharType>::ReferenceEquals(const StringRefBase<CharType>& other) const
+bool StringView<CharType>::ReferenceEquals(const StringView<CharType>& other) const
 {
 	return this->str == other.str && this->len == other.len;
 }
 
 template <typename CharType>
-bool StringRefBase<CharType>::ValueEquals(const StringRefBase<CharType>& other) const
+bool StringView<CharType>::ValueEquals(const StringView<CharType>& other) const
 {
 	if (len != other.len || str == nullptr || other.str == nullptr)
 		return false;
@@ -54,7 +54,7 @@ bool StringRefBase<CharType>::ValueEquals(const StringRefBase<CharType>& other) 
 }
 
 template <typename CharType>
-bool StringRefBase<CharType>::ValueEquals(const char* cstring) const
+bool StringView<CharType>::ValueEquals(const char* cstring) const
 {
 	if (str == nullptr || cstring == nullptr)
 		return false;
@@ -68,38 +68,38 @@ bool StringRefBase<CharType>::ValueEquals(const char* cstring) const
 		++i;
 	}
 
-	// The strings match for the length of this StringRefBase
+	// The strings match for the length of this StringView
 	// If cstring too ends here, the strings are equal
 	return cstring[i] == '\0';
 }
 
 template <typename CharType>
-bool StringRefBase<CharType>::operator==(const StringRefBase<CharType>& other) const
+bool StringView<CharType>::operator==(const StringView<CharType>& other) const
 {
 	return this->ValueEquals(other);
 }
 
 template <typename CharType>
-bool StringRefBase<CharType>::operator!=(const StringRefBase<CharType>& other) const
+bool StringView<CharType>::operator!=(const StringView<CharType>& other) const
 {
 	return this->ValueEquals(other) == false;
 }
 
-TEST_CASE("StringRefBase can test for equality")
+TEST_CASE("StringView can test for equality")
 {
 	const char* str1 = "Test string";
 	const char* str2 = "Test string";
 	const char* str3 = "Test str";
 
-	StringRef ref1(str1);
-	StringRef ref2(str2);
-	StringRef ref3(str3);
-	StringRef ref4(str1, ref3.len);
+	ConstStringView ref1(str1);
+	ConstStringView ref2(str2);
+	ConstStringView ref3(str3);
+	ConstStringView ref4(str1, ref3.len);
 
 	CHECK(ref1 == ref2);
 	CHECK(ref1 != ref3);
-	CHECK(ref1 != StringRef());
-	CHECK(StringRef() != StringRef());
+	CHECK(ref1 != ConstStringView());
+	CHECK(ConstStringView() != ConstStringView());
 	CHECK(ref1.ValueEquals(ref2) == true);
 	CHECK(ref1.ValueEquals(str2) == true);
 	CHECK(ref1.ValueEquals(ref3) == false);
@@ -108,14 +108,14 @@ TEST_CASE("StringRefBase can test for equality")
 }
 
 template <typename CharType>
-void StringRefBase<CharType>::Clear()
+void StringView<CharType>::Clear()
 {
 	str = nullptr;
 	len = 0;
 }
 
 template <typename CharType>
-bool StringRefBase<CharType>::StartsWith(const StringRefBase& other) const
+bool StringView<CharType>::StartsWith(const StringView& other) const
 {
 	if (this->len < other.len)
 		return false;
@@ -128,7 +128,7 @@ bool StringRefBase<CharType>::StartsWith(const StringRefBase& other) const
 }
 
 template <typename CharType>
-bool StringRefBase<CharType>::EndsWith(const StringRefBase& other) const
+bool StringView<CharType>::EndsWith(const StringView& other) const
 {
 	if (len < other.len)
 		return false;
@@ -140,32 +140,32 @@ bool StringRefBase<CharType>::EndsWith(const StringRefBase& other) const
 	return true;
 }
 
-TEST_CASE("StringRefBase can match string start and end")
+TEST_CASE("StringView can match string start and end")
 {
-	StringRef str("Test string");
+	ConstStringView str("Test string");
 
-	CHECK(str.StartsWith(StringRef("T")) == true);
-	CHECK(str.StartsWith(StringRef("Test")) == true);
-	CHECK(str.StartsWith(StringRef("est")) == false);
+	CHECK(str.StartsWith(ConstStringView("T")) == true);
+	CHECK(str.StartsWith(ConstStringView("Test")) == true);
+	CHECK(str.StartsWith(ConstStringView("est")) == false);
 
-	CHECK(str.EndsWith(StringRef("g")) == true);
-	CHECK(str.EndsWith(StringRef("ing")) == true);
-	CHECK(str.EndsWith(StringRef("tin")) == false);
+	CHECK(str.EndsWith(ConstStringView("g")) == true);
+	CHECK(str.EndsWith(ConstStringView("ing")) == true);
+	CHECK(str.EndsWith(ConstStringView("tin")) == false);
 }
 
 template <typename CharType>
-StringRefBase<CharType> StringRefBase<CharType>::SubStr(size_t startPos, size_t length) const
+StringView<CharType> StringView<CharType>::SubStr(size_t startPos, size_t length) const
 {
 	assert(startPos < len || (startPos == len && length == 0));
 
 	if (length == 0)
 		length = len - startPos;
 
-	return StringRefBase<CharType>(str + startPos, length);
+	return StringView<CharType>(str + startPos, length);
 }
 
 template <typename CharType>
-StringRefBase<CharType> StringRefBase<CharType>::SubStrPos(size_t startPos, intptr_t end) const
+StringView<CharType> StringView<CharType>::SubStrPos(size_t startPos, intptr_t end) const
 {
 	assert(startPos < len || startPos == end);
 	assert(end <= (intptr_t)len);
@@ -173,34 +173,34 @@ StringRefBase<CharType> StringRefBase<CharType>::SubStrPos(size_t startPos, intp
 	size_t endPos = (end < 0) ? len + end : end;
 	
 	if (endPos < startPos)
-		return StringRefBase();
+		return StringView();
 
-	return StringRefBase<CharType>(str + startPos, endPos - startPos);
+	return StringView<CharType>(str + startPos, endPos - startPos);
 }
 
-TEST_CASE("StringRefBase can return substrings")
+TEST_CASE("StringView can return substrings")
 {
-	StringRef testString("Test test string");
+	ConstStringView testString("Test test string");
 
 	CHECK(testString.SubStr(0) == testString);
 	CHECK(testString.SubStr(1) != testString);
 	CHECK(testString.SubStr(0, testString.len) == testString);
 	CHECK(testString.SubStr(0, testString.len - 1) != testString);
-	CHECK(testString.SubStr(0, 4) == StringRef("Test"));
-	CHECK(testString.SubStr(5, 4) == StringRef("test"));
-	CHECK(testString.SubStr(10) == StringRef("string"));
+	CHECK(testString.SubStr(0, 4) == ConstStringView("Test"));
+	CHECK(testString.SubStr(5, 4) == ConstStringView("test"));
+	CHECK(testString.SubStr(10) == ConstStringView("string"));
 
 	CHECK(testString.SubStrPos(0, testString.len) == testString);
 	CHECK(testString.SubStrPos(0, -1) != testString);
 	CHECK(testString.SubStrPos(0, 1) != testString);
-	CHECK(testString.SubStrPos(0, 4) == StringRef("Test"));
-	CHECK(testString.SubStrPos(0, -12) == StringRef("Test"));
-	CHECK(testString.SubStrPos(5, 9) == StringRef("test"));
-	CHECK(testString.SubStrPos(5, -7) == StringRef("test"));
+	CHECK(testString.SubStrPos(0, 4) == ConstStringView("Test"));
+	CHECK(testString.SubStrPos(0, -12) == ConstStringView("Test"));
+	CHECK(testString.SubStrPos(5, 9) == ConstStringView("test"));
+	CHECK(testString.SubStrPos(5, -7) == ConstStringView("test"));
 }
 
 template <typename CharType>
-intptr_t StringRefBase<CharType>::FindFirst(StringRefBase<const CharType> find, size_t startAt) const
+intptr_t StringView<CharType>::FindFirst(StringView<const CharType> find, size_t startAt) const
 {
 	for (size_t sourceIdx = startAt; sourceIdx < len; ++sourceIdx)
 	{
@@ -225,18 +225,18 @@ intptr_t StringRefBase<CharType>::FindFirst(StringRefBase<const CharType> find, 
 	return -1;
 }
 
-TEST_CASE("StringRefBase can find substrings")
+TEST_CASE("StringView can find substrings")
 {
-	StringRef str("Test string");
+	ConstStringView str("Test string");
 
-	CHECK(str.FindFirst(StringRef("Test")) == 0);
-	CHECK(str.FindFirst(StringRef("Test"), 1) < 0);
-	CHECK(str.FindFirst(StringRef("ing")) == 8);
-	CHECK(str.FindFirst(StringRef("ing"), 8) == 8);
+	CHECK(str.FindFirst(ConstStringView("Test")) == 0);
+	CHECK(str.FindFirst(ConstStringView("Test"), 1) < 0);
+	CHECK(str.FindFirst(ConstStringView("ing")) == 8);
+	CHECK(str.FindFirst(ConstStringView("ing"), 8) == 8);
 }
 
 template <typename CharType>
-intptr_t StringRefBase<CharType>::FindFirstOf(const char* chars, size_t startAt) const
+intptr_t StringView<CharType>::FindFirstOf(const char* chars, size_t startAt) const
 {
 	size_t charCount = std::strlen(chars);
 
@@ -249,7 +249,7 @@ intptr_t StringRefBase<CharType>::FindFirstOf(const char* chars, size_t startAt)
 }
 
 template <typename CharType>
-intptr_t StringRefBase<CharType>::FindFirstNotOf(const char* chars, size_t startAt) const
+intptr_t StringView<CharType>::FindFirstNotOf(const char* chars, size_t startAt) const
 {
 	size_t charCount = std::strlen(chars);
 
@@ -268,9 +268,9 @@ intptr_t StringRefBase<CharType>::FindFirstNotOf(const char* chars, size_t start
 	return -1;
 }
 
-TEST_CASE("StringRefBase can find chars")
+TEST_CASE("StringView can find chars")
 {
-	StringRef str("Test string");
+	ConstStringView str("Test string");
 
 	CHECK(str.FindFirstOf("a") < 0);
 	CHECK(str.FindFirstOf("T", 1) < 0);
@@ -292,7 +292,7 @@ TEST_CASE("StringRefBase can find chars")
 }
 
 template <typename CharType>
-intptr_t StringRefBase<CharType>::FindLast(StringRefBase<const CharType> find) const
+intptr_t StringView<CharType>::FindLast(StringView<const CharType> find) const
 {
 	for (intptr_t sourceIdx = len - find.len; sourceIdx >= 0; --sourceIdx)
 	{
@@ -314,23 +314,23 @@ intptr_t StringRefBase<CharType>::FindLast(StringRefBase<const CharType> find) c
 	return -1;
 }
 
-TEST_CASE("StringRefBase can find last substring")
+TEST_CASE("StringView can find last substring")
 {
-	StringRef str("Test str str");
+	ConstStringView str("Test str str");
 
-	CHECK(str.FindLast(StringRef("Test")) == 0);
-	CHECK(str.FindLast(StringRef("str")) == 9);
-	CHECK(str.FindLast(StringRef("str ")) == 5);
-	CHECK(str.FindLast(StringRef("ing")) < 0);
+	CHECK(str.FindLast(ConstStringView("Test")) == 0);
+	CHECK(str.FindLast(ConstStringView("str")) == 9);
+	CHECK(str.FindLast(ConstStringView("str ")) == 5);
+	CHECK(str.FindLast(ConstStringView("ing")) < 0);
 }
 
 namespace kokko
 {
-uint32_t Hash32(const StringRef& value, uint32_t seed)
+uint32_t Hash32(const ConstStringView& value, uint32_t seed)
 {
 	return Hash32(value.str, value.len, seed);
 }
 }
 
-template class StringRefBase<char>;
-template class StringRefBase<const char>;
+template class StringView<char>;
+template class StringView<const char>;

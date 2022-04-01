@@ -46,7 +46,7 @@ bool DebugLog::OpenLogFile(const char* filePath, bool append)
 
 void DebugLog::Log(const char* text, size_t length, LogLevel level)
 {
-	console->AddLogEntry(StringRef(text, length), level);
+	console->AddLogEntry(ConstStringView(text, length), level);
 
 	if (fileHandle != nullptr)
 	{

@@ -2,7 +2,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/ArrayView.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Resources/ResourceManagers.hpp"
 

@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Memory/Allocator.hpp"
 
@@ -90,7 +90,7 @@ ArrayView<const BufferUniform> UniformData::GetBufferUniforms() const
 	return ArrayView<const BufferUniform>(definitions.bufferUniforms, definitions.bufferUniformCount);
 }
 
-BufferUniform* UniformData::FindBufferUniformByName(StringRef name)
+BufferUniform* UniformData::FindBufferUniformByName(ConstStringView name)
 {
 	for (size_t i = 0, count = definitions.bufferUniformCount; i < count; ++i)
 		if (definitions.bufferUniforms[i].name.ValueEquals(name))
@@ -99,7 +99,7 @@ BufferUniform* UniformData::FindBufferUniformByName(StringRef name)
 	return nullptr;
 }
 
-const BufferUniform* UniformData::FindBufferUniformByName(StringRef name) const
+const BufferUniform* UniformData::FindBufferUniformByName(ConstStringView name) const
 {
 	for (size_t i = 0, count = definitions.bufferUniformCount; i < count; ++i)
 		if (definitions.bufferUniforms[i].name.ValueEquals(name))
@@ -136,12 +136,12 @@ ArrayView<const TextureUniform> UniformData::GetTextureUniforms() const
 	return ArrayView<const TextureUniform>(definitions.textureUniforms, definitions.textureUniformCount);
 }
 
-TextureUniform* UniformData::FindTextureUniformByName(StringRef name)
+TextureUniform* UniformData::FindTextureUniformByName(ConstStringView name)
 {
 	return definitions.FindTextureUniformByName(name);
 }
 
-const TextureUniform* UniformData::FindTextureUniformByName(StringRef name) const
+const TextureUniform* UniformData::FindTextureUniformByName(ConstStringView name) const
 {
 	return definitions.FindTextureUniformByName(name);
 }

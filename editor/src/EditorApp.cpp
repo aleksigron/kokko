@@ -388,7 +388,7 @@ void EditorApp::DrawMainMenuBar()
 		if (filePickerPathOut.empty() == false)
 		{
 			std::string filenameStr = filePickerPathOut.filename().u8string();
-			CreateProject(filePickerPathOut, StringRef(filenameStr.c_str(), filenameStr.length()));
+			CreateProject(filePickerPathOut, ConstStringView(filenameStr.c_str(), filenameStr.length()));
 		}
 	}
 
@@ -421,7 +421,7 @@ void EditorApp::ResetMainMenuDialog()
 	currentDialogId = 0;
 }
 
-bool EditorApp::CreateProject(const std::filesystem::path& directory, StringRef name)
+bool EditorApp::CreateProject(const std::filesystem::path& directory, ConstStringView name)
 {
 	namespace fs = std::filesystem;
 
@@ -448,7 +448,7 @@ bool EditorApp::CreateProject(const std::filesystem::path& directory, StringRef 
 	if (project.SerializeToFile() == false)
 	{
 		project.SetRootPath(fs::path());
-		project.SetName(StringRef());
+		project.SetName(ConstStringView());
 		return false;
 	}
 
@@ -477,13 +477,13 @@ void EditorApp::OnProjectChanged()
 
 	std::filesystem::path assetPath = project.GetRootPath() / "assets";
 	std::string assetPathStr = assetPath.u8string();
-	StringRef assetPathRef(assetPathStr.c_str(), assetPathStr.length());
+	ConstStringView assetPathRef(assetPathStr.c_str(), assetPathStr.length());
 
 	using MountPoint = FilesystemResolverVirtual::MountPoint;
 	MountPoint mounts[] = {
-		MountPoint{ StringRef(EditorConstants::VirtualMountEngine), StringRef("engine/res") },
-		MountPoint{ StringRef(EditorConstants::VirtualMountEditor), StringRef("editor/res") },
-		MountPoint{ StringRef(EditorConstants::VirtualMountAssets), assetPathRef }
+		MountPoint{ ConstStringView(EditorConstants::VirtualMountEngine), ConstStringView("engine/res") },
+		MountPoint{ ConstStringView(EditorConstants::VirtualMountEditor), ConstStringView("editor/res") },
+		MountPoint{ ConstStringView(EditorConstants::VirtualMountAssets), assetPathRef }
 	};
 	filesystemResolver->SetMountPoints(ArrayView(mounts));
 

@@ -77,10 +77,10 @@ set (KOKKO_SOURCES
 	src/Core/SortedArray.hpp
 	src/Core/String.cpp
 	src/Core/String.hpp
-	src/Core/StringRef.cpp
-	src/Core/StringRef.hpp
 	src/Core/StringUtil.cpp
 	src/Core/StringUtil.hpp
+	src/Core/StringView.cpp
+	src/Core/StringView.hpp
 	src/Core/TypeTraits.hpp
 	src/Core/Uid.cpp
 	src/Core/Uid.hpp

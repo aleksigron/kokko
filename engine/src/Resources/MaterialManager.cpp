@@ -148,7 +148,7 @@ MaterialId MaterialManager::FindMaterialByUid(const kokko::Uid& uid)
 	{
 		MaterialId id = CreateMaterial();
 
-		StringRef fileStr(reinterpret_cast<const char*>(file.GetData()), file.GetCount());
+		ConstStringView fileStr(reinterpret_cast<const char*>(file.GetData()), file.GetCount());
 		kokko::MaterialSerializer serializer(allocator, this, shaderManager, textureManager);
 
 		if (serializer.DeserializeMaterial(id, fileStr))
@@ -173,7 +173,7 @@ MaterialId MaterialManager::FindMaterialByUid(const kokko::Uid& uid)
 	return MaterialId::Null;
 }
 
-MaterialId MaterialManager::FindMaterialByPath(const StringRef& path)
+MaterialId MaterialManager::FindMaterialByPath(const ConstStringView& path)
 {
 	KOKKO_PROFILE_FUNCTION();
 

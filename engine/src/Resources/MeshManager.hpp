@@ -4,7 +4,7 @@
 
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 #include "Core/Uid.hpp"
 
 #include "Math/BoundingBox.hpp"

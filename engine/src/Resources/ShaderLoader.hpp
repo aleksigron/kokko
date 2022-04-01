@@ -7,7 +7,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/SortedArray.hpp"
 #include "Core/String.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Rendering/RenderDeviceEnums.hpp"
 
@@ -29,7 +29,7 @@ public:
 	struct StageSource
 	{
 		RenderShaderStage stage;
-		StringRef source;
+		ConstStringView source;
 	};
 
 	ShaderLoader(Allocator* allocator,
@@ -40,9 +40,9 @@ public:
 
 	bool LoadFromFile(
 		ShaderData& shaderOut,
-		StringRef shaderPath,
-		StringRef shaderContent,
-		StringRef debugName);
+		ConstStringView shaderPath,
+		ConstStringView shaderContent,
+		ConstStringView debugName);
 
 private:
 
@@ -61,32 +61,32 @@ private:
 	kokko::String processedStageSources[MaxStageCount];
 
 	bool FindShaderSections(
-		StringRef shaderContents,
-		StringRef& programSectionOut,
+		ConstStringView shaderContents,
+		ConstStringView& programSectionOut,
 		StageSource stageSectionsOut[MaxStageCount],
 		size_t& stageCountOut);
 
 	void ProcessProgramProperties(
 		ShaderData& shaderOut,
-		StringRef programSection,
-		StringRef shaderPath);
+		ConstStringView programSection,
+		ConstStringView shaderPath);
 
 	bool ProcessShaderStages(
 		ShaderData& shaderOut,
-		StringRef shaderPath,
+		ConstStringView shaderPath,
 		ArrayView<const StageSource> stages,
-		StringRef versionStr,
-		StringRef debugName);
+		ConstStringView versionStr,
+		ConstStringView debugName);
 
 	bool ProcessStage(
-		StringRef versionStr,
-		StringRef uniformBlockDefinition,
-		StringRef mainFilePath,
-		StringRef mainFileContent,
+		ConstStringView versionStr,
+		ConstStringView uniformBlockDefinition,
+		ConstStringView mainFilePath,
+		ConstStringView mainFileContent,
 		kokko::String& processedSourceOut);
 
 	bool ProcessIncludes(
-		StringRef sourceStr,
+		ConstStringView sourceStr,
 		uint32_t filePathHash,
 		kokko::String& processedSourceOut);
 };

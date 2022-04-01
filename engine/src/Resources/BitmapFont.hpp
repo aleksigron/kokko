@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
@@ -33,11 +33,11 @@ private:
 
 	Vec2i genericGlyphSize;
 
-	static size_t FindPrintable(StringRef string);
-	static size_t FindUnprintable(StringRef string);
-	static size_t FindSpacesInString(StringRef string, size_t* posOut, size_t maxPositions);
-	static int ParseInt(StringRef string);
-	static void ParseBitmapRow(StringRef line, unsigned int pixels, unsigned char* bitmapOut);
+	static size_t FindPrintable(ConstStringView string);
+	static size_t FindUnprintable(ConstStringView string);
+	static size_t FindSpacesInString(ConstStringView string, size_t* posOut, size_t maxPositions);
+	static int ParseInt(ConstStringView string);
+	static void ParseBitmapRow(ConstStringView line, unsigned int pixels, unsigned char* bitmapOut);
 	static Vec2f CalculateTextureSize(int glyphCount, Vec2f glyphSize);
 	static bool CompareGlyphCodePointAsc(const BitmapGlyph& lhs, const BitmapGlyph& rhs);
 
@@ -53,5 +53,5 @@ public:
 	unsigned int GetTextureDriverId() const { return textureId; }
 	Vec2f GetTextureSize() const { return textureSize; }
 
-	bool LoadFromBDF(TextureManager* textureManager, StringRef content);
+	bool LoadFromBDF(TextureManager* textureManager, ConstStringView content);
 };

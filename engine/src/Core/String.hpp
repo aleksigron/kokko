@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 class Allocator;
 
@@ -27,7 +27,7 @@ public:
 	String(const String& s);
 	String(String&& s) noexcept;
 	String(Allocator* allocator, const char* s);
-	String(Allocator* allocator, StringRef s);
+	String(Allocator* allocator, ConstStringView s);
 
 	~String();
 
@@ -48,7 +48,7 @@ public:
 	const char* end() const { return string + length; }
 
 	size_t GetLength() const { return length; }
-	StringRef GetRef() const;
+	ConstStringView GetRef() const;
 
 	char& At(size_t index) { return string[index]; }
 	const char& At(size_t index) const { return string[index]; }
@@ -58,12 +58,12 @@ public:
 
 	String& operator+=(const String& append);
 
-	void Append(StringRef s);
+	void Append(ConstStringView s);
 	void Append(const String& s);
 	void Append(const char* s);
 	void Append(char c);
 
-	void Assign(StringRef s);
+	void Assign(ConstStringView s);
 	void Assign(const String& s);
 	void Assign(const char* s);
 
@@ -75,12 +75,12 @@ public:
 	void Replace(char replace, char with);
 
 	// To gain access to allocator
-	friend String operator+(const String& lhs, StringRef rhs);
-	friend String operator+(StringRef lhs, const String& rhs);
+	friend String operator+(const String& lhs, ConstStringView rhs);
+	friend String operator+(ConstStringView lhs, const String& rhs);
 };
 
-String operator+(const String& lhs, StringRef rhs);
-String operator+(StringRef lhs, const String& rhs);
+String operator+(const String& lhs, ConstStringView rhs);
+String operator+(ConstStringView lhs, const String& rhs);
 
 String operator+(const String& lhs, const String& rhs);
 
@@ -93,13 +93,13 @@ String operator+(char lhs, const String& rhs);
 bool operator==(const String& lhs, const String& rhs);
 bool operator==(const String& lhs, const char* rhs);
 bool operator==(const char* lhs, const String& rhs);
-bool operator==(const String& lhs, StringRef rhs);
-bool operator==(StringRef lhs, const String& rhs);
+bool operator==(const String& lhs, ConstStringView rhs);
+bool operator==(ConstStringView lhs, const String& rhs);
 
 bool operator!=(const String& lhs, const String& rhs);
 bool operator!=(const String& lhs, const char* rhs);
 bool operator!=(const char* lhs, const String& rhs);
-bool operator!=(const String& lhs, StringRef rhs);
-bool operator!=(StringRef lhs, const String& rhs);
+bool operator!=(const String& lhs, ConstStringView rhs);
+bool operator!=(ConstStringView lhs, const String& rhs);
 
 }

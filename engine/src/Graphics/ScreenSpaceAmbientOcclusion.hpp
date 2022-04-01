@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Array.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
@@ -71,7 +71,7 @@ private:
 	unsigned int noiseTextureId;
 
 	void CreatePassResources(size_t passCount,
-		const StringRef* shaderPaths,
+		const ConstStringView* shaderPaths,
 		const size_t* uniformSizes);
 
 	void UpdateUniformBuffers(const ProjectionParameters& projection) const;

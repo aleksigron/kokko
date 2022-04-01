@@ -193,7 +193,7 @@ void TerrainQuadTree::RenderTile(
 		char buf[32];
 		auto [out, size] = fmt::format_to_n(buf, sizeof(buf), "{:.3f}", sizeMaxAxis);
 
-		tr->AddTextNormalized(StringRef(buf, size), screenCoord.xy());
+		tr->AddTextNormalized(ConstStringView(buf, size), screenCoord.xy());
 	}
 	else
 	{

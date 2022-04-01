@@ -4,7 +4,7 @@
 
 #include "Core/ArrayView.hpp"
 #include "Core/Optional.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 namespace kokko
 {
