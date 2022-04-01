@@ -73,7 +73,7 @@ bool IsTextAsset(AssetType type)
 
 void NormalizeLineEndings(ArrayView<const uint8_t> bytes, String& resultOut)
 {
-	static const StringRef crlf("\r\n");
+	static const ConstStringView crlf("\r\n");
 
 	size_t count = bytes.GetCount();
 	resultOut.Reserve(count);
@@ -155,12 +155,12 @@ const AssetInfo* AssetLibrary::FindAssetByVirtualPath(const String& virtualPath)
 		return nullptr;
 }
 
-Optional<Uid> AssetLibrary::CreateAsset(AssetType type, StringRef pathRelativeToAssets, ArrayView<const uint8_t> content)
+Optional<Uid> AssetLibrary::CreateAsset(AssetType type, ConstStringView pathRelativeToAssets, ArrayView<const uint8_t> content)
 {
 	Uid assetUid = Uid::Create();
 	uint64_t calculatedHash = CalculateHash(type, content);
 	uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
-	StringRef mount = StringRef(EditorConstants::VirtualMountAssets);
+	ConstStringView mount = ConstStringView(EditorConstants::VirtualMountAssets);
 
 	assets.PushBack(AssetInfo(allocator, mount, pathRelativeToAssets, assetUid, calculatedHash, type));
 	const String& virtualPath = assets.GetBack().GetVirtualPath();
@@ -270,7 +270,7 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 	rapidjson::Document document;
 	rapidjson::StringBuffer jsonStringBuffer;
 
-	auto processEntry = [&](StringRef virtualMount, const fs::path& root, const fs::directory_entry& entry)
+	auto processEntry = [&](ConstStringView virtualMount, const fs::path& root, const fs::directory_entry& entry)
 	{
 		KOKKO_PROFILE_SCOPE("Scan file");
 
@@ -396,7 +396,7 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 		uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
 
 		assets.PushBack(AssetInfo(
-			allocator, virtualMount, StringRef(relativeStdStr.c_str(), relativeStdStr.length()),
+			allocator, virtualMount, ConstStringView(relativeStdStr.c_str(), relativeStdStr.length()),
 			assetUid, calculatedHash, assetType.GetValue()));
 
 		auto uidPair = uidToIndexMap.Insert(assetUid);
@@ -410,8 +410,8 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 	{
 		const fs::path engineResDir = fs::absolute(EditorConstants::EngineResourcePath);
 		const fs::path editorResDir = fs::absolute(EditorConstants::EditorResourcePath);
-		const StringRef virtualMountEngine(EditorConstants::VirtualMountEngine);
-		const StringRef virtualMountEditor(EditorConstants::VirtualMountEditor);
+		const ConstStringView virtualMountEngine(EditorConstants::VirtualMountEngine);
+		const ConstStringView virtualMountEditor(EditorConstants::VirtualMountEditor);
 
 		std::error_code engineItrError;
 		auto engineItr = fs::recursive_directory_iterator(engineResDir, engineItrError);
@@ -439,7 +439,7 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 	if (scanProject)
 	{
 		const fs::path& assetDir = editorProject->GetAssetPath();
-		const StringRef virtualMountAssets(EditorConstants::VirtualMountAssets);
+		const ConstStringView virtualMountAssets(EditorConstants::VirtualMountAssets);
 
 		std::error_code projectItrError;
 		auto projectItr = fs::recursive_directory_iterator(assetDir, projectItrError);
@@ -472,7 +472,7 @@ uint64_t AssetLibrary::CalculateHash(AssetType type, ArrayView<const uint8_t> co
 	return hash;
 }
 
-AssetInfo::AssetInfo(Allocator* allocator, StringRef virtualMount, StringRef relativePath,
+AssetInfo::AssetInfo(Allocator* allocator, ConstStringView virtualMount, ConstStringView relativePath,
 	Uid uid, uint64_t contentHash, AssetType type) :
 	virtualPath(allocator),
 	uid(uid),
@@ -487,7 +487,7 @@ AssetInfo::AssetInfo(Allocator* allocator, StringRef virtualMount, StringRef rel
 	this->virtualMount = virtualPath.GetRef().SubStr(0, virtualMount.len);
 	this->pathRelativeToMount = virtualPath.GetRef().SubStr(virtualMount.len + 1);
 	
-	intptr_t lastSlash = this->pathRelativeToMount.FindLast(StringRef("/", 1));
+	intptr_t lastSlash = this->pathRelativeToMount.FindLast(ConstStringView("/", 1));
 	this->filename = virtualPath.GetRef().SubStr(lastSlash + 1);
 }
 

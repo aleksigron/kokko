@@ -92,7 +92,7 @@ void LevelSerializer::SerializeToString(kokko::String& out)
 	emitter << YAML::EndMap;
 
 	std::string str = outStream.str();
-	out.Assign(StringRef(str.c_str(), str.length()));
+	out.Assign(ConstStringView(str.c_str(), str.length()));
 }
 
 void LevelSerializer::DeserializeEntitiesFromString(const char* data, SceneObjectId parent)
@@ -120,7 +120,7 @@ void LevelSerializer::SerializeEntitiesToString(ArrayView<Entity> serializeEntit
 	}
 	emitter << YAML::EndSeq;
 
-	serializedOut.Assign(StringRef(emitter.c_str(), emitter.size()));
+	serializedOut.Assign(ConstStringView(emitter.c_str(), emitter.size()));
 }
 
 void LevelSerializer::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)

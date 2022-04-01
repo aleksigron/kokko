@@ -19,9 +19,9 @@ public:
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) override;
 
 	virtual void SetDebugMessageCallback(DebugCallbackFn callback) override;
-	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, StringRef label) override;
-	virtual void SetObjectPtrLabel(void* ptr, StringRef label) override;
-	virtual void PushDebugGroup(unsigned int id, StringRef message) override;
+	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, ConstStringView label) override;
+	virtual void SetObjectPtrLabel(void* ptr, ConstStringView label) override;
+	virtual void PushDebugGroup(unsigned int id, ConstStringView message) override;
 	virtual void PopDebugGroup() override;
 
 	virtual void Clear(const RenderCommandData::ClearMask* data) override;

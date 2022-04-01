@@ -73,7 +73,7 @@ private:
 	void DrawMainMenuBar();
 	void ResetMainMenuDialog();
 
-	bool CreateProject(const std::filesystem::path& directory, StringRef name);
+	bool CreateProject(const std::filesystem::path& directory, ConstStringView name);
 	bool OpenProject(const std::filesystem::path& projectDir);
 	void OnProjectChanged();
 

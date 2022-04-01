@@ -5,7 +5,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/SortedArray.hpp"
 #include "Core/String.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Engine/Entity.hpp"
 

@@ -32,7 +32,7 @@ const size_t MaxStageCount = 2;
 
 struct AddUniforms_UniformData
 {
-	StringRef name;
+	ConstStringView name;
 	unsigned int arraySize;
 	kokko::UniformDataType type;
 };
@@ -47,7 +47,7 @@ bool BufferUniformSortPredicate(const kokko::BufferUniform& a, const kokko::Buff
 void AddUniformsAndShaderPath(
 	ShaderData& shaderOut,
 	ArrayView<const AddUniforms_UniformData> uniforms,
-	StringRef shaderPath,
+	ConstStringView shaderPath,
 	Allocator* allocator)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -168,12 +168,12 @@ void AddUniformsAndShaderPath(
 		}
 
 		// Copy uniform name
-		const StringRef& uniformName = uniforms[uIndex].name;
+		const ConstStringView& uniformName = uniforms[uIndex].name;
 
 		std::memcpy(namePtr, uniformName.str, uniformName.len);
 		namePtr[uniformName.len] = '\0';
 
-		baseUniform->name = StringRef(namePtr, uniformName.len);
+		baseUniform->name = ConstStringView(namePtr, uniformName.len);
 		namePtr += uniformName.len + 1;
 
 		// Compute uniform name hash
@@ -184,7 +184,7 @@ void AddUniformsAndShaderPath(
 	// Copy shader path
 	std::memcpy(shaderPathPtr, shaderPath.str, shaderPath.len);
 	shaderPathPtr[shaderPath.len] = '\0';
-	shaderOut.path = StringRef(shaderPathPtr, shaderPath.len);
+	shaderOut.path = ConstStringView(shaderPathPtr, shaderPath.len);
 
 	shaderOut.uniforms.bufferUniformCount = bufferUniformCount;
 	shaderOut.uniforms.textureUniformCount = textureUniformCount;
@@ -233,7 +233,7 @@ void AddUniformsAndShaderPath(
 
 	if (shaderOut.uniforms.bufferUniformCount == 0)
 	{
-		shaderOut.uniformBlockDefinition = StringRef();
+		shaderOut.uniformBlockDefinition = ConstStringView();
 	}
 	else
 	{
@@ -255,7 +255,7 @@ void AddUniformsAndShaderPath(
 
 			auto bufLeft = shaderDataEnd - uniformBlockPtr;
 
-			// TODO: StringRef doesn't always refer to a null-terminated string, so fix this
+			// TODO: ConstStringView doesn't always refer to a null-terminated string, so fix this
 			auto formatRes = fmt::format_to_n(
 				uniformBlockPtr, bufLeft, blockRowFormat, typeInfo.typeName, uniform.name.str);
 			assert(static_cast<ptrdiff_t>(formatRes.size) <= bufLeft);
@@ -287,7 +287,7 @@ bool Compile(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
 	RenderShaderStage stage,
-	StringRef source,
+	ConstStringView source,
 	unsigned int& shaderIdOut)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -328,7 +328,7 @@ bool CompileAndLink(
 	ArrayView<const ShaderLoader::StageSource> stages,
 	Allocator* allocator,
 	RenderDevice* renderDevice,
-	StringRef debugName)
+	ConstStringView debugName)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -337,7 +337,7 @@ bool CompileAndLink(
 	for (size_t i = 0, count = stages.GetCount(); i < stages.GetCount(); ++i)
 	{
 		RenderShaderStage stageType = stages[i].stage;
-		StringRef source = stages[i].source;
+		ConstStringView source = stages[i].source;
 
 		unsigned int stageObject = 0;
 		bool compiled = Compile(shaderOut, allocator, renderDevice, stageType, source, stageObject);
@@ -435,13 +435,13 @@ ShaderLoader::~ShaderLoader()
 
 bool ShaderLoader::LoadFromFile(
 	ShaderData& shaderOut,
-	StringRef shaderPath,
-	StringRef shaderContent,
-	StringRef debugName)
+	ConstStringView shaderPath,
+	ConstStringView shaderContent,
+	ConstStringView debugName)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	StringRef programSection;
+	ConstStringView programSection;
 	StageSource stageSections[MaxStageCount];
 	size_t stageCount;
 	
@@ -450,7 +450,7 @@ bool ShaderLoader::LoadFromFile(
 
 	ProcessProgramProperties(shaderOut, programSection, shaderPath);
 
-	StringRef versionStr("#version 450\n");
+	ConstStringView versionStr("#version 450\n");
 	ArrayView<const StageSource> stages(stageSections, stageCount);
 	if (ProcessShaderStages(shaderOut, shaderPath, stages, versionStr, debugName) == false)
 		return false;
@@ -459,14 +459,14 @@ bool ShaderLoader::LoadFromFile(
 }
 
 bool ShaderLoader::FindShaderSections(
-	StringRef shaderContents,
-	StringRef& programSectionOut,
+	ConstStringView shaderContents,
+	ConstStringView& programSectionOut,
 	StageSource stageSectionsOut[MaxStageCount],
 	size_t& stageCountOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	const StringRef stageDeclStr("#stage ");
+	const ConstStringView stageDeclStr("#stage ");
 
 	intptr_t sectionStart = 0;
 	intptr_t sectionContentStart = 0;
@@ -504,13 +504,13 @@ bool ShaderLoader::FindShaderSections(
 		if (lineEnd < 0)
 			break;
 
-		StringRef sectionName = shaderContents.SubStrPos(sectionStart + stageDeclStr.len, lineEnd);
+		ConstStringView sectionName = shaderContents.SubStrPos(sectionStart + stageDeclStr.len, lineEnd);
 
-		if (sectionName == StringRef("vertex"))
+		if (sectionName == ConstStringView("vertex"))
 			currentStage = RenderShaderStage::VertexShader;
-		else if (sectionName == StringRef("fragment"))
+		else if (sectionName == ConstStringView("fragment"))
 			currentStage = RenderShaderStage::FragmentShader;
-		else if (sectionName == StringRef("compute"))
+		else if (sectionName == ConstStringView("compute"))
 			currentStage = RenderShaderStage::ComputeShader;
 
 		sectionContentStart = shaderContents.FindFirstNotOf(LineBreakChars, lineEnd);
@@ -528,7 +528,7 @@ bool ShaderLoader::FindShaderSections(
 		return false;
 }
 
-void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef programSection, StringRef shaderPath)
+void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, ConstStringView programSection, ConstStringView shaderPath)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -536,7 +536,7 @@ void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef pro
 	AddUniforms_UniformData uniforms[MaxUniformCount];
 	unsigned int uniformCount = 0;
 
-	const StringRef propertyStr("#property ");
+	const ConstStringView propertyStr("#property ");
 
 	size_t findStart = 0;
 
@@ -555,14 +555,14 @@ void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef pro
 
 		findStart = lineEnd;
 
-		StringRef nameAndType = programSection.SubStrPos(nameStart, lineEnd);
+		ConstStringView nameAndType = programSection.SubStrPos(nameStart, lineEnd);
 		intptr_t nameEnd = nameAndType.FindFirstOf(WhitespaceChars);
 
 		if (nameEnd < 0 || nameAndType.str[nameEnd] == '\r' || nameAndType.str[nameEnd] == '\n')
 			break;
 
-		StringRef nameStr = nameAndType.SubStr(0, nameEnd);
-		StringRef typeStr = nameAndType.SubStr(nameEnd + 1);
+		ConstStringView nameStr = nameAndType.SubStr(0, nameEnd);
+		ConstStringView typeStr = nameAndType.SubStr(nameEnd + 1);
 
 		AddUniforms_UniformData& uniform = uniforms[uniformCount];
 		uniform.name = nameStr;
@@ -611,10 +611,10 @@ void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, StringRef pro
 
 bool ShaderLoader::ProcessShaderStages(
 	ShaderData& shaderOut,
-	StringRef shaderPath,
+	ConstStringView shaderPath,
 	ArrayView<const StageSource> stages,
-	StringRef versionStr,
-	StringRef debugName)
+	ConstStringView versionStr,
+	ConstStringView debugName)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -649,10 +649,10 @@ bool ShaderLoader::ProcessShaderStages(
 }
 
 bool ShaderLoader::ProcessStage(
-	StringRef versionStr,
-	StringRef uniformBlockDefinition,
-	StringRef mainFilePath,
-	StringRef mainFileContent,
+	ConstStringView versionStr,
+	ConstStringView uniformBlockDefinition,
+	ConstStringView mainFilePath,
+	ConstStringView mainFileContent,
 	kokko::String& processedSourceOut)
 {
 	processedSourceOut.Clear();
@@ -673,11 +673,11 @@ bool ShaderLoader::ProcessStage(
 }
 
 bool ShaderLoader::ProcessIncludes(
-	StringRef sourceStr,
+	ConstStringView sourceStr,
 	uint32_t filePathHash,
 	kokko::String& processedSourceOut)
 {
-	const StringRef includeDeclStr("#include ");
+	const ConstStringView includeDeclStr("#include ");
 
 	filesIncludedInStage.Insert(filePathHash);
 
@@ -721,7 +721,7 @@ bool ShaderLoader::ProcessIncludes(
 
 		includeStatementEnd = secondQuote + 1;
 
-		StringRef includePath = sourceStr.SubStrPos(firstQuote + 1, secondQuote);
+		ConstStringView includePath = sourceStr.SubStrPos(firstQuote + 1, secondQuote);
 		uint32_t pathHash = kokko::HashString(includePath.str, includePath.len);
 
 		// Include file only if it hasn't been included yet in this shader stage

@@ -4,7 +4,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 #include "Core/Uid.hpp"
 
 #include "Math/Mat4x4.hpp"
@@ -58,7 +58,7 @@ public:
 	~ModelManager();
 
 	ModelId FindModelByUid(const kokko::Uid& uid);
-	ModelId FindModelByPath(const StringRef& path);
+	ModelId FindModelByPath(const ConstStringView& path);
 
 	kokko::Uid GetModelUid(ModelId id) const;
 

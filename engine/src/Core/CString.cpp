@@ -28,7 +28,7 @@ size_t StringCopyN(char* destination, const char* source, size_t destBufferCount
 	// String needs to be truncated
 	// Make sure no UTF-8 characters are broken up
 
-	StringRef destRef(destination, i);
+	ConstStringView destRef(destination, i);
 	size_t lastCharPos = EncodingUtf8::FindLastCharacter(destRef);
 
 	// We found a valid character

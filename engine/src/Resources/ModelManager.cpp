@@ -67,7 +67,7 @@ ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)
 	return ModelId::Null;
 }
 
-ModelId ModelManager::FindModelByPath(const StringRef& path)
+ModelId ModelManager::FindModelByPath(const ConstStringView& path)
 {
 	KOKKO_PROFILE_FUNCTION();
 

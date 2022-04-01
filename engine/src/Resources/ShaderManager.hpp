@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include "Core/HashMap.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 #include "Core/Uid.hpp"
 
 #include "Rendering/UniformList.hpp"
@@ -28,8 +28,8 @@ struct ShaderData
 	kokko::Uid uid;
 
 	void* buffer;
-	StringRef uniformBlockDefinition;
-	StringRef path;
+	ConstStringView uniformBlockDefinition;
+	ConstStringView path;
 
 	TransparencyType transparencyType;
 
@@ -74,7 +74,7 @@ public:
 	void RemoveShader(ShaderId id);
 
 	ShaderId FindShaderByUid(const kokko::Uid& uid);
-	ShaderId FindShaderByPath(const StringRef& path);
+	ShaderId FindShaderByPath(const ConstStringView& path);
 
 	const ShaderData& GetShaderData(ShaderId id) const
 	{

@@ -96,9 +96,9 @@ void ScreenSpaceAmbientOcclusion::Initialize()
 
 	// Per pass resources
 
-	StringRef shaderPaths[] = {
-		StringRef("engine/shaders/post_process/ssao_occlusion.glsl"),
-		StringRef("engine/shaders/post_process/ssao_blur.glsl")
+	ConstStringView shaderPaths[] = {
+		ConstStringView("engine/shaders/post_process/ssao_occlusion.glsl"),
+		ConstStringView("engine/shaders/post_process/ssao_blur.glsl")
 	};
 
 	size_t uniformSizes[] = {
@@ -244,7 +244,7 @@ void ScreenSpaceAmbientOcclusion::UpdateUniformBuffers(const ProjectionParameter
 	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(BlurUniformBlock), &blurUniforms);
 }
 
-void ScreenSpaceAmbientOcclusion::CreatePassResources(size_t passCount, const StringRef* shaderPaths, const size_t* uniformSizes)
+void ScreenSpaceAmbientOcclusion::CreatePassResources(size_t passCount, const ConstStringView* shaderPaths, const size_t* uniformSizes)
 {
 	renderDevice->CreateBuffers(static_cast<unsigned int>(passCount), uniformBufferIds);
 

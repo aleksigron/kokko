@@ -2,7 +2,7 @@
 
 #include "Core/Queue.hpp"
 #include "Core/String.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Debug/LogLevel.hpp"
 
@@ -18,7 +18,7 @@ class DebugConsole
 private:
 	struct LogEntry
 	{
-		StringRef text;
+		ConstStringView text;
 		size_t lengthWithPad;
 		int rows;
 		LogLevel level;
@@ -60,7 +60,7 @@ public:
 
 	void SetDrawArea(const Rectanglef& area);
 
-	void AddLogEntry(StringRef text, LogLevel level = LogLevel::Info);
+	void AddLogEntry(ConstStringView text, LogLevel level = LogLevel::Info);
 
 	void UpdateAndDraw();
 };

@@ -64,7 +64,7 @@ void AssetBrowserView::Update(EditorContext& context)
 						currentVirtualRoot.Clear();
 					else
 					{
-						intptr_t slash = currentDirectory.GetRef().FindLast(StringRef("/"));
+						intptr_t slash = currentDirectory.GetRef().FindLast(ConstStringView("/"));
 
 						if (slash > 0)
 							currentDirectory.Resize(slash);
@@ -256,7 +256,7 @@ void AssetBrowserView::DrawEntry(
 		if (ImGui::BeginDragDropSource())
 		{
 			std::string absolutePath = entryPath.u8string();
-			auto result = AbsolutePathToVirtual(context, StringRef(absolutePath.c_str(), absolutePath.length()));
+			auto result = AbsolutePathToVirtual(context, ConstStringView(absolutePath.c_str(), absolutePath.length()));
 			if (result.HasValue())
 			{
 				if (auto asset = context.assetLibrary->FindAssetByVirtualPath(result.GetValue()))
@@ -292,7 +292,7 @@ void AssetBrowserView::DrawIconAndName(ImVec2 startPos, TextureId icon, float ic
 void AssetBrowserView::MoveToPath(EditorContext& context, const std::filesystem::path& path)
 {
 	std::string absolutePath = path.u8string();
-	auto result = AbsolutePathToRelative(context, StringRef(absolutePath.c_str(), absolutePath.length()));
+	auto result = AbsolutePathToRelative(context, ConstStringView(absolutePath.c_str(), absolutePath.length()));
 	if (result.HasValue() == false)
 		return;
 
@@ -306,7 +306,7 @@ void AssetBrowserView::MoveToPath(EditorContext& context, const std::filesystem:
 void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem::path& path, bool editAsset)
 {
 	std::string absolutePath = path.u8string();
-	auto result = AbsolutePathToRelative(context, StringRef(absolutePath.c_str(), absolutePath.length()));
+	auto result = AbsolutePathToRelative(context, ConstStringView(absolutePath.c_str(), absolutePath.length()));
 	if (result.HasValue())
 	{
 		selectedPath.Assign(result.GetValue());
@@ -335,7 +335,7 @@ void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem:
 	context.selectedAsset = Optional<Uid>();
 }
 
-Optional<String> AssetBrowserView::AbsolutePathToVirtual(EditorContext& context, StringRef absolute)
+Optional<String> AssetBrowserView::AbsolutePathToVirtual(EditorContext& context, ConstStringView absolute)
 {
 	auto result = AbsolutePathToRelative(context, absolute);
 	if (result.HasValue())
@@ -344,7 +344,7 @@ Optional<String> AssetBrowserView::AbsolutePathToVirtual(EditorContext& context,
 	return Optional<String>();
 }
 
-Optional<StringRef> AssetBrowserView::AbsolutePathToRelative(EditorContext& context, StringRef absolute)
+Optional<ConstStringView> AssetBrowserView::AbsolutePathToRelative(EditorContext& context, ConstStringView absolute)
 {
 	String& realRoot = pathStore;
 
@@ -361,10 +361,10 @@ Optional<StringRef> AssetBrowserView::AbsolutePathToRelative(EditorContext& cont
 	else
 		KK_LOG_ERROR("Current real root was not at the start of the path.");
 
-	return Optional<StringRef>();
+	return Optional<ConstStringView>();
 }
 
-String AssetBrowserView::RelativePathToVirtual(StringRef path) const
+String AssetBrowserView::RelativePathToVirtual(ConstStringView path) const
 {
 	String str(allocator);
 	str.Append(currentVirtualRoot);

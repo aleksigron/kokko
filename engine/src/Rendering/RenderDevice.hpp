@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderDeviceEnums.hpp"
@@ -16,7 +16,7 @@ public:
 		RenderDebugType type;
 		unsigned int id;
 		RenderDebugSeverity severity;
-		StringRef message;
+		ConstStringView message;
 	};
 
 	using DebugCallbackFn = void(*)(const DebugMessage&);
@@ -26,9 +26,9 @@ public:
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) = 0;
 
 	virtual void SetDebugMessageCallback(DebugCallbackFn callback) = 0;
-	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, StringRef label) = 0;
-	virtual void SetObjectPtrLabel(void* ptr, StringRef label) = 0;
-	virtual void PushDebugGroup(unsigned int id, StringRef message) = 0;
+	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, ConstStringView label) = 0;
+	virtual void SetObjectPtrLabel(void* ptr, ConstStringView label) = 0;
+	virtual void PushDebugGroup(unsigned int id, ConstStringView message) = 0;
 	virtual void PopDebugGroup() = 0;
 
 	virtual void Clear(const RenderCommandData::ClearMask* data) = 0;

@@ -30,7 +30,7 @@ bool EditorAssetLoader::LoadAsset(const Uid& uid, Array<uint8_t>& output)
 	return false;
 }
 
-Optional<Uid> EditorAssetLoader::GetAssetUidByVirtualPath(const StringRef& path)
+Optional<Uid> EditorAssetLoader::GetAssetUidByVirtualPath(const ConstStringView& path)
 {
 	pathString.Assign(path);
 

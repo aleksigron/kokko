@@ -1,6 +1,6 @@
 #include "Debug/DebugCulling.hpp"
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
@@ -36,7 +36,7 @@ void DebugCulling::UpdateAndDraw(World* world)
 		Scene* scene = world->GetScene();
 		CameraSystem* cameraSystem = world->GetCameraSystem();
 
-		textRenderer->AddText(StringRef("Culling camera is locked"), guideTextPosition);
+		textRenderer->AddText(ConstStringView("Culling camera is locked"), guideTextPosition);
 
 		const Mat4x4f& transform = renderer->GetCullingCameraTransform();
 

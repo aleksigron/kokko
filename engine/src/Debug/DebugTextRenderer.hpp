@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Array.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
@@ -78,17 +78,17 @@ public:
 	/**
 	 * Add a text to be rendered this frame at a specified normalized position.
 	 */
-	void AddTextNormalized(StringRef str, Vec2f position);
+	void AddTextNormalized(ConstStringView str, Vec2f position);
 
 	/**
 	 * Add a text to be rendered this frame at a specified pixel position.
 	 */
-	void AddText(StringRef str, Vec2f position);
+	void AddText(ConstStringView str, Vec2f position);
 
 	/**
 	 * Add a text to be rendered this frame in a specified area.
 	 */
-	void AddText(StringRef str, const Rectanglef& area);
+	void AddText(ConstStringView str, const Rectanglef& area);
 
 	void Render();
 };

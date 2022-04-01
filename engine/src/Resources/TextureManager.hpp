@@ -4,7 +4,7 @@
 
 #include "Core/ArrayView.hpp"
 #include "Core/HashMap.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 #include "Core/Uid.hpp"
 
 #include "Math/Vec2.hpp"
@@ -84,7 +84,7 @@ public:
 	
 	// TODO: Create a way for asset loader or some other mechanism to provide the metadata
 	TextureId FindTextureByUid(const kokko::Uid& uid, bool preferLinear = false);
-	TextureId FindTextureByPath(const StringRef& path, bool preferLinear = false);
+	TextureId FindTextureByPath(const ConstStringView& path, bool preferLinear = false);
 
 	TextureId GetId_White2D() const { return constantTextures[ConstTex_White2D]; }
 	TextureId GetId_Black2D() const { return constantTextures[ConstTex_Black2D]; }

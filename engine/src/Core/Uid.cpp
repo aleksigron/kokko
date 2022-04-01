@@ -6,7 +6,7 @@
 #include "doctest/doctest.h"
 
 #include "Core/Hash.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 #include "Core/StringUtil.hpp"
 
 #include "Math/Random.hpp"

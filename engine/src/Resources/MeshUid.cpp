@@ -4,7 +4,7 @@
 
 #include "doctest/doctest.h"
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 #include "Core/StringUtil.hpp"
 
 #include "Math/Random.hpp"
@@ -17,8 +17,8 @@ Optional<MeshUid> MeshUid::FromString(ArrayView<const char> str)
 	if (str.GetCount() < MeshUid::StringLength)
 		return Optional<MeshUid>();
 
-	StringRef strRef(str.GetData(), str.GetCount());
-	intptr_t split = strRef.FindFirst(StringRef(":"));
+	ConstStringView strRef(str.GetData(), str.GetCount());
+	intptr_t split = strRef.FindFirst(ConstStringView(":"));
 
 	if (split != Uid::StringLength)
 		return Optional<MeshUid>();

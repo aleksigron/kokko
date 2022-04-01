@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 class Allocator;
 class MaterialManager;
@@ -24,7 +24,7 @@ public:
 		TextureManager* textureManager);
 	~MaterialSerializer();
 
-	bool DeserializeMaterial(MaterialId id, StringRef config);
+	bool DeserializeMaterial(MaterialId id, ConstStringView config);
 	void SerializeToString(MaterialId id, String& out);
 
 private:

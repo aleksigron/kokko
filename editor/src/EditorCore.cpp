@@ -201,7 +201,7 @@ void EditorCore::SaveLevelAs(const std::filesystem::path& pathRelativeToAssets)
 	// TODO: Extract to a function
 	std::string pathStdStr = EditorConstants::VirtualMountAssets + ('/' + pathRelativeToAssets.generic_u8string());
 	String pathStr(allocator);
-	pathStr.Assign(StringRef(pathStdStr.c_str(), pathStdStr.length()));
+	pathStr.Assign(ConstStringView(pathStdStr.c_str(), pathStdStr.length()));
 
 	auto asset = editorContext.assetLibrary->FindAssetByVirtualPath(pathStr);
 	Optional<Uid> assetUid;
@@ -226,7 +226,7 @@ void EditorCore::SaveLevelAs(const std::filesystem::path& pathRelativeToAssets)
 	else
 	{
 		std::string relativePath = pathRelativeToAssets.generic_u8string();
-		StringRef relativePathRef(relativePath.c_str(), relativePath.length());
+		ConstStringView relativePathRef(relativePath.c_str(), relativePath.length());
 
 		// Create asset
 		assetUid = editorContext.assetLibrary->CreateAsset(AssetType::Level, relativePathRef, contentView);

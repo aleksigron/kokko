@@ -1,13 +1,13 @@
 #include "Rendering/UniformList.hpp"
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Rendering/Uniform.hpp"
 
 namespace kokko
 {
 
-TextureUniform* UniformList::FindTextureUniformByName(StringRef name)
+TextureUniform* UniformList::FindTextureUniformByName(ConstStringView name)
 {
 	for (size_t i = 0, count = textureUniformCount; i < count; ++i)
 		if (textureUniforms[i].name.ValueEquals(name))
@@ -16,7 +16,7 @@ TextureUniform* UniformList::FindTextureUniformByName(StringRef name)
 	return nullptr;
 }
 
-const TextureUniform* UniformList::FindTextureUniformByName(StringRef name) const
+const TextureUniform* UniformList::FindTextureUniformByName(ConstStringView name) const
 {
 	for (size_t i = 0, count = textureUniformCount; i < count; ++i)
 		if (textureUniforms[i].name.ValueEquals(name))

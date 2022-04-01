@@ -46,7 +46,7 @@ void DebugMemoryStats::UpdateAndDraw()
 		area.size.x = static_cast<float>(glyphWidth * columnWidth0);
 		area.size.y = static_cast<float>(lineHeight);
 
-		textRenderer->AddText(StringRef("Scope name"), area);
+		textRenderer->AddText(ConstStringView("Scope name"), area);
 	}
 
 	{
@@ -56,7 +56,7 @@ void DebugMemoryStats::UpdateAndDraw()
 		area.size.x = static_cast<float>(glyphWidth * columnWidth1);
 		area.size.y = static_cast<float>(lineHeight);
 
-		textRenderer->AddText(StringRef("Count"), area);
+		textRenderer->AddText(ConstStringView("Count"), area);
 	}
 
 	{
@@ -66,7 +66,7 @@ void DebugMemoryStats::UpdateAndDraw()
 		area.size.x = static_cast<float>(glyphWidth * columnWidth2);
 		area.size.y = static_cast<float>(lineHeight);
 
-		textRenderer->AddText(StringRef("Size"), area);
+		textRenderer->AddText(ConstStringView("Size"), area);
 	}
 
 	char buffer[32];
@@ -85,7 +85,7 @@ void DebugMemoryStats::UpdateAndDraw()
 			area.size.x = static_cast<float>(glyphWidth * columnWidth0);
 			area.size.y = static_cast<float>(lineHeight);
 
-			textRenderer->AddText(StringRef(name), area);
+			textRenderer->AddText(ConstStringView(name), area);
 		}
 
 		{
@@ -96,7 +96,7 @@ void DebugMemoryStats::UpdateAndDraw()
 			area.size.y = static_cast<float>(lineHeight);
 
 			fmt::format_to_n(buffer, sizeof(buffer), FMT_STRING("{}"), allocCount);
-			textRenderer->AddText(StringRef(buffer), area);
+			textRenderer->AddText(ConstStringView(buffer), area);
 		}
 
 		{
@@ -107,7 +107,7 @@ void DebugMemoryStats::UpdateAndDraw()
 			area.size.y = static_cast<float>(lineHeight);
 
 			fmt::format_to_n(buffer, sizeof(buffer), FMT_STRING("{}"), allocSize);
-			textRenderer->AddText(StringRef(buffer), area);
+			textRenderer->AddText(ConstStringView(buffer), area);
 		}
 	}
 }

@@ -236,7 +236,7 @@ void Framebuffer::SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDe
 	renderDevice->SetTextureCompareFunc(RenderTextureTarget::Texture2d, func);
 }
 
-void Framebuffer::SetDebugLabel(StringRef label)
+void Framebuffer::SetDebugLabel(ConstStringView label)
 {
 	renderDevice->SetObjectLabel(RenderObjectType::Framebuffer, framebufferId, label);
 }

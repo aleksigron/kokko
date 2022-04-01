@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Array.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "Math/Vec2.hpp"
 

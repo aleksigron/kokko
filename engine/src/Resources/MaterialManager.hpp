@@ -4,7 +4,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 #include "Core/Uid.hpp"
 
 #include "Rendering/UniformData.hpp"
@@ -77,7 +77,7 @@ public:
 	void RemoveMaterial(MaterialId id);
 
 	MaterialId FindMaterialByUid(const kokko::Uid& uid);
-	MaterialId FindMaterialByPath(const StringRef& path);
+	MaterialId FindMaterialByPath(const ConstStringView& path);
 
 	kokko::Uid GetMaterialUid(MaterialId id) const;
 

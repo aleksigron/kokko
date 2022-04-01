@@ -422,7 +422,7 @@ void EnvironmentSystem::SetEnvironmentTexture(EnvironmentId id, const kokko::Uid
 
 	// Load shader
 
-	ShaderId equirectShaderId = shaderManager->FindShaderByPath(StringRef("engine/shaders/preprocess/equirect_to_cube.glsl"));
+	ShaderId equirectShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/preprocess/equirect_to_cube.glsl"));
 	const ShaderData& equirectShader = shaderManager->GetShaderData(equirectShaderId);
 
 	// Bind common resources
@@ -471,7 +471,7 @@ void EnvironmentSystem::SetEnvironmentTexture(EnvironmentId id, const kokko::Uid
 
 	// Load shader
 
-	ShaderId calcDiffuseShaderId = shaderManager->FindShaderByPath(StringRef("engine/shaders/preprocess/calc_diffuse_irradiance.glsl"));
+	ShaderId calcDiffuseShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/preprocess/calc_diffuse_irradiance.glsl"));
 	const ShaderData& calcDiffuseShader = shaderManager->GetShaderData(calcDiffuseShaderId);
 
 	renderDevice->UseShaderProgram(calcDiffuseShader.driverId);
@@ -513,7 +513,7 @@ void EnvironmentSystem::SetEnvironmentTexture(EnvironmentId id, const kokko::Uid
 
 	// Load shader
 
-	ShaderId calcSpecularShaderId = shaderManager->FindShaderByPath(StringRef("engine/shaders/preprocess/calc_specular_irradiance.glsl"));
+	ShaderId calcSpecularShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/preprocess/calc_specular_irradiance.glsl"));
 	const ShaderData& calcSpecularShader = shaderManager->GetShaderData(calcSpecularShaderId);
 
 	renderDevice->UseShaderProgram(calcSpecularShader.driverId);

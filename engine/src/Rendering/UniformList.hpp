@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 namespace kokko
 {
@@ -21,8 +21,8 @@ struct UniformList
 	BufferUniform* bufferUniforms = nullptr;
 	TextureUniform* textureUniforms = nullptr;
 
-	TextureUniform* FindTextureUniformByName(StringRef name);
-	const TextureUniform* FindTextureUniformByName(StringRef name) const;
+	TextureUniform* FindTextureUniformByName(ConstStringView name);
+	const TextureUniform* FindTextureUniformByName(ConstStringView name) const;
 
 	TextureUniform* FindTextureUniformByNameHash(uint32_t nameHash);
 	const TextureUniform* FindTextureUniformByNameHash(uint32_t nameHash) const;

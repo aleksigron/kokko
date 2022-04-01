@@ -55,15 +55,15 @@ const BitmapGlyph* BitmapFont::GetGlyph(unsigned int codePoint) const
 	return nullptr;
 }
 
-bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
+bool BitmapFont::LoadFromBDF(TextureManager* textureManager, ConstStringView content)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	StringRef unprocessed = content;
+	ConstStringView unprocessed = content;
 
 	// Find end of first line
 
-	StringRef line;
+	ConstStringView line;
 
 	size_t lineEnd = FindUnprintable(unprocessed);
 
@@ -83,7 +83,7 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, StringRef content)
 	Vec2i glyphsOnAxes(0, 0);
 
 	size_t spacesInLine[7];
-	StringRef tokens[8];
+	ConstStringView tokens[8];
 
 	while (line.str != nullptr)
 	{
@@ -303,7 +303,7 @@ Vec2f BitmapFont::CalculateTextureSize(int glyphCount, Vec2f glyphSize)
 	return result;
 }
 
-void BitmapFont::ParseBitmapRow(StringRef line, unsigned int pixels, unsigned char* bitmapOut)
+void BitmapFont::ParseBitmapRow(ConstStringView line, unsigned int pixels, unsigned char* bitmapOut)
 {
 	for (unsigned int charIndex = 0; charIndex < line.len; ++charIndex)
 	{
@@ -323,7 +323,7 @@ void BitmapFont::ParseBitmapRow(StringRef line, unsigned int pixels, unsigned ch
 	}
 }
 
-size_t BitmapFont::FindPrintable(StringRef string)
+size_t BitmapFont::FindPrintable(ConstStringView string)
 {
 	const char* itr = string.str;
 	const char* end = string.str + string.len;
@@ -338,7 +338,7 @@ size_t BitmapFont::FindPrintable(StringRef string)
 	return string.len;
 }
 
-size_t BitmapFont::FindUnprintable(StringRef string)
+size_t BitmapFont::FindUnprintable(ConstStringView string)
 {
 	const char* itr = string.str;
 	const char* end = string.str + string.len;
@@ -353,7 +353,7 @@ size_t BitmapFont::FindUnprintable(StringRef string)
 	return string.len;
 }
 
-size_t BitmapFont::FindSpacesInString(StringRef string, size_t* posOut, size_t maxPositions)
+size_t BitmapFont::FindSpacesInString(ConstStringView string, size_t* posOut, size_t maxPositions)
 {
 	unsigned int foundCount = 0;
 
@@ -371,7 +371,7 @@ size_t BitmapFont::FindSpacesInString(StringRef string, size_t* posOut, size_t m
 	return foundCount;
 }
 
-int BitmapFont::ParseInt(StringRef string)
+int BitmapFont::ParseInt(ConstStringView string)
 {
 	int result = 0;
 	int sign = 1;

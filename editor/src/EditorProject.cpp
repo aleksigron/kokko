@@ -5,7 +5,7 @@
 #include "yaml-cpp/yaml.h"
 
 #include "Core/Core.hpp"
-#include "Core/StringRef.hpp"
+#include "Core/StringView.hpp"
 
 #include "EditorConstants.hpp"
 
@@ -59,7 +59,7 @@ bool EditorProject::DeserializeFromFile(const std::filesystem::path& projectRoot
 		if (nameNode.IsDefined() && nameNode.IsScalar())
 		{
 			const std::string& nameStr = nameNode.Scalar();
-			name.Assign(StringRef(nameStr.c_str(), nameStr.size()));
+			name.Assign(ConstStringView(nameStr.c_str(), nameStr.size()));
 
 			SetRootPath(projectRootPath);
 
@@ -85,7 +85,7 @@ void EditorProject::SetRootPath(const std::filesystem::path& path)
 	rootPath = path;
 
 	std::string pathStr = rootPath.u8string();
-	rootPathString.Assign(StringRef(pathStr.c_str(), pathStr.size()));
+	rootPathString.Assign(ConstStringView(pathStr.c_str(), pathStr.size()));
 
 	assetPath = rootPath / EditorConstants::AssetDirectoryName;
 }
@@ -100,7 +100,7 @@ const String& EditorProject::GetName() const
 	return name;
 }
 
-void EditorProject::SetName(StringRef name)
+void EditorProject::SetName(ConstStringView name)
 {
 	this->name.Assign(name);
 }
