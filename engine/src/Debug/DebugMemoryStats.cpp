@@ -46,7 +46,7 @@ void DebugMemoryStats::UpdateAndDraw()
 		area.size.x = static_cast<float>(glyphWidth * columnWidth0);
 		area.size.y = static_cast<float>(lineHeight);
 
-		textRenderer->AddText(ConstStringView("Scope name"), area);
+		textRenderer->AddText(kokko::ConstStringView("Scope name"), area);
 	}
 
 	{
@@ -56,7 +56,7 @@ void DebugMemoryStats::UpdateAndDraw()
 		area.size.x = static_cast<float>(glyphWidth * columnWidth1);
 		area.size.y = static_cast<float>(lineHeight);
 
-		textRenderer->AddText(ConstStringView("Count"), area);
+		textRenderer->AddText(kokko::ConstStringView("Count"), area);
 	}
 
 	{
@@ -66,7 +66,7 @@ void DebugMemoryStats::UpdateAndDraw()
 		area.size.x = static_cast<float>(glyphWidth * columnWidth2);
 		area.size.y = static_cast<float>(lineHeight);
 
-		textRenderer->AddText(ConstStringView("Size"), area);
+		textRenderer->AddText(kokko::ConstStringView("Size"), area);
 	}
 
 	char buffer[32];
@@ -85,7 +85,7 @@ void DebugMemoryStats::UpdateAndDraw()
 			area.size.x = static_cast<float>(glyphWidth * columnWidth0);
 			area.size.y = static_cast<float>(lineHeight);
 
-			textRenderer->AddText(ConstStringView(name), area);
+			textRenderer->AddText(kokko::ConstStringView(name), area);
 		}
 
 		{
@@ -96,7 +96,7 @@ void DebugMemoryStats::UpdateAndDraw()
 			area.size.y = static_cast<float>(lineHeight);
 
 			fmt::format_to_n(buffer, sizeof(buffer), FMT_STRING("{}"), allocCount);
-			textRenderer->AddText(ConstStringView(buffer), area);
+			textRenderer->AddText(kokko::ConstStringView(buffer), area);
 		}
 
 		{
@@ -107,7 +107,7 @@ void DebugMemoryStats::UpdateAndDraw()
 			area.size.y = static_cast<float>(lineHeight);
 
 			fmt::format_to_n(buffer, sizeof(buffer), FMT_STRING("{}"), allocSize);
-			textRenderer->AddText(ConstStringView(buffer), area);
+			textRenderer->AddText(kokko::ConstStringView(buffer), area);
 		}
 	}
 }

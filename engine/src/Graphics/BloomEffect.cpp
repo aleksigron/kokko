@@ -77,10 +77,10 @@ void BloomEffect::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	ConstStringView extractPath("engine/shaders/post_process/bloom_extract.glsl");
-	ConstStringView downsamplePath("engine/shaders/post_process/bloom_downsample.glsl");
-	ConstStringView upsamplePath("engine/shaders/post_process/bloom_upsample.glsl");
-	ConstStringView applyPath("engine/shaders/post_process/bloom_apply.glsl");
+	kokko::ConstStringView extractPath("engine/shaders/post_process/bloom_extract.glsl");
+	kokko::ConstStringView downsamplePath("engine/shaders/post_process/bloom_downsample.glsl");
+	kokko::ConstStringView upsamplePath("engine/shaders/post_process/bloom_upsample.glsl");
+	kokko::ConstStringView applyPath("engine/shaders/post_process/bloom_apply.glsl");
 
 	extractShaderId = shaderManager->FindShaderByPath(extractPath);
 	downsampleShaderId = shaderManager->FindShaderByPath(downsamplePath);

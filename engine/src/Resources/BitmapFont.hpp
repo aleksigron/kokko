@@ -33,11 +33,11 @@ private:
 
 	Vec2i genericGlyphSize;
 
-	static size_t FindPrintable(ConstStringView string);
-	static size_t FindUnprintable(ConstStringView string);
-	static size_t FindSpacesInString(ConstStringView string, size_t* posOut, size_t maxPositions);
-	static int ParseInt(ConstStringView string);
-	static void ParseBitmapRow(ConstStringView line, unsigned int pixels, unsigned char* bitmapOut);
+	static size_t FindPrintable(kokko::ConstStringView string);
+	static size_t FindUnprintable(kokko::ConstStringView string);
+	static size_t FindSpacesInString(kokko::ConstStringView string, size_t* posOut, size_t maxPositions);
+	static int ParseInt(kokko::ConstStringView string);
+	static void ParseBitmapRow(kokko::ConstStringView line, unsigned int pixels, unsigned char* bitmapOut);
 	static Vec2f CalculateTextureSize(int glyphCount, Vec2f glyphSize);
 	static bool CompareGlyphCodePointAsc(const BitmapGlyph& lhs, const BitmapGlyph& rhs);
 
@@ -53,5 +53,5 @@ public:
 	unsigned int GetTextureDriverId() const { return textureId; }
 	Vec2f GetTextureSize() const { return textureSize; }
 
-	bool LoadFromBDF(TextureManager* textureManager, ConstStringView content);
+	bool LoadFromBDF(TextureManager* textureManager, kokko::ConstStringView content);
 };

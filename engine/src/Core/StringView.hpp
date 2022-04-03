@@ -3,6 +3,9 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace kokko
+{
+
 template <typename CharType>
 struct StringView
 {
@@ -51,7 +54,6 @@ struct StringView
 using MutableStringView = StringView<char>;
 using ConstStringView = StringView<const char>;
 
-namespace kokko
-{
 uint32_t Hash32(const ConstStringView& value, uint32_t seed);
+
 }

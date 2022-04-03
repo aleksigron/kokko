@@ -83,8 +83,8 @@ int main(int argc, char** argv)
 
 		using MountPoint = kokko::FilesystemResolverVirtual::MountPoint;
 		MountPoint mounts[] = {
-			MountPoint{ ConstStringView(EditorConst::VirtualMountEngine), ConstStringView("engine/res") },
-			MountPoint{ ConstStringView(EditorConst::VirtualMountEditor), ConstStringView("editor/res") }
+			MountPoint{ kokko::ConstStringView(EditorConst::VirtualMountEngine), kokko::ConstStringView("engine/res") },
+			MountPoint{ kokko::ConstStringView(EditorConst::VirtualMountEditor), kokko::ConstStringView("editor/res") }
 		};
 		resolver.SetMountPoints(ArrayView(mounts));
 

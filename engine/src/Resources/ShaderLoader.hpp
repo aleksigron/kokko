@@ -21,8 +21,6 @@ namespace kokko
 
 class Filesystem;
 
-}
-
 class ShaderLoader
 {
 public:
@@ -33,7 +31,7 @@ public:
 	};
 
 	ShaderLoader(Allocator* allocator,
-		kokko::Filesystem* filesystem,
+		Filesystem* filesystem,
 		RenderDevice* renderDevice);
 
 	~ShaderLoader();
@@ -52,13 +50,13 @@ private:
 	static const char* const WhitespaceChars;
 
 	Allocator* allocator;
-	kokko::Filesystem* filesystem;
+	Filesystem* filesystem;
 	RenderDevice* renderDevice;
 
 	HashMap<uint32_t, kokko::String> includeFileCache;
 	SortedArray<uint32_t> filesIncludedInStage;
-	kokko::String pathString;
-	kokko::String processedStageSources[MaxStageCount];
+	String pathString;
+	String processedStageSources[MaxStageCount];
 
 	bool FindShaderSections(
 		ConstStringView shaderContents,
@@ -83,10 +81,12 @@ private:
 		ConstStringView uniformBlockDefinition,
 		ConstStringView mainFilePath,
 		ConstStringView mainFileContent,
-		kokko::String& processedSourceOut);
+		String& processedSourceOut);
 
 	bool ProcessIncludes(
 		ConstStringView sourceStr,
 		uint32_t filePathHash,
-		kokko::String& processedSourceOut);
+		String& processedSourceOut);
 };
+
+}

@@ -16,7 +16,7 @@ public:
 		RenderDebugType type;
 		unsigned int id;
 		RenderDebugSeverity severity;
-		ConstStringView message;
+		kokko::ConstStringView message;
 	};
 
 	using DebugCallbackFn = void(*)(const DebugMessage&);
@@ -26,9 +26,9 @@ public:
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) = 0;
 
 	virtual void SetDebugMessageCallback(DebugCallbackFn callback) = 0;
-	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, ConstStringView label) = 0;
-	virtual void SetObjectPtrLabel(void* ptr, ConstStringView label) = 0;
-	virtual void PushDebugGroup(unsigned int id, ConstStringView message) = 0;
+	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label) = 0;
+	virtual void SetObjectPtrLabel(void* ptr, kokko::ConstStringView label) = 0;
+	virtual void PushDebugGroup(unsigned int id, kokko::ConstStringView message) = 0;
 	virtual void PopDebugGroup() = 0;
 
 	virtual void Clear(const RenderCommandData::ClearMask* data) = 0;

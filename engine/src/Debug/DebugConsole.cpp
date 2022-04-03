@@ -55,7 +55,7 @@ void DebugConsole::SetDrawArea(const Rectanglef& area)
 	this->drawArea = area;
 }
 
-void DebugConsole::AddLogEntry(ConstStringView text, LogLevel level)
+void DebugConsole::AddLogEntry(kokko::ConstStringView text, LogLevel level)
 {
 	const BitmapFont* font = textRenderer->GetFont();
 
@@ -84,7 +84,7 @@ void DebugConsole::AddLogEntry(ConstStringView text, LogLevel level)
 	size_t charCount = EncodingUtf8::CountCharacters(inputValue.GetRef());
 
 	LogEntry& newEntry = entries.Push();
-	newEntry.text = ConstStringView();
+	newEntry.text = kokko::ConstStringView();
 	newEntry.rows = static_cast<int>(textRenderer->GetRowCountForTextLength(charCount));
 	newEntry.lengthWithPad = 0;
 	newEntry.level = level;

@@ -26,6 +26,9 @@
 
 #include "System/Filesystem.hpp"
 
+namespace kokko
+{
+
 namespace
 {
 const size_t MaxStageCount = 2;
@@ -34,13 +37,13 @@ struct AddUniforms_UniformData
 {
 	ConstStringView name;
 	unsigned int arraySize;
-	kokko::UniformDataType type;
+	UniformDataType type;
 };
 
-bool BufferUniformSortPredicate(const kokko::BufferUniform& a, const kokko::BufferUniform& b)
+bool BufferUniformSortPredicate(const BufferUniform& a, const BufferUniform& b)
 {
-	const kokko::UniformTypeInfo& aType = kokko::UniformTypeInfo::Types[static_cast<unsigned int>(a.type)];
-	const kokko::UniformTypeInfo& bType = kokko::UniformTypeInfo::Types[static_cast<unsigned int>(b.type)];
+	const UniformTypeInfo& aType = UniformTypeInfo::Types[static_cast<unsigned int>(a.type)];
+	const UniformTypeInfo& bType = UniformTypeInfo::Types[static_cast<unsigned int>(b.type)];
 	return aType.size > bType.size;
 }
 
@@ -78,7 +81,7 @@ void AddUniformsAndShaderPath(
 	for (size_t uIndex = 0, uCount = uniforms.GetCount(); uIndex < uCount; ++uIndex)
 	{
 		const AddUniforms_UniformData& uniform = uniforms[uIndex];
-		kokko::UniformTypeInfo type = kokko::UniformTypeInfo::FromType(uniform.type);
+		UniformTypeInfo type = UniformTypeInfo::FromType(uniform.type);
 
 		if (type.isTexture)
 		{
@@ -99,8 +102,8 @@ void AddUniformsAndShaderPath(
 	uniformBlockBytes = Math::RoundUpToMultiple(uniformBlockBytes, shaderDataAlignment);
 	size_t shaderPathBytes = Math::RoundUpToMultiple(shaderPath.len + 1, shaderDataAlignment);
 
-	size_t bufferUniformBytes = sizeof(kokko::BufferUniform) * bufferUniformCount;
-	size_t textureUniformBytes = sizeof(kokko::TextureUniform) * textureUniformCount;
+	size_t bufferUniformBytes = sizeof(BufferUniform) * bufferUniformCount;
+	size_t textureUniformBytes = sizeof(TextureUniform) * textureUniformCount;
 
 	size_t shaderDataBytes =
 		nameBytes + uniformBlockBytes + shaderPathBytes + bufferUniformBytes + textureUniformBytes;
@@ -113,26 +116,26 @@ void AddUniformsAndShaderPath(
 	char* shaderDataEnd = namePtr + shaderDataBytes;
 	char* uniformBlockPtr = namePtr + nameBytes;
 	char* shaderPathPtr = uniformBlockPtr + uniformBlockBytes;
-	kokko::BufferUniform* bufferUniformPtr = reinterpret_cast<kokko::BufferUniform*>(shaderPathPtr + shaderPathBytes);
-	kokko::TextureUniform* textureUniformPtr = reinterpret_cast<kokko::TextureUniform*>(bufferUniformPtr + bufferUniformCount);
+	BufferUniform* bufferUniformPtr = reinterpret_cast<BufferUniform*>(shaderPathPtr + shaderPathBytes);
+	TextureUniform* textureUniformPtr = reinterpret_cast<TextureUniform*>(bufferUniformPtr + bufferUniformCount);
 
 	shaderOut.uniforms.bufferUniforms = bufferUniformPtr;
 	shaderOut.uniforms.textureUniforms = textureUniformPtr;
 
 	// Copy uniform definitions to allocated memory
-	
+
 	unsigned int textureUniformsCopied = 0;
 	unsigned int bufferUniformsCopied = 0;
 
 	for (size_t uIndex = 0, uCount = uniforms.GetCount(); uIndex < uCount; ++uIndex)
 	{
-		kokko::ShaderUniform* baseUniform = nullptr;
+		ShaderUniform* baseUniform = nullptr;
 
-		kokko::UniformDataType dataType = uniforms[uIndex].type;
+		UniformDataType dataType = uniforms[uIndex].type;
 
-		if (kokko::UniformTypeInfo::FromType(dataType).isTexture)
+		if (UniformTypeInfo::FromType(dataType).isTexture)
 		{
-			kokko::TextureUniform& uniform = shaderOut.uniforms.textureUniforms[textureUniformsCopied];
+			TextureUniform& uniform = shaderOut.uniforms.textureUniforms[textureUniformsCopied];
 
 			// Since shader is not compiled at this point, we can't know the uniform location
 			uniform.uniformLocation = -1;
@@ -140,10 +143,10 @@ void AddUniformsAndShaderPath(
 
 			switch (dataType)
 			{
-			case kokko::UniformDataType::Tex2D:
+			case UniformDataType::Tex2D:
 				uniform.textureTarget = RenderTextureTarget::Texture2d;
 				break;
-			case kokko::UniformDataType::TexCube:
+			case UniformDataType::TexCube:
 				uniform.textureTarget = RenderTextureTarget::TextureCubeMap;
 				break;
 			default:
@@ -153,18 +156,18 @@ void AddUniformsAndShaderPath(
 
 			++textureUniformsCopied;
 
-			baseUniform = static_cast<kokko::ShaderUniform*>(&uniform);
+			baseUniform = static_cast<ShaderUniform*>(&uniform);
 		}
 		else
 		{
-			kokko::BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[bufferUniformsCopied];
+			BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[bufferUniformsCopied];
 			uniform.dataOffset = 0;
 			uniform.bufferObjectOffset = 0;
 			uniform.arraySize = uniforms[uIndex].arraySize;
 
 			++bufferUniformsCopied;
 
-			baseUniform = static_cast<kokko::ShaderUniform*>(&uniform);
+			baseUniform = static_cast<ShaderUniform*>(&uniform);
 		}
 
 		// Copy uniform name
@@ -177,7 +180,7 @@ void AddUniformsAndShaderPath(
 		namePtr += uniformName.len + 1;
 
 		// Compute uniform name hash
-		baseUniform->nameHash = kokko::HashString(baseUniform->name.str, baseUniform->name.len);
+		baseUniform->nameHash = HashString(baseUniform->name.str, baseUniform->name.len);
 		baseUniform->type = dataType;
 	}
 
@@ -190,8 +193,8 @@ void AddUniformsAndShaderPath(
 	shaderOut.uniforms.textureUniformCount = textureUniformCount;
 
 	// Order buffer uniforms based on size
-	kokko::BufferUniform* begin = shaderOut.uniforms.bufferUniforms;
-	kokko::BufferUniform* end = begin + bufferUniformCount;
+	BufferUniform* begin = shaderOut.uniforms.bufferUniforms;
+	BufferUniform* end = begin + bufferUniformCount;
 	std::sort(begin, end, BufferUniformSortPredicate);
 
 	// Calculate CPU and GPU buffer offsets for buffer uniforms
@@ -201,9 +204,9 @@ void AddUniformsAndShaderPath(
 
 	for (size_t i = 0, count = bufferUniformCount; i < count; ++i)
 	{
-		kokko::BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
-		const kokko::UniformTypeInfo& type = kokko::UniformTypeInfo::FromType(uniform.type);
-		
+		BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
+		const UniformTypeInfo& type = UniformTypeInfo::FromType(uniform.type);
+
 		// Round up the offset to match type aligment
 		bufferObjectOffset = Math::RoundUpToMultiple(bufferObjectOffset, type.alignment);
 
@@ -250,8 +253,8 @@ void AddUniformsAndShaderPath(
 
 		for (size_t i = 0, count = shaderOut.uniforms.bufferUniformCount; i < count; ++i)
 		{
-			const kokko::BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
-			const kokko::UniformTypeInfo& typeInfo = kokko::UniformTypeInfo::FromType(uniform.type);
+			const BufferUniform& uniform = shaderOut.uniforms.bufferUniforms[i];
+			const UniformTypeInfo& typeInfo = UniformTypeInfo::FromType(uniform.type);
 
 			auto bufLeft = shaderDataEnd - uniformBlockPtr;
 
@@ -277,7 +280,7 @@ void UpdateTextureUniformLocations(
 
 	for (size_t idx = 0, count = shaderInOut.uniforms.textureUniformCount; idx < count; ++idx)
 	{
-		kokko::TextureUniform& u = shaderInOut.uniforms.textureUniforms[idx];
+		TextureUniform& u = shaderInOut.uniforms.textureUniforms[idx];
 		u.uniformLocation = renderDevice->GetUniformLocation(shaderInOut.driverId, u.name.str);
 	}
 }
@@ -310,7 +313,7 @@ bool Compile(
 
 		if (infoLogLength > 0)
 		{
-			kokko::String infoLog(allocator);
+			String infoLog(allocator);
 			infoLog.Resize(infoLogLength);
 
 			// Print out info log
@@ -393,7 +396,7 @@ bool CompileAndLink(
 
 		if (infoLogLength > 0)
 		{
-			kokko::String infoLog(allocator);
+			String infoLog(allocator);
 			infoLog.Resize(infoLogLength);
 
 			// Get info log
@@ -417,7 +420,7 @@ bool CompileAndLink(
 const char* const ShaderLoader::LineBreakChars = "\r\n";
 const char* const ShaderLoader::WhitespaceChars = " \t\r\n";
 
-ShaderLoader::ShaderLoader(Allocator* allocator, kokko::Filesystem* filesystem, RenderDevice* renderDevice) :
+ShaderLoader::ShaderLoader(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
 	allocator(allocator),
 	filesystem(filesystem),
 	renderDevice(renderDevice),
@@ -426,7 +429,7 @@ ShaderLoader::ShaderLoader(Allocator* allocator, kokko::Filesystem* filesystem, 
 	pathString(allocator)
 {
 	for (size_t i = 0; i < MaxStageCount; ++i)
-		processedStageSources[i] = kokko::String(allocator);
+		processedStageSources[i] = String(allocator);
 }
 
 ShaderLoader::~ShaderLoader()
@@ -444,7 +447,7 @@ bool ShaderLoader::LoadFromFile(
 	ConstStringView programSection;
 	StageSource stageSections[MaxStageCount];
 	size_t stageCount;
-	
+
 	if (FindShaderSections(shaderContent, programSection, stageSections, stageCount) == false)
 		return false;
 
@@ -528,7 +531,10 @@ bool ShaderLoader::FindShaderSections(
 		return false;
 }
 
-void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, ConstStringView programSection, ConstStringView shaderPath)
+void ShaderLoader::ProcessProgramProperties(
+	ShaderData& shaderOut,
+	ConstStringView programSection,
+	ConstStringView shaderPath)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -567,24 +573,24 @@ void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, ConstStringVi
 		AddUniforms_UniformData& uniform = uniforms[uniformCount];
 		uniform.name = nameStr;
 
-		uint32_t typeHash = kokko::HashString(typeStr.str, typeStr.len);
+		uint32_t typeHash = HashString(typeStr.str, typeStr.len);
 
 		switch (typeHash)
 		{
-		case "tex2d"_hash: uniform.type = kokko::UniformDataType::Tex2D; break;
-		case "texCube"_hash: uniform.type = kokko::UniformDataType::TexCube; break;
-		case "mat4x4"_hash: uniform.type = kokko::UniformDataType::Mat4x4; break;
-		case "mat4x4Array"_hash: uniform.type = kokko::UniformDataType::Mat4x4Array; break;
-		case "vec4"_hash: uniform.type = kokko::UniformDataType::Vec4; break;
-		case "vec4Array"_hash: uniform.type = kokko::UniformDataType::Vec4Array; break;
-		case "vec3"_hash: uniform.type = kokko::UniformDataType::Vec3; break;
-		case "vec3Array"_hash: uniform.type = kokko::UniformDataType::Vec3Array; break;
-		case "vec2"_hash: uniform.type = kokko::UniformDataType::Vec2; break;
-		case "vec2Array"_hash: uniform.type = kokko::UniformDataType::Vec2Array; break;
-		case "float"_hash: uniform.type = kokko::UniformDataType::Float; break;
-		case "floatArray"_hash: uniform.type = kokko::UniformDataType::FloatArray; break;
-		case "int"_hash: uniform.type = kokko::UniformDataType::Int; break;
-		case "intArray"_hash: uniform.type = kokko::UniformDataType::IntArray; break;
+		case "tex2d"_hash: uniform.type = UniformDataType::Tex2D; break;
+		case "texCube"_hash: uniform.type = UniformDataType::TexCube; break;
+		case "mat4x4"_hash: uniform.type = UniformDataType::Mat4x4; break;
+		case "mat4x4Array"_hash: uniform.type = UniformDataType::Mat4x4Array; break;
+		case "vec4"_hash: uniform.type = UniformDataType::Vec4; break;
+		case "vec4Array"_hash: uniform.type = UniformDataType::Vec4Array; break;
+		case "vec3"_hash: uniform.type = UniformDataType::Vec3; break;
+		case "vec3Array"_hash: uniform.type = UniformDataType::Vec3Array; break;
+		case "vec2"_hash: uniform.type = UniformDataType::Vec2; break;
+		case "vec2Array"_hash: uniform.type = UniformDataType::Vec2Array; break;
+		case "float"_hash: uniform.type = UniformDataType::Float; break;
+		case "floatArray"_hash: uniform.type = UniformDataType::FloatArray; break;
+		case "int"_hash: uniform.type = UniformDataType::Int; break;
+		case "intArray"_hash: uniform.type = UniformDataType::IntArray; break;
 
 		default:
 			break;
@@ -592,7 +598,7 @@ void ShaderLoader::ProcessProgramProperties(ShaderData& shaderOut, ConstStringVi
 
 		uniform.arraySize = 0;
 
-		if (kokko::UniformTypeInfo::FromType(uniform.type).isArray)
+		if (UniformTypeInfo::FromType(uniform.type).isArray)
 		{
 			// TODO: Implement array type size
 			KK_LOG_ERROR("Failed to parse shader because array uniforms aren't implemented");
@@ -653,7 +659,7 @@ bool ShaderLoader::ProcessStage(
 	ConstStringView uniformBlockDefinition,
 	ConstStringView mainFilePath,
 	ConstStringView mainFileContent,
-	kokko::String& processedSourceOut)
+	String& processedSourceOut)
 {
 	processedSourceOut.Clear();
 	processedSourceOut.Append(versionStr);
@@ -661,7 +667,7 @@ bool ShaderLoader::ProcessStage(
 	if (uniformBlockDefinition.len > 0)
 		processedSourceOut.Append(uniformBlockDefinition);
 
-	uint32_t pathHash = kokko::HashString(mainFilePath.str, mainFilePath.len);
+	uint32_t pathHash = HashString(mainFilePath.str, mainFilePath.len);
 
 	if (ProcessIncludes(mainFileContent, pathHash, processedSourceOut) == false)
 		return false;
@@ -675,7 +681,7 @@ bool ShaderLoader::ProcessStage(
 bool ShaderLoader::ProcessIncludes(
 	ConstStringView sourceStr,
 	uint32_t filePathHash,
-	kokko::String& processedSourceOut)
+	String& processedSourceOut)
 {
 	const ConstStringView includeDeclStr("#include ");
 
@@ -722,7 +728,7 @@ bool ShaderLoader::ProcessIncludes(
 		includeStatementEnd = secondQuote + 1;
 
 		ConstStringView includePath = sourceStr.SubStrPos(firstQuote + 1, secondQuote);
-		uint32_t pathHash = kokko::HashString(includePath.str, includePath.len);
+		uint32_t pathHash = HashString(includePath.str, includePath.len);
 
 		// Include file only if it hasn't been included yet in this shader stage
 		if (filesIncludedInStage.Contains(pathHash) == false)
@@ -734,7 +740,7 @@ bool ShaderLoader::ProcessIncludes(
 			{
 				pathString.Assign(includePath);
 
-				kokko::String fileContent(allocator);
+				String fileContent(allocator);
 
 				if (filesystem->ReadText(pathString.GetCStr(), fileContent))
 				{
@@ -772,3 +778,5 @@ bool ShaderLoader::ProcessIncludes(
 
 	return success;
 }
+
+} // namespace kokko

@@ -18,8 +18,8 @@ void EditorImages::LoadImages(TextureManager* textureManager)
 {
 	this->textureManager = textureManager;
 
-	folderIcon = textureManager->FindTextureByPath(ConstStringView("editor/textures/editor_folder_icon_256.png"));
-	genericFileIcon = textureManager->FindTextureByPath(ConstStringView("editor/textures/editor_generic_file_icon_256.png"));
+	folderIcon = textureManager->FindTextureByPath(kokko::ConstStringView("editor/textures/editor_folder_icon_256.png"));
+	genericFileIcon = textureManager->FindTextureByPath(kokko::ConstStringView("editor/textures/editor_generic_file_icon_256.png"));
 }
 
 void* EditorImages::GetImGuiTextureId(TextureId id) const

@@ -236,7 +236,7 @@ TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid, bool preferLin
 	return TextureId::Null;
 }
 
-TextureId TextureManager::FindTextureByPath(const ConstStringView& path, bool preferLinear)
+TextureId TextureManager::FindTextureByPath(kokko::ConstStringView path, bool preferLinear)
 {
 	KOKKO_PROFILE_FUNCTION();
 

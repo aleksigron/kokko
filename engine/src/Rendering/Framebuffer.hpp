@@ -46,7 +46,7 @@ public:
 	void AttachExternalDepthTexture(unsigned int textureId);
 	void SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDepthCompareFunc func);
 
-	void SetDebugLabel(ConstStringView label);
+	void SetDebugLabel(kokko::ConstStringView label);
 
 private:
 	void CreateTexture(RenderTextureSizedFormat format, int width, int height);

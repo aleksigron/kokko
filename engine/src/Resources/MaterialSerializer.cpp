@@ -18,7 +18,7 @@
 
 namespace {
 
-const rapidjson::Value* FindVariableValue(const rapidjson::Value& variablesArray, const ConstStringView& name)
+const rapidjson::Value* FindVariableValue(const rapidjson::Value& variablesArray, kokko::ConstStringView name)
 {
 	if (variablesArray.IsArray())
 	{
@@ -31,7 +31,7 @@ const rapidjson::Value* FindVariableValue(const rapidjson::Value& variablesArray
 
 			if (nameItr != varItr->MemberEnd() &&
 				nameItr->value.IsString() &&
-				ConstStringView(nameItr->value.GetString(), nameItr->value.GetStringLength()).ValueEquals(name))
+				kokko::ConstStringView(nameItr->value.GetString(), nameItr->value.GetStringLength()) == name)
 			{
 				rapidjson::Value::ConstMemberIterator valueItr = varItr->FindMember("value");
 				if (valueItr != varItr->MemberEnd())

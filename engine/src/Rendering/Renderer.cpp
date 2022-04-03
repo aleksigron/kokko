@@ -223,7 +223,7 @@ void Renderer::Initialize()
 			storage.dynamicStorage = true;
 			device->SetBufferStorage(&storage);
 
-			ConstStringView label("Renderer viewport uniform buffer");
+			kokko::ConstStringView label("Renderer viewport uniform buffer");
 			device->SetObjectLabel(RenderObjectType::Buffer, buffers[i], label);
 		}
 	}
@@ -242,7 +242,7 @@ void Renderer::Initialize()
 		framebufferShadow.SetDepthTextureCompare(
 			RenderTextureCompareMode::CompareRefToTexture, RenderDepthCompareFunc::GreaterThanOrEqual);
 
-		framebufferShadow.SetDebugLabel(ConstStringView("Renderer shadow framebuffer"));
+		framebufferShadow.SetDebugLabel(kokko::ConstStringView("Renderer shadow framebuffer"));
 	}
 	
 	{
@@ -260,7 +260,7 @@ void Renderer::Initialize()
 		storage.dynamicStorage = true;
 		device->SetBufferStorage(&storage);
 
-		ConstStringView label("Renderer tonemap uniform buffer");
+		kokko::ConstStringView label("Renderer tonemap uniform buffer");
 		device->SetObjectLabel(RenderObjectType::Buffer, tonemapUniformBufferId, label);
 	}
 
@@ -279,7 +279,7 @@ void Renderer::Initialize()
 		storage.dynamicStorage = true;
 		device->SetBufferStorage(&storage);
 
-		ConstStringView label("Renderer deferred lighting uniform buffer");
+		kokko::ConstStringView label("Renderer deferred lighting uniform buffer");
 		device->SetObjectLabel(RenderObjectType::Buffer, lightingUniformBufferId, label);
 	}
 
@@ -291,22 +291,22 @@ void Renderer::Initialize()
 	
 	{
 		const char* path = "engine/materials/forward/shadow_depth.material";
-		shadowMaterial = materialManager->FindMaterialByPath(ConstStringView(path));
+		shadowMaterial = materialManager->FindMaterialByPath(kokko::ConstStringView(path));
 	}
 
 	{
 		const char* path = "engine/materials/deferred_geometry/fallback.material";
-		fallbackMeshMaterial = materialManager->FindMaterialByPath(ConstStringView(path));
+		fallbackMeshMaterial = materialManager->FindMaterialByPath(kokko::ConstStringView(path));
 	}
 
 	{
 		const char* path = "engine/shaders/deferred_lighting/lighting.glsl";
-		lightingShaderId = shaderManager->FindShaderByPath(ConstStringView(path));
+		lightingShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(path));
 	}
 
 	{
 		const char* path = "engine/shaders/post_process/tonemap.glsl";
-		tonemappingShaderId = shaderManager->FindShaderByPath(ConstStringView(path));
+		tonemappingShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(path));
 	}
 
 	{
@@ -345,7 +345,7 @@ void Renderer::Initialize()
 		device->Viewport(&viewport);
 
 		const char* path = "engine/shaders/preprocess/calc_brdf_lut.glsl";
-		ShaderId calcBrdfShaderId = shaderManager->FindShaderByPath(ConstStringView(path));
+		ShaderId calcBrdfShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(path));
 		const ShaderData& calcBrdfShader = shaderManager->GetShaderData(calcBrdfShaderId);
 		device->UseShaderProgram(calcBrdfShader.driverId);
 
@@ -355,7 +355,7 @@ void Renderer::Initialize()
 
 		device->DestroyFramebuffers(1, &framebuffer);
 
-		ConstStringView label("Renderer BRDF LUT");
+		kokko::ConstStringView label("Renderer BRDF LUT");
 		device->SetObjectLabel(RenderObjectType::Texture, brdfLutTextureId, label);
 	}
 
@@ -365,7 +365,7 @@ void Renderer::Initialize()
 		MeshPresets::UploadCube(meshManager, skyboxMeshId);
 
 		const char* shaderPath = "engine/shaders/skybox/skybox.glsl";
-		skyboxShaderId = shaderManager->FindShaderByPath(ConstStringView(shaderPath));
+		skyboxShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(shaderPath));
 
 		device->CreateBuffers(1, &skyboxUniformBufferId);
 		device->BindBuffer(RenderBufferTarget::UniformBuffer, skyboxUniformBufferId);
@@ -449,7 +449,7 @@ void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
 		ArrayView<RenderTextureSizedFormat> colorFormatsList(colorFormats, GbufferColorCount);
 
 		framebufferGbuffer.Create(width, height, depthFormat, colorFormatsList);
-		framebufferGbuffer.SetDebugLabel(ConstStringView("Renderer G-buffer"));
+		framebufferGbuffer.SetDebugLabel(kokko::ConstStringView("Renderer G-buffer"));
 	}
 
 	{
@@ -461,7 +461,7 @@ void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
 		ArrayView<RenderTextureSizedFormat> colorFormatList(&colorFormat, 1);
 		framebufferLightAcc.Create(width, height, Optional<RenderTextureSizedFormat>(), colorFormatList);
 		framebufferLightAcc.AttachExternalDepthTexture(framebufferGbuffer.GetDepthTextureId());
-		framebufferLightAcc.SetDebugLabel(ConstStringView("Renderer light accumulation framebuffer"));
+		framebufferLightAcc.SetDebugLabel(kokko::ConstStringView("Renderer light accumulation framebuffer"));
 	}
 }
 
@@ -1022,7 +1022,7 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 
 			device->SetBufferStorage(&setStorage);
 
-			ConstStringView label("Renderer object uniform buffer");
+			kokko::ConstStringView label("Renderer object uniform buffer");
 			device->SetObjectLabel(RenderObjectType::Buffer, objUniformBuffers[i], label);
 		}
 	}

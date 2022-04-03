@@ -36,7 +36,7 @@ void DebugCulling::UpdateAndDraw(World* world)
 		Scene* scene = world->GetScene();
 		CameraSystem* cameraSystem = world->GetCameraSystem();
 
-		textRenderer->AddText(ConstStringView("Culling camera is locked"), guideTextPosition);
+		textRenderer->AddText(kokko::ConstStringView("Culling camera is locked"), guideTextPosition);
 
 		const Mat4x4f& transform = renderer->GetCullingCameraTransform();
 

@@ -71,7 +71,7 @@ private:
 	unsigned int noiseTextureId;
 
 	void CreatePassResources(size_t passCount,
-		const ConstStringView* shaderPaths,
+		const kokko::ConstStringView* shaderPaths,
 		const size_t* uniformSizes);
 
 	void UpdateUniformBuffers(const ProjectionParameters& projection) const;

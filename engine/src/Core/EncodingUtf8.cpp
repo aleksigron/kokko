@@ -62,7 +62,7 @@ size_t EncodingUtf8::DecodeCodepoint(const char* input, uint32_t& codepointOut)
 	return bytesDecoded;
 }
 
-size_t EncodingUtf8::CountCharacters(ConstStringView input)
+size_t EncodingUtf8::CountCharacters(kokko::ConstStringView input)
 {
 	size_t count = 0;
 
@@ -101,7 +101,7 @@ size_t EncodingUtf8::CountCharacters(ConstStringView input)
 	return count;
 }
 
-size_t EncodingUtf8::FindLastCharacter(ConstStringView input)
+size_t EncodingUtf8::FindLastCharacter(kokko::ConstStringView input)
 {
 	const char* itr = input.str + input.len - 1;
 	const char* end = input.str;

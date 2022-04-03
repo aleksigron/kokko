@@ -77,7 +77,7 @@ public:
 	void RemoveMaterial(MaterialId id);
 
 	MaterialId FindMaterialByUid(const kokko::Uid& uid);
-	MaterialId FindMaterialByPath(const ConstStringView& path);
+	MaterialId FindMaterialByPath(kokko::ConstStringView path);
 
 	kokko::Uid GetMaterialUid(MaterialId id) const;
 
