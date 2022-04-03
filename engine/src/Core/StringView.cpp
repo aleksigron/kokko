@@ -7,10 +7,13 @@
 
 #include "Core/Hash.hpp"
 
-doctest::String toString(const StringView<const char>& value)
+doctest::String toString(const kokko::StringView<const char>& value)
 {
 	return doctest::String(value.str, static_cast<unsigned int>(value.len));
 }
+
+namespace kokko
+{
 
 template <typename CharType>
 StringView<CharType>::StringView() :
@@ -324,13 +327,14 @@ TEST_CASE("StringView can find last substring")
 	CHECK(str.FindLast(ConstStringView("ing")) < 0);
 }
 
-namespace kokko
-{
+// Explicit template instantiation, we don't need any other types than these
+
+template class StringView<char>;
+template class StringView<const char>;
+
 uint32_t Hash32(const ConstStringView& value, uint32_t seed)
 {
 	return Hash32(value.str, value.len, seed);
 }
-}
 
-template class StringView<char>;
-template class StringView<const char>;
+}

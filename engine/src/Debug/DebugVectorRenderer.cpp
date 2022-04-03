@@ -64,7 +64,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 	// Initialize shaders
 
 	const char* shaderPath = "engine/shaders/debug/debug_vector.glsl";
-	shaderId = shaderManager->FindShaderByPath(ConstStringView(shaderPath));
+	shaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(shaderPath));
 
 	// Initialize meshes
 

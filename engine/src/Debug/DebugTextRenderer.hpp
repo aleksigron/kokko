@@ -78,17 +78,17 @@ public:
 	/**
 	 * Add a text to be rendered this frame at a specified normalized position.
 	 */
-	void AddTextNormalized(ConstStringView str, Vec2f position);
+	void AddTextNormalized(kokko::ConstStringView str, Vec2f position);
 
 	/**
 	 * Add a text to be rendered this frame at a specified pixel position.
 	 */
-	void AddText(ConstStringView str, Vec2f position);
+	void AddText(kokko::ConstStringView str, Vec2f position);
 
 	/**
 	 * Add a text to be rendered this frame in a specified area.
 	 */
-	void AddText(ConstStringView str, const Rectanglef& area);
+	void AddText(kokko::ConstStringView str, const Rectanglef& area);
 
 	void Render();
 };

@@ -98,7 +98,7 @@ ShaderId ShaderManager::CreateShader()
 	}
 
 	data.shader[id.i].buffer = nullptr;
-	data.shader[id.i].uniformBlockDefinition = ConstStringView();
+	data.shader[id.i].uniformBlockDefinition = kokko::ConstStringView();
 	data.shader[id.i].transparencyType = TransparencyType::Opaque;
 	data.shader[id.i].driverId = 0;
 	data.shader[id.i].uniforms = kokko::UniformList();
@@ -153,8 +153,8 @@ ShaderId ShaderManager::FindShaderByUid(const kokko::Uid& uid)
 		ShaderId id = CreateShader();
 		ShaderData& shader = data.shader[id.i];
 
-		ConstStringView fileString(reinterpret_cast<char*>(file.GetData()), file.GetCount());
-		ShaderLoader loader(allocator, filesystem, renderDevice);
+		kokko::ConstStringView fileString(reinterpret_cast<char*>(file.GetData()), file.GetCount());
+		kokko::ShaderLoader loader(allocator, filesystem, renderDevice);
 
 		if (loader.LoadFromFile(shader, virtualPath.GetRef(), fileString, virtualPath.GetRef()))
 		{
@@ -178,7 +178,7 @@ ShaderId ShaderManager::FindShaderByUid(const kokko::Uid& uid)
 	return ShaderId::Null;
 }
 
-ShaderId ShaderManager::FindShaderByPath(const ConstStringView& path)
+ShaderId ShaderManager::FindShaderByPath(kokko::ConstStringView path)
 {
 	KOKKO_PROFILE_FUNCTION();
 

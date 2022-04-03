@@ -18,7 +18,7 @@ class DebugConsole
 private:
 	struct LogEntry
 	{
-		ConstStringView text;
+		kokko::ConstStringView text;
 		size_t lengthWithPad;
 		int rows;
 		LogLevel level;
@@ -60,7 +60,7 @@ public:
 
 	void SetDrawArea(const Rectanglef& area);
 
-	void AddLogEntry(ConstStringView text, LogLevel level = LogLevel::Info);
+	void AddLogEntry(kokko::ConstStringView text, LogLevel level = LogLevel::Info);
 
 	void UpdateAndDraw();
 };

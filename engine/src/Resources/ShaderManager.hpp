@@ -28,8 +28,8 @@ struct ShaderData
 	kokko::Uid uid;
 
 	void* buffer;
-	ConstStringView uniformBlockDefinition;
-	ConstStringView path;
+	kokko::ConstStringView uniformBlockDefinition;
+	kokko::ConstStringView path;
 
 	TransparencyType transparencyType;
 
@@ -74,7 +74,7 @@ public:
 	void RemoveShader(ShaderId id);
 
 	ShaderId FindShaderByUid(const kokko::Uid& uid);
-	ShaderId FindShaderByPath(const ConstStringView& path);
+	ShaderId FindShaderByPath(kokko::ConstStringView path);
 
 	const ShaderData& GetShaderData(ShaderId id) const
 	{

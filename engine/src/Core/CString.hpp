@@ -2,6 +2,9 @@
 
 #include <cstddef>
 
+namespace kokko
+{
+
 // Safer alternative to strncpy when not directly copying to an array
 // Prefer StringCopySafe when possible.
 // Always terminates the string in the destination buffer.
@@ -23,3 +26,5 @@ size_t StringCopySafe(char(&destination)[CharCount], const char* source)
 
 bool StringIsEmpty(const char* str);
 void SetEmptyString(char* str);
+
+}

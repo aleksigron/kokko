@@ -115,7 +115,7 @@ bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const cha
 		return false;
 }
 
-void DebugTextRenderer::AddTextNormalized(ConstStringView str, Vec2f position)
+void DebugTextRenderer::AddTextNormalized(kokko::ConstStringView str, Vec2f position)
 {
 	Vec2f pixelPos = Vec2f::Hadamard(position, scaledFrameSize);
 	Rectanglef area(pixelPos, scaledFrameSize);
@@ -123,14 +123,14 @@ void DebugTextRenderer::AddTextNormalized(ConstStringView str, Vec2f position)
 	this->AddText(str, area);
 }
 
-void DebugTextRenderer::AddText(ConstStringView str, Vec2f position)
+void DebugTextRenderer::AddText(kokko::ConstStringView str, Vec2f position)
 {
 	Rectanglef area(position, scaledFrameSize);
 
 	this->AddText(str, area);
 }
 
-void DebugTextRenderer::AddText(ConstStringView str, const Rectanglef& area)
+void DebugTextRenderer::AddText(kokko::ConstStringView str, const Rectanglef& area)
 {
 	stringCharCount += EncodingUtf8::CountCharacters(str);
 
@@ -173,14 +173,14 @@ void DebugTextRenderer::Render()
 		CreateAndUploadData();
 
 		const char* shaderPath = "engine/shaders/debug/debug_text.glsl";
-		ShaderId shaderId = shaderManager->FindShaderByPath(ConstStringView(shaderPath));
+		ShaderId shaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(shaderPath));
 
 		if (shaderId == ShaderId::Null)
 			return;
 
 		const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
-		ConstStringView uniformName("glyph_tex");
+		kokko::ConstStringView uniformName("glyph_tex");
 		const kokko::TextureUniform* textureUniform = shader.uniforms.FindTextureUniformByName(uniformName);
 
 		renderDevice->DepthTestDisable();

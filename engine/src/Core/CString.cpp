@@ -7,6 +7,9 @@
 
 #include "Core/EncodingUtf8.hpp"
 
+namespace kokko
+{
+
 size_t StringCopyN(char* destination, const char* source, size_t destBufferCount)
 {
 	assert(destBufferCount > 0);
@@ -127,4 +130,6 @@ TEST_CASE("StringIsEmpty")
 
 	char buf1[4] = { 'A', '\0', '\0', '\0' };
 	CHECK(StringIsEmpty(buf1) == false);
+}
+
 }

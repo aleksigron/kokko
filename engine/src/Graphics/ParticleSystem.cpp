@@ -93,11 +93,11 @@ void ParticleSystem::Initialize()
 	quadMeshId = meshManager->CreateMesh();
 	meshManager->Upload(quadMeshId, vertexData);
 
-	initUpdateShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/particles/particle_init_update.glsl"));
-	emitShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/particles/particle_emit.glsl"));
-	simulateShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/particles/particle_simulate.glsl"));
-	finishUpdateShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/particles/particle_finish_update.glsl"));
-	renderShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/particles/particle_render.glsl"));
+	initUpdateShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView("engine/shaders/particles/particle_init_update.glsl"));
+	emitShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView("engine/shaders/particles/particle_emit.glsl"));
+	simulateShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView("engine/shaders/particles/particle_simulate.glsl"));
+	finishUpdateShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView("engine/shaders/particles/particle_finish_update.glsl"));
+	renderShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView("engine/shaders/particles/particle_render.glsl"));
 
 	// Create noise texture
 

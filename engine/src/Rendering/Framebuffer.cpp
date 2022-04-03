@@ -236,7 +236,7 @@ void Framebuffer::SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDe
 	renderDevice->SetTextureCompareFunc(RenderTextureTarget::Texture2d, func);
 }
 
-void Framebuffer::SetDebugLabel(ConstStringView label)
+void Framebuffer::SetDebugLabel(kokko::ConstStringView label)
 {
 	renderDevice->SetObjectLabel(RenderObjectType::Framebuffer, framebufferId, label);
 }
