@@ -31,7 +31,8 @@ struct VertexData
 		vertexBufferUsage(RenderBufferUsage::StaticDraw),
 		primitiveMode(RenderPrimitiveMode::Triangles),
 		vertexData(nullptr),
-		vertexDataSize(0)
+		vertexDataSize(0),
+		vertexCount(0)
 	{
 	}
 
@@ -42,6 +43,8 @@ struct VertexData
 
 	const void* vertexData;
 	unsigned int vertexDataSize;
+
+	unsigned int vertexCount;
 };
 
 struct IndexedVertexData : VertexData
@@ -60,16 +63,6 @@ struct IndexedVertexData : VertexData
 	unsigned int indexDataSize;
 
 	unsigned int indexCount;
-};
-
-struct NonIndexedVertexData : VertexData
-{
-	NonIndexedVertexData() :
-		vertexCount(0)
-	{
-	}
-
-	unsigned int vertexCount;
 };
 
 struct MeshDrawData
@@ -119,6 +112,7 @@ private:
 
 		MeshDrawData* drawData;
 		MeshBufferData* bufferData;
+		int* uniqueVertexCount; // Used for rendering normal visualization
 		BoundingBox* bounds;
 		MeshId* meshId;
 		kokko::Uid* uid;
@@ -131,12 +125,12 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	void UpdateBuffers(unsigned int index, const NonIndexedVertexData& vdata);
+	void UpdateBuffers(unsigned int index, const VertexData& vdata);
 	void UpdateBuffersIndexed(unsigned int index, const IndexedVertexData& vdata);
 
 	void DeleteBuffers(MeshBufferData& buffers) const;
 
-	void CreateDrawData(unsigned int index, const NonIndexedVertexData& vdata);
+	void CreateDrawData(unsigned int index, const VertexData& vdata);
 	void CreateDrawDataIndexed(unsigned int index, const IndexedVertexData& vdata);
 
 	void SetVertexAttribPointers(const VertexFormat& vertexFormat);
@@ -157,7 +151,8 @@ public:
 	void SetBoundingBox(MeshId id, const BoundingBox& bounds);
 
 	const MeshDrawData* GetDrawData(MeshId id) const;
+	int GetUniqueVertexCount(MeshId id) const;
 
-	void Upload(MeshId id, const NonIndexedVertexData& vdata);
+	void Upload(MeshId id, const VertexData& vdata);
 	void UploadIndexed(MeshId id, const IndexedVertexData& vdata);
 };

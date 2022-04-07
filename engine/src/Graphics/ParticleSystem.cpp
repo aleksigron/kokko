@@ -83,7 +83,7 @@ void ParticleSystem::Initialize()
 	VertexFormat format(vertexAttr, sizeof(vertexAttr) / sizeof(vertexAttr[0]));
 	format.CalcOffsetsAndSizeInterleaved();
 
-	NonIndexedVertexData vertexData;
+	VertexData vertexData;
 	vertexData.vertexFormat = format;
 	vertexData.primitiveMode = RenderPrimitiveMode::TriangleStrip;
 	vertexData.vertexData = vertexBuffer;
