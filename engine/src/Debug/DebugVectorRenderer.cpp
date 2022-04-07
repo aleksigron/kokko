@@ -81,7 +81,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		MeshId& lineMeshId = this->staticMeshes[static_cast<unsigned int>(PrimitiveType::Line)];
 		lineMeshId = meshManager->CreateMesh();
 
-		NonIndexedVertexData data;
+		VertexData data;
 		data.vertexFormat = vertexFormatPos;
 		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertexData = lineVertexData;
@@ -331,7 +331,7 @@ void DebugVectorRenderer::DrawLineChainScreen(size_t count, const Vec3f* points,
 		VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
 		VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
 
-		NonIndexedVertexData data;
+		VertexData data;
 		data.vertexFormat = vertexFormatPos;
 		data.primitiveMode = RenderPrimitiveMode::LineStrip;
 		data.vertexBufferUsage = RenderBufferUsage::DynamicDraw;

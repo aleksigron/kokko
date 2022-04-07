@@ -294,7 +294,7 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 	}
 	else
 	{
-		NonIndexedVertexData nonindexedVertexData;
+		VertexData nonindexedVertexData;
 		nonindexedVertexData.vertexFormat = format;
 		nonindexedVertexData.primitiveMode = primitiveMode;
 		nonindexedVertexData.vertexData = cgltfVertexBuffer->data;

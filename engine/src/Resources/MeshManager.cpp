@@ -60,6 +60,7 @@ void MeshManager::Reallocate(unsigned int required)
 	newData.indexList = newData.freeList + newData.allocated;
 	newData.drawData = reinterpret_cast<MeshDrawData*>(newData.indexList + newData.allocated);
 	newData.bufferData = reinterpret_cast<MeshBufferData*>(newData.drawData + newData.allocated);
+	newData.uniqueVertexCount = reinterpret_cast<int*>(newData.bufferData + newData.allocated);
 	newData.bounds = reinterpret_cast<BoundingBox*>(newData.bufferData + newData.allocated);
 	newData.meshId = reinterpret_cast<MeshId*>(newData.bounds + newData.allocated);
 	newData.uid = reinterpret_cast<kokko::Uid*>(newData.meshId + newData.allocated);
@@ -77,6 +78,7 @@ void MeshManager::Reallocate(unsigned int required)
 
 		std::memcpy(newData.drawData, data.drawData, data.count * sizeof(MeshDrawData));
 		std::memcpy(newData.bufferData, data.bufferData, data.count * sizeof(MeshBufferData));
+		std::memcpy(newData.uniqueVertexCount, data.uniqueVertexCount, data.count * sizeof(int));
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
 		std::memcpy(newData.meshId, data.meshId, data.count * sizeof(MeshId));
 		std::memcpy(newData.uid, data.uid, data.count * sizeof(kokko::Uid));
@@ -111,6 +113,7 @@ MeshId MeshManager::CreateMesh()
 
 	data.drawData[index] = MeshDrawData{};
 	data.bufferData[index] = MeshBufferData{};
+	data.uniqueVertexCount[index] = 0;
 	data.bounds[index] = BoundingBox();
 	data.meshId[index] = id;
 	data.uid[index] = kokko::Uid();
@@ -141,6 +144,7 @@ void MeshManager::RemoveMesh(MeshId id)
 		// Move the last mesh into the removed mesh's place
 		data.drawData[index] = data.drawData[lastIndex];
 		data.bufferData[index] = data.bufferData[lastIndex];
+		data.uniqueVertexCount[index] = data.uniqueVertexCount[lastIndex];
 		data.bounds[index] = data.bounds[lastIndex];
 		data.meshId[index] = lastMeshId;
 		data.uid[index] = data.uid[lastIndex];
@@ -162,16 +166,18 @@ unsigned int MeshManager::GetIndex(MeshId meshId) const
 
 Optional<kokko::Uid> MeshManager::GetUid(MeshId id) const
 {
-	if (data.uidExists[GetIndex(id)])
-		return data.uid[GetIndex(id)];
+	unsigned int index = GetIndex(id);
+	if (data.uidExists[index])
+		return data.uid[index];
 	else
 		return Optional<kokko::Uid>();
 }
 
 void MeshManager::SetUid(MeshId id, const kokko::Uid& uid)
 {
-	data.uid[GetIndex(id)] = uid;
-	data.uidExists[GetIndex(id)] = true;
+	unsigned int index = GetIndex(id);
+	data.uid[index] = uid;
+	data.uidExists[index] = true;
 }
 
 const BoundingBox* MeshManager::GetBoundingBox(MeshId id) const
@@ -189,7 +195,12 @@ const MeshDrawData* MeshManager::GetDrawData(MeshId id) const
 	return &data.drawData[GetIndex(id)];
 }
 
-void MeshManager::UpdateBuffers(unsigned int index, const NonIndexedVertexData& vdata)
+int MeshManager::GetUniqueVertexCount(MeshId id) const
+{
+	return data.uniqueVertexCount[GetIndex(id)];
+}
+
+void MeshManager::UpdateBuffers(unsigned int index, const VertexData& vdata)
 {
 	MeshBufferData& bufferData = data.bufferData[index];
 
@@ -319,13 +330,15 @@ void MeshManager::DeleteBuffers(MeshBufferData& bufferDataInOut) const
 	}
 }
 
-void MeshManager::CreateDrawData(unsigned int index, const NonIndexedVertexData& vdata)
+void MeshManager::CreateDrawData(unsigned int index, const VertexData& vdata)
 {
 	MeshDrawData& drawData = data.drawData[index];
 	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = data.bufferData[index].vertexArrayObject;
 	drawData.count = static_cast<int>(vdata.vertexCount);
 	drawData.indexType = RenderIndexType::None;
+
+	data.uniqueVertexCount[index] = static_cast<int>(vdata.vertexCount);
 }
 
 void MeshManager::CreateDrawDataIndexed(unsigned int index, const IndexedVertexData& vdata)
@@ -335,6 +348,8 @@ void MeshManager::CreateDrawDataIndexed(unsigned int index, const IndexedVertexD
 	drawData.vertexArrayObject = data.bufferData[index].vertexArrayObject;
 	drawData.count = static_cast<int>(vdata.indexCount);
 	drawData.indexType = RenderIndexType::UnsignedShort;
+
+	data.uniqueVertexCount[index] = static_cast<int>(vdata.vertexCount);
 }
 
 void MeshManager::SetVertexAttribPointers(const VertexFormat& vertexFormat)
@@ -355,7 +370,7 @@ void MeshManager::SetVertexAttribPointers(const VertexFormat& vertexFormat)
 	}
 }
 
-void MeshManager::Upload(MeshId id, const NonIndexedVertexData& vdata)
+void MeshManager::Upload(MeshId id, const VertexData& vdata)
 {
 	KOKKO_PROFILE_FUNCTION();
 
