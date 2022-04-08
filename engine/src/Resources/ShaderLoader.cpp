@@ -31,7 +31,6 @@ namespace kokko
 
 namespace
 {
-const size_t MaxStageCount = 2;
 
 struct AddUniforms_UniformData
 {
@@ -335,7 +334,7 @@ bool CompileAndLink(
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	unsigned int stageObjects[MaxStageCount] = { 0 };
+	unsigned int stageObjects[ShaderLoader::MaxStageCount] = { 0 };
 
 	for (size_t i = 0, count = stages.GetCount(); i < stages.GetCount(); ++i)
 	{
@@ -511,6 +510,8 @@ bool ShaderLoader::FindShaderSections(
 
 		if (sectionName == ConstStringView("vertex"))
 			currentStage = RenderShaderStage::VertexShader;
+		if (sectionName == ConstStringView("geometry"))
+			currentStage = RenderShaderStage::GeometryShader;
 		else if (sectionName == ConstStringView("fragment"))
 			currentStage = RenderShaderStage::FragmentShader;
 		else if (sectionName == ConstStringView("compute"))

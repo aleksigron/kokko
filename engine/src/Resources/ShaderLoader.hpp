@@ -42,9 +42,9 @@ public:
 		ConstStringView shaderContent,
 		ConstStringView debugName);
 
-private:
+	static constexpr size_t MaxStageCount = 3;
 
-	static const size_t MaxStageCount = 2;
+private:
 
 	static const char* const LineBreakChars;
 	static const char* const WhitespaceChars;
