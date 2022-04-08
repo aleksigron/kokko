@@ -43,7 +43,16 @@ void DebugView::Update(EditorContext& context)
 			ImGui::Text("Frametime: %.2f ms", currentFrameTime * 1000.0);
 
 			ImGui::Checkbox("Vertical sync", &engineSettings->verticalSync);
-			ImGui::Checkbox("Draw mesh bounds", &engineSettings->drawMeshBounds);
+
+			kokko::RenderDebugSettings& features = engineSettings->renderDebug;
+
+			bool drawBounds = features.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawBounds);
+			if (ImGui::Checkbox("Draw mesh bounds", &drawBounds))
+				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawBounds, drawBounds);
+
+			bool drawNormals = features.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawNormals);
+			if (ImGui::Checkbox("Draw mesh normals", &drawNormals))
+				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawNormals, drawNormals);
 
 			if (ImGui::Button("Capture profile"))
 			{

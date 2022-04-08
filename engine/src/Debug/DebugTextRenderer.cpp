@@ -342,6 +342,7 @@ void DebugTextRenderer::CreateAndUploadData()
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertexData = vertexData.GetData();
 	data.vertexDataSize = vertexData.GetCount() * sizeof(vertexData[0]);
+	data.vertexCount = vertexData.GetCount() / static_cast<int>(componentCount);
 	data.vertexBufferUsage = RenderBufferUsage::DynamicDraw;
 	data.indexData = indexData.GetData();
 	data.indexDataSize = indexData.GetCount() * sizeof(indexData[0]);

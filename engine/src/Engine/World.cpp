@@ -135,8 +135,7 @@ void World::Render(const Optional<CameraParameters>& editorCamera, const Framebu
 	renderer.instance->Render(editorCamera, framebuffer);
 }
 
-void World::DebugRender(EngineSettings* engineSettings, DebugVectorRenderer* vectorRenderer)
+void World::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& renderDebug)
 {
-	if (engineSettings->drawMeshBounds)
-		renderer.instance->DebugRender(vectorRenderer);
+	renderer.instance->DebugRender(vectorRenderer, renderDebug);
 }

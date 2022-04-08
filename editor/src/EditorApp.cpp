@@ -186,7 +186,7 @@ void EditorApp::StartFrame()
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 }
 
-void EditorApp::Update(EngineSettings* engineSettings, bool& shouldExitOut)
+void EditorApp::Update(kokko::EngineSettings* engineSettings, bool& shouldExitOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 

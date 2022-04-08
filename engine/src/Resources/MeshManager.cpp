@@ -332,6 +332,8 @@ void MeshManager::DeleteBuffers(MeshBufferData& bufferDataInOut) const
 
 void MeshManager::CreateDrawData(unsigned int index, const VertexData& vdata)
 {
+	assert(vdata.vertexCount != 0);
+
 	MeshDrawData& drawData = data.drawData[index];
 	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = data.bufferData[index].vertexArrayObject;
@@ -343,6 +345,8 @@ void MeshManager::CreateDrawData(unsigned int index, const VertexData& vdata)
 
 void MeshManager::CreateDrawDataIndexed(unsigned int index, const IndexedVertexData& vdata)
 {
+	assert(vdata.vertexCount != 0);
+
 	MeshDrawData& drawData = data.drawData[index];
 	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = data.bufferData[index].vertexArrayObject;

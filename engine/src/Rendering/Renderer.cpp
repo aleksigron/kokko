@@ -34,6 +34,7 @@
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderCommandType.hpp"
+#include "Rendering/RenderDebugSettings.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderTargetContainer.hpp"
 #include "Rendering/RenderViewport.hpp"
@@ -90,6 +91,14 @@ struct TonemapUniformBlock
 	alignas(16) float exposure;
 };
 
+struct DebugNormalUniformBlock
+{
+	alignas(16) Mat4x4f MVP;
+	alignas(16) Mat4x4f MV;
+	alignas(16) Vec4f baseColor;
+	alignas(4) float normalLength;
+};
+
 Renderer::Renderer(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
@@ -126,7 +135,8 @@ Renderer::Renderer(
 	customRenderers(allocator),
 	skyboxShaderId(ShaderId::Null),
 	skyboxMeshId(MeshId::Null),
-	skyboxUniformBufferId(0)
+	skyboxUniformBufferId(0),
+	normalDebugBufferId(0)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -1808,17 +1818,81 @@ void Renderer::NotifyUpdatedTransforms(size_t count, const Entity* entities, con
 	}
 }
 
-void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer)
+void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Color color(1.0f, 1.0f, 1.0f, 1.0f);
-
-	for (unsigned int idx = 1; idx < data.count; ++idx)
+	Entity debugEntity = settings.GetDebugEntity();
+	if (debugEntity != Entity::Null &&
+		settings.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawNormals))
 	{
-		Vec3f pos = data.bounds[idx].center;
-		Vec3f scale = data.bounds[idx].extents * 2.0f;
-		Mat4x4f transform = Mat4x4f::Translate(pos) * Mat4x4f::Scale(scale);
-		vectorRenderer->DrawWireCube(transform, color);
+		if (normalDebugBufferId == 0)
+		{
+			RenderBufferUsage usage = RenderBufferUsage::DynamicDraw;
+
+			device->CreateBuffers(1, &normalDebugBufferId);
+
+			device->BindBuffer(RenderBufferTarget::UniformBuffer, normalDebugBufferId);
+
+			RenderCommandData::SetBufferStorage storage{};
+			storage.target = RenderBufferTarget::UniformBuffer;
+			storage.size = sizeof(DebugNormalUniformBlock);
+			storage.data = nullptr;
+			storage.dynamicStorage = true;
+			device->SetBufferStorage(&storage);
+		}
+
+		RenderObjectId object = Lookup(debugEntity);
+		if (object != RenderObjectId::Null)
+		{
+			// Draw normals
+
+			auto shaderPath = kokko::ConstStringView("engine/shaders/debug/debug_normal.glsl");
+			ShaderId shaderId = shaderManager->FindShaderByPath(shaderPath);
+			if (shaderId == ShaderId::Null)
+				return;
+
+			const ShaderData& shader = shaderManager->GetShaderData(shaderId);
+			device->UseShaderProgram(shader.driverId);
+
+			const Mat4x4f& model = data.transform[object.i];
+			DebugNormalUniformBlock uniforms;
+			uniforms.MVP = viewportData[viewportIndexFullscreen].viewProjection * model;
+			uniforms.MV = viewportData[viewportIndexFullscreen].view.inverse * model;
+			uniforms.baseColor = Vec4f(0.0f, 1.0f, 1.0f, 1.0f);
+			uniforms.normalLength = 0.03f;
+
+			device->BindBuffer(RenderBufferTarget::UniformBuffer, normalDebugBufferId);
+			device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0,
+				static_cast<unsigned int>(sizeof(DebugNormalUniformBlock)), &uniforms);
+
+			device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, normalDebugBufferId);
+
+			MeshId mesh = GetMeshId(object);
+			if (mesh != MeshId::Null)
+			{
+				int meshVertexCount = meshManager->GetUniqueVertexCount(mesh);
+				const MeshDrawData* draw = meshManager->GetDrawData(mesh);
+				device->BindVertexArray(draw->vertexArrayObject);
+
+				// Geometry shader will turn points into lines
+				device->Draw(RenderPrimitiveMode::Points, 0, meshVertexCount);
+			}
+		}
+	}
+
+	if (settings.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawBounds))
+	{
+		Color color(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// Draw bounds
+
+		for (unsigned int idx = 1; idx < data.count; ++idx)
+		{
+			Vec3f pos = data.bounds[idx].center;
+			Vec3f scale = data.bounds[idx].extents * 2.0f;
+			Mat4x4f transform = Mat4x4f::Translate(pos) * Mat4x4f::Scale(scale);
+			vectorRenderer->DrawWireCube(transform, color);
+		}
 	}
 }

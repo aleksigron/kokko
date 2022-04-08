@@ -132,6 +132,8 @@ void EditorCore::Update()
 
 	for (EditorWindow* window : editorWindows)
 		window->Update(editorContext);
+
+	editorContext.engineSettings->renderDebug.SetDebugEntity(editorContext.selectedEntity);
 }
 
 void EditorCore::LateUpdate()

@@ -16,7 +16,6 @@ class World;
 class Window;
 
 struct CameraParameters;
-struct EngineSettings;
 
 namespace kokko
 {
@@ -25,6 +24,7 @@ class Filesystem;
 class FilesystemResolverVirtual;
 
 struct Uid;
+struct EngineSettings;
 
 namespace editor
 {
@@ -52,7 +52,7 @@ public:
 	void Deinitialize();
 
 	void StartFrame();
-	void Update(EngineSettings* engineSettings, bool& shouldExitOut);
+	void Update(kokko::EngineSettings* engineSettings, bool& shouldExitOut);
 	void EndFrame();
 
 	const Framebuffer& GetSceneViewFramebuffer();

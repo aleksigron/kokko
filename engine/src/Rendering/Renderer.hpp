@@ -60,6 +60,7 @@ namespace kokko
 {
 
 class EnvironmentSystem;
+class RenderDebugSettings;
 class UniformData;
 
 struct ResourceManagers;
@@ -161,6 +162,7 @@ private:
 	ShaderId skyboxShaderId;
 	MeshId skyboxMeshId;
 	unsigned int skyboxUniformBufferId;
+	unsigned int normalDebugBufferId;
 
 	void ReallocateRenderObjects(unsigned int required);
 
@@ -210,7 +212,7 @@ public:
 
 	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer);
 
-	void DebugRender(DebugVectorRenderer* vectorRenderer);
+	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings);
 
 	virtual void NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms) override;
 

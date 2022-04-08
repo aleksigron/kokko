@@ -36,6 +36,7 @@ void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertexData = vertexData;
 	data.vertexDataSize = sizeof(vertexData);
+	data.vertexCount = sizeof(vertexData) / (sizeof(vertexData[0]) * 3);
 	data.indexData = indexData;
 	data.indexDataSize = sizeof(indexData);
 	data.indexCount = sizeof(indexData) / sizeof(indexData[0]);
@@ -67,6 +68,7 @@ void MeshPresets::UploadPlane(MeshManager* meshManager, MeshId meshId)
 	data.vertexFormat = vertexFormatPos;
 	data.vertexData = vertexData;
 	data.vertexDataSize = sizeof(vertexData);
+	data.vertexCount = sizeof(vertexData) / (sizeof(vertexData[0]) * 3);
 	data.indexData = indexData;
 	data.indexDataSize = sizeof(indexData);
 	data.indexCount = sizeof(indexData) / sizeof(indexData[0]);
