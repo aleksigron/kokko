@@ -204,6 +204,9 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderCommandList.cpp
 	src/Rendering/RenderCommandList.hpp
 	src/Rendering/RenderCommandType.hpp
+	src/Rendering/RenderDebugFeature.hpp
+	src/Rendering/RenderDebugSettings.cpp
+	src/Rendering/RenderDebugSettings.hpp
 	src/Rendering/RenderDevice.hpp
 	src/Rendering/RenderDeviceEnums.hpp
 	src/Rendering/RenderDeviceOpenGL.cpp

@@ -142,7 +142,7 @@ void Engine::Render(const CameraParameters& editorCamera, const Framebuffer& fra
 	KOKKO_PROFILE_FUNCTION();
 
 	world.instance->Render(editorCamera, framebuffer);
-	world.instance->DebugRender(&settings, debug.instance->GetVectorRenderer());
+	world.instance->DebugRender(debug.instance->GetVectorRenderer(), settings.renderDebug);
 
 	debug.instance->Render(world.instance, framebuffer, editorCamera);
 }

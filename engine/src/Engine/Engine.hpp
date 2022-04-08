@@ -34,7 +34,7 @@ private:
 	Allocator* systemAllocator;
 	Allocator* debugNameAllocator;
 
-	EngineSettings settings;
+	kokko::EngineSettings settings;
 
 	kokko::Filesystem* filesystem;
 	kokko::AssetLoader* assetLoader;
@@ -66,7 +66,7 @@ public:
 
 	void SetAppPointer(void* app);
 
-	EngineSettings* GetSettings() { return &settings; }
+	kokko::EngineSettings* GetSettings() { return &settings; }
 	Window* GetMainWindow() { return mainWindow.instance; }
 	RenderDevice* GetRenderDevice() { return renderDevice; }
 	Debug* GetDebug() { return debug.instance; }

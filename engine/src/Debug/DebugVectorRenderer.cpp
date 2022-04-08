@@ -117,6 +117,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertexData = cubeVertexData;
 		data.vertexDataSize = sizeof(cubeVertexData);
+		data.vertexCount = sizeof(cubeVertexData) / (sizeof(cubeVertexData[0]) * 3);
 		data.indexData = cubeIndexData;
 		data.indexDataSize = sizeof(cubeIndexData);
 		data.indexCount = sizeof(cubeIndexData) / sizeof(cubeIndexData[0]);
@@ -178,6 +179,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertexData = sphereVertexData;
 		data.vertexDataSize = sizeof(sphereVertexData);
+		data.vertexCount = sphereVertices;
 		data.indexData = sphereIndexData;
 		data.indexDataSize = sizeof(sphereIndexData);
 		data.indexCount = sizeof(sphereIndexData) / sizeof(sphereIndexData[0]);
@@ -203,6 +205,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 		data.primitiveMode = RenderPrimitiveMode::Lines;
 		data.vertexData = rectangleVertexData;
 		data.vertexDataSize = sizeof(rectangleVertexData);
+		data.vertexCount = sizeof(rectangleVertexData) / (sizeof(rectangleVertexData[0]) * 3);
 		data.indexData = rectangleIndexData;
 		data.indexDataSize = sizeof(rectangleIndexData);
 		data.indexCount = sizeof(rectangleIndexData) / sizeof(rectangleIndexData[0]);

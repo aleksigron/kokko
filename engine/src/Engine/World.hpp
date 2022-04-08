@@ -18,7 +18,6 @@ class Window;
 class Framebuffer;
 
 struct CameraParameters;
-struct EngineSettings;
 
 class EntityManager;
 class Scene;
@@ -33,8 +32,9 @@ class ComponentSerializer;
 namespace kokko
 {
 class AssetLoader;
-class TerrainSystem;
 class EnvironmentSystem;
+class RenderDebugSettings;
+class TerrainSystem;
 }
 
 class World
@@ -56,7 +56,7 @@ public:
 
 	void Update();
 	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
-	void DebugRender(EngineSettings* engineSettings, DebugVectorRenderer* vectorRenderer);
+	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& renderDebug);
 
 	EntityManager* GetEntityManager() { return entityManager.instance; }
 	Scene* GetScene() { return scene.instance; }

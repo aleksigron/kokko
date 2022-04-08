@@ -9,12 +9,12 @@
 class Allocator;
 class World;
 
-struct EngineSettings;
-
 namespace kokko
 {
 
 class FilesystemResolver;
+
+struct EngineSettings;
 
 namespace editor
 {

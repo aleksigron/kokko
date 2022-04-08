@@ -286,6 +286,7 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 		indexedVertexData.primitiveMode = primitiveMode;
 		indexedVertexData.vertexData = cgltfVertexBuffer->data;
 		indexedVertexData.vertexDataSize = cgltfVertexBuffer->size;
+		indexedVertexData.vertexCount = static_cast<int>(vertexCount);
 		indexedVertexData.indexData = indexBuffer;
 		indexedVertexData.indexDataSize = indexBufferSize;
 		indexedVertexData.indexCount = prim.indices->count;
