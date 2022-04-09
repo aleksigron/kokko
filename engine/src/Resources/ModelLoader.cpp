@@ -197,6 +197,10 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 	for (size_t i = 0; i < prim.attributes_count; ++i)
 	{
 		cgltf_attribute& attr = prim.attributes[i];
+
+		if (attr.type == cgltf_attribute_type_tangent)
+			continue;
+
 		cgltf_accessor& accessor = *attr.data;
 
 		// Make sure all vertex attributes come from same buffer
@@ -232,8 +236,6 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 		}
 		else if (attr.type == cgltf_attribute_type_normal)
 			attributePos = VertexFormat::AttributeIndexNor;
-		else if (attr.type == cgltf_attribute_type_tangent)
-			attributePos = VertexFormat::AttributeIndexTan;
 		else if (attr.type == cgltf_attribute_type_texcoord)
 			attributePos = VertexFormat::AttributeIndexUV0;
 		else if (attr.type == cgltf_attribute_type_color)
