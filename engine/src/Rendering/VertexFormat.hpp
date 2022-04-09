@@ -36,8 +36,6 @@ struct VertexAttribute
 	static VertexAttribute pos3;
 	static VertexAttribute pos4;
 	static VertexAttribute nor;
-	static VertexAttribute tan;
-	static VertexAttribute bit;
 	static VertexAttribute rgb0;
 	static VertexAttribute rgba0;
 	static VertexAttribute rgb1;
@@ -93,8 +91,6 @@ struct VertexFormat
 	{
 		AttributeIndexPos,
 		AttributeIndexNor,
-		AttributeIndexTan,
-		AttributeIndexBit,
 		AttributeIndexCol0,
 		AttributeIndexCol1,
 		AttributeIndexCol2,
