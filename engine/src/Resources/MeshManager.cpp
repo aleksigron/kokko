@@ -9,7 +9,6 @@
 #include "Rendering/RenderDevice.hpp"
 
 #include "Resources/AssetLoader.hpp"
-#include "Resources/MeshLoader.hpp"
 
 const MeshId MeshId::Null = MeshId{ 0 };
 
