@@ -1261,7 +1261,12 @@ CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>&
 
 		SceneObjectId cameraSceneObj = scene->Lookup(cameraEntity);
 		result.transform.forward = scene->GetWorldTransform(cameraSceneObj);
-		result.transform.inverse = result.transform.forward.GetInverse();
+
+		Optional<Mat4x4f> viewOpt = result.transform.forward.GetInverse();
+		if (viewOpt.HasValue())
+			result.transform.inverse = viewOpt.GetValue();
+		else
+			KK_LOG_ERROR("Renderer: camera's transform couldn't be inverted");
 
 		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
 		result.projection = cameraSystem->GetData(cameraId);

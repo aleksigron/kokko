@@ -4,10 +4,14 @@
 #include <cstddef>
 
 #include "Math/Vec4.hpp"
-#include "Math/Mat3x3.hpp"
+
+struct Mat3x3f;
 
 template <typename T>
 struct Vec2;
+
+template <typename T>
+class Optional;
 
 struct alignas(16) Mat4x4f
 {
@@ -27,10 +31,8 @@ struct alignas(16) Mat4x4f
 	void Transpose();
 	Mat4x4f GetTransposed() const;
 
-	/*
-	Get the inverse of a non-scaled transform
-	*/
-	Mat4x4f GetInverse() const;
+	Mat4x4f GetInverseNonScaled() const;
+	Optional<Mat4x4f> GetInverse() const;
 
 	static Mat4x4f LookAt(Vec3f eye, Vec3f target, Vec3f up);
 	static Mat4x4f Translate(const Vec3f& translation);
