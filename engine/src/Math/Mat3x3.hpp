@@ -5,6 +5,9 @@
 
 #include "Math/Vec3.hpp"
 
+template <typename T>
+class Optional;
+
 struct Mat3x3f
 {
 	float m[9];
@@ -17,12 +20,16 @@ struct Mat3x3f
 	float* ValuePointer();
 	const float* ValuePointer() const;
 
+	float GetDeterminant() const;
+
 	Vec3f Right() const;
 	Vec3f Up() const;
 	Vec3f Forward() const;
 
 	void Transpose();
 	Mat3x3f GetTransposed() const;
+
+	Optional<Mat3x3f> GetInverse() const;
 
 	static Mat3x3f RotateAroundAxis(Vec3f axis, float angle);
 	static Mat3x3f RotateEuler(const Vec3f& angles);
