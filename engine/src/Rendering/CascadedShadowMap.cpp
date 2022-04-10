@@ -99,7 +99,7 @@ void CalculateCascadeFrusta(
 		Vec3f from = sphereCenter - lightDirection * radius;
 
 		Mat4x4f lightModelTransform = Mat4x4f::LookAt(from, sphereCenter, up);
-		Mat4x4f lightViewTransform = lightModelTransform.GetInverse();
+		Mat4x4f lightViewTransform = lightModelTransform.GetInverseNonScaled();
 
 		float diameter = radius * 2.0f;
 
@@ -124,7 +124,7 @@ void CalculateCascadeFrusta(
 		// Because we don't return projection as a matrix, we have to add the offset to the view transform
 		Mat4x4f cascadeTransform = Mat4x4f::LookAt(from - offsetWs, sphereCenter - offsetWs, up);
 		transformsOut[cascIdx].forward = cascadeTransform;
-		transformsOut[cascIdx].inverse = cascadeTransform.GetInverse();
+		transformsOut[cascIdx].inverse = cascadeTransform.GetInverseNonScaled();
 		projectionsOut[cascIdx] = cascProj;
 	}
 }

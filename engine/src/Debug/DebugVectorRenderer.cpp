@@ -501,6 +501,13 @@ void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, co
 			Entity cameraEntity = scene->GetActiveCameraEntity();
 			SceneObjectId cameraSceneObject = scene->Lookup(cameraEntity);
 			const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
+			Optional<Mat4x4f> viewOpt = cameraTransform.GetInverse();
+			Mat4x4f view;
+
+			if (viewOpt.HasValue())
+				view = viewOpt.GetValue();
+			else
+				KK_LOG_ERROR("DebugVectorRenderer: camera's transform couldn't be inverted");
 
 			bool reverseDepth = false;
 
@@ -509,7 +516,6 @@ void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, co
 			projectionParams.SetAspectRatio(viewport.size.x, viewport.size.y);
 
 			proj = projectionParams.GetProjectionMatrix(reverseDepth);
-			view = cameraTransform.GetInverse();
 			viewProj = proj * view;
 		}
 

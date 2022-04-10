@@ -3,6 +3,7 @@
 #include "imgui.h"
 
 #include "Math/Math.hpp"
+#include "Math/Mat3x3.hpp"
 #include "Math/Mat4x4.hpp"
 
 #include "Rendering/CameraParameters.hpp"
