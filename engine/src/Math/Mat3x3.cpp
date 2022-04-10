@@ -1,5 +1,25 @@
 #include "Math/Mat3x3.hpp"
 
+#include "doctest/doctest.h"
+
+#include "Core/Optional.hpp"
+
+namespace
+{
+
+int Index(int row, int col)
+{
+	return row * 3 + col;
+}
+
+void MultiplyCells(Mat3x3f& m, float f)
+{
+	for (int i = 0; i < 9; ++i)
+		m[i] = m[i] * f;
+}
+
+}
+
 Mat3x3f::Mat3x3f() : m{ 1, 0, 0, 0, 1, 0, 0, 0, 1 } {}
 
 float& Mat3x3f::operator[](size_t index) { return m[index]; }
@@ -8,9 +28,59 @@ const float& Mat3x3f::operator[](size_t index) const { return m[index]; }
 float* Mat3x3f::ValuePointer() { return m; }
 const float* Mat3x3f::ValuePointer() const { return m; }
 
-Vec3f Mat3x3f::Right() const { return Vec3f(m[0], m[1], m[2]); }
-Vec3f Mat3x3f::Up() const { return Vec3f(m[3], m[4], m[5]); }
-Vec3f Mat3x3f::Forward() const { return Vec3f(-m[6], -m[7], -m[8]); }
+float Mat3x3f::GetDeterminant() const
+{
+	float cofactors[3];
+
+	for (int col = 0; col < 3; ++col)
+	{
+		int col0 = col > 0 ? 0 : 1;
+		int row0 = 1;
+		int col1 = col < 2 ? 2 : 1;
+		int row1 = 2;
+
+		float val00 = m[Index(row0, col0)];
+		float val01 = m[Index(row0, col1)];
+		float val10 = m[Index(row1, col0)];
+		float val11 = m[Index(row1, col1)];
+
+		float sign = (col & 1) != 0 ? -1.0f : 1.0f;
+		cofactors[col] = (val00 * val11 - val01 * val10) * sign;
+	}
+
+	return m[0] * cofactors[0] - m[1] * cofactors[1] + m[2] * cofactors[2];
+}
+
+TEST_CASE("Mat3x3f.GetDeterminant")
+{
+	Mat3x3f matrix;
+	matrix[0] = 3.0f;
+	matrix[1] = 0.0f;
+	matrix[2] = 2.0f;
+	matrix[3] = 2.0f;
+	matrix[4] = 0.0f;
+	matrix[5] = -2.0f;
+	matrix[6] = 0.0f;
+	matrix[7] = 1.0f;
+	matrix[8] = 1.0f;
+
+	CHECK(matrix.GetDeterminant() == doctest::Approx(10.0f));
+}
+
+Vec3f Mat3x3f::Right() const
+{
+	return Vec3f(m[0], m[1], m[2]);
+}
+
+Vec3f Mat3x3f::Up() const
+{
+	return Vec3f(m[3], m[4], m[5]);
+}
+
+Vec3f Mat3x3f::Forward() const
+{
+	return Vec3f(-m[6], -m[7], -m[8]);
+}
 
 void Mat3x3f::Transpose()
 {
@@ -35,6 +105,70 @@ Mat3x3f Mat3x3f::GetTransposed() const
 		result[i] = m[(i % 3) * 3 + i / 3];
 
 	return result;
+}
+
+Optional<Mat3x3f> Mat3x3f::GetInverse() const
+{
+	Mat3x3f cofactors;
+
+	for (int row = 0; row < 3; ++row)
+	{
+		for (int col = 0; col < 3; ++col)
+		{
+			int col0 = col > 0 ? 0 : 1;
+			int row0 = row > 0 ? 0 : 1;
+			int col1 = col < 2 ? 2 : 1;
+			int row1 = row < 2 ? 2 : 1;
+
+			float val00 = m[Index(row0, col0)];
+			float val01 = m[Index(row0, col1)];
+			float val10 = m[Index(row1, col0)];
+			float val11 = m[Index(row1, col1)];
+
+			int index = Index(row, col);
+			float sign = (index & 1) != 0 ? -1.0f : 1.0f;
+			cofactors[index] = (val00 * val11 - val01 * val10) * sign;
+		}
+	}
+
+	float determinant = m[0] * cofactors[0] - m[1] * cofactors[1] + m[2] * cofactors[2];
+
+	if (determinant == 0.0f)
+		return Optional<Mat3x3f>();
+
+	Mat3x3f result = cofactors.GetTransposed();
+	MultiplyCells(result, 1.0f / determinant);
+	return result;
+}
+
+TEST_CASE("Mat3x3f.GetInverse")
+{
+	Mat3x3f matrix;
+	matrix[0] = 3.0f;
+	matrix[1] = 0.0f;
+	matrix[2] = 2.0f;
+	matrix[3] = 2.0f;
+	matrix[4] = 0.0f;
+	matrix[5] = -2.0f;
+	matrix[6] = 0.0f;
+	matrix[7] = 1.0f;
+	matrix[8] = 1.0f;
+
+	Optional<Mat3x3f> inverseResult = matrix.GetInverse();
+
+	CHECK(inverseResult.HasValue() == true);
+	
+	const Mat3x3f& inverse = inverseResult.GetValue();
+
+	CHECK(inverse[0] == doctest::Approx(0.2f));
+	CHECK(inverse[1] == doctest::Approx(0.2f));
+	CHECK(inverse[2] == doctest::Approx(0.0f));
+	CHECK(inverse[3] == doctest::Approx(-0.2f));
+	CHECK(inverse[4] == doctest::Approx(0.3f));
+	CHECK(inverse[5] == doctest::Approx(1.0f));
+	CHECK(inverse[6] == doctest::Approx(0.2f));
+	CHECK(inverse[7] == doctest::Approx(-0.3f));
+	CHECK(inverse[8] == doctest::Approx(0.0f));
 }
 
 /* ======================== *
