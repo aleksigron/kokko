@@ -44,6 +44,7 @@ private:
 	int contentHeight;
 
 	int currentGizmoOperation;
+	int currentGizmoMode;
 
 	bool resizeRequested;
 	bool windowIsFocused;
