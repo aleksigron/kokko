@@ -159,6 +159,7 @@ set (KOKKO_SOURCES
 	src/Math/Intersect3D.cpp
 	src/Math/Intersect3D.hpp
 	src/Math/Mat2x2.hpp
+	src/Math/Mat3x3.cpp
 	src/Math/Mat3x3.hpp
 	src/Math/Mat4x4.cpp
 	src/Math/Mat4x4.hpp
