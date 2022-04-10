@@ -25,6 +25,7 @@ SceneView::SceneView() :
 	contentWidth(0),
 	contentHeight(0),
 	currentGizmoOperation(ImGuizmo::TRANSLATE),
+	currentGizmoMode(ImGuizmo::LOCAL),
 	resizeRequested(false),
 	windowIsFocused(false),
 	windowIsHovered(false)
@@ -105,10 +106,18 @@ void SceneView::LateUpdate(EditorContext& context)
 			if (ImGui::Button("Scale"))
 				currentGizmoOperation = ImGuizmo::SCALE;
 
+			ImGui::SameLine();
+			if (ImGui::Button("Local"))
+				currentGizmoMode = ImGuizmo::LOCAL;
+
+			ImGui::SameLine();
+			if (ImGui::Button("World"))
+				currentGizmoMode = ImGuizmo::WORLD;
+
 			// Draw gizmo
 
 			ImGuizmo::OPERATION op = static_cast<ImGuizmo::OPERATION>(currentGizmoOperation);
-			ImGuizmo::MODE mode = ImGuizmo::LOCAL;
+			ImGuizmo::MODE mode = static_cast<ImGuizmo::MODE>(currentGizmoMode);
 
 			Entity entity = context.selectedEntity;
 
@@ -132,22 +141,37 @@ void SceneView::LateUpdate(EditorContext& context)
 					Mat4x4f projectionTransform = editorCamera.GetProjectionParameters().GetProjectionMatrix(false);
 					float* proj = projectionTransform.ValuePointer();
 
-					Mat4x4f objectTransform = scene->GetLocalTransform(sceneObj);
-					float* obj = objectTransform.ValuePointer();
+					Mat4x4f objectTransform = scene->GetWorldTransform(sceneObj);
 
-					if (ImGuizmo::Manipulate(view, proj, op, mode, obj))
+					if (ImGuizmo::Manipulate(view, proj, op, mode, objectTransform.ValuePointer()))
 					{
-						SceneEditTransform editTransform;
-						float* translation = editTransform.translation.ValuePointer();
-						float* rotation = editTransform.rotation.ValuePointer();
-						float* scale = editTransform.scale.ValuePointer();
 
-						ImGuizmo::DecomposeMatrixToComponents(obj, translation, rotation, scale);
+						Mat4x4f local;
+
+						SceneObjectId parentObj = scene->GetParent(sceneObj);
+						if (parentObj != SceneObjectId::Null)
+						{
+							Mat4x4f parent = scene->GetWorldTransform(parentObj);
+
+							auto parentInvOpt = parent.GetInverse();
+							if (parentInvOpt.HasValue())
+								local = parentInvOpt.GetValue() * objectTransform;
+						}
+						else
+						{
+							local = objectTransform;
+						}
+
+						SceneEditTransform editTransform;
+						float* translate = editTransform.translation.ValuePointer();
+						float* rotate = editTransform.rotation.ValuePointer();
+						float* scale = editTransform.scale.ValuePointer();
+						ImGuizmo::DecomposeMatrixToComponents(local.ValuePointer(), translate, rotate, scale);
 
 						// DecomposeMatrixToComponents returns degrees, so convert to radians
 						editTransform.rotation = Math::DegreesToRadians(editTransform.rotation);
 
-						scene->SetLocalAndEditTransform(sceneObj, objectTransform, editTransform);
+						scene->SetLocalAndEditTransform(sceneObj, local, editTransform);
 					}
 				}
 			}
