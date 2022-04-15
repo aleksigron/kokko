@@ -1,33 +1,22 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #include "Core/Array.hpp"
 #include "Core/BitPack.hpp"
-#include "Core/FixedArray.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
-
-#include "Engine/Entity.hpp"
-
-#include "Graphics/TransformUpdateReceiver.hpp"
-
-#include "Math/Mat4x4.hpp"
-#include "Math/Rectangle.hpp"
-#include "Math/Vec3.hpp"
-#include "Math/Vec2.hpp"
-#include "Math/Projection.hpp"
-
-#include "Resources/MeshId.hpp"
-#include "Resources/MaterialData.hpp"
-#include "Resources/ShaderId.hpp"
 
 #include "Rendering/CustomRenderer.hpp"
 #include "Rendering/Framebuffer.hpp"
 #include "Rendering/Light.hpp"
 #include "Rendering/RenderCommandList.hpp"
-#include "Rendering/RendererData.hpp"
 #include "Rendering/RenderOrder.hpp"
+
+#include "Resources/MaterialData.hpp"
+#include "Resources/MeshId.hpp"
+#include "Resources/ShaderId.hpp"
 
 class Allocator;
 class CameraSystem;
@@ -50,7 +39,6 @@ class Framebuffer;
 struct BoundingBox;
 struct CameraParameters;
 struct RenderViewport;
-struct MaterialData;
 struct ShaderData;
 struct ProjectionParameters;
 struct LightingUniformBlock;
@@ -60,6 +48,7 @@ namespace kokko
 {
 
 class EnvironmentSystem;
+class MeshComponentSystem;
 class RenderDebugSettings;
 class UniformData;
 
@@ -67,7 +56,7 @@ struct ResourceManagers;
 
 }
 
-class Renderer : public TransformUpdateReceiver, public CustomRenderer
+class Renderer : public CustomRenderer
 {
 private:
 	static const unsigned int FramesInFlightCount = 1;
@@ -84,6 +73,7 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* device;
+	kokko::MeshComponentSystem* componentSystem;
 
 	RenderTargetContainer* renderTargetContainer;
 	PostProcessRenderer* postProcessRenderer;
@@ -122,22 +112,6 @@ private:
 	unsigned int skyboxRenderCallback;
 	unsigned int postProcessCallback;
 
-	struct InstanceData
-	{
-		unsigned int count;
-		unsigned int allocated;
-		void *buffer;
-
-		Entity* entity;
-		MeshId* mesh;
-		RenderOrderData* order;
-		BoundingBox* bounds;
-		Mat4x4f* transform;
-	}
-	data;
-
-	HashMap<unsigned int, RenderObjectId> entityMap;
-
 	RenderOrderConfiguration renderOrder;
 
 	Scene* scene;
@@ -163,8 +137,6 @@ private:
 	MeshId skyboxMeshId;
 	unsigned int skyboxUniformBufferId;
 	unsigned int normalDebugBufferId;
-
-	void ReallocateRenderObjects(unsigned int required);
 
 	void CreateResolutionDependentFramebuffers(int width, int height);
 	void DestroyResolutionDependentFramebuffers();
@@ -197,6 +169,7 @@ private:
 public:
 	Renderer(Allocator* allocator,
 		RenderDevice* renderDevice,
+		kokko::MeshComponentSystem* componentSystem,
 		Scene* scene,
 		CameraSystem* cameraSystem,
 		LightManager* lightManager,
@@ -213,31 +186,6 @@ public:
 	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer);
 
 	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings);
-
-	virtual void NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms) override;
-
-	// Render object management
-
-	RenderObjectId Lookup(Entity e)
-	{
-		auto* pair = entityMap.Lookup(e.id);
-		return pair != nullptr ? pair->second : RenderObjectId{};
-	}
-
-	RenderObjectId AddRenderObject(Entity entity);
-	void AddRenderObject(unsigned int count, const Entity* entities, RenderObjectId* renderObjectIdsOut);
-
-	void RemoveRenderObject(RenderObjectId id);
-
-	void RemoveAll();
-
-	// Render object property management
-
-	void SetMeshId(RenderObjectId id, MeshId meshId) { data.mesh[id.i] = meshId; }
-	MeshId GetMeshId(RenderObjectId id) const { return data.mesh[id.i]; }
-
-	void SetOrderData(RenderObjectId id, const RenderOrderData& order) { data.order[id.i] = order; }
-	const RenderOrderData& GetOrderData(RenderObjectId id) const { return data.order[id.i]; }
 
 	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
 

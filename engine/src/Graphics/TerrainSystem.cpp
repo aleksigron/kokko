@@ -6,6 +6,8 @@
 
 #include "Core/Core.hpp"
 
+#include "Engine/Entity.hpp"
+
 #include "Graphics/TerrainQuadTree.hpp"
 
 #include "Math/Mat4x4.hpp"

@@ -440,7 +440,7 @@ void EnvironmentSystem::SetEnvironmentTexture(EnvironmentId id, const kokko::Uid
 
 	// Render
 	{
-		KOKKO_PROFILE_SCOPE("Render equirect to cubemap");
+		KOKKO_PROFILE_SCOPE("Mesh equirect to cubemap");
 
 		SetViewport(renderDevice, EnvironmentTextureSize);
 

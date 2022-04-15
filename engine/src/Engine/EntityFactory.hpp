@@ -11,7 +11,7 @@ namespace kokko
 enum class EntityComponentType
 {
 	Scene,
-	Render,
+	Mesh,
 	Camera,
 	Light,
 	Terrain,

@@ -16,7 +16,7 @@
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
-#include "Rendering/Renderer.hpp"
+#include "Rendering/MeshComponentSystem.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
@@ -187,23 +187,23 @@ void EntityView::DrawSceneComponent(Entity selectedEntity, World* world)
 void EntityView::DrawRenderComponent(EditorContext& context)
 {
 	Scene* scene = context.world->GetScene();
-	Renderer* renderer = context.world->GetRenderer();
+	MeshComponentSystem* meshComponentSystem = context.world->GetMeshComponentSystem();
 
-	RenderObjectId renderObj = renderer->Lookup(context.selectedEntity);
-	if (renderObj != RenderObjectId::Null)
+	MeshComponentId meshComponent = meshComponentSystem->Lookup(context.selectedEntity);
+	if (meshComponent != MeshComponentId::Null)
 	{
 		ImGui::Spacing();
 
 		ImVec4 warningColor(1.0f, 0.6f, 0.0f, 1.0f);
 
 		bool componentVisible = true;
-		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Render);
+		const char* componentTitle = EntityFactory::GetComponentTypeName(EntityComponentType::Mesh);
 		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGuiInputTextFlags roFlags = ImGuiInputTextFlags_ReadOnly;
 
 			context.temporaryString.Assign("No mesh");
-			MeshId meshId = renderer->GetMeshId(renderObj);
+			MeshId meshId = meshComponentSystem->GetMeshId(meshComponent);
 			if (meshId != MeshId::Null)
 			{
 				Optional<Uid> modelUid = meshManager->GetUid(meshId);
@@ -289,7 +289,7 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 
 							if (modelMeshes.GetCount() > meshIndex)
 							{
-								renderer->SetMeshId(renderObj, modelMeshes[meshIndex].meshId);
+								meshComponentSystem->SetMeshId(meshComponent, modelMeshes[meshIndex].meshId);
 
 								SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
 								if (sceneObj != SceneObjectId::Null)
@@ -303,7 +303,7 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 			}
 
 			context.temporaryString.Assign("No material");
-			MaterialId materialId = renderer->GetOrderData(renderObj).material;
+			MaterialId materialId = meshComponentSystem->GetMaterialId(meshComponent);
 			if (materialId != MaterialId::Null)
 			{
 				Uid materialUid = materialManager->GetMaterialUid(materialId);
@@ -329,11 +329,9 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 							MaterialId newMatId = materialManager->FindMaterialByUid(assetUid);
 							if (newMatId != MaterialId::Null && newMatId != materialId)
 							{
-								RenderOrderData order;
-								order.material = newMatId;
-								order.transparency = materialManager->GetMaterialTransparency(newMatId);
+								TransparencyType transparency = materialManager->GetMaterialTransparency(newMatId);
 
-								renderer->SetOrderData(renderObj, order);
+								meshComponentSystem->SetMaterial(meshComponent, newMatId, transparency);
 							}
 						}
 					}
@@ -344,7 +342,7 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 			}
 
 			if (componentVisible == false)
-				renderer->RemoveRenderObject(renderObj);
+				meshComponentSystem->RemoveComponent(meshComponent);
 		}
 	}
 }

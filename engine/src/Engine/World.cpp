@@ -19,6 +19,7 @@
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
+#include "Rendering/MeshComponentSystem.hpp"
 #include "Rendering/Renderer.hpp"
 
 #include "Resources/AssetLoader.hpp"
@@ -56,9 +57,12 @@ World::World(AllocatorManager* allocManager,
 	environmentSystem.New(environmentSystem.allocator, assetLoader, renderDevice,
 		resourceManagers.shaderManager, resourceManagers.meshManager, resourceManagers.textureManager);
 
+	meshComponentSystem.CreateScope(allocManager, "MeshComponentSystem", alloc);
+	meshComponentSystem.New(meshComponentSystem.allocator, resourceManagers.meshManager);
+
 	renderer.CreateScope(allocManager, "Renderer", alloc);
-	renderer.New(renderer.allocator, renderDevice, scene.instance, cameraSystem.instance,
-		lightManager.instance, environmentSystem.instance, resourceManagers);
+	renderer.New(renderer.allocator, renderDevice, meshComponentSystem.instance, scene.instance,
+		cameraSystem.instance, lightManager.instance, environmentSystem.instance, resourceManagers);
 
 	scriptSystem.CreateScope(allocManager, "ScriptSystem", alloc);
 	scriptSystem.New(scriptSystem.allocator, inputManager);
@@ -78,6 +82,7 @@ World::~World()
 	terrainSystem.Delete();
 	scriptSystem.Delete();
 	renderer.Delete();
+	meshComponentSystem.Delete();
 	scene.Delete();
 	environmentSystem.Delete();
 	cameraSystem.Delete();
@@ -106,7 +111,7 @@ void World::ClearAllEntities()
 	// TODO: scriptSystem
 	cameraSystem.instance->RemoveAll();
 	lightManager.instance->RemoveAll();
-	renderer.instance->RemoveAll();
+	meshComponentSystem.instance->RemoveAll();
 	scene.instance->Clear();
 	entityManager.instance->ClearAll();
 }
@@ -122,7 +127,7 @@ void World::Render(const Optional<CameraParameters>& editorCamera, const Framebu
 	TransformUpdateReceiver* transformUpdateReceivers[] =
 	{
 		lightManager.instance,
-		renderer.instance,
+		meshComponentSystem.instance,
 		particleSystem.instance
 	};
 

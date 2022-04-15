@@ -12,7 +12,7 @@
 
 #include "Rendering/CameraSerializer.hpp"
 #include "Rendering/LightSerializer.hpp"
-#include "Rendering/RenderObjectSerializer.hpp"
+#include "Rendering/MeshComponentSerializer.hpp"
 
 #include "Graphics/EnvironmentSerializer.hpp"
 #include "Graphics/Scene.hpp"
@@ -45,7 +45,7 @@ void LevelSerializer::Initialize(World* world, const kokko::ResourceManagers& re
 
 	transformSerializer = allocator->MakeNew<TransformSerializer>(world->GetScene());
 
-	componentSerializers.PushBack(allocator->MakeNew<RenderObjectSerializer>(world->GetRenderer(), resourceManagers));
+	componentSerializers.PushBack(allocator->MakeNew<MeshComponentSerializer>(world->GetMeshComponentSystem(), resourceManagers));
 	componentSerializers.PushBack(allocator->MakeNew<LightSerializer>(world->GetLightManager()));
 	componentSerializers.PushBack(allocator->MakeNew<CameraSerializer>(world->GetCameraSystem()));
 	componentSerializers.PushBack(allocator->MakeNew<ParticleEmitterSerializer>(world->GetParticleSystem()));

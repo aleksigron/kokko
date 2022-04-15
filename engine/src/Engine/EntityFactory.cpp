@@ -13,14 +13,14 @@
 
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
-#include "Rendering/Renderer.hpp"
+#include "Rendering/MeshComponentSystem.hpp"
 
 namespace kokko
 {
 
 const char* const EntityFactory::ComponentNames[] = {
 	"Transform",
-	"Render object",
+	"Mesh object",
 	"Camera",
 	"Light",
 	"Terrain",
@@ -62,12 +62,12 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 			scene->AddSceneObject(entity);
 		break;
 	}
-	case EntityComponentType::Render:
+	case EntityComponentType::Mesh:
 	{
-		Renderer* renderer = world->GetRenderer();
-		RenderObjectId renderObj = renderer->Lookup(entity);
-		if (renderObj == RenderObjectId::Null)
-			renderer->AddRenderObject(entity);
+		MeshComponentSystem* meshComponentSystem = world->GetMeshComponentSystem();
+		MeshComponentId componentId = meshComponentSystem->Lookup(entity);
+		if (componentId == MeshComponentId::Null)
+			meshComponentSystem->AddComponent(entity);
 		break;
 	}
 	case EntityComponentType::Camera:
@@ -127,12 +127,12 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 			scene->RemoveSceneObject(sceneObj);
 		break;
 	}
-	case EntityComponentType::Render:
+	case EntityComponentType::Mesh:
 	{
-		Renderer* renderer = world->GetRenderer();
-		RenderObjectId renderObj = renderer->Lookup(entity);
-		if (renderObj != RenderObjectId::Null)
-			renderer->RemoveRenderObject(renderObj);
+		MeshComponentSystem* meshComponenSystem = world->GetMeshComponentSystem();
+		MeshComponentId componentId = meshComponenSystem->Lookup(entity);
+		if (componentId != MeshComponentId::Null)
+			meshComponenSystem->RemoveComponent(componentId);
 		break;
 	}
 	case EntityComponentType::Camera:
