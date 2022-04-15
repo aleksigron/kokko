@@ -30,6 +30,7 @@
 #include "Rendering/CascadedShadowMap.hpp"
 #include "Rendering/Framebuffer.hpp"
 #include "Rendering/LightManager.hpp"
+#include "Rendering/MeshComponentSystem.hpp"
 #include "Rendering/PostProcessRenderer.hpp"
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/RenderCommandData.hpp"
@@ -49,8 +50,6 @@
 #include "Resources/TextureManager.hpp"
 
 #include "System/Window.hpp"
-
-const RenderObjectId RenderObjectId::Null = RenderObjectId{ 0 };
 
 struct LightingUniformBlock
 {
@@ -102,6 +101,7 @@ struct DebugNormalUniformBlock
 Renderer::Renderer(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
+	kokko::MeshComponentSystem* componentSystem,
 	Scene* scene,
 	CameraSystem* cameraSystem,
 	LightManager* lightManager,
@@ -109,6 +109,7 @@ Renderer::Renderer(
 	const kokko::ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	device(renderDevice),
+	componentSystem(componentSystem),
 	renderTargetContainer(nullptr),
 	ssao(nullptr),
 	bloomEffect(nullptr),
@@ -119,7 +120,6 @@ Renderer::Renderer(
 	uniformStagingBuffer(allocator),
 	objectUniformBufferLists{ Array<unsigned int>(allocator) },
 	currentFrameIndex(0),
-	entityMap(allocator),
 	scene(scene),
 	cameraSystem(cameraSystem),
 	lightManager(lightManager),
@@ -166,18 +166,11 @@ Renderer::Renderer(
 
 	objectUniformBlockStride = 0;
 	objectsPerUniformBuffer = 0;
-
-	data = InstanceData{};
-	data.count = 1; // Reserve index 0 as RenderObjectId::Null value
-
-	this->ReallocateRenderObjects(512);
 }
 
 Renderer::~Renderer()
 {
 	this->Deinitialize();
-
-	allocator->Deallocate(data.buffer);
 
 	allocator->MakeDelete(bloomEffect);
 	allocator->MakeDelete(ssao);
@@ -583,7 +576,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 
 				device->BindBufferRange(&bind);
 
-				MeshId mesh = data.mesh[objIdx];
+				MeshId mesh = componentSystem->data.mesh[objIdx];
 
 				if (mesh != lastMeshId)
 				{
@@ -1074,7 +1067,7 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 
 			TransformUniformBlock* tu = reinterpret_cast<TransformUniformBlock*>(stagingBuffer + objectUniformBlockStride * objectInBuffer);
 
-			const Mat4x4f& model = data.transform[objIdx];
+			const Mat4x4f& model = componentSystem->data.transform[objIdx];
 			tu->MVP = viewportData[vpIdx].viewProjection * model;
 			tu->MV = viewportData[vpIdx].view.inverse * model;
 			tu->M = model;
@@ -1587,7 +1580,8 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 	// Create draw commands for render objects in scene
 
-	unsigned int visRequired = BitPack::CalculateRequired(data.count);
+	unsigned int componentCount = componentSystem->data.count;
+	unsigned int visRequired = BitPack::CalculateRequired(componentCount);
 	objectVisibility.Resize(visRequired * viewportCount);
 
 	const unsigned int compareTrIdx = static_cast<unsigned int>(TransparencyType::AlphaTest);
@@ -1603,20 +1597,21 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		const Vec2i viewPortSize = viewportData[vpIdx].viewportRectangle.size;
 		float minSize = viewportData[vpIdx].objectMinScreenSizePx / (viewPortSize.x * viewPortSize.y);
 
-		Intersect::FrustumAABBMinSize(frustum, viewProjection, minSize, data.count, data.bounds, vis[vpIdx]);
+		Intersect::FrustumAABBMinSize(frustum, viewProjection, minSize, componentCount,
+			componentSystem->data.bounds, vis[vpIdx]);
 	}
 
 	unsigned int objectDrawCount = 0;
 
-	for (unsigned int i = 1; i < data.count; ++i)
+	for (unsigned int i = 1; i < componentCount; ++i)
 	{
-		Vec3f objPos = (data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+		Vec3f objPos = (componentSystem->data.transform[i] * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
 
 		// Test visibility in shadow viewports
 		for (unsigned int vpIdx = 0, count = numShadowViewports; vpIdx < count; ++vpIdx)
 		{
 			if (BitPack::Get(vis[vpIdx], i) &&
-				static_cast<unsigned int>(data.order[i].transparency) <= compareTrIdx)
+				static_cast<unsigned int>(componentSystem->data.transparency[i]) <= compareTrIdx)
 			{
 				const RenderViewport& vp = viewportData[vpIdx];
 
@@ -1631,13 +1626,13 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		// Test visibility in fullscreen viewport
 		if (BitPack::Get(vis[fsvp], i))
 		{
-			const RenderOrderData& o = data.order[i];
+			MaterialId mat = componentSystem->data.material[i];
 			const RenderViewport& vp = viewportData[fsvp];
 
 			float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
-			RenderPass pass = static_cast<RenderPass>(o.transparency);
-			commandList.AddDraw(fsvp, pass, depth, o.material, i);
+			RenderPass pass = static_cast<RenderPass>(componentSystem->data.transparency[i]);
+			commandList.AddDraw(fsvp, pass, depth, mat, i);
 
 			objectDrawCount += 1;
 		}
@@ -1660,113 +1655,6 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	commandList.Sort();
 
 	return objectDrawCount;
-}
-
-void Renderer::ReallocateRenderObjects(unsigned int required)
-{
-	if (required <= data.allocated)
-		return;
-
-	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
-
-	// Reserve same amount in entity map
-	entityMap.Reserve(required);
-
-	InstanceData newData;
-	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(RenderOrderData) +
-		sizeof(BoundingBox) + sizeof(Mat4x4f));
-
-	newData.buffer = this->allocator->Allocate(bytes, "Renderer InstanceData buffer");
-	newData.count = data.count;
-	newData.allocated = required;
-
-	newData.entity = static_cast<Entity*>(newData.buffer);
-	newData.mesh = reinterpret_cast<MeshId*>(newData.entity + required);
-	newData.order = reinterpret_cast<RenderOrderData*>(newData.mesh + required);
-	newData.bounds = reinterpret_cast<BoundingBox*>(newData.order + required);
-	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
-
-	if (data.buffer != nullptr)
-	{
-		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
-		std::memcpy(newData.mesh, data.mesh, data.count * sizeof(MeshId));
-		std::memcpy(newData.order, data.order, data.count * sizeof(RenderOrderData));
-		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
-		std::memcpy(newData.transform, data.transform, data.count * sizeof(Mat4x4f));
-
-		this->allocator->Deallocate(data.buffer);
-	}
-
-	data = newData;
-}
-
-RenderObjectId Renderer::AddRenderObject(Entity entity)
-{
-	RenderObjectId id;
-	this->AddRenderObject(1, &entity, &id);
-	return id;
-}
-
-void Renderer::AddRenderObject(unsigned int count, const Entity* entities, RenderObjectId* renderObjectIdsOut)
-{
-	if (data.count + count > data.allocated)
-		this->ReallocateRenderObjects(data.count + count);
-
-	for (unsigned int i = 0; i < count; ++i)
-	{
-		unsigned int id = data.count + i;
-
-		Entity e = entities[i];
-
-		auto mapPair = entityMap.Insert(e.id);
-		mapPair->second.i = id;
-
-		data.entity[id] = e;
-		data.mesh[id] = MeshId::Null;
-		data.order[id] = RenderOrderData{};
-		data.bounds[id] = BoundingBox();
-		data.transform[id] = Mat4x4f();
-
-		renderObjectIdsOut[i].i = id;
-	}
-
-	data.count += count;
-}
-
-void Renderer::RemoveRenderObject(RenderObjectId id)
-{
-	assert(id != RenderObjectId::Null);
-	assert(id.i < data.count);
-
-	// Remove from entity map
-	Entity entity = data.entity[id.i];
-	auto* pair = entityMap.Lookup(entity.id);
-	if (pair != nullptr)
-		entityMap.Remove(pair);
-
-	if (data.count > 2 && id.i + 1 < data.count) // We need to swap another object
-	{
-		unsigned int swapIdx = data.count - 1;
-
-		// Update the swapped objects id in the entity map
-		auto* swapKv = entityMap.Lookup(data.entity[swapIdx].id);
-		if (swapKv != nullptr)
-			swapKv->second = id;
-
-		data.entity[id.i] = data.entity[swapIdx];
-		data.mesh[id.i] = data.mesh[swapIdx];
-		data.order[id.i] = data.order[swapIdx];
-		data.bounds[id.i] = data.bounds[swapIdx];
-		data.transform[id.i] = data.transform[swapIdx];
-	}
-
-	--data.count;
-}
-
-void Renderer::RemoveAll()
-{
-	entityMap.Clear();
-	data.count = 1;
 }
 
 unsigned int Renderer::AddCustomRenderer(CustomRenderer* customRenderer)
@@ -1797,32 +1685,6 @@ void Renderer::RemoveCustomRenderer(unsigned int callbackId)
 	}
 }
 
-void Renderer::NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms)
-{
-	for (unsigned int entityIdx = 0; entityIdx < count; ++entityIdx)
-	{
-		Entity entity = entities[entityIdx];
-		RenderObjectId obj = this->Lookup(entity);
-
-		if (obj != RenderObjectId::Null)
-		{
-			unsigned int dataIdx = obj.i;
-
-			// Recalculate bounding box
-			MeshId meshId = data.mesh[dataIdx];
-
-			if (meshId != MeshId::Null)
-			{
-				const BoundingBox* bounds = meshManager->GetBoundingBox(meshId);
-				data.bounds[dataIdx] = bounds->Transform(transforms[entityIdx]);
-			}
-
-			// Set world transform
-			data.transform[dataIdx] = transforms[entityIdx];
-		}
-	}
-}
-
 void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -1847,8 +1709,8 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::Ren
 			device->SetBufferStorage(&storage);
 		}
 
-		RenderObjectId object = Lookup(debugEntity);
-		if (object != RenderObjectId::Null)
+		kokko::MeshComponentId component = componentSystem->Lookup(debugEntity);
+		if (component != kokko::MeshComponentId::Null)
 		{
 			// Draw normals
 
@@ -1860,7 +1722,7 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::Ren
 			const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 			device->UseShaderProgram(shader.driverId);
 
-			const Mat4x4f& model = data.transform[object.i];
+			const Mat4x4f& model = componentSystem->data.transform[component.i];
 			DebugNormalUniformBlock uniforms;
 			uniforms.MVP = viewportData[viewportIndexFullscreen].viewProjection * model;
 			uniforms.MV = viewportData[viewportIndexFullscreen].view.inverse * model;
@@ -1873,7 +1735,7 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::Ren
 
 			device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, normalDebugBufferId);
 
-			MeshId mesh = GetMeshId(object);
+			MeshId mesh = componentSystem->GetMeshId(component);
 			if (mesh != MeshId::Null)
 			{
 				int meshVertexCount = meshManager->GetUniqueVertexCount(mesh);
@@ -1891,11 +1753,11 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::Ren
 		Color color(1.0f, 1.0f, 1.0f, 1.0f);
 
 		// Draw bounds
-
-		for (unsigned int idx = 1; idx < data.count; ++idx)
+		BoundingBox* bounds = componentSystem->data.bounds;
+		for (unsigned int idx = 1, count = componentSystem->data.count; idx < count; ++idx)
 		{
-			Vec3f pos = data.bounds[idx].center;
-			Vec3f scale = data.bounds[idx].extents * 2.0f;
+			Vec3f pos = bounds[idx].center;
+			Vec3f scale = bounds[idx].extents * 2.0f;
 			Mat4x4f transform = Mat4x4f::Translate(pos) * Mat4x4f::Scale(scale);
 			vectorRenderer->DrawWireCube(transform, color);
 		}

@@ -9,7 +9,7 @@
 #include "Engine/ComponentSerializer.hpp"
 #include "Engine/Entity.hpp"
 
-#include "Rendering/Renderer.hpp"
+#include "Rendering/MeshComponentSystem.hpp"
 
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
@@ -17,22 +17,24 @@
 #include "Resources/ModelManager.hpp"
 #include "Resources/ResourceManagers.hpp"
 
-class RenderObjectSerializer final : public ComponentSerializer
+class MeshComponentSerializer final : public ComponentSerializer
 {
 private:
-	Renderer* renderer;
+	kokko::MeshComponentSystem* meshComponentSystem;
 	kokko::ResourceManagers res;
 
 public:
-	RenderObjectSerializer(Renderer* renderer, const kokko::ResourceManagers& resourceManagers) :
-		renderer(renderer),
+	MeshComponentSerializer(
+		kokko::MeshComponentSystem* meshComponentSystem,
+		const kokko::ResourceManagers& resourceManagers) :
+		meshComponentSystem(meshComponentSystem),
 		res(resourceManagers)
 	{
 	}
 
 	virtual uint32_t GetComponentTypeNameHash() override
 	{
-		return "render"_hash;
+		return "mesh"_hash;
 	}
 
 	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
@@ -43,7 +45,7 @@ public:
 		if (meshNode.IsDefined() && meshNode.IsScalar() &&
 			materialNode.IsDefined() && materialNode.IsScalar())
 		{
-			RenderObjectId renderObj = renderer->AddRenderObject(entity);
+			kokko::MeshComponentId componentId = meshComponentSystem->AddComponent(entity);
 
 			const std::string& meshUidStr = meshNode.Scalar();
 			auto meshUidOpt = kokko::MeshUid::FromString(ArrayView(meshUidStr.c_str(), meshUidStr.length()));
@@ -58,7 +60,7 @@ public:
 					auto modelMeshes = res.modelManager->GetModelMeshes(modelId);
 					
 					if (modelMeshes.GetCount() > meshUid.meshIndex)
-						renderer->SetMeshId(renderObj, modelMeshes[meshUid.meshIndex].meshId);
+						meshComponentSystem->SetMeshId(componentId, modelMeshes[meshUid.meshIndex].meshId);
 				}
 			}
 
@@ -71,25 +73,22 @@ public:
 
 				// We don't care if the material isn't found
 				// Renderer will use fallback material if Material::Null is specified
-				RenderOrderData data;
-				data.material = materialId;
 
+				TransparencyType transparency = TransparencyType::Opaque;
 				if (materialId != MaterialId::Null)
-					data.transparency = res.materialManager->GetMaterialTransparency(materialId);
-				else
-					data.transparency = TransparencyType::Opaque;
+					transparency = res.materialManager->GetMaterialTransparency(materialId);
 
-				renderer->SetOrderData(renderObj, data);
+				meshComponentSystem->SetMaterial(componentId, materialId, transparency);
 			}
 		}
 	}
 
 	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
 	{
-		RenderObjectId renderObj = renderer->Lookup(entity);
-		if (renderObj != RenderObjectId::Null)
+		kokko::MeshComponentId componentId = meshComponentSystem->Lookup(entity);
+		if (componentId != kokko::MeshComponentId::Null)
 		{
-			MeshId meshId = renderer->GetMeshId(renderObj);
+			MeshId meshId = meshComponentSystem->GetMeshId(componentId);
 
 			Optional<kokko::Uid> modelUidOpt;
 			if (meshId != MeshId::Null)
@@ -123,7 +122,7 @@ public:
 			char materialUidStr[kokko::Uid::StringLength + 1];
 			materialUidStr[0] = '\0';
 
-			MaterialId materialId = renderer->GetOrderData(renderObj).material;
+			MaterialId materialId = meshComponentSystem->GetMaterialId(componentId);
 			if (materialId != MaterialId::Null)
 			{
 				kokko::Uid materialUid = res.materialManager->GetMaterialUid(materialId);
@@ -132,7 +131,7 @@ public:
 			}
 
 			out << YAML::BeginMap;
-			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "render";
+			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "mesh";
 			out << YAML::Key << "mesh" << YAML::Value << meshUidStr;
 			out << YAML::Key << "material" << YAML::Value << materialUidStr;
 			out << YAML::EndMap;

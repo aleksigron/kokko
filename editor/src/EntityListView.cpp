@@ -106,9 +106,9 @@ void EntityListView::DrawEntityListButtons(World* world)
 			EntityComponentType component = EntityComponentType::Scene;
 			EntityFactory::CreateEntity(world, ArrayView(&component, 1));
 		}
-		if (ImGui::Selectable("Render object"))
+		if (ImGui::Selectable("Mesh object"))
 		{
-			EntityComponentType components[] = { EntityComponentType::Scene, EntityComponentType::Render };
+			EntityComponentType components[] = { EntityComponentType::Scene, EntityComponentType::Mesh };
 			EntityFactory::CreateEntity(world, ArrayView(components));
 		}
 		if (ImGui::Selectable("Camera"))

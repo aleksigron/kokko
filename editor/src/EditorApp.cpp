@@ -209,7 +209,7 @@ void EditorApp::EndFrame()
 	core->EndFrame();
 
 	{
-		KOKKO_PROFILE_SCOPE("ImGui::Render()");
+		KOKKO_PROFILE_SCOPE("ImGui::Mesh()");
 		ImGui::Render();
 	}
 

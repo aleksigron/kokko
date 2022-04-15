@@ -33,6 +33,7 @@ namespace kokko
 {
 class AssetLoader;
 class EnvironmentSystem;
+class MeshComponentSystem;
 class RenderDebugSettings;
 class TerrainSystem;
 }
@@ -61,6 +62,7 @@ public:
 	EntityManager* GetEntityManager() { return entityManager.instance; }
 	Scene* GetScene() { return scene.instance; }
 	Renderer* GetRenderer() { return renderer.instance; }
+	kokko::MeshComponentSystem* GetMeshComponentSystem() { return meshComponentSystem.instance; }
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
 	kokko::EnvironmentSystem* GetEnvironmentSystem() { return environmentSystem.instance; }
@@ -80,6 +82,7 @@ private:
 	InstanceAllocatorPair<CameraSystem> cameraSystem;
 	InstanceAllocatorPair<kokko::EnvironmentSystem> environmentSystem;
 	InstanceAllocatorPair<Scene> scene;
+	InstanceAllocatorPair<kokko::MeshComponentSystem> meshComponentSystem;
 	InstanceAllocatorPair<Renderer> renderer;
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
 	InstanceAllocatorPair<kokko::TerrainSystem> terrainSystem;

@@ -198,6 +198,9 @@ set (KOKKO_SOURCES
 	src/Rendering/LightManager.cpp
 	src/Rendering/LightManager.hpp
 	src/Rendering/LightSerializer.hpp
+	src/Rendering/MeshComponentSerializer.hpp
+	src/Rendering/MeshComponentSystem.cpp
+	src/Rendering/MeshComponentSystem.hpp
 	src/Rendering/PostProcessRenderer.cpp
 	src/Rendering/PostProcessRenderer.hpp
 	src/Rendering/PostProcessRenderPass.hpp
@@ -214,8 +217,6 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDeviceOpenGL.hpp
 	src/Rendering/Renderer.cpp
 	src/Rendering/Renderer.hpp
-	src/Rendering/RendererData.hpp
-	src/Rendering/RenderObjectSerializer.hpp
 	src/Rendering/RenderOrder.hpp
 	src/Rendering/RenderTargetContainer.cpp
 	src/Rendering/RenderTargetContainer.hpp
