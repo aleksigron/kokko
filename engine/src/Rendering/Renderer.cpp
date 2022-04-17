@@ -15,8 +15,11 @@
 #include "Engine/EntityManager.hpp"
 
 #include "Graphics/BloomEffect.hpp"
-#include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
 #include "Graphics/EnvironmentSystem.hpp"
+#include "Graphics/GraphicsFeature.hpp"
+#include "Graphics/GraphicsFeatureCommandList.hpp"
+#include "Graphics/GraphicsFeatureSkybox.hpp"
+#include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
 #include "Graphics/Scene.hpp"
 
 #include "Math/Rectangle.hpp"
@@ -80,11 +83,6 @@ struct LightingUniformBlock
 	alignas(4) float shadowBiasClamp;
 };
 
-struct SkyboxUniformBlock
-{
-	alignas(16) Mat4x4f transform;
-};
-
 struct TonemapUniformBlock
 {
 	alignas(16) float exposure;
@@ -133,9 +131,7 @@ Renderer::Renderer(
 	objectVisibility(allocator),
 	lightResultArray(allocator),
 	customRenderers(allocator),
-	skyboxShaderId(ShaderId::Null),
-	skyboxMeshId(MeshId::Null),
-	skyboxUniformBufferId(0),
+	graphicsFeatures(allocator),
 	normalDebugBufferId(0)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -362,32 +358,29 @@ void Renderer::Initialize()
 		device->SetObjectLabel(RenderObjectType::Texture, brdfLutTextureId, label);
 	}
 
-	// Inialize skybox resources
+	graphicsFeatures.PushBack(allocator->MakeNew<kokko::GraphicsFeatureSkybox>());
+
+	kokko::GraphicsFeature::InitializeParameters parameters;
+	parameters.renderDevice = device;
+	parameters.meshManager = meshManager;
+	parameters.shaderManager = shaderManager;
+
+	for (auto feature : graphicsFeatures)
 	{
-		skyboxMeshId = meshManager->CreateMesh();
-		MeshPresets::UploadCube(meshManager, skyboxMeshId);
-
-		const char* shaderPath = "engine/shaders/skybox/skybox.glsl";
-		skyboxShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(shaderPath));
-
-		device->CreateBuffers(1, &skyboxUniformBufferId);
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, skyboxUniformBufferId);
-
-		RenderCommandData::SetBufferStorage storage{};
-		storage.target = RenderBufferTarget::UniformBuffer;
-		storage.size = sizeof(SkyboxUniformBlock);
-		storage.data = nullptr;
-		storage.dynamicStorage = true;
-		device->SetBufferStorage(&storage);
+		feature->Initialize(parameters);
 	}
 }
 
 void Renderer::Deinitialize()
 {
-	if (skyboxUniformBufferId != 0)
+	kokko::GraphicsFeature::InitializeParameters parameters;
+	parameters.renderDevice = device;
+	parameters.meshManager = meshManager;
+	parameters.shaderManager = shaderManager;
+
+	for (auto feature : graphicsFeatures)
 	{
-		device->DestroyBuffers(1, &skyboxUniformBufferId);
-		skyboxUniformBufferId = 0;
+		feature->Deinitialize(parameters);
 	}
 
 	if (fullscreenMesh != MeshId::Null)
@@ -590,36 +583,55 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 			}
 			else // Render with callback
 			{
-				size_t callbackId = renderOrder.renderObject.GetValue(command);
+				uint64_t featureIndex = renderOrder.featureIndex.GetValue(command);
 
-				if (callbackId > 0 && callbackId <= customRenderers.GetCount())
+				if (renderOrder.isGraphicsFeature.GetValue(command) != 0)
 				{
-					CustomRenderer* customRenderer = customRenderers[callbackId - 1];
+					uint64_t objectId = renderOrder.featureObjectId.GetValue(command);
 
-					if (customRenderer != nullptr)
+					kokko::GraphicsFeature::RenderParameters params;
+					params.renderDevice = device;
+					params.environmentSystem = environmentSystem;
+					params.meshManager = meshManager;
+					params.shaderManager = shaderManager;
+					params.textureManager = textureManager;
+					params.cameraParameters = cameraParams;
+					params.featureObjectId = static_cast<uint16_t>(objectId);
+
+					kokko::GraphicsFeature* feature = graphicsFeatures[featureIndex];
+					feature->Render(params);
+				}
+				else
+				{
+					if (featureIndex > 0 && featureIndex <= customRenderers.GetCount())
 					{
-						CustomRenderer::RenderParams params;
-						params.viewport = &viewport;
-						params.cameraParams = cameraParams;
-						params.callbackId = static_cast<unsigned int>(callbackId);
-						params.command = command;
-						params.scene = scene;
+						CustomRenderer* customRenderer = customRenderers[featureIndex - 1];
 
-						customRenderer->RenderCustom(params);
+						if (customRenderer != nullptr)
+						{
+							CustomRenderer::RenderParams params;
+							params.viewport = &viewport;
+							params.cameraParams = cameraParams;
+							params.callbackId = static_cast<unsigned int>(featureIndex);
+							params.command = command;
+							params.scene = scene;
 
-						// Reset state cache
-						lastVpIdx = MaxViewportCount;
-						lastShaderProgram = 0;
-						draw = nullptr;
-						lastMeshId = MeshId{ 0 };
-						lastMaterialId = MaterialId{ 0 };
-
-						// TODO: manage sampler state more robustly
-						device->BindSampler(0, 0);
-
-						// TODO: Figure how to restore viewport and other relevant state
+							customRenderer->RenderCustom(params);
+						}
 					}
 				}
+
+				// Reset state cache
+				lastVpIdx = MaxViewportCount;
+				lastShaderProgram = 0;
+				draw = nullptr;
+				lastMeshId = MeshId{ 0 };
+				lastMaterialId = MaterialId{ 0 };
+
+				// TODO: manage sampler state more robustly
+				device->BindSampler(0, 0);
+
+				// TODO: Figure how to restore viewport and other relevant state
 			}
 		}
 	}
@@ -677,8 +689,6 @@ void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 {
 	if (params.callbackId == deferredLightingCallback)
 		RenderDeferredLighting(params);
-	else if (params.callbackId == skyboxRenderCallback)
-		RenderSkybox(params);
 	else if (params.callbackId == postProcessCallback)
 		RenderPostProcess(params);
 }
@@ -771,38 +781,6 @@ void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params
 	postProcessRenderer->RenderPass(deferredPass);
 
 	ssao->ReleaseResult();
-}
-
-void Renderer::RenderSkybox(const CustomRenderer::RenderParams& params)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	kokko::EnvironmentTextures envMap;
-	kokko::EnvironmentId envId = environmentSystem->FindActiveEnvironment();
-	if (envId != kokko::EnvironmentId::Null)
-		envMap = environmentSystem->GetEnvironmentMap(envId);
-	else
-		envMap = environmentSystem->GetEmptyEnvironmentMap();
-
-	const TextureData& envTexture = textureManager->GetTextureData(envMap.environmentTexture);
-
-	const ShaderData& shader = shaderManager->GetShaderData(skyboxShaderId);
-	device->UseShaderProgram(shader.driverId);
-
-	const kokko::TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash("environment_map"_hash);
-	if (uniform != nullptr)
-	{
-		device->SetActiveTextureUnit(0);
-		device->BindTexture(envTexture.textureTarget, envTexture.textureObjectId);
-		device->SetUniformInt(uniform->uniformLocation, 0);
-	}
-
-	device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, skyboxUniformBufferId);
-
-	const MeshDrawData* draw = meshManager->GetDrawData(skyboxMeshId);
-	device->BindVertexArray(draw->vertexArrayObject);
-
-	device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 }
 
 void Renderer::RenderPostProcess(const CustomRenderer::RenderParams& params)
@@ -1279,6 +1257,18 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	// Get camera transforms
 
 	CameraParameters cameraParameters = GetCameraParameters(editorCamera, targetFramebuffer);
+
+	{
+		kokko::GraphicsFeature::UploadParameters featureParameters;
+		featureParameters.renderDevice = device;
+		featureParameters.cameraParameters = cameraParameters;
+
+		for (auto feature : graphicsFeatures)
+		{
+			feature->Upload(featureParameters);
+		}
+	}
+
 	Mat4x4fBijection cameraTransforms = cameraParameters.transform;
 	ProjectionParameters projectionParams = cameraParameters.projection;
 	Mat4x4f cameraProjection = projectionParams.GetProjectionMatrix(true);
@@ -1293,23 +1283,12 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		lockCullingCameraTransform = cameraTransforms;
 	}
 
-	Vec3f cameraPos = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-
 	int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
 	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
 	Vec2i shadowCascadeSize(shadowSide, shadowSide);
 	Vec2i shadowTextureSize(shadowSide * shadowCascadeCount, shadowSide);
 	Mat4x4fBijection cascadeViewTransforms[CascadedShadowMap::MaxCascadeCount];
 	ProjectionParameters lightProjections[CascadedShadowMap::MaxCascadeCount];
-
-	// Update skybox parameters
-	{
-		SkyboxUniformBlock skyboxUniforms;
-		skyboxUniforms.transform = cameraProjection * cameraTransforms.inverse * Mat4x4f::Translate(cameraPos);
-
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, skyboxUniformBufferId);
-		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(SkyboxUniformBlock), &skyboxUniforms);
-	}
 
 	// Reset the used viewport count
 	viewportCount = 0;
@@ -1650,6 +1629,14 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 			customRenderers[i]->AddRenderCommands(params);
 		}
+	}
+
+	for (size_t i = 0, count = graphicsFeatures.GetCount(); i < count; ++i)
+	{
+		uint64_t featureIndex = static_cast<uint64_t>(i);
+		kokko::GraphicsFeatureCommandList commandList(commandList, viewportIndexFullscreen, featureIndex);
+		kokko::GraphicsFeature::SubmitParameters params{ commandList };
+		graphicsFeatures[i]->Submit(params);
 	}
 
 	commandList.Sort();

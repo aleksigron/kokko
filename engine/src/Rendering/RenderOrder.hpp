@@ -30,6 +30,13 @@ struct RenderOrderConfiguration
 		materialId.SetDefinition(12, opaquePadding.shift);
 		renderObject.SetDefinition(20, materialId.shift);
 
+		// For custom renderer / graphics feature commands
+		// These replace renderObject
+
+		isGraphicsFeature.SetDefinition(1, materialId.shift);
+		featureIndex.SetDefinition(5, isGraphicsFeature.shift);
+		featureObjectId.SetDefinition(14, featureIndex.shift);
+
 		// CONTROL COMMANDS
 
 		// Ordering for commands for same viewport, layer and transparency
@@ -55,6 +62,9 @@ struct RenderOrderConfiguration
 	BitfieldVariable<uint64_t> opaquePadding;
 	BitfieldVariable<uint64_t> materialId;
 	BitfieldVariable<uint64_t> renderObject;
+	BitfieldVariable<uint64_t> isGraphicsFeature; // Remove once all custom renderers have been converted
+	BitfieldVariable<uint64_t> featureIndex; // Or custom renderer index
+	BitfieldVariable<uint64_t> featureObjectId;
 	BitfieldVariable<uint64_t> commandOrder;
 	BitfieldVariable<uint64_t> commandType;
 	BitfieldVariable<uint64_t> commandData;

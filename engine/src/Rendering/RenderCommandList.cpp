@@ -89,7 +89,13 @@ void RenderCommandList::AddDraw(
 	commands.PushBack(c);
 }
 
-void RenderCommandList::AddDrawWithCallback(unsigned int viewport, RenderPass pass, float depth, unsigned int callbackIndex)
+void RenderCommandList::AddDrawWithCallback(
+	unsigned int viewport,
+	RenderPass pass,
+	float depth,
+	unsigned int callbackIndex,
+	bool isGraphicsFeature,
+	uint16_t featureObjectId)
 {
 	depth = (depth > 1.0f ? 1.0f : (depth < 0.0f ? 0.0f : depth));
 
@@ -113,7 +119,9 @@ void RenderCommandList::AddDrawWithCallback(unsigned int viewport, RenderPass pa
 	}
 
 	renderOrder.materialId.AssignValue(c, RenderOrderConfiguration::CallbackMaterialId);
-	renderOrder.renderObject.AssignValue(c, callbackIndex);
+	renderOrder.isGraphicsFeature.AssignValue(c, static_cast<uint64_t>(isGraphicsFeature));
+	renderOrder.featureIndex.AssignValue(c, callbackIndex);
+	renderOrder.featureObjectId.AssignValue(c, static_cast<uint64_t>(featureObjectId));
 
 	commands.PushBack(c);
 }
