@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 template <typename T>
 struct BitfieldVariable
 {
@@ -11,6 +13,8 @@ struct BitfieldVariable
 
 	void SetDefinition(T bits, T unusedBits)
 	{
+		assert(bits <= unusedBits);
+
 		this->bits = bits;
 		this->mask = static_cast<T>((1ULL << bits) - 1);
 		this->shift = unusedBits - bits;
@@ -18,14 +22,15 @@ struct BitfieldVariable
 
 	void AssignValue(T& bitfield, T value) const
 	{
-		value = value & this->mask;
-		value = value << this->shift;
-		bitfield = bitfield | value;
+		T bitfieldValue = value & this->mask;
+		assert(bitfieldValue == value);
+		bitfieldValue = bitfieldValue << this->shift;
+		bitfield = bitfield | bitfieldValue;
 	}
 
 	void AssignZero(T& bitfield) const
 	{
-		T inverseMask = ~(this->mask);
+		T inverseMask = ~(this->mask << this->shift);
 		bitfield = bitfield & inverseMask;
 	}
 
