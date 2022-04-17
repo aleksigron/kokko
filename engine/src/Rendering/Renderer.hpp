@@ -48,6 +48,7 @@ namespace kokko
 {
 
 class EnvironmentSystem;
+class GraphicsFeature;
 class MeshComponentSystem;
 class RenderDebugSettings;
 class UniformData;
@@ -133,9 +134,8 @@ private:
 
 	Array<CustomRenderer*> customRenderers;
 
-	ShaderId skyboxShaderId;
-	MeshId skyboxMeshId;
-	unsigned int skyboxUniformBufferId;
+	Array<kokko::GraphicsFeature*> graphicsFeatures;
+
 	unsigned int normalDebugBufferId;
 
 	void CreateResolutionDependentFramebuffers(int width, int height);
@@ -161,7 +161,6 @@ private:
 	bool ParseControlCommand(uint64_t orderKey);
 
 	void RenderDeferredLighting(const CustomRenderer::RenderParams& params);
-	void RenderSkybox(const CustomRenderer::RenderParams& params);
 	void RenderPostProcess(const CustomRenderer::RenderParams& params);
 	void RenderBloom(const CustomRenderer::RenderParams& params);
 	void RenderTonemapping(const CustomRenderer::RenderParams& params);

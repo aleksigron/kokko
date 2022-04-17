@@ -53,6 +53,7 @@ set (KOKKO_SOURCES
 	src/Core/Array.cpp
 	src/Core/Array.hpp
 	src/Core/ArrayView.hpp
+	src/Core/BitfieldVariable.cpp
 	src/Core/BitfieldVariable.hpp
 	src/Core/BitPack.hpp
 	src/Core/Color.hpp
@@ -138,6 +139,11 @@ set (KOKKO_SOURCES
 	src/Graphics/EnvironmentSerializer.hpp
 	src/Graphics/EnvironmentSystem.cpp
 	src/Graphics/EnvironmentSystem.hpp
+	src/Graphics/GraphicsFeature.hpp
+	src/Graphics/GraphicsFeatureCommandList.cpp
+	src/Graphics/GraphicsFeatureCommandList.hpp
+	src/Graphics/GraphicsFeatureSkybox.cpp
+	src/Graphics/GraphicsFeatureSkybox.hpp
 	src/Graphics/ParticleSystem.cpp
 	src/Graphics/ParticleSystem.hpp
 	src/Graphics/ParticleEmitterSerializer.hpp
