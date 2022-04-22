@@ -274,6 +274,7 @@ void ParticleSystem::RenderCustom(const RenderParams& params)
 
 void ParticleSystem::NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms)
 {
+	// TODO: Updatetransforms;
 }
 
 ParticleEmitterId ParticleSystem::Lookup(Entity e)

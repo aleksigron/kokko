@@ -18,8 +18,9 @@
 #include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/GraphicsFeature.hpp"
 #include "Graphics/GraphicsFeatureCommandList.hpp"
+#include "Graphics/GraphicsFeatureDeferredLighting.hpp"
 #include "Graphics/GraphicsFeatureSkybox.hpp"
-#include "Graphics/ScreenSpaceAmbientOcclusion.hpp"
+#include "Graphics/GraphicsFeatureSsao.hpp"
 #include "Graphics/Scene.hpp"
 
 #include "Math/Rectangle.hpp"
@@ -40,6 +41,7 @@
 #include "Rendering/RenderCommandType.hpp"
 #include "Rendering/RenderDebugSettings.hpp"
 #include "Rendering/RenderDevice.hpp"
+#include "Rendering/RenderGraphResources.hpp"
 #include "Rendering/RenderTargetContainer.hpp"
 #include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
@@ -53,35 +55,6 @@
 #include "Resources/TextureManager.hpp"
 
 #include "System/Window.hpp"
-
-struct LightingUniformBlock
-{
-	static constexpr size_t MaxLightCount = 8;
-	static constexpr size_t MaxCascadeCount = 4;
-
-	UniformBlockArray<Vec3f, MaxLightCount> lightColors;
-	UniformBlockArray<Vec4f, MaxLightCount> lightPositions; // xyz: position, w: inverse square radius
-	UniformBlockArray<Vec4f, MaxLightCount> lightDirections; // xyz: direction, w: spot light angle
-	UniformBlockArray<bool, MaxLightCount> lightCastShadow;
-
-	UniformBlockArray<Mat4x4f, MaxCascadeCount> shadowMatrices;
-	UniformBlockArray<float, MaxCascadeCount + 1> shadowSplits;
-
-	alignas(16) Mat4x4f perspectiveMatrix;
-	alignas(16) Mat4x4f viewToWorld;
-	alignas(8) Vec2f halfNearPlane;
-	alignas(8) Vec2f shadowMapScale;
-	alignas(8) Vec2f frameResolution;
-
-	alignas(4) int directionalLightCount;
-	alignas(4) int pointLightCount;
-	alignas(4) int spotLightCount;
-	alignas(4) int cascadeCount;
-
-	alignas(4) float shadowBiasOffset;
-	alignas(4) float shadowBiasFactor;
-	alignas(4) float shadowBiasClamp;
-};
 
 struct TonemapUniformBlock
 {
@@ -108,8 +81,8 @@ Renderer::Renderer(
 	allocator(allocator),
 	device(renderDevice),
 	componentSystem(componentSystem),
+	renderGraphResources(nullptr),
 	renderTargetContainer(nullptr),
-	ssao(nullptr),
 	bloomEffect(nullptr),
 	targetFramebufferId(0),
 	viewportData(nullptr),
@@ -117,6 +90,7 @@ Renderer::Renderer(
 	viewportIndexFullscreen(0),
 	uniformStagingBuffer(allocator),
 	objectUniformBufferLists{ Array<unsigned int>(allocator) },
+	postProcessCallback(0),
 	currentFrameIndex(0),
 	scene(scene),
 	cameraSystem(cameraSystem),
@@ -136,29 +110,19 @@ Renderer::Renderer(
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	renderGraphResources = allocator->MakeNew<kokko::RenderGraphResources>(renderDevice, meshManager);
+
 	renderTargetContainer = allocator->MakeNew<RenderTargetContainer>(allocator, renderDevice);
 
 	postProcessRenderer = allocator->MakeNew<PostProcessRenderer>(
 		renderDevice, meshManager, shaderManager, renderTargetContainer);
 
-	ssao = allocator->MakeNew<ScreenSpaceAmbientOcclusion>(
-		allocator, renderDevice, shaderManager, postProcessRenderer);
-
 	bloomEffect = allocator->MakeNew<BloomEffect>(
 		allocator, renderDevice, shaderManager, postProcessRenderer);
 
-	framebufferShadow.SetRenderDevice(renderDevice);
-	framebufferGbuffer.SetRenderDevice(renderDevice);
-	framebufferLightAcc.SetRenderDevice(renderDevice);
-
-	fullscreenMesh = MeshId{ 0 };
-	lightingShaderId = ShaderId{ 0 };
 	tonemappingShaderId = ShaderId{ 0 };
 	shadowMaterial = MaterialId{ 0 };
-	lightingUniformBufferId = 0;
 	tonemapUniformBufferId = 0;
-
-	brdfLutTextureId = 0;
 
 	objectUniformBlockStride = 0;
 	objectsPerUniformBuffer = 0;
@@ -169,7 +133,6 @@ Renderer::~Renderer()
 	this->Deinitialize();
 
 	allocator->MakeDelete(bloomEffect);
-	allocator->MakeDelete(ssao);
 	allocator->MakeDelete(postProcessRenderer);
 	allocator->MakeDelete(renderTargetContainer);
 }
@@ -188,7 +151,6 @@ void Renderer::Initialize()
 	objectsPerUniformBuffer = ObjectUniformBufferSize / objectUniformBlockStride;
 
 	postProcessRenderer->Initialize();
-	ssao->Initialize();
 
 	bloomEffect->Initialize();
 
@@ -228,23 +190,6 @@ void Renderer::Initialize()
 	}
 
 	{
-		KOKKO_PROFILE_SCOPE("Create shadow framebuffer");
-
-		// Create shadow framebuffer
-
-		int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
-		unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
-		Vec2i size(shadowSide * shadowCascadeCount, shadowSide);
-
-		RenderTextureSizedFormat depthFormat = RenderTextureSizedFormat::D32F;
-		framebufferShadow.Create(size.x, size.y, depthFormat, ArrayView<RenderTextureSizedFormat>());
-		framebufferShadow.SetDepthTextureCompare(
-			RenderTextureCompareMode::CompareRefToTexture, RenderDepthCompareFunc::GreaterThanOrEqual);
-
-		framebufferShadow.SetDebugLabel(kokko::ConstStringView("Renderer shadow framebuffer"));
-	}
-	
-	{
 		KOKKO_PROFILE_SCOPE("Create tonemap uniform buffer");
 
 		// Set up uniform buffer for tonemapping pass
@@ -264,31 +209,6 @@ void Renderer::Initialize()
 	}
 
 	{
-		KOKKO_PROFILE_SCOPE("Create lighting uniform buffer");
-
-		// Create opaque lighting pass uniform buffer
-
-		device->CreateBuffers(1, &lightingUniformBufferId);
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
-
-		RenderCommandData::SetBufferStorage storage{};
-		storage.target = RenderBufferTarget::UniformBuffer;
-		storage.size = sizeof(LightingUniformBlock);
-		storage.data = nullptr;
-		storage.dynamicStorage = true;
-		device->SetBufferStorage(&storage);
-
-		kokko::ConstStringView label("Renderer deferred lighting uniform buffer");
-		device->SetObjectLabel(RenderObjectType::Buffer, lightingUniformBufferId, label);
-	}
-
-	{
-		// Create screen filling quad
-		fullscreenMesh = meshManager->CreateMesh();
-		MeshPresets::UploadPlane(meshManager, fullscreenMesh);
-	}
-	
-	{
 		const char* path = "engine/materials/forward/shadow_depth.material";
 		shadowMaterial = materialManager->FindMaterialByPath(kokko::ConstStringView(path));
 	}
@@ -299,65 +219,19 @@ void Renderer::Initialize()
 	}
 
 	{
-		const char* path = "engine/shaders/deferred_lighting/lighting.glsl";
-		lightingShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(path));
-	}
-
-	{
 		const char* path = "engine/shaders/post_process/tonemap.glsl";
 		tonemappingShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(path));
 	}
 
-	{
-		KOKKO_PROFILE_SCOPE("Calculate BRDF LUT");
+	auto lightingFeature = allocator->MakeNew<kokko::GraphicsFeatureDeferredLighting>(allocator);
+	lightingFeature->SetOrder(1);
 
-		// Calculate the BRDF LUT
+	auto ssaoFeature = allocator->MakeNew<kokko::GraphicsFeatureSsao>(allocator);
+	ssaoFeature->SetOrder(0);
 
-		static const int LutSize = 512;
-
-		device->CreateTextures(1, &brdfLutTextureId);
-		device->BindTexture(RenderTextureTarget::Texture2d, brdfLutTextureId);
-
-		RenderCommandData::SetTextureStorage2D storage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RG16F, LutSize, LutSize
-		};
-		device->SetTextureStorage2D(&storage);
-
-		device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-
-		unsigned int framebuffer;
-		device->CreateFramebuffers(1, &framebuffer);
-
-		RenderCommandData::BindFramebufferData bindFramebuffer{ RenderFramebufferTarget::Framebuffer, framebuffer };
-		device->BindFramebuffer(&bindFramebuffer);
-
-		RenderCommandData::AttachFramebufferTexture2D attachTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
-			RenderTextureTarget::Texture2d, brdfLutTextureId, 0
-		};
-		device->AttachFramebufferTexture2D(&attachTexture);
-
-		RenderCommandData::ViewportData viewport{ 0, 0, LutSize, LutSize };
-		device->Viewport(&viewport);
-
-		const char* path = "engine/shaders/preprocess/calc_brdf_lut.glsl";
-		ShaderId calcBrdfShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(path));
-		const ShaderData& calcBrdfShader = shaderManager->GetShaderData(calcBrdfShaderId);
-		device->UseShaderProgram(calcBrdfShader.driverId);
-
-		const MeshDrawData* meshDraw = meshManager->GetDrawData(fullscreenMesh);
-		device->BindVertexArray(meshDraw->vertexArrayObject);
-		device->DrawIndexed(meshDraw->primitiveMode, meshDraw->count, meshDraw->indexType);
-
-		device->DestroyFramebuffers(1, &framebuffer);
-
-		kokko::ConstStringView label("Renderer BRDF LUT");
-		device->SetObjectLabel(RenderObjectType::Texture, brdfLutTextureId, label);
-	}
-
+	graphicsFeatures.Reserve(3);
+	graphicsFeatures.PushBack(lightingFeature);
+	graphicsFeatures.PushBack(ssaoFeature);
 	graphicsFeatures.PushBack(allocator->MakeNew<kokko::GraphicsFeatureSkybox>());
 
 	kokko::GraphicsFeature::InitializeParameters parameters;
@@ -383,18 +257,6 @@ void Renderer::Deinitialize()
 		feature->Deinitialize(parameters);
 	}
 
-	if (fullscreenMesh != MeshId::Null)
-	{
-		meshManager->RemoveMesh(fullscreenMesh);
-		fullscreenMesh = MeshId{ 0 };
-	}
-
-	if (lightingUniformBufferId != 0)
-	{
-		device->DestroyBuffers(1, &lightingUniformBufferId);
-		lightingUniformBufferId = 0;
-	}
-
 	for (unsigned int i = 0; i < FramesInFlightCount; ++i)
 	{
 		if (objectUniformBufferLists[i].GetCount() > 0)
@@ -404,10 +266,6 @@ void Renderer::Deinitialize()
 			list.Clear();
 		}
 	}
-
-	framebufferShadow.Destroy();
-	framebufferGbuffer.Destroy();
-	framebufferLightAcc.Destroy();
 
 	if (viewportData != nullptr)
 	{
@@ -426,51 +284,6 @@ void Renderer::Deinitialize()
 	}
 }
 
-void Renderer::CreateResolutionDependentFramebuffers(int width, int height)
-{
-	ssao->SetFramebufferSize(Vec2i(width, height));
-
-	{
-		KOKKO_PROFILE_SCOPE("Create geometry framebuffer");
-
-		// Create geometry framebuffer and textures
-
-		RenderTextureSizedFormat depthFormat = RenderTextureSizedFormat::D32F;
-
-		RenderTextureSizedFormat colorFormats[GbufferColorCount];
-		colorFormats[GbufferAlbedoIndex] = RenderTextureSizedFormat::SRGB8;
-		colorFormats[GbufferNormalIndex] = RenderTextureSizedFormat::RG16,
-		colorFormats[GbufferMaterialIndex] = RenderTextureSizedFormat::RGB8;
-
-		ArrayView<RenderTextureSizedFormat> colorFormatsList(colorFormats, GbufferColorCount);
-
-		framebufferGbuffer.Create(width, height, depthFormat, colorFormatsList);
-		framebufferGbuffer.SetDebugLabel(kokko::ConstStringView("Renderer G-buffer"));
-	}
-
-	{
-		KOKKO_PROFILE_SCOPE("Create HDR light accumulation framebuffer");
-
-		// HDR light accumulation framebuffer
-
-		RenderTextureSizedFormat colorFormat = RenderTextureSizedFormat::RGB16F;
-		ArrayView<RenderTextureSizedFormat> colorFormatList(&colorFormat, 1);
-		framebufferLightAcc.Create(width, height, Optional<RenderTextureSizedFormat>(), colorFormatList);
-		framebufferLightAcc.AttachExternalDepthTexture(framebufferGbuffer.GetDepthTextureId());
-		framebufferLightAcc.SetDebugLabel(kokko::ConstStringView("Renderer light accumulation framebuffer"));
-	}
-}
-
-void Renderer::DestroyResolutionDependentFramebuffers()
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	framebufferGbuffer.Destroy();
-	framebufferLightAcc.Destroy();
-
-	renderTargetContainer->DestroyAllRenderTargets();
-}
-
 void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -478,14 +291,11 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 	if (targetFramebuffer.IsInitialized() == false)
 		return;
 
-	if (targetFramebuffer.GetSize() != framebufferGbuffer.GetSize())
-	{
-		DestroyResolutionDependentFramebuffers();
-		CreateResolutionDependentFramebuffers(targetFramebuffer.GetWidth(), targetFramebuffer.GetHeight());
-	}
+	if (targetFramebuffer.GetSize() != renderGraphResources->GetFullscreenViewportSize())
+		renderTargetContainer->DestroyAllRenderTargets();
 
-	deferredLightingCallback = AddCustomRenderer(this);
-	skyboxRenderCallback = AddCustomRenderer(this);
+	renderGraphResources->VerifyResourcesAreCreated(targetFramebuffer.GetSize());
+
 	postProcessCallback = AddCustomRenderer(this);
 
 	targetFramebufferId = targetFramebuffer.GetFramebufferId();
@@ -504,6 +314,23 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 	Array<unsigned int>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
 	
 	CameraParameters cameraParams = GetCameraParameters(editorCamera, targetFramebuffer);
+
+	kokko::GraphicsFeature::RenderParameters params
+	{
+		device,
+		postProcessRenderer,
+		meshManager,
+		shaderManager,
+		textureManager,
+		environmentSystem,
+		lightManager,
+		cameraParams,
+		viewportData[viewportIndexFullscreen],
+		ArrayView(viewportData + viewportIndicesShadowCascade.start,
+			viewportIndicesShadowCascade.end - viewportIndicesShadowCascade.start),
+		renderGraphResources,
+		0
+	};
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -587,19 +414,9 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 
 				if (renderOrder.isGraphicsFeature.GetValue(command) != 0)
 				{
-					uint64_t objectId = renderOrder.featureObjectId.GetValue(command);
+					params.featureObjectId = renderOrder.featureObjectId.GetValue(command);
 
-					kokko::GraphicsFeature::RenderParameters params;
-					params.renderDevice = device;
-					params.environmentSystem = environmentSystem;
-					params.meshManager = meshManager;
-					params.shaderManager = shaderManager;
-					params.textureManager = textureManager;
-					params.cameraParameters = cameraParams;
-					params.featureObjectId = static_cast<uint16_t>(objectId);
-
-					kokko::GraphicsFeature* feature = graphicsFeatures[featureIndex];
-					feature->Render(params);
+					graphicsFeatures[featureIndex]->Render(params);
 				}
 				else
 				{
@@ -687,9 +504,7 @@ void Renderer::BindTextures(const ShaderData& shader, unsigned int count,
 
 void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
 {
-	if (params.callbackId == deferredLightingCallback)
-		RenderDeferredLighting(params);
-	else if (params.callbackId == postProcessCallback)
+	if (params.callbackId == postProcessCallback)
 		RenderPostProcess(params);
 }
 
@@ -703,86 +518,6 @@ const Mat4x4f& Renderer::GetCullingCameraTransform() const
 	return lockCullingCameraTransform.forward;
 }
 
-void Renderer::RenderDeferredLighting(const CustomRenderer::RenderParams& params)
-{
-	// Both SSAO and deferred lighting passes use these
-
-	ProjectionParameters projParams = params.cameraParams.projection;
-
-	LightingUniformBlock lightingUniforms;
-	UpdateLightingDataToUniformBuffer(projParams, lightingUniforms);
-	device->BindBuffer(RenderBufferTarget::UniformBuffer, lightingUniformBufferId);
-	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(LightingUniformBlock), &lightingUniforms);
-
-	device->DepthTestDisable();
-
-	ScreenSpaceAmbientOcclusion::RenderParams ssaoRenderParams;
-	ssaoRenderParams.normalTexture = framebufferGbuffer.GetColorTextureId(GbufferNormalIndex);
-	ssaoRenderParams.depthTexture = framebufferGbuffer.GetDepthTextureId();
-	ssaoRenderParams.projection = projParams;
-	ssao->Render(ssaoRenderParams);
-
-	kokko::EnvironmentTextures envMap;
-	kokko::EnvironmentId envId = environmentSystem->FindActiveEnvironment();
-	if (envId != kokko::EnvironmentId::Null)
-		envMap = environmentSystem->GetEnvironmentMap(envId);
-	else
-		envMap = environmentSystem->GetEmptyEnvironmentMap();
-
-	const TextureData& diffIrrTexture = textureManager->GetTextureData(envMap.diffuseIrradianceTexture);
-	const TextureData& specIrrTexture = textureManager->GetTextureData(envMap.specularIrradianceTexture);
-
-	// Deferred lighting
-
-	PostProcessRenderPass deferredPass;
-
-	deferredPass.textureNameHashes[0] = "g_albedo"_hash;
-	deferredPass.textureNameHashes[1] = "g_normal"_hash;
-	deferredPass.textureNameHashes[2] = "g_material"_hash;
-	deferredPass.textureNameHashes[3] = "g_depth"_hash;
-	deferredPass.textureNameHashes[4] = "ssao_map"_hash;
-	deferredPass.textureNameHashes[5] = "shadow_map"_hash;
-	deferredPass.textureNameHashes[6] = "diff_irradiance_map"_hash;
-	deferredPass.textureNameHashes[7] = "spec_irradiance_map"_hash;
-	deferredPass.textureNameHashes[8] = "brdf_lut"_hash;
-
-	deferredPass.textureIds[0] = framebufferGbuffer.GetColorTextureId(GbufferAlbedoIndex);
-	deferredPass.textureIds[1] = framebufferGbuffer.GetColorTextureId(GbufferNormalIndex);
-	deferredPass.textureIds[2] = framebufferGbuffer.GetColorTextureId(GbufferMaterialIndex);
-	deferredPass.textureIds[3] = framebufferGbuffer.GetDepthTextureId();
-	deferredPass.textureIds[4] = ssao->GetResultTextureId();
-	deferredPass.textureIds[5] = framebufferShadow.GetDepthTextureId();
-	deferredPass.textureIds[6] = diffIrrTexture.textureObjectId;
-	deferredPass.textureIds[7] = specIrrTexture.textureObjectId;
-	deferredPass.textureIds[8] = brdfLutTextureId;
-
-	deferredPass.samplerIds[0] = 0;
-	deferredPass.samplerIds[1] = 0;
-	deferredPass.samplerIds[2] = 0;
-	deferredPass.samplerIds[3] = 0;
-	deferredPass.samplerIds[4] = 0;
-	deferredPass.samplerIds[5] = 0;
-	deferredPass.samplerIds[6] = 0;
-	deferredPass.samplerIds[7] = 0;
-	deferredPass.samplerIds[8] = 0;
-
-	deferredPass.textureCount = 9;
-
-	deferredPass.uniformBufferId = lightingUniformBufferId;
-	deferredPass.uniformBindingPoint = UniformBlockBinding::Object;
-	deferredPass.uniformBufferRangeStart = 0;
-	deferredPass.uniformBufferRangeSize = sizeof(LightingUniformBlock);
-
-	deferredPass.framebufferId = framebufferLightAcc.GetFramebufferId();
-	deferredPass.viewportSize = framebufferLightAcc.GetSize();
-	deferredPass.shaderId = lightingShaderId;
-	deferredPass.enableBlending = false;
-
-	postProcessRenderer->RenderPass(deferredPass);
-
-	ssao->ReleaseResult();
-}
-
 void Renderer::RenderPostProcess(const CustomRenderer::RenderParams& params)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -793,10 +528,10 @@ void Renderer::RenderPostProcess(const CustomRenderer::RenderParams& params)
 
 void Renderer::RenderBloom(const CustomRenderer::RenderParams& params)
 {
-	unsigned int sourceTexture = framebufferLightAcc.GetColorTextureId(0);
-	unsigned int framebufferId = framebufferLightAcc.GetFramebufferId();
+	unsigned int sourceTexture = renderGraphResources->GetLightAccumulationBuffer().GetColorTextureId(0);
+	unsigned int framebufferId = renderGraphResources->GetLightAccumulationBuffer().GetFramebufferId();
 
-	bloomEffect->Render(sourceTexture, framebufferId, framebufferLightAcc.GetSize());
+	bloomEffect->Render(sourceTexture, framebufferId, renderGraphResources->GetLightAccumulationBuffer().GetSize());
 }
 
 void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
@@ -808,7 +543,7 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 		device->BlendingDisable();
 		device->DepthTestDisable();
 
-		const MeshDrawData* meshDrawData = meshManager->GetDrawData(fullscreenMesh);
+		const MeshDrawData* meshDrawData = meshManager->GetDrawData(renderGraphResources->GetFullscreenMeshId());
 		device->BindVertexArray(meshDrawData->vertexArrayObject);
 
 		// Bind default framebuffer
@@ -830,149 +565,12 @@ void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
 
 		{
 			uint32_t textureNameHashes[] = { "light_acc_map"_hash };
-			unsigned int textureIds[] = { framebufferLightAcc.GetColorTextureId(0) };
+			unsigned int textureIds[] = { renderGraphResources->GetLightAccumulationBuffer().GetColorTextureId(0) };
 			BindTextures(shader, 1, textureNameHashes, textureIds);
 		}
 
 		device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
 	}
-}
-
-void Renderer::UpdateLightingDataToUniformBuffer(
-	const ProjectionParameters& projection, LightingUniformBlock& uniformsOut)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	const RenderViewport& fsvp = viewportData[viewportIndexFullscreen];
-
-	// Update directional light viewports
-	Array<LightId>& directionalLights = lightResultArray;
-	lightManager->GetDirectionalLights(directionalLights);
-
-	Vec2f halfNearPlane;
-	halfNearPlane.y = std::tan(projection.perspectiveFieldOfView * 0.5f);
-	halfNearPlane.x = halfNearPlane.y * projection.aspect;
-	uniformsOut.halfNearPlane = halfNearPlane;
-
-	int shadowSide = CascadedShadowMap::GetShadowCascadeResolution();
-	unsigned int cascadeCount = CascadedShadowMap::GetCascadeCount();
-	uniformsOut.shadowMapScale = Vec2f(1.0f / (cascadeCount * shadowSide), 1.0f / shadowSide);
-
-	uniformsOut.frameResolution = framebufferGbuffer.GetSize().As<float>();
-
-	// Set viewport transform matrices
-	uniformsOut.perspectiveMatrix = fsvp.projection;
-	uniformsOut.viewToWorld = fsvp.view.forward;
-
-	size_t dirLightCount = directionalLights.GetCount();
-	uniformsOut.directionalLightCount = static_cast<int>(dirLightCount);
-
-	// Directional light
-	for (size_t i = 0; i < dirLightCount; ++i)
-	{
-		LightId dirLightId = directionalLights[i];
-
-		Mat3x3f orientation = lightManager->GetOrientation(dirLightId);
-		Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
-		Vec4f vLightDir = fsvp.view.inverse * Vec4f(wLightDir, 0.0f);
-		uniformsOut.lightDirections[i] = vLightDir;
-
-		uniformsOut.lightColors[i] = lightManager->GetColor(dirLightId);
-		uniformsOut.lightCastShadow[i] = lightManager->GetShadowCasting(dirLightId);
-	}
-
-	lightResultArray.Clear();
-	Array<LightId>& nonDirLights = lightResultArray;
-	lightManager->GetNonDirectionalLightsWithinFrustum(fsvp.frustum, nonDirLights);
-
-	// Count the different light types
-
-	unsigned int pointLightCount = 0;
-	unsigned int spotLightCount = 0;
-
-	for (size_t lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
-	{
-		LightType type = lightManager->GetLightType(nonDirLights[lightIdx]);
-		if (type == LightType::Point)
-			pointLightCount += 1;
-		else if (type == LightType::Spot)
-			spotLightCount += 1;
-	}
-
-	uniformsOut.pointLightCount = pointLightCount;
-	uniformsOut.spotLightCount = spotLightCount;
-
-	const size_t dirLightOffset = 1;
-	size_t pointLightsAdded = 0;
-	size_t spotLightsAdded = 0;
-
-	// Light other visible lights
-	for (size_t lightIdx = 0, count = nonDirLights.GetCount(); lightIdx < count; ++lightIdx)
-	{
-		size_t shaderLightIdx;
-
-		LightId lightId = nonDirLights[lightIdx];
-
-		// Point lights come first, so offset spot lights with the amount of point lights
-		LightType type = lightManager->GetLightType(lightId);
-		if (type == LightType::Spot)
-		{
-			shaderLightIdx = dirLightOffset + pointLightCount + spotLightsAdded;
-			spotLightsAdded += 1;
-
-			Mat3x3f orientation = lightManager->GetOrientation(lightId);
-			Vec3f wLightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
-			Vec4f vLightDir = fsvp.view.inverse * Vec4f(wLightDir, 0.0f);
-			vLightDir.w = lightManager->GetSpotAngle(lightId);
-			uniformsOut.lightDirections[shaderLightIdx] = vLightDir;
-		}
-		else
-		{
-			shaderLightIdx = dirLightOffset + pointLightsAdded;
-			pointLightsAdded += 1;
-		}
-
-		Vec3f wLightPos = lightManager->GetPosition(lightId);
-		Vec3f vLightPos = (fsvp.view.inverse * Vec4f(wLightPos, 1.0f)).xyz();
-
-		float radius = lightManager->GetRadius(lightId);
-		float inverseSquareRadius = 1.0f / (radius * radius);
-		uniformsOut.lightPositions[shaderLightIdx] = Vec4f(vLightPos, inverseSquareRadius);
-
-		Vec3f lightCol = lightManager->GetColor(lightId);
-		uniformsOut.lightColors[shaderLightIdx] = lightCol;
-	}
-
-	lightResultArray.Clear();
-
-	// shadow_params.splits[0] is the near depth
-	uniformsOut.shadowSplits[0] = projection.perspectiveNear;
-
-	unsigned int shadowCascadeCount = CascadedShadowMap::GetCascadeCount();
-	uniformsOut.cascadeCount = shadowCascadeCount;
-
-	float cascadeSplitDepths[CascadedShadowMap::MaxCascadeCount];
-	CascadedShadowMap::CalculateSplitDepths(projection, cascadeSplitDepths);
-
-	Mat4x4f bias;
-	bias[0] = 0.5f;
-	bias[5] = 0.5f;
-	bias[12] = 0.5f;
-	bias[13] = 0.5f;
-
-	// Update transforms and split depths for each shadow cascade
-	for (size_t vpIdx = 0; vpIdx < shadowCascadeCount; ++vpIdx)
-	{
-		Mat4x4f viewToLight = viewportData[vpIdx].viewProjection * fsvp.view.forward;
-		Mat4x4f shadowMat = bias * viewToLight;
-
-		uniformsOut.shadowMatrices[vpIdx] = shadowMat;
-		uniformsOut.shadowSplits[vpIdx + 1] = cascadeSplitDepths[vpIdx];
-	}
-
-	uniformsOut.shadowBiasOffset = 0.001f;
-	uniformsOut.shadowBiasFactor = 0.0019f;
-	uniformsOut.shadowBiasClamp = 0.01f;
 }
 
 void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
@@ -1259,9 +857,12 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	CameraParameters cameraParameters = GetCameraParameters(editorCamera, targetFramebuffer);
 
 	{
-		kokko::GraphicsFeature::UploadParameters featureParameters;
-		featureParameters.renderDevice = device;
-		featureParameters.cameraParameters = cameraParameters;
+		kokko::GraphicsFeature::UploadParameters featureParameters
+		{
+			device,
+			cameraParameters,
+			viewportData[viewportIndexFullscreen]
+		};
 
 		for (auto feature : graphicsFeatures)
 		{
@@ -1309,6 +910,8 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 			Vec3f lightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 
 			CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransforms.forward, projectionParams, cascadeViewTransforms, lightProjections);
+
+			viewportIndicesShadowCascade = Range<unsigned int>(viewportCount, viewportCount + shadowCascadeCount);
 
 			for (unsigned int cascade = 0; cascade < shadowCascadeCount; ++cascade)
 			{
@@ -1426,7 +1029,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 			// Bind shadow framebuffer before any shadow cascade draws
 			RenderCommandData::BindFramebufferData data;
 			data.target = RenderFramebufferTarget::Framebuffer;
-			data.framebuffer = framebufferShadow.GetFramebufferId();
+			data.framebuffer = renderGraphResources->GetShadowBuffer().GetFramebufferId();
 
 			commandList.AddControl(0, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
 		}
@@ -1436,8 +1039,8 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 			RenderCommandData::ViewportData data;
 			data.x = 0;
 			data.y = 0;
-			data.w = framebufferShadow.GetWidth();
-			data.h = framebufferShadow.GetHeight();
+			data.w = renderGraphResources->GetShadowBuffer().GetWidth();
+			data.h = renderGraphResources->GetShadowBuffer().GetHeight();
 
 			commandList.AddControl(0, g_pass, 9, ctrl::Viewport, sizeof(data), &data);
 		}
@@ -1499,7 +1102,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		// Bind geometry framebuffer
 		RenderCommandData::BindFramebufferData data;
 		data.target = RenderFramebufferTarget::Framebuffer;
-		data.framebuffer = framebufferGbuffer.GetFramebufferId();
+		data.framebuffer = renderGraphResources->GetGeometryBuffer().GetFramebufferId();
 
 		commandList.AddControl(fsvp, g_pass, 2, ctrl::BindFramebuffer, sizeof(data), &data);
 	}
@@ -1512,8 +1115,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 	// PASS: OPAQUE LIGHTING
 
-	// Draw lighting pass
-	commandList.AddDrawWithCallback(fsvp, l_pass, 0.0f, deferredLightingCallback);
+	// Deferred lighting and SSAO will be added from graphics features
 
 	// PASS: SKYBOX
 
@@ -1533,8 +1135,6 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 		commandList.AddControl(fsvp, s_pass, 3, ctrl::Viewport, sizeof(data), &data);
 	}
-
-	commandList.AddDrawWithCallback(fsvp, s_pass, 0.0f, skyboxRenderCallback);
 
 	// PASS: TRANSPARENT
 
@@ -1561,7 +1161,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 	unsigned int componentCount = componentSystem->data.count;
 	unsigned int visRequired = BitPack::CalculateRequired(componentCount);
-	objectVisibility.Resize(visRequired * viewportCount);
+	objectVisibility.Resize(static_cast<size_t>(visRequired) * viewportCount);
 
 	const unsigned int compareTrIdx = static_cast<unsigned int>(TransparencyType::AlphaTest);
 

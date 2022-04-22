@@ -7,6 +7,7 @@
 #include "Core/BitPack.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
+#include "Core/Range.hpp"
 
 #include "Rendering/CustomRenderer.hpp"
 #include "Rendering/Framebuffer.hpp"
@@ -51,6 +52,7 @@ class EnvironmentSystem;
 class GraphicsFeature;
 class MeshComponentSystem;
 class RenderDebugSettings;
+class RenderGraphResources;
 class UniformData;
 
 struct ResourceManagers;
@@ -65,42 +67,29 @@ private:
 	static const unsigned int MaxFramebufferCount = 4;
 	static const unsigned int MaxFramebufferTextureCount = 16;
 
-	static const size_t GbufferAlbedoIndex = 0;
-	static const size_t GbufferNormalIndex = 1;
-	static const size_t GbufferMaterialIndex = 2;
-	static const size_t GbufferColorCount = 3;
-
 	static const size_t ObjectUniformBufferSize = 512 * 1024;
 
 	Allocator* allocator;
 	RenderDevice* device;
 	kokko::MeshComponentSystem* componentSystem;
 
+	kokko::RenderGraphResources* renderGraphResources;
 	RenderTargetContainer* renderTargetContainer;
 	PostProcessRenderer* postProcessRenderer;
-
-	ScreenSpaceAmbientOcclusion* ssao;
+	
 	BloomEffect* bloomEffect;
-
-	Framebuffer framebufferShadow;
-	Framebuffer framebufferGbuffer;
-	Framebuffer framebufferLightAcc;
 
 	unsigned int targetFramebufferId;
 
 	RenderViewport* viewportData;
 	unsigned int viewportCount;
 	unsigned int viewportIndexFullscreen;
+	Range<unsigned int> viewportIndicesShadowCascade;
 
-	MeshId fullscreenMesh;
-	ShaderId lightingShaderId;
 	ShaderId tonemappingShaderId;
 	MaterialId shadowMaterial;
 	MaterialId fallbackMeshMaterial;
-	unsigned int lightingUniformBufferId;
 	unsigned int tonemapUniformBufferId;
-
-	unsigned int brdfLutTextureId;
 
 	Array<unsigned char> uniformStagingBuffer;
 	Array<unsigned int> objectUniformBufferLists[FramesInFlightCount];
@@ -109,8 +98,6 @@ private:
 	intptr_t objectUniformBlockStride;
 	intptr_t objectsPerUniformBuffer;
 
-	unsigned int deferredLightingCallback;
-	unsigned int skyboxRenderCallback;
 	unsigned int postProcessCallback;
 
 	RenderOrderConfiguration renderOrder;

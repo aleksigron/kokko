@@ -22,6 +22,8 @@ MeshComponentSystem::MeshComponentSystem(Allocator* allocator, MeshManager* mesh
 	entityMap(allocator)
 {
 	data.count = 1;
+
+	Reallocate(256);
 }
 
 MeshComponentSystem::~MeshComponentSystem()

@@ -53,6 +53,13 @@ struct RenderCommandList
 		uint16_t featureObjectId = 0
 	);
 
+	void AddGraphicsFeatureWithOrder(
+		unsigned int viewport,
+		RenderPass pass,
+		uint32_t order,
+		unsigned int featureIndex,
+		uint16_t featureObjectId);
+
 	void Sort();
 
 	void Clear();

@@ -126,6 +126,29 @@ void RenderCommandList::AddDrawWithCallback(
 	commands.PushBack(c);
 }
 
+void RenderCommandList::AddGraphicsFeatureWithOrder(unsigned int viewport, RenderPass pass, uint32_t order, unsigned int featureIndex, uint16_t featureObjectId)
+{
+	uint64_t intpass = static_cast<uint64_t>(pass);
+
+	uint64_t c = 0;
+
+	renderOrder.viewportIndex.AssignValue(c, viewport);
+	renderOrder.viewportPass.AssignValue(c, intpass);
+	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Draw));
+
+	if ((0xfc & intpass) != 0) // Is greater than 0x03; must be transparent
+		renderOrder.transparentDepth.AssignValue(c, order);
+	else
+		renderOrder.opaqueDepth.AssignValue(c, order);
+
+	renderOrder.materialId.AssignValue(c, RenderOrderConfiguration::CallbackMaterialId);
+	renderOrder.isGraphicsFeature.AssignValue(c, static_cast<uint64_t>(1));
+	renderOrder.featureIndex.AssignValue(c, featureIndex);
+	renderOrder.featureObjectId.AssignValue(c, static_cast<uint64_t>(featureObjectId));
+
+	commands.PushBack(c);
+}
+
 void RenderCommandList::Sort()
 {
 	KOKKO_PROFILE_FUNCTION();

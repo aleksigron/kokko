@@ -59,6 +59,9 @@ void GraphicsFeatureSkybox::Deinitialize(const InitializeParameters& parameters)
 {
 	parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
 	uniformBufferId = 0;
+
+	parameters.meshManager->RemoveMesh(meshId);
+	meshId = MeshId::Null;
 }
 
 void GraphicsFeatureSkybox::Upload(const UploadParameters& parameters)
