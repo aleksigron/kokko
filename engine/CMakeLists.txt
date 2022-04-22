@@ -142,13 +142,15 @@ set (KOKKO_SOURCES
 	src/Graphics/GraphicsFeature.hpp
 	src/Graphics/GraphicsFeatureCommandList.cpp
 	src/Graphics/GraphicsFeatureCommandList.hpp
+	src/Graphics/GraphicsFeatureDeferredLighting.cpp
+	src/Graphics/GraphicsFeatureDeferredLighting.hpp
+	src/Graphics/GraphicsFeatureSsao.cpp
+	src/Graphics/GraphicsFeatureSsao.hpp
 	src/Graphics/GraphicsFeatureSkybox.cpp
 	src/Graphics/GraphicsFeatureSkybox.hpp
 	src/Graphics/ParticleSystem.cpp
 	src/Graphics/ParticleSystem.hpp
 	src/Graphics/ParticleEmitterSerializer.hpp
-	src/Graphics/ScreenSpaceAmbientOcclusion.cpp
-	src/Graphics/ScreenSpaceAmbientOcclusion.hpp
 	src/Graphics/TerrainInstance.cpp
 	src/Graphics/TerrainInstance.hpp
 	src/Graphics/TerrainSystem.cpp
@@ -223,6 +225,8 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDeviceOpenGL.hpp
 	src/Rendering/Renderer.cpp
 	src/Rendering/Renderer.hpp
+	src/Rendering/RenderGraphResources.cpp
+	src/Rendering/RenderGraphResources.hpp
 	src/Rendering/RenderOrder.hpp
 	src/Rendering/RenderTargetContainer.cpp
 	src/Rendering/RenderTargetContainer.hpp

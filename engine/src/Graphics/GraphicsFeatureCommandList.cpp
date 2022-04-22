@@ -20,4 +20,9 @@ void GraphicsFeatureCommandList::AddToFullscreenViewport(RenderPass pass, float 
 	list.AddDrawWithCallback(fullscreenViewportIndex, pass, depth, featureIndex, true, object);
 }
 
+void GraphicsFeatureCommandList::AddToFullscreenViewportWithOrder(RenderPass pass, uint64_t order, uint16_t object)
+{
+	list.AddGraphicsFeatureWithOrder(fullscreenViewportIndex, pass, order, featureIndex, object);
+}
+
 }
