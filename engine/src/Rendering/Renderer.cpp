@@ -120,8 +120,6 @@ Renderer::Renderer(
 
 Renderer::~Renderer()
 {
-	this->Deinitialize();
-
 	allocator->MakeDelete(postProcessRenderer);
 	allocator->MakeDelete(renderTargetContainer);
 }
@@ -224,7 +222,10 @@ void Renderer::Deinitialize()
 	for (auto feature : graphicsFeatures)
 	{
 		feature->Deinitialize(parameters);
+		allocator->MakeDelete(feature);
 	}
+
+	graphicsFeatures.Clear();
 
 	for (unsigned int i = 0; i < FramesInFlightCount; ++i)
 	{

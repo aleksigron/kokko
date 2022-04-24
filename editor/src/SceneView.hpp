@@ -30,6 +30,8 @@ public:
 	virtual void Update(EditorContext&) override;
 	virtual void LateUpdate(EditorContext& context) override;
 
+	virtual void ReleaseEngineResources() override;
+
 	void ResizeFramebufferIfRequested();
 
 	const Framebuffer& GetFramebuffer();

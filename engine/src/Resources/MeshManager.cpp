@@ -47,8 +47,8 @@ void MeshManager::Reallocate(unsigned int required)
 
 	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
 
-	size_t objectBytes = sizeof(unsigned int) * 2 + sizeof(MeshDrawData) +
-		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(MeshId) + sizeof(kokko::Uid);
+	size_t objectBytes = sizeof(unsigned int) * 2 + sizeof(MeshDrawData) + sizeof(int) +
+		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(MeshId) + sizeof(kokko::Uid) + sizeof(bool);
 
 	InstanceData newData;
 	newData.buffer = allocator->Allocate(required * objectBytes);
@@ -125,6 +125,8 @@ MeshId MeshManager::CreateMesh()
 
 void MeshManager::RemoveMesh(MeshId id)
 {
+	assert(id.i != 0);
+
 	// Add removed MeshId to the free list
 	data.freeList[id.i] = freeListFirst;
 	freeListFirst = id.i;
