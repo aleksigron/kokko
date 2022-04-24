@@ -8,6 +8,7 @@
 
 class Allocator;
 class MeshManager;
+class Renderer;
 
 struct BoundingBox;
 struct Entity;
@@ -30,6 +31,8 @@ struct MeshComponentId
 
 class MeshComponentSystem : public TransformUpdateReceiver
 {
+	friend class ::Renderer;
+
 public:
 	MeshComponentSystem(Allocator* allocator, MeshManager* meshManager);
 	~MeshComponentSystem();
@@ -74,8 +77,6 @@ private:
 
 	// Look up table from entity to component id / index
 	HashMap<unsigned int, unsigned int> entityMap;
-
-	friend class Renderer;
 };
 
 }
