@@ -1125,8 +1125,8 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	for (size_t i = 0, count = graphicsFeatures.GetCount(); i < count; ++i)
 	{
 		uint64_t featureIndex = static_cast<uint64_t>(i);
-		kokko::GraphicsFeatureCommandList commandList(commandList, viewportIndexFullscreen, featureIndex);
-		kokko::GraphicsFeature::SubmitParameters params{ commandList };
+		kokko::GraphicsFeatureCommandList featureCommandList(commandList, viewportIndexFullscreen, featureIndex);
+		kokko::GraphicsFeature::SubmitParameters params{ featureCommandList };
 		graphicsFeatures[i]->Submit(params);
 	}
 
