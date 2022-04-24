@@ -134,12 +134,12 @@ set (KOKKO_SOURCES
 	src/Engine/JobWorker.hpp
 	src/Engine/World.cpp
 	src/Engine/World.hpp
-	src/Graphics/BloomEffect.cpp
-	src/Graphics/BloomEffect.hpp
 	src/Graphics/EnvironmentSerializer.hpp
 	src/Graphics/EnvironmentSystem.cpp
 	src/Graphics/EnvironmentSystem.hpp
 	src/Graphics/GraphicsFeature.hpp
+	src/Graphics/GraphicsFeatureBloom.cpp
+	src/Graphics/GraphicsFeatureBloom.hpp
 	src/Graphics/GraphicsFeatureCommandList.cpp
 	src/Graphics/GraphicsFeatureCommandList.hpp
 	src/Graphics/GraphicsFeatureDeferredLighting.cpp
@@ -148,6 +148,8 @@ set (KOKKO_SOURCES
 	src/Graphics/GraphicsFeatureSsao.hpp
 	src/Graphics/GraphicsFeatureSkybox.cpp
 	src/Graphics/GraphicsFeatureSkybox.hpp
+	src/Graphics/GraphicsFeatureTonemapping.cpp
+	src/Graphics/GraphicsFeatureTonemapping.hpp
 	src/Graphics/ParticleSystem.cpp
 	src/Graphics/ParticleSystem.hpp
 	src/Graphics/ParticleEmitterSerializer.hpp

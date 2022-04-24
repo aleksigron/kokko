@@ -14,13 +14,14 @@
 
 #include "Engine/EntityManager.hpp"
 
-#include "Graphics/BloomEffect.hpp"
 #include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/GraphicsFeature.hpp"
+#include "Graphics/GraphicsFeatureBloom.hpp"
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 #include "Graphics/GraphicsFeatureDeferredLighting.hpp"
 #include "Graphics/GraphicsFeatureSkybox.hpp"
 #include "Graphics/GraphicsFeatureSsao.hpp"
+#include "Graphics/GraphicsFeatureTonemapping.hpp"
 #include "Graphics/Scene.hpp"
 
 #include "Math/Rectangle.hpp"
@@ -32,6 +33,7 @@
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
+#include "Rendering/CustomRenderer.hpp"
 #include "Rendering/Framebuffer.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/MeshComponentSystem.hpp"
@@ -56,11 +58,6 @@
 
 #include "System/Window.hpp"
 
-struct TonemapUniformBlock
-{
-	alignas(16) float exposure;
-};
-
 struct DebugNormalUniformBlock
 {
 	alignas(16) Mat4x4f MVP;
@@ -83,14 +80,12 @@ Renderer::Renderer(
 	componentSystem(componentSystem),
 	renderGraphResources(nullptr),
 	renderTargetContainer(nullptr),
-	bloomEffect(nullptr),
 	targetFramebufferId(0),
 	viewportData(nullptr),
 	viewportCount(0),
 	viewportIndexFullscreen(0),
 	uniformStagingBuffer(allocator),
 	objectUniformBufferLists{ Array<unsigned int>(allocator) },
-	postProcessCallback(0),
 	currentFrameIndex(0),
 	scene(scene),
 	cameraSystem(cameraSystem),
@@ -117,12 +112,7 @@ Renderer::Renderer(
 	postProcessRenderer = allocator->MakeNew<PostProcessRenderer>(
 		renderDevice, meshManager, shaderManager, renderTargetContainer);
 
-	bloomEffect = allocator->MakeNew<BloomEffect>(
-		allocator, renderDevice, shaderManager, postProcessRenderer);
-
-	tonemappingShaderId = ShaderId{ 0 };
 	shadowMaterial = MaterialId{ 0 };
-	tonemapUniformBufferId = 0;
 
 	objectUniformBlockStride = 0;
 	objectsPerUniformBuffer = 0;
@@ -132,7 +122,6 @@ Renderer::~Renderer()
 {
 	this->Deinitialize();
 
-	allocator->MakeDelete(bloomEffect);
 	allocator->MakeDelete(postProcessRenderer);
 	allocator->MakeDelete(renderTargetContainer);
 }
@@ -151,15 +140,6 @@ void Renderer::Initialize()
 	objectsPerUniformBuffer = ObjectUniformBufferSize / objectUniformBlockStride;
 
 	postProcessRenderer->Initialize();
-
-	bloomEffect->Initialize();
-
-	BloomEffect::Params bloomParams;
-	bloomParams.iterationCount = 4;
-	bloomParams.bloomThreshold = 1.2f;
-	bloomParams.bloomSoftThreshold = 0.8f;
-	bloomParams.bloomIntensity = 0.6f;
-	bloomEffect->SetParams(bloomParams);
 
 	{
 		KOKKO_PROFILE_SCOPE("Allocate viewport data");
@@ -189,24 +169,6 @@ void Renderer::Initialize()
 		}
 	}
 
-	{
-		KOKKO_PROFILE_SCOPE("Create tonemap uniform buffer");
-
-		// Set up uniform buffer for tonemapping pass
-
-		device->CreateBuffers(1, &tonemapUniformBufferId);
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, tonemapUniformBufferId);
-
-		RenderCommandData::SetBufferStorage storage{};
-		storage.target = RenderBufferTarget::UniformBuffer;
-		storage.size = sizeof(TonemapUniformBlock);
-		storage.data = nullptr;
-		storage.dynamicStorage = true;
-		device->SetBufferStorage(&storage);
-
-		kokko::ConstStringView label("Renderer tonemap uniform buffer");
-		device->SetObjectLabel(RenderObjectType::Buffer, tonemapUniformBufferId, label);
-	}
 
 	{
 		const char* path = "engine/materials/forward/shadow_depth.material";
@@ -218,21 +180,28 @@ void Renderer::Initialize()
 		fallbackMeshMaterial = materialManager->FindMaterialByPath(kokko::ConstStringView(path));
 	}
 
-	{
-		const char* path = "engine/shaders/post_process/tonemap.glsl";
-		tonemappingShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(path));
-	}
-
-	auto lightingFeature = allocator->MakeNew<kokko::GraphicsFeatureDeferredLighting>(allocator);
-	lightingFeature->SetOrder(1);
+	// Deferred lighting pass
 
 	auto ssaoFeature = allocator->MakeNew<kokko::GraphicsFeatureSsao>(allocator);
 	ssaoFeature->SetOrder(0);
 
-	graphicsFeatures.Reserve(3);
-	graphicsFeatures.PushBack(lightingFeature);
+	auto lightingFeature = allocator->MakeNew<kokko::GraphicsFeatureDeferredLighting>(allocator);
+	lightingFeature->SetOrder(1);
+
+	// Post process pass
+
+	auto bloomFeature = allocator->MakeNew<kokko::GraphicsFeatureBloom>(allocator);
+	bloomFeature->SetOrder(0);
+
+	auto tonemappingFeature = allocator->MakeNew<kokko::GraphicsFeatureTonemapping>();
+	tonemappingFeature->SetOrder(1);
+
+	graphicsFeatures.Reserve(5);
 	graphicsFeatures.PushBack(ssaoFeature);
+	graphicsFeatures.PushBack(lightingFeature);
 	graphicsFeatures.PushBack(allocator->MakeNew<kokko::GraphicsFeatureSkybox>());
+	graphicsFeatures.PushBack(bloomFeature);
+	graphicsFeatures.PushBack(tonemappingFeature);
 
 	kokko::GraphicsFeature::InitializeParameters parameters;
 	parameters.renderDevice = device;
@@ -296,8 +265,6 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 
 	renderGraphResources->VerifyResourcesAreCreated(targetFramebuffer.GetSize());
 
-	postProcessCallback = AddCustomRenderer(this);
-
 	targetFramebufferId = targetFramebuffer.GetFramebufferId();
 
 	unsigned int objectDrawCount = PopulateCommandList(editorCamera, targetFramebuffer);
@@ -315,7 +282,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 	
 	CameraParameters cameraParams = GetCameraParameters(editorCamera, targetFramebuffer);
 
-	kokko::GraphicsFeature::RenderParameters params
+	kokko::GraphicsFeature::RenderParameters featureRenderParams
 	{
 		device,
 		postProcessRenderer,
@@ -329,6 +296,7 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 		ArrayView(viewportData + viewportIndicesShadowCascade.start,
 			viewportIndicesShadowCascade.end - viewportIndicesShadowCascade.start),
 		renderGraphResources,
+		targetFramebuffer.GetFramebufferId(),
 		0
 	};
 
@@ -414,9 +382,9 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 
 				if (renderOrder.isGraphicsFeature.GetValue(command) != 0)
 				{
-					params.featureObjectId = renderOrder.featureObjectId.GetValue(command);
+					featureRenderParams.featureObjectId = renderOrder.featureObjectId.GetValue(command);
 
-					graphicsFeatures[featureIndex]->Render(params);
+					graphicsFeatures[featureIndex]->Render(featureRenderParams);
 				}
 				else
 				{
@@ -487,27 +455,6 @@ void Renderer::BindMaterialTextures(const kokko::UniformData& materialUniforms) 
 	}
 }
 
-void Renderer::BindTextures(const ShaderData& shader, unsigned int count,
-	const uint32_t* nameHashes, const unsigned int* textures)
-{
-	for (unsigned int i = 0; i < count; ++i)
-	{
-		const kokko::TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(nameHashes[i]);
-		if (tu != nullptr)
-		{
-			device->SetUniformInt(tu->uniformLocation, i);
-			device->SetActiveTextureUnit(i);
-			device->BindTexture(tu->textureTarget, textures[i]);
-		}
-	}
-}
-
-void Renderer::RenderCustom(const CustomRenderer::RenderParams& params)
-{
-	if (params.callbackId == postProcessCallback)
-		RenderPostProcess(params);
-}
-
 void Renderer::SetLockCullingCamera(bool lockEnable)
 {
 	lockCullingCamera = lockEnable;
@@ -516,61 +463,6 @@ void Renderer::SetLockCullingCamera(bool lockEnable)
 const Mat4x4f& Renderer::GetCullingCameraTransform() const
 {
 	return lockCullingCameraTransform.forward;
-}
-
-void Renderer::RenderPostProcess(const CustomRenderer::RenderParams& params)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	RenderBloom(params);
-	RenderTonemapping(params);
-}
-
-void Renderer::RenderBloom(const CustomRenderer::RenderParams& params)
-{
-	unsigned int sourceTexture = renderGraphResources->GetLightAccumulationBuffer().GetColorTextureId(0);
-	unsigned int framebufferId = renderGraphResources->GetLightAccumulationBuffer().GetFramebufferId();
-
-	bloomEffect->Render(sourceTexture, framebufferId, renderGraphResources->GetLightAccumulationBuffer().GetSize());
-}
-
-void Renderer::RenderTonemapping(const CustomRenderer::RenderParams& params)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	if (targetFramebufferId != 0)
-	{
-		device->BlendingDisable();
-		device->DepthTestDisable();
-
-		const MeshDrawData* meshDrawData = meshManager->GetDrawData(renderGraphResources->GetFullscreenMeshId());
-		device->BindVertexArray(meshDrawData->vertexArrayObject);
-
-		// Bind default framebuffer
-
-		RenderCommandData::BindFramebufferData bindFramebufferCommand;
-		bindFramebufferCommand.target = RenderFramebufferTarget::Framebuffer;
-		bindFramebufferCommand.framebuffer = targetFramebufferId;
-		device->BindFramebuffer(&bindFramebufferCommand);
-
-		const ShaderData& shader = shaderManager->GetShaderData(tonemappingShaderId);
-		device->UseShaderProgram(shader.driverId);
-
-		TonemapUniformBlock uniforms;
-		uniforms.exposure = 1.0f;
-
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, tonemapUniformBufferId);
-		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TonemapUniformBlock), &uniforms);
-		device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, tonemapUniformBufferId);
-
-		{
-			uint32_t textureNameHashes[] = { "light_acc_map"_hash };
-			unsigned int textureIds[] = { renderGraphResources->GetLightAccumulationBuffer().GetColorTextureId(0) };
-			BindTextures(shader, 1, textureNameHashes, textureIds);
-		}
-
-		device->DrawIndexed(meshDrawData->primitiveMode, meshDrawData->count, meshDrawData->indexType);
-	}
 }
 
 void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
@@ -1153,9 +1045,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	}
 
 	// PASS: POST PROCESS
-
-	// Draw HDR tonemapping pass
-	commandList.AddDrawWithCallback(fsvp, p_pass, 0.0f, postProcessCallback);
+	// These draw commands will be added from graphics features
 
 	// Create draw commands for render objects in scene
 
