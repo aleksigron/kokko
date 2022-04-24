@@ -9,7 +9,8 @@
 #include "Core/Optional.hpp"
 #include "Core/Range.hpp"
 
-#include "Rendering/CustomRenderer.hpp"
+#include "Math/Mat4x4.hpp"
+
 #include "Rendering/Framebuffer.hpp"
 #include "Rendering/Light.hpp"
 #include "Rendering/RenderCommandList.hpp"
@@ -21,6 +22,7 @@
 
 class Allocator;
 class CameraSystem;
+class CustomRenderer;
 class LightManager;
 class ShaderManager;
 class MeshManager;
@@ -39,11 +41,10 @@ class Framebuffer;
 
 struct BoundingBox;
 struct CameraParameters;
+struct ProjectionParameters;
+struct PostProcessRenderPass;
 struct RenderViewport;
 struct ShaderData;
-struct ProjectionParameters;
-struct LightingUniformBlock;
-struct PostProcessRenderPass;
 
 namespace kokko
 {
@@ -59,7 +60,7 @@ struct ResourceManagers;
 
 }
 
-class Renderer : public CustomRenderer
+class Renderer
 {
 private:
 	static const unsigned int FramesInFlightCount = 1;
@@ -77,8 +78,6 @@ private:
 	RenderTargetContainer* renderTargetContainer;
 	PostProcessRenderer* postProcessRenderer;
 	
-	BloomEffect* bloomEffect;
-
 	unsigned int targetFramebufferId;
 
 	RenderViewport* viewportData;
@@ -86,10 +85,8 @@ private:
 	unsigned int viewportIndexFullscreen;
 	Range<unsigned int> viewportIndicesShadowCascade;
 
-	ShaderId tonemappingShaderId;
 	MaterialId shadowMaterial;
 	MaterialId fallbackMeshMaterial;
-	unsigned int tonemapUniformBufferId;
 
 	Array<unsigned char> uniformStagingBuffer;
 	Array<unsigned int> objectUniformBufferLists[FramesInFlightCount];
@@ -97,8 +94,6 @@ private:
 
 	intptr_t objectUniformBlockStride;
 	intptr_t objectsPerUniformBuffer;
-
-	unsigned int postProcessCallback;
 
 	RenderOrderConfiguration renderOrder;
 
@@ -125,15 +120,7 @@ private:
 
 	unsigned int normalDebugBufferId;
 
-	void CreateResolutionDependentFramebuffers(int width, int height);
-	void DestroyResolutionDependentFramebuffers();
-
 	void BindMaterialTextures(const kokko::UniformData& materialUniforms) const;
-	void BindTextures(const ShaderData& shader, unsigned int count,
-		const uint32_t* nameHashes, const unsigned int* textures);
-
-	void UpdateLightingDataToUniformBuffer(
-		const ProjectionParameters& projection, LightingUniformBlock& uniformsOut);
 
 	CameraParameters GetCameraParameters(const Optional<CameraParameters>& editorCamera,
 		const Framebuffer& targetFramebuffer);
@@ -146,11 +133,6 @@ private:
 
 	bool IsDrawCommand(uint64_t orderKey);
 	bool ParseControlCommand(uint64_t orderKey);
-
-	void RenderDeferredLighting(const CustomRenderer::RenderParams& params);
-	void RenderPostProcess(const CustomRenderer::RenderParams& params);
-	void RenderBloom(const CustomRenderer::RenderParams& params);
-	void RenderTonemapping(const CustomRenderer::RenderParams& params);
 
 public:
 	Renderer(Allocator* allocator,
@@ -172,8 +154,6 @@ public:
 	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer);
 
 	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings);
-
-	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
 
 	// Custom renderer management
 	unsigned int AddCustomRenderer(CustomRenderer* customRenderer);

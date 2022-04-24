@@ -11,15 +11,15 @@
 #include "Debug/DebugVectorRenderer.hpp"
 #include "Debug/Instrumentation.hpp"
 
-#include "Engine/World.hpp"
-
 #include "Engine/EntityManager.hpp"
+#include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
 
 #include "Memory/Memory.hpp"
 
 #include "Rendering/CameraSystem.hpp"
+#include "Rendering/CameraParameters.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/RenderDeviceOpenGL.hpp"
 #include "Rendering/Renderer.hpp"

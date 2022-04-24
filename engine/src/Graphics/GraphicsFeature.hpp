@@ -71,11 +71,14 @@ public:
 		const RenderViewport& fullscreenViewport;
 		ArrayView<const RenderViewport> shadowViewports;
 		const RenderGraphResources* renderGraphResources;
+		unsigned int finalTargetFramebufferId;
 
 		// Feature parameters
 
 		uint16_t featureObjectId;
 	};
+
+	virtual ~GraphicsFeature() {}
 
 	virtual void Initialize(const InitializeParameters& parameters) {}
 	virtual void Deinitialize(const InitializeParameters& parameters) {}
