@@ -40,6 +40,7 @@ public:
 	~EditorCore();
 
 	void Initialize(Engine* engine);
+	void Deinitialize();
 
 	void ResizeSceneViewFramebufferIfRequested();
 	const Framebuffer& GetSceneViewFramebuffer();

@@ -76,6 +76,12 @@ void EditorCore::Initialize(Engine* engine)
 	editorWindows.PushBack(debugView);
 }
 
+void EditorCore::Deinitialize()
+{
+	for (EditorWindow* window : editorWindows)
+		window->ReleaseEngineResources();
+}
+
 void EditorCore::ResizeSceneViewFramebufferIfRequested()
 {
 	sceneView->ResizeFramebufferIfRequested();

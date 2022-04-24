@@ -167,6 +167,8 @@ void EditorApp::Deinitialize()
 	ImGui_ImplGlfw_Shutdown();
 
 	ImGui::DestroyContext();
+
+	core->Deinitialize();
 }
 
 void EditorApp::StartFrame()

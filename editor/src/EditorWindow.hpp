@@ -26,23 +26,17 @@ public:
 	{
 	}
 
-	virtual ~EditorWindow()
-	{
-	}
+	virtual ~EditorWindow() {}
 
-	virtual void OnEditorProjectChanged(const EditorContext& context)
-	{
-	}
+	virtual void OnEditorProjectChanged(const EditorContext& context) {}
 
 	// Called after frame update
-	virtual void Update(EditorContext& context)
-	{
-	}
+	virtual void Update(EditorContext& context) {}
 
 	// Called after frame render
-	virtual void LateUpdate(EditorContext& context)
-	{
-	}
+	virtual void LateUpdate(EditorContext& context) {}
+
+	virtual void ReleaseEngineResources() {}
 
 	const char* windowTitle;
 	bool windowIsOpen;

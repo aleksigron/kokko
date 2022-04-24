@@ -188,6 +188,11 @@ void SceneView::LateUpdate(EditorContext& context)
 	}
 }
 
+void SceneView::ReleaseEngineResources()
+{
+	framebuffer.Destroy();
+}
+
 void SceneView::ResizeFramebufferIfRequested()
 {
 	if (resizeRequested)

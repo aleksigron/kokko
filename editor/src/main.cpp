@@ -136,6 +136,8 @@ int main(int argc, char** argv)
 				editor.EndFrame();
 				engine.EndFrame();
 			}
+
+			editor.Deinitialize();
 		}
 		else
 		{
