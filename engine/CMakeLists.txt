@@ -201,7 +201,6 @@ set (KOKKO_SOURCES
 	src/Rendering/CameraSystem.hpp
 	src/Rendering/CascadedShadowMap.cpp
 	src/Rendering/CascadedShadowMap.hpp
-	src/Rendering/CustomRenderer.hpp
 	src/Rendering/Framebuffer.cpp
 	src/Rendering/Framebuffer.hpp
 	src/Rendering/Light.hpp

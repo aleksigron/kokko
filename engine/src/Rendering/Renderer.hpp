@@ -32,7 +32,6 @@ class EntityManager;
 class RenderDevice;
 class Scene;
 class DebugVectorRenderer;
-class CustomRenderer;
 class ScreenSpaceAmbientOcclusion;
 class BloomEffect;
 class PostProcessRenderer;
@@ -114,8 +113,6 @@ private:
 
 	Array<LightId> lightResultArray;
 
-	Array<CustomRenderer*> customRenderers;
-
 	Array<kokko::GraphicsFeature*> graphicsFeatures;
 
 	unsigned int normalDebugBufferId;
@@ -154,10 +151,6 @@ public:
 	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer);
 
 	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings);
-
-	// Custom renderer management
-	unsigned int AddCustomRenderer(CustomRenderer* customRenderer);
-	void RemoveCustomRenderer(unsigned int callbackId);
 
 	// Transfers ownership to Renderer
 	void AddGraphicsFeature(kokko::GraphicsFeature* graphicsFeature);
