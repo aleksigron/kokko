@@ -98,10 +98,12 @@ void World::Initialize()
 	environmentSystem.instance->Initialize();
 
 	renderer.instance->AddGraphicsFeature(particleSystem.instance);
+	renderer.instance->AddGraphicsFeature(terrainSystem.instance);
 }
 
 void World::Deinitialize()
 {
+	renderer.instance->RemoveGraphicsFeature(terrainSystem.instance);
 	renderer.instance->RemoveGraphicsFeature(particleSystem.instance);
 
 	renderer.instance->Deinitialize();
@@ -137,8 +139,6 @@ void World::Render(const Optional<CameraParameters>& editorCamera, const Framebu
 
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
-
-	terrainSystem.instance->RegisterCustomRenderer(renderer.instance);
 
 	renderer.instance->Render(editorCamera, framebuffer);
 }
