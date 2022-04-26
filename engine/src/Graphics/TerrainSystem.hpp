@@ -10,7 +10,7 @@
 #include "Graphics/TerrainQuadTree.hpp"
 #include "Graphics/TerrainTileId.hpp"
 
-#include "Rendering/CustomRenderer.hpp"
+#include "Graphics/GraphicsFeature.hpp"
 
 #include "Resources/MaterialData.hpp"
 #include "Resources/TextureId.hpp"
@@ -46,7 +46,7 @@ struct TerrainParameters
 	float heightRange = 2.0f;
 };
 
-class TerrainSystem : public CustomRenderer
+class TerrainSystem : public GraphicsFeature
 {
 public:
 	TerrainSystem(Allocator* allocator, RenderDevice* renderDevice,
@@ -80,10 +80,8 @@ public:
 	TextureId GetRoughnessTextureId(TerrainId id) const;
 	void SetRoughnessTexture(TerrainId id, TextureId textureId, unsigned int textureObject);
 
-	void RegisterCustomRenderer(Renderer* renderer);
-
-	virtual void AddRenderCommands(const CustomRenderer::CommandParams& params) override final;
-	virtual void RenderCustom(const CustomRenderer::RenderParams& params) override final;
+	virtual void Submit(const SubmitParameters& parameters) override;
+	virtual void Render(const RenderParameters& parameters) override;
 
 private:
 	Allocator* allocator;

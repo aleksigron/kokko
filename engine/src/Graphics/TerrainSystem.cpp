@@ -9,6 +9,7 @@
 #include "Engine/Entity.hpp"
 
 #include "Graphics/TerrainQuadTree.hpp"
+#include "Graphics/GraphicsFeatureCommandList.hpp"
 
 #include "Math/Mat4x4.hpp"
 #include "Math/Vec3.hpp"
@@ -233,22 +234,19 @@ void TerrainSystem::SetRoughnessTexture(TerrainId id, TextureId textureId, unsig
 	data.textures[id.i].roughnessTexture.textureObjectId = textureObject;
 }
 
-void TerrainSystem::RegisterCustomRenderer(Renderer* renderer)
-{
-	renderer->AddCustomRenderer(this);
-}
-
-void TerrainSystem::AddRenderCommands(const CustomRenderer::CommandParams& params)
-{
-	params.commandList->AddDrawWithCallback(params.fullscreenViewport, RenderPass::OpaqueGeometry, 0.0f, params.callbackId);
-}
-
-void TerrainSystem::RenderCustom(const CustomRenderer::RenderParams& params)
+void TerrainSystem::Submit(const SubmitParameters& parameters)
 {
 	for (size_t i = 1; i < data.count; ++i)
 	{
-		RenderTerrain(TerrainId{ static_cast<unsigned int>(i) }, *params.viewport);
+		float depth = 0.0f; // TODO: Calculate
+		parameters.commandList.AddToFullscreenViewport(RenderPass::OpaqueGeometry, depth, i);
 	}
+}
+
+void TerrainSystem::Render(const RenderParameters& parameters)
+{
+	TerrainId id{ static_cast<uint32_t>(parameters.featureObjectId) };
+	RenderTerrain(id, parameters.fullscreenViewport);
 }
 
 void TerrainSystem::CreateVertexData()
