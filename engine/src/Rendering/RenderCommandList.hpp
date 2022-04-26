@@ -49,7 +49,6 @@ struct RenderCommandList
 		RenderPass pass,
 		float depth,
 		unsigned int callbackIndex,
-		bool isGraphicsFeature = false,
 		uint16_t featureObjectId = 0
 	);
 

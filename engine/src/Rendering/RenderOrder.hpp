@@ -33,8 +33,7 @@ struct RenderOrderConfiguration
 		// For custom renderer / graphics feature commands
 		// These replace renderObject
 
-		isGraphicsFeature.SetDefinition(1, materialId.shift);
-		featureIndex.SetDefinition(5, isGraphicsFeature.shift);
+		featureIndex.SetDefinition(6, materialId.shift);
 		featureObjectId.SetDefinition(14, featureIndex.shift);
 
 		// CONTROL COMMANDS
@@ -62,7 +61,6 @@ struct RenderOrderConfiguration
 	BitfieldVariable<uint64_t> opaquePadding;
 	BitfieldVariable<uint64_t> materialId;
 	BitfieldVariable<uint64_t> renderObject;
-	BitfieldVariable<uint64_t> isGraphicsFeature; // Remove once all custom renderers have been converted
 	BitfieldVariable<uint64_t> featureIndex; // Or custom renderer index
 	BitfieldVariable<uint64_t> featureObjectId;
 	BitfieldVariable<uint64_t> commandOrder;

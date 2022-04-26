@@ -33,7 +33,6 @@
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
-#include "Rendering/CustomRenderer.hpp"
 #include "Rendering/Framebuffer.hpp"
 #include "Rendering/LightManager.hpp"
 #include "Rendering/MeshComponentSystem.hpp"
@@ -99,7 +98,6 @@ Renderer::Renderer(
 	commandList(allocator),
 	objectVisibility(allocator),
 	lightResultArray(allocator),
-	customRenderers(allocator),
 	graphicsFeatures(allocator),
 	normalDebugBufferId(0)
 {
@@ -381,31 +379,9 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 			{
 				uint64_t featureIndex = renderOrder.featureIndex.GetValue(command);
 
-				if (renderOrder.isGraphicsFeature.GetValue(command) != 0)
-				{
-					featureRenderParams.featureObjectId = renderOrder.featureObjectId.GetValue(command);
+				featureRenderParams.featureObjectId = renderOrder.featureObjectId.GetValue(command);
 
-					graphicsFeatures[featureIndex]->Render(featureRenderParams);
-				}
-				else
-				{
-					if (featureIndex > 0 && featureIndex <= customRenderers.GetCount())
-					{
-						CustomRenderer* customRenderer = customRenderers[featureIndex - 1];
-
-						if (customRenderer != nullptr)
-						{
-							CustomRenderer::RenderParams params;
-							params.viewport = &viewport;
-							params.cameraParams = cameraParams;
-							params.callbackId = static_cast<unsigned int>(featureIndex);
-							params.command = command;
-							params.scene = scene;
-
-							customRenderer->RenderCustom(params);
-						}
-					}
-				}
+				graphicsFeatures[featureIndex]->Render(featureRenderParams);
 
 				// Reset state cache
 				lastVpIdx = MaxViewportCount;
@@ -428,7 +404,6 @@ void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Fram
 
 	currentFrameIndex = (currentFrameIndex + 1) % FramesInFlightCount;
 
-	customRenderers.Clear();
 	targetFramebufferId = 0;
 }
 
@@ -1108,20 +1083,6 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		}
 	}
 
-	for (size_t i = 0, count = customRenderers.GetCount(); i < count; ++i)
-	{
-		if (customRenderers[i] != nullptr)
-		{
-			CustomRenderer::CommandParams params;
-			params.fullscreenViewport = this->viewportIndexFullscreen;
-			params.commandList = &commandList;
-			params.callbackId = static_cast<unsigned int>(i + 1);
-			params.scene = scene;
-
-			customRenderers[i]->AddRenderCommands(params);
-		}
-	}
-
 	for (size_t i = 0, count = graphicsFeatures.GetCount(); i < count; ++i)
 	{
 		uint64_t featureIndex = static_cast<uint64_t>(i);
@@ -1133,34 +1094,6 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	commandList.Sort();
 
 	return objectDrawCount;
-}
-
-unsigned int Renderer::AddCustomRenderer(CustomRenderer* customRenderer)
-{
-	for (size_t i = 0, count = customRenderers.GetCount(); i < count; ++i)
-	{
-		if (customRenderers[i] == nullptr)
-		{
-			customRenderers[i] = customRenderer;
-
-			return static_cast<unsigned int>(i + 1);
-		}
-	}
-
-	customRenderers.PushBack(customRenderer);
-	return static_cast<unsigned int>(customRenderers.GetCount());
-}
-
-void Renderer::RemoveCustomRenderer(unsigned int callbackId)
-{
-	if (callbackId == customRenderers.GetCount())
-	{
-		customRenderers.PopBack();
-	}
-	else if (callbackId < customRenderers.GetCount() && callbackId > 0)
-	{
-		customRenderers[callbackId - 1] = nullptr;
-	}
 }
 
 void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings)
