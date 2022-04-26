@@ -96,10 +96,14 @@ void World::Initialize()
 	terrainSystem.instance->Initialize();
 	particleSystem.instance->Initialize();
 	environmentSystem.instance->Initialize();
+
+	renderer.instance->AddGraphicsFeature(particleSystem.instance);
 }
 
 void World::Deinitialize()
 {
+	renderer.instance->RemoveGraphicsFeature(particleSystem.instance);
+
 	renderer.instance->Deinitialize();
 }
 
@@ -135,7 +139,6 @@ void World::Render(const Optional<CameraParameters>& editorCamera, const Framebu
 	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
 	terrainSystem.instance->RegisterCustomRenderer(renderer.instance);
-	particleSystem.instance->RegisterCustomRenderer(renderer.instance);
 
 	renderer.instance->Render(editorCamera, framebuffer);
 }

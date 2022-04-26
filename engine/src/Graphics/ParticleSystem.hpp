@@ -5,7 +5,7 @@
 
 #include "Core/HashMap.hpp"
 
-#include "Rendering/CustomRenderer.hpp"
+#include "Graphics/GraphicsFeature.hpp"
 #include "Graphics/TransformUpdateReceiver.hpp"
 
 #include "Resources/MeshId.hpp"
@@ -19,6 +19,9 @@ class Renderer;
 
 struct Entity;
 
+namespace kokko
+{
+
 struct ParticleEmitterId
 {
 	unsigned int i;
@@ -29,7 +32,7 @@ struct ParticleEmitterId
 	static const ParticleEmitterId Null;
 };
 
-class ParticleSystem : public CustomRenderer, public TransformUpdateReceiver
+class ParticleSystem : public GraphicsFeature, public TransformUpdateReceiver
 {
 public:
 	ParticleSystem(Allocator* allocator, RenderDevice* renderDevice,
@@ -44,10 +47,8 @@ public:
 	void Initialize();
 	void Deinitialize();
 
-	void RegisterCustomRenderer(Renderer* renderer);
-
-	virtual void AddRenderCommands(const CommandParams& params) override final;
-	virtual void RenderCustom(const RenderParams& params) override final;
+	virtual void Submit(const SubmitParameters& parameters) override;
+	virtual void Render(const RenderParameters& parameters) override;
 
 	virtual void NotifyUpdatedTransforms(
 		size_t count, const Entity* entities, const Mat4x4f* transforms) override final;
@@ -139,3 +140,5 @@ private:
 	void InitializeEmitter(ParticleEmitterId id);
 	void DeinitializeEmitter(ParticleEmitterId id);
 };
+
+}

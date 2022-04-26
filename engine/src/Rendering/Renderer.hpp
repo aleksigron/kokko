@@ -158,4 +158,8 @@ public:
 	// Custom renderer management
 	unsigned int AddCustomRenderer(CustomRenderer* customRenderer);
 	void RemoveCustomRenderer(unsigned int callbackId);
+
+	// Transfers ownership to Renderer
+	void AddGraphicsFeature(kokko::GraphicsFeature* graphicsFeature);
+	void RemoveGraphicsFeature(kokko::GraphicsFeature* graphicsFeature);
 };
