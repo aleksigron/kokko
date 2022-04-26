@@ -1241,3 +1241,20 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::Ren
 		}
 	}
 }
+
+void Renderer::AddGraphicsFeature(kokko::GraphicsFeature* graphicsFeature)
+{
+	graphicsFeatures.PushBack(graphicsFeature);
+}
+
+void Renderer::RemoveGraphicsFeature(kokko::GraphicsFeature* graphicsFeature)
+{
+	for (size_t i = 0, count = graphicsFeatures.GetCount(); i < count; ++i)
+	{
+		if (graphicsFeatures[i] == graphicsFeature)
+		{
+			graphicsFeatures.Remove(i);
+			return;
+		}
+	}
+}

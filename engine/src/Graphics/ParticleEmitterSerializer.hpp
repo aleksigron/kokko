@@ -12,7 +12,7 @@
 class ParticleEmitterSerializer final : public ComponentSerializer
 {
 public:
-	ParticleEmitterSerializer(ParticleSystem* particleSystem) :
+	ParticleEmitterSerializer(kokko::ParticleSystem* particleSystem) :
 		particleSystem(particleSystem)
 	{
 	}
@@ -24,7 +24,7 @@ public:
 
 	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
 	{
-		ParticleEmitterId id = particleSystem->AddEmitter(entity);
+		kokko::ParticleEmitterId id = particleSystem->AddEmitter(entity);
 
 		float emitRate = 0.0f;
 
@@ -37,8 +37,8 @@ public:
 
 	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
 	{
-		ParticleEmitterId emitterId = particleSystem->Lookup(entity);
-		if (emitterId != ParticleEmitterId::Null)
+		kokko::ParticleEmitterId emitterId = particleSystem->Lookup(entity);
+		if (emitterId != kokko::ParticleEmitterId::Null)
 		{
 			out << YAML::BeginMap;
 			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "particle";
@@ -51,5 +51,5 @@ public:
 	}
 
 private:
-	ParticleSystem* particleSystem;
+	kokko::ParticleSystem* particleSystem;
 };

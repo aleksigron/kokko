@@ -10,7 +10,7 @@
 #include "Math/Vec3.hpp"
 #include "Math/Random.hpp"
 
-#include "Rendering/RenderCommandList.hpp"
+#include "Graphics/GraphicsFeatureCommandList.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Rendering/RenderViewport.hpp"
@@ -22,6 +22,9 @@
 #include "Resources/ShaderManager.hpp"
 
 #include "System/Time.hpp"
+
+namespace kokko
+{
 
 const ParticleEmitterId ParticleEmitterId::Null = ParticleEmitterId{ 0 };
 
@@ -133,148 +136,153 @@ void ParticleSystem::Deinitialize()
 	}
 }
 
-void ParticleSystem::RegisterCustomRenderer(Renderer* renderer)
+void ParticleSystem::Submit(const SubmitParameters& parameters)
 {
-	renderer->AddCustomRenderer(this);
+	assert(data.count <= UINT16_MAX);
+
+	for (unsigned int i = 1; i < data.count; ++i)
+	{
+		EmitterData& emitter = data.emitter[i];
+		float depth = 0.0f; // TODO: Calculate
+		parameters.commandList.AddToFullscreenViewport(RenderPass::Transparent, depth, static_cast<uint16_t>(i));
+	}
 }
 
-void ParticleSystem::AddRenderCommands(const CommandParams& params)
-{
-	float depth = 0.0f; // TODO: Calculate
-	params.commandList->AddDrawWithCallback(params.fullscreenViewport, RenderPass::Transparent, depth, params.callbackId);
-}
-
-void ParticleSystem::RenderCustom(const RenderParams& params)
+void ParticleSystem::Render(const RenderParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	double currentTime = Time::GetRunningTime();
 	float deltaTime = Time::GetDeltaTime();
 
-	for (unsigned int i = 1; i < data.count; ++i)
+	EmitterData& emitter = data.emitter[parameters.featureObjectId];
+	const Mat4x4f& transform = data.transform[parameters.featureObjectId];
+
+	emitter.emitAccumulation += emitter.emitRate * deltaTime;
+	int emitCount = static_cast<int>(emitter.emitAccumulation);
+	emitter.emitAccumulation -= emitCount;
+
+	int noiseSeed = Random::Int(0, NoiseTextureSize * NoiseTextureSize - 1);
+
+	UpdateParticleBlock updateUniforms;
+	updateUniforms.emitPosition = Vec3f(0.0f, 1.5f, 0.0f);
+	updateUniforms.emitPositionVariance = 0.05f;
+	updateUniforms.initialVelocity = Vec3f(5.0f, 3.0f, 0.0f);
+	updateUniforms.initialVelocityVariance = 1.2f;
+	updateUniforms.gravity = Vec3f(0.0f, -9.82f, 0.0f);
+	updateUniforms.noiseTextureSize = NoiseTextureSize;
+	updateUniforms.noiseSeed = noiseSeed;
+	updateUniforms.emitCount = emitCount;
+	updateUniforms.particleLifetime = 5.0f;
+	updateUniforms.particleSize = 0.04f;
+	updateUniforms.bounceEnergy = 0.9f;
+	updateUniforms.currentTime = static_cast<float>(currentTime);
+	updateUniforms.deltaTime = deltaTime;
+
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, emitter.bufferIds[Buffer_UpdateUniforms]);
+	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(UpdateParticleBlock), &updateUniforms);
+
+	TransformUniformBlock transformUniforms;
+	transformUniforms.M = transform;
+	transformUniforms.MV = parameters.fullscreenViewport.view.inverse * transform;
+	transformUniforms.MVP = parameters.fullscreenViewport.viewProjection * transform;
+
+	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, emitter.bufferIds[Buffer_RenderTransform]);
+	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TransformUniformBlock), &transformUniforms);
+
+	RenderCommandData::MemoryBarrier shaderStorageBarrier{};
+	shaderStorageBarrier.shaderStorage = true;
+
+	RenderCommandData::MemoryBarrier shaderStorageAndDrawIndirectBarrier{};
+	shaderStorageAndDrawIndirectBarrier.shaderStorage = true;
+	shaderStorageAndDrawIndirectBarrier.command = true;
+
+	renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 0, emitter.bufferIds[Buffer_Position]);
+	renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 1, emitter.bufferIds[Buffer_Velocity]);
+	renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 2, emitter.bufferIds[Buffer_Lifetime]);
+	renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 3, emitter.bufferIds[Buffer_DeadList]);
+	renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 4, emitter.aliveListCurrent);
+	renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 5, emitter.aliveListNext);
+	renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 6, emitter.bufferIds[Buffer_Counter]);
+	renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 7, emitter.bufferIds[Buffer_Indirect]);
+	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, emitter.bufferIds[Buffer_UpdateUniforms]);
+
+	// Init update step
+
+	const ShaderData& initUpdateShader = shaderManager->GetShaderData(initUpdateShaderId);
+	renderDevice->UseShaderProgram(initUpdateShader.driverId);
+	renderDevice->DispatchCompute(1, 1, 1);
+
+	// Emit step
+
+	// Make sure the indirect buffer updates are visible to the dispatch command
+	renderDevice->MemoryBarrier(shaderStorageBarrier);
+
+	renderDevice->BindBuffer(RenderBufferTarget::DispatchIndirectBuffer, emitter.bufferIds[Buffer_Indirect]);
+
+	const ShaderData& emitShader = shaderManager->GetShaderData(emitShaderId);
+	renderDevice->UseShaderProgram(emitShader.driverId);
+
+	const kokko::TextureUniform* tu = emitShader.uniforms.FindTextureUniformByNameHash("noise_texture"_hash);
+	if (tu != nullptr)
 	{
-		EmitterData& emitter = data.emitter[i];
-
-		emitter.emitAccumulation += emitter.emitRate * deltaTime;
-		int emitCount = static_cast<int>(emitter.emitAccumulation);
-		emitter.emitAccumulation -= emitCount;
-
-		int noiseSeed = Random::Int(0, NoiseTextureSize * NoiseTextureSize - 1);
-
-		UpdateParticleBlock updateUniforms;
-		updateUniforms.emitPosition = Vec3f(0.0f, 1.5f, 0.0f);
-		updateUniforms.emitPositionVariance = 0.05f;
-		updateUniforms.initialVelocity = Vec3f(5.0f, 3.0f, 0.0f);
-		updateUniforms.initialVelocityVariance = 1.2f;
-		updateUniforms.gravity = Vec3f(0.0f, -9.82f, 0.0f);
-		updateUniforms.noiseTextureSize = NoiseTextureSize;
-		updateUniforms.noiseSeed = noiseSeed;
-		updateUniforms.emitCount = emitCount;
-		updateUniforms.particleLifetime = 5.0f;
-		updateUniforms.particleSize = 0.04f;
-		updateUniforms.bounceEnergy = 0.9f;
-		updateUniforms.currentTime = static_cast<float>(currentTime);
-		updateUniforms.deltaTime = deltaTime;
-
-		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, emitter.bufferIds[Buffer_UpdateUniforms]);
-		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(UpdateParticleBlock), &updateUniforms);
-
-		TransformUniformBlock transformUniforms;
-		transformUniforms.M = Mat4x4f();
-		transformUniforms.MV = params.viewport->view.inverse;
-		transformUniforms.MVP = params.viewport->viewProjection;
-
-		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, emitter.bufferIds[Buffer_RenderTransform]);
-		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TransformUniformBlock), &transformUniforms);
-
-		RenderCommandData::MemoryBarrier shaderStorageBarrier{};
-		shaderStorageBarrier.shaderStorage = true;
-
-		RenderCommandData::MemoryBarrier shaderStorageAndDrawIndirectBarrier{};
-		shaderStorageAndDrawIndirectBarrier.shaderStorage = true;
-		shaderStorageAndDrawIndirectBarrier.command = true;
-
-		renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 0, emitter.bufferIds[Buffer_Position]);
-		renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 1, emitter.bufferIds[Buffer_Velocity]);
-		renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 2, emitter.bufferIds[Buffer_Lifetime]);
-		renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 3, emitter.bufferIds[Buffer_DeadList]);
-		renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 4, emitter.aliveListCurrent);
-		renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 5, emitter.aliveListNext);
-		renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 6, emitter.bufferIds[Buffer_Counter]);
-		renderDevice->BindBufferBase(RenderBufferTarget::ShaderStorageBuffer, 7, emitter.bufferIds[Buffer_Indirect]);
-		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, emitter.bufferIds[Buffer_UpdateUniforms]);
-
-		// Init update step
-
-		const ShaderData& initUpdateShader = shaderManager->GetShaderData(initUpdateShaderId);
-		renderDevice->UseShaderProgram(initUpdateShader.driverId);
-		renderDevice->DispatchCompute(1, 1, 1);
-
-		// Emit step
-
-		// Make sure the indirect buffer updates are visible to the dispatch command
-		renderDevice->MemoryBarrier(shaderStorageBarrier);
-
-		renderDevice->BindBuffer(RenderBufferTarget::DispatchIndirectBuffer, emitter.bufferIds[Buffer_Indirect]);
-
-		const ShaderData& emitShader = shaderManager->GetShaderData(emitShaderId);
-		renderDevice->UseShaderProgram(emitShader.driverId);
-
-		const kokko::TextureUniform* tu = emitShader.uniforms.FindTextureUniformByNameHash("noise_texture"_hash);
-		if (tu != nullptr)
-		{
-			renderDevice->SetUniformInt(tu->uniformLocation, 0);
-			renderDevice->SetActiveTextureUnit(0);
-			renderDevice->BindTexture(RenderTextureTarget::Texture2d, noiseTextureId);
-		}
-
-		renderDevice->DispatchComputeIndirect(IndirectOffsetEmit);
-
-		// Simulate step
-
-		// Shader storage writes need to be made visible to the next step
-		renderDevice->MemoryBarrier(shaderStorageBarrier);
-
-		const ShaderData& simulateShader = shaderManager->GetShaderData(simulateShaderId);
-		renderDevice->UseShaderProgram(simulateShader.driverId);
-		renderDevice->DispatchComputeIndirect(IndirectOffsetSimulate);
-
-		// Finish update step
-
-		// Shader storage writes need to be made visible to the next step
-		renderDevice->MemoryBarrier(shaderStorageBarrier);
-
-		const ShaderData& finishUpdateShader = shaderManager->GetShaderData(finishUpdateShaderId);
-		renderDevice->UseShaderProgram(finishUpdateShader.driverId);
-		renderDevice->DispatchCompute(1, 1, 1);
-
-		// Render step
-
-		// Make sure changes to indirect arguments and particle buffers are visible
-		renderDevice->MemoryBarrier(shaderStorageAndDrawIndirectBarrier);
-
-		renderDevice->BindBuffer(RenderBufferTarget::DrawIndirectBuffer, emitter.bufferIds[Buffer_Indirect]);
-		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, params.viewport->uniformBlockObject);
-		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, emitter.bufferIds[Buffer_RenderTransform]);
-
-		const ShaderData& renderShader = shaderManager->GetShaderData(renderShaderId);
-		renderDevice->UseShaderProgram(renderShader.driverId);
-
-		const MeshDrawData* draw = meshManager->GetDrawData(quadMeshId);
-		renderDevice->BindVertexArray(draw->vertexArrayObject);
-		renderDevice->DrawIndirect(draw->primitiveMode, IndirectOffsetRender);
-
-		// Swap alive lists
-
-		unsigned int tempList = emitter.aliveListNext;
-		emitter.aliveListNext = emitter.aliveListCurrent;
-		emitter.aliveListCurrent = tempList;
+		renderDevice->SetUniformInt(tu->uniformLocation, 0);
+		renderDevice->SetActiveTextureUnit(0);
+		renderDevice->BindTexture(RenderTextureTarget::Texture2d, noiseTextureId);
 	}
+
+	renderDevice->DispatchComputeIndirect(IndirectOffsetEmit);
+
+	// Simulate step
+
+	// Shader storage writes need to be made visible to the next step
+	renderDevice->MemoryBarrier(shaderStorageBarrier);
+
+	const ShaderData& simulateShader = shaderManager->GetShaderData(simulateShaderId);
+	renderDevice->UseShaderProgram(simulateShader.driverId);
+	renderDevice->DispatchComputeIndirect(IndirectOffsetSimulate);
+
+	// Finish update step
+
+	// Shader storage writes need to be made visible to the next step
+	renderDevice->MemoryBarrier(shaderStorageBarrier);
+
+	const ShaderData& finishUpdateShader = shaderManager->GetShaderData(finishUpdateShaderId);
+	renderDevice->UseShaderProgram(finishUpdateShader.driverId);
+	renderDevice->DispatchCompute(1, 1, 1);
+
+	// Render step
+
+	// Make sure changes to indirect arguments and particle buffers are visible
+	renderDevice->MemoryBarrier(shaderStorageAndDrawIndirectBarrier);
+
+	renderDevice->BindBuffer(RenderBufferTarget::DrawIndirectBuffer, emitter.bufferIds[Buffer_Indirect]);
+	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, parameters.fullscreenViewport.uniformBlockObject);
+	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, emitter.bufferIds[Buffer_RenderTransform]);
+
+	const ShaderData& renderShader = shaderManager->GetShaderData(renderShaderId);
+	renderDevice->UseShaderProgram(renderShader.driverId);
+
+	const MeshDrawData* draw = meshManager->GetDrawData(quadMeshId);
+	renderDevice->BindVertexArray(draw->vertexArrayObject);
+	renderDevice->DrawIndirect(draw->primitiveMode, IndirectOffsetRender);
+
+	// Swap alive lists
+
+	unsigned int tempList = emitter.aliveListNext;
+	emitter.aliveListNext = emitter.aliveListCurrent;
+	emitter.aliveListCurrent = tempList;
 }
 
 void ParticleSystem::NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms)
 {
-	// TODO: Updatetransforms;
+	for (size_t i = 0; i < count; ++i)
+	{
+		Entity entity = entities[i];
+		ParticleEmitterId id = Lookup(entity);
+		if (id != ParticleEmitterId::Null)
+			data.transform[id.i] = transforms[i];
+	}
 }
 
 ParticleEmitterId ParticleSystem::Lookup(Entity e)
@@ -541,4 +549,6 @@ void ParticleSystem::DeinitializeEmitter(ParticleEmitterId id)
 		for (unsigned int i = 0; i < Buffer_COUNT; ++i)
 			emitter.bufferIds[i] = 0;
 	}
+}
+
 }
