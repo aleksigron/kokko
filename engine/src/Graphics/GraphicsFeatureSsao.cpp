@@ -10,10 +10,10 @@
 #include "Rendering/PostProcessRenderer.hpp"
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/RenderCommandData.hpp"
-#include "Rendering/RenderCommandType.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderDeviceEnums.hpp"
 #include "Rendering/RenderGraphResources.hpp"
+#include "Rendering/RenderPassType.hpp"
 #include "Rendering/RenderTargetContainer.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 
@@ -188,7 +188,7 @@ void GraphicsFeatureSsao::Upload(const UploadParameters& parameters)
 
 void GraphicsFeatureSsao::Submit(const SubmitParameters& parameters)
 {
-	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPass::OpaqueLighting, renderOrder, 0);
+	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::OpaqueLighting, renderOrder, 0);
 }
 
 void GraphicsFeatureSsao::Render(const RenderParameters& parameters)

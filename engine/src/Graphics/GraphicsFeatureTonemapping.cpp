@@ -4,9 +4,9 @@
 
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 
-#include "Rendering/RenderCommandType.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderGraphResources.hpp"
+#include "Rendering/RenderPassType.hpp"
 #include "Rendering/PostProcessRenderer.hpp"
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
@@ -85,7 +85,7 @@ void GraphicsFeatureTonemapping::Upload(const UploadParameters& parameters)
 
 void GraphicsFeatureTonemapping::Submit(const SubmitParameters& parameters)
 {
-	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPass::PostProcess, renderOrder, 0);
+	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::PostProcess, renderOrder, 0);
 }
 
 void GraphicsFeatureTonemapping::Render(const RenderParameters& parameters)

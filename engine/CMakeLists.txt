@@ -214,9 +214,6 @@ set (KOKKO_SOURCES
 	src/Rendering/PostProcessRenderer.hpp
 	src/Rendering/PostProcessRenderPass.hpp
 	src/Rendering/RenderCommandData.hpp
-	src/Rendering/RenderCommandList.cpp
-	src/Rendering/RenderCommandList.hpp
-	src/Rendering/RenderCommandType.hpp
 	src/Rendering/RenderDebugFeature.hpp
 	src/Rendering/RenderDebugSettings.cpp
 	src/Rendering/RenderDebugSettings.hpp
@@ -226,9 +223,12 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDeviceOpenGL.hpp
 	src/Rendering/Renderer.cpp
 	src/Rendering/Renderer.hpp
+	src/Rendering/RendererCommandList.cpp
+	src/Rendering/RendererCommandList.hpp
 	src/Rendering/RenderGraphResources.cpp
 	src/Rendering/RenderGraphResources.hpp
 	src/Rendering/RenderOrder.hpp
+	src/Rendering/RenderPassType.hpp
 	src/Rendering/RenderTargetContainer.cpp
 	src/Rendering/RenderTargetContainer.hpp
 	src/Rendering/RenderViewport.hpp

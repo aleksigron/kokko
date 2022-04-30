@@ -13,37 +13,27 @@
 
 #include "Rendering/Framebuffer.hpp"
 #include "Rendering/Light.hpp"
-#include "Rendering/RenderCommandList.hpp"
+#include "Rendering/RendererCommandList.hpp"
 #include "Rendering/RenderOrder.hpp"
 
 #include "Resources/MaterialData.hpp"
-#include "Resources/MeshId.hpp"
-#include "Resources/ShaderId.hpp"
 
 class Allocator;
 class CameraSystem;
-class CustomRenderer;
 class LightManager;
 class ShaderManager;
 class MeshManager;
 class MaterialManager;
 class TextureManager;
-class EntityManager;
 class RenderDevice;
 class Scene;
 class DebugVectorRenderer;
-class ScreenSpaceAmbientOcclusion;
-class BloomEffect;
 class PostProcessRenderer;
 class RenderTargetContainer;
 class Framebuffer;
 
-struct BoundingBox;
 struct CameraParameters;
-struct ProjectionParameters;
-struct PostProcessRenderPass;
 struct RenderViewport;
-struct ShaderData;
 
 namespace kokko
 {
@@ -108,7 +98,7 @@ private:
 	bool lockCullingCamera;
 	Mat4x4fBijection lockCullingCameraTransform;
 
-	RenderCommandList commandList;
+	RendererCommandList commandList;
 	Array<BitPack> objectVisibility;
 
 	Array<LightId> lightResultArray;

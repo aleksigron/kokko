@@ -10,9 +10,9 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/PostProcessRenderer.hpp"
 #include "Rendering/PostProcessRenderPass.hpp"
-#include "Rendering/RenderCommandType.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderGraphResources.hpp"
+#include "Rendering/RenderPassType.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 
 #include "Resources/MeshManager.hpp"
@@ -161,7 +161,7 @@ void GraphicsFeatureDeferredLighting::Deinitialize(const InitializeParameters& p
 
 void GraphicsFeatureDeferredLighting::Submit(const SubmitParameters& parameters)
 {
-	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPass::OpaqueLighting, renderOrder, 0);
+	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::OpaqueLighting, renderOrder, 0);
 }
 
 void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
