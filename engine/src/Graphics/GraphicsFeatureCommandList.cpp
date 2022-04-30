@@ -1,12 +1,12 @@
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 
-#include "Rendering/RenderCommandList.hpp"
+#include "Rendering/RendererCommandList.hpp"
 
 namespace kokko
 {
 
 GraphicsFeatureCommandList::GraphicsFeatureCommandList(
-	RenderCommandList& list,
+	RendererCommandList& list,
 	uint64_t fullscreenViewport,
 	uint64_t featureIndex) :
 	list(list),
@@ -15,12 +15,12 @@ GraphicsFeatureCommandList::GraphicsFeatureCommandList(
 {
 }
 
-void GraphicsFeatureCommandList::AddToFullscreenViewport(RenderPass pass, float depth, uint16_t object)
+void GraphicsFeatureCommandList::AddToFullscreenViewport(RenderPassType pass, float depth, uint16_t object)
 {
 	list.AddDrawWithCallback(fullscreenViewportIndex, pass, depth, featureIndex, object);
 }
 
-void GraphicsFeatureCommandList::AddToFullscreenViewportWithOrder(RenderPass pass, uint64_t order, uint16_t object)
+void GraphicsFeatureCommandList::AddToFullscreenViewportWithOrder(RenderPassType pass, uint64_t order, uint16_t object)
 {
 	list.AddGraphicsFeatureWithOrder(fullscreenViewportIndex, pass, order, featureIndex, object);
 }

@@ -18,7 +18,6 @@
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/Renderer.hpp"
-#include "Rendering/RenderCommandList.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
@@ -239,7 +238,7 @@ void TerrainSystem::Submit(const SubmitParameters& parameters)
 	for (size_t i = 1; i < data.count; ++i)
 	{
 		float depth = 0.0f; // TODO: Calculate
-		parameters.commandList.AddToFullscreenViewport(RenderPass::OpaqueGeometry, depth, i);
+		parameters.commandList.AddToFullscreenViewport(RenderPassType::OpaqueGeometry, depth, i);
 	}
 }
 

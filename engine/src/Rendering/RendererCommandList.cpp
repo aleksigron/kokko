@@ -1,20 +1,20 @@
-#include "Rendering/RenderCommandList.hpp"
+#include "Rendering/RendererCommandList.hpp"
 
 #include "Core/Core.hpp"
 #include "Core/Sort.hpp"
 
-void RenderCommandList::AddControl(
+void RendererCommandList::AddControl(
 	unsigned int viewport,
-	RenderPass pass,
+	RenderPassType pass,
 	unsigned int order,
-	RenderControlType type,
+	RendererControlType type,
 	unsigned int data)
 {
 	uint64_t c = 0;
 
 	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, static_cast<uint64_t>(pass));
-	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Control));
+	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RendererCommandType::Control));
 	renderOrder.commandOrder.AssignValue(c, order);
 	renderOrder.commandType.AssignValue(c, static_cast<uint64_t>(type));
 	renderOrder.commandData.AssignValue(c, data);
@@ -22,11 +22,11 @@ void RenderCommandList::AddControl(
 	commands.PushBack(c);
 }
 
-void RenderCommandList::AddControl(
+void RendererCommandList::AddControl(
 	unsigned int viewport,
-	RenderPass pass,
+	RenderPassType pass,
 	unsigned int order,
-	RenderControlType type,
+	RendererControlType type,
 	unsigned int byteCount,
 	void* data)
 {
@@ -37,7 +37,7 @@ void RenderCommandList::AddControl(
 
 	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, static_cast<uint64_t>(pass));
-	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Control));
+	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RendererCommandType::Control));
 	renderOrder.commandOrder.AssignValue(c, order);
 	renderOrder.commandType.AssignValue(c, static_cast<uint64_t>(type));
 
@@ -55,9 +55,9 @@ void RenderCommandList::AddControl(
 	commands.PushBack(c);
 }
 
-void RenderCommandList::AddDraw(
+void RendererCommandList::AddDraw(
 	unsigned int viewport,
-	RenderPass pass,
+	RenderPassType pass,
 	float depth,
 	MaterialId material,
 	unsigned int renderObjectId)
@@ -70,7 +70,7 @@ void RenderCommandList::AddDraw(
 
 	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, intpass);
-	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Draw));
+	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RendererCommandType::Draw));
 
 	if ((0xfc & intpass) != 0) // Is greater than 0x03; must be transparent
 	{
@@ -89,9 +89,9 @@ void RenderCommandList::AddDraw(
 	commands.PushBack(c);
 }
 
-void RenderCommandList::AddDrawWithCallback(
+void RendererCommandList::AddDrawWithCallback(
 	unsigned int viewport,
-	RenderPass pass,
+	RenderPassType pass,
 	float depth,
 	unsigned int callbackIndex,
 	uint16_t featureObjectId)
@@ -104,7 +104,7 @@ void RenderCommandList::AddDrawWithCallback(
 
 	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, intpass);
-	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Draw));
+	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RendererCommandType::Draw));
 
 	if ((0xfc & intpass) != 0) // Is greater than 0x03; must be transparent
 	{
@@ -124,7 +124,7 @@ void RenderCommandList::AddDrawWithCallback(
 	commands.PushBack(c);
 }
 
-void RenderCommandList::AddGraphicsFeatureWithOrder(unsigned int viewport, RenderPass pass, uint32_t order, unsigned int featureIndex, uint16_t featureObjectId)
+void RendererCommandList::AddGraphicsFeatureWithOrder(unsigned int viewport, RenderPassType pass, uint32_t order, unsigned int featureIndex, uint16_t featureObjectId)
 {
 	uint64_t intpass = static_cast<uint64_t>(pass);
 
@@ -132,7 +132,7 @@ void RenderCommandList::AddGraphicsFeatureWithOrder(unsigned int viewport, Rende
 
 	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, intpass);
-	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RenderCommandType::Draw));
+	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RendererCommandType::Draw));
 
 	if ((0xfc & intpass) != 0) // Is greater than 0x03; must be transparent
 		renderOrder.transparentDepth.AssignValue(c, order);
@@ -146,14 +146,14 @@ void RenderCommandList::AddGraphicsFeatureWithOrder(unsigned int viewport, Rende
 	commands.PushBack(c);
 }
 
-void RenderCommandList::Sort()
+void RendererCommandList::Sort()
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	ShellSortAsc(commands.GetData(), commands.GetCount());
 }
 
-void RenderCommandList::Clear()
+void RendererCommandList::Clear()
 {
 	commands.Clear();
 	commandData.Clear();

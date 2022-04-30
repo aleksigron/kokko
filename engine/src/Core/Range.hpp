@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 template <typename T>
 struct Range
 {
@@ -12,5 +14,11 @@ struct Range
 
 	Range(T start, T end) : start(start), end(end)
 	{
+	}
+
+	T GetLength() const
+	{
+		assert(end >= start);
+		return end - start;
 	}
 };

@@ -4,9 +4,9 @@
 
 class Renderer;
 
-struct RenderCommandList;
+struct RendererCommandList;
 
-enum class RenderPass;
+enum class RenderPassType;
 
 namespace kokko
 {
@@ -14,13 +14,13 @@ namespace kokko
 class GraphicsFeatureCommandList
 {
 public:
-	GraphicsFeatureCommandList(RenderCommandList& list, uint64_t fullscreenViewport, uint64_t featureIndex);
+	GraphicsFeatureCommandList(RendererCommandList& list, uint64_t fullscreenViewport, uint64_t featureIndex);
 
-	void AddToFullscreenViewport(RenderPass pass, float depth, uint16_t object);
-	void AddToFullscreenViewportWithOrder(RenderPass pass, uint64_t order, uint16_t object);
+	void AddToFullscreenViewport(RenderPassType pass, float depth, uint16_t object);
+	void AddToFullscreenViewportWithOrder(RenderPassType pass, uint64_t order, uint16_t object);
 
 private:
-	RenderCommandList& list;
+	RendererCommandList& list;
 	uint64_t fullscreenViewportIndex;
 	uint64_t featureIndex;
 

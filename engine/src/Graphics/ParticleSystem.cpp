@@ -144,7 +144,7 @@ void ParticleSystem::Submit(const SubmitParameters& parameters)
 	{
 		EmitterData& emitter = data.emitter[i];
 		float depth = 0.0f; // TODO: Calculate
-		parameters.commandList.AddToFullscreenViewport(RenderPass::Transparent, depth, static_cast<uint16_t>(i));
+		parameters.commandList.AddToFullscreenViewport(RenderPassType::Transparent, depth, static_cast<uint16_t>(i));
 	}
 }
 

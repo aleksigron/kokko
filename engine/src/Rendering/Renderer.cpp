@@ -39,10 +39,10 @@
 #include "Rendering/PostProcessRenderer.hpp"
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/RenderCommandData.hpp"
-#include "Rendering/RenderCommandType.hpp"
 #include "Rendering/RenderDebugSettings.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderGraphResources.hpp"
+#include "Rendering/RenderPassType.hpp"
 #include "Rendering/RenderTargetContainer.hpp"
 #include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
@@ -532,146 +532,136 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 
 bool Renderer::IsDrawCommand(uint64_t orderKey)
 {
-	return renderOrder.command.GetValue(orderKey) == static_cast<uint64_t>(RenderCommandType::Draw);
+	return renderOrder.command.GetValue(orderKey) == static_cast<uint64_t>(RendererCommandType::Draw);
 }
 
 bool Renderer::ParseControlCommand(uint64_t orderKey)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	if (renderOrder.command.GetValue(orderKey) == static_cast<uint64_t>(RenderCommandType::Draw))
+	if (renderOrder.command.GetValue(orderKey) == static_cast<uint64_t>(RendererCommandType::Draw))
 		return false;
 
 	uint64_t commandTypeInt = renderOrder.commandType.GetValue(orderKey);
-	RenderControlType control = static_cast<RenderControlType>(commandTypeInt);
+	RendererControlType control = static_cast<RendererControlType>(commandTypeInt);
 
 	switch (control)
 	{
-		case RenderControlType::BlendingEnable:
-			device->BlendingEnable();
-			break;
+	case RendererControlType::BeginViewport:
+	{
+		uint32_t viewportIndex = static_cast<uint32_t>(renderOrder.viewportIndex.GetValue(orderKey));
 
-		case RenderControlType::BlendingDisable:
-			device->BlendingDisable();
-			break;
-
-		case RenderControlType::BlendFunction:
+		if (viewportIndex == 0)
 		{
-			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
-			uint8_t* data = commandList.commandData.GetData() + offset;
-			auto* blendFn = reinterpret_cast<RenderCommandData::BlendFunctionData*>(data);
-			device->BlendFunction(blendFn);
-
-		}
-			break;
-
-		case RenderControlType::Viewport:
-		{
-			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
-			uint8_t* data = commandList.commandData.GetData() + offset;
-			auto* viewport = reinterpret_cast<RenderCommandData::ViewportData*>(data);
-			device->Viewport(viewport);
-		}
-			break;
-
-		case RenderControlType::ScissorTestEnable:
-			device->ScissorTestEnable();
-			break;
-
-		case RenderControlType::ScissorTestDisable:
-			device->ScissorTestDisable();
-			break;
-
-		case RenderControlType::DepthRange:
-		{
-			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
-			uint8_t* data = commandList.commandData.GetData() + offset;
-			auto* depthRange = reinterpret_cast<RenderCommandData::DepthRangeData*>(data);
-			device->DepthRange(depthRange);
-		}
-			break;
-
-		case RenderControlType::DepthTestEnable:
 			device->DepthTestEnable();
-			break;
-
-		case RenderControlType::DepthTestDisable:
-			device->DepthTestDisable();
-			break;
-
-		case RenderControlType::DepthTestFunction:
-		{
-			uint64_t fn = renderOrder.commandData.GetValue(orderKey);
-			device->DepthTestFunction(static_cast<RenderDepthCompareFunc>(fn));
-		}
-			break;
-
-		case RenderControlType::DepthWriteEnable:
+			device->DepthTestFunction(RenderDepthCompareFunc::Greater);
 			device->DepthWriteEnable();
-			break;
-
-		case RenderControlType::DepthWriteDisable:
-			device->DepthWriteDisable();
-			break;
-
-		case RenderControlType::CullFaceEnable:
 			device->CullFaceEnable();
-			break;
-
-		case RenderControlType::CullFaceDisable:
-			device->CullFaceDisable();
-			break;
-
-		case RenderControlType::CullFaceFront:
-			device->CullFaceFront();
-			break;
-
-		case RenderControlType::CullFaceBack:
 			device->CullFaceBack();
-			break;
-
-		case RenderControlType::Clear:
-		{
-			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
-			uint8_t* data = commandList.commandData.GetData() + offset;
-			auto* clearMask = reinterpret_cast<RenderCommandData::ClearMask*>(data);
-			device->Clear(clearMask);
+			device->ScissorTestDisable();
+			device->BlendingDisable();
+			device->ClearDepth(0.0f);
 		}
-			break;
 
-		case RenderControlType::ClearColor:
+		if (viewportIndex == viewportIndicesShadowCascade.start)
 		{
-			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
-			uint8_t* data = commandList.commandData.GetData() + offset;
-			auto* color = reinterpret_cast<RenderCommandData::ClearColorData*>(data);
-			device->ClearColor(color);
-		}
-			break;
+			// Bind shadow framebuffer before any shadow cascade draws
+			device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, renderGraphResources->GetShadowBuffer().GetFramebufferId());
 
-		case RenderControlType::ClearDepth:
+			// Set viewport size to full framebuffer size before clearing
+
+			RenderCommandData::ViewportData viewport;
+			viewport.x = 0;
+			viewport.y = 0;
+			viewport.w = renderGraphResources->GetShadowBuffer().GetWidth();
+			viewport.h = renderGraphResources->GetShadowBuffer().GetHeight();
+
+			device->Viewport(&viewport);
+
+			// Clear shadow framebuffer
+
+			RenderCommandData::ClearMask clearMask{ false, true, false };
+			device->Clear(&clearMask);
+
+			// Enable sRGB conversion for framebuffer
+			// TODO: WHY though?
+			//device->FramebufferSrgbEnable();
+		}
+
+		if (viewportIndex >= viewportIndicesShadowCascade.start &&
+			viewportIndex < viewportIndicesShadowCascade.end)
 		{
-			uint64_t intDepth = renderOrder.commandData.GetValue(orderKey);
-			float depth = *reinterpret_cast<float*>(&intDepth);
-			device->ClearDepth(depth);
-		}
-			break;
+			const RenderViewport& viewport = viewportData[viewportIndex];
 
-		case RenderControlType::BindFramebuffer:
+			RenderCommandData::ViewportData setViewport;
+			setViewport.x = viewport.viewportRectangle.position.x;
+			setViewport.y = viewport.viewportRectangle.position.y;
+			setViewport.w = viewport.viewportRectangle.size.x;
+			setViewport.h = viewport.viewportRectangle.size.y;
+
+			device->Viewport(&setViewport);
+		}
+
+		if (viewportIndex == viewportIndexFullscreen)
 		{
-			uint64_t offset = renderOrder.commandData.GetValue(orderKey);
-			uint8_t* data = commandList.commandData.GetData() + offset;
-			auto* bind = reinterpret_cast<RenderCommandData::BindFramebufferData*>(data);
-			device->BindFramebuffer(bind);
+			device->DepthTestFunction(RenderDepthCompareFunc::Greater);
+
+			RenderCommandData::ClearColorData clearColor{ 0.0f, 0.0f, 0.0f, 0.0f };
+			device->ClearColor(&clearColor);
+
+			const RenderViewport& viewport = viewportData[viewportIndexFullscreen];
+
+			RenderCommandData::ViewportData setViewport;
+			setViewport.x = viewport.viewportRectangle.position.x;
+			setViewport.y = viewport.viewportRectangle.position.y;
+			setViewport.w = viewport.viewportRectangle.size.x;
+			setViewport.h = viewport.viewportRectangle.size.y;
+
+			device->Viewport(&setViewport);
+
+			device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, renderGraphResources->GetGeometryBuffer().GetFramebufferId());
+
+			RenderCommandData::ClearMask clearMask{ true, true, false };
+			device->Clear(&clearMask);
 		}
-			break;
 
-		case RenderControlType::FramebufferSrgbEnable:
-			device->FramebufferSrgbEnable();
-			break;
+		break;
+	}
 
-		case RenderControlType::FramebufferSrgbDisable:
-			device->FramebufferSrgbDisable();
-			break;
+	case RendererControlType::BeginPass:
+	{
+		uint32_t viewportIndex = static_cast<uint32_t>(renderOrder.viewportIndex.GetValue(orderKey));
+		auto pass = static_cast<RenderPassType>(renderOrder.viewportPass.GetValue(orderKey));
+
+		if (viewportIndex == viewportIndexFullscreen)
+		{
+			if (pass == RenderPassType::Skybox)
+			{
+				device->DepthTestEnable();
+				device->DepthTestFunction(RenderDepthCompareFunc::Equal);
+				device->DepthWriteDisable();
+
+				const RenderViewport& viewport = viewportData[viewportIndexFullscreen];
+
+				RenderCommandData::ViewportData setViewport;
+				setViewport.x = viewport.viewportRectangle.position.x;
+				setViewport.y = viewport.viewportRectangle.position.y;
+				setViewport.w = viewport.viewportRectangle.size.x;
+				setViewport.h = viewport.viewportRectangle.size.y;
+
+				device->Viewport(&setViewport);
+			}
+			else if (pass == RenderPassType::Transparent)
+			{
+				device->DepthTestFunction(RenderDepthCompareFunc::Greater);
+				device->BlendingEnable();
+
+				// Set mix blending
+				device->BlendFunction(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+			}
+		}
+		break;
+	}
 	}
 
 	return true;
@@ -817,7 +807,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 	lightResultArray.Clear();
 
-	unsigned int numShadowViewports = viewportCount;
+	unsigned int numShadowViewports = viewportIndicesShadowCascade.GetLength();
 
 	{
 		// Add the fullscreen viewport
@@ -851,177 +841,22 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		this->viewportIndexFullscreen = vpIdx;
 	}
 
-	const FrustumPlanes& fullscreenFrustum = viewportData[viewportIndexFullscreen].frustum;
+	// Create control commands for beginning of viewports and render passes
 
-	RenderPass g_pass = RenderPass::OpaqueGeometry;
-	RenderPass l_pass = RenderPass::OpaqueLighting;
-	RenderPass s_pass = RenderPass::Skybox;
-	RenderPass t_pass = RenderPass::Transparent;
-	RenderPass p_pass = RenderPass::PostProcess;
+	constexpr uint32_t firstViewportIndex = 0;
+	commandList.AddControl(0, RenderPassType::OpaqueGeometry, 0, RendererControlType::BeginViewport, firstViewportIndex);
 
-	using ctrl = RenderControlType;
-
-	// Before light shadow viewport
-
-	// Set depth test on
-	commandList.AddControl(0, g_pass, 0, ctrl::DepthTestEnable);
-
-	// Set depth test function
-	commandList.AddControl(0, g_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Greater));
-
-	// Enable depth writing
-	commandList.AddControl(0, g_pass, 2, ctrl::DepthWriteEnable);
-
-	// Set face culling on
-	commandList.AddControl(0, g_pass, 3, ctrl::CullFaceEnable);
-
-	// Set face culling to cull back faces
-	commandList.AddControl(0, g_pass, 4, ctrl::CullFaceBack);
-
-	commandList.AddControl(0, g_pass, 5, ctrl::ScissorTestDisable);
-
-	{
-		// Set clear depth
-		float depth = 0.0f;
-		unsigned int* intDepthPtr = reinterpret_cast<unsigned int*>(&depth);
-
-		commandList.AddControl(0, g_pass, 6, ctrl::ClearDepth, *intDepthPtr);
-	}
-
-	// Disable blending
-	commandList.AddControl(0, g_pass, 7, ctrl::BlendingDisable);
-
-	if (numShadowViewports > 0)
-	{
-		{
-			// Bind shadow framebuffer before any shadow cascade draws
-			RenderCommandData::BindFramebufferData data;
-			data.target = RenderFramebufferTarget::Framebuffer;
-			data.framebuffer = renderGraphResources->GetShadowBuffer().GetFramebufferId();
-
-			commandList.AddControl(0, g_pass, 8, ctrl::BindFramebuffer, sizeof(data), &data);
-		}
-
-		{
-			// Set viewport size to full framebuffer size before clearing
-			RenderCommandData::ViewportData data;
-			data.x = 0;
-			data.y = 0;
-			data.w = renderGraphResources->GetShadowBuffer().GetWidth();
-			data.h = renderGraphResources->GetShadowBuffer().GetHeight();
-
-			commandList.AddControl(0, g_pass, 9, ctrl::Viewport, sizeof(data), &data);
-		}
-
-		// Clear shadow framebuffer RenderFramebufferTarget::Framebuffer
-		{
-			RenderCommandData::ClearMask clearMask{ false, true, false };
-			commandList.AddControl(0, g_pass, 10, ctrl::Clear, sizeof(clearMask), &clearMask);
-		}
-
-		// Enable sRGB conversion for framebuffer
-		commandList.AddControl(0, g_pass, 11, ctrl::FramebufferSrgbEnable);
-
-		// For each shadow viewport
-		for (unsigned int vpIdx = 0; vpIdx < numShadowViewports; ++vpIdx)
-		{
-			const RenderViewport& viewport = viewportData[vpIdx];
-
-			// Set viewport size
-			RenderCommandData::ViewportData data;
-			data.x = viewport.viewportRectangle.position.x;
-			data.y = viewport.viewportRectangle.position.y;
-			data.w = viewport.viewportRectangle.size.x;
-			data.h = viewport.viewportRectangle.size.y;
-
-			commandList.AddControl(vpIdx, g_pass, 12, ctrl::Viewport, sizeof(data), &data);
-		}
-	}
-
-	// Before fullscreen viewport
-
-	// PASS: OPAQUE GEOMETRY
+	for (unsigned int vpIdx = viewportIndicesShadowCascade.start; vpIdx < viewportIndicesShadowCascade.end; ++vpIdx)
+		if (vpIdx != firstViewportIndex)
+			commandList.AddControl(vpIdx, RenderPassType::OpaqueGeometry, 0, RendererControlType::BeginViewport);
 
 	unsigned int fsvp = viewportIndexFullscreen;
 
-	// Set depth test function for reverse depth buffer
-	commandList.AddControl(0, g_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Greater));
+	if (fsvp != firstViewportIndex)
+		commandList.AddControl(fsvp, RenderPassType::OpaqueGeometry, 0, RendererControlType::BeginViewport);
 
-	{
-		// Set clear color
-		RenderCommandData::ClearColorData data{ 0.0f, 0.0f, 0.0f, 0.0f };
-		commandList.AddControl(fsvp, g_pass, 0, ctrl::ClearColor, sizeof(data), &data);
-	}
-
-	{
-		const RenderViewport& viewport = viewportData[viewportIndexFullscreen];
-
-		// Set viewport size
-		RenderCommandData::ViewportData data;
-		data.x = viewport.viewportRectangle.position.x;
-		data.y = viewport.viewportRectangle.position.y;
-		data.w = viewport.viewportRectangle.size.x;
-		data.h = viewport.viewportRectangle.size.y;
-
-		commandList.AddControl(fsvp, g_pass, 1, ctrl::Viewport, sizeof(data), &data);
-	}
-
-	{
-		// Bind geometry framebuffer
-		RenderCommandData::BindFramebufferData data;
-		data.target = RenderFramebufferTarget::Framebuffer;
-		data.framebuffer = renderGraphResources->GetGeometryBuffer().GetFramebufferId();
-
-		commandList.AddControl(fsvp, g_pass, 2, ctrl::BindFramebuffer, sizeof(data), &data);
-	}
-
-	// Clear currently bound RenderFramebufferTarget::Framebuffer
-	{
-		RenderCommandData::ClearMask clearMask{ true, true, false };
-		commandList.AddControl(fsvp, g_pass, 3, ctrl::Clear, sizeof(clearMask), &clearMask);
-	}
-
-	// PASS: OPAQUE LIGHTING
-
-	// Deferred lighting and SSAO will be added from graphics features
-
-	// PASS: SKYBOX
-
-	commandList.AddControl(fsvp, s_pass, 0, ctrl::DepthTestEnable);
-	commandList.AddControl(fsvp, s_pass, 1, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Equal));
-	commandList.AddControl(fsvp, s_pass, 2, ctrl::DepthWriteDisable);
-
-	{
-		const RenderViewport& viewport = viewportData[viewportIndexFullscreen];
-
-		// Set viewport size
-		RenderCommandData::ViewportData data;
-		data.x = viewport.viewportRectangle.position.x;
-		data.y = viewport.viewportRectangle.position.y;
-		data.w = viewport.viewportRectangle.size.x;
-		data.h = viewport.viewportRectangle.size.y;
-
-		commandList.AddControl(fsvp, s_pass, 3, ctrl::Viewport, sizeof(data), &data);
-	}
-
-	// PASS: TRANSPARENT
-
-	// Before transparent objects
-
-	commandList.AddControl(fsvp, t_pass, 0, ctrl::DepthTestFunction, static_cast<unsigned int>(RenderDepthCompareFunc::Greater));
-	commandList.AddControl(fsvp, t_pass, 1, ctrl::BlendingEnable);
-
-	{
-		// Set mix blending
-		RenderCommandData::BlendFunctionData data;
-		data.srcFactor = RenderBlendFactor::SrcAlpha;
-		data.dstFactor = RenderBlendFactor::OneMinusSrcAlpha;
-
-		commandList.AddControl(fsvp, t_pass, 2, ctrl::BlendFunction, sizeof(data), &data);
-	}
-
-	// PASS: POST PROCESS
-	// These draw commands will be added from graphics features
+	commandList.AddControl(fsvp, RenderPassType::Skybox, 0, RendererControlType::BeginPass);
+	commandList.AddControl(fsvp, RenderPassType::Transparent, 0, RendererControlType::BeginPass);
 
 	// Create draw commands for render objects in scene
 
@@ -1062,7 +897,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 				float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
-				commandList.AddDraw(vpIdx, RenderPass::OpaqueGeometry, depth, shadowMaterial, i);
+				commandList.AddDraw(vpIdx, RenderPassType::OpaqueGeometry, depth, shadowMaterial, i);
 
 				objectDrawCount += 1;
 			}
@@ -1076,7 +911,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 			float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
-			RenderPass pass = static_cast<RenderPass>(componentSystem->data.transparency[i]);
+			auto pass = static_cast<RenderPassType>(componentSystem->data.transparency[i]);
 			commandList.AddDraw(fsvp, pass, depth, mat, i);
 
 			objectDrawCount += 1;

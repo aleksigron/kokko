@@ -5,8 +5,8 @@
 #include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 
-#include "Rendering/RenderCommandType.hpp"
 #include "Rendering/RenderDevice.hpp"
+#include "Rendering/RenderPassType.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/Uniform.hpp"
 
@@ -82,7 +82,7 @@ void GraphicsFeatureSkybox::Upload(const UploadParameters& parameters)
 
 void GraphicsFeatureSkybox::Submit(const SubmitParameters& parameters)
 {
-	parameters.commandList.AddToFullscreenViewport(RenderPass::Skybox, 0.0f, 0);
+	parameters.commandList.AddToFullscreenViewport(RenderPassType::Skybox, 0.0f, 0);
 }
 
 void GraphicsFeatureSkybox::Render(const RenderParameters& parameters)
