@@ -131,14 +131,44 @@ private:
 	}
 
 public:
-	HashMap(Allocator* allocator) :
+	explicit HashMap(Allocator* allocator) :
 		allocator(allocator),
 		data(nullptr),
 		population(0),
 		allocated(0),
-		zeroUsed(false)
+		zeroUsed(false),
+		zeroPair{}
 	{
-		zeroPair = KeyValuePair{};
+	}
+
+	HashMap(const HashMap& other) :
+		allocator(other.allocator),
+		data(nullptr),
+		population(other.population),
+		allocated(other.allocated),
+		zeroUsed(other.zeroUsed),
+		zeroPair(other.zeroPair)
+	{
+		if (other.data != nullptr && other.population > 0)
+		{
+			ReserveInternal(other.allocated);
+			std::memcpy(data, other.data, other.allocated * sizeof(KeyValuePair));
+		}
+	}
+
+	HashMap(HashMap&& other) noexcept :
+		allocator(other.allocator),
+		data(other.data),
+		population(other.population),
+		allocated(other.allocated),
+		zeroUsed(other.zeroUsed),
+		zeroPair(other.zeroPair)
+	{
+		other.data = nullptr;
+		other.population = 0;
+		other.allocated = 0;
+		other.zeroUsed = false;
+		other.zeroPair = KeyValuePair{};
 	}
 
 	~HashMap()
@@ -156,6 +186,52 @@ public:
 
 			allocator->Deallocate(data);
 		}
+	}
+
+	HashMap& operator=(const HashMap& other)
+	{
+		if (data != nullptr)
+		{
+			allocator->Deallocate(data);
+			data = nullptr;
+		}
+
+		allocator = other.allocator;
+		population = other.population;
+		allocated = other.allocated;
+		zeroUsed = other.zeroUsed;
+		zeroPair = other.zeroPair;
+
+		if (other.data != nullptr && other.population > 0)
+		{
+			ReserveInternal(other.allocated);
+			std::memcpy(data, other.data, other.allocated * sizeof(KeyValuePair));
+		}
+
+		return *this;
+	}
+
+	HashMap& operator=(HashMap&& other)
+	{
+		if (data != nullptr)
+		{
+			allocator->Deallocate(data);
+		}
+
+		allocator = other.allocator;
+		data = other.data;
+		population = other.population;
+		allocated = other.allocated;
+		zeroUsed = other.zeroUsed;
+		zeroPair = other.zeroPair;
+
+		other.data = nullptr;
+		other.population = 0;
+		other.allocated = 0;
+		other.zeroUsed = false;
+		other.zeroPair = KeyValuePair{};
+
+		return *this;
 	}
 
 	void Clear()
@@ -227,6 +303,30 @@ public:
 	}
 
 	KeyValuePair* Lookup(const KeyType& key)
+	{
+		if (key != KeyType{})
+		{
+			if (data != nullptr)
+			{
+				for (size_t i = GetIndex(kokko::Hash32(key, 0u));; i = GetIndex(i + 1))
+				{
+					KeyValuePair* pair = data + i;
+
+					if (pair->first == key)
+						return pair;
+
+					if (pair->first == KeyType{})
+						return nullptr;
+				}
+			}
+		}
+		else if (zeroUsed)
+			return &zeroPair;
+
+		return nullptr;
+	}
+
+	const KeyValuePair* Lookup(const KeyType& key) const
 	{
 		if (key != KeyType{})
 		{

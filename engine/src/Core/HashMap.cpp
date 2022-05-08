@@ -4,20 +4,101 @@
 
 #include "Core/String.hpp"
 
-TEST_CASE("HashMap.Lookup")
+TEST_CASE("HashMap.LookupAndModify")
 {
 	Allocator* allocator = Allocator::GetDefault();
 	HashMap<int, int> map(allocator);
 
+	auto key = [](int i) { return (i + 31) * 7; };
+
 	constexpr int count = 16;
 	for (int i = 0; i < count; ++i)
 	{
-		map.Insert(i * 4)->second = i;
+		map.Insert(key(i))->second = i;
 	}
+
+	// Check const lookup
+
+	const HashMap<int, int>& constMap = map;
 
 	for (int i = 0; i < count; ++i)
 	{
-		auto pair = map.Lookup(i * 4);
+		auto pair = constMap.Lookup(key(i));
+		CHECK(pair != nullptr);
+		CHECK(pair->second == i);
+	}
+
+	// Check non-const lookup and modify
+
+	for (int i = 0; i < count; ++i)
+	{
+		auto pair = map.Lookup(key(i));
+		CHECK(pair != nullptr);
+		CHECK(pair->second == i);
+
+		pair->second = i * 5;
+	}
+
+	// Check modified value
+
+	for (int i = 0; i < count; ++i)
+	{
+		auto pair = map.Lookup(key(i));
+		CHECK(pair != nullptr);
+		CHECK(pair->second == i * 5);
+	}
+}
+
+TEST_CASE("HashMap.CopyAndMove")
+{
+	Allocator* allocator = Allocator::GetDefault();
+	HashMap<int, int> map(allocator);
+
+	auto key = [](int i) { return (i + 31) * 7; };
+
+	constexpr int count = 16;
+	for (int i = 0; i < count; ++i)
+	{
+		map.Insert(key(i))->second = i;
+	}
+
+	HashMap<int, int> copyConstruct(map);
+
+	for (int i = 0; i < count; ++i)
+	{
+		auto pair = copyConstruct.Lookup(key(i));
+		CHECK(pair != nullptr);
+		CHECK(pair->second == i);
+	}
+
+	HashMap<int, int> copyAssign(allocator);
+	copyAssign = map;
+
+	for (int i = 0; i < count; ++i)
+	{
+		auto pair = copyAssign.Lookup(key(i));
+		CHECK(pair != nullptr);
+		CHECK(pair->second == i);
+	}
+
+	HashMap<int, int> moveConstruct(std::move(map));
+	for (int i = 0; i < count; ++i)
+	{
+		CHECK(map.Lookup(key(i)) == nullptr);
+
+		auto pair = moveConstruct.Lookup(key(i));
+		CHECK(pair != nullptr);
+		CHECK(pair->second == i);
+	}
+
+	HashMap<int, int> moveAssign(allocator);
+	moveAssign = std::move(copyConstruct);
+
+	for (int i = 0; i < count; ++i)
+	{
+		CHECK(copyConstruct.Lookup(key(i)) == nullptr);
+
+		auto pair = moveAssign.Lookup(key(i));
 		CHECK(pair != nullptr);
 		CHECK(pair->second == i);
 	}
