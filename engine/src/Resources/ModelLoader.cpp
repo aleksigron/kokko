@@ -71,18 +71,23 @@ bool ModelLoader::LoadFromBuffer(ModelManager::ModelData& model, ArrayView<const
 
 	cgltf_result result = cgltf_parse(&options, buffer.GetData(), buffer.GetCount(), &data);
 	if (result != cgltf_result_success)
+	{
+		KK_LOG_ERROR("ModelLoader: Failed to load model, couldn't parse glTF");
 		return false;
+	}
 	
 	// TODO: mesh path and callbacks
 	cgltf_result loadResult = cgltf_load_buffers(&options, data, nullptr);
 	if (loadResult != cgltf_result_success)
 	{
+		KK_LOG_ERROR("ModelLoader: Failed to load model, couldn't load glTF buffers");
 		cgltf_free(data);
 		return false;
 	}
 
 	if (data->scenes_count == 0)
 	{
+		KK_LOG_ERROR("ModelLoader: Failed to load model, glTF didn't contain any scenes");
 		cgltf_free(data);
 		return false;
 	}
@@ -95,6 +100,7 @@ bool ModelLoader::LoadFromBuffer(ModelManager::ModelData& model, ArrayView<const
 
 	if (countResult.nodeCount == 0 || countResult.meshCount == 0)
 	{
+		KK_LOG_ERROR("ModelLoader: Failed to load model, glTF didn't contain any meshes");
 		cgltf_free(data);
 		return false;
 	}
