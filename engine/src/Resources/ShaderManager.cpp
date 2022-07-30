@@ -173,7 +173,7 @@ ShaderId ShaderManager::FindShaderByUid(const kokko::Uid& uid)
 		}
 	}
 	else
-		KK_LOG_ERROR("AssetLoader couldn't load material asset");
+		KK_LOG_ERROR("AssetLoader couldn't load shader asset");
 
 	return ShaderId::Null;
 }

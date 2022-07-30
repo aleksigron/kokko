@@ -231,7 +231,7 @@ TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid, bool preferLin
 		}
 	}
 	else
-		KK_LOG_ERROR("AssetLoader couldn't load material asset");
+		KK_LOG_ERROR("AssetLoader couldn't load texture asset");
 
 	return TextureId::Null;
 }
