@@ -22,7 +22,6 @@ layout(std140, binding = BLOCK_BINDING_OBJECT) uniform TerrainBlock
 uniforms;
 
 layout(location = VERTEX_ATTR_INDEX_POS) in vec2 position;
-layout(location = VERTEX_ATTR_INDEX_NOR) in vec3 normal;
 
 out VS_TO_FS {
 	vec3 normal;
@@ -31,40 +30,32 @@ out VS_TO_FS {
 
 uniform sampler2D height_map;
 
-float sample_height(vec2 offset)
+vec3 calc_position(vec2 offset)
 {
-	return texture(height_map, position + offset).r;
+	float height_sample = texture(height_map, position + offset).r;
+	vec2 xy_pos = (position + offset + uniforms.tile_offset) * uniforms.terrain_size * uniforms.tile_scale;
+	return vec3(xy_pos.x, uniforms.height_origin + height_sample * uniforms.height_range, xy_pos.y);
 }
 
 void main()
 {
 	float offset_amount = 1.0 / uniforms.terrain_resolution;
-	float y_extent = uniforms.height_range;
 	float w_offset = uniforms.terrain_size / uniforms.terrain_resolution * 2.0;
 
-	float h0 = sample_height(vec2(0.0, 0.0));
-	float h1 = sample_height(vec2(offset_amount, 0.0));
-	float h2 = sample_height(vec2(-offset_amount, 0.0));
-	float h3 = sample_height(vec2(0.0, offset_amount));
-	float h4 = sample_height(vec2(0.0, -offset_amount));
+	vec3 p_0 = calc_position(vec2(0.0, 0.0));
+	vec3 p_right = calc_position(vec2(offset_amount, 0.0));
+	vec3 p_left = calc_position(vec2(-offset_amount, 0.0));
+	vec3 p_top = calc_position(vec2(0.0, offset_amount));
+	vec3 p_bottom = calc_position(vec2(0.0, -offset_amount));
 
-	float x_diff = (h2 - h1) * y_extent;
-	float z_diff = (h4 - h3) * y_extent;
-	
-	float x_angle = atan(x_diff, w_offset);
-	float z_angle = atan(z_diff, w_offset);
+	vec3 x_tan = normalize(p_right - p_left);
+	vec3 z_tan = normalize(p_bottom - p_top);
+	vec3 w_normal = cross(x_tan, z_tan);
 
-	vec3 x_tan = vec3(cos(x_angle), -sin(x_angle), 0.0);
-	vec3 z_tan = vec3(0.0, -sin(z_angle), cos(z_angle));
-
-	vec3 w_normal = cross(normalize(z_tan), normalize(x_tan));
-
-	vec2 w_pos = (position + uniforms.tile_offset) * uniforms.terrain_size * uniforms.tile_scale;
-
-	gl_Position = uniforms.MVP * vec4(w_pos.x, uniforms.height_origin + h0 * y_extent, w_pos.y, 1.0);
+	gl_Position = uniforms.MVP * vec4(p_0, 1.0);
 
 	vs_out.normal = normalize(vec3(uniforms.MV * vec4(w_normal, 0.0)));
-	vs_out.tex_coord = w_pos * uniforms.texture_scale;
+	vs_out.tex_coord = p_0.xz * uniforms.texture_scale;
 }
 
 #stage fragment
