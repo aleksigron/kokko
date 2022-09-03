@@ -6,7 +6,6 @@
 #include "Core/String.hpp"
 
 #include "Debug/Debug.hpp"
-#include "Debug/DebugLog.hpp"
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 #include "Debug/Instrumentation.hpp"
@@ -103,10 +102,6 @@ bool Engine::Initialize(const kokko::WindowSettings& windowSettings)
 	KOKKO_PROFILE_FUNCTION();
 
 	if (mainWindow.instance->Initialize(windowSettings) == false)
-		return false;
-
-	DebugLog* debugLog = debug.instance->GetLog();
-	if (debugLog->OpenLogFile("log.txt", false) == false)
 		return false;
 
 	if (debug.instance->Initialize(mainWindow.instance, meshManager.instance,

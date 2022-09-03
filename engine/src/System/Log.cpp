@@ -1,10 +1,15 @@
-#include "Debug/Log.hpp"
+#include "System/Log.hpp"
+
+#include <cassert>
 
 #include "Core/Array.hpp"
 
-#include "Debug/DebugLog.hpp"
+#include "System/Logger.hpp"
 
-static DebugLog* DebugLogInstance = nullptr;
+namespace kokko
+{
+
+static Logger* LogInstance = nullptr;
 
 static const size_t FormatBufferSize = 4096;
 
@@ -17,14 +22,15 @@ static const char LevelStrings[][LevelStringLength] =
 	"[ERROR]"
 };
 
-void Log::SetLogInstance(DebugLog* instance)
+void Log::SetLogInstance(kokko::Logger* instance)
 {
-	DebugLogInstance = instance;
+	LogInstance = instance;
 }
 
 void Log::_DebugVarLog(const char* file, int line, fmt::string_view format, fmt::format_args args)
 {
-	Array<char>& formatBuffer = DebugLogInstance->GetFormatBuffer();
+    assert(LogInstance != nullptr);
+	Array<char>& formatBuffer = LogInstance->GetFormatBuffer();
 	formatBuffer.Resize(FormatBufferSize);
 	size_t n = formatBuffer.GetCount() - 1;
 	char* buffer = formatBuffer.GetData();
@@ -37,12 +43,13 @@ void Log::_DebugVarLog(const char* file, int line, fmt::string_view format, fmt:
 
 	size_t length = result.out - buffer;
 
-	DebugLogInstance->Log(buffer, length, LogLevel::Debug);
+    LogInstance->Log(buffer, length, LogLevel::Debug);
 }
 
 void Log::_VarLog(LogLevel level, fmt::string_view format, fmt::format_args args)
 {
-	Array<char>& formatBuffer = DebugLogInstance->GetFormatBuffer();
+    assert(LogInstance != nullptr);
+	Array<char>& formatBuffer = LogInstance->GetFormatBuffer();
 	formatBuffer.Resize(FormatBufferSize);
 	size_t n = formatBuffer.GetCount() - 1;
 	char* buffer = formatBuffer.GetData();
@@ -57,5 +64,7 @@ void Log::_VarLog(LogLevel level, fmt::string_view format, fmt::format_args args
 
 	size_t length = result.out - buffer;
 
-	DebugLogInstance->Log(buffer, length, level);
+    LogInstance->Log(buffer, length, level);
+}
+
 }

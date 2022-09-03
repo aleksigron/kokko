@@ -93,8 +93,6 @@ set (KOKKO_SOURCES
 	src/Debug/DebugCulling.hpp
 	src/Debug/DebugGraph.cpp
 	src/Debug/DebugGraph.hpp
-	src/Debug/DebugLog.cpp
-	src/Debug/DebugLog.hpp
 	src/Debug/DebugMemoryStats.cpp
 	src/Debug/DebugMemoryStats.hpp
 	src/Debug/DebugTextRenderer.cpp
@@ -106,9 +104,6 @@ set (KOKKO_SOURCES
 	src/Debug/Instrumentation.hpp
 	src/Debug/InstrumentationTimer.cpp
 	src/Debug/InstrumentationTimer.hpp
-	src/Debug/Log.cpp
-	src/Debug/Log.hpp
-	src/Debug/LogLevel.hpp
 	src/Debug/PerformanceTimer.hpp
 	src/Engine/ComponentSerializer.hpp
 	src/Engine/ComponentSystemDefaultImpl.hpp
@@ -300,6 +295,11 @@ set (KOKKO_SOURCES
 	src/System/InputView.cpp
 	src/System/InputView.hpp
 	src/System/KeyCode.hpp
+	src/System/Log.cpp
+	src/System/Log.hpp
+	src/System/Logger.cpp
+	src/System/Logger.hpp
+	src/System/LogLevel.hpp
 	src/System/Time.cpp
 	src/System/Time.hpp
 	src/System/Window.cpp

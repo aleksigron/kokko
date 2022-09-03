@@ -10,10 +10,8 @@
 #include "Debug/DebugGraph.hpp"
 #include "Debug/DebugCulling.hpp"
 #include "Debug/DebugConsole.hpp"
-#include "Debug/DebugLog.hpp"
 #include "Debug/DebugMemoryStats.hpp"
 #include "Debug/Instrumentation.hpp"
-#include "Debug/Log.hpp"
 
 #include "Engine/World.hpp"
 
@@ -30,6 +28,7 @@
 
 #include "System/InputManager.hpp"
 #include "System/InputView.hpp"
+#include "System/Log.hpp"
 #include "System/Time.hpp"
 #include "System/Window.hpp"
 
@@ -38,7 +37,7 @@ Debug* Debug::singletonInstance = nullptr;
 static void RenderDebugCallback(const RenderDevice::DebugMessage& message)
 {
 	if (message.severity != RenderDebugSeverity::Notification)
-		Log::Log(LogLevel::Warning, FMT_STRING("{}"), message.message.str);
+		kokko::Log::Log(LogLevel::Warning, FMT_STRING("{}"), message.message.str);
 }
 
 Debug::Debug(
@@ -62,10 +61,6 @@ Debug::Debug(
 	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
 	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
 	console = allocator->MakeNew<DebugConsole>(allocator, window, textRenderer, vectorRenderer);
-	log = allocator->MakeNew<DebugLog>(allocator, console);
-
-	// Set up log instance
-	Log::SetLogInstance(log);
 
 	memoryStats = allocator->MakeNew<DebugMemoryStats>(allocManager, textRenderer);
 
@@ -78,10 +73,6 @@ Debug::~Debug()
 
 	allocator->MakeDelete(memoryStats);
 
-	// Clear log instance in LogHelper
-	Log::SetLogInstance(nullptr);
-
-	allocator->MakeDelete(log);
 	allocator->MakeDelete(console);
 	allocator->MakeDelete(culling);
 	allocator->MakeDelete(graph);

@@ -11,6 +11,7 @@
 
 #include "System/Filesystem.hpp"
 #include "System/FilesystemResolverVirtual.hpp"
+#include "System/Logger.hpp"
 #include "System/Window.hpp"
 #include "System/WindowSettings.hpp"
 
@@ -70,6 +71,9 @@ int main(int argc, char** argv)
 
 	{
 		Allocator* defaultAlloc = Memory::GetDefaultAllocator();
+        kokko::Logger logger(defaultAlloc);
+        kokko::Log::SetLogInstance(&logger);
+
 		AllocatorManager* allocManager = defaultAlloc->MakeNew<AllocatorManager>(defaultAlloc);
 
 		// Virtual filesystem

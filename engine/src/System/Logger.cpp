@@ -1,4 +1,4 @@
-#include "Debug/DebugLog.hpp"
+#include "System/Logger.hpp"
 
 #include <cstdio>
 
@@ -7,15 +7,16 @@
 
 #include "Debug/DebugConsole.hpp"
 
-DebugLog::DebugLog(Allocator* allocator, DebugConsole* console) :
-	fileHandle(nullptr),
-	console(console),
-	formatBuffer(allocator)
+namespace kokko
 {
 
+Logger::Logger(Allocator* allocator) :
+	fileHandle(nullptr),
+	formatBuffer(allocator)
+{
 }
 
-DebugLog::~DebugLog()
+Logger::~Logger()
 {
 	if (fileHandle != nullptr)
 	{
@@ -24,7 +25,7 @@ DebugLog::~DebugLog()
 	}
 }
 
-bool DebugLog::OpenLogFile(const char* filePath, bool append)
+bool Logger::OpenLogFile(const char* filePath, bool append)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -44,9 +45,9 @@ bool DebugLog::OpenLogFile(const char* filePath, bool append)
 	return false;
 }
 
-void DebugLog::Log(const char* text, size_t length, LogLevel level)
+void Logger::Log(const char* text, size_t length, LogLevel level)
 {
-	console->AddLogEntry(kokko::ConstStringView(text, length), level);
+    // TODO: Reimplement debug console
 
 	if (fileHandle != nullptr)
 	{
@@ -60,4 +61,6 @@ void DebugLog::Log(const char* text, size_t length, LogLevel level)
 	// Write to standard output (console)
 	std::fwrite(text, 1, length, stdout);
 	std::fputc('\n', stdout);
+}
+
 }
