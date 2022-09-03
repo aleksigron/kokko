@@ -2,13 +2,15 @@
 
 #include <fmt/format.h>
 
-#include "Debug/LogLevel.hpp"
+#include "System/LogLevel.hpp"
 
-class DebugLog;
+namespace kokko
+{
+class Logger;
 
 namespace Log
 {
-	void SetLogInstance(DebugLog* instance);
+	void SetLogInstance(kokko::Logger* instance);
 
 	void _DebugVarLog(const char* file, int line, fmt::string_view format, fmt::format_args args);
 	void _VarLog(LogLevel level, fmt::string_view format, fmt::format_args args);
@@ -24,4 +26,6 @@ namespace Log
 	{
 		_VarLog(level, format, fmt::make_args_checked<Args...>(format, args...));
 	}
+}
+
 }

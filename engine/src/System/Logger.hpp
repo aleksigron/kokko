@@ -1,26 +1,24 @@
 #pragma once
 
 #include "Core/Array.hpp"
-#include "Core/StringView.hpp"
 
-#include "Debug/LogLevel.hpp"
+#include "System/LogLevel.hpp"
 
 class Allocator;
-class String;
-class DebugConsole;
 
-class DebugLog
+namespace kokko
+{
+
+class Logger
 {
 private:
 	void* fileHandle;
 
-	DebugConsole* console;
-
 	Array<char> formatBuffer;
 
 public:
-	DebugLog(Allocator* allocator, DebugConsole* console);
-	~DebugLog();
+    Logger(Allocator* allocator);
+	~Logger();
 
 	bool OpenLogFile(const char* filePath, bool append);
 
@@ -28,3 +26,5 @@ public:
 
 	Array<char>& GetFormatBuffer() { return formatBuffer; }
 };
+
+}

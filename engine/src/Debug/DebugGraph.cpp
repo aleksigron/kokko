@@ -5,7 +5,6 @@
 
 #include "Engine/Engine.hpp"
 #include "Debug/Debug.hpp"
-#include "Debug/DebugLog.hpp"
 
 #include "System/Time.hpp"
 #include "Debug/DebugVectorRenderer.hpp"

@@ -21,7 +21,6 @@ class DebugTextRenderer;
 class DebugGraph;
 class DebugCulling;
 class DebugConsole;
-class DebugLog;
 class DebugMemoryStats;
 
 struct ViewRectangle;
@@ -47,7 +46,6 @@ private:
 	DebugGraph* graph;
 	DebugCulling* culling;
 	DebugConsole* console;
-	DebugLog* log;
 	DebugMemoryStats* memoryStats;
 
 	Window* window;
@@ -82,7 +80,6 @@ public:
 
 	void Render(World* world, const Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera);
 
-	DebugLog* GetLog() { return log; }
 	DebugConsole* GetConsole() { return console; }
 	DebugTextRenderer* GetTextRenderer() { return textRenderer; }
 	DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer; }

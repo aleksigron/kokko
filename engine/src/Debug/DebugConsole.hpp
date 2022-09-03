@@ -4,9 +4,9 @@
 #include "Core/String.hpp"
 #include "Core/StringView.hpp"
 
-#include "Debug/LogLevel.hpp"
-
 #include "Math/Rectangle.hpp"
+
+#include "System/LogLevel.hpp"
 
 class Allocator;
 class Window;
