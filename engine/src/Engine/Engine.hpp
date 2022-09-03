@@ -9,7 +9,6 @@ class Debug;
 class Framebuffer;
 class RenderDevice;
 class Time;
-class Window;
 
 class World;
 class MeshManager;
@@ -24,6 +23,7 @@ namespace kokko
 class AssetLoader;
 class Filesystem;
 class ModelManager;
+class WindowManager;
 struct ResourceManagers;
 struct WindowSettings;
 }
@@ -39,7 +39,7 @@ private:
 	kokko::Filesystem* filesystem;
 	kokko::AssetLoader* assetLoader;
 
-	InstanceAllocatorPair<Window> mainWindow;
+	InstanceAllocatorPair<kokko::WindowManager> windowManager;
 	Time* time;
 	RenderDevice* renderDevice;
 	InstanceAllocatorPair<Debug> debug;
@@ -67,7 +67,7 @@ public:
 	void SetAppPointer(void* app);
 
 	kokko::EngineSettings* GetSettings() { return &settings; }
-	Window* GetMainWindow() { return mainWindow.instance; }
+	kokko::WindowManager* GetWindowManager() { return windowManager.instance; }
 	RenderDevice* GetRenderDevice() { return renderDevice; }
 	Debug* GetDebug() { return debug.instance; }
 	kokko::Filesystem* GetFilesystem() { return filesystem; }

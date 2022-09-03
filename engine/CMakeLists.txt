@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+set(PLATFORM_MACOS 1)
+endif()
+
 include_directories(
 	src
 	${PROJECT_ROOT}/deps/doctest
@@ -15,6 +19,23 @@ include_directories(
 	${PROJECT_ROOT}/deps/xxhash
 	${PROJECT_ROOT}/deps/yaml-cpp/include
 )
+
+set (PLATFORM_SOURCES
+    src/Platform/Window.hpp
+    src/Platform/Window.cpp
+)
+
+if (${PLATFORM_MACOS})
+list (APPEND PLATFORM_SOURCES
+    src/Platform/WindowMetal.hpp
+    src/Platform/WindowMetal.mm
+)
+else()
+list (APPEND PLATFORM_SOURCES
+    src/Platform/WindowOpenGL.hpp
+    src/Platform/WindowOpenGL.cpp
+)
+endif()
 
 set (CGLTF_SOURCES
 	${PROJECT_ROOT}/deps/cgltf/include/cgltf/cgltf.h
@@ -50,6 +71,7 @@ set (DEPS_SOURCES
 )
 
 set (KOKKO_SOURCES
+	${PLATFORM_SOURCES}
 	src/Core/Array.cpp
 	src/Core/Array.hpp
 	src/Core/ArrayView.hpp
@@ -302,8 +324,8 @@ set (KOKKO_SOURCES
 	src/System/LogLevel.hpp
 	src/System/Time.cpp
 	src/System/Time.hpp
-	src/System/Window.cpp
-	src/System/Window.hpp
+	src/System/WindowManager.cpp
+	src/System/WindowManager.hpp
 	src/System/WindowSettings.hpp
 )
 
@@ -327,8 +349,19 @@ set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(${PROJECT_ROOT}/deps/yaml-cpp yaml-cpp-build)
 
-find_package(OpenGL REQUIRED)
+target_link_libraries(${KOKKO_LIB}
+    PUBLIC glfw
+    PUBLIC yaml-cpp
+)
 
-target_link_libraries(${KOKKO_LIB} glfw)
-target_link_libraries(${KOKKO_LIB} yaml-cpp)
+
+if(${PLATFORM_MACOS})
+target_link_libraries(${KOKKO_LIB}
+    INTERFACE "-framework QuartzCore"
+    INTERFACE "-framework MetalKit"
+    INTERFACE "-framework Metal"
+)
+else()
+find_package(OpenGL REQUIRED)
 target_link_libraries(${KOKKO_LIB} OpenGL::GL)
+endif()

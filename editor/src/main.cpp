@@ -7,12 +7,14 @@
 #include "Memory/Memory.hpp"
 #include "Memory/AllocatorManager.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "Rendering/CameraParameters.hpp"
 
 #include "System/Filesystem.hpp"
 #include "System/FilesystemResolverVirtual.hpp"
 #include "System/Logger.hpp"
-#include "System/Window.hpp"
+#include "System/WindowManager.hpp"
 #include "System/WindowSettings.hpp"
 
 #include "AssetLibrary.hpp"
@@ -121,7 +123,7 @@ int main(int argc, char** argv)
 
 			instr.EndSession();
 
-			while (engine.GetMainWindow()->GetShouldClose() == false)
+			while (engine.GetWindowManager()->GetWindow()->GetShouldClose() == false)
 			{
 				engine.StartFrame();
 				editor.StartFrame();
@@ -133,7 +135,7 @@ int main(int argc, char** argv)
 				bool editorWantsToExit = false;
 				editor.Update(engine.GetSettings(), editorWantsToExit);
 				if (editorWantsToExit)
-					engine.GetMainWindow()->SetShouldClose(true);
+                    engine.GetWindowManager()->GetWindow()->SetShouldClose(true);
 
 				engine.Render(editor.GetEditorCameraParameters(), editor.GetSceneViewFramebuffer());
 

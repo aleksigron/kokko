@@ -26,14 +26,13 @@
 
 #include "Scripting/ScriptSystem.hpp"
 
-#include "System/Window.hpp"
+#include "Platform/Window.hpp"
 
 World::World(AllocatorManager* allocManager,
 	Allocator* allocator,
 	Allocator* debugNameAllocator,
 	RenderDevice* renderDevice,
 	kokko::AssetLoader* assetLoader,
-	InputManager* inputManager,
 	const kokko::ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	levelSerializer(allocator),
@@ -65,7 +64,7 @@ World::World(AllocatorManager* allocManager,
 		cameraSystem.instance, lightManager.instance, environmentSystem.instance, resourceManagers);
 
 	scriptSystem.CreateScope(allocManager, "ScriptSystem", alloc);
-	scriptSystem.New(scriptSystem.allocator, inputManager);
+	scriptSystem.New(scriptSystem.allocator);
 
 	terrainSystem.CreateScope(allocManager, "TerrainSystem", alloc);
 	terrainSystem.New(terrainSystem.allocator, renderDevice,
@@ -122,9 +121,9 @@ void World::ClearAllEntities()
 	entityManager.instance->ClearAll();
 }
 
-void World::Update()
+void World::Update(InputManager* inputManager)
 {
-	scriptSystem.instance->UpdateScripts(this);
+	scriptSystem.instance->UpdateScripts(this, inputManager);
 }
 
 void World::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer)

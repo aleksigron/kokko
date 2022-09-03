@@ -11,7 +11,6 @@ class RenderDevice;
 class MeshManager;
 class ShaderManager;
 class TextureManager;
-class Window;
 class Renderer;
 class World;
 class Framebuffer;
@@ -28,9 +27,8 @@ struct CameraParameters;
 
 namespace kokko
 {
-
 class Filesystem;
-
+class Window;
 }
 
 class Debug
@@ -48,7 +46,7 @@ private:
 	DebugConsole* console;
 	DebugMemoryStats* memoryStats;
 
-	Window* window;
+	kokko::Window* window;
 
 	bool profileInProgress;
 	bool profileStarted;
@@ -68,13 +66,13 @@ private:
 	mode;
 
 public:
-	Debug(Allocator* allocator, AllocatorManager* allocManager,
-		Window* window, RenderDevice* renderDevice, kokko::Filesystem* filesystem);
+	Debug(Allocator* allocator, AllocatorManager* allocManager, RenderDevice* renderDevice,
+        kokko::Filesystem* filesystem);
 	~Debug();
 
 	static Debug* Get() { return singletonInstance; }
 
-	bool Initialize(Window* window, MeshManager* meshManager,
+	bool Initialize(kokko::Window* window, MeshManager* meshManager,
 		ShaderManager* shaderManager, TextureManager* textureManager);
 	void Deinitialize();
 

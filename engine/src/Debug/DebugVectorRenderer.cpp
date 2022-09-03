@@ -12,6 +12,8 @@
 #include "Math/Math.hpp"
 #include "Math/Frustum.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/RenderDevice.hpp"
@@ -19,8 +21,6 @@
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
-
-#include "System/Window.hpp"
 
 struct MaterialBlock
 {

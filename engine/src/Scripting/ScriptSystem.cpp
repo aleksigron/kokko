@@ -6,10 +6,7 @@
 
 #include "Scripting/NativeScriptComponent.hpp"
 
-#include "System/Window.hpp"
-
-ScriptSystem::ScriptSystem(Allocator* allocator, InputManager* inputManager) :
-	inputManager(inputManager),
+ScriptSystem::ScriptSystem(Allocator* allocator) :
 	app(nullptr),
 	allocator(allocator),
 	scripts(allocator),
@@ -35,7 +32,7 @@ void ScriptSystem::AddScriptInternal(Entity entity, NativeScriptComponent* scrip
 	mapPair->second = static_cast<unsigned int>(scriptIndex);
 }
 
-void ScriptSystem::UpdateScripts(World* world)
+void ScriptSystem::UpdateScripts(World* world, InputManager* inputManager)
 {
 	KOKKO_PROFILE_FUNCTION();
 

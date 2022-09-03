@@ -88,7 +88,7 @@ TEST_CASE("StringCopyN")
 
 	memset(dest, 0, sizeof(dest));
 
-	char utf8buf[] = u8"Tëstiä";
+	char utf8buf[] = u8"T\xC3\xABsti\xC3\xA4";
 
 	CHECK(StringCopyN(dest, utf8buf, sizeof(dest)) == 7);
 	CHECK(dest[5] == utf8buf[5]);
@@ -113,7 +113,7 @@ TEST_CASE("StringCopySafe")
 
 	memset(dest, 0, sizeof(dest));
 
-	char utf8buf[] = u8"Tëstiä";
+	char utf8buf[] = u8"T\xC3\xABsti\xC3\xA4";
 
 	CHECK(StringCopySafe(dest, utf8buf) == 7);
 	CHECK(dest[5] == utf8buf[5]);

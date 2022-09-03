@@ -15,7 +15,6 @@ class NativeScriptComponent;
 class ScriptSystem
 {
 private:
-	InputManager* inputManager;
 	void* app;
 	Allocator* allocator;
 
@@ -28,7 +27,7 @@ private:
 	void AddScriptInternal(Entity entity, NativeScriptComponent* script);
 
 public:
-	ScriptSystem(Allocator* allocator, InputManager* inputManager);
+	explicit ScriptSystem(Allocator* allocator);
 	ScriptSystem(const ScriptSystem&) = delete;
 	ScriptSystem(ScriptSystem&&) = delete;
 	~ScriptSystem();
@@ -61,5 +60,5 @@ public:
 			return nullptr;
 	}
 
-	void UpdateScripts(World* world);
+	void UpdateScripts(World* world, InputManager* inputManager);
 };

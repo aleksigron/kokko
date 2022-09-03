@@ -236,8 +236,10 @@ void SerializeUniformToJson(
 	case UniformDataType::IntArray:
 		CreateArray<int>(uniformData, uniform, jsonValueOut, jsonAllocator);
 		break;
-	}
 
+    default:
+        break;
+	}
 }
 
 void DeserializeUniformFromJson(

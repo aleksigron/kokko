@@ -1,8 +1,9 @@
 #include "System/InputSource.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "System/IncludeGLFW.hpp"
 #include "System/InputManager.hpp"
-#include "System/Window.hpp"
 
 InputSource::InputSource() :
 	InputView("InputSource"),
@@ -209,7 +210,7 @@ bool InputSource::FindKeyState(KeyCode key, ButtonState& stateOut)
 
 void InputSource::_KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	InputSource* self = Window::GetWindowObject(window)->GetInputManager()->GetInputSource();
+	InputSource* self = kokko::Window::GetWindowObject(window)->GetInputManager()->GetInputSource();
 	self->KeyCallback(key, scancode, action, mods);
 }
 
@@ -252,7 +253,7 @@ void InputSource::KeyCallback(int key, int scancode, int action, int mods)
 
 void InputSource::_ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 {
-	InputSource* self = Window::GetWindowObject(window)->GetInputManager()->GetInputSource();
+	InputSource* self = kokko::Window::GetWindowObject(window)->GetInputManager()->GetInputSource();
 	self->ScrollCallback(xOffset, yOffset);
 }
 
@@ -263,7 +264,7 @@ void InputSource::ScrollCallback(double xOffset, double yOffset)
 
 void InputSource::_CharCallback(GLFWwindow* window, unsigned int codepoint)
 {
-	InputSource* self = Window::GetWindowObject(window)->GetInputManager()->GetInputSource();
+	InputSource* self = kokko::Window::GetWindowObject(window)->GetInputManager()->GetInputSource();
 	self->CharCallback(codepoint);
 }
 

@@ -45,8 +45,11 @@ namespace Math
 
 	float DampenMultiplier(float dampenPerSecond, float deltaTime);
 
-	uint32_t RoundUpToMultiple(uint32_t value, uint32_t multiple);
-	uint64_t RoundUpToMultiple(uint64_t value, uint64_t multiple);
+	template <typename T>
+	T RoundUpToMultiple(T value, T multiple)
+    {
+        return (value + multiple - 1) / multiple * multiple;
+    }
 
 	bool IsPowerOfTwo(uint64_t v);
 

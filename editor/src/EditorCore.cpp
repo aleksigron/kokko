@@ -7,12 +7,14 @@
 #include "Engine/Engine.hpp"
 #include "Engine/World.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "Rendering/CameraParameters.hpp"
 
 #include "Resources/LevelSerializer.hpp"
 
 #include "System/Filesystem.hpp"
-#include "System/Window.hpp"
+#include "System/WindowManager.hpp"
 
 #include "AssetBrowserView.hpp"
 #include "AssetView.hpp"
@@ -60,7 +62,7 @@ void EditorCore::Initialize(Engine* engine)
 	editorWindows.PushBack(entityView);
 
 	sceneView = allocator->MakeNew<SceneView>();
-	sceneView->Initialize(engine->GetRenderDevice(), engine->GetMainWindow());
+	sceneView->Initialize(engine->GetRenderDevice(), engine->GetWindowManager()->GetWindow());
 	editorWindows.PushBack(sceneView);
 
 	AssetBrowserView* assetBrowserView = allocator->MakeNew<AssetBrowserView>(allocator);
