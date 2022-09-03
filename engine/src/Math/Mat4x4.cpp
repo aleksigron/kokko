@@ -1,13 +1,13 @@
 #include "Math/Mat4x4.hpp"
 
+#ifdef KOKKO_USE_SSE
 #include <immintrin.h>
+#endif
 
 #include "Core/Optional.hpp"
 
 #include "Math/Mat3x3.hpp"
 #include "Math/Vec2.hpp"
-
-#define KOKKO_USE_SSE
 
 Mat4x4f::Mat4x4f() :
 	m{ 1, 0, 0, 0,

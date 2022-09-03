@@ -30,6 +30,8 @@
 
 #include "Memory/Allocator.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/CascadedShadowMap.hpp"
@@ -54,8 +56,6 @@
 #include "Resources/ResourceManagers.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
-
-#include "System/Window.hpp"
 
 struct DebugNormalUniformBlock
 {

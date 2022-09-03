@@ -21,6 +21,8 @@
 
 #include "Memory/Allocator.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
@@ -32,7 +34,7 @@
 #include "System/Filesystem.hpp"
 #include "System/FilesystemResolverVirtual.hpp"
 #include "System/InputManager.hpp"
-#include "System/Window.hpp"
+#include "System/WindowManager.hpp"
 
 #include "EditorConstants.hpp"
 #include "EditorCore.hpp"
@@ -91,7 +93,7 @@ void EditorApp::Initialize(Engine* engine)
 	this->renderDevice = engine->GetRenderDevice();
 	this->world = engine->GetWorld();
 
-	Window* window = engine->GetMainWindow();
+	Window* window = engine->GetWindowManager()->GetWindow();
 	window->RegisterWindowResizeCallback(OnWindowResize, this);
 	window->RegisterMaximizeCallback(OnWindowMaximize, this);
 
@@ -129,7 +131,7 @@ void EditorApp::Initialize(Engine* engine)
 		imguiColors[i] = color;
 	}
 
-	GLFWwindow* glfwWindow = engine->GetMainWindow()->GetGlfwWindow();
+	GLFWwindow* glfwWindow = engine->GetWindowManager()->GetWindow()->GetGlfwWindow();
 
 	{
 		KOKKO_PROFILE_SCOPE("ImGui_ImplGlfw_InitForOpenGL()");
@@ -493,7 +495,7 @@ void EditorApp::OnProjectChanged()
 
 	KK_LOG_INFO("Editor project changed to {}", name.GetCStr());
 
-	engine->GetMainWindow()->SetWindowTitle(name.GetCStr());
+	engine->GetWindowManager()->GetWindow()->SetWindowTitle(name.GetCStr());
 
 	core->NotifyProjectChanged(&project);
 }

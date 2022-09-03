@@ -14,15 +14,13 @@
 #include "System/InputManager.hpp"
 #include "System/InputView.hpp"
 #include "System/Time.hpp"
-#include "System/Window.hpp"
+#include "Platform/Window.hpp"
 
 DebugConsole::DebugConsole(
 	Allocator* allocator,
-	Window* window,
 	DebugTextRenderer* textRenderer,
 	DebugVectorRenderer* vectorRenderer) :
 	allocator(allocator),
-	window(window),
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
 	entries(allocator),
@@ -151,7 +149,10 @@ void DebugConsole::UpdateAndDraw()
 {
 	/* *** Update *** */
 
-	InputView* input = window->GetInputManager()->GetGameInputView();
+	//InputView* input = window->GetInputManager()->GetGameInputView();
+    InputView* input = nullptr;
+    if (input == nullptr)
+        return;
 
 	if (input->GetKeyDown(KeyCode::Enter))
 	{

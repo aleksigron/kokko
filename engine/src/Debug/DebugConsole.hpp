@@ -9,9 +9,13 @@
 #include "System/LogLevel.hpp"
 
 class Allocator;
-class Window;
 class DebugTextRenderer;
 class DebugVectorRenderer;
+
+namespace kokko
+{
+class Window;
+}
 
 class DebugConsole
 {
@@ -25,7 +29,6 @@ private:
 	};
 
 	Allocator* allocator;
-	Window* window;
 	DebugTextRenderer* textRenderer;
 	DebugVectorRenderer* vectorRenderer;
 
@@ -47,10 +50,9 @@ private:
 public:
 	DebugConsole(
 		Allocator* allocator,
-		Window* window,
 		DebugTextRenderer* textRenderer,
 		DebugVectorRenderer* vectorRenderer);
-	virtual ~DebugConsole();
+	~DebugConsole();
 
 	void RequestFocus();
 	void ReleaseFocus();

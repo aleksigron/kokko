@@ -19,6 +19,8 @@
 
 #include "Math/Rectangle.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "Rendering/Framebuffer.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Rendering/RenderDevice.hpp"
@@ -30,7 +32,6 @@
 #include "System/InputView.hpp"
 #include "System/Log.hpp"
 #include "System/Time.hpp"
-#include "System/Window.hpp"
 
 Debug* Debug::singletonInstance = nullptr;
 
@@ -43,7 +44,6 @@ static void RenderDebugCallback(const RenderDevice::DebugMessage& message)
 Debug::Debug(
 	Allocator* allocator,
 	AllocatorManager* allocManager,
-	Window* window,
 	RenderDevice* renderDevice,
 	kokko::Filesystem* filesystem) :
 	allocator(allocator),
@@ -60,7 +60,7 @@ Debug::Debug(
 	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator, renderDevice, filesystem);
 	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
 	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
-	console = allocator->MakeNew<DebugConsole>(allocator, window, textRenderer, vectorRenderer);
+	console = allocator->MakeNew<DebugConsole>(allocator, textRenderer, vectorRenderer);
 
 	memoryStats = allocator->MakeNew<DebugMemoryStats>(allocManager, textRenderer);
 
@@ -80,7 +80,7 @@ Debug::~Debug()
 	allocator->MakeDelete(vectorRenderer);
 }
 
-bool Debug::Initialize(Window* window, MeshManager* meshManager,
+bool Debug::Initialize(kokko::Window* window, MeshManager* meshManager,
 	ShaderManager* shaderManager, TextureManager* textureManager)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -182,11 +182,12 @@ void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<
 
 		// Check vsync switching
 
-		vsync = window->GetSwapInterval() != 0;
+        // TODO: Fix debug key shortcuts
+		//vsync = window->GetSwapInterval() != 0;
 		if (input->GetKeyDown(KeyCode::F8))
 		{
 			vsync = !vsync;
-			window->SetSwapInterval(vsync ? 1 : 0);
+			//window->SetSwapInterval(vsync ? 1 : 0);
 		}
 
 		// Check console switching

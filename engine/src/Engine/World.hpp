@@ -46,7 +46,6 @@ public:
 		Allocator* debugNameAllocator,
 		RenderDevice* renderDevice,
 		kokko::AssetLoader* assetLoader,
-		InputManager* inputManager,
 		const kokko::ResourceManagers& resourceManagers);
 	~World();
 
@@ -55,7 +54,7 @@ public:
 
 	void ClearAllEntities();
 
-	void Update();
+	void Update(InputManager* inputManager);
 	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
 	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& renderDebug);
 

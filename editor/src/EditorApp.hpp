@@ -13,7 +13,6 @@ class Engine;
 class Framebuffer;
 class RenderDevice;
 class World;
-class Window;
 
 struct CameraParameters;
 
@@ -22,6 +21,7 @@ namespace kokko
 
 class Filesystem;
 class FilesystemResolverVirtual;
+class Window;
 
 struct Uid;
 struct EngineSettings;

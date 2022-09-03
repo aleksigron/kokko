@@ -47,16 +47,6 @@ float Math::DampenMultiplier(float dampenPerSecond, float deltaTime)
 	return std::pow(dampenPerSecond, deltaTime);
 }
 
-uint32_t Math::RoundUpToMultiple(uint32_t value, uint32_t multiple)
-{
-	return (value + multiple - 1) / multiple * multiple;
-}
-
-uint64_t Math::RoundUpToMultiple(uint64_t value, uint64_t multiple)
-{
-	return (value + multiple - 1) / multiple * multiple;
-}
-
 TEST_CASE("Math::DampenMultiplier")
 {
 	const float dampenPerSecond = 0.5f;

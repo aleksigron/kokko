@@ -7,10 +7,12 @@ struct Mat3x3f;
 struct Mat4x4fBijection;
 struct CameraParameters;
 
-class Window;
 
 namespace kokko
 {
+
+class Window;
+
 namespace editor
 {
 
@@ -51,5 +53,5 @@ public:
 	CameraParameters GetCameraParameters() const;
 };
 
-}
-}
+} // namespace editor
+} // namespace kokko

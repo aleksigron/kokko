@@ -6,9 +6,10 @@
 #include "Math/Mat3x3.hpp"
 #include "Math/Mat4x4.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "Rendering/CameraParameters.hpp"
 
-#include "System/Window.hpp"
 #include "System/KeyCode.hpp"
 
 namespace kokko

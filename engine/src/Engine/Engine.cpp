@@ -17,6 +17,8 @@
 
 #include "Memory/Memory.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/LightManager.hpp"
@@ -33,7 +35,7 @@
 
 #include "System/InputManager.hpp"
 #include "System/Time.hpp"
-#include "System/Window.hpp"
+#include "System/WindowManager.hpp"
 
 Engine::Engine(
 	AllocatorManager* allocatorManager,
@@ -46,15 +48,17 @@ Engine::Engine(
 
 	Allocator* alloc = Memory::GetDefaultAllocator();
 
-	mainWindow.CreateScope(allocatorManager, "Window", alloc);
-	mainWindow.New(mainWindow.allocator);
+    windowManager.CreateScope(allocatorManager, "Window", alloc);
+    windowManager.New(windowManager.allocator);
+
+    kokko::Window* mainWindow = windowManager.instance->GetWindow();
 
 	systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 	time = systemAllocator->MakeNew<Time>();
 	renderDevice = systemAllocator->MakeNew<RenderDeviceOpenGL>();
 
 	debug.CreateScope(allocatorManager, "Debug", alloc);
-	debug.New(debug.allocator, allocatorManager, mainWindow.instance, renderDevice, filesystem);
+	debug.New(debug.allocator, allocatorManager, renderDevice, filesystem);
 
 	debugNameAllocator = allocatorManager->CreateAllocatorScope("EntityDebugNames", alloc);
 
@@ -78,7 +82,7 @@ Engine::Engine(
 
 	world.CreateScope(allocatorManager, "World", alloc);
 	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice,
-		assetLoader, mainWindow.instance->GetInputManager(), resManagers);
+		assetLoader, resManagers);
 }
 
 Engine::~Engine()
@@ -94,17 +98,17 @@ Engine::~Engine()
 	debug.Delete();
 	systemAllocator->MakeDelete(renderDevice);
 	systemAllocator->MakeDelete(time);
-	mainWindow.Delete();
+	windowManager.Delete();
 }
 
 bool Engine::Initialize(const kokko::WindowSettings& windowSettings)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	if (mainWindow.instance->Initialize(windowSettings) == false)
+	if (windowManager.instance->Initialize(windowSettings) == false)
 		return false;
 
-	if (debug.instance->Initialize(mainWindow.instance, meshManager.instance,
+	if (debug.instance->Initialize(windowManager.instance->GetWindow(), meshManager.instance,
 		shaderManager.instance, textureManager.instance) == false)
 		return false;
 
@@ -129,7 +133,7 @@ void Engine::UpdateWorld()
 	KOKKO_PROFILE_FUNCTION();
 
 	time->Update();
-	world.instance->Update();
+	world.instance->Update(windowManager.instance->GetWindow()->GetInputManager());
 }
 
 void Engine::Render(const CameraParameters& editorCamera, const Framebuffer& framebuffer)
@@ -144,11 +148,12 @@ void Engine::Render(const CameraParameters& editorCamera, const Framebuffer& fra
 
 void Engine::EndFrame()
 {
-	mainWindow.instance->Swap();
-	mainWindow.instance->ProcessEvents();
-	mainWindow.instance->UpdateInput();
+    kokko::Window* window = windowManager.instance->GetWindow();
+    window->Swap();
+    windowManager.instance->ProcessEvents();
+    window->UpdateInput();
 
-	mainWindow.instance->SetSwapInterval(settings.verticalSync ? 1 : 0);
+    windowManager.instance->SetSwapInterval(settings.verticalSync ? 1 : 0);
 }
 
 void Engine::SetAppPointer(void* app)
