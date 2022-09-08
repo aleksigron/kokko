@@ -14,28 +14,12 @@ include_directories(
 	${PROJECT_ROOT}/deps/fmt/include
 	${PROJECT_ROOT}/deps/glad/include
 	${PROJECT_ROOT}/deps/glfw/include
+    ${PROJECT_ROOT}/deps/metal-cpp
 	${PROJECT_ROOT}/deps/rapidjson/include
 	${PROJECT_ROOT}/deps/stb_image/include
 	${PROJECT_ROOT}/deps/xxhash
 	${PROJECT_ROOT}/deps/yaml-cpp/include
 )
-
-set (PLATFORM_SOURCES
-    src/Platform/Window.hpp
-    src/Platform/Window.cpp
-)
-
-if (${PLATFORM_MACOS})
-list (APPEND PLATFORM_SOURCES
-    src/Platform/WindowMetal.hpp
-    src/Platform/WindowMetal.mm
-)
-else()
-list (APPEND PLATFORM_SOURCES
-    src/Platform/WindowOpenGL.hpp
-    src/Platform/WindowOpenGL.cpp
-)
-endif()
 
 set (CGLTF_SOURCES
 	${PROJECT_ROOT}/deps/cgltf/include/cgltf/cgltf.h
@@ -52,6 +36,12 @@ set (GLAD_SOURCES
 	${PROJECT_ROOT}/deps/glad/src/glad.c
 )
 
+if(${PLATFORM_MACOS})
+set (METAL_CPP_SOURCES
+    ${PROJECT_ROOT}/deps/metal-cpp/MetalCpp.cpp
+)
+endif()
+
 set (STB_IMAGE_SOURCES
 	${PROJECT_ROOT}/deps/stb_image/include/stb_image/stb_image.h
 	${PROJECT_ROOT}/deps/stb_image/src/stb_image.cpp
@@ -66,12 +56,12 @@ set (DEPS_SOURCES
 	${CGLTF_SOURCES}
 	${FMT_SOURCES}
 	${GLAD_SOURCES}
+    ${METAL_CPP_SOURCES}
 	${STB_IMAGE_SOURCES}
 	${XXHASH_SOURCES}
 )
 
 set (KOKKO_SOURCES
-	${PLATFORM_SOURCES}
 	src/Core/Array.cpp
 	src/Core/Array.hpp
 	src/Core/ArrayView.hpp
@@ -212,6 +202,8 @@ set (KOKKO_SOURCES
 	src/Memory/MetricAllocator.hpp
 	src/Memory/TraceAllocator.cpp
 	src/Memory/TraceAllocator.hpp
+    src/Platform/Window.hpp
+    src/Platform/Window.cpp
 	src/Rendering/CameraParameters.hpp
 	src/Rendering/CameraSerializer.hpp
 	src/Rendering/CameraSystem.cpp
@@ -236,8 +228,6 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDebugSettings.hpp
 	src/Rendering/RenderDevice.hpp
 	src/Rendering/RenderDeviceEnums.hpp
-	src/Rendering/RenderDeviceOpenGL.cpp
-	src/Rendering/RenderDeviceOpenGL.hpp
 	src/Rendering/Renderer.cpp
 	src/Rendering/Renderer.hpp
 	src/Rendering/RendererCommandList.cpp
@@ -329,6 +319,24 @@ set (KOKKO_SOURCES
 	src/System/WindowSettings.hpp
 )
 
+if (${PLATFORM_MACOS})
+# Metal
+list (APPEND KOKKO_SOURCES
+    src/Platform/WindowMetal.hpp
+    src/Platform/WindowMetal.mm
+    src/Rendering/Metal/RenderDeviceMetal.hpp
+    src/Rendering/Metal/RenderDeviceMetal.cpp
+)
+else()
+# OpenGL
+list (APPEND KOKKO_SOURCES
+    src/Platform/WindowOpenGL.hpp
+    src/Platform/WindowOpenGL.cpp
+    src/Rendering/RenderDeviceOpenGL.cpp
+    src/Rendering/RenderDeviceOpenGL.hpp
+)
+endif()
+
 source_group(Dependencies\\cgltf FILES ${CGLTF_SOURCES})
 source_group(Dependencies\\fmt FILES ${FMT_SOURCES})
 source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
@@ -354,11 +362,10 @@ target_link_libraries(${KOKKO_LIB}
     PUBLIC yaml-cpp
 )
 
-
 if(${PLATFORM_MACOS})
 target_link_libraries(${KOKKO_LIB}
+    INTERFACE "-framework Foundation"
     INTERFACE "-framework QuartzCore"
-    INTERFACE "-framework MetalKit"
     INTERFACE "-framework Metal"
 )
 else()

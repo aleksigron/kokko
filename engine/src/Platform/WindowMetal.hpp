@@ -14,7 +14,7 @@ public:
     explicit WindowMetal(Allocator* allocator);
     ~WindowMetal();
 
-    virtual bool CreateWindow(const kokko::WindowSettings& settings) override;
+    virtual GLFWwindow* CreateWindow(const kokko::WindowSettings& settings) override;
 
 private:
     Allocator* allocator;
