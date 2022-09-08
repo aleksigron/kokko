@@ -2,8 +2,8 @@
 
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
+#include "GLFW/glfw3.h"
+#include "GLFW/glfw3native.h"
 
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
@@ -21,7 +21,7 @@ WindowMetal::~WindowMetal()
 {
 }
 
-bool WindowMetal::CreateWindow(const kokko::WindowSettings& settings)
+GLFWwindow* WindowMetal::CreateWindow(const kokko::WindowSettings& settings)
 {
     KOKKO_PROFILE_FUNCTION();
 
@@ -44,17 +44,14 @@ bool WindowMetal::CreateWindow(const kokko::WindowSettings& settings)
     if (window == nullptr)
     {
         KK_LOG_ERROR("GLFW window couldn't be initialized");
-
-        return false;
+        return nullptr;
     }
 
     NSWindow *nswindow = glfwGetCocoaWindow(window);
     nswindow.contentView.layer = caLayer;
     nswindow.contentView.wantsLayer = YES;
 
-    SetGlfwWindow(window);
-
-    return true;
+    return window;
 }
 
 } // namespace kokko

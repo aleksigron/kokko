@@ -87,7 +87,8 @@ bool Debug::Initialize(kokko::Window* window, MeshManager* meshManager,
 
 	{
 		KOKKO_PROFILE_SCOPE("void RenderDevice::SetDebugMessageCallback()");
-		renderDevice->SetDebugMessageCallback(RenderDebugCallback);
+        // TODO: refactor
+		//renderDevice->SetDebugMessageCallback(RenderDebugCallback);
 	}
 
 	this->window = window;

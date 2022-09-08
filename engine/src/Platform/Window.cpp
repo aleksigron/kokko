@@ -35,7 +35,7 @@ Window::~Window()
 
 bool Window::Initialize(const WindowSettings& settings)
 {
-    CreateWindow(settings);
+    windowHandle = CreateWindow(settings);
 
     if (windowHandle != nullptr)
     {
