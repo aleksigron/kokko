@@ -9,7 +9,7 @@
 
 #include "Math/Vec2.hpp"
 
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 #include "Resources/TextureId.hpp"
 

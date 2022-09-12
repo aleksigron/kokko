@@ -9,7 +9,7 @@
 #include "Core/String.hpp"
 #include "Core/StringView.hpp"
 
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 class Allocator;
 class RenderDevice;

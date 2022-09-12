@@ -2,7 +2,7 @@
 
 #include "Resources/MeshManager.hpp"
 
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)

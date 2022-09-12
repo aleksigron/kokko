@@ -4,7 +4,7 @@
 
 #include "Core/FixedArray.hpp"
 
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 namespace kokko
 {

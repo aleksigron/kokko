@@ -6,7 +6,7 @@
 #include "Math/Vec3.hpp"
 #include "Math/Vec4.hpp"
 
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 struct VertexAttribute
 {

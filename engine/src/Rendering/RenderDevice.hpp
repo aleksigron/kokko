@@ -5,7 +5,7 @@
 #include "Core/StringView.hpp"
 
 #include "Rendering/RenderCommandData.hpp"
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 class Allocator;
 

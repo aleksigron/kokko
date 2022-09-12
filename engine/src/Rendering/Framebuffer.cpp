@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "Rendering/RenderDevice.hpp"
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 Framebuffer::Framebuffer() :
 	renderDevice(nullptr),

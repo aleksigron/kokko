@@ -230,7 +230,6 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDebugSettings.hpp
     src/Rendering/RenderDevice.cpp
 	src/Rendering/RenderDevice.hpp
-	src/Rendering/RenderDeviceEnums.hpp
 	src/Rendering/Renderer.cpp
 	src/Rendering/Renderer.hpp
 	src/Rendering/RendererCommandList.cpp
@@ -244,6 +243,7 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderPassType.hpp
 	src/Rendering/RenderTargetContainer.cpp
 	src/Rendering/RenderTargetContainer.hpp
+    src/Rendering/RenderTypes.hpp
 	src/Rendering/RenderViewport.hpp
 	src/Rendering/StaticUniformBuffer.hpp
 	src/Rendering/TransparencyType.hpp
