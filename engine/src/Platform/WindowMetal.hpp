@@ -2,7 +2,6 @@
 
 #include "Platform/Window.hpp"
 
-class Allocator;
 struct GLFWwindow;
 
 namespace kokko
@@ -14,10 +13,10 @@ public:
     explicit WindowMetal(Allocator* allocator);
     ~WindowMetal();
 
-    virtual GLFWwindow* CreateWindow(const kokko::WindowSettings& settings) override;
+    virtual GLFWwindow* CreateWindow(const kokko::WindowSettings& settings, NativeRenderDevice* device) override;
 
 private:
-    Allocator* allocator;
+    void* metalLayer;
 };
 
 }

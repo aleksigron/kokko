@@ -33,9 +33,9 @@ Window::~Window()
     }
 }
 
-bool Window::Initialize(const WindowSettings& settings)
+bool Window::Initialize(const WindowSettings& settings, NativeRenderDevice* device)
 {
-    windowHandle = CreateWindow(settings);
+    windowHandle = CreateWindow(settings, device);
 
     if (windowHandle != nullptr)
     {

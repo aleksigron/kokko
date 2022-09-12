@@ -13,6 +13,8 @@ struct GLFWwindow;
 
 namespace kokko
 {
+class NativeRenderDevice;
+
 struct WindowSettings;
 
 class Window
@@ -32,9 +34,9 @@ public:
     virtual ~Window();
 
     // Implemented by the specific render backend window type
-    virtual GLFWwindow* CreateWindow(const kokko::WindowSettings& settings) = 0;
+    virtual GLFWwindow* CreateWindow(const kokko::WindowSettings& settings, NativeRenderDevice* device) = 0;
 
-    bool Initialize(const kokko::WindowSettings& settings);
+    bool Initialize(const kokko::WindowSettings& settings, NativeRenderDevice* device);
 
     void UpdateInput();
     void ProcessEvents();

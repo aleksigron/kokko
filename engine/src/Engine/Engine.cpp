@@ -22,7 +22,7 @@
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/LightManager.hpp"
-#include "Rendering/RenderDeviceOpenGL.hpp"
+#include "Rendering/RenderDevice.hpp"
 #include "Rendering/Renderer.hpp"
 
 #include "Resources/MaterialManager.hpp"
@@ -48,6 +48,8 @@ Engine::Engine(
 
 	Allocator* alloc = Memory::GetDefaultAllocator();
 
+    renderDevice = RenderDevice::Create(systemAllocator);
+    
     windowManager.CreateScope(allocatorManager, "Window", alloc);
     windowManager.New(windowManager.allocator);
 
@@ -55,7 +57,6 @@ Engine::Engine(
 
 	systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 	time = systemAllocator->MakeNew<Time>();
-	renderDevice = systemAllocator->MakeNew<RenderDeviceOpenGL>();
 
 	debug.CreateScope(allocatorManager, "Debug", alloc);
 	debug.New(debug.allocator, allocatorManager, renderDevice, filesystem);
@@ -105,7 +106,7 @@ bool Engine::Initialize(const kokko::WindowSettings& windowSettings)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	if (windowManager.instance->Initialize(windowSettings) == false)
+	if (windowManager.instance->Initialize(windowSettings, renderDevice->GetNativeDevice()) == false)
 		return false;
 
 	if (debug.instance->Initialize(windowManager.instance->GetWindow(), meshManager.instance,

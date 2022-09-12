@@ -1,5 +1,49 @@
 #pragma once
 
+#include <cstdint>
+
+#include "Math/Vec4.hpp"
+
+namespace kokko
+{
+
+enum class AttachmentLoadAction : uint8_t
+{
+    DontCare,
+    Load,
+    Clear
+};
+
+enum class AttachmentStoreAction : uint8_t
+{
+    DontCare,
+    Store
+};
+
+struct RenderPassAttachment
+{
+    void* texture;
+    AttachmentLoadAction loadAction;
+    AttachmentStoreAction storeAction;
+};
+
+struct RenderPassColorAttachment : public RenderPassAttachment
+{
+    Vec4f clearColor;
+};
+
+struct RenderPassDepthAttachment : public RenderPassAttachment
+{
+    float clearDepth;
+};
+
+struct RenderPassStencilAttachment : public RenderPassAttachment
+{
+    uint32_t clearStencil;
+};
+
+}
+
 enum class RenderDeviceParameter
 {
 	MaxUniformBlockSize,

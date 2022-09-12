@@ -38,7 +38,7 @@ WindowManager::~WindowManager()
         glfwTerminate();
 }
 
-bool WindowManager::Initialize(const kokko::WindowSettings& settings)
+bool WindowManager::Initialize(const kokko::WindowSettings& settings, NativeRenderDevice* device)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -61,7 +61,7 @@ bool WindowManager::Initialize(const kokko::WindowSettings& settings)
         window = allocator->MakeNew<WindowOpenGL>(allocator);
 #endif
 
-        bool windowInitialized = window->Initialize(settings);
+        bool windowInitialized = window->Initialize(settings, device);
 
         if (windowInitialized)
 			return true;

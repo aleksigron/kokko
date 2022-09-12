@@ -38,10 +38,10 @@ private:
 
 	kokko::Filesystem* filesystem;
 	kokko::AssetLoader* assetLoader;
+    RenderDevice* renderDevice;
 
 	InstanceAllocatorPair<kokko::WindowManager> windowManager;
 	Time* time;
-	RenderDevice* renderDevice;
 	InstanceAllocatorPair<Debug> debug;
 	InstanceAllocatorPair<MeshManager> meshManager;
 	InstanceAllocatorPair<kokko::ModelManager> modelManager;
