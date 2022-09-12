@@ -7,6 +7,15 @@
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderDeviceEnums.hpp"
 
+class Allocator;
+
+namespace kokko
+{
+class CommandBuffer;
+// Dummy type to disallow implicit pointer casting
+class NativeRenderDevice;
+}
+
 class RenderDevice
 {
 public:
@@ -21,7 +30,13 @@ public:
 
 	using DebugCallbackFn = void(*)(const DebugMessage&);
 
-	virtual ~RenderDevice() {}
+    static RenderDevice* Create(Allocator* allocator);
+
+    virtual ~RenderDevice() {}
+
+    virtual kokko::NativeRenderDevice* GetNativeDevice() { return nullptr; }
+
+    virtual kokko::CommandBuffer* CreateCommandBuffer(Allocator* allocator) = 0;
 
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) = 0;
 

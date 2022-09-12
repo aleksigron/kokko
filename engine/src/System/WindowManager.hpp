@@ -11,6 +11,7 @@ class InputManager;
 
 namespace kokko
 {
+class NativeRenderDevice;
 class Window;
 struct WindowSettings;
 
@@ -20,7 +21,7 @@ public:
 	WindowManager(Allocator* allocator);
 	~WindowManager();
 	
-	bool Initialize(const kokko::WindowSettings& settings);
+	bool Initialize(const kokko::WindowSettings& settings, NativeRenderDevice* device);
 
 	void ProcessEvents();
 

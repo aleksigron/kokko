@@ -1,0 +1,16 @@
+#pragma once
+
+#include "Metal/Metal.hpp"
+
+#include "Math/Vec4.hpp"
+
+#include "Rendering/RenderDeviceEnums.hpp"
+
+namespace kokko
+{
+
+MTL::LoadAction ConvertLoadAction(AttachmentLoadAction loadAction);
+MTL::StoreAction ConvertStoreAction(AttachmentStoreAction storeAction);
+MTL::ClearColor ConvertClearColor(const Vec4f& color);
+
+}

@@ -210,6 +210,8 @@ set (KOKKO_SOURCES
 	src/Rendering/CameraSystem.hpp
 	src/Rendering/CascadedShadowMap.cpp
 	src/Rendering/CascadedShadowMap.hpp
+    src/Rendering/CommandBuffer.cpp
+    src/Rendering/CommandBuffer.hpp
 	src/Rendering/Framebuffer.cpp
 	src/Rendering/Framebuffer.hpp
 	src/Rendering/Light.hpp
@@ -226,6 +228,7 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDebugFeature.hpp
 	src/Rendering/RenderDebugSettings.cpp
 	src/Rendering/RenderDebugSettings.hpp
+    src/Rendering/RenderDevice.cpp
 	src/Rendering/RenderDevice.hpp
 	src/Rendering/RenderDeviceEnums.hpp
 	src/Rendering/Renderer.cpp
@@ -235,6 +238,9 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderGraphResources.cpp
 	src/Rendering/RenderGraphResources.hpp
 	src/Rendering/RenderOrder.hpp
+    src/Rendering/RenderPass.hpp
+    src/Rendering/RenderPass.cpp
+    src/Rendering/RenderPassDescriptor.hpp
 	src/Rendering/RenderPassType.hpp
 	src/Rendering/RenderTargetContainer.cpp
 	src/Rendering/RenderTargetContainer.hpp
@@ -324,16 +330,22 @@ if (${PLATFORM_MACOS})
 list (APPEND KOKKO_SOURCES
     src/Platform/WindowMetal.hpp
     src/Platform/WindowMetal.mm
+    src/Rendering/Metal/CommandBufferMetal.cpp
+    src/Rendering/Metal/CommandBufferMetal.hpp
+    src/Rendering/Metal/ConversionMetal.cpp
+    src/Rendering/Metal/ConversionMetal.hpp
     src/Rendering/Metal/RenderDeviceMetal.hpp
     src/Rendering/Metal/RenderDeviceMetal.cpp
+    src/Rendering/Metal/RenderPassMetal.hpp
+    src/Rendering/Metal/RenderPassMetal.cpp
 )
 else()
 # OpenGL
 list (APPEND KOKKO_SOURCES
     src/Platform/WindowOpenGL.hpp
     src/Platform/WindowOpenGL.cpp
-    src/Rendering/RenderDeviceOpenGL.cpp
-    src/Rendering/RenderDeviceOpenGL.hpp
+    src/Rendering/OpenGL/RenderDeviceOpenGL.cpp
+    src/Rendering/OpenGL/RenderDeviceOpenGL.hpp
 )
 endif()
 
@@ -368,7 +380,9 @@ target_link_libraries(${KOKKO_LIB}
     INTERFACE "-framework QuartzCore"
     INTERFACE "-framework Metal"
 )
+target_compile_definitions(${KOKKO_LIB} PRIVATE KOKKO_USE_METAL)
 else()
 find_package(OpenGL REQUIRED)
 target_link_libraries(${KOKKO_LIB} OpenGL::GL)
+target_compile_definitions(${KOKKO_LIB} PRIVATE KOKKO_USE_OPENGL)
 endif()

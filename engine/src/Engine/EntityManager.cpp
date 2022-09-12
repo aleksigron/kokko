@@ -71,7 +71,7 @@ const char* EntityManager::GetDebugNameWithFallback(Entity entity)
 		return setName;
 	else
 	{
-		std::snprintf(unnamedEntityBuffer.GetData(), unnamedEntityBuffer.GetCapacity(), "Entity %u", entity.id);
+		std::snprintf(unnamedEntityBuffer.GetData(), 32, "Entity %u", entity.id);
 		return unnamedEntityBuffer.GetData();
 	}
 }

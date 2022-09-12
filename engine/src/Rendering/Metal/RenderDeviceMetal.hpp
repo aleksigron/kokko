@@ -1,20 +1,27 @@
 #pragma once
 
+#include "Metal/Metal.hpp"
+#include "Foundation/Foundation.hpp"
+
 #include "Rendering/RenderDevice.hpp"
+
+namespace kokko
+{
 
 class RenderDeviceMetal : public RenderDevice
 {
-public:
-	struct DebugMessageUserData
-	{
-		DebugCallbackFn callback;
-	};
-
 private:
-	DebugMessageUserData debugUserData;
+    NS::SharedPtr<MTL::Device> device;
+    NS::SharedPtr<MTL::CommandQueue> queue;
+    NS::SharedPtr<NS::AutoreleasePool> pool;
 
 public:
 	RenderDeviceMetal();
+    ~RenderDeviceMetal();
+
+    virtual kokko::NativeRenderDevice* GetNativeDevice() override;
+    
+    virtual kokko::CommandBuffer* CreateCommandBuffer(Allocator* allocator) override;
 
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) override;
 
@@ -146,3 +153,5 @@ public:
 
 	virtual void MemoryBarrier(const RenderCommandData::MemoryBarrier& barrier) override;
 };
+
+}
