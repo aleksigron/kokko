@@ -3,7 +3,7 @@
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 
 #include "Rendering/RenderDevice.hpp"
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 #include "Rendering/RenderGraphResources.hpp"
 #include "Rendering/RenderPassType.hpp"
 #include "Rendering/RenderTargetContainer.hpp"

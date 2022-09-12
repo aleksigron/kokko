@@ -4,7 +4,7 @@
 
 #include "Rendering/CascadedShadowMap.hpp"
 #include "Rendering/RenderDevice.hpp"
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"

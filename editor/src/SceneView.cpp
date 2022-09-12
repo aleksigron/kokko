@@ -11,7 +11,7 @@
 #include "Graphics/Scene.hpp"
 
 #include "Rendering/CameraParameters.hpp"
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 #include "EditorContext.hpp"
 

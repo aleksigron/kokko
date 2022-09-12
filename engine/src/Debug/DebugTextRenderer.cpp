@@ -10,7 +10,7 @@
 #include "Engine/Engine.hpp"
 
 #include "Rendering/RenderDevice.hpp"
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/Uniform.hpp"
 #include "Rendering/VertexFormat.hpp"

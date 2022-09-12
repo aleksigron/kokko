@@ -11,7 +11,7 @@
 #include "Math/Mat3x3.hpp"
 #include "Math/Mat4x4.hpp"
 
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 #include "Resources/TextureId.hpp"
 

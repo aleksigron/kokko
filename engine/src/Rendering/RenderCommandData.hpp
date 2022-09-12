@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 namespace RenderCommandData
 {

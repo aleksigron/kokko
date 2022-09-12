@@ -9,7 +9,7 @@
 
 #include "Math/BoundingBox.hpp"
 
-#include "Rendering/RenderDeviceEnums.hpp"
+#include "Rendering/RenderTypes.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/MeshId.hpp"
