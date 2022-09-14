@@ -47,6 +47,7 @@ Engine::Engine(
 	KOKKO_PROFILE_FUNCTION();
 
 	Allocator* alloc = Memory::GetDefaultAllocator();
+    systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 
     renderDevice = RenderDevice::Create(systemAllocator);
     
@@ -55,7 +56,6 @@ Engine::Engine(
 
     kokko::Window* mainWindow = windowManager.instance->GetWindow();
 
-	systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 	time = systemAllocator->MakeNew<Time>();
 
 	debug.CreateScope(allocatorManager, "Debug", alloc);
@@ -141,7 +141,7 @@ void Engine::Render(const CameraParameters& editorCamera, const Framebuffer& fra
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	world.instance->Render(editorCamera, framebuffer);
+	world.instance->Render(windowManager.instance->GetWindow(), editorCamera, framebuffer);
 	world.instance->DebugRender(debug.instance->GetVectorRenderer(), settings.renderDebug);
 
 	debug.instance->Render(world.instance, framebuffer, editorCamera);

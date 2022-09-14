@@ -380,9 +380,9 @@ target_link_libraries(${KOKKO_LIB}
     INTERFACE "-framework QuartzCore"
     INTERFACE "-framework Metal"
 )
-target_compile_definitions(${KOKKO_LIB} PRIVATE KOKKO_USE_METAL)
+target_compile_definitions(${KOKKO_LIB} PUBLIC KOKKO_USE_METAL)
 else()
 find_package(OpenGL REQUIRED)
 target_link_libraries(${KOKKO_LIB} OpenGL::GL)
-target_compile_definitions(${KOKKO_LIB} PRIVATE KOKKO_USE_OPENGL)
+target_compile_definitions(${KOKKO_LIB} PUBLIC KOKKO_USE_OPENGL)
 endif()

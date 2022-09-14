@@ -14,6 +14,8 @@ struct GLFWwindow;
 namespace kokko
 {
 class NativeRenderDevice;
+class NativeSurface;
+struct TextureHandle;
 
 struct WindowSettings;
 
@@ -36,11 +38,15 @@ public:
     // Implemented by the specific render backend window type
     virtual GLFWwindow* CreateWindow(const kokko::WindowSettings& settings, NativeRenderDevice* device) = 0;
 
+    virtual NativeSurface* GetNativeSurface();
+    virtual TextureHandle GetNativeSurfaceTexture();
+    virtual void ReleaseNativeSurface();
+
     bool Initialize(const kokko::WindowSettings& settings, NativeRenderDevice* device);
 
     void UpdateInput();
     void ProcessEvents();
-    void Swap();
+    virtual void Swap();
 
     bool GetShouldClose();
     void SetShouldClose(bool shouldClose);

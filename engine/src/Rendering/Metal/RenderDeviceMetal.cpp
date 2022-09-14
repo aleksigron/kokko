@@ -1,5 +1,7 @@
 #include "Rendering/Metal/RenderDeviceMetal.hpp"
 
+#include "Metal/Metal.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/Metal/CommandBufferMetal.hpp"

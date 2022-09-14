@@ -2,6 +2,8 @@
 
 #include "Math/Mat4x4.hpp"
 
+#include "Rendering/RenderTypes.hpp"
+
 #include "System/IncludeGLFW.hpp"
 #include "System/InputManager.hpp"
 
@@ -32,6 +34,18 @@ Window::~Window()
         glfwDestroyWindow(windowHandle);
     }
 }
+
+NativeSurface* Window::GetNativeSurface()
+{
+    return nullptr;
+}
+
+TextureHandle Window::GetNativeSurfaceTexture()
+{
+    return TextureHandle{};
+}
+
+void Window::ReleaseNativeSurface() {}
 
 bool Window::Initialize(const WindowSettings& settings, NativeRenderDevice* device)
 {
@@ -91,10 +105,10 @@ void Window::ProcessEvents()
 
 void Window::Swap()
 {
-    {
-        KOKKO_PROFILE_SCOPE("glfwSwapBuffers()");
-        glfwSwapBuffers(windowHandle);
-    }
+    KOKKO_PROFILE_FUNCTION();
+
+    // TODO: Move to OpenGL
+    glfwSwapBuffers(windowHandle);
 }
 
 bool Window::GetShouldClose()

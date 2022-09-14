@@ -42,4 +42,14 @@ MTL::ClearColor ConvertClearColor(const Vec4f& color)
     return MTL::ClearColor::Make(color.x, color.y, color.z, color.w);
 }
 
+MTL::Texture* ConvertTextureToMetal(TextureHandle texture)
+{
+    return reinterpret_cast<MTL::Texture*>(texture.storage);
+}
+
+TextureHandle ConvertTextureFromMetal(MTL::Texture* texture)
+{
+
+}
+
 } // namespace kokko

@@ -44,6 +44,7 @@ class MeshComponentSystem;
 class RenderDebugSettings;
 class RenderGraphResources;
 class UniformData;
+class Window;
 
 struct ResourceManagers;
 
@@ -138,7 +139,7 @@ public:
 	void SetLockCullingCamera(bool lockEnable);
 	const Mat4x4f& GetCullingCameraTransform() const;
 
-	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer);
+	void Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer);
 
 	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings);
 

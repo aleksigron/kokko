@@ -20,9 +20,14 @@ enum class AttachmentStoreAction : uint8_t
     Store
 };
 
+struct TextureHandle
+{
+    uint64_t storage;
+};
+
 struct RenderPassAttachment
 {
-    void* texture;
+    TextureHandle texture;
     AttachmentLoadAction loadAction;
     AttachmentStoreAction storeAction;
 };

@@ -8,6 +8,8 @@
 #include "GLFW/glfw3.h"
 #include "GLFW/glfw3native.h"
 
+#include "Rendering/RenderTypes.hpp"
+
 #include "System/WindowSettings.hpp"
 
 namespace kokko
@@ -15,12 +17,14 @@ namespace kokko
 
 WindowMetal::WindowMetal(Allocator* allocator) :
     Window(allocator),
-    metalLayer(nullptr)
+    metalLayer(nullptr),
+    currentDrawable(nullptr)
 {
 }
 
 WindowMetal::~WindowMetal()
 {
+    [(CAMetalLayer*)metalLayer release];
 }
 
 GLFWwindow* WindowMetal::CreateWindow(const kokko::WindowSettings& settings, NativeRenderDevice* device)
@@ -52,8 +56,45 @@ GLFWwindow* WindowMetal::CreateWindow(const kokko::WindowSettings& settings, Nat
     nswindow.contentView.wantsLayer = YES;
 
     metalLayer = layer;
+    [(CAMetalLayer*)metalLayer retain];
 
     return window;
+}
+
+NativeSurface* WindowMetal::GetNativeSurface()
+{
+    if (currentDrawable == nullptr)
+    {
+        CAMetalLayer* layer = (CAMetalLayer*)metalLayer;
+        id<CAMetalDrawable> drawable = [layer nextDrawable];
+        [drawable retain];
+
+        currentDrawable = (__bridge void*)drawable;
+    }
+
+    return static_cast<NativeSurface*>(currentDrawable);
+}
+
+TextureHandle WindowMetal::GetNativeSurfaceTexture()
+{
+    id<CAMetalDrawable> drawable = (__bridge id<CAMetalDrawable>)GetNativeSurface();
+    void* ptr = (__bridge void*)[drawable texture];
+    return TextureHandle{ reinterpret_cast<uint64_t>(ptr) };
+}
+
+void WindowMetal::ReleaseNativeSurface()
+{
+    if (currentDrawable != nullptr)
+    {
+        id<CAMetalDrawable> drawable = (__bridge id<CAMetalDrawable>)currentDrawable;
+        [drawable release];
+        currentDrawable = nullptr;
+    }
+}
+
+void WindowMetal::Swap()
+{
+    // NO-OP for now. We could try to do present here at some point.
 }
 
 } // namespace kokko

@@ -36,6 +36,7 @@ class MeshComponentSystem;
 class ParticleSystem;
 class RenderDebugSettings;
 class TerrainSystem;
+class Window;
 }
 
 class World
@@ -55,7 +56,7 @@ public:
 	void ClearAllEntities();
 
 	void Update(InputManager* inputManager);
-	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
+	void Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
 	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& renderDebug);
 
 	EntityManager* GetEntityManager() { return entityManager.instance; }
