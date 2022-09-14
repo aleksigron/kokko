@@ -50,6 +50,10 @@
 #include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/Uniform.hpp"
 
+#include "Rendering/CommandBuffer.hpp"
+#include "Rendering/RenderPassDescriptor.hpp"
+#include "Rendering/RenderPass.hpp"
+
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
@@ -252,9 +256,34 @@ void Renderer::Deinitialize()
 	}
 }
 
-void Renderer::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
+void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
+
+
+#ifdef KOKKO_USE_METAL
+    kokko::NativeSurface* surface = window->GetNativeSurface();
+    kokko::TextureHandle texture = window->GetNativeSurfaceTexture();
+    kokko::CommandBuffer* buffer = device->CreateCommandBuffer(allocator);
+    kokko::RenderPassDescriptor passDescriptor;
+    passDescriptor.colorAttachments.PushBack(kokko::RenderPassColorAttachment{
+        texture,
+        kokko::AttachmentLoadAction::Clear,
+        kokko::AttachmentStoreAction::Store,
+        Vec4f(0.0f, 0.6f, 0.7f, 1.0f)
+    });
+    kokko::RenderPass* renderPass = buffer->CreateRenderPass(passDescriptor, allocator);
+
+    allocator->MakeDelete(renderPass);
+
+    buffer->Present(surface);
+    buffer->Commit();
+    window->ReleaseNativeSurface();
+
+    allocator->MakeDelete(buffer);
+
+    return;
+#endif
 
 	if (targetFramebuffer.IsInitialized() == false)
 		return;

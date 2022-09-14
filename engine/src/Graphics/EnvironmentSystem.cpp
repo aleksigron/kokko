@@ -105,6 +105,10 @@ void EnvironmentSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+#ifdef KOKKO_USE_METAL
+    return;
+#endif
+
 	// Create cube mesh
 
 	cubeMeshId = meshManager->CreateMesh();

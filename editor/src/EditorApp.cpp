@@ -89,6 +89,10 @@ void EditorApp::Initialize(Engine* engine)
 {
 	KOKKO_PROFILE_FUNCTION();
 
+#ifdef KOKKO_USE_METAL
+    return;
+#endif
+
 	this->engine = engine;
 	this->renderDevice = engine->GetRenderDevice();
 	this->world = engine->GetWorld();
@@ -165,6 +169,9 @@ void EditorApp::Deinitialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+#ifdef KOKKO_USE_METAL
+    return;
+#endif
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 
@@ -177,6 +184,9 @@ void EditorApp::StartFrame()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+#ifdef KOKKO_USE_METAL
+    return;
+#endif
 	core->ResizeSceneViewFramebufferIfRequested();
 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -194,6 +204,9 @@ void EditorApp::Update(kokko::EngineSettings* engineSettings, bool& shouldExitOu
 {
 	KOKKO_PROFILE_FUNCTION();
 
+#ifdef KOKKO_USE_METAL
+    return;
+#endif
 	DrawMainMenuBar();
 
 	core->Update();
@@ -208,6 +221,9 @@ void EditorApp::EndFrame()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+#ifdef KOKKO_USE_METAL
+    return;
+#endif
 	core->LateUpdate();
 
 	core->EndFrame();
@@ -256,6 +272,9 @@ AssetLibrary* EditorApp::GetAssetLibrary()
 
 CameraParameters EditorApp::GetEditorCameraParameters() const
 {
+#ifdef KOKKO_USE_METAL
+    return CameraParameters{};
+#endif
 	return core->GetEditorCameraParameters();
 }
 

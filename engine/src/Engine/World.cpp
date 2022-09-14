@@ -126,7 +126,7 @@ void World::Update(InputManager* inputManager)
 	scriptSystem.instance->UpdateScripts(this, inputManager);
 }
 
-void World::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer)
+void World::Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer)
 {
 	// Propagate transform updates from Scene to other systems that require it
 	TransformUpdateReceiver* transformUpdateReceivers[] =
@@ -139,7 +139,7 @@ void World::Render(const Optional<CameraParameters>& editorCamera, const Framebu
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
 
-	renderer.instance->Render(editorCamera, framebuffer);
+	renderer.instance->Render(window, editorCamera, framebuffer);
 }
 
 void World::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& renderDebug)

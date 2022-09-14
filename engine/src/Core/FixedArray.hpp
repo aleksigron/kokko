@@ -46,26 +46,34 @@ public:
 	ValueType& operator[](unsigned int index) { return data[index]; }
 	const ValueType& operator[](unsigned int index) const { return data[index]; }
 
+    ValueType& PushBack()
+    {
+        assert(count < Capacity);
+        ValueType* ptr = new (data + count) ValueType();
+        ++count;
+        return *ptr;
+    }
+
     void PushBack(const ValueType& value)
     {
-        Reserve(count + 1);
+        assert(count < Capacity);
         new (data + count) ValueType(value);
         ++count;
     }
 
     void PopBack()
     {
-        --(this->count);
+        --(count);
 
-        this->data[this->count].~ValueType();
+        data[count].~ValueType();
     }
 
     void Clear()
     {
-        for (size_t i = 0; i < this->count; ++i)
-            this->data[i].~ValueType();
+        for (size_t i = 0; i < count; ++i)
+            data[i].~ValueType();
 
-        this->count = 0;
+        count = 0;
     }
     
     class Iterator

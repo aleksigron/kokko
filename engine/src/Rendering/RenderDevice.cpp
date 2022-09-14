@@ -13,13 +13,13 @@
 #ifdef KOKKO_USE_METAL
 RenderDevice* RenderDevice::Create(Allocator* allocator)
 {
-    allocator->MakeNew<kokko::RenderDeviceMetal>();
+    return allocator->MakeNew<kokko::RenderDeviceMetal>();
 }
 #endif
 
 #ifdef KOKKO_USE_OPENGL
 RenderDevice* RenderDevice::Create(Allocator* allocator)
 {
-    allocator->MakeNew<RenderDeviceOpenGL>();
+    return allocator->MakeNew<RenderDeviceOpenGL>();
 }
 #endif

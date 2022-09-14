@@ -17,6 +17,7 @@ class RenderPassMetal : public RenderPass
 {
 public:
     RenderPassMetal(MTL::CommandBuffer* commandBuffer, const RenderPassDescriptor& descriptor);
+    ~RenderPassMetal();
 
 private:
     MTL::RenderCommandEncoder* encoder;

@@ -6,6 +6,8 @@ struct GLFWwindow;
 
 namespace kokko
 {
+class NativeSurface;
+struct TextureHandle;
 
 class WindowMetal : public Window
 {
@@ -13,10 +15,17 @@ public:
     explicit WindowMetal(Allocator* allocator);
     ~WindowMetal();
 
-    virtual GLFWwindow* CreateWindow(const kokko::WindowSettings& settings, NativeRenderDevice* device) override;
+    GLFWwindow* CreateWindow(const kokko::WindowSettings& settings, NativeRenderDevice* device) override;
+
+    NativeSurface* GetNativeSurface() override;
+    TextureHandle GetNativeSurfaceTexture() override;
+    void ReleaseNativeSurface() override;
+
+    void Swap() override;
 
 private:
     void* metalLayer;
+    void* currentDrawable;
 };
 
 }

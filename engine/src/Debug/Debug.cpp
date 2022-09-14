@@ -110,6 +110,10 @@ void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<
 {
 	KOKKO_PROFILE_FUNCTION();
 
+#ifdef KOKKO_USE_METAL
+    return;
+#endif
+
 	Vec2i framebufferSize(framebuffer.GetWidth(), framebuffer.GetHeight());
 	Vec2f frameSizef = framebufferSize.As<float>();
 	float screenCoordScale = this->window->GetScreenCoordinateScale();

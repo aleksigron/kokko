@@ -11,7 +11,6 @@ namespace kokko
 CommandBufferMetal::CommandBufferMetal(RenderDeviceMetal* renderDevice, MTL::CommandBuffer* commandBuffer) :
     buffer(commandBuffer)
 {
-    MTL::StoreAction action;
 }
 
 CommandBufferMetal::~CommandBufferMetal()
@@ -30,9 +29,11 @@ void CommandBufferMetal::Commit()
     buffer->commit();
 }
 
-void CommandBufferMetal::Present()
+void CommandBufferMetal::Present(NativeSurface* surface)
 {
-
+    void* ptr = surface;
+    MTL::Drawable* drawable = static_cast<MTL::Drawable*>(ptr);
+    buffer->presentDrawable(drawable);
 }
 
 } // namespace kokko

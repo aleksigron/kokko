@@ -13,4 +13,7 @@ MTL::LoadAction ConvertLoadAction(AttachmentLoadAction loadAction);
 MTL::StoreAction ConvertStoreAction(AttachmentStoreAction storeAction);
 MTL::ClearColor ConvertClearColor(const Vec4f& color);
 
+MTL::Texture* ConvertTextureToMetal(TextureHandle texture);
+TextureHandle ConvertTextureFromMetal(MTL::Texture* texture);
+
 }
