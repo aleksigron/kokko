@@ -2,6 +2,14 @@
 
 #include "Math/Mat4x4.hpp"
 
+#ifdef KOKKO_USE_METAL
+#include "Platform/WindowMetal.hpp"
+#endif
+
+#ifdef KOKKO_USE_OPENGL
+#include "Platform/WindowOpenGL.hpp"
+#endif
+
 #include "Rendering/RenderTypes.hpp"
 
 #include "System/IncludeGLFW.hpp"
@@ -17,6 +25,7 @@ Window::Window(Allocator* allocator) :
     framebufferResizeCallbacks(allocator),
     windowResizeCallbacks(allocator),
     maximizeCallbacks(allocator),
+    currentSwapInterval(-1),
     currentMaximizeState(false),
     framebufferResizePending(false),
     windowResizePending(false),
@@ -33,6 +42,15 @@ Window::~Window()
     {
         glfwDestroyWindow(windowHandle);
     }
+}
+
+Window* Window::Create(Allocator* allocator)
+{
+#ifdef KOKKO_USE_METAL
+    return allocator->MakeNew<WindowMetal>(allocator);
+#else
+    return allocator->MakeNew<WindowOpenGL>(allocator);
+#endif
 }
 
 NativeSurface* Window::GetNativeSurface()
@@ -101,6 +119,20 @@ void Window::ProcessEvents()
 
         maximizeChangePending = false;
     }
+}
+
+void Window::SetSwapInterval(int swapInterval)
+{
+    if (swapInterval != currentSwapInterval)
+    {
+        currentSwapInterval = swapInterval;
+        glfwSwapInterval(swapInterval);
+    }
+}
+
+int Window::GetSwapInterval() const
+{
+    return currentSwapInterval;
 }
 
 void Window::Swap()

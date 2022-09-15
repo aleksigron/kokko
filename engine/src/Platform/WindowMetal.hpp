@@ -21,6 +21,8 @@ public:
     TextureHandle GetNativeSurfaceTexture() override;
     void ReleaseNativeSurface() override;
 
+    void SetSwapInterval(int swapInterval) override {}
+    int GetSwapInterval() const override { return -1; }
     void Swap() override;
 
 private:

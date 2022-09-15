@@ -11,9 +11,9 @@ namespace kokko
 class RenderDeviceMetal : public RenderDevice
 {
 private:
+    NS::SharedPtr<NS::AutoreleasePool> pool;
     NS::SharedPtr<MTL::Device> device;
     NS::SharedPtr<MTL::CommandQueue> queue;
-    NS::SharedPtr<NS::AutoreleasePool> pool;
 
 public:
 	RenderDeviceMetal();

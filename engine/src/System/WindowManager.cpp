@@ -4,7 +4,7 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "Platform/WindowMetal.hpp"
+#include "Platform/Window.hpp"
 
 #include "System/IncludeOpenGL.hpp"
 #include "System/InputManager.hpp"
@@ -21,7 +21,6 @@ namespace kokko
 WindowManager::WindowManager(Allocator* allocator) :
 	allocator(allocator),
     window(nullptr),
-    currentSwapInterval(-1),
     glfwInitialized(false)
 {
 }
@@ -29,10 +28,7 @@ WindowManager::WindowManager(Allocator* allocator) :
 WindowManager::~WindowManager()
 {
     if (window != nullptr)
-    {
         allocator->MakeDelete(window);
-        window = nullptr;
-    }
 
     if (glfwInitialized)
         glfwTerminate();
@@ -55,11 +51,7 @@ bool WindowManager::Initialize(const kokko::WindowSettings& settings, NativeRend
 	{
         glfwInitialized = true;
 
-#ifdef __APPLE__
-        window = allocator->MakeNew<WindowMetal>(allocator);
-#else
-        window = allocator->MakeNew<WindowOpenGL>(allocator);
-#endif
+        window = Window::Create(allocator);
 
         bool windowInitialized = window->Initialize(settings, device);
 
@@ -85,20 +77,6 @@ void WindowManager::ProcessEvents()
 Window* WindowManager::GetWindow()
 {
     return window;
-}
-
-void WindowManager::SetSwapInterval(int swapInterval)
-{
-	if (swapInterval != currentSwapInterval)
-	{
-		currentSwapInterval = swapInterval;
-		glfwSwapInterval(swapInterval);
-	}
-}
-
-int WindowManager::GetSwapInterval() const
-{
-	return currentSwapInterval;
 }
 
 

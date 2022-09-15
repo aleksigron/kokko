@@ -1,29 +1,28 @@
 #include "Rendering/Metal/RenderDeviceMetal.hpp"
 
+#include <cassert>
+
 #include "Metal/Metal.hpp"
 
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/Metal/CommandBufferMetal.hpp"
 
-#include <cassert>
-
 namespace kokko
 {
 
 RenderDeviceMetal::RenderDeviceMetal()
 {
+    pool = NS::TransferPtr(NS::AutoreleasePool::alloc()->init());
+
     device = NS::TransferPtr(MTL::CreateSystemDefaultDevice());
     assert(device);
     queue = NS::TransferPtr(device->newCommandQueue());
     assert(queue);
-
-    pool = NS::TransferPtr(NS::AutoreleasePool::alloc()->init());
 }
 
 RenderDeviceMetal::~RenderDeviceMetal()
 {
-
 }
 
 NativeRenderDevice* RenderDeviceMetal::GetNativeDevice()
@@ -33,7 +32,7 @@ NativeRenderDevice* RenderDeviceMetal::GetNativeDevice()
 
 kokko::CommandBuffer* RenderDeviceMetal::CreateCommandBuffer(Allocator* allocator)
 {
-    return allocator->MakeNew<kokko::CommandBufferMetal>(this, queue->commandBuffer());
+    return allocator->MakeNew<kokko::CommandBufferMetal>(queue.get());
 }
 
 void RenderDeviceMetal::SetDebugMessageCallback(DebugCallbackFn callback)
