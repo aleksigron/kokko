@@ -97,9 +97,9 @@ Engine::~Engine()
 	textureManager.Delete();
 	meshManager.Delete();
 	debug.Delete();
-	systemAllocator->MakeDelete(renderDevice);
 	systemAllocator->MakeDelete(time);
 	windowManager.Delete();
+    systemAllocator->MakeDelete(renderDevice);
 }
 
 bool Engine::Initialize(const kokko::WindowSettings& windowSettings)
@@ -154,7 +154,7 @@ void Engine::EndFrame()
     windowManager.instance->ProcessEvents();
     window->UpdateInput();
 
-    windowManager.instance->SetSwapInterval(settings.verticalSync ? 1 : 0);
+    window->SetSwapInterval(settings.verticalSync ? 1 : 0);
 }
 
 void Engine::SetAppPointer(void* app)

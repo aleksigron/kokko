@@ -35,6 +35,8 @@ public:
     Window(Allocator* allocator);
     virtual ~Window();
 
+    static Window* Create(Allocator* allocator);
+
     // Implemented by the specific render backend window type
     virtual GLFWwindow* CreateWindow(const kokko::WindowSettings& settings, NativeRenderDevice* device) = 0;
 
@@ -46,6 +48,13 @@ public:
 
     void UpdateInput();
     void ProcessEvents();
+
+    /*
+    Set the number of screen refresh to wait for until swapping buffers.
+    0: vsync off, 1: vsync every refresh, n: vsync once every n refreshes
+    */
+    virtual void SetSwapInterval(int swapInterval);
+    virtual int GetSwapInterval() const;
     virtual void Swap();
 
     bool GetShouldClose();
@@ -102,6 +111,7 @@ private:
 
     Vec2i currentFramebufferSize;
     Vec2i currentWindowSize;
+    int currentSwapInterval;
     bool currentMaximizeState;
 
     bool framebufferResizePending;

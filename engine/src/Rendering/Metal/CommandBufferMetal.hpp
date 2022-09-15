@@ -1,20 +1,22 @@
 #pragma once
 
-#include "Metal/Metal.hpp"
-
 #include "Rendering/CommandBuffer.hpp"
 
 class Allocator;
 
+namespace MTL
+{
+class CommandBuffer;
+class CommandQueue;
+}
+
 namespace kokko
 {
-
-class RenderDeviceMetal;
 
 class CommandBufferMetal : public CommandBuffer
 {
 public:
-    CommandBufferMetal(RenderDeviceMetal* renderDevice, MTL::CommandBuffer* commandBuffer);
+    explicit CommandBufferMetal(MTL::CommandQueue* queue);
     ~CommandBufferMetal();
 
     virtual RenderPass* CreateRenderPass(const RenderPassDescriptor& descriptor, Allocator* allocator) override;

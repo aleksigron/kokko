@@ -1,5 +1,7 @@
 #include "Rendering/Metal/CommandBufferMetal.hpp"
 
+#include "Metal/Metal.hpp"
+
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/RenderPassDescriptor.hpp"
@@ -8,15 +10,15 @@
 namespace kokko
 {
 
-CommandBufferMetal::CommandBufferMetal(RenderDeviceMetal* renderDevice, MTL::CommandBuffer* commandBuffer) :
-    buffer(commandBuffer)
+CommandBufferMetal::CommandBufferMetal(MTL::CommandQueue* queue)
 {
+    buffer = queue->commandBuffer();
+    buffer->retain();
 }
 
 CommandBufferMetal::~CommandBufferMetal()
 {
-    if (buffer != nullptr)
-        buffer->release();
+    buffer->release();
 }
 
 RenderPass* CommandBufferMetal::CreateRenderPass(const RenderPassDescriptor& descriptor, Allocator* allocator)

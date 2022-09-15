@@ -27,17 +27,9 @@ public:
 
     Window* GetWindow();
 
-	/*
-	Set the number of screen refresh to wait for until swapping buffers.
-	0: vsync off, 1: vsync every refresh, n: vsync once every n refreshes
-	*/
-	void SetSwapInterval(int swapInterval);
-	int GetSwapInterval() const;
-
 private:
 	Allocator* allocator;
     Window* window;
-    int currentSwapInterval;
     bool glfwInitialized;
 };
 
