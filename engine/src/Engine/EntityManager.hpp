@@ -27,7 +27,7 @@ private:
 
 	Array<kokko::String> debugNames;
 
-	FixedArray<char, 32> unnamedEntityBuffer;
+	char unnamedEntityBuffer[32];
 
 public:
 	EntityManager(Allocator* mainAllocator, Allocator* debugNameAllocator);
