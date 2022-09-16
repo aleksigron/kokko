@@ -124,7 +124,6 @@ void TerrainSystem::Initialize()
 
 	ConstStringView path("engine/materials/deferred_geometry/terrain.material");
 	terrainMaterial = materialManager->FindMaterialByPath(path);
-	//assert(terrainMaterial != MaterialId::Null);
 
 	// Sampler
 
