@@ -42,22 +42,25 @@ size_t StringCopyN(char* destination, const char* source, size_t destBufferCount
 		// Check how many bytes the character takes
 		size_t codepointBytes = EncodingUtf8::DecodeCodepoint(&destination[lastCharPos], codepoint);
 
-		if (lastCharPos + codepointBytes >= destBufferCount)
+		if (codepointBytes >= 0)
 		{
-			destination[lastCharPos] = '\0';
-			return lastCharPos + 1;
-		}
-		else
-		{
-			destination[destBufferCount - 1] = '\0';
-			return destBufferCount;
+			if (lastCharPos + codepointBytes >= destBufferCount)
+			{
+				destination[lastCharPos] = '\0';
+				return lastCharPos + 1;
+			}
+			else
+			{
+				destination[destBufferCount - 1] = '\0';
+				return destBufferCount;
+			}
 		}
 	}
-	else // Couldn't find any valid characters
-	{
-		destination[0] = '\0';
-		return 1;
-	}
+	
+	// Couldn't find any valid characters
+	// Either FindLastCharacter didn't find any chars or DecodeCodepoint couldn't decode the char
+	destination[0] = '\0';
+	return 1;
 }
 
 bool StringIsEmpty(const char* str)
@@ -88,7 +91,7 @@ TEST_CASE("StringCopyN")
 
 	memset(dest, 0, sizeof(dest));
 
-	char utf8buf[] = u8"T\xC3\xABsti\xC3\xA4";
+	char utf8buf[] = { "T\xC3\xABsti\xC3\xA4" };
 
 	CHECK(StringCopyN(dest, utf8buf, sizeof(dest)) == 7);
 	CHECK(dest[5] == utf8buf[5]);
@@ -113,7 +116,7 @@ TEST_CASE("StringCopySafe")
 
 	memset(dest, 0, sizeof(dest));
 
-	char utf8buf[] = u8"T\xC3\xABsti\xC3\xA4";
+	char utf8buf[] = { "T\xC3\xABsti\xC3\xA4" };
 
 	CHECK(StringCopySafe(dest, utf8buf) == 7);
 	CHECK(dest[5] == utf8buf[5]);
