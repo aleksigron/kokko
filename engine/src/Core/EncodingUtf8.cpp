@@ -1,5 +1,7 @@
 #include "EncodingUtf8.hpp"
 
+#include "doctest/doctest.h"
+
 size_t EncodingUtf8::EncodeCodepoint(uint32_t codepoint, char* utf8BytesOut)
 {
 	if (codepoint <= 0x7F)
@@ -103,20 +105,39 @@ size_t EncodingUtf8::CountCharacters(kokko::ConstStringView input)
 
 size_t EncodingUtf8::FindLastCharacter(kokko::ConstStringView input)
 {
-	const char* itr = input.str + input.len - 1;
-	const char* end = input.str;
-	for (; itr >= end; --itr)
+	for (int64_t idx = input.len - 1; idx >= 0; idx -= 1)
 	{
-		char c = *itr;
+		char c = input.str[idx];
+		int charBytes;
 
-		if ((c & 0x80) == 0x00 || // 1-byte char
-			(c & 0xe0) == 0xc0 || // 2-byte char
-			(c & 0xf0) == 0xe0 || // 3-byte char
-			(c & 0xf8) == 0xf0) // 4-byte char
-		{
-			return static_cast<size_t>(itr - input.str);
-		}
+		if ((c & 0x80) == 0x00)
+			charBytes = 1;
+		else if ((c & 0xe0) == 0xc0)
+			charBytes = 2;
+		else if ((c & 0xf0) == 0xe0)
+			charBytes = 3;
+		else if ((c & 0xf8) == 0xf0)
+			charBytes = 4;
+		else
+			continue; // Not first byte of character
+
+		// Check that the character fits in the input
+		if (idx + charBytes <= input.len)
+			return static_cast<size_t>(idx);
 	}
 
 	return input.len;
+}
+
+TEST_CASE("EncodingUtf8.FindLastCharacter")
+{
+	char buf0[] = u8"T\xC3\xA4";
+	CHECK(EncodingUtf8::FindLastCharacter(kokko::ConstStringView(buf0, 2)) == 0);
+
+	char buf1[] = u8"Test";
+	CHECK(EncodingUtf8::FindLastCharacter(kokko::ConstStringView(buf1)) == 3);
+
+	char buf2[] = { "\xA4\xA4\xA4\0" };
+	kokko::ConstStringView view2(buf2);
+	CHECK(EncodingUtf8::FindLastCharacter(view2) == view2.len);
 }
