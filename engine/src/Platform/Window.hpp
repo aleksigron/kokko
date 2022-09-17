@@ -53,9 +53,9 @@ public:
     Set the number of screen refresh to wait for until swapping buffers.
     0: vsync off, 1: vsync every refresh, n: vsync once every n refreshes
     */
-    virtual void SetSwapInterval(int swapInterval);
-    virtual int GetSwapInterval() const;
-    virtual void Swap();
+    virtual void SetSwapInterval(int swapInterval) {}
+    virtual int GetSwapInterval() const { return -1; }
+    virtual void Swap() {}
 
     bool GetShouldClose();
     void SetShouldClose(bool shouldClose);

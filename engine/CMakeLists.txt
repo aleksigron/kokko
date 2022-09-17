@@ -383,6 +383,6 @@ target_link_libraries(${KOKKO_LIB}
 target_compile_definitions(${KOKKO_LIB} PUBLIC KOKKO_USE_METAL)
 else()
 find_package(OpenGL REQUIRED)
-target_link_libraries(${KOKKO_LIB} OpenGL::GL)
+target_link_libraries(${KOKKO_LIB} PUBLIC OpenGL::GL)
 target_compile_definitions(${KOKKO_LIB} PUBLIC KOKKO_USE_OPENGL)
 endif()

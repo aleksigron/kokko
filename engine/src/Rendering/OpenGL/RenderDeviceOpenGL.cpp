@@ -1,4 +1,4 @@
-#include "Rendering/RenderDeviceOpenGL.hpp"
+#include "Rendering/OpenGL/RenderDeviceOpenGL.hpp"
 
 #include "System/IncludeOpenGL.hpp"
 
