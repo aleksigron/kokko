@@ -137,7 +137,7 @@ TEST_CASE("EncodingUtf8.FindLastCharacter")
 	char buf1[] = u8"Test";
 	CHECK(EncodingUtf8::FindLastCharacter(kokko::ConstStringView(buf1)) == 3);
 
-	char buf2[] = { "\xA4\xA4\xA4\0" };
+	char buf2[] = { "\xA4\xA4\xA4" };
 	kokko::ConstStringView view2(buf2);
 	CHECK(EncodingUtf8::FindLastCharacter(view2) == view2.len);
 }
