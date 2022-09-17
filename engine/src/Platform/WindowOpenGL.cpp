@@ -2,12 +2,25 @@
 
 #include "Core/Core.hpp"
 
-#include "System/IncludeGLFW.hpp"
+#include "System/IncludeOpenGL.hpp"
+#include "System/WindowSettings.hpp"
 
 namespace kokko
 {
 
-bool WindowOpenGL::Initialize()
+WindowOpenGL::WindowOpenGL(Allocator* allocator) :
+    Window(allocator),
+    currentSwapInterval(-1)
+{
+
+}
+
+WindowOpenGL::~WindowOpenGL()
+{
+
+}
+
+GLFWwindow* WindowOpenGL::CreateWindow(const WindowSettings& settings, NativeRenderDevice* device)
 {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -22,40 +35,51 @@ bool WindowOpenGL::Initialize()
 
     glfwWindowHint(GLFW_MAXIMIZED, settings.maximized ? GLFW_TRUE : GLFW_FALSE);
 
+    GLFWwindow* window;
+
     {
         KOKKO_PROFILE_SCOPE("GLFWwindow* glfwCreateWindow()");
-        windowHandle = glfwCreateWindow(settings.width, settings.height, settings.title, NULL, NULL);
+        window = glfwCreateWindow(settings.width, settings.height, settings.title, NULL, NULL);
     }
 
-    if (windowHandle != nullptr)
+    if (window == nullptr)
     {
-        glfwGetFramebufferSize(windowHandle, &currentFramebufferSize.x, &currentFramebufferSize.y);
-        glfwGetWindowSize(windowHandle, &currentWindowSize.x, &currentWindowSize.y);
-        int maximized = glfwGetWindowAttrib(windowHandle, GLFW_MAXIMIZED);
-        currentMaximizeState = maximized == GLFW_TRUE;
-
-        inputManager = allocator->MakeNew<InputManager>(allocator);
-        inputManager->Initialize(windowHandle);
-
-        glfwSetWindowUserPointer(windowHandle, this);
-
-        glfwSetFramebufferSizeCallback(windowHandle, _GlfwFramebufferSizeCallback);
-        glfwSetWindowSizeCallback(windowHandle, _GlfwWindowSizeCallback);
-        glfwSetWindowMaximizeCallback(windowHandle, _GlfwMaximizeCallback);
-
-        {
-            KOKKO_PROFILE_SCOPE("void glfwMakeContextCurrent()");
-            glfwMakeContextCurrent(windowHandle);
-        }
-
-        {
-            KOKKO_PROFILE_SCOPE("void gladLoadGLLoader()");
-            // Tell glad how it can load the OpenGL functions it needs
-            gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-        }
-
-        return true;
+        KK_LOG_ERROR("GLFW window couldn't be initialized");
+        return nullptr;
     }
+
+    {
+        KOKKO_PROFILE_SCOPE("glfwMakeContextCurrent()");
+        glfwMakeContextCurrent(window);
+    }
+
+    {
+        KOKKO_PROFILE_SCOPE("gladLoadGLLoader()");
+        gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+    }
+
+    return window;
+}
+
+void WindowOpenGL::SetSwapInterval(int swapInterval)
+{
+    if (swapInterval != currentSwapInterval)
+    {
+        currentSwapInterval = swapInterval;
+        glfwSwapInterval(swapInterval);
+    }
+}
+
+int WindowOpenGL::GetSwapInterval() const
+{
+    return currentSwapInterval;
+}
+
+void WindowOpenGL::Swap()
+{
+    KOKKO_PROFILE_FUNCTION();
+
+    glfwSwapBuffers(GetGlfwWindow());
 }
 
 }

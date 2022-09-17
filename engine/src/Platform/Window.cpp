@@ -121,28 +121,6 @@ void Window::ProcessEvents()
     }
 }
 
-void Window::SetSwapInterval(int swapInterval)
-{
-    if (swapInterval != currentSwapInterval)
-    {
-        currentSwapInterval = swapInterval;
-        glfwSwapInterval(swapInterval);
-    }
-}
-
-int Window::GetSwapInterval() const
-{
-    return currentSwapInterval;
-}
-
-void Window::Swap()
-{
-    KOKKO_PROFILE_FUNCTION();
-
-    // TODO: Move to OpenGL
-    glfwSwapBuffers(windowHandle);
-}
-
 bool Window::GetShouldClose()
 {
     return glfwWindowShouldClose(windowHandle) == GLFW_TRUE;

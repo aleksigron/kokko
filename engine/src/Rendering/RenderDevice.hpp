@@ -36,7 +36,7 @@ public:
 
     virtual kokko::NativeRenderDevice* GetNativeDevice() { return nullptr; }
 
-    virtual kokko::CommandBuffer* CreateCommandBuffer(Allocator* allocator) = 0;
+	virtual kokko::CommandBuffer* CreateCommandBuffer(Allocator* allocator) { return nullptr; }
 
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) = 0;
 
