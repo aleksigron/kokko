@@ -87,6 +87,8 @@ bool Window::Initialize(const WindowSettings& settings, NativeRenderDevice* devi
 
         return true;
     }
+
+    return false;
 }
 
 void Window::UpdateInput()
