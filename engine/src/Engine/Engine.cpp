@@ -141,6 +141,8 @@ void Engine::Render(const CameraParameters& editorCamera, const Framebuffer& fra
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	renderDevice->FramebufferSrgbEnable();
+
 	world.instance->Render(windowManager.instance->GetWindow(), editorCamera, framebuffer);
 	world.instance->DebugRender(debug.instance->GetVectorRenderer(), settings.renderDebug);
 
