@@ -68,6 +68,7 @@ set (KOKKO_SOURCES
 	src/Core/BitfieldVariable.cpp
 	src/Core/BitfieldVariable.hpp
 	src/Core/BitPack.hpp
+	src/Core/Color.cpp
 	src/Core/Color.hpp
 	src/Core/ColorSrgb.hpp
 	src/Core/Core.hpp

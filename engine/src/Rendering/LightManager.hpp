@@ -34,7 +34,7 @@ private:
 		Vec3f* position;
 		Mat3x3f* orientation;
 		LightType* type;
-		Vec3f* color;
+		Vec4f* colorAndIntensity;
 		float* radius;
 		float* angle;
 		bool* shadowCasting;
@@ -47,7 +47,7 @@ private:
 
 	void Reallocate(unsigned int required);
 
-	static float CalculateDefaultRadius(Vec3f color);
+	static float CalculateDefaultRadius(Vec4f colorAndIntensity);
 
 public:
 	LightManager(Allocator* allocator);
@@ -78,12 +78,25 @@ public:
 	LightType GetLightType(LightId id) const { return data.type[id.i]; }
 	void SetLightType(LightId id, LightType type) { data.type[id.i] = type; }
 
-	Vec3f GetColor(LightId id) const { return data.color[id.i]; }
-	void SetColor(LightId id, Vec3f color) { data.color[id.i] = color; }
+	Vec3f GetColor(LightId id) const { return data.colorAndIntensity[id.i].xyz(); }
+	void SetColor(LightId id, Vec3f color)
+	{
+		data.colorAndIntensity[id.i] = Vec4f(color, data.colorAndIntensity[id.i].w);
+	}
+
+	float GetIntensity(LightId id) const { return data.colorAndIntensity[id.i].w; }
+	void SetIntensity(LightId id, float intensity) { data.colorAndIntensity[id.i].w = intensity; }
+
+	Vec3f GetLightEnergy(LightId id) const {
+		return data.colorAndIntensity[id.i].xyz() * data.colorAndIntensity[id.i].w;
+	}
 
 	float GetRadius(LightId id) const { return data.radius[id.i]; }
 	void SetRadius(LightId id, float radius) { data.radius[id.i] = radius; }
-	void SetRadiusFromColor(LightId id) { data.radius[id.i] = CalculateDefaultRadius(data.color[id.i]); }
+	void SetRadiusFromColor(LightId id)
+	{
+		data.radius[id.i] = CalculateDefaultRadius(data.colorAndIntensity[id.i]);
+	}
 
 	float GetSpotAngle(LightId id) const { return data.angle[id.i]; }
 	void SetSpotAngle(LightId id, float angle) { data.angle[id.i] = angle; }

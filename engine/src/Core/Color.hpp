@@ -1,7 +1,12 @@
 #pragma once
 
+#include "Math/Vec3.hpp"
+
 struct Color
 {
+	static Vec3f FromSrgbToLinear(const Vec3f& srgb);
+	static Vec3f FromLinearToSrgb(const Vec3f& srgb);
+
 	float r, g, b, a;
 
 	Color()

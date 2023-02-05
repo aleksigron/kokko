@@ -69,6 +69,11 @@ public:
 		if (colorNode.IsDefined() && colorNode.IsSequence())
 			color = colorNode.as<Vec3f>();
 
+		float intensity = -1.0f;
+		YAML::Node intensityNode = map["intensity"];
+		if (intensityNode.IsDefined() && intensityNode.IsScalar())
+			intensity = intensityNode.as<float>();
+
 		float radius = -1.0f;
 		YAML::Node radiusNode = map["radius"];
 		if (radiusNode.IsDefined() && radiusNode.IsScalar())
@@ -87,6 +92,7 @@ public:
 		LightId lightId = lightManager->AddLight(entity);
 		lightManager->SetLightType(lightId, type);
 		lightManager->SetColor(lightId, color);
+		lightManager->SetIntensity(lightId, intensity >= 0.0f ? intensity : 1.0f);
 
 		if (type != LightType::Directional)
 		{
@@ -115,6 +121,9 @@ public:
 
 			Vec3f lightColor = lightManager->GetColor(lightId);
 			out << YAML::Key << "color" << YAML::Value << lightColor;
+
+			float lightIntensity = lightManager->GetIntensity(lightId);
+			out << YAML::Key << "intensity" << YAML::Value << lightIntensity;
 
 			if (lightType != LightType::Directional)
 			{

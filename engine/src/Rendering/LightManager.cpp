@@ -52,7 +52,7 @@ void LightManager::Reallocate(unsigned int required)
 	entityMap.Reserve(required);
 
 	InstanceData newData;
-	unsigned int bytes = required * (sizeof(Entity) + sizeof(LightType) + sizeof(Vec3f) * 2 +
+	unsigned int bytes = required * (sizeof(Entity) + sizeof(LightType) + sizeof(Vec3f) + sizeof(Vec4f) +
 		sizeof(Mat3x3f) + sizeof(float) * 2 + sizeof(bool));
 
 	newData.buffer = allocator->Allocate(bytes);
@@ -63,8 +63,8 @@ void LightManager::Reallocate(unsigned int required)
 	newData.position = reinterpret_cast<Vec3f*>(newData.entity + required);
 	newData.orientation = reinterpret_cast<Mat3x3f*>(newData.position + required);
 	newData.type = reinterpret_cast<LightType*>(newData.orientation + required);
-	newData.color = reinterpret_cast<Vec3f*>(newData.type + required);
-	newData.radius = reinterpret_cast<float*>(newData.color + required);
+	newData.colorAndIntensity = reinterpret_cast<Vec4f*>(newData.type + required);
+	newData.radius = reinterpret_cast<float*>(newData.colorAndIntensity + required);
 	newData.angle = reinterpret_cast<float*>(newData.radius + required);
 	newData.shadowCasting = reinterpret_cast<bool*>(newData.angle + required);
 
@@ -74,7 +74,7 @@ void LightManager::Reallocate(unsigned int required)
 		std::memcpy(newData.position, data.position, data.count * sizeof(Vec3f));
 		std::memcpy(newData.orientation, data.orientation, data.count * sizeof(Mat3x3f));
 		std::memcpy(newData.type, data.type, data.count * sizeof(LightType));
-		std::memcpy(newData.color, data.color, data.count * sizeof(Vec3f));
+		std::memcpy(newData.colorAndIntensity, data.colorAndIntensity, data.count * sizeof(Vec4f));
 		std::memcpy(newData.radius, data.radius, data.count * sizeof(float));
 		std::memcpy(newData.angle, data.angle, data.count * sizeof(float));
 		std::memcpy(newData.shadowCasting, data.shadowCasting, data.count * sizeof(bool));
@@ -85,9 +85,10 @@ void LightManager::Reallocate(unsigned int required)
 	data = newData;
 }
 
-float LightManager::CalculateDefaultRadius(Vec3f color)
+float LightManager::CalculateDefaultRadius(Vec4f colorAndIntensity)
 {
 	const float thresholdInv = 256.0f / 5.0f;
+	Vec3f color = colorAndIntensity.xyz() * colorAndIntensity.w;
 
 	float lightMax = std::max({ color.x, color.y, color.z });
 	return std::sqrt(lightMax * thresholdInv);
@@ -135,7 +136,7 @@ void LightManager::AddLight(unsigned int count, const Entity* entities, LightId*
 		data.position[id] = Vec3f();
 		data.orientation[id] = Mat3x3f();
 		data.type[id] = LightType::Point;
-		data.color[id] = Vec3f(1.0f, 1.0f, 1.0f);
+		data.colorAndIntensity[id] = Vec4f(1.0f, 1.0f, 1.0f, 1.0f);
 		data.radius[id] = 1.0f;
 		data.angle[id] = Math::DegreesToRadians(60.0f);
 		data.shadowCasting[id] = false;
@@ -170,7 +171,7 @@ void LightManager::RemoveLight(LightId id)
 		data.position[id.i] = data.position[swapIdx];
 		data.orientation[id.i] = data.orientation[swapIdx];
 		data.type[id.i] = data.type[swapIdx];
-		data.color[id.i] = data.color[swapIdx];
+		data.colorAndIntensity[id.i] = data.colorAndIntensity[swapIdx];
 		data.radius[id.i] = data.radius[swapIdx];
 		data.angle[id.i] = data.angle[swapIdx];
 		data.shadowCasting[id.i] = data.shadowCasting[swapIdx];
