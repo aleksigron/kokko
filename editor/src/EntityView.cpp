@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 
+#include "Core/Color.hpp"
 #include "Core/Core.hpp"
 #include "Core/CString.hpp"
 
@@ -448,11 +449,13 @@ void EntityView::DrawLightComponent(Entity selectedEntity, World* world)
 				ImGui::EndCombo();
 			}
 
-			Vec3f lightColor = lightManager->GetColor(lightId);
-			ImGuiColorEditFlags colorEditFlags = ImGuiColorEditFlags_NoAlpha |
-				ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR;
-			if (ImGui::ColorEdit3("Color", lightColor.ValuePointer(), colorEditFlags))
-				lightManager->SetColor(lightId, lightColor);
+			Vec3f srgbColor = Color::FromLinearToSrgb(lightManager->GetColor(lightId));
+			if (ImGui::ColorEdit3("Color", srgbColor.ValuePointer()))
+				lightManager->SetColor(lightId, Color::FromSrgbToLinear(srgbColor));
+
+			float intensity = lightManager->GetIntensity(lightId);
+			if (ImGui::DragFloat("Intensity", &intensity, 0.01f, 0.0f, 0.0f, "%.3f"))
+				lightManager->SetIntensity(lightId, intensity);
 
 			if (lightType != LightType::Directional)
 			{

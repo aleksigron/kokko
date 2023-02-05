@@ -212,7 +212,7 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 			Vec4f vLightDir = fsvp.view.inverse * Vec4f(wLightDir, 0.0f);
 			lightingUniforms.lightDirections[i] = vLightDir;
 
-			lightingUniforms.lightColors[i] = lightManager->GetColor(dirLightId);
+			lightingUniforms.lightColors[i] = lightManager->GetLightEnergy(dirLightId);
 			lightingUniforms.lightCastShadow[i] = lightManager->GetShadowCasting(dirLightId);
 		}
 
@@ -237,7 +237,6 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 		lightingUniforms.pointLightCount = pointLightCount;
 		lightingUniforms.spotLightCount = spotLightCount;
 
-		const size_t dirLightOffset = 1;
 		size_t pointLightsAdded = 0;
 		size_t spotLightsAdded = 0;
 
@@ -252,7 +251,7 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 			LightType type = lightManager->GetLightType(lightId);
 			if (type == LightType::Spot)
 			{
-				shaderLightIdx = dirLightOffset + pointLightCount + spotLightsAdded;
+				shaderLightIdx = dirLightCount + pointLightCount + spotLightsAdded;
 				spotLightsAdded += 1;
 
 				Mat3x3f orientation = lightManager->GetOrientation(lightId);
@@ -263,7 +262,7 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 			}
 			else
 			{
-				shaderLightIdx = dirLightOffset + pointLightsAdded;
+				shaderLightIdx = dirLightCount + pointLightsAdded;
 				pointLightsAdded += 1;
 			}
 
@@ -274,8 +273,9 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 			float inverseSquareRadius = 1.0f / (radius * radius);
 			lightingUniforms.lightPositions[shaderLightIdx] = Vec4f(vLightPos, inverseSquareRadius);
 
-			Vec3f lightCol = lightManager->GetColor(lightId);
+			Vec3f lightCol = lightManager->GetLightEnergy(lightId);
 			lightingUniforms.lightColors[shaderLightIdx] = lightCol;
+			lightingUniforms.lightCastShadow[shaderLightIdx] = false;
 		}
 
 		lightResultArray.Clear();
