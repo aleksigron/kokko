@@ -5,8 +5,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(EXECUTABLE_NAME kokko-editor)
 
-set(ENGINE_PATH "${PROJECT_ROOT}/engine")
-
 include_directories(
 	src
 	${ENGINE_PATH}/src

@@ -36,9 +36,11 @@ xcuserdata
 # Ignore build directory
 build/
 
-log.txt
-imgui.ini
-unit_test_trace.json
-startup_trace.json
-runtime_trace.json
+# Ignore local files created at runtime
 editor_user_settings.yml
+imgui.ini
+log.txt
+render_test_trace.json
+runtime_trace.json
+startup_trace.json
+unit_test_trace.json
