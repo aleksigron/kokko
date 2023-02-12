@@ -15,7 +15,7 @@
 
 #include "Graphics/Scene.hpp"
 
-#include "Memory/Memory.hpp"
+#include "Memory/RootAllocator.hpp"
 
 #include "Platform/Window.hpp"
 
@@ -46,7 +46,7 @@ Engine::Engine(
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Allocator* alloc = Memory::GetDefaultAllocator();
+	Allocator* alloc = RootAllocator::GetDefaultAllocator();
     systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 
     renderDevice = RenderDevice::Create(systemAllocator);
