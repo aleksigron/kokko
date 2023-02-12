@@ -4,7 +4,7 @@
 
 #include "Engine/Engine.hpp"
 
-#include "Memory/Memory.hpp"
+#include "Memory/RootAllocator.hpp"
 #include "Memory/AllocatorManager.hpp"
 
 #include "Platform/Window.hpp"
@@ -53,6 +53,11 @@ kokko::WindowSettings GetWindowSettings(const kokko::editor::EditorUserSettings&
 
 int main(int argc, char** argv)
 {
+	RootAllocator rootAllocator;
+	Allocator* defaultAlloc = RootAllocator::GetDefaultAllocator();
+	kokko::Logger logger(defaultAlloc);
+	kokko::Log::SetLogInstance(&logger);
+
 	Instrumentation& instr = Instrumentation::Get();
 	instr.BeginSession("unit_test_trace.json");
 
@@ -67,93 +72,81 @@ int main(int argc, char** argv)
 	instr.EndSession();
 	instr.BeginSession("startup_trace.json");
 
-	// Memory
+	AllocatorManager* allocManager = defaultAlloc->MakeNew<AllocatorManager>(defaultAlloc);
 
-	Memory::InitializeMemorySystem();
+	// Virtual filesystem
+	// Initial virtual mount points before editor project is loaded
 
+	Allocator* filesystemAllocator = allocManager->CreateAllocatorScope("Filesystem", defaultAlloc);
+	kokko::FilesystemResolverVirtual resolver(filesystemAllocator);
+	kokko::Filesystem filesystem(filesystemAllocator, &resolver);
+
+	using EditorConst = kokko::editor::EditorConstants;
+
+	using MountPoint = kokko::FilesystemResolverVirtual::MountPoint;
+	MountPoint mounts[] = {
+		MountPoint{ kokko::ConstStringView(EditorConst::VirtualMountEngine), kokko::ConstStringView("engine/res") },
+		MountPoint{ kokko::ConstStringView(EditorConst::VirtualMountEditor), kokko::ConstStringView("editor/res") }
+	};
+	resolver.SetMountPoints(ArrayView(mounts));
+
+	Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
+	kokko::editor::EditorApp editor(appAllocator, &filesystem, &resolver);
+	kokko::editor::AssetLibrary* assetLibrary = editor.GetAssetLibrary();
+	kokko::editor::EditorAssetLoader assetLoader(appAllocator, &filesystem, assetLibrary);
+
+	editor.LoadUserSettings();
+	kokko::WindowSettings windowSettings = GetWindowSettings(editor.GetUserSettings());
+
+	// TODO: Make sure EditorApp GPU resources are released before Engine is destroyed
+	// 
+
+	// Engine
+
+	Engine engine(allocManager, &filesystem, &assetLoader);
+
+	if (assetLibrary->ScanEngineAssets() == false)
 	{
-		Allocator* defaultAlloc = Memory::GetDefaultAllocator();
-        kokko::Logger logger(defaultAlloc);
-        kokko::Log::SetLogInstance(&logger);
+		instr.EndSession();
 
-		AllocatorManager* allocManager = defaultAlloc->MakeNew<AllocatorManager>(defaultAlloc);
-
-		// Virtual filesystem
-		// Initial virtual mount points before editor project is loaded
-
-		Allocator* filesystemAllocator = allocManager->CreateAllocatorScope("Filesystem", defaultAlloc);
-		kokko::FilesystemResolverVirtual resolver(filesystemAllocator);
-		kokko::Filesystem filesystem(filesystemAllocator, &resolver);
-
-		using EditorConst = kokko::editor::EditorConstants;
-
-		using MountPoint = kokko::FilesystemResolverVirtual::MountPoint;
-		MountPoint mounts[] = {
-			MountPoint{ kokko::ConstStringView(EditorConst::VirtualMountEngine), kokko::ConstStringView("engine/res") },
-			MountPoint{ kokko::ConstStringView(EditorConst::VirtualMountEditor), kokko::ConstStringView("editor/res") }
-		};
-		resolver.SetMountPoints(ArrayView(mounts));
-
-		Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
-		kokko::editor::EditorApp editor(appAllocator, &filesystem, &resolver);
-		kokko::editor::AssetLibrary* assetLibrary = editor.GetAssetLibrary();
-		kokko::editor::EditorAssetLoader assetLoader(appAllocator, &filesystem, assetLibrary);
-
-		editor.LoadUserSettings();
-		kokko::WindowSettings windowSettings = GetWindowSettings(editor.GetUserSettings());
-
-		// TODO: Make sure EditorApp GPU resources are released before Engine is destroyed
-		// 
-
-		// Engine
-
-		Engine engine(allocManager, &filesystem, &assetLoader);
-
-		if (assetLibrary->ScanEngineAssets() == false)
-		{
-			instr.EndSession();
-
-			res = -1;
-		}
-		else if (engine.Initialize(windowSettings))
-		{
-			editor.Initialize(&engine);
-
-			engine.SetAppPointer(&editor);
-
-			instr.EndSession();
-
-			while (engine.GetWindowManager()->GetWindow()->GetShouldClose() == false)
-			{
-				engine.StartFrame();
-				editor.StartFrame();
-
-				engine.UpdateWorld();
-
-				// Because editor can change the state of the world and systems,
-				// let's run those updates at the same part of the frame as other updates
-				bool editorWantsToExit = false;
-				editor.Update(engine.GetSettings(), editorWantsToExit);
-				if (editorWantsToExit)
-                    engine.GetWindowManager()->GetWindow()->SetShouldClose(true);
-
-				engine.Render(editor.GetEditorCameraParameters(), editor.GetSceneViewFramebuffer());
-
-				editor.EndFrame();
-				engine.EndFrame();
-			}
-
-			editor.Deinitialize();
-		}
-		else
-		{
-			instr.EndSession();
-
-			res = -1;
-		}
+		res = -1;
 	}
+	else if (engine.Initialize(windowSettings))
+	{
+		editor.Initialize(&engine);
 
-	Memory::DeinitializeMemorySystem();
+		engine.SetAppPointer(&editor);
+
+		instr.EndSession();
+
+		while (engine.GetWindowManager()->GetWindow()->GetShouldClose() == false)
+		{
+			engine.StartFrame();
+			editor.StartFrame();
+
+			engine.UpdateWorld();
+
+			// Because editor can change the state of the world and systems,
+			// let's run those updates at the same part of the frame as other updates
+			bool editorWantsToExit = false;
+			editor.Update(engine.GetSettings(), editorWantsToExit);
+			if (editorWantsToExit)
+                engine.GetWindowManager()->GetWindow()->SetShouldClose(true);
+
+			engine.Render(editor.GetEditorCameraParameters(), editor.GetSceneViewFramebuffer());
+
+			editor.EndFrame();
+			engine.EndFrame();
+		}
+
+		editor.Deinitialize();
+	}
+	else
+	{
+		instr.EndSession();
+
+		res = -1;
+	}
 
 	return res;
 }

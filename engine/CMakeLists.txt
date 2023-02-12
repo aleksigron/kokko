@@ -191,8 +191,6 @@ set (KOKKO_SOURCES
 	src/Math/Vec2.hpp
 	src/Math/Vec3.hpp
 	src/Math/Vec4.hpp
-	src/Memory/Memory.cpp
-	src/Memory/Memory.hpp
 	src/Memory/Allocator.cpp
 	src/Memory/Allocator.hpp
 	src/Memory/AllocatorManager.cpp
@@ -201,6 +199,8 @@ set (KOKKO_SOURCES
 	src/Memory/DefaultAllocator.hpp
 	src/Memory/MetricAllocator.cpp
 	src/Memory/MetricAllocator.hpp
+	src/Memory/RootAllocator.cpp
+	src/Memory/RootAllocator.hpp
 	src/Memory/TraceAllocator.cpp
 	src/Memory/TraceAllocator.hpp
     src/Platform/Window.hpp

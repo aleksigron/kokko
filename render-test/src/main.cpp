@@ -5,14 +5,14 @@
 
 #include "Debug/Instrumentation.hpp"
 
-#include "Memory/Memory.hpp"
+#include "Memory/RootAllocator.hpp"
 
 #include "System/Logger.hpp"
 
 int main(int argc, char** argv)
 {
-	Memory::InitializeMemorySystem();
-	Allocator* defaultAlloc = Memory::GetDefaultAllocator();
+	RootAllocator rootAllocator;
+	Allocator* defaultAlloc = RootAllocator::GetDefaultAllocator();
 	kokko::Logger logger(defaultAlloc);
 	kokko::Log::SetLogInstance(&logger);
 
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 			continue;
 		}
 
-		const std::string testNameStr = testPath.u8string();
+		const std::string testNameStr = testPath.generic_u8string();
 
 		KK_LOG_INFO("Run test: {}", testNameStr.c_str());
 
@@ -63,10 +63,6 @@ int main(int argc, char** argv)
 	}
 
 	instr.EndSession();
-	
-	// TODO: this will not be called, if we exit early.
-	// TODO: if we call this here, we deallocate the allocator too soon.
-	//Memory::DeinitializeMemorySystem();
 
 	return 0;
 }

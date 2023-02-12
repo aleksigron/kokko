@@ -14,8 +14,6 @@
 
 #include "Math/Rectangle.hpp"
 
-#include "Memory/Memory.hpp"
-
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
@@ -38,39 +36,37 @@ World::World(AllocatorManager* allocManager,
 	levelSerializer(allocator),
 	resourceManagers(resourceManagers)
 {
-	Allocator* alloc = Memory::GetDefaultAllocator();
-
-	entityManager.CreateScope(allocManager, "EntityManager", alloc);
+	entityManager.CreateScope(allocManager, "EntityManager", allocator);
 	entityManager.New(entityManager.allocator, debugNameAllocator);
 
-	lightManager.CreateScope(allocManager, "LightManager", alloc);
+	lightManager.CreateScope(allocManager, "LightManager", allocator);
 	lightManager.New(lightManager.allocator);
 
-	cameraSystem.CreateScope(allocManager, "CameraSystem", alloc);
+	cameraSystem.CreateScope(allocManager, "CameraSystem", allocator);
 	cameraSystem.New(cameraSystem.allocator);
 
-	scene.CreateScope(allocManager, "Scene", alloc);
+	scene.CreateScope(allocManager, "Scene", allocator);
 	scene.New(scene.allocator);
 
-	environmentSystem.CreateScope(allocManager, "EnvironmentSystem", alloc);
+	environmentSystem.CreateScope(allocManager, "EnvironmentSystem", allocator);
 	environmentSystem.New(environmentSystem.allocator, assetLoader, renderDevice,
 		resourceManagers.shaderManager, resourceManagers.meshManager, resourceManagers.textureManager);
 
-	meshComponentSystem.CreateScope(allocManager, "MeshComponentSystem", alloc);
+	meshComponentSystem.CreateScope(allocManager, "MeshComponentSystem", allocator);
 	meshComponentSystem.New(meshComponentSystem.allocator, resourceManagers.meshManager);
 
-	renderer.CreateScope(allocManager, "Renderer", alloc);
+	renderer.CreateScope(allocManager, "Renderer", allocator);
 	renderer.New(renderer.allocator, renderDevice, meshComponentSystem.instance, scene.instance,
 		cameraSystem.instance, lightManager.instance, environmentSystem.instance, resourceManagers);
 
-	scriptSystem.CreateScope(allocManager, "ScriptSystem", alloc);
+	scriptSystem.CreateScope(allocManager, "ScriptSystem", allocator);
 	scriptSystem.New(scriptSystem.allocator);
 
-	terrainSystem.CreateScope(allocManager, "TerrainSystem", alloc);
+	terrainSystem.CreateScope(allocManager, "TerrainSystem", allocator);
 	terrainSystem.New(terrainSystem.allocator, renderDevice,
 		resourceManagers.materialManager, resourceManagers.shaderManager);
 
-	particleSystem.CreateScope(allocManager, "ParticleEffects", alloc);
+	particleSystem.CreateScope(allocManager, "ParticleEffects", allocator);
 	particleSystem.New(particleSystem.allocator, renderDevice, resourceManagers.shaderManager, resourceManagers.meshManager);
 	levelSerializer.Initialize(this, resourceManagers);
 }
