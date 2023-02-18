@@ -12,6 +12,8 @@ struct MaterialId;
 
 namespace kokko
 {
+
+class AssetInfo;
 class UniformData;
 
 struct BufferUniform;
@@ -19,8 +21,6 @@ struct TextureUniform;
 
 namespace editor
 {
-
-class AssetInfo;
 
 class AssetView : public EditorWindow
 {

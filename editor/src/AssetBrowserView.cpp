@@ -4,9 +4,12 @@
 
 #include "Core/Core.hpp"
 
+#include "Engine/EngineConstants.hpp"
+
+#include "Resources/AssetLibrary.hpp"
+
 #include "System/FilesystemResolver.hpp"
 
-#include "AssetLibrary.hpp"
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 #include "EditorImages.hpp"
@@ -211,7 +214,7 @@ void AssetBrowserView::DrawEntry(
 	bool isDir = entry.is_directory();
 	bool isFile = entry.is_regular_file();
 
-	if (isFile && entry.path().extension() == EditorConstants::MetadataExtension)
+	if (isFile && entry.path().extension() == EngineConstants::MetadataExtension)
 		return;
 
 	const std::filesystem::path& entryPath = entry.path();

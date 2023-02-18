@@ -8,7 +8,8 @@
 #include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
 
-#include "AssetLibrary.hpp"
+#include "Resources/AssetLibrary.hpp"
+
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 

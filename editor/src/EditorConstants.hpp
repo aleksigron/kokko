@@ -11,20 +11,11 @@ class EditorConstants
 {
 public:
 	// Asset Library
-
-	static const char* const MetadataExtensionStr;
-	static const std::filesystem::path MetadataExtension;
-
-	static const char* const AssetDirectoryName;
-
-	static const char* const EngineResourcePath;
 	static const char* const EditorResourcePath;
 
 	// Virtual filesystem
 
-	static const char* const VirtualMountEngine;
 	static const char* const VirtualMountEditor;
-	static const char* const VirtualMountAssets;
 
 	// Editor settings
 
@@ -32,6 +23,7 @@ public:
 
 	// UI
 
+	static const char* const AssetDirectoryName;
 	static const char* const SceneDragDropType;
 	static const char* const AssetDragDropType;
 

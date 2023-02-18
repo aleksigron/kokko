@@ -12,6 +12,7 @@ class World;
 namespace kokko
 {
 
+class AssetLibrary;
 class FilesystemResolver;
 
 struct EngineSettings;
@@ -19,7 +20,6 @@ struct EngineSettings;
 namespace editor
 {
 
-class AssetLibrary;
 class EditorProject;
 
 struct EditorContext

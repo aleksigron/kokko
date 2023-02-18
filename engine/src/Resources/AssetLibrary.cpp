@@ -10,14 +10,11 @@
 
 #include "Core/Core.hpp"
 
+#include "Engine/EngineConstants.hpp"
+
 #include "System/Filesystem.hpp"
 
-#include "EditorConstants.hpp"
-#include "EditorProject.hpp"
-
 namespace kokko
-{
-namespace editor
 {
 namespace
 {
@@ -122,7 +119,6 @@ TEST_CASE("AssetLibrary.NormalizeLineEndings")
 AssetLibrary::AssetLibrary(Allocator* allocator, Filesystem* filesystem) :
 	allocator(allocator),
 	filesystem(filesystem),
-	editorProject(nullptr),
 	uidToIndexMap(allocator),
 	pathToIndexMap(allocator),
 	assets(allocator)
@@ -160,7 +156,7 @@ Optional<Uid> AssetLibrary::CreateAsset(AssetType type, ConstStringView pathRela
 	Uid assetUid = Uid::Create();
 	uint64_t calculatedHash = CalculateHash(type, content);
 	uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
-	ConstStringView mount = ConstStringView(EditorConstants::VirtualMountAssets);
+	ConstStringView mount = ConstStringView(EngineConstants::VirtualMountAssets);
 
 	assets.PushBack(AssetInfo(allocator, mount, pathRelativeToAssets, assetUid, calculatedHash, type));
 	const String& virtualPath = assets.GetBack().GetVirtualPath();
@@ -175,7 +171,7 @@ Optional<Uid> AssetLibrary::CreateAsset(AssetType type, ConstStringView pathRela
 	rapidjson::Document document;
 	CreateMetadataJson(document, calculatedHash, assetUid);
 
-	String metaPath = virtualPath + EditorConstants::MetadataExtensionStr;
+	String metaPath = virtualPath + EngineConstants::MetadataExtension;
 	rapidjson::StringBuffer jsonStringBuffer;
 	if (WriteDocumentToFile(filesystem, metaPath.GetCStr(), document, jsonStringBuffer) == false)
 	{
@@ -211,7 +207,7 @@ bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> c
 		CreateMetadataJson(document, calculatedHash, asset.uid);
 
 		String assetVirtualPath = asset.GetVirtualPath();
-		String metaVirtualPath = assetVirtualPath + EditorConstants::MetadataExtensionStr;
+		String metaVirtualPath = assetVirtualPath + EngineConstants::MetadataExtension;
 
 		rapidjson::StringBuffer jsonStringBuffer;
 		if (WriteDocumentToFile(filesystem, metaVirtualPath.GetCStr(), document, jsonStringBuffer) == false)
@@ -232,24 +228,21 @@ bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> c
 	return true;
 }
 
-bool AssetLibrary::ScanEngineAssets()
+void AssetLibrary::SetAppScopeConfig(const AssetScopeConfiguration& config)
 {
-	return ScanAssets(true, false);
+	applicationConfig = config;
 }
 
-void AssetLibrary::SetProject(const EditorProject* project)
+void AssetLibrary::SetProjectScopeConfig(const AssetScopeConfiguration& config)
 {
-	// TODO: Remove current project assets when switching to new project
-
-	editorProject = project;
-
-	ScanAssets(false, true);
+	projectConfig = config;
 }
 
-bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
+bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 {
 	namespace fs = std::filesystem;
 
+	const fs::path metadataExt(EngineConstants::MetadataExtension);
 	const fs::path levelExt(".level");
 	const fs::path materialExt(".material");
 	const fs::path modelGltfExt(".gltf");
@@ -276,7 +269,7 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 
 		const fs::path& currentPath = entry.path();
 		std::filesystem::path currentExt = currentPath.extension();
-		if (entry.is_regular_file() == false || currentExt == EditorConstants::MetadataExtension)
+		if (entry.is_regular_file() == false || currentExt == metadataExt)
 			return;
 
 		assetPathStr = currentPath.generic_u8string();
@@ -317,7 +310,7 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 
 		// Open meta file
 		fs::path metaPath = currentPath;
-		metaPath += EditorConstants::MetadataExtension;
+		metaPath += metadataExt;
 		metaPathStr = metaPath.u8string();
 
 		bool needsToWriteMetaFile = false;
@@ -406,12 +399,10 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 		pathPair->second = assetRefIndex;
 	};
 
-	if (scanEngineAndEditor)
+	if (scanEngine)
 	{
-		const fs::path engineResDir = fs::absolute(EditorConstants::EngineResourcePath);
-		const fs::path editorResDir = fs::absolute(EditorConstants::EditorResourcePath);
-		const ConstStringView virtualMountEngine(EditorConstants::VirtualMountEngine);
-		const ConstStringView virtualMountEditor(EditorConstants::VirtualMountEditor);
+		const fs::path engineResDir = fs::absolute(EngineConstants::EngineResourcePath);
+		const ConstStringView virtualMountEngine(EngineConstants::VirtualMountEngine);
 
 		std::error_code engineItrError;
 		auto engineItr = fs::recursive_directory_iterator(engineResDir, engineItrError);
@@ -421,25 +412,29 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 			return false;
 		}
 
-		std::error_code editorItrError;
-		auto editorItr = fs::recursive_directory_iterator(editorResDir, editorItrError);
-		if (editorItrError)
+		for (const auto& entry : engineItr)
+			processEntry(virtualMountEngine, engineResDir, entry);
+	}
+
+	if (scanApp)
+	{
+		const fs::path& assetDir = applicationConfig.assetFolderPath;
+
+		std::error_code appItrError;
+		auto appItr = fs::recursive_directory_iterator(assetDir, appItrError);
+		if (appItrError)
 		{
-			KK_LOG_ERROR("Editor assets couldn't be processed, please check the current working directory.");
+			KK_LOG_ERROR("Application assets couldn't be processed, please check the current working directory.");
 			return false;
 		}
 
-		for (const auto& entry : engineItr)
-			processEntry(virtualMountEngine, engineResDir, entry);
-
-		for (const auto& entry : editorItr)
-			processEntry(virtualMountEditor, editorResDir, entry);
+		for (const auto& entry : appItr)
+			processEntry(applicationConfig.virtualMountName.GetRef(), assetDir, entry);
 	}
 
 	if (scanProject)
 	{
-		const fs::path& assetDir = editorProject->GetAssetPath();
-		const ConstStringView virtualMountAssets(EditorConstants::VirtualMountAssets);
+		const fs::path& assetDir = projectConfig.assetFolderPath;
 
 		std::error_code projectItrError;
 		auto projectItr = fs::recursive_directory_iterator(assetDir, projectItrError);
@@ -450,7 +445,7 @@ bool AssetLibrary::ScanAssets(bool scanEngineAndEditor, bool scanProject)
 		}
 
 		for (const auto& entry : projectItr)
-			processEntry(virtualMountAssets, assetDir, entry);
+			processEntry(projectConfig.virtualMountName.GetRef(), assetDir, entry);
 	}
 
 	return true;
@@ -491,5 +486,4 @@ AssetInfo::AssetInfo(Allocator* allocator, ConstStringView virtualMount, ConstSt
 	this->filename = virtualPath.GetRef().SubStr(lastSlash + 1);
 }
 
-}
 }
