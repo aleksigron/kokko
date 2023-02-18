@@ -5,6 +5,7 @@
 #include "Core/Core.hpp"
 
 #include "Engine/Engine.hpp"
+#include "Engine/EngineConstants.hpp"
 #include "Engine/World.hpp"
 
 #include "Platform/Window.hpp"
@@ -20,6 +21,7 @@
 #include "AssetView.hpp"
 #include "DebugView.hpp"
 #include "EditorConstants.hpp"
+#include "EditorProject.hpp"
 #include "EntityListView.hpp"
 #include "EntityView.hpp"
 #include "SceneView.hpp"
@@ -38,6 +40,12 @@ EditorCore::EditorCore(Allocator* allocator, Filesystem* filesystem, FilesystemR
 	editorWindows(allocator),
 	sceneView(nullptr)
 {
+	auto appConfig = AssetScopeConfiguration{
+		EditorConstants::EditorResourcePath,
+		String(allocator, EditorConstants::VirtualMountEditor)
+	};
+
+	assetLibrary.SetAppScopeConfig(appConfig);
 }
 
 EditorCore::~EditorCore()
@@ -116,7 +124,13 @@ Optional<Uid> EditorCore::GetLoadedLevelUid() const
 
 void EditorCore::NotifyProjectChanged(const EditorProject* editorProject)
 {
-	assetLibrary.SetProject(editorProject);
+	auto projectConfig = AssetScopeConfiguration{
+		editorProject->GetAssetPath(),
+		String(allocator, EngineConstants::VirtualMountAssets)
+	};
+
+	assetLibrary.SetProjectScopeConfig(projectConfig);
+	assetLibrary.ScanAssets(false, false, true);
 
 	editorContext.project = editorProject;
 	editorContext.assetLibrary = &assetLibrary;
@@ -209,7 +223,7 @@ void EditorCore::SaveLevelAs(const std::filesystem::path& pathRelativeToAssets)
 	ArrayView<const uint8_t> contentView(reinterpret_cast<const uint8_t*>(content.GetData()), content.GetLength());
 
 	// TODO: Extract to a function
-	std::string pathStdStr = EditorConstants::VirtualMountAssets + ('/' + pathRelativeToAssets.generic_u8string());
+	std::string pathStdStr = EngineConstants::VirtualMountAssets + ('/' + pathRelativeToAssets.generic_u8string());
 	String pathStr(allocator);
 	pathStr.Assign(ConstStringView(pathStdStr.c_str(), pathStdStr.length()));
 

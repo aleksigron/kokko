@@ -7,12 +7,12 @@
 #include "Rendering/Uniform.hpp"
 #include "Rendering/UniformData.hpp"
 
+#include "Resources/AssetLibrary.hpp"
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MaterialSerializer.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
-#include "AssetLibrary.hpp"
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 

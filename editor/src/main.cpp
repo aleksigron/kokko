@@ -3,6 +3,7 @@
 #include "Debug/Instrumentation.hpp"
 
 #include "Engine/Engine.hpp"
+#include "Engine/EngineConstants.hpp"
 
 #include "Memory/RootAllocator.hpp"
 #include "Memory/AllocatorManager.hpp"
@@ -11,13 +12,14 @@
 
 #include "Rendering/CameraParameters.hpp"
 
+#include "Resources/AssetLibrary.hpp"
+
 #include "System/Filesystem.hpp"
 #include "System/FilesystemResolverVirtual.hpp"
 #include "System/Logger.hpp"
 #include "System/WindowManager.hpp"
 #include "System/WindowSettings.hpp"
 
-#include "AssetLibrary.hpp"
 #include "EditorApp.hpp"
 #include "EditorAssetLoader.hpp"
 #include "EditorConstants.hpp"
@@ -81,31 +83,37 @@ int main(int argc, char** argv)
 	kokko::FilesystemResolverVirtual resolver(filesystemAllocator);
 	kokko::Filesystem filesystem(filesystemAllocator, &resolver);
 
+	using EngineConst = kokko::EngineConstants;
 	using EditorConst = kokko::editor::EditorConstants;
 
-	using MountPoint = kokko::FilesystemResolverVirtual::MountPoint;
-	MountPoint mounts[] = {
-		MountPoint{ kokko::ConstStringView(EditorConst::VirtualMountEngine), kokko::ConstStringView("engine/res") },
-		MountPoint{ kokko::ConstStringView(EditorConst::VirtualMountEditor), kokko::ConstStringView("editor/res") }
+	kokko::FilesystemResolverVirtual::MountPoint mounts[] = {
+		kokko::FilesystemResolverVirtual::MountPoint{
+			kokko::ConstStringView(EngineConst::VirtualMountEngine),
+			kokko::ConstStringView(EngineConst::EngineResourcePath)
+		},
+		kokko::FilesystemResolverVirtual::MountPoint{
+			kokko::ConstStringView(EditorConst::VirtualMountEditor),
+			kokko::ConstStringView(EditorConst::EditorResourcePath)
+		}
 	};
 	resolver.SetMountPoints(ArrayView(mounts));
 
 	Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
 	kokko::editor::EditorApp editor(appAllocator, &filesystem, &resolver);
-	kokko::editor::AssetLibrary* assetLibrary = editor.GetAssetLibrary();
-	kokko::editor::EditorAssetLoader assetLoader(appAllocator, &filesystem, assetLibrary);
+	kokko::AssetLibrary* assetLibrary = editor.GetAssetLibrary();
 
 	editor.LoadUserSettings();
 	kokko::WindowSettings windowSettings = GetWindowSettings(editor.GetUserSettings());
 
 	// TODO: Make sure EditorApp GPU resources are released before Engine is destroyed
-	// 
+
+	kokko::editor::EditorAssetLoader assetLoader(appAllocator, &filesystem, assetLibrary);
 
 	// Engine
 
 	Engine engine(allocManager, &filesystem, &assetLoader);
 
-	if (assetLibrary->ScanEngineAssets() == false)
+	if (assetLibrary->ScanAssets(true, true, false) == false)
 	{
 		instr.EndSession();
 

@@ -19,13 +19,13 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/MeshComponentSystem.hpp"
 
+#include "Resources/AssetLibrary.hpp"
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/ModelManager.hpp"
 #include "Resources/MeshUid.hpp"
 #include "Resources/TextureManager.hpp"
 
-#include "AssetLibrary.hpp"
 #include "EditorConstants.hpp"
 #include "EditorContext.hpp"
 

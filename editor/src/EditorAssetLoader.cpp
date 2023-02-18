@@ -1,8 +1,8 @@
 #include "EditorAssetLoader.hpp"
 
-#include "System/Filesystem.hpp"
+#include "Resources/AssetLibrary.hpp"
 
-#include "AssetLibrary.hpp"
+#include "System/Filesystem.hpp"
 
 namespace kokko
 {

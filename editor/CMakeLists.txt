@@ -39,8 +39,6 @@ set (EDITOR_SOURCES
 	src/main.cpp
 	src/AssetBrowserView.cpp
 	src/AssetBrowserView.hpp
-	src/AssetLibrary.cpp
-	src/AssetLibrary.hpp
 	src/AssetView.cpp
 	src/AssetView.hpp
 	src/DebugView.cpp

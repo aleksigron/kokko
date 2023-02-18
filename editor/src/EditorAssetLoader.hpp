@@ -9,12 +9,11 @@ class Allocator;
 namespace kokko
 {
 
+class AssetLibrary;
 class Filesystem;
 
 namespace editor
 {
-
-class AssetLibrary;
 
 class EditorAssetLoader : public AssetLoader
 {

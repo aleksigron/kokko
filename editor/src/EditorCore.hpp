@@ -6,9 +6,10 @@
 #include "Core/Optional.hpp"
 #include "Core/String.hpp"
 
+#include "Resources/AssetLibrary.hpp"
+
 #include "FilePickerDialog.hpp"
 
-#include "AssetLibrary.hpp"
 #include "EditorImages.hpp"
 #include "EditorContext.hpp"
 

@@ -122,6 +122,8 @@ set (KOKKO_SOURCES
 	src/Engine/ComponentSystemDefaultImpl.hpp
 	src/Engine/Engine.cpp
 	src/Engine/Engine.hpp
+	src/Engine/EngineConstants.cpp
+	src/Engine/EngineConstants.hpp
 	src/Engine/EngineSettings.hpp
 	src/Engine/Entity.hpp
 	src/Engine/EntityFactory.cpp
@@ -257,6 +259,8 @@ set (KOKKO_SOURCES
 	src/Rendering/UniformList.hpp
 	src/Rendering/VertexFormat.cpp
 	src/Rendering/VertexFormat.hpp
+	src/Resources/AssetLibrary.cpp
+	src/Resources/AssetLibrary.hpp
 	src/Resources/AssetLoader.hpp
 	src/Resources/BitmapFont.cpp
 	src/Resources/BitmapFont.hpp

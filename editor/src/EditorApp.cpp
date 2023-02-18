@@ -11,6 +11,7 @@
 #include "Core/Core.hpp"
 
 #include "Engine/Engine.hpp"
+#include "Engine/EngineConstants.hpp"
 #include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
 
@@ -504,9 +505,18 @@ void EditorApp::OnProjectChanged()
 
 	using MountPoint = FilesystemResolverVirtual::MountPoint;
 	MountPoint mounts[] = {
-		MountPoint{ ConstStringView(EditorConstants::VirtualMountEngine), ConstStringView("engine/res") },
-		MountPoint{ ConstStringView(EditorConstants::VirtualMountEditor), ConstStringView("editor/res") },
-		MountPoint{ ConstStringView(EditorConstants::VirtualMountAssets), assetPathRef }
+		MountPoint{
+			ConstStringView(EngineConstants::VirtualMountEngine),
+			ConstStringView(EngineConstants::EngineResourcePath)
+		},
+		MountPoint{
+			ConstStringView(EditorConstants::VirtualMountEditor),
+			ConstStringView(EngineConstants::EngineResourcePath)
+		},
+		MountPoint{
+			ConstStringView(EngineConstants::VirtualMountAssets),
+			assetPathRef
+		}
 	};
 	filesystemResolver->SetMountPoints(ArrayView(mounts));
 

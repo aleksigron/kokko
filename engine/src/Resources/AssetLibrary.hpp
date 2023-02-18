@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <filesystem>
 
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
@@ -16,11 +17,6 @@ namespace kokko
 
 class Filesystem;
 
-namespace editor
-{
-
-class EditorProject;
-
 enum class AssetType
 {
 	Level,
@@ -28,6 +24,12 @@ enum class AssetType
 	Model,
 	Shader,
 	Texture
+};
+
+struct AssetScopeConfiguration
+{
+	std::filesystem::path assetFolderPath;
+	String virtualMountName;
 };
 
 class AssetInfo
@@ -56,6 +58,7 @@ private:
 	AssetType type;
 };
 
+
 class AssetLibrary
 {
 public:
@@ -68,24 +71,24 @@ public:
 	Optional<Uid> CreateAsset(AssetType type, ConstStringView pathRelativeToAssets, ArrayView<const uint8_t> content);
 	bool UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> content);
 
-	bool ScanEngineAssets();
-	void SetProject(const EditorProject* project);
+	void SetAppScopeConfig(const AssetScopeConfiguration& config);
+	void SetProjectScopeConfig(const AssetScopeConfiguration& config);
+
+	bool ScanAssets(bool scanEngine, bool scanApp, bool scanProject);
 
 private:
-	bool ScanAssets(bool scanEngineAndEditor, bool scanProject);
-
 	uint64_t CalculateHash(AssetType type, ArrayView<const uint8_t> content);
 
 private:
 	Allocator* allocator;
 	Filesystem* filesystem;
-	const EditorProject* editorProject;
 
 	HashMap<Uid, uint32_t> uidToIndexMap;
 	HashMap<String, uint32_t> pathToIndexMap;
 
 	Array<AssetInfo> assets;
+	AssetScopeConfiguration applicationConfig;
+	AssetScopeConfiguration projectConfig;
 };
 
-}
 }

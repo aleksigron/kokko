@@ -19,6 +19,7 @@ struct CameraParameters;
 namespace kokko
 {
 
+class AssetLibrary;
 class Filesystem;
 class FilesystemResolverVirtual;
 class Window;
@@ -29,7 +30,6 @@ struct EngineSettings;
 namespace editor
 {
 
-class AssetLibrary;
 class EditorCore;
 
 enum class EditorWindowType;
