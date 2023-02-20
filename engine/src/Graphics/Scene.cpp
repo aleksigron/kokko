@@ -18,8 +18,7 @@ Scene::Scene(Allocator* allocator):
 	allocator(allocator),
 	entityMap(allocator),
 	updatedEntities(allocator),
-	updatedTransforms(allocator),
-	activeCamera(Entity::Null)
+	updatedTransforms(allocator)
 {
 	data = InstanceData{};
 	data.count = 1; // Reserve index 0 as SceneObjectId::Null value

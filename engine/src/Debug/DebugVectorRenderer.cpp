@@ -498,7 +498,7 @@ void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, co
 			Scene* scene = world->GetScene();
 			CameraSystem* cameraSystem = world->GetCameraSystem();
 
-			Entity cameraEntity = scene->GetActiveCameraEntity();
+			Entity cameraEntity = cameraSystem->GetActiveCamera();
 			SceneObjectId cameraSceneObject = scene->Lookup(cameraEntity);
 			const Mat4x4f& cameraTransform = scene->GetWorldTransform(cameraSceneObject);
 			Optional<Mat4x4f> viewOpt = cameraTransform.GetInverse();
@@ -512,7 +512,7 @@ void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, co
 			bool reverseDepth = false;
 
 			CameraId cameraId = cameraSystem->Lookup(cameraEntity);
-			ProjectionParameters projectionParams = cameraSystem->GetData(cameraId);
+			ProjectionParameters projectionParams = cameraSystem->GetProjection(cameraId);
 			projectionParams.SetAspectRatio(viewport.size.x, viewport.size.y);
 
 			proj = projectionParams.GetProjectionMatrix(reverseDepth);

@@ -66,8 +66,6 @@ private:
 	SortedArray<unsigned int> updatedEntities;
 	Array<Mat4x4f> updatedTransforms;
 
-	Entity activeCamera;
-
 	void Reallocate(unsigned int required);
 
 	// The specified object and all its children are updated
@@ -125,7 +123,4 @@ public:
 	void MarkUpdated(SceneObjectId id);
 
 	void NotifyUpdatedTransforms(size_t receiverCount, TransformUpdateReceiver** updateReceivers);
-
-	void SetActiveCameraEntity(Entity camera) { activeCamera = camera; }
-	Entity GetActiveCameraEntity() const { return activeCamera; }
 };

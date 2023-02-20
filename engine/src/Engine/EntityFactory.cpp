@@ -74,8 +74,8 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 	{
 		CameraSystem* cameraSystem = world->GetCameraSystem();
 		CameraId cameraId = cameraSystem->Lookup(entity);
-		if (cameraId == CameraId::Null())
-			cameraSystem->AddComponentToEntity(entity);
+		if (cameraId == CameraId::Null)
+			cameraSystem->AddCamera(entity);
 		break;
 	}
 	case EntityComponentType::Light:
@@ -139,8 +139,8 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 	{
 		CameraSystem* cameraSystem = world->GetCameraSystem();
 		CameraId cameraId = cameraSystem->Lookup(entity);
-		if (cameraId != CameraId::Null())
-			cameraSystem->RemoveComponent(cameraId);
+		if (cameraId != CameraId::Null)
+			cameraSystem->RemoveCamera(cameraId);
 		break;
 	}
 	case EntityComponentType::Light:

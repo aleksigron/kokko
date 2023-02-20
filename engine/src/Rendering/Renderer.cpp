@@ -711,22 +711,24 @@ CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>&
 	}
 	else
 	{
-		Entity cameraEntity = scene->GetActiveCameraEntity();
+		Entity cameraEntity = cameraSystem->GetActiveCamera();
 
 		CameraParameters result;
 
-		SceneObjectId cameraSceneObj = scene->Lookup(cameraEntity);
-		result.transform.forward = scene->GetWorldTransform(cameraSceneObj);
+		if (cameraEntity != Entity::Null) {
+			SceneObjectId cameraSceneObj = scene->Lookup(cameraEntity);
+			result.transform.forward = scene->GetWorldTransform(cameraSceneObj);
 
-		Optional<Mat4x4f> viewOpt = result.transform.forward.GetInverse();
-		if (viewOpt.HasValue())
-			result.transform.inverse = viewOpt.GetValue();
-		else
-			KK_LOG_ERROR("Renderer: camera's transform couldn't be inverted");
+			Optional<Mat4x4f> viewOpt = result.transform.forward.GetInverse();
+			if (viewOpt.HasValue())
+				result.transform.inverse = viewOpt.GetValue();
+			else
+				KK_LOG_ERROR("Renderer: camera's transform couldn't be inverted");
 
-		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
-		result.projection = cameraSystem->GetData(cameraId);
-		result.projection.SetAspectRatio(targetFramebuffer.GetWidth(), targetFramebuffer.GetHeight());
+			CameraId cameraId = cameraSystem->Lookup(cameraEntity);
+			result.projection = cameraSystem->GetProjection(cameraId);
+			result.projection.SetAspectRatio(targetFramebuffer.GetWidth(), targetFramebuffer.GetHeight());
+		}
 
 		return result;
 	}
