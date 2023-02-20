@@ -92,19 +92,19 @@ public:
 				params.orthographicFar = far;
 		}
 
-		CameraId cameraId = cameraSystem->AddComponentToEntity(entity);
-		cameraSystem->SetData(cameraId, params);
+		CameraId cameraId = cameraSystem->AddCamera(entity);
+		cameraSystem->SetProjection(cameraId, params);
 	}
 
 	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
 	{
 		CameraId cameraId = cameraSystem->Lookup(entity);
-		if (cameraId != CameraId::Null())
+		if (cameraId != CameraId::Null)
 		{
 			out << YAML::BeginMap;
 			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "camera";
 
-			ProjectionParameters params = cameraSystem->GetData(cameraId);
+			const ProjectionParameters& params = cameraSystem->GetProjection(cameraId);
 
 			out << YAML::Key << "projection_type" << YAML::Value << CameraSystem::GetProjectionTypeName(params.projection);
 

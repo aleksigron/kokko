@@ -353,7 +353,7 @@ void EntityView::DrawCameraComponent(Entity selectedEntity, World* world)
 	CameraSystem* cameraSystem = world->GetCameraSystem();
 	CameraId cameraId = cameraSystem->Lookup(selectedEntity);
 
-	if (cameraId != CameraId::Null())
+	if (cameraId != CameraId::Null)
 	{
 		ImGui::Spacing();
 
@@ -362,7 +362,7 @@ void EntityView::DrawCameraComponent(Entity selectedEntity, World* world)
 		if (ImGui::CollapsingHeader(componentTitle, &componentVisible, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			bool edited = false;
-			ProjectionParameters params = cameraSystem->GetData(cameraId);
+			ProjectionParameters params = cameraSystem->GetProjection(cameraId);
 
 			if (ImGui::BeginCombo("Projection", CameraSystem::GetProjectionTypeDisplayName(params.projection)))
 			{
@@ -409,10 +409,10 @@ void EntityView::DrawCameraComponent(Entity selectedEntity, World* world)
 			}
 
 			if (edited)
-				cameraSystem->SetData(cameraId, params);
+				cameraSystem->SetProjection(cameraId, params);
 
 			if (componentVisible == false)
-				cameraSystem->RemoveComponent(cameraId);
+				cameraSystem->RemoveCamera(cameraId);
 		}
 	}
 }
