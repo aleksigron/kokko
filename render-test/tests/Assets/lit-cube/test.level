@@ -1,0 +1,33 @@
+objects:
+  - entity_name: Cube
+    components:
+      - component_type: transform
+        position: [0, 0, 0]
+        rotation: [0, 0, 0]
+        scale: [1, 1, 1]
+      - component_type: mesh
+        mesh: 106116c3245cce9caa1e5ac62a9d26d7:00000000
+        material: c3bfb04f753809fe6984ccb23d8ffe15
+  - entity_name: Light
+    components:
+      - component_type: transform
+        position: [-1, 1, 1]
+        rotation: [0, -0, 0]
+        scale: [1, 1, 1]
+      - component_type: light
+        type: point
+        color: [1, 1, 1]
+        intensity: 0.829999983
+        radius: 10.1192884
+        cast_shadow: false
+  - entity_name: Camera
+    components:
+      - component_type: transform
+        position: [-2, 2, 2]
+        rotation: [-0.436332315, -0.785397708, 0]
+        scale: [1, 1.00000036, 1.00000024]
+      - component_type: camera
+        projection_type: perspective
+        field_of_view: 1
+        near: 0.100000001
+        far: 100

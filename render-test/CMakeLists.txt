@@ -16,6 +16,8 @@ include_directories(
 
 set (RENDER_TEST_SOURCES
 	src/main.cpp
+	src/TestRunnerAssetLoader.cpp
+	src/TestRunnerAssetLoader.hpp
 )
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${RENDER_TEST_SOURCES})

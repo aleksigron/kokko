@@ -1,16 +1,34 @@
 #include <filesystem>
 #include <thread>
 
+#include "Core/Array.hpp"
 #include "Core/Core.hpp"
 
 #include "Debug/Instrumentation.hpp"
 
+#include "Engine/Engine.hpp"
+#include "Engine/EngineConstants.hpp"
+#include "Engine/World.hpp"
+
 #include "Memory/RootAllocator.hpp"
 
+#include "Rendering/CameraParameters.hpp"
+#include "Rendering/RenderDevice.hpp"
+#include "Rendering/Framebuffer.hpp"
+
+#include "Resources/AssetLibrary.hpp"
+
+#include "System/Filesystem.hpp"
+#include "System/FilesystemResolverVirtual.hpp"
 #include "System/Logger.hpp"
+#include "System/WindowSettings.hpp"
+
+#include "TestRunnerAssetLoader.hpp"
 
 int main(int argc, char** argv)
 {
+	// Setup RootAllocator and logging
+
 	RootAllocator rootAllocator;
 	Allocator* defaultAlloc = RootAllocator::GetDefaultAllocator();
 	kokko::Logger logger(defaultAlloc);
@@ -18,6 +36,57 @@ int main(int argc, char** argv)
 
 	Instrumentation& instr = Instrumentation::Get();
 	instr.BeginSession("render_test_trace.json");
+
+	// Setup other engine systems
+
+	kokko::FilesystemResolverVirtual::MountPoint mounts[] = {
+		kokko::FilesystemResolverVirtual::MountPoint{
+			kokko::ConstStringView(kokko::EngineConstants::VirtualMountEngine),
+			kokko::ConstStringView(kokko::EngineConstants::EngineResourcePath)
+		},
+		kokko::FilesystemResolverVirtual::MountPoint{ 
+			kokko::ConstStringView(kokko::EngineConstants::VirtualMountAssets),
+			kokko::ConstStringView("render-test/res")
+		}
+	};
+	kokko::FilesystemResolverVirtual resolver(defaultAlloc);
+	resolver.SetMountPoints(ArrayView(mounts));
+
+	kokko::Filesystem filesystem(defaultAlloc, &resolver);
+	kokko::AssetLibrary assetLibrary(defaultAlloc, &filesystem);
+
+	auto assetConfig = kokko::AssetScopeConfiguration{
+		"render-test/res",
+		kokko::String(defaultAlloc, kokko::EngineConstants::VirtualMountAssets)
+	};
+	assetLibrary.SetAppScopeConfig(assetConfig);
+
+	AllocatorManager allocManager(defaultAlloc);
+	kokko::TestRunnerAssetLoader assetLoader(defaultAlloc, &filesystem, &assetLibrary);
+	Engine engine(&allocManager, &filesystem, &assetLoader);
+	engine.GetSettings()->enableDebugTools = false;
+
+	if (assetLibrary.ScanAssets(true, true, false) == false)
+	{
+		instr.EndSession();
+		return -1;
+	}
+	
+	kokko::WindowSettings windowSettings;
+	windowSettings.verticalSync = false;
+	windowSettings.visible = false;
+	windowSettings.maximized = false;
+	windowSettings.width = 200;
+	windowSettings.height = 200;
+	windowSettings.title = "kokko-render-test-runner";
+
+	if (engine.Initialize(windowSettings) == false)
+	{
+		instr.EndSession();
+		return -1;
+	}
+
+	// Setup tests
 
 	namespace fs = std::filesystem;
 	const auto testsRoot = fs::absolute("render-test/tests");
@@ -31,20 +100,33 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	fs::path testPath;
+	kokko::String testLevelContent(defaultAlloc);
+
+	Framebuffer framebuffer;
+	RenderTextureSizedFormat colorFormat[] = { RenderTextureSizedFormat::SRGB8 };
+	constexpr int width = 512;
+	constexpr int height = 512;
+	framebuffer.SetRenderDevice(engine.GetRenderDevice());
+	framebuffer.Create(width, height, Optional<RenderTextureSizedFormat>(), ArrayView(colorFormat));
+
+	Array<unsigned char> pixelDataArray(defaultAlloc);
+	pixelDataArray.Resize(width * height * 3);
+	unsigned char* pixelData = pixelDataArray.GetData();
+	//unsigned char pixelDataArray[width * height * 3];
+	//unsigned char* pixelData = pixelDataArray;
 
 	for (const auto& entry : testItr)
 	{
 		if (entry.is_regular_file() == false)
 			continue;
 
-		const auto path = entry.path();
+		const auto& path = entry.path();
 
 		if (path.filename() != testFilename)
 			continue;
 
 		std::error_code relativeError;
-		testPath = fs::relative(path.parent_path(), testsRoot, relativeError);
+		fs::path testPath = fs::relative(path.parent_path(), testsRoot, relativeError);
 
 		if (relativeError)
 		{
@@ -58,7 +140,34 @@ int main(int argc, char** argv)
 
 		{
 			KOKKO_PROFILE_SCOPE(testNameStr.c_str());
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+			World* world = engine.GetWorld();
+
+			{
+				KOKKO_PROFILE_SCOPE("Load test level content");
+
+				if (filesystem.ReadText(path.u8string().c_str(), testLevelContent) == false)
+				{
+					KK_LOG_ERROR("Test level content couldn't be loaded.");
+					continue;
+				}
+
+				world->GetSerializer()->DeserializeFromString(testLevelContent.GetCStr());
+			}
+
+			{
+				KOKKO_PROFILE_SCOPE("Run render test");
+
+				engine.StartFrame();
+				engine.UpdateWorld();
+				engine.Render(Optional<CameraParameters>(), framebuffer);
+				engine.EndFrame();
+
+				engine.GetRenderDevice()->ReadFramebufferPixels(0, 0, width, height,
+					RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, pixelData);
+			}
+
+			world->ClearAllEntities();
 		}
 	}
 

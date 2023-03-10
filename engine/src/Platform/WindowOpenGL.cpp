@@ -34,6 +34,7 @@ GLFWwindow* WindowOpenGL::CreateWindow(const WindowSettings& settings, NativeRen
     glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
     glfwWindowHint(GLFW_MAXIMIZED, settings.maximized ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, settings.visible ? GLFW_TRUE : GLFW_FALSE);
 
     GLFWwindow* window;
 
