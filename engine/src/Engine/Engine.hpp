@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Optional.hpp"
+
 #include "Engine/EngineSettings.hpp"
 #include "Engine/InstanceAllocatorPair.hpp"
 
@@ -61,7 +63,7 @@ public:
 
 	void StartFrame();
 	void UpdateWorld();
-	void Render(const CameraParameters& editorCamera, const Framebuffer& framebuffer);
+	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
 	void EndFrame();
 
 	void SetAppPointer(void* app);

@@ -137,7 +137,7 @@ void Engine::UpdateWorld()
 	world.instance->Update(windowManager.instance->GetWindow()->GetInputManager());
 }
 
-void Engine::Render(const CameraParameters& editorCamera, const Framebuffer& framebuffer)
+void Engine::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -146,7 +146,10 @@ void Engine::Render(const CameraParameters& editorCamera, const Framebuffer& fra
 	world.instance->Render(windowManager.instance->GetWindow(), editorCamera, framebuffer);
 	world.instance->DebugRender(debug.instance->GetVectorRenderer(), settings.renderDebug);
 
-	debug.instance->Render(world.instance, framebuffer, editorCamera);
+	if (settings.enableDebugTools)
+	{
+		debug.instance->Render(world.instance, framebuffer, editorCamera);
+	}
 }
 
 void Engine::EndFrame()

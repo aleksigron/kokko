@@ -603,6 +603,12 @@ void RenderDeviceOpenGL::SetFramebufferDrawBuffers(unsigned int count, const Ren
 	glDrawBuffers(count, attachments);
 }
 
+void RenderDeviceOpenGL::ReadFramebufferPixels(int x, int y, int width, int height,
+	RenderTextureBaseFormat format, RenderTextureDataType type, void* data)
+{
+	glReadPixels(x, y, width, height, ConvertTextureBaseFormat(format), ConvertTextureDataType(type), data);
+}
+
 // TEXTURE
 
 void RenderDeviceOpenGL::CreateTextures(unsigned int count, unsigned int* texturesOut)

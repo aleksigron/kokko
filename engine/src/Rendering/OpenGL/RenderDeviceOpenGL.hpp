@@ -64,6 +64,8 @@ public:
 	virtual void BindFramebuffer(RenderFramebufferTarget target, unsigned int framebuffer) override;
 	virtual void AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data) override;
 	virtual void SetFramebufferDrawBuffers(unsigned int count, const RenderFramebufferAttachment* buffers) override;
+	virtual void ReadFramebufferPixels(int x, int y, int width, int height,
+		RenderTextureBaseFormat format, RenderTextureDataType type, void* data) override;
 
 	virtual void CreateTextures(unsigned int count, unsigned int* texturesOut) override;
 	virtual void DestroyTextures(unsigned int count, unsigned int* textures) override;

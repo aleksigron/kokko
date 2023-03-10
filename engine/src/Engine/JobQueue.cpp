@@ -97,6 +97,7 @@ Job* JobQueue::Steal()
 			return nullptr;
 		}
 
+		assert((void*)job != (void*)0xcdcdcdcdcdcdcdcd);
 		return job;
 	}
 	else
