@@ -12,6 +12,7 @@ include_directories(
 	${PROJECT_ROOT}/deps/fmt/include
 	${PROJECT_ROOT}/deps/glad/include
 	${PROJECT_ROOT}/deps/rapidjson/include
+	${PROJECT_ROOT}/deps/libwebp/src
 )
 
 set (RENDER_TEST_SOURCES
@@ -26,6 +27,10 @@ set(SOURCES
 	${RENDER_TEST_SOURCES}
 )
 
-add_executable(${EXECUTABLE_NAME} $<TARGET_OBJECTS:${KOKKO_LIB}> ${SOURCES})
+add_executable(${EXECUTABLE_NAME} ${SOURCES})
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES FOLDER "kokko")
+target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${KOKKO_LIB})
 
-target_link_libraries(${EXECUTABLE_NAME} ${KOKKO_LIB})
+add_subdirectory(${PROJECT_ROOT}/deps/libwebp libwebp-build)
+target_link_libraries(${EXECUTABLE_NAME} PUBLIC webp)
+

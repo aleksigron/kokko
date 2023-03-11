@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <thread>
 
+#include "webp/encode.h"
+
 #include "Core/Array.hpp"
 #include "Core/Core.hpp"
 
@@ -106,14 +108,15 @@ int main(int argc, char** argv)
 	RenderTextureSizedFormat colorFormat[] = { RenderTextureSizedFormat::SRGB8 };
 	constexpr int width = 512;
 	constexpr int height = 512;
+	constexpr int bytesPerPixel = 3;
+	constexpr int stride = width * bytesPerPixel;
+	constexpr int totalBytes = stride * height;
 	framebuffer.SetRenderDevice(engine.GetRenderDevice());
 	framebuffer.Create(width, height, Optional<RenderTextureSizedFormat>(), ArrayView(colorFormat));
 
 	Array<unsigned char> pixelDataArray(defaultAlloc);
-	pixelDataArray.Resize(width * height * 3);
+	pixelDataArray.Resize(totalBytes);
 	unsigned char* pixelData = pixelDataArray.GetData();
-	//unsigned char pixelDataArray[width * height * 3];
-	//unsigned char* pixelData = pixelDataArray;
 
 	for (const auto& entry : testItr)
 	{
@@ -125,8 +128,10 @@ int main(int argc, char** argv)
 		if (path.filename() != testFilename)
 			continue;
 
+		const auto testFolderPath = path.parent_path();
+
 		std::error_code relativeError;
-		fs::path testPath = fs::relative(path.parent_path(), testsRoot, relativeError);
+		fs::path testPath = fs::relative(testFolderPath, testsRoot, relativeError);
 
 		if (relativeError)
 		{
@@ -163,8 +168,21 @@ int main(int argc, char** argv)
 				engine.Render(Optional<CameraParameters>(), framebuffer);
 				engine.EndFrame();
 
+				engine.GetRenderDevice()->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebuffer.GetFramebufferId());
 				engine.GetRenderDevice()->ReadFramebufferPixels(0, 0, width, height,
 					RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, pixelData);
+
+				uint8_t* webpBuffer;
+				size_t webpSize = WebPEncodeRGB(pixelData, width, height, stride, 95.0f, &webpBuffer);
+				if (webpSize != 0)
+				{
+					auto resultPath = testFolderPath / "actual.webp";
+
+					ArrayView<uint8_t> content(webpBuffer, webpSize);
+					filesystem.Write(resultPath.u8string().c_str(), content, false);
+
+					WebPFree(webpBuffer);
+				}
 			}
 
 			world->ClearAllEntities();
