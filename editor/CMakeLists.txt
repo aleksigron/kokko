@@ -83,6 +83,7 @@ set(SOURCES
 )
 
 add_executable(${EXECUTABLE_NAME} $<TARGET_OBJECTS:${KOKKO_LIB}> ${SOURCES})
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES FOLDER "kokko")
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_ROOT}/build/bin/release"

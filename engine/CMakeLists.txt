@@ -362,6 +362,7 @@ source_group(Dependencies\\xxhash FILES ${XXHASH_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})
 
 add_library(${KOKKO_LIB} OBJECT ${DEPS_SOURCES} ${KOKKO_SOURCES})
+set_target_properties(${KOKKO_LIB} PROPERTIES FOLDER "kokko")
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

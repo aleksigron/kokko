@@ -16,3 +16,6 @@
 [submodule "deps/fmt"]
 	path = deps/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "deps/libwebp"]
+	path = deps/libwebp
+	url = https://chromium.googlesource.com/webm/libwebp
