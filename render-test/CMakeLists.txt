@@ -31,6 +31,8 @@ add_executable(${EXECUTABLE_NAME} ${SOURCES})
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES FOLDER "kokko")
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${KOKKO_LIB})
 
+set(CMAKE_FOLDER "webp") # Group webp targets into a folder
 add_subdirectory(${PROJECT_ROOT}/deps/libwebp libwebp-build)
+set(CMAKE_FOLDER) # Disable folder grouping
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC webp)
 
