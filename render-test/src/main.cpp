@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <thread>
 
+#include "webp/decode.h"
 #include "webp/encode.h"
 
 #include "Core/Array.hpp"
@@ -102,21 +103,29 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	kokko::String testLevelContent(defaultAlloc);
-
-	Framebuffer framebuffer;
-	RenderTextureSizedFormat colorFormat[] = { RenderTextureSizedFormat::SRGB8 };
 	constexpr int width = 512;
 	constexpr int height = 512;
 	constexpr int bytesPerPixel = 3;
 	constexpr int stride = width * bytesPerPixel;
-	constexpr int totalBytes = stride * height;
-	framebuffer.SetRenderDevice(engine.GetRenderDevice());
+	constexpr int imageBytes = stride * height;
+	constexpr int totalBytes = imageBytes + stride; // Reserve one row for swapping row order
+
+	Framebuffer framebuffer;
+	RenderTextureSizedFormat colorFormat[] = { RenderTextureSizedFormat::SRGB8 };
+	RenderDevice* renderDevice = engine.GetRenderDevice();
+	framebuffer.SetRenderDevice(renderDevice);
 	framebuffer.Create(width, height, Optional<RenderTextureSizedFormat>(), ArrayView(colorFormat));
 
-	Array<unsigned char> pixelDataArray(defaultAlloc);
-	pixelDataArray.Resize(totalBytes);
-	unsigned char* pixelData = pixelDataArray.GetData();
+	Array<uint8_t> resultPixelArray(defaultAlloc);
+	resultPixelArray.Resize(totalBytes);
+	uint8_t* resultPixels = resultPixelArray.GetData();
+	uint8_t* swapBuffer = &resultPixels[imageBytes];
+
+	Array<uint8_t> expectationPixelArray(defaultAlloc);
+	expectationPixelArray.Resize(imageBytes);
+
+	Array<uint8_t> expectationFileArray(defaultAlloc);
+	kokko::String testLevelContent(defaultAlloc);
 
 	for (const auto& entry : testItr)
 	{
@@ -147,6 +156,7 @@ int main(int argc, char** argv)
 			KOKKO_PROFILE_SCOPE(testNameStr.c_str());
 
 			World* world = engine.GetWorld();
+			world->ClearAllEntities();
 
 			{
 				KOKKO_PROFILE_SCOPE("Load test level content");
@@ -167,25 +177,114 @@ int main(int argc, char** argv)
 				engine.UpdateWorld();
 				engine.Render(Optional<CameraParameters>(), framebuffer);
 				engine.EndFrame();
+			}
 
-				engine.GetRenderDevice()->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebuffer.GetFramebufferId());
-				engine.GetRenderDevice()->ReadFramebufferPixels(0, 0, width, height,
-					RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, pixelData);
+			{
+				KOKKO_PROFILE_SCOPE("Read render result");
 
-				uint8_t* webpBuffer;
-				size_t webpSize = WebPEncodeRGB(pixelData, width, height, stride, 95.0f, &webpBuffer);
-				if (webpSize != 0)
+				renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebuffer.GetFramebufferId());
+				renderDevice->ReadFramebufferPixels(0, 0, width, height,
+					RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, resultPixels);
+			}
+
+			{
+				KOKKO_PROFILE_SCOPE("Reorder image rows");
+
+				for (int rowIndex = 0, numSwaps = height / 2; rowIndex < numSwaps; ++rowIndex)
 				{
-					auto resultPath = testFolderPath / "actual.webp";
-
-					ArrayView<uint8_t> content(webpBuffer, webpSize);
-					filesystem.Write(resultPath.u8string().c_str(), content, false);
-
-					WebPFree(webpBuffer);
+					uint8_t* forwardRow = resultPixels + (stride * rowIndex);
+					uint8_t* reverseRow = resultPixels + (stride * (height - rowIndex - 1));
+					std::memcpy(swapBuffer, forwardRow, stride);
+					std::memcpy(forwardRow, reverseRow, stride);
+					std::memcpy(reverseRow, swapBuffer, stride);
 				}
 			}
 
-			world->ClearAllEntities();
+			uint8_t* resultWebpBuffer;
+			size_t resultWebpSize = 0;
+
+			{
+				KOKKO_PROFILE_SCOPE("Encode result to WebP");
+
+				resultWebpSize = WebPEncodeLosslessRGB(resultPixels, width, height, stride, &resultWebpBuffer);
+			}
+
+			if (resultWebpSize != 0)
+			{
+				KOKKO_PROFILE_SCOPE("Write result to file");
+
+				const auto resultPath = testFolderPath / "actual.webp";
+				const auto resultPathStr = resultPath.u8string();
+
+				ArrayView<uint8_t> content(resultWebpBuffer, resultWebpSize);
+				if (filesystem.Write(resultPathStr.c_str(), content, false) == false)
+				{
+					KK_LOG_ERROR("Writing test result failed: {}", resultPathStr.c_str());
+				}
+
+				WebPFree(resultWebpBuffer);
+			}
+
+			uint8_t* expectWebpData = nullptr;
+			size_t expectWebpSize = 0;
+
+			{
+				KOKKO_PROFILE_SCOPE("Read expectation from file");
+
+				const auto expectationPath = testFolderPath / "expected.webp";
+				const auto expectationPathStr = expectationPath.u8string();
+
+				if (filesystem.ReadBinary(expectationPathStr.c_str(), expectationFileArray))
+				{
+					expectWebpData = expectationFileArray.GetData();
+					expectWebpSize = expectationFileArray.GetCount();
+				}
+				else
+				{
+					KK_LOG_ERROR("Reading test expectation failed: {}", expectationPathStr.c_str());
+				}
+			}
+
+			uint8_t* expectationPixels = nullptr;
+
+			if (expectWebpData != nullptr)
+			{
+				KOKKO_PROFILE_SCOPE("Decode expectation from WebP");
+
+				uint8_t* output = expectationPixelArray.GetData();
+				expectationPixels = WebPDecodeRGBInto(expectWebpData, expectWebpSize, output, imageBytes, stride);
+			}
+
+			if (expectationPixels != nullptr)
+			{
+				KOKKO_PROFILE_SCOPE("Compare result to expectation");
+
+				double diff = 0.0;
+
+				for (int y = 0; y < height; ++y)
+				{
+					for (int x = 0; x < width; ++x)
+					{
+						size_t index = y * stride + x * bytesPerPixel;
+						double diff0 = std::abs(resultPixels[index + 0] - expectationPixels[index + 0]) / 255.0;
+						double diff1 = std::abs(resultPixels[index + 1] - expectationPixels[index + 1]) / 255.0;
+						double diff2 = std::abs(resultPixels[index + 2] - expectationPixels[index + 2]) / 255.0;
+						diff += (diff0 + diff1 + diff2) / 3.0;
+					}
+				}
+
+				diff = diff / (width * height);
+				constexpr double allowed = 0.0002;
+
+				if (diff > allowed)
+				{
+					KK_LOG_INFO("Test failed, diff {} is over allowed value {}", diff, allowed);
+				}
+				else
+				{
+					KK_LOG_INFO("Test passed, diff {}", diff);
+				}
+			}
 		}
 	}
 

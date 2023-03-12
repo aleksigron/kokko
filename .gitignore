@@ -44,3 +44,5 @@ render_test_trace.json
 runtime_trace.json
 startup_trace.json
 unit_test_trace.json
+
+render-test/tests/**/actual.webp
