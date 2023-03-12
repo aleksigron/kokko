@@ -93,6 +93,8 @@ TerrainSystem::~TerrainSystem()
 
 	if (textureSampler != 0)
 		renderDevice->DestroySamplers(1, &textureSampler);
+
+	allocator->Deallocate(data.buffer);
 }
 
 void TerrainSystem::Initialize()
@@ -256,13 +258,13 @@ void TerrainSystem::CreateVertexData()
 	size_t vertexComponents = 2;
 	size_t vertSize = sizeof(float) * vertexComponents;
 	unsigned int vertBytes = static_cast<unsigned int>(vertSize * vertCount);
-	float* vertexBuf = static_cast<float*>(allocator->Allocate(vertBytes));
+	float* vertexBuf = static_cast<float*>(allocator->Allocate(vertBytes, "TerrainSystem.CreateVertexData() vertexBuf"));
 
 	int sideQuads = TerrainTile::Resolution;
 	int quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
 	unsigned int indexCount = sideQuads * sideQuads * quadIndices;
 	unsigned int indexBytes = indexCount * sizeof(uint16_t);
-	uint16_t* indexBuf = static_cast<uint16_t*>(allocator->Allocate(indexBytes));
+	uint16_t* indexBuf = static_cast<uint16_t*>(allocator->Allocate(indexBytes, "TerrainSystem.CreateVertexData() indexBuf"));
 
 	float quadSize = 1.0f / TerrainTile::Resolution;
 
@@ -355,7 +357,7 @@ void TerrainSystem::Reallocate(size_t required)
 	InstanceData newData;
 	size_t bytes = required * (sizeof(Entity) + sizeof(Vec2f) + sizeof(TerrainQuadTree));
 
-	newData.buffer = allocator->Allocate(bytes);
+	newData.buffer = allocator->Allocate(bytes, "TerrainSystem.data.buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 

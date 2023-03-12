@@ -47,7 +47,7 @@ DebugVectorRenderer::DebugVectorRenderer(
 	primitiveAllocated = 1024;
 
 	std::size_t primitivesSize = sizeof(Primitive) * primitiveAllocated;
-	primitives = static_cast<Primitive*>(allocator->Allocate(primitivesSize));
+	primitives = static_cast<Primitive*>(allocator->Allocate(primitivesSize, "DebugVectorRenderer.primitives"));
 }
 
 DebugVectorRenderer::~DebugVectorRenderer()
@@ -277,7 +277,7 @@ DebugVectorRenderer::DynamicMesh* DebugVectorRenderer::GetDynamicMesh(size_t byt
 		{
 			unsigned int newAllocated = dynamicMeshAllocated == 0 ? 8 : dynamicMeshAllocated * 2;
 			size_t newByteSize = newAllocated * sizeof(DynamicMesh);
-			DynamicMesh* newData = static_cast<DynamicMesh*>(allocator->Allocate(newByteSize));
+			DynamicMesh* newData = static_cast<DynamicMesh*>(allocator->Allocate(newByteSize, "DebugVectorRenderer.dynamicMeshes"));
 
 			if (dynamicMeshCount > 0)
 				std::memcpy(newData, dynamicMeshes, dynamicMeshCount * sizeof(DynamicMesh));

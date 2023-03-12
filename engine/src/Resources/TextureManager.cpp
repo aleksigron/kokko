@@ -122,7 +122,7 @@ void TextureManager::Reallocate(unsigned int required)
 	size_t objectBytes = sizeof(unsigned int) + sizeof(TextureData);
 
 	InstanceData newData;
-	newData.buffer = allocator->Allocate(required * objectBytes);
+	newData.buffer = allocator->Allocate(required * objectBytes, "TextureManager.data.buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 

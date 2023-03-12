@@ -108,7 +108,7 @@ bool ModelLoader::LoadFromBuffer(ModelManager::ModelData& model, ArrayView<const
 	size_t bufferBytes = sizeof(ModelNode) * countResult.nodeCount +
 		sizeof(ModelMesh) * countResult.meshCount + countResult.totalStringLength;
 
-	model.buffer = allocator->Allocate(bufferBytes);
+	model.buffer = allocator->Allocate(bufferBytes, "ModelLoader.LoadFromBuffer() model.buffer");
 
 	textBuffer = ArrayView<char>(static_cast<char*>(model.buffer), countResult.totalStringLength);
 	uid = model.uid;

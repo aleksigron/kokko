@@ -147,10 +147,10 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, kokko::ConstStringV
 						size_t skipListLength = glyphCount + ((skipStep - 1)) / skipStep;
 
 						size_t skipListSize = skipListLength * sizeof(size_t);
-						this->glyphSkipList = static_cast<size_t*>(allocator->Allocate(skipListSize));
+						this->glyphSkipList = static_cast<size_t*>(allocator->Allocate(skipListSize, "BitmapFont.glyphSkiplist"));
 
 						size_t glyphsSize = glyphCount * sizeof(BitmapGlyph);
-						this->glyphs = static_cast<BitmapGlyph*>(allocator->Allocate(glyphsSize));
+						this->glyphs = static_cast<BitmapGlyph*>(allocator->Allocate(glyphsSize, "BitmapFont.glyphs"));
 
 						this->glyphCount = glyphCount;
 

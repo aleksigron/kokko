@@ -33,7 +33,7 @@ const char* MetricAllocator::GetMemoryScopeName() const
 
 void* MetricAllocator::Allocate(size_t size, const char* debugTag)
 {
-	void* result = allocator->Allocate(size);
+	void* result = allocator->Allocate(size, debugTag);
 
 	if (result != nullptr)
 	{

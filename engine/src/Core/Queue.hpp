@@ -6,6 +6,8 @@
 #include <new>
 #include <utility>
 
+#include "Core/Core.hpp"
+
 #include "Math/Math.hpp"
 
 #include "Memory/Allocator.hpp"
@@ -36,7 +38,7 @@ private:
 				newAllocated = Math::UpperPowerOfTwo(requiredSize);
 
 			size_t newBytes = newAllocated * sizeof(ValueType);
-			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newBytes));
+			ValueType* newData = static_cast<ValueType*>(allocator->Allocate(newBytes, KOKKO_FUNC_SIG));
 
 			size_t startToMemEnd = allocated - start;
 

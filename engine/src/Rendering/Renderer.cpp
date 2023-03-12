@@ -124,6 +124,7 @@ Renderer::~Renderer()
 {
 	allocator->MakeDelete(postProcessRenderer);
 	allocator->MakeDelete(renderTargetContainer);
+	allocator->MakeDelete(renderGraphResources);
 }
 
 void Renderer::Initialize()

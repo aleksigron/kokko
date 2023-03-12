@@ -30,7 +30,10 @@ ModelManager::ModelManager(Allocator* allocator, AssetLoader* assetLoader, MeshM
 
 ModelManager::~ModelManager()
 {
-	// TODO: Release model data buffers
+	for (unsigned int i = 1, count = models.GetCount(); i < count; ++i)
+	{
+		allocator->Deallocate(models[i].buffer);
+	}
 }
 
 ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)

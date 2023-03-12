@@ -45,7 +45,7 @@ String::String(const String& s)
 	if (allocated > 0)
 	{
 		size_t bufferSize = allocated + 1;
-		string = static_cast<char*>(allocator->Allocate(bufferSize));
+		string = static_cast<char*>(allocator->Allocate(bufferSize, "String"));
 		
 		size_t len = s.GetLength();
 		std::memcpy(string, s.GetCStr(), len);
@@ -76,7 +76,7 @@ String::String(Allocator* allocator, const char* s) :
 	if (allocated > 0)
 	{
 		size_t bufferSize = allocated + 1;
-		string = static_cast<char*>(allocator->Allocate(bufferSize));
+		string = static_cast<char*>(allocator->Allocate(bufferSize, "String"));
 		StringCopyN(string, s, bufferSize);
 	}
 	else
@@ -91,7 +91,7 @@ String::String(Allocator* allocator, ConstStringView s) :
 
 	if (allocated > 0)
 	{
-		string = static_cast<char*>(allocator->Allocate(allocated + 1));
+		string = static_cast<char*>(allocator->Allocate(allocated + 1, "String"));
 		std::memcpy(string, s.str, length);
 		string[length] = '\0';
 	}
@@ -117,7 +117,7 @@ String& String::operator=(const String& s)
 		allocator = s.allocator;
 
 		allocated = CalculateAllocationSize(allocated, newLength);
-		string = static_cast<char*>(allocator->Allocate(allocated + 1));
+		string = static_cast<char*>(allocator->Allocate(allocated + 1, "String"));
 	}
 	else
 		allocator = s.allocator;
@@ -179,7 +179,7 @@ void String::Append(ConstStringView s)
 		{
 			size_t newAllocated = CalculateAllocationSize(allocated, requiredLength);
 
-			char* newString = static_cast<char*>(allocator->Allocate(newAllocated + 1));
+			char* newString = static_cast<char*>(allocator->Allocate(newAllocated + 1, "String"));
 			std::memcpy(newString, string, length);
 			allocator->Deallocate(string);
 
@@ -257,7 +257,7 @@ void String::Reserve(size_t reserveLength)
 	if (reserveLength > allocated)
 	{
 		size_t bufferSize = reserveLength + 1;
-		char* newString = static_cast<char*>(allocator->Allocate(bufferSize));
+		char* newString = static_cast<char*>(allocator->Allocate(bufferSize, "String"));
 
 		if (string != nullptr)
 		{
@@ -277,7 +277,7 @@ void String::Resize(size_t size)
 	{
 		if (size > allocated)
 		{
-			char* newString = static_cast<char*>(allocator->Allocate(size + 1));
+			char* newString = static_cast<char*>(allocator->Allocate(size + 1, "String"));
 
 			if (this->string != nullptr)
 			{

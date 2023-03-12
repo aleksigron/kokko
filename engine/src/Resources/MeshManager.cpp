@@ -51,7 +51,7 @@ void MeshManager::Reallocate(unsigned int required)
 		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(MeshId) + sizeof(kokko::Uid) + sizeof(bool);
 
 	InstanceData newData;
-	newData.buffer = allocator->Allocate(required * objectBytes);
+	newData.buffer = allocator->Allocate(required * objectBytes, "MeshManager.data.buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 

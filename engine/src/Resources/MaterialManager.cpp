@@ -61,7 +61,7 @@ void MaterialManager::Reallocate(unsigned int required)
 	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
 
 	InstanceData newData;
-	newData.buffer = allocator->Allocate((sizeof(unsigned int) + sizeof(MaterialData)) * required);
+	newData.buffer = allocator->Allocate((sizeof(unsigned int) + sizeof(MaterialData)) * required, "MaterialManager.data.buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 
@@ -270,7 +270,7 @@ void MaterialManager::UpdateUniformsToGPU(MaterialId id)
 		if (uniformBufferSize <= stackBufferSize)
 			uniformBuffer = stackBuffer;
 		else
-			uniformBuffer = static_cast<unsigned char*>(allocator->Allocate(uniformBufferSize));
+			uniformBuffer = static_cast<unsigned char*>(allocator->Allocate(uniformBufferSize, "MaterialManager.UpdateUniformsToGPU() uniformBuffer"));
 
 		uniforms.WriteToUniformBuffer(uniformBuffer);
 

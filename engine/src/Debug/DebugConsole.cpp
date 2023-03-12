@@ -74,7 +74,7 @@ void DebugConsole::AddLogEntry(kokko::ConstStringView text, LogLevel level)
 		int rowChars = static_cast<int>(areaSize.x) / font->GetGlyphWidth();
 
 		stringDataAllocated = (screenRows + 1) * rowChars;
-		stringData = static_cast<char*>(allocator->Allocate(stringDataAllocated));
+		stringData = static_cast<char*>(allocator->Allocate(stringDataAllocated, "DebugConsole.stringData"));
 	}
 
 	// Add into buffer

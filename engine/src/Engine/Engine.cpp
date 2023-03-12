@@ -95,6 +95,7 @@ Engine::~Engine()
 	materialManager.Delete();
 	shaderManager.Delete();
 	textureManager.Delete();
+	modelManager.Delete();
 	meshManager.Delete();
 	debug.Delete();
 	systemAllocator->MakeDelete(time);
