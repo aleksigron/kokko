@@ -174,7 +174,7 @@ void MeshComponentSystem::Reallocate(unsigned int required)
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(MaterialId) +
 		sizeof(TransparencyType) + sizeof(BoundingBox) + sizeof(Mat4x4f));
 
-	newData.buffer = this->allocator->Allocate(bytes, "MeshComponentSystem component buffer");
+	newData.buffer = this->allocator->Allocate(bytes, "MeshComponentSystem.data.buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 

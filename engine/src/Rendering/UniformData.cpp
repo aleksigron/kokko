@@ -43,7 +43,7 @@ void UniformData::Initialize(const UniformList& from)
 			definitions.textureUniformCount * sizeof(kokko::TextureUniform) +
 			definitions.uniformDataSize;
 
-		buffer = allocator->Allocate(bufferSize);
+		buffer = allocator->Allocate(bufferSize, "UniformData.buffer");
 
 		auto bufferBuf = static_cast<kokko::BufferUniform*>(buffer);
 		auto textureBuf = reinterpret_cast<kokko::TextureUniform*>(bufferBuf + definitions.bufferUniformCount);

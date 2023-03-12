@@ -46,7 +46,7 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* render
 	terrainBottom = params.heightOrigin;
 	terrainHeight = params.heightRange;
 
-	void* buffer = allocator->Allocate(tileCount * sizeof(TerrainTile));
+	void* buffer = allocator->Allocate(tileCount * sizeof(TerrainTile), "TerrainQuadTree.tiles");
 	tiles = static_cast<TerrainTile*>(buffer);
 
 	for (int levelIdx = 0; levelIdx < treeLevels; ++levelIdx)
@@ -66,7 +66,7 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* render
 		}
 	}
 
-	tileTextureIds = static_cast<uint32_t*>(allocator->Allocate(tileCount * sizeof(uint32_t)));
+	tileTextureIds = static_cast<uint32_t*>(allocator->Allocate(tileCount * sizeof(uint32_t), "TerrainQuadTree.tileTextureIds"));
 	renderDevice->CreateTextures(tileCount, tileTextureIds);
 
 	for (int levelIdx = 0; levelIdx < treeLevels; ++levelIdx)

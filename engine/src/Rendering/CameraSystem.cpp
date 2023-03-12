@@ -49,7 +49,7 @@ void CameraSystem::Reallocate(unsigned int required)
 	InstanceData newData;
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(ProjectionParameters));
 
-	newData.buffer = allocator->Allocate(bytes);
+	newData.buffer = allocator->Allocate(bytes, "CameraSystem.data.buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 

@@ -29,7 +29,7 @@ Allocator* AllocatorManager::CreateAllocatorScope(const char* name, Allocator* b
 		// Reallocate
 
 		unsigned int newAllocated = scopeAllocated > 0 ? scopeAllocated * 2 : 32;
-		void* newBuffer = this->alloc->Allocate(sizeof(MetricAllocator*) * newAllocated);
+		void* newBuffer = this->alloc->Allocate(sizeof(MetricAllocator*) * newAllocated, "AllocatorManager.scopes");
 
 		if (scopeCount > 0)
 		{

@@ -47,7 +47,7 @@ void Scene::Reallocate(unsigned int required)
 		4 * sizeof(SceneObjectId) + sizeof(SceneEditTransform);
 
 	InstanceData newData;
-	newData.buffer = allocator->Allocate(required * objectBytes);
+	newData.buffer = allocator->Allocate(required * objectBytes, "Scene.data.buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 

@@ -109,7 +109,7 @@ void AddUniformsAndShaderPath(
 
 	// Allocate memory
 
-	shaderOut.buffer = allocator->Allocate(shaderDataBytes);
+	shaderOut.buffer = allocator->Allocate(shaderDataBytes, "ShaderLoader AddUniformsAndShaderPath()");
 
 	char* namePtr = static_cast<char*>(shaderOut.buffer);
 	char* shaderDataEnd = namePtr + shaderDataBytes;

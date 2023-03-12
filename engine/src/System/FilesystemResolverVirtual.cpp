@@ -14,6 +14,11 @@ FilesystemResolverVirtual::FilesystemResolverVirtual(Allocator* allocator) :
 {
 }
 
+FilesystemResolverVirtual::~FilesystemResolverVirtual()
+{
+	allocator->Deallocate(mountStringBuffer);
+}
+
 void FilesystemResolverVirtual::SetMountPoints(ArrayView<MountPoint> mounts)
 {
 	if (mountStringBuffer != nullptr)
@@ -65,7 +70,7 @@ void FilesystemResolverVirtual::SetMountPoints(ArrayView<MountPoint> mounts)
 
 	if (mountPointCount > 0)
 	{
-		mountStringBuffer = static_cast<char*>(allocator->Allocate(stringDataUsed));
+		mountStringBuffer = static_cast<char*>(allocator->Allocate(stringDataUsed, "FilesystemResolverVirtual.mountStringBuffer"));
 		char* strBufItr = mountStringBuffer;
 
 		for (size_t i = 0; i < mountPointCount; ++i)

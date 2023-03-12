@@ -78,8 +78,8 @@ World::~World()
 	scriptSystem.Delete();
 	renderer.Delete();
 	meshComponentSystem.Delete();
-	scene.Delete();
 	environmentSystem.Delete();
+	scene.Delete();
 	cameraSystem.Delete();
 	lightManager.Delete();
 	entityManager.Delete();

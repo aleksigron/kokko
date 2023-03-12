@@ -53,7 +53,7 @@ void ShaderManager::Reallocate(size_t required)
 	size_t bytes = (sizeof(unsigned int) + sizeof(ShaderData)) * required;
 
 	InstanceData newData;
-	newData.buffer = allocator->Allocate(bytes);
+	newData.buffer = allocator->Allocate(bytes, "ShaderManager.data.buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 

@@ -20,7 +20,7 @@ public:
 	};
 
 	FilesystemResolverVirtual(Allocator* allocator);
-	virtual ~FilesystemResolverVirtual() = default;
+	virtual ~FilesystemResolverVirtual();
 
 	void SetMountPoints(ArrayView<MountPoint> mounts);
 
