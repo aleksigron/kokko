@@ -127,6 +127,9 @@ int main(int argc, char** argv)
 	Array<uint8_t> expectationFileArray(defaultAlloc);
 	kokko::String testLevelContent(defaultAlloc);
 
+	int failedTests = 0;
+	int erroredTests = 0;
+
 	for (const auto& entry : testItr)
 	{
 		if (entry.is_regular_file() == false)
@@ -279,6 +282,7 @@ int main(int argc, char** argv)
 				if (diff > allowed)
 				{
 					KK_LOG_INFO("Test failed, diff {} is over allowed value {}", diff, allowed);
+					failedTests += 1;
 				}
 				else
 				{
@@ -289,6 +293,12 @@ int main(int argc, char** argv)
 	}
 
 	instr.EndSession();
+
+	if (failedTests != 0 || erroredTests != 0)
+	{
+		KK_LOG_ERROR("Failed tests: {}, errored tests: {}", failedTests, erroredTests);
+		return failedTests + erroredTests;
+	}
 
 	return 0;
 }
