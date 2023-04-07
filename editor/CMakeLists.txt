@@ -26,8 +26,6 @@ set (IMGUI_SOURCES
 	${PROJECT_ROOT}/deps/imgui/imgui_widgets.cpp
 	${PROJECT_ROOT}/deps/imgui/backends/imgui_impl_glfw.cpp
 	${PROJECT_ROOT}/deps/imgui/backends/imgui_impl_glfw.h
-	${PROJECT_ROOT}/deps/imgui/backends/imgui_impl_opengl3.cpp
-	${PROJECT_ROOT}/deps/imgui/backends/imgui_impl_opengl3.h
 )
 
 set (IMGUIZMO_SOURCES
@@ -68,6 +66,8 @@ set (EDITOR_SOURCES
 	src/FilePickerDialog.cpp
 	src/FilePickerDialog.hpp
 	src/Hash_StdFilesystem.hpp
+	src/ImguiImplOpenGL.cpp
+	src/ImguiImplOpenGL.hpp
 	src/SceneView.cpp
 	src/SceneView.hpp
 )
