@@ -23,7 +23,7 @@ private:
 	ShaderId shaderId;
 
 	MeshId meshId;
-	unsigned int uniformBufferId;
+	RenderBufferId uniformBufferId;
 };
 
 }

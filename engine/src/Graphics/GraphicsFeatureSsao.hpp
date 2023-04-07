@@ -6,6 +6,8 @@
 
 #include "Graphics/GraphicsFeature.hpp"
 
+#include "Rendering/RenderResourceId.hpp"
+
 #include "Resources/ShaderId.hpp"
 
 class Allocator;
@@ -36,10 +38,10 @@ private:
 	static const size_t PassCount = 2;
 	enum { PassIdx_Occlusion = 0, PassIdx_Blur = 1 };
 
-	unsigned int uniformBufferIds[PassCount];
+	kokko::RenderBufferId uniformBufferIds[PassCount];
 	ShaderId shaderIds[PassCount];
 
-	unsigned int noiseTextureId;
+	kokko::RenderTextureId noiseTextureId;
 };
 
 }

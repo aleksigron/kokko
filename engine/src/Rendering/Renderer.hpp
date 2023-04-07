@@ -48,6 +48,9 @@ class Window;
 
 struct ResourceManagers;
 
+namespace render
+{
+class CommandEncoder;
 }
 
 class Renderer
@@ -62,13 +65,14 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* device;
-	kokko::MeshComponentSystem* componentSystem;
+	render::CommandEncoder* encoder;
+	MeshComponentSystem* componentSystem;
 
-	kokko::RenderGraphResources* renderGraphResources;
+	RenderGraphResources* renderGraphResources;
 	RenderTargetContainer* renderTargetContainer;
 	PostProcessRenderer* postProcessRenderer;
 	
-	unsigned int targetFramebufferId;
+	RenderFramebufferId targetFramebufferId;
 
 	RenderViewport* viewportData;
 	unsigned int viewportCount;
@@ -78,8 +82,8 @@ private:
 	MaterialId shadowMaterial;
 	MaterialId fallbackMeshMaterial;
 
-	Array<unsigned char> uniformStagingBuffer;
-	Array<unsigned int> objectUniformBufferLists[FramesInFlightCount];
+	Array<uint8_t> uniformStagingBuffer;
+	Array<RenderBufferId> objectUniformBufferLists[FramesInFlightCount];
 	unsigned int currentFrameIndex;
 
 	intptr_t objectUniformBlockStride;
@@ -106,7 +110,7 @@ private:
 
 	Array<kokko::GraphicsFeature*> graphicsFeatures;
 
-	unsigned int normalDebugBufferId;
+	RenderBufferId normalDebugBufferId;
 
 	void BindMaterialTextures(const kokko::UniformData& materialUniforms) const;
 
@@ -147,3 +151,5 @@ public:
 	void AddGraphicsFeature(kokko::GraphicsFeature* graphicsFeature);
 	void RemoveGraphicsFeature(kokko::GraphicsFeature* graphicsFeature);
 };
+
+} // namespace kokko

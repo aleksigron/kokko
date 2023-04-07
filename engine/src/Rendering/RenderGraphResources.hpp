@@ -3,6 +3,7 @@
 #include "Math/Vec2.hpp"
 
 #include "Rendering/Framebuffer.hpp"
+#include "Rendering/RenderResourceId.hpp"
 
 #include "Resources/MeshId.hpp"
 
@@ -25,9 +26,9 @@ public:
 	const Framebuffer& GetLightAccumulationBuffer() const;
 	const Framebuffer& GetAmbientOcclusionBuffer() const;
 
-	unsigned int GetGeometryBufferAlbedoTexture() const;
-	unsigned int GetGeometryBufferNormalTexture() const;
-	unsigned int GetGeometryBufferMaterialTexture() const;
+	RenderTextureId GetGeometryBufferAlbedoTexture() const;
+	RenderTextureId GetGeometryBufferNormalTexture() const;
+	RenderTextureId GetGeometryBufferMaterialTexture() const;
 
 	Vec2i GetFullscreenViewportSize() const;
 

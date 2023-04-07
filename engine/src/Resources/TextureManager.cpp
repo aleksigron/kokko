@@ -32,6 +32,59 @@ int MipLevelsFromDimensions(int width, int height)
 
 	return levels;
 }
+
+Optional<RenderTextureSizedFormat> SizedFormatFromBaseFormatAndType(
+	RenderTextureBaseFormat base,
+	RenderTextureDataType type,
+	bool preferLinear)
+{
+	bool formatFound = false;
+	RenderTextureSizedFormat sizedFormat;
+
+	if (base == RenderTextureBaseFormat::R)
+	{
+		if (type == RenderTextureDataType::UnsignedByte || type == RenderTextureDataType::SignedByte)
+			return RenderTextureSizedFormat::R8;
+		else if (type == RenderTextureDataType::UnsignedShort || type == RenderTextureDataType::SignedShort)
+			return RenderTextureSizedFormat::R16;
+		else if (type == RenderTextureDataType::UnsignedInt || type == RenderTextureDataType::SignedInt ||
+			type == RenderTextureDataType::Float)
+			return RenderTextureSizedFormat::R32F;
+	}
+	else if (base == RenderTextureBaseFormat::RG)
+	{
+		if (type == RenderTextureDataType::UnsignedByte || type == RenderTextureDataType::SignedByte)
+			return RenderTextureSizedFormat::RG8;
+		else if (type == RenderTextureDataType::UnsignedShort || type == RenderTextureDataType::SignedShort)
+			return RenderTextureSizedFormat::RG16;
+		else if (type == RenderTextureDataType::UnsignedInt || type == RenderTextureDataType::SignedInt ||
+			type == RenderTextureDataType::Float)
+			return RenderTextureSizedFormat::RG32F;
+	}
+	else if (base == RenderTextureBaseFormat::RGB)
+	{
+		if (type == RenderTextureDataType::UnsignedByte || type == RenderTextureDataType::SignedByte)
+			return preferLinear ? RenderTextureSizedFormat::RGB8 : RenderTextureSizedFormat::SRGB8;
+		else if (type == RenderTextureDataType::UnsignedShort || type == RenderTextureDataType::SignedShort)
+			return RenderTextureSizedFormat::RGB16;
+		else if (type == RenderTextureDataType::UnsignedInt || type == RenderTextureDataType::SignedInt ||
+			type == RenderTextureDataType::Float)
+			return RenderTextureSizedFormat::RGB32F;
+	}
+	else if (base == RenderTextureBaseFormat::RGBA)
+	{
+		if (type == RenderTextureDataType::UnsignedByte || type == RenderTextureDataType::SignedByte)
+			return preferLinear ? RenderTextureSizedFormat::RGBA8 : RenderTextureSizedFormat::SRGB8_A8;
+		else if (type == RenderTextureDataType::UnsignedShort || type == RenderTextureDataType::SignedShort)
+			return RenderTextureSizedFormat::RGBA16;
+		else if (type == RenderTextureDataType::UnsignedInt || type == RenderTextureDataType::SignedInt ||
+			type == RenderTextureDataType::Float)
+			return RenderTextureSizedFormat::RGBA32F;
+	}
+
+	KK_LOG_ERROR("Couldn't find sized texture format");
+	return Optional<RenderTextureSizedFormat>();
+}
 }
 
 TextureId TextureId::Null = TextureId{ 0 };
@@ -75,24 +128,20 @@ void TextureManager::Initialize()
 	imageData.imageDataSize = sizeof(buffer);
 
 	imageData.imageSize = Vec2i(size, size);
-	imageData.pixelFormat = GL_RGB;
-	imageData.componentDataType = GL_UNSIGNED_BYTE;
-
-	TextureOptions options;
-	options.minFilter = RenderTextureFilterMode::Nearest;
-	options.magFilter = RenderTextureFilterMode::Nearest;
+	imageData.pixelFormat = RenderTextureBaseFormat::RGB;
+	imageData.componentDataType = RenderTextureDataType::UnsignedByte;
 
 	{
 		std::memset(buffer, 255, sizeof(buffer));
 		TextureId white2d = CreateTexture();
-		Upload_2D(white2d, imageData, options);
+		Upload_2D(white2d, imageData, false);
 		constantTextures[ConstTex_White2D] = white2d;
 	}
 
 	{
 		std::memset(buffer, 0, sizeof(buffer));
 		TextureId black2d = CreateTexture();
-		Upload_2D(black2d, imageData, options);
+		Upload_2D(black2d, imageData, false);
 		constantTextures[ConstTex_Black2D] = black2d;
 	}
 
@@ -105,7 +154,7 @@ void TextureManager::Initialize()
 		}
 
 		TextureId emptyNormal = CreateTexture();
-		Upload_2D(emptyNormal, imageData, options);
+		Upload_2D(emptyNormal, imageData, false);
 		constantTextures[ConstTex_EmptyNormal] = emptyNormal;
 	}
 }
@@ -139,7 +188,7 @@ void TextureManager::Reallocate(unsigned int required)
 
 	for (unsigned int i = data.allocated, end = newData.allocated; i < end; ++i)
 	{
-		newData.texture[i].textureObjectId = 0;
+		newData.texture[i].textureObjectId = kokko::RenderTextureId();
 	}
 
 	data = newData;
@@ -189,9 +238,9 @@ void TextureManager::RemoveTexture(TextureId id)
 
 	if (data.texture[id.i].textureObjectId != 0)
 	{
-		unsigned int objectId = data.texture[id.i].textureObjectId;
+		auto objectId = data.texture[id.i].textureObjectId;
 		renderDevice->DestroyTextures(1, &objectId);
-		data.texture[id.i].textureObjectId = 0;
+		data.texture[id.i].textureObjectId = kokko::RenderTextureId();
 	}
 
 	--data.count;
@@ -263,7 +312,7 @@ bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> byt
 		textureBytes = stbi_load_from_memory(fileBytesPtr, length, &width, &height, &nrComponents, 0);
 	}
 
-	unsigned int textureObjectId = 0;
+	kokko::RenderTextureId textureObjectId;
 
 	if (textureBytes != nullptr)
 	{
@@ -308,24 +357,15 @@ bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> byt
 
 			int mipLevels = MipLevelsFromDimensions(width, height);
 
-			renderDevice->CreateTextures(1, &textureObjectId);
-			renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureObjectId);
-
-			RenderCommandData::SetTextureStorage2D textureStorage{
-				RenderTextureTarget::Texture2d, mipLevels, sizedFormat, width, height,
-			};
-			renderDevice->SetTextureStorage2D(&textureStorage);
-
-			RenderCommandData::SetTextureSubImage2D textureImage{
-				RenderTextureTarget::Texture2d, 0, 0, 0, width, height,
-				baseFormat, RenderTextureDataType::UnsignedByte, textureBytes
-			};
-			renderDevice->SetTextureSubImage2D(&textureImage);
+			renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &textureObjectId);
+			renderDevice->SetTextureStorage2D(textureObjectId, mipLevels, sizedFormat, width, height);
+			renderDevice->SetTextureSubImage2D(textureObjectId, 0, 0, 0, width, height,
+				baseFormat, RenderTextureDataType::UnsignedByte, textureBytes);
 
 			if (mipLevels > 1)
 			{
 				KOKKO_PROFILE_SCOPE("Generate texture mipmaps");
-				renderDevice->GenerateTextureMipmaps(RenderTextureTarget::Texture2d);
+				renderDevice->GenerateTextureMipmaps(textureObjectId);
 			}
 		}
 
@@ -350,52 +390,55 @@ bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> byt
 	return false;
 }
 
-void TextureManager::Upload_2D(TextureId id, const ImageData& image, const TextureOptions& options)
+void TextureManager::Upload_2D(TextureId id, const ImageData& image, bool generateMipmaps)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	TextureData& texture = data.texture[id.i];
 
-	texture.textureSize = image.imageSize;
+	assert(texture.textureObjectId == 0);
 
+	texture.textureSize = image.imageSize;
 	texture.textureTarget = RenderTextureTarget::Texture2d;
 
-	renderDevice->CreateTextures(1, &texture.textureObjectId);
-	renderDevice->BindTexture(texture.textureTarget, texture.textureObjectId);
+	const int mips = generateMipmaps ? MipLevelsFromDimensions(image.imageSize.x, image.imageSize.y) : 1;
+
+	renderDevice->CreateTextures(texture.textureTarget, 1, &texture.textureObjectId);
+
+	const Optional<RenderTextureSizedFormat> format = 
+		SizedFormatFromBaseFormatAndType(image.pixelFormat, image.componentDataType, true);
+	assert(format.HasValue());
+
+	renderDevice->SetTextureStorage2D(
+		texture.textureObjectId, mips, format.GetValue(), image.imageSize.x, image.imageSize.y);
 
 	if (image.compressed)
 	{
+		assert(false && "Compressed textures not yet supported");
+
+		/*
 		RenderCommandData::SetTextureImageCompressed2D textureImage{
 			texture.textureTarget, 0, image.pixelFormat,
 			image.imageSize.x, image.imageSize.y, 
 			static_cast<unsigned int>(image.compressedSize), image.imageData
 		};
 
-		renderDevice->SetTextureImageCompressed2D(&textureImage);
+		renderDevice->SetTextureSubImageCompressed2D(texture.textureObjectId, 0, image.pixelFormat,
+			image.imageSize.x, image.imageSize.y, 
+			static_cast<unsigned int>(image.compressedSize), image.imageData);
+		*/
 	}
 	else
 	{
-		RenderCommandData::SetTextureImage2D textureImage{
-			texture.textureTarget, 0, image.pixelFormat, image.imageSize.x, image.imageSize.y,
-			image.pixelFormat, image.componentDataType, image.imageData
-		};
-
-		renderDevice->SetTextureImage2D(&textureImage);
+		renderDevice->SetTextureSubImage2D(texture.textureObjectId, 0, 0, 0, image.imageSize.x, image.imageSize.y,
+			image.pixelFormat, image.componentDataType, image.imageData);
 	}
 
-	if (options.generateMipmaps)
-	{
-		renderDevice->GenerateTextureMipmaps(texture.textureTarget);
-	}
-
-	renderDevice->SetTextureMinFilter(texture.textureTarget, options.minFilter);
-	renderDevice->SetTextureMagFilter(texture.textureTarget, options.magFilter);
-
-	renderDevice->SetTextureWrapModeU(texture.textureTarget, options.wrapModeU);
-	renderDevice->SetTextureWrapModeV(texture.textureTarget, options.wrapModeV);
+	if (generateMipmaps)
+		renderDevice->GenerateTextureMipmaps(texture.textureObjectId);
 }
 
-void TextureManager::Upload_Cube(TextureId id, const ImageData* images, const TextureOptions& options)
+void TextureManager::Upload_Cube(TextureId id, const ImageData* images, bool generateMipmaps)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -416,43 +459,42 @@ void TextureManager::Upload_Cube(TextureId id, const ImageData* images, const Te
 
 	texture.textureTarget = RenderTextureTarget::TextureCubeMap;
 
-	renderDevice->CreateTextures(1, &texture.textureObjectId);
-	renderDevice->BindTexture(texture.textureTarget, texture.textureObjectId);
+	renderDevice->CreateTextures(RenderTextureTarget::TextureCubeMap, 1, &texture.textureObjectId);
 
-	for (unsigned int i = 0; i < 6; ++i)
+	const int mips = generateMipmaps ? MipLevelsFromDimensions(images[0].imageSize.x, images[0].imageSize.y) : 1;
+	const Optional<RenderTextureSizedFormat> format =
+		SizedFormatFromBaseFormatAndType(images[0].pixelFormat, images[0].componentDataType, true);
+	assert(format.HasValue());
+
+	renderDevice->SetTextureStorage2D(
+		texture.textureObjectId, mips, format.GetValue(), texture.textureSize.x, texture.textureSize.y);
+
+	for (int face = 0; face < 6; ++face)
 	{
-		const ImageData& image = images[i];
-		RenderTextureTarget targetFace = cubemapFaceValues[i];
+		const ImageData& image = images[face];
 
 		if (image.compressed)
 		{
+			assert(false && "Compressed textures not yet supported");
+
+			/*
 			RenderCommandData::SetTextureImageCompressed2D textureImage{
 				targetFace, 0, image.pixelFormat, image.imageSize.x, image.imageSize.y,
 				static_cast<unsigned int>(image.compressedSize), image.imageData
 			};
 
 			renderDevice->SetTextureImageCompressed2D(&textureImage);
+			*/
 		}
 		else
 		{
-			RenderCommandData::SetTextureImage2D textureImage{
-				targetFace, 0, image.pixelFormat, image.imageSize.x, image.imageSize.y,
-				image.pixelFormat, image.componentDataType, image.imageData
-			};
-
-			renderDevice->SetTextureImage2D(&textureImage);
+			renderDevice->SetTextureSubImage3D(
+				texture.textureObjectId, 0, 0, 0, face, image.imageSize.x, image.imageSize.y,
+				1, image.pixelFormat, image.componentDataType, image.imageData);
 		}
 
-		if (options.generateMipmaps)
-		{
-			renderDevice->GenerateTextureMipmaps(texture.textureTarget);
-		}
-
-		renderDevice->SetTextureMinFilter(texture.textureTarget, options.minFilter);
-		renderDevice->SetTextureMagFilter(texture.textureTarget, options.magFilter);
-
-		renderDevice->SetTextureWrapModeU(texture.textureTarget, options.wrapModeU);
-		renderDevice->SetTextureWrapModeV(texture.textureTarget, options.wrapModeV);
+		if (generateMipmaps)
+			renderDevice->GenerateTextureMipmaps(texture.textureObjectId);
 	}
 }
 
@@ -467,18 +509,16 @@ void TextureManager::AllocateTextureStorage(TextureId id, RenderTextureTarget ta
 		texture.textureSize = size;
 		texture.textureTarget = target;
 
-		renderDevice->CreateTextures(1, &texture.textureObjectId);
-		renderDevice->BindTexture(target, texture.textureObjectId);
-
-		RenderCommandData::SetTextureStorage2D textureStorage{ target, levels, format, size.x, size.y };
-		renderDevice->SetTextureStorage2D(&textureStorage);
-
+		renderDevice->CreateTextures(target, 1, &texture.textureObjectId);
+		renderDevice->SetTextureStorage2D(texture.textureObjectId, levels, format, size.x, size.y);
+		/*
 		if (target == RenderTextureTarget::TextureCubeMap)
 		{
 			renderDevice->SetTextureWrapModeU(target, RenderTextureWrapMode::ClampToEdge);
 			renderDevice->SetTextureWrapModeV(target, RenderTextureWrapMode::ClampToEdge);
 			renderDevice->SetTextureWrapModeW(target, RenderTextureWrapMode::ClampToEdge);
 		}
+		*/
 	}
 	else
 	{

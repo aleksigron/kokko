@@ -8,6 +8,8 @@
 
 #include "Math/Vec2.hpp"
 
+#include "Rendering/RenderResourceId.hpp"
+
 class RenderDevice;
 
 enum class RenderTextureSizedFormat;
@@ -31,9 +33,9 @@ public:
 
 	bool IsInitialized() const;
 
-	unsigned int GetFramebufferId() const;
-	unsigned int GetColorTextureId(size_t index) const;
-	unsigned int GetDepthTextureId() const;
+	kokko::RenderFramebufferId GetFramebufferId() const;
+	kokko::RenderTextureId GetColorTextureId(size_t index) const;
+	kokko::RenderTextureId GetDepthTextureId() const;
 
 	int GetWidth() const;
 	int GetHeight() const;
@@ -43,24 +45,21 @@ public:
 		ArrayView<RenderTextureSizedFormat> colorTextureFormats);
 	void Destroy();
 
-	void AttachExternalDepthTexture(unsigned int textureId);
-	void SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDepthCompareFunc func);
+	void AttachExternalDepthTexture(kokko::RenderTextureId textureId);
 
 	void SetDebugLabel(kokko::ConstStringView label);
 
 private:
-	void CreateTexture(RenderTextureSizedFormat format, int width, int height);
-
 	RenderDevice* renderDevice;
 
 	int width;
 	int height;
 
-	unsigned int framebufferId;
+	kokko::RenderFramebufferId framebufferId;
 
 	size_t colorTextureCount;
-	unsigned int colorTextureIds[MaxColorTextureCount];
+	kokko::RenderTextureId colorTextureIds[MaxColorTextureCount];
 
-	unsigned int depthTextureId;
+	kokko::RenderTextureId depthTextureId;
 	bool depthTextureIsOwned;
 };

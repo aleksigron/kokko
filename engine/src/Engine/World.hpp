@@ -21,7 +21,6 @@ struct CameraParameters;
 
 class EntityManager;
 class Scene;
-class Renderer;
 class LightManager;
 class CameraSystem;
 class ScriptSystem;
@@ -34,6 +33,7 @@ class AssetLoader;
 class EnvironmentSystem;
 class MeshComponentSystem;
 class ParticleSystem;
+class Renderer;
 class RenderDebugSettings;
 class TerrainSystem;
 class Window;
@@ -61,7 +61,7 @@ public:
 
 	EntityManager* GetEntityManager() { return entityManager.instance; }
 	Scene* GetScene() { return scene.instance; }
-	Renderer* GetRenderer() { return renderer.instance; }
+	kokko::Renderer* GetRenderer() { return renderer.instance; }
 	kokko::MeshComponentSystem* GetMeshComponentSystem() { return meshComponentSystem.instance; }
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
@@ -83,7 +83,7 @@ private:
 	InstanceAllocatorPair<kokko::EnvironmentSystem> environmentSystem;
 	InstanceAllocatorPair<Scene> scene;
 	InstanceAllocatorPair<kokko::MeshComponentSystem> meshComponentSystem;
-	InstanceAllocatorPair<Renderer> renderer;
+	InstanceAllocatorPair<kokko::Renderer> renderer;
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
 	InstanceAllocatorPair<kokko::TerrainSystem> terrainSystem;
 	InstanceAllocatorPair<kokko::ParticleSystem> particleSystem;

@@ -138,20 +138,7 @@ void AddUniformsAndShaderPath(
 
 			// Since shader is not compiled at this point, we can't know the uniform location
 			uniform.uniformLocation = -1;
-			uniform.textureObject = 0;
-
-			switch (dataType)
-			{
-			case UniformDataType::Tex2D:
-				uniform.textureTarget = RenderTextureTarget::Texture2d;
-				break;
-			case UniformDataType::TexCube:
-				uniform.textureTarget = RenderTextureTarget::TextureCubeMap;
-				break;
-			default:
-				uniform.textureTarget = RenderTextureTarget::Texture2d;
-				break;
-			}
+			uniform.textureObject = kokko::RenderTextureId();
 
 			++textureUniformsCopied;
 
@@ -280,7 +267,7 @@ void UpdateTextureUniformLocations(
 	for (size_t idx = 0, count = shaderInOut.uniforms.textureUniformCount; idx < count; ++idx)
 	{
 		TextureUniform& u = shaderInOut.uniforms.textureUniforms[idx];
-		u.uniformLocation = renderDevice->GetUniformLocation(shaderInOut.driverId, u.name.str);
+		u.uniformLocation = renderDevice->GetUniformLocation(shaderInOut.driverId.i, u.name.str);
 	}
 }
 
@@ -381,7 +368,7 @@ bool CompileAndLink(
 	// Check link status
 	if (linkSucceeded)
 	{
-		shaderOut.driverId = programId;
+		shaderOut.driverId = kokko::RenderShaderId(programId);
 
 		renderDevice->SetObjectLabel(RenderObjectType::Program, programId, debugName);
 
@@ -389,7 +376,7 @@ bool CompileAndLink(
 	}
 	else
 	{
-		shaderOut.driverId = 0;
+		shaderOut.driverId = kokko::RenderShaderId();
 
 		int infoLogLength = renderDevice->GetShaderProgramInfoLogLength(programId);
 

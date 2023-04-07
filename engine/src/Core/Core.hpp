@@ -1,5 +1,7 @@
 #pragma once
 
+#define KOKKO_ARRAY_ITEMS(x) (sizeof(x) / sizeof(x[0]))
+
 #define KK_UNIQUE_NAME_(name, counter) name##counter
 #define KK_UNIQUE_NAME(name, counter) KK_UNIQUE_NAME_(name, counter)
 

@@ -3,9 +3,15 @@
 #include "Math/Vec2.hpp"
 
 #include "Rendering/RenderTypes.hpp"
+#include "Rendering/RenderResourceId.hpp"
 
 class Allocator;
 class RenderDevice;
+
+namespace kokko
+{
+class RenderCommandEncoder;
+}
 
 struct RenderTarget
 {
@@ -13,9 +19,9 @@ struct RenderTarget
 	Vec2i size;
 
 	RenderTextureSizedFormat colorFormat;
-	unsigned int colorTexture;
+	kokko::RenderTextureId colorTexture;
 
-	unsigned int framebuffer;
+	kokko::RenderFramebufferId framebuffer;
 };
 
 class RenderTargetContainer

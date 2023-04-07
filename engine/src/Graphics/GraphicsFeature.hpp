@@ -24,6 +24,11 @@ class EnvironmentSystem;
 class GraphicsFeatureCommandList;
 class RenderGraphResources;
 
+namespace render
+{
+class CommandEncoder;
+}
+
 class GraphicsFeature
 {
 public:
@@ -34,24 +39,8 @@ public:
 		ShaderManager* shaderManager;
 	};
 
-	struct UploadParameters
+	struct CommonRenderParameters
 	{
-		RenderDevice* renderDevice;
-
-		// Render state
-
-		const CameraParameters& cameraParameters;
-		const RenderViewport& fullscreenViewport;
-	};
-
-	struct SubmitParameters
-	{
-		GraphicsFeatureCommandList& commandList;
-	};
-
-	struct RenderParameters
-	{
-		RenderDevice* renderDevice;
 		PostProcessRenderer* postProcessRenderer;
 
 		// Resource managers
@@ -64,16 +53,29 @@ public:
 
 		kokko::EnvironmentSystem* environmentSystem;
 		LightManager* lightManager;
-		
+
 		// Render state
 
 		const CameraParameters& cameraParameters;
 		const RenderViewport& fullscreenViewport;
 		ArrayView<const RenderViewport> shadowViewports;
 		const RenderGraphResources* renderGraphResources;
-		unsigned int finalTargetFramebufferId;
+		kokko::RenderFramebufferId finalTargetFramebufferId;
+	};
 
-		// Feature parameters
+	struct UploadParameters : public CommonRenderParameters
+	{
+		RenderDevice* renderDevice;
+	};
+
+	struct SubmitParameters
+	{
+		GraphicsFeatureCommandList& commandList;
+	};
+
+	struct RenderParameters : public CommonRenderParameters
+	{
+		render::CommandEncoder* encoder;
 
 		uint16_t featureObjectId;
 	};

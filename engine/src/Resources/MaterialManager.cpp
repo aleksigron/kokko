@@ -102,8 +102,8 @@ MaterialId MaterialManager::CreateMaterial()
 	data.material[id.i].uid = kokko::Uid();
 	data.material[id.i].transparency = TransparencyType::Opaque;
 	data.material[id.i].shaderId = ShaderId{};
-	data.material[id.i].cachedShaderDeviceId = 0;
-	data.material[id.i].uniformBufferObject = 0;
+	data.material[id.i].cachedShaderDeviceId = kokko::RenderShaderId();
+	data.material[id.i].uniformBufferObject = kokko::RenderBufferId();
 	data.material[id.i].uniformData = kokko::UniformData(allocator);
 
 	++data.count;
@@ -220,7 +220,7 @@ void MaterialManager::SetMaterialShader(MaterialId id, ShaderId shaderId)
 	if (shaderId == ShaderId::Null)
 	{
 		material.shaderId = ShaderId::Null;
-		material.cachedShaderDeviceId = 0;
+		material.cachedShaderDeviceId = kokko::RenderShaderId();
 		material.transparency = TransparencyType::Opaque;
 		material.uniformData.Release();
 		return;
@@ -239,15 +239,8 @@ void MaterialManager::SetMaterialShader(MaterialId id, ShaderId shaderId)
 		// Create GPU uniform buffer and allocate storage
 
 		renderDevice->CreateBuffers(1, &material.uniformBufferObject);
-
-		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
-
-		RenderCommandData::SetBufferStorage bufferStorage{};
-		bufferStorage.target = RenderBufferTarget::UniformBuffer;
-		bufferStorage.size = material.uniformData.GetUniformBufferSize();
-		bufferStorage.data = nullptr;
-		bufferStorage.dynamicStorage = true;
-		renderDevice->SetBufferStorage(&bufferStorage);
+		renderDevice->SetBufferStorage(material.uniformBufferObject, material.uniformData.GetUniformBufferSize(),
+			nullptr, BufferStorageFlags::Dynamic);
 	}
 }
 
@@ -274,8 +267,7 @@ void MaterialManager::UpdateUniformsToGPU(MaterialId id)
 
 		uniforms.WriteToUniformBuffer(uniformBuffer);
 
-		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, material.uniformBufferObject);
-		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, uniformBufferSize, uniformBuffer);
+		renderDevice->SetBufferSubData(material.uniformBufferObject, 0, uniformBufferSize, uniformBuffer);
 
 		if (uniformBuffer != stackBuffer)
 			allocator->Deallocate(uniformBuffer);

@@ -15,6 +15,11 @@ GraphicsFeatureCommandList::GraphicsFeatureCommandList(
 {
 }
 
+void GraphicsFeatureCommandList::AddToStartOfFrame(uint16_t object)
+{
+	list.AddDrawWithCallback(0, RenderPassType::OpaqueGeometry, FLT_MIN, featureIndex, object);
+}
+
 void GraphicsFeatureCommandList::AddToFullscreenViewport(RenderPassType pass, float depth, uint16_t object)
 {
 	list.AddDrawWithCallback(fullscreenViewportIndex, pass, depth, featureIndex, object);

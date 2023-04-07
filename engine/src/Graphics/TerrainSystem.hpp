@@ -75,10 +75,10 @@ public:
 	void SetTextureScale(TerrainId id, Vec2f scale) { data.textureScale[id.i] = scale; }
 
 	TextureId GetAlbedoTextureId(TerrainId id) const;
-	void SetAlbedoTexture(TerrainId id, TextureId textureId, unsigned int textureObject);
+	void SetAlbedoTexture(TerrainId id, TextureId textureId, RenderTextureId textureObject);
 
 	TextureId GetRoughnessTextureId(TerrainId id) const;
-	void SetRoughnessTexture(TerrainId id, TextureId textureId, unsigned int textureObject);
+	void SetRoughnessTexture(TerrainId id, TextureId textureId, RenderTextureId textureObject);
 
 	virtual void Submit(const SubmitParameters& parameters) override;
 	virtual void Render(const RenderParameters& parameters) override;
@@ -90,7 +90,7 @@ private:
 	ShaderManager* shaderManager;
 	
 	unsigned int uniformBlockStride;
-	unsigned int uniformBufferId;
+	RenderBufferId uniformBufferId;
 
 	MaterialId terrainMaterial;
 
@@ -98,20 +98,20 @@ private:
 
 	struct VertexData
 	{
-		unsigned int vertexArray;
-		unsigned int vertexBuffer;
-		unsigned int indexBuffer;
+		RenderVertexArrayId vertexArray;
+		RenderBufferId vertexBuffer;
+		RenderBufferId indexBuffer;
 
 		int indexCount;
 	};
 	VertexData vertexData;
 
-	unsigned int textureSampler;
+	RenderSamplerId textureSampler;
 
 	struct TextureInfo
 	{
 		TextureId textureId;
-		unsigned int textureObjectId;
+		RenderTextureId textureObjectId;
 	};
 
 	struct TerrainTextures

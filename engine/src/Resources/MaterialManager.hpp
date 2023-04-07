@@ -32,9 +32,9 @@ private:
 		kokko::Uid uid;
 		TransparencyType transparency;
 		ShaderId shaderId;
-		unsigned int cachedShaderDeviceId;
+		kokko::RenderShaderId cachedShaderDeviceId;
 
-		unsigned int uniformBufferObject;
+		kokko::RenderBufferId uniformBufferObject;
 
 		kokko::UniformData uniformData;
 	};
@@ -92,9 +92,9 @@ public:
 	kokko::UniformData& GetMaterialUniforms(MaterialId id)
 	{ return data.material[id.i].uniformData; }
 
-	unsigned int GetMaterialShaderDeviceId(MaterialId id) const
+	kokko::RenderShaderId GetMaterialShaderDeviceId(MaterialId id) const
 	{ return data.material[id.i].cachedShaderDeviceId; }
-	unsigned int GetMaterialUniformBufferId(MaterialId id) const
+	kokko::RenderBufferId GetMaterialUniformBufferId(MaterialId id) const
 	{ return data.material[id.i].uniformBufferObject; }
 
 	void UpdateUniformsToGPU(MaterialId id);

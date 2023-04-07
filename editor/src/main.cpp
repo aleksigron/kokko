@@ -121,6 +121,8 @@ int main(int argc, char** argv)
 	}
 	else if (engine.Initialize(windowSettings))
 	{
+		kokko::render::CommandEncoder* commandEncoder = engine.GetCommandEncoder();
+
 		editor.Initialize(&engine);
 
 		engine.SetAppPointer(&editor);
@@ -143,7 +145,7 @@ int main(int argc, char** argv)
 
 			engine.Render(editor.GetEditorCameraParameters(), editor.GetSceneViewFramebuffer());
 
-			editor.EndFrame();
+			editor.EndFrame(commandEncoder);
 			engine.EndFrame();
 		}
 

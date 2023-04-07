@@ -159,22 +159,4 @@ namespace RenderCommandData
 		bool coherent; // Persistent mapping is also to be coherent
 	};
 
-	struct MemoryBarrier
-	{
-		bool vertexAttribArray : 1;
-		bool elementArray : 1;
-		bool uniform : 1;
-		bool textureFetch : 1;
-		bool shaderImageAccess : 1;
-		bool command : 1;
-		bool pixelBuffer : 1;
-		bool textureUpdate : 1;
-		bool bufferUpdate : 1;
-		bool clientMappedBuffer : 1;
-		bool framebuffer : 1;
-		bool transformFeedback : 1;
-		bool atomicCounter : 1;
-		bool shaderStorage : 1;
-		bool queryBuffer : 1;
-	};
 }

@@ -4,6 +4,8 @@
 
 #include "Resources/MeshId.hpp"
 
+#include "Rendering/RenderResourceId.hpp"
+
 class RenderDevice;
 class MeshManager;
 class ShaderManager;
@@ -12,10 +14,18 @@ class RenderTargetContainer;
 struct ShaderData;
 struct PostProcessRenderPass;
 
+namespace kokko
+{
+namespace render
+{
+class CommandEncoder;
+}
+}
+
 class PostProcessRenderer
 {
 private:
-	RenderDevice* renderDevice;
+	kokko::render::CommandEncoder* encoder;
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
 	RenderTargetContainer* renderTargetContainer;
@@ -23,10 +33,10 @@ private:
 	MeshId fullscreenMeshId;
 
 	void BindTextures(const ShaderData& shader, unsigned int count,
-		const uint32_t* nameHashes, const unsigned int* textures, const unsigned int* samplers);
+		const uint32_t* nameHashes, const kokko::RenderTextureId* textures, const kokko::RenderSamplerId* samplers);
 
 public:
-	PostProcessRenderer(RenderDevice* renderDevice, MeshManager* meshManager,
+	PostProcessRenderer(kokko::render::CommandEncoder* encoder, MeshManager* meshManager,
 		ShaderManager* shaderManager, RenderTargetContainer* renderTargetContainer);
 	~PostProcessRenderer();
 

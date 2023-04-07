@@ -264,15 +264,12 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, kokko::ConstStringV
 		imageData.imageDataSize = textureBuffer.GetCount();
 
 		imageData.imageSize = Vec2i(int(textureSize.x), int(textureSize.y));
-		imageData.pixelFormat = GL_RED;
-		imageData.componentDataType = GL_UNSIGNED_BYTE;
+		imageData.pixelFormat = RenderTextureBaseFormat::R;
+		imageData.componentDataType = RenderTextureDataType::UnsignedByte;
 
 		TextureId id = textureManager->CreateTexture();
 
-		TextureOptions options;
-		options.minFilter = RenderTextureFilterMode::Nearest;
-		options.magFilter = RenderTextureFilterMode::Nearest;
-		textureManager->Upload_2D(id, imageData, options);
+		textureManager->Upload_2D(id, imageData, false);
 
 		textureId = textureManager->GetTextureData(id).textureObjectId;
 		

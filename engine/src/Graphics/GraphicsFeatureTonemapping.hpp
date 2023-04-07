@@ -2,6 +2,8 @@
 
 #include "Graphics/GraphicsFeature.hpp"
 
+#include "Rendering/RenderResourceId.hpp"
+
 #include "Resources/ShaderId.hpp"
 
 namespace kokko
@@ -26,7 +28,7 @@ private:
 	unsigned int renderOrder;
 
 	ShaderId shaderId;
-	unsigned int uniformBufferId;
+	kokko::RenderBufferId uniformBufferId;
 };
 
 }

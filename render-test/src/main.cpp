@@ -16,6 +16,7 @@
 #include "Memory/RootAllocator.hpp"
 
 #include "Rendering/CameraParameters.hpp"
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/Framebuffer.hpp"
 
@@ -113,6 +114,7 @@ int main(int argc, char** argv)
 	Framebuffer framebuffer;
 	RenderTextureSizedFormat colorFormat[] = { RenderTextureSizedFormat::SRGB8 };
 	RenderDevice* renderDevice = engine.GetRenderDevice();
+	kokko::render::CommandEncoder* encoder = engine.GetCommandEncoder();
 	framebuffer.SetRenderDevice(renderDevice);
 	framebuffer.Create(width, height, Optional<RenderTextureSizedFormat>(), ArrayView(colorFormat));
 
@@ -185,7 +187,10 @@ int main(int argc, char** argv)
 			{
 				KOKKO_PROFILE_SCOPE("Read render result");
 
-				renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebuffer.GetFramebufferId());
+				encoder->BindFramebuffer(framebuffer.GetFramebufferId());
+				// TODO: Start using pixel buffer to read pixels
+				// When supporting Vulkan, we will need to use vkCmdBlitImage or
+				// vkCmdCopyImage to copy to host-visible memory
 				renderDevice->ReadFramebufferPixels(0, 0, width, height,
 					RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, resultPixels);
 			}

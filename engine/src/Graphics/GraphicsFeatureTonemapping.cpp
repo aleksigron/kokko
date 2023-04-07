@@ -47,17 +47,10 @@ void GraphicsFeatureTonemapping::Initialize(const InitializeParameters& paramete
 
 	{
 		device->CreateBuffers(1, &uniformBufferId);
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-
-		RenderCommandData::SetBufferStorage storage{};
-		storage.target = RenderBufferTarget::UniformBuffer;
-		storage.size = sizeof(TonemapUniformBlock);
-		storage.data = nullptr;
-		storage.dynamicStorage = true;
-		device->SetBufferStorage(&storage);
+		device->SetBufferStorage(uniformBufferId, sizeof(TonemapUniformBlock), nullptr, BufferStorageFlags::Dynamic);
 
 		kokko::ConstStringView label("Tonemapping uniform buffer");
-		device->SetObjectLabel(RenderObjectType::Buffer, uniformBufferId, label);
+		device->SetObjectLabel(RenderObjectType::Buffer, uniformBufferId.i, label);
 	}
 
 	{
@@ -69,7 +62,7 @@ void GraphicsFeatureTonemapping::Initialize(const InitializeParameters& paramete
 void GraphicsFeatureTonemapping::Deinitialize(const InitializeParameters& parameters)
 {
 	parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
-	uniformBufferId = 0;
+	uniformBufferId = RenderBufferId();
 }
 
 void GraphicsFeatureTonemapping::Upload(const UploadParameters& parameters)
@@ -79,8 +72,7 @@ void GraphicsFeatureTonemapping::Upload(const UploadParameters& parameters)
 	TonemapUniformBlock uniforms;
 	uniforms.exposure = 1.0f;
 
-	device->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TonemapUniformBlock), &uniforms);
+	device->SetBufferSubData(uniformBufferId, 0, sizeof(TonemapUniformBlock), &uniforms);
 }
 
 void GraphicsFeatureTonemapping::Submit(const SubmitParameters& parameters)
@@ -98,7 +90,7 @@ void GraphicsFeatureTonemapping::Render(const RenderParameters& parameters)
 
 	pass.textureNameHashes[0] = "light_acc_map"_hash;
 	pass.textureIds[0] = resources->GetLightAccumulationBuffer().GetColorTextureId(0);
-	pass.samplerIds[0] = 0;
+	pass.samplerIds[0] = RenderSamplerId();
 	pass.textureCount = 1;
 
 	pass.uniformBufferId = uniformBufferId;

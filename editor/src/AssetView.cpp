@@ -150,7 +150,7 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 				float side = ImGui::GetFontSize() * 6.0f;
 				ImVec2 size(side, side);
 
-				void* texId = reinterpret_cast<void*>(static_cast<size_t>(texture.textureObject));
+				void* texId = reinterpret_cast<void*>(static_cast<size_t>(texture.textureObject.i));
 				ImVec2 uv0(0.0f, 1.0f);
 				ImVec2 uv1(1.0f, 0.0f);
 
@@ -385,7 +385,7 @@ void AssetView::DrawTexture(EditorContext& context, const AssetInfo* asset)
 	float side = ImGui::GetFontSize() * 10.0f;
 	ImVec2 size(side, side);
 
-	void* texId = reinterpret_cast<void*>(static_cast<size_t>(texture.textureObjectId));
+	void* texId = reinterpret_cast<void*>(static_cast<size_t>(texture.textureObjectId.i));
 	ImVec2 uv0(0.0f, 1.0f);
 	ImVec2 uv1(1.0f, 0.0f);
 

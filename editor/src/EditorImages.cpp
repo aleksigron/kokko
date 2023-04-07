@@ -25,7 +25,7 @@ void EditorImages::LoadImages(TextureManager* textureManager)
 void* EditorImages::GetImGuiTextureId(TextureId id) const
 {
 	const TextureData& data = textureManager->GetTextureData(id);
-	return reinterpret_cast<void*>(static_cast<size_t>(data.textureObjectId));
+	return reinterpret_cast<void*>(static_cast<size_t>(data.textureObjectId.i));
 }
 
 }

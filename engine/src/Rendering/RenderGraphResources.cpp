@@ -36,8 +36,7 @@ void RenderGraphResources::VerifyResourcesAreCreated(Vec2i fullscreenViewportRes
 
 		RenderTextureSizedFormat depthFormat = RenderTextureSizedFormat::D32F;
 		framebufferShadow.Create(size.x, size.y, depthFormat, ArrayView<RenderTextureSizedFormat>());
-		framebufferShadow.SetDepthTextureCompare(
-			RenderTextureCompareMode::CompareRefToTexture, RenderDepthCompareFunc::GreaterThanOrEqual);
+		// TODO: use sampler to set shadowmap comparison mode
 
 		framebufferShadow.SetDebugLabel(kokko::ConstStringView("Renderer shadow framebuffer"));
 	}
@@ -126,17 +125,17 @@ const Framebuffer& RenderGraphResources::GetAmbientOcclusionBuffer() const
 	return framebufferAmbientOcclusion;
 }
 
-unsigned int RenderGraphResources::GetGeometryBufferAlbedoTexture() const
+RenderTextureId RenderGraphResources::GetGeometryBufferAlbedoTexture() const
 {
 	return framebufferGbuffer.GetColorTextureId(GbufferAlbedoIndex);
 }
 
-unsigned int RenderGraphResources::GetGeometryBufferNormalTexture() const
+RenderTextureId RenderGraphResources::GetGeometryBufferNormalTexture() const
 {
 	return framebufferGbuffer.GetColorTextureId(GbufferNormalIndex);
 }
 
-unsigned int RenderGraphResources::GetGeometryBufferMaterialTexture() const
+RenderTextureId RenderGraphResources::GetGeometryBufferMaterialTexture() const
 {
 	return framebufferGbuffer.GetColorTextureId(GbufferMaterialIndex);
 }

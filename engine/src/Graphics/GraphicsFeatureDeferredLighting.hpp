@@ -5,6 +5,7 @@
 #include "Graphics/GraphicsFeature.hpp"
 
 #include "Rendering/Light.hpp"
+#include "Rendering/RenderResourceId.hpp"
 
 #include "Resources/MeshId.hpp"
 #include "Resources/ShaderId.hpp"
@@ -24,6 +25,8 @@ public:
 	virtual void Initialize(const InitializeParameters& parameters) override;
 	virtual void Deinitialize(const InitializeParameters& parameters) override;
 
+	virtual void Upload(const UploadParameters& parameters) override;
+
 	virtual void Submit(const SubmitParameters& parameters) override;
 	virtual void Render(const RenderParameters& parameters) override;
 
@@ -36,9 +39,9 @@ private:
 
 	unsigned int renderOrder;
 
-	unsigned int uniformBufferId;
-
-	unsigned int brdfLutTextureId;
+	kokko::RenderBufferId uniformBufferId;
+	kokko::RenderFramebufferId brdfLutFramebufferId;
+	kokko::RenderTextureId brdfLutTextureId;
 };
 
 }

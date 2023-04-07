@@ -34,28 +34,13 @@ RenderTarget RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextur
 
 	if (renderTargetCount < MaxRenderTargetCount)
 	{
-		unsigned int framebuffer = 0;
+		kokko::RenderFramebufferId framebuffer;
+		kokko::RenderTextureId texture;
+
 		renderDevice->CreateFramebuffers(1, &framebuffer);
-		renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebuffer);
-
-		unsigned int texture = 0;
-		renderDevice->CreateTextures(1, &texture);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, texture);
-		renderDevice->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-		renderDevice->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-		renderDevice->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		renderDevice->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-
-		RenderCommandData::SetTextureStorage2D storage{
-			RenderTextureTarget::Texture2d, 1, format, size.x, size.y
-		};
-		renderDevice->SetTextureStorage2D(&storage);
-
-		RenderCommandData::AttachFramebufferTexture2D attachTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
-			RenderTextureTarget::Texture2d, texture, 0
-		};
-		renderDevice->AttachFramebufferTexture2D(&attachTexture);
+		renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &texture);
+		renderDevice->SetTextureStorage2D(texture, 1, format, size.x, size.y);
+		renderDevice->AttachFramebufferTexture(framebuffer, RenderFramebufferAttachment::Color0, texture, 0);
 
 		TargetInfo& targetInfo = renderTargets[renderTargetCount];
 

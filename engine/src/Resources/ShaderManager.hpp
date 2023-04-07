@@ -8,6 +8,7 @@
 #include "Core/Uid.hpp"
 
 #include "Rendering/UniformList.hpp"
+#include "Rendering/RenderResourceId.hpp"
 #include "Rendering/TransparencyType.hpp"
 
 #include "Resources/ShaderId.hpp"
@@ -33,7 +34,7 @@ struct ShaderData
 
 	TransparencyType transparencyType;
 
-	unsigned int driverId;
+	kokko::RenderShaderId driverId;
 
 	kokko::UniformList uniforms;
 };

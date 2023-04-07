@@ -8,7 +8,6 @@
 
 class Allocator;
 class MeshManager;
-class Renderer;
 
 struct BoundingBox;
 struct Entity;
@@ -18,6 +17,8 @@ struct MeshId;
 
 namespace kokko
 {
+
+class Renderer;
 
 struct MeshComponentId
 {
@@ -31,7 +32,7 @@ struct MeshComponentId
 
 class MeshComponentSystem : public TransformUpdateReceiver
 {
-	friend class ::Renderer;
+	friend class kokko::Renderer;
 
 public:
 	MeshComponentSystem(Allocator* allocator, MeshManager* meshManager);

@@ -28,6 +28,12 @@ class ModelManager;
 class WindowManager;
 struct ResourceManagers;
 struct WindowSettings;
+
+namespace render
+{
+struct CommandBuffer;
+class CommandEncoder;
+}
 }
 
 class Engine
@@ -41,6 +47,8 @@ private:
 	kokko::Filesystem* filesystem;
 	kokko::AssetLoader* assetLoader;
     RenderDevice* renderDevice;
+	kokko::render::CommandBuffer* commandBuffer;
+	kokko::render::CommandEncoder* commandEncoder;
 
 	InstanceAllocatorPair<kokko::WindowManager> windowManager;
 	Time* time;
@@ -71,6 +79,7 @@ public:
 	kokko::EngineSettings* GetSettings() { return &settings; }
 	kokko::WindowManager* GetWindowManager() { return windowManager.instance; }
 	RenderDevice* GetRenderDevice() { return renderDevice; }
+	kokko::render::CommandEncoder* GetCommandEncoder() { return commandEncoder; }
 	Debug* GetDebug() { return debug.instance; }
 	kokko::Filesystem* GetFilesystem() { return filesystem; }
 	MeshManager* GetMeshManager() { return meshManager.instance; }

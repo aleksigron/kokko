@@ -227,12 +227,23 @@ set (KOKKO_SOURCES
 	src/Rendering/PostProcessRenderer.cpp
 	src/Rendering/PostProcessRenderer.hpp
 	src/Rendering/PostProcessRenderPass.hpp
+	src/Rendering/RenderCommand.cpp
+	src/Rendering/RenderCommand.hpp
+	src/Rendering/RenderCommandBuffer.cpp
+	src/Rendering/RenderCommandBuffer.hpp
 	src/Rendering/RenderCommandData.hpp
+	src/Rendering/RenderCommandEncoder.cpp
+	src/Rendering/RenderCommandEncoder.hpp
+	src/Rendering/RenderCommandExecutor.hpp
+	src/Rendering/RenderCommandExecutorOpenGL.cpp
+	src/Rendering/RenderCommandExecutorOpenGL.hpp
 	src/Rendering/RenderDebugFeature.hpp
 	src/Rendering/RenderDebugSettings.cpp
 	src/Rendering/RenderDebugSettings.hpp
     src/Rendering/RenderDevice.cpp
 	src/Rendering/RenderDevice.hpp
+    src/Rendering/RenderDeviceEnumsOpenGL.cpp
+	src/Rendering/RenderDeviceEnumsOpenGL.hpp
 	src/Rendering/Renderer.cpp
 	src/Rendering/Renderer.hpp
 	src/Rendering/RendererCommandList.cpp
@@ -244,8 +255,12 @@ set (KOKKO_SOURCES
     src/Rendering/RenderPass.cpp
     src/Rendering/RenderPassDescriptor.hpp
 	src/Rendering/RenderPassType.hpp
+	src/Rendering/RenderResourceId.hpp
+	src/Rendering/RenderResourceMap.cpp
+	src/Rendering/RenderResourceMap.hpp
 	src/Rendering/RenderTargetContainer.cpp
 	src/Rendering/RenderTargetContainer.hpp
+    src/Rendering/RenderTypes.cpp
     src/Rendering/RenderTypes.hpp
 	src/Rendering/RenderViewport.hpp
 	src/Rendering/StaticUniformBuffer.hpp

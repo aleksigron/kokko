@@ -9,6 +9,7 @@
 
 #include "Rendering/Uniform.hpp"
 #include "Rendering/UniformList.hpp"
+#include "Rendering/RenderResourceId.hpp"
 
 class Allocator;
 
@@ -72,7 +73,7 @@ public:
 
 	// Set texture values
 
-	void SetTexture(TextureUniform& uniform, TextureId textureId, unsigned int textureObjectId);
+	void SetTexture(TextureUniform& uniform, TextureId textureId, kokko::RenderTextureId textureObjectId);
 
 	void WriteToUniformBuffer(uint8_t* uniformBuffer) const;
 

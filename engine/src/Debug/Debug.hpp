@@ -29,6 +29,11 @@ namespace kokko
 {
 class Filesystem;
 class Window;
+
+namespace render
+{
+class CommandEncoder;
+}
 }
 
 class Debug
@@ -76,7 +81,11 @@ public:
 		ShaderManager* shaderManager, TextureManager* textureManager);
 	void Deinitialize();
 
-	void Render(World* world, const Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera);
+	void Render(
+		kokko::render::CommandEncoder* encoder,
+		World* world,
+		const Framebuffer& framebuffer,
+		const Optional<CameraParameters>& editorCamera);
 
 	DebugConsole* GetConsole() { return console; }
 	DebugTextRenderer* GetTextRenderer() { return textRenderer; }

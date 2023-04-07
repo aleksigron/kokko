@@ -5,6 +5,8 @@
 #include "Math/Vec3.hpp"
 #include "Math/Frustum.hpp"
 
+#include "Rendering/RenderResourceId.hpp"
+
 struct RenderViewport
 {
 	Vec3f position;
@@ -22,5 +24,5 @@ struct RenderViewport
 
 	FrustumPlanes frustum;
 
-	unsigned int uniformBlockObject;
+	kokko::RenderBufferId uniformBlockObject;
 };

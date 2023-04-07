@@ -16,7 +16,7 @@ Framebuffer::Framebuffer() :
 	depthTextureIsOwned(false)
 {
 	for (size_t i = 0; i < MaxColorTextureCount; ++i)
-		colorTextureIds[i] = 0;
+		colorTextureIds[i] = kokko::RenderTextureId();
 }
 
 Framebuffer::Framebuffer(Framebuffer&& other) noexcept :
@@ -46,7 +46,7 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& other) noexcept
 	{
 		colorTextureIds[i] = other.colorTextureIds[i];
 
-		other.colorTextureIds[i] = 0;
+		other.colorTextureIds[i] = kokko::RenderTextureId();
 	}
 
 	depthTextureId = other.depthTextureId;
@@ -54,9 +54,9 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& other) noexcept
 
 	other.width = 0;
 	other.height = 0;
-	other.framebufferId = 0;
+	other.framebufferId = kokko::RenderFramebufferId();
 	other.colorTextureCount = 0;
-	other.depthTextureId = 0;
+	other.depthTextureId = kokko::RenderTextureId();
 	other.depthTextureIsOwned = false;
 
 	return *this;
@@ -72,19 +72,19 @@ bool Framebuffer::IsInitialized() const
 	return framebufferId != 0;
 }
 
-unsigned int Framebuffer::GetFramebufferId() const
+kokko::RenderFramebufferId Framebuffer::GetFramebufferId() const
 {
 	return framebufferId;
 }
 
-unsigned int Framebuffer::GetColorTextureId(size_t index) const
+kokko::RenderTextureId Framebuffer::GetColorTextureId(size_t index) const
 {
 	assert(index < colorTextureCount);
 
 	return colorTextureIds[index];
 }
 
-unsigned int Framebuffer::GetDepthTextureId() const
+kokko::RenderTextureId Framebuffer::GetDepthTextureId() const
 {
 	return depthTextureId;
 }
@@ -124,10 +124,9 @@ void Framebuffer::Create(
 	this->width = width;
 	this->height = height;
 
-	// Create and bind framebuffer
+	// Create framebuffer
 
 	renderDevice->CreateFramebuffers(1, &framebufferId);
-	renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, framebufferId);
 
 	// Depth texture
 
@@ -135,16 +134,9 @@ void Framebuffer::Create(
 	{
 		RenderTextureSizedFormat depthTextureFormat = depthFormat.GetValue();
 
-		renderDevice->CreateTextures(1, &depthTextureId);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, depthTextureId);
-
-		CreateTexture(depthTextureFormat, width, height);
-
-		RenderCommandData::AttachFramebufferTexture2D attachTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
-			RenderTextureTarget::Texture2d, depthTextureId, 0
-		};
-		renderDevice->AttachFramebufferTexture2D(&attachTexture);
+		renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &depthTextureId);
+		renderDevice->SetTextureStorage2D(depthTextureId, 1, depthTextureFormat, width, height);
+		renderDevice->AttachFramebufferTexture(framebufferId, RenderFramebufferAttachment::Depth, depthTextureId, 0);
 
 		depthTextureIsOwned = true;
 	}
@@ -155,19 +147,13 @@ void Framebuffer::Create(
 
 	if (colorTextureCount > 0)
 	{
-		renderDevice->CreateTextures(static_cast<unsigned int>(colorTextureFormats.GetCount()), colorTextureIds);
+		renderDevice->CreateTextures(RenderTextureTarget::Texture2d,
+			static_cast<uint32_t>(colorTextureFormats.GetCount()), colorTextureIds);
 
 		for (size_t i = 0, count = colorTextureFormats.GetCount(); i < count; ++i)
 		{
-			unsigned int textureId = colorTextureIds[i];
-			renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureId);
-
-			CreateTexture(colorTextureFormats[i], width, height);
-
-			RenderCommandData::AttachFramebufferTexture2D attachTexture{
-				RenderFramebufferTarget::Framebuffer, colAtt[i], RenderTextureTarget::Texture2d, textureId, 0
-			};
-			renderDevice->AttachFramebufferTexture2D(&attachTexture);
+			renderDevice->SetTextureStorage2D(colorTextureIds[i], 1, colorTextureFormats[i], width, height);
+			renderDevice->AttachFramebufferTexture(framebufferId, colAtt[i], colorTextureIds[i], 0);
 		}
 
 		renderDevice->SetFramebufferDrawBuffers(static_cast<unsigned int>(colorTextureCount), colAtt);
@@ -186,7 +172,7 @@ void Framebuffer::Destroy()
 	if (framebufferId != 0)
 	{
 		renderDevice->DestroyFramebuffers(1, &framebufferId);
-		framebufferId = 0;
+		framebufferId = kokko::RenderFramebufferId();
 
 		width = 0;
 		height = 0;
@@ -196,7 +182,7 @@ void Framebuffer::Destroy()
 			renderDevice->DestroyTextures(static_cast<unsigned int>(colorTextureCount), colorTextureIds);
 
 			for (size_t i = 0; i < colorTextureCount; ++i)
-				colorTextureIds[i] = 0;
+				colorTextureIds[i] = kokko::RenderTextureId();
 
 			colorTextureCount = 0;
 		}
@@ -206,49 +192,23 @@ void Framebuffer::Destroy()
 			if (depthTextureIsOwned)
 				renderDevice->DestroyTextures(1, &depthTextureId);
 
-			depthTextureId = 0;
+			depthTextureId = kokko::RenderTextureId();
 			depthTextureIsOwned = false;
 		}
 	}
 }
 
-void Framebuffer::AttachExternalDepthTexture(unsigned int textureId)
+void Framebuffer::AttachExternalDepthTexture(kokko::RenderTextureId textureId)
 {
 	assert(depthTextureId == 0);
 
 	depthTextureId = textureId;
 	depthTextureIsOwned = false;
 
-	RenderCommandData::AttachFramebufferTexture2D attachTexture{
-		RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Depth,
-		RenderTextureTarget::Texture2d, depthTextureId, 0
-	};
-	renderDevice->AttachFramebufferTexture2D(&attachTexture);
-}
-
-void Framebuffer::SetDepthTextureCompare(RenderTextureCompareMode mode, RenderDepthCompareFunc func)
-{
-	assert(depthTextureId != 0);
-	assert(depthTextureIsOwned == true);
-
-	renderDevice->BindTexture(RenderTextureTarget::Texture2d, depthTextureId);
-	renderDevice->SetTextureCompareMode(RenderTextureTarget::Texture2d, mode);
-	renderDevice->SetTextureCompareFunc(RenderTextureTarget::Texture2d, func);
+	renderDevice->AttachFramebufferTexture(framebufferId, RenderFramebufferAttachment::Depth, depthTextureId, 0);
 }
 
 void Framebuffer::SetDebugLabel(kokko::ConstStringView label)
 {
-	renderDevice->SetObjectLabel(RenderObjectType::Framebuffer, framebufferId, label);
-}
-
-void Framebuffer::CreateTexture(RenderTextureSizedFormat format, int width, int height)
-{
-	RenderCommandData::SetTextureStorage2D textureStorage{ RenderTextureTarget::Texture2d, 1, format, width, height };
-	renderDevice->SetTextureStorage2D(&textureStorage);
-
-	renderDevice->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-	renderDevice->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-	renderDevice->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-	renderDevice->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-	renderDevice->SetTextureWrapModeW(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+	renderDevice->SetObjectLabel(RenderObjectType::Framebuffer, framebufferId.i, label);
 }
