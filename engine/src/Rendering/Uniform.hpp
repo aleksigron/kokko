@@ -12,6 +12,7 @@
 #include "Math/Mat4x4.hpp"
 
 #include "Rendering/RenderTypes.hpp"
+#include "Rendering/RenderResourceId.hpp"
 
 #include "Resources/TextureId.hpp"
 
@@ -55,9 +56,8 @@ struct BufferUniform : ShaderUniform
 struct TextureUniform : ShaderUniform
 {
 	int uniformLocation;
-	RenderTextureTarget textureTarget;
 	TextureId textureId;
-	unsigned int textureObject;
+	kokko::RenderTextureId textureObject;
 };
 
 struct UniformTypeInfo

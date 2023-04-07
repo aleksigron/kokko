@@ -14,6 +14,7 @@ struct VertexAttribute
 		attrIndex(0),
 		elemCount(0),
 		offset(0),
+		stride(0),
 		elemType(RenderVertexElemType::Float)
 	{
 	}
@@ -22,6 +23,7 @@ struct VertexAttribute
 		attrIndex(attrIndex),
 		elemCount(elemCount),
 		offset(0),
+		stride(0),
 		elemType(RenderVertexElemType::Float)
 	{
 	}

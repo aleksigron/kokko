@@ -105,7 +105,7 @@ void Debug::Deinitialize()
 	vectorRenderer->Deinitialize();
 }
 
-void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera)
+void Debug::Render(kokko::render::CommandEncoder* encoder, World* world, const Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -203,7 +203,7 @@ void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<
 
 		// Check culling camera controller switching
 
-		Renderer* renderer = world->GetRenderer();
+		kokko::Renderer* renderer = world->GetRenderer();
 
 		if (oldMode != DebugMode::Culling && this->mode == DebugMode::Culling)
 		{
@@ -291,8 +291,8 @@ void Debug::Render(World* world, const Framebuffer& framebuffer, const Optional<
 	viewport.position = Vec2i();
 	viewport.size = framebufferSize;
 
-	vectorRenderer->Render(world, viewport, editorCamera);
-	textRenderer->Render();
+	vectorRenderer->Render(encoder, world, viewport, editorCamera);
+	textRenderer->Render(encoder);
 }
 
 void Debug::RequestBeginProfileSession()

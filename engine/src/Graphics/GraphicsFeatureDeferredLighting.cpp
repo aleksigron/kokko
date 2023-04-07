@@ -10,6 +10,7 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/PostProcessRenderer.hpp"
 #include "Rendering/PostProcessRenderPass.hpp"
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderGraphResources.hpp"
 #include "Rendering/RenderPassType.hpp"
@@ -25,6 +26,8 @@ namespace kokko
 
 namespace
 {
+
+constexpr int BrdfLutSize = 512;
 
 struct LightingUniformBlock
 {
@@ -74,20 +77,13 @@ void GraphicsFeatureDeferredLighting::SetOrder(unsigned int order)
 
 void GraphicsFeatureDeferredLighting::Initialize(const InitializeParameters& parameters)
 {
-	RenderDevice* device = parameters.renderDevice;
+	RenderDevice* renderDevice = parameters.renderDevice;
 
-	device->CreateBuffers(1, &uniformBufferId);
-	device->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-
-	RenderCommandData::SetBufferStorage storage{};
-	storage.target = RenderBufferTarget::UniformBuffer;
-	storage.size = sizeof(LightingUniformBlock);
-	storage.data = nullptr;
-	storage.dynamicStorage = true;
-	device->SetBufferStorage(&storage);
+	renderDevice->CreateBuffers(1, &uniformBufferId);
+	renderDevice->SetBufferStorage(uniformBufferId, sizeof(LightingUniformBlock), nullptr, BufferStorageFlags::Dynamic);
 
 	ConstStringView label("Renderer deferred lighting uniform buffer");
-	device->SetObjectLabel(RenderObjectType::Buffer, uniformBufferId, label);
+	renderDevice->SetObjectLabel(RenderObjectType::Buffer, uniformBufferId.i, label);
 
 	ConstStringView shaderPath("engine/shaders/deferred_lighting/lighting.glsl");
 	shaderId = parameters.shaderManager->FindShaderByPath(shaderPath);
@@ -95,80 +91,65 @@ void GraphicsFeatureDeferredLighting::Initialize(const InitializeParameters& par
 	// Create screen filling quad
 	meshId = parameters.meshManager->CreateMesh();
 	MeshPresets::UploadPlane(parameters.meshManager, meshId);
-
-	{
-		KOKKO_PROFILE_SCOPE("Calculate BRDF LUT");
-
-		// Calculate the BRDF LUT
-
-		static const int LutSize = 512;
-
-		device->CreateTextures(1, &brdfLutTextureId);
-		device->BindTexture(RenderTextureTarget::Texture2d, brdfLutTextureId);
-
-		RenderCommandData::SetTextureStorage2D storage{
-			RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RG16F, LutSize, LutSize
-		};
-		device->SetTextureStorage2D(&storage);
-
-		device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-		device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-
-		unsigned int framebuffer;
-		device->CreateFramebuffers(1, &framebuffer);
-
-		RenderCommandData::BindFramebufferData bindFramebuffer{ RenderFramebufferTarget::Framebuffer, framebuffer };
-		device->BindFramebuffer(&bindFramebuffer);
-
-		RenderCommandData::AttachFramebufferTexture2D attachTexture{
-			RenderFramebufferTarget::Framebuffer, RenderFramebufferAttachment::Color0,
-			RenderTextureTarget::Texture2d, brdfLutTextureId, 0
-		};
-		device->AttachFramebufferTexture2D(&attachTexture);
-
-		RenderCommandData::ViewportData viewport{ 0, 0, LutSize, LutSize };
-		device->Viewport(&viewport);
-
-		ConstStringView path("engine/shaders/preprocess/calc_brdf_lut.glsl");
-		ShaderId calcBrdfShaderId = parameters.shaderManager->FindShaderByPath(path);
-		const ShaderData& calcBrdfShader = parameters.shaderManager->GetShaderData(calcBrdfShaderId);
-		device->UseShaderProgram(calcBrdfShader.driverId);
-
-		const MeshDrawData* meshDraw = parameters.meshManager->GetDrawData(meshId);
-		device->BindVertexArray(meshDraw->vertexArrayObject);
-		device->DrawIndexed(meshDraw->primitiveMode, meshDraw->count, meshDraw->indexType);
-
-		device->DestroyFramebuffers(1, &framebuffer);
-
-		kokko::ConstStringView label("Renderer BRDF LUT");
-		device->SetObjectLabel(RenderObjectType::Texture, brdfLutTextureId, label);
-	}
 }
 
 void GraphicsFeatureDeferredLighting::Deinitialize(const InitializeParameters& parameters)
 {
-	parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
-	uniformBufferId = 0;
+	if (uniformBufferId != 0)
+	{
+		parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
+		uniformBufferId = RenderBufferId();
+	}
 
-	parameters.renderDevice->DestroyTextures(1, &brdfLutTextureId);
-	brdfLutTextureId = 0;
+	if (brdfLutTextureId != 0)
+	{
+		parameters.renderDevice->DestroyTextures(1, &brdfLutTextureId);
+		brdfLutTextureId = RenderTextureId();
+	}
 
-	parameters.meshManager->RemoveMesh(meshId);
-	meshId = MeshId::Null;
+	if (brdfLutFramebufferId != 0)
+	{
+		parameters.renderDevice->DestroyFramebuffers(1, &brdfLutFramebufferId);
+		brdfLutFramebufferId = RenderFramebufferId();
+	}
+
+	if (meshId == MeshId::Null)
+	{
+		parameters.meshManager->RemoveMesh(meshId);
+		meshId = MeshId::Null;
+	}
 }
 
-void GraphicsFeatureDeferredLighting::Submit(const SubmitParameters& parameters)
-{
-	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::OpaqueLighting, renderOrder, 0);
-}
-
-void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
+void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	RenderDevice* device = parameters.renderDevice;
+	RenderDevice* renderDevice = parameters.renderDevice;
+
+	if (brdfLutFramebufferId != 0)
+	{
+		parameters.renderDevice->DestroyFramebuffers(1, &brdfLutFramebufferId);
+		brdfLutFramebufferId = RenderFramebufferId();
+	}
+
+	if (brdfLutTextureId == 0)
+	{
+		renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &brdfLutTextureId);
+		renderDevice->SetTextureStorage2D(brdfLutTextureId, 1, RenderTextureSizedFormat::RG16F, BrdfLutSize, BrdfLutSize);
+
+		kokko::ConstStringView label("Renderer BRDF LUT");
+		renderDevice->SetObjectLabel(RenderObjectType::Texture, brdfLutTextureId.i, label);
+
+		//device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+		//device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
+		//device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
+		//device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
+
+		renderDevice->CreateFramebuffers(1, &brdfLutFramebufferId);
+		renderDevice->AttachFramebufferTexture(brdfLutFramebufferId, RenderFramebufferAttachment::Color0, brdfLutTextureId, 0);
+	}
+
+
 	LightManager* lightManager = parameters.lightManager;
 
 	// Both SSAO and deferred lighting passes use these
@@ -309,11 +290,46 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 		lightingUniforms.shadowBiasFactor = 0.0019f;
 		lightingUniforms.shadowBiasClamp = 0.01f;
 
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(LightingUniformBlock), &lightingUniforms);
+		renderDevice->SetBufferSubData(uniformBufferId, 0, sizeof(LightingUniformBlock), &lightingUniforms);
+	}
+}
+
+void GraphicsFeatureDeferredLighting::Submit(const SubmitParameters& parameters)
+{
+	if (brdfLutFramebufferId != 0)
+	{
+		parameters.commandList.AddToStartOfFrame(UINT16_MAX);
 	}
 
-	device->DepthTestDisable();
+	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::OpaqueLighting, renderOrder, 0);
+}
+
+void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	render::CommandEncoder* encoder = parameters.encoder;
+
+	if (brdfLutFramebufferId != 0)
+	{
+		KOKKO_PROFILE_SCOPE("Calculate BRDF LUT");
+
+		// Calculate the BRDF LUT
+
+		encoder->SetViewport(0, 0, BrdfLutSize, BrdfLutSize);
+
+		ConstStringView path("engine/shaders/preprocess/calc_brdf_lut.glsl");
+		ShaderId calcBrdfShaderId = parameters.shaderManager->FindShaderByPath(path);
+		const ShaderData& calcBrdfShader = parameters.shaderManager->GetShaderData(calcBrdfShaderId);
+		encoder->UseShaderProgram(calcBrdfShader.driverId);
+
+		const MeshDrawData* meshDraw = parameters.meshManager->GetDrawData(meshId);
+		encoder->BindVertexArray(meshDraw->vertexArrayObject);
+		encoder->DrawIndexed(meshDraw->primitiveMode, meshDraw->count, meshDraw->indexType);
+	}
+
+
+	encoder->DepthTestDisable();
 
 	const RenderGraphResources* resources = parameters.renderGraphResources;
 
@@ -351,15 +367,15 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 	deferredPass.textureIds[7] = specIrrTexture.textureObjectId;
 	deferredPass.textureIds[8] = brdfLutTextureId;
 
-	deferredPass.samplerIds[0] = 0;
-	deferredPass.samplerIds[1] = 0;
-	deferredPass.samplerIds[2] = 0;
-	deferredPass.samplerIds[3] = 0;
-	deferredPass.samplerIds[4] = 0;
-	deferredPass.samplerIds[5] = 0;
-	deferredPass.samplerIds[6] = 0;
-	deferredPass.samplerIds[7] = 0;
-	deferredPass.samplerIds[8] = 0;
+	deferredPass.samplerIds[0] = RenderSamplerId();
+	deferredPass.samplerIds[1] = RenderSamplerId();
+	deferredPass.samplerIds[2] = RenderSamplerId();
+	deferredPass.samplerIds[3] = RenderSamplerId();
+	deferredPass.samplerIds[4] = RenderSamplerId();
+	deferredPass.samplerIds[5] = RenderSamplerId();
+	deferredPass.samplerIds[6] = RenderSamplerId();
+	deferredPass.samplerIds[7] = RenderSamplerId();
+	deferredPass.samplerIds[8] = RenderSamplerId();
 
 	deferredPass.textureCount = 9;
 

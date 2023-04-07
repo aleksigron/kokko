@@ -8,6 +8,8 @@
 
 #include "Engine/Entity.hpp"
 
+#include "Rendering/RenderResourceId.hpp"
+
 #include "Resources/MeshId.hpp"
 #include "Resources/TextureId.hpp"
 
@@ -22,6 +24,11 @@ namespace kokko
 {
 
 class AssetLoader;
+
+namespace render
+{
+class CommandEncoder;
+}
 
 struct EnvironmentId
 {
@@ -55,6 +62,7 @@ private:
 		Entity entity;
 		Optional<Uid> sourceTextureUid;
 		EnvironmentTextures textures;
+		bool needsUpload;
 	};
 
 	static const size_t CubemapSideCount = 6;
@@ -76,11 +84,13 @@ private:
 	size_t viewportBlockStride;
 	size_t specularBlockStride;
 
-	unsigned int framebufferId;
-	unsigned int viewportUniformBufferId;
-	unsigned int specularUniformBufferId;
-	unsigned int samplerId;
+	RenderFramebufferId framebufferId;
+	RenderBufferId viewportUniformBufferId;
+	RenderBufferId specularUniformBufferId;
+	RenderSamplerId samplerId;
 	MeshId cubeMeshId;
+
+	bool resourcesUploaded;
 
 	void LoadEmptyEnvironmentMap();
 
@@ -101,6 +111,8 @@ public:
 
 	void Initialize();
 	void Deinitialize();
+
+	void Upload(render::CommandEncoder* encoder);
 
 	EnvironmentId Lookup(Entity entity);
 

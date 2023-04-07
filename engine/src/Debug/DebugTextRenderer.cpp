@@ -9,6 +9,7 @@
 
 #include "Engine/Engine.hpp"
 
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
@@ -143,7 +144,7 @@ void DebugTextRenderer::AddText(kokko::ConstStringView str, const Rectanglef& ar
 	dd.area = area;
 }
 
-void DebugTextRenderer::Render()
+void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -156,18 +157,8 @@ void DebugTextRenderer::Render()
 
 		if (bufferObjectId == 0)
 		{
-			RenderBufferUsage usage = RenderBufferUsage::DynamicDraw;
-
 			renderDevice->CreateBuffers(1, &bufferObjectId);
-
-			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, bufferObjectId);
-
-			RenderCommandData::SetBufferStorage storage{};
-			storage.target = RenderBufferTarget::UniformBuffer;
-			storage.size = sizeof(UniformBlock);
-			storage.data = nullptr;
-			storage.dynamicStorage = true;
-			renderDevice->SetBufferStorage(&storage);
+			renderDevice->SetBufferStorage(bufferObjectId, sizeof(UniformBlock), nullptr, BufferStorageFlags::Dynamic);
 		}
 
 		CreateAndUploadData();
@@ -183,38 +174,27 @@ void DebugTextRenderer::Render()
 		kokko::ConstStringView uniformName("glyph_tex");
 		const kokko::TextureUniform* textureUniform = shader.uniforms.FindTextureUniformByName(uniformName);
 
-		renderDevice->DepthTestDisable();
+		encoder->DepthTestDisable();
 
-		renderDevice->BlendingEnable();
-		renderDevice->BlendFunction(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+		encoder->BlendingEnable();
+		encoder->BlendFunction(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
 
 		// Use shader
-		renderDevice->UseShaderProgram(shader.driverId);
+		encoder->UseShaderProgram(shader.driverId);
 
-		// Update shadow offset
-
-		UniformBlock uniforms;
-		Vec2f texSize = font->GetTextureSize();
-		uniforms.shadowOffset = Vec2f(0.0f, 1.0f / texSize.y);
-
-		renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, bufferObjectId);
-		renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(UniformBlock), &uniforms);
-
-		renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, bufferObjectId);
+		encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, bufferObjectId);
 
 		// Bind texture
 		if (textureUniform != nullptr)
 		{
-			renderDevice->SetActiveTextureUnit(0);
-			renderDevice->BindTexture(RenderTextureTarget::Texture2d, font->GetTextureDriverId());
-			renderDevice->SetUniformInt(textureUniform->uniformLocation, 0);
+			encoder->BindTextureToShader(textureUniform->uniformLocation, 0, font->GetTextureDriverId());
 		}
 
 		// Draw
 
 		const MeshDrawData* draw = meshManager->GetDrawData(meshId);
-		renderDevice->BindVertexArray(draw->vertexArrayObject);
-		renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+		encoder->BindVertexArray(draw->vertexArrayObject);
+		encoder->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 
 		// Clear data
 
@@ -350,4 +330,12 @@ void DebugTextRenderer::CreateAndUploadData()
 	data.indexBufferUsage = RenderBufferUsage::DynamicDraw;
 
 	meshManager->UploadIndexed(meshId, data);
+
+	// Update shadow offset
+
+	UniformBlock uniforms;
+	Vec2f texSize = font->GetTextureSize();
+	uniforms.shadowOffset = Vec2f(0.0f, 1.0f / texSize.y);
+
+	renderDevice->SetBufferSubData(bufferObjectId, 0, sizeof(UniformBlock), &uniforms);
 }

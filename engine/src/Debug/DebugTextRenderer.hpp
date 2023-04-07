@@ -6,6 +6,8 @@
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
 
+#include "Rendering/RenderResourceId.hpp"
+
 #include "Resources/MeshId.hpp"
 
 class Allocator;
@@ -20,6 +22,10 @@ namespace kokko
 
 class Filesystem;
 
+namespace render
+{
+class CommandEncoder;
+}
 }
 
 class DebugTextRenderer
@@ -51,7 +57,7 @@ private:
 	Array<float> vertexData;
 	Array<unsigned short> indexData;
 
-	unsigned int bufferObjectId;
+	kokko::RenderBufferId bufferObjectId;
 
 	void CreateAndUploadData();
 
@@ -90,5 +96,5 @@ public:
 	 */
 	void AddText(kokko::ConstStringView str, const Rectanglef& area);
 
-	void Render();
+	void Render(kokko::render::CommandEncoder* encoder);
 };

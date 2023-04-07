@@ -2,6 +2,7 @@
 
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/RenderGraphResources.hpp"
@@ -56,7 +57,9 @@ struct ApplyUniforms
 GraphicsFeatureBloom::GraphicsFeatureBloom(Allocator* allocator) :
 	allocator(allocator),
 	blurKernel(allocator),
-	uniformStagingBuffer(nullptr),
+	renderPasses(allocator),
+	renderTargets(allocator),
+	uniformStagingBuffer(allocator),
 	extractShaderId(ShaderId::Null),
 	downsampleShaderId(ShaderId::Null),
 	upsampleShaderId(ShaderId::Null),
@@ -93,32 +96,22 @@ void GraphicsFeatureBloom::Initialize(const InitializeParameters& parameters)
 
 	int aligment = 0;
 	renderDevice->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
-	uniformBlockStride = static_cast<unsigned int>((maxBlockSize + aligment - 1) / aligment * aligment);
+	uniformBlockStride = Math::RoundUpToMultiple(static_cast<int>(maxBlockSize), aligment);
 
 	unsigned int blockCount = 32;
 	unsigned int bufferSize = uniformBlockStride * blockCount;
 
-	uniformStagingBuffer = static_cast<unsigned char*>(allocator->Allocate(bufferSize, "GraphicsFeatureBloom::uniformStagingBuffer"));
+	uniformStagingBuffer.Resize(bufferSize);
 
 	renderDevice->CreateBuffers(1, &uniformBufferId);
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-
-	RenderCommandData::SetBufferStorage storage{};
-	storage.target = RenderBufferTarget::UniformBuffer;
-	storage.size = bufferSize;
-	storage.data = nullptr;
-	storage.dynamicStorage = true;
-	renderDevice->SetBufferStorage(&storage);
-
-	renderDevice->CreateSamplers(1, &linearSamplerId);
+	renderDevice->SetBufferStorage(uniformBufferId, bufferSize, nullptr, BufferStorageFlags::Dynamic);
 
 	RenderTextureFilterMode linear = RenderTextureFilterMode::Linear;
 	RenderTextureWrapMode clamp = RenderTextureWrapMode::ClampToEdge;
-
-	RenderCommandData::SetSamplerParameters linearSamplerParams{
-		linearSamplerId, linear, linear, clamp, clamp, clamp, RenderTextureCompareMode::None
+	RenderSamplerParameters linearSamplerParams{
+		linear, linear, clamp, clamp, clamp, RenderTextureCompareMode::None
 	};
-	renderDevice->SetSamplerParameters(&linearSamplerParams);
+	renderDevice->CreateSamplers(1, &linearSamplerParams, &linearSamplerId);
 
 	CreateKernel(KernelExtent);
 }
@@ -128,28 +121,17 @@ void GraphicsFeatureBloom::Deinitialize(const InitializeParameters& parameters)
 	if (linearSamplerId != 0)
 	{
 		parameters.renderDevice->DestroySamplers(1, &linearSamplerId);
-		linearSamplerId = 0;
-	}
-
-	if (uniformStagingBuffer != nullptr)
-	{
-		allocator->Deallocate(uniformStagingBuffer);
-		uniformStagingBuffer = nullptr;
+		linearSamplerId = RenderSamplerId();
 	}
 
 	if (uniformBufferId != 0)
 	{
 		parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
-		uniformBufferId = 0;
+		uniformBufferId = RenderBufferId();
 	}
 }
 
-void GraphicsFeatureBloom::Submit(const SubmitParameters& parameters)
-{
-	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::PostProcess, renderOrder, 0);
-}
-
-void GraphicsFeatureBloom::Render(const RenderParameters& parameters)
+void GraphicsFeatureBloom::Upload(const UploadParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -157,18 +139,13 @@ void GraphicsFeatureBloom::Render(const RenderParameters& parameters)
 	PostProcessRenderer* postProcessRenderer = parameters.postProcessRenderer;
 	Vec2i framebufferSize = parameters.fullscreenViewport.viewportRectangle.size;
 
-	unsigned int passCount = 0;
-
-	RenderTarget renderTargets[8];
-	PostProcessRenderPass renderPasses[16];
-
 	RenderTarget* currentSource = nullptr;
 	RenderTarget* currentDestination = nullptr;
 
-	unsigned int extractPassSampler = linearSamplerId;
-	unsigned int downsamplePassSampler = linearSamplerId;
-	unsigned int upsamplePassSampler = linearSamplerId;
-	unsigned int applyPassSampler = linearSamplerId;
+	RenderSamplerId extractPassSampler = linearSamplerId;
+	RenderSamplerId downsamplePassSampler = linearSamplerId;
+	RenderSamplerId upsamplePassSampler = linearSamplerId;
+	RenderSamplerId applyPassSampler = linearSamplerId;
 
 	int iterationCount = 4;
 	float bloomThreshold = 1.2f;
@@ -190,21 +167,20 @@ void GraphicsFeatureBloom::Render(const RenderParameters& parameters)
 	renderTargets[0] = renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F);
 	currentDestination = &renderTargets[0];
 
-	ExtractUniforms* extractBlock = reinterpret_cast<ExtractUniforms*>(&uniformStagingBuffer[uniformBlockStride * passCount]);
+	auto extractBlock = reinterpret_cast<ExtractUniforms*>(&uniformStagingBuffer[uniformBlockStride * renderPasses.GetCount()]);
 	extractBlock->textureScale = Vec2f(1.0f / framebufferSize.x, 1.0f / framebufferSize.y);
 	extractBlock->threshold = bloomThreshold;
 	extractBlock->softThreshold = bloomSoftThreshold;
 
 	pass.textureIds[0] = parameters.renderGraphResources->GetLightAccumulationBuffer().GetColorTextureId(0);
 	pass.samplerIds[0] = extractPassSampler;
-	pass.uniformBufferRangeStart = uniformBlockStride * passCount;
+	pass.uniformBufferRangeStart = uniformBlockStride * renderPasses.GetCount();
 	pass.uniformBufferRangeSize = sizeof(ExtractUniforms);
 	pass.framebufferId = currentDestination->framebuffer;
 	pass.viewportSize = currentDestination->size;
 	pass.shaderId = extractShaderId;
 
-	renderPasses[passCount] = pass;
-	passCount += 1;
+	renderPasses.PushBack(pass);
 
 	currentSource = currentDestination;
 
@@ -222,19 +198,18 @@ void GraphicsFeatureBloom::Render(const RenderParameters& parameters)
 		renderTargets[rtIdx] = renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F);
 		currentDestination = &renderTargets[rtIdx];
 
-		DownsampleUniforms* block = reinterpret_cast<DownsampleUniforms*>(&uniformStagingBuffer[uniformBlockStride * passCount]);
+		DownsampleUniforms* block = reinterpret_cast<DownsampleUniforms*>(&uniformStagingBuffer[uniformBlockStride * renderPasses.GetCount()]);
 		block->textureScale = Vec2f(1.0f / currentSource->size.x, 1.0f / currentSource->size.y);
 
 		pass.textureIds[0] = currentSource->colorTexture;
 		pass.samplerIds[0] = downsamplePassSampler;
-		pass.uniformBufferRangeStart = uniformBlockStride * passCount;
+		pass.uniformBufferRangeStart = uniformBlockStride * renderPasses.GetCount();
 		pass.uniformBufferRangeSize = sizeof(DownsampleUniforms);
 		pass.framebufferId = currentDestination->framebuffer;
 		pass.viewportSize = currentDestination->size;
 		pass.shaderId = downsampleShaderId;
 
-		renderPasses[passCount] = pass;
-		passCount += 1;
+		renderPasses.PushBack(pass);
 
 		currentSource = currentDestination;
 	}
@@ -247,7 +222,7 @@ void GraphicsFeatureBloom::Render(const RenderParameters& parameters)
 
 	for (rtIdx -= 2; rtIdx >= 0; rtIdx--)
 	{
-		UpsampleUniforms* block = reinterpret_cast<UpsampleUniforms*>(&uniformStagingBuffer[uniformBlockStride * passCount]);
+		UpsampleUniforms* block = reinterpret_cast<UpsampleUniforms*>(&uniformStagingBuffer[uniformBlockStride * renderPasses.GetCount()]);
 
 		for (size_t i = 0; i < MaxKernelSize; ++i)
 			block->kernel[i] = blurKernel[i];
@@ -259,21 +234,20 @@ void GraphicsFeatureBloom::Render(const RenderParameters& parameters)
 
 		pass.textureIds[0] = currentSource->colorTexture;
 		pass.samplerIds[0] = upsamplePassSampler;
-		pass.uniformBufferRangeStart = uniformBlockStride * passCount;
+		pass.uniformBufferRangeStart = uniformBlockStride * renderPasses.GetCount();
 		pass.uniformBufferRangeSize = sizeof(UpsampleUniforms);
 		pass.framebufferId = currentDestination->framebuffer;
 		pass.viewportSize = currentDestination->size;
 		pass.shaderId = upsampleShaderId;
 
-		renderPasses[passCount] = pass;
-		passCount += 1;
+		renderPasses.PushBack(pass);
 
 		currentSource = currentDestination;
 	}
 
 	// APPLY PASS
 
-	ApplyUniforms* applyBlock = reinterpret_cast<ApplyUniforms*>(&uniformStagingBuffer[uniformBlockStride * passCount]);
+	ApplyUniforms* applyBlock = reinterpret_cast<ApplyUniforms*>(&uniformStagingBuffer[uniformBlockStride * renderPasses.GetCount()]);
 	for (size_t i = 0; i < MaxKernelSize; ++i)
 		applyBlock->kernel[i] = blurKernel[i];
 
@@ -283,30 +257,41 @@ void GraphicsFeatureBloom::Render(const RenderParameters& parameters)
 
 	pass.textureIds[0] = currentSource->colorTexture;
 	pass.samplerIds[0] = applyPassSampler;
-	pass.uniformBufferRangeStart = uniformBlockStride * passCount;
+	pass.uniformBufferRangeStart = uniformBlockStride * renderPasses.GetCount();
 	pass.uniformBufferRangeSize = sizeof(ApplyUniforms);
 	pass.framebufferId = parameters.renderGraphResources->GetLightAccumulationBuffer().GetFramebufferId();
 	pass.viewportSize = framebufferSize;
 	pass.shaderId = applyShaderId;
 
-	renderPasses[passCount] = pass;
-	passCount += 1;
+	renderPasses.PushBack(pass);
 
 	// Update uniform buffer
+	renderDevice->SetBufferSubData(uniformBufferId, 0, uniformBlockStride * renderPasses.GetCount(), uniformStagingBuffer.GetData());
+}
 
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, uniformBlockStride * passCount, uniformStagingBuffer);
+void GraphicsFeatureBloom::Submit(const SubmitParameters& parameters)
+{
+	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::PostProcess, renderOrder, 0);
+}
 
-	// Render passes
+void GraphicsFeatureBloom::Render(const RenderParameters& parameters)
+{
+	KOKKO_PROFILE_FUNCTION();
 
-	renderDevice->DepthTestDisable();
+	PostProcessRenderer* postProcessRenderer = parameters.postProcessRenderer;
+	RenderTargetContainer* renderTargetContainer = postProcessRenderer->GetRenderTargetContainer();
+	
+	parameters.encoder->DepthTestDisable();
 
-	postProcessRenderer->RenderPasses(passCount, renderPasses);
+	postProcessRenderer->RenderPasses(renderPasses.GetCount(), renderPasses.GetData());
 
 	// Release render targets
 
-	for (int i = 0; i < iterationCount; ++i)
-		renderTargetContainer->ReleaseRenderTarget(renderTargets[i].id);
+	for (const auto& renderTarget : renderTargets)
+		renderTargetContainer->ReleaseRenderTarget(renderTarget.id);
+
+	renderPasses.Clear();
+	renderTargets.Clear();
 }
 
 void GraphicsFeatureBloom::CreateKernel(int kernelExtent)

@@ -11,8 +11,18 @@
 #include "Math/Rectangle.hpp"
 #include "Math/Projection.hpp"
 
+#include "Rendering/RenderResourceId.hpp"
+
 #include "Resources/MeshId.hpp"
 #include "Resources/ShaderId.hpp"
+
+namespace kokko
+{
+namespace render
+{
+class CommandEncoder;
+}
+}
 
 struct Entity;
 struct CameraParameters;
@@ -75,7 +85,7 @@ private:
 	enum UniformBufferType { ObjectBuffer, MaterialBuffer };
 
 	bool buffersInitialized;
-	unsigned int uniformBufferIds[2];
+	kokko::RenderBufferId uniformBufferIds[2];
 
 	DynamicMesh* GetDynamicMesh(size_t byteSize);
 
@@ -98,5 +108,5 @@ public:
 
 	void DrawWireFrustum(const Mat4x4f& transform, const ProjectionParameters& projection, const Color& color);
 
-	void Render(World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
+	void Render(kokko::render::CommandEncoder* encoder, World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
 };

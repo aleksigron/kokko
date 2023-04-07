@@ -22,6 +22,8 @@
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/LightManager.hpp"
+#include "Rendering/RenderCommandBuffer.hpp"
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/Renderer.hpp"
 
@@ -50,6 +52,8 @@ Engine::Engine(
     systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 
     renderDevice = RenderDevice::Create(systemAllocator);
+	commandBuffer = systemAllocator->MakeNew<kokko::render::CommandBuffer>(systemAllocator);
+	commandEncoder = systemAllocator->MakeNew<kokko::render::CommandEncoder>(systemAllocator, commandBuffer);
     
     windowManager.CreateScope(allocatorManager, "Window", alloc);
     windowManager.New(windowManager.allocator);
@@ -100,6 +104,8 @@ Engine::~Engine()
 	debug.Delete();
 	systemAllocator->MakeDelete(time);
 	windowManager.Delete();
+
+	systemAllocator->MakeDelete(commandEncoder);
     systemAllocator->MakeDelete(renderDevice);
 }
 
@@ -142,14 +148,12 @@ void Engine::Render(const Optional<CameraParameters>& editorCamera, const Frameb
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	renderDevice->FramebufferSrgbEnable();
-
 	world.instance->Render(windowManager.instance->GetWindow(), editorCamera, framebuffer);
 	world.instance->DebugRender(debug.instance->GetVectorRenderer(), settings.renderDebug);
 
 	if (settings.enableDebugTools)
 	{
-		debug.instance->Render(world.instance, framebuffer, editorCamera);
+		debug.instance->Render(commandEncoder, world.instance, framebuffer, editorCamera);
 	}
 }
 

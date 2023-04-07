@@ -66,8 +66,9 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* render
 		}
 	}
 
-	tileTextureIds = static_cast<uint32_t*>(allocator->Allocate(tileCount * sizeof(uint32_t), "TerrainQuadTree.tileTextureIds"));
-	renderDevice->CreateTextures(tileCount, tileTextureIds);
+	tileTextureIds = static_cast<RenderTextureId*>(
+		allocator->Allocate(tileCount * sizeof(uint32_t), "TerrainQuadTree.tileTextureIds"));
+	renderDevice->CreateTextures(RenderTextureTarget::Texture2d, tileCount, tileTextureIds);
 
 	for (int levelIdx = 0; levelIdx < treeLevels; ++levelIdx)
 	{
@@ -79,20 +80,12 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* render
 			{
 				int tileIdx = GetTileIndex(levelIdx, tileX, tileY);
 				
-				renderDevice->BindTexture(RenderTextureTarget::Texture2d, tileTextureIds[tileIdx]);
+				renderDevice->SetTextureStorage2D(
+					tileTextureIds[tileIdx], 1, RenderTextureSizedFormat::R16, texResolution, texResolution);
 
-				RenderCommandData::SetTextureStorage2D textureStorage{
-					RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::R16,
-					texResolution, texResolution
-				};
-				renderDevice->SetTextureStorage2D(&textureStorage);
-
-				RenderCommandData::SetTextureSubImage2D subimage{
-					RenderTextureTarget::Texture2d, 0, 0, 0,
+				renderDevice->SetTextureSubImage2D(tileTextureIds[tileIdx], 0, 0, 0,
 					texResolution, texResolution, RenderTextureBaseFormat::R,
-					RenderTextureDataType::UnsignedShort, tiles[tileIdx].heightData
-				};
-				renderDevice->SetTextureSubImage2D(&subimage);
+					RenderTextureDataType::UnsignedShort, tiles[tileIdx].heightData);
 			}
 		}
 	}
@@ -222,7 +215,7 @@ const TerrainTile* TerrainQuadTree::GetTile(int level, int x, int y)
 	return &tiles[GetTileIndex(level, x, y)];
 }
 
-unsigned int TerrainQuadTree::GetTileHeightTexture(int level, int x, int y)
+RenderTextureId TerrainQuadTree::GetTileHeightTexture(int level, int x, int y)
 {
 	return tileTextureIds[GetTileIndex(level, x, y)];
 }

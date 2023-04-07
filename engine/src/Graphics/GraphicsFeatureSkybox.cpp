@@ -5,6 +5,7 @@
 #include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderPassType.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
@@ -45,20 +46,13 @@ void GraphicsFeatureSkybox::Initialize(const InitializeParameters& parameters)
 	shaderId = parameters.shaderManager->FindShaderByPath(shaderPath);
 
 	device->CreateBuffers(1, &uniformBufferId);
-	device->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-
-	RenderCommandData::SetBufferStorage storage{};
-	storage.target = RenderBufferTarget::UniformBuffer;
-	storage.size = sizeof(SkyboxUniformBlock);
-	storage.data = nullptr;
-	storage.dynamicStorage = true;
-	device->SetBufferStorage(&storage);
+	device->SetBufferStorage(uniformBufferId, sizeof(SkyboxUniformBlock), nullptr, BufferStorageFlags::Dynamic);
 }
 
 void GraphicsFeatureSkybox::Deinitialize(const InitializeParameters& parameters)
 {
 	parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
-	uniformBufferId = 0;
+	uniformBufferId = RenderBufferId();
 
 	parameters.meshManager->RemoveMesh(meshId);
 	meshId = MeshId::Null;
@@ -76,8 +70,7 @@ void GraphicsFeatureSkybox::Upload(const UploadParameters& parameters)
 	SkyboxUniformBlock skyboxUniforms;
 	skyboxUniforms.transform = cameraProjection * cameraTransforms.inverse * Mat4x4f::Translate(cameraPos);
 
-	device->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(SkyboxUniformBlock), &skyboxUniforms);
+	device->SetBufferSubData(uniformBufferId, 0, sizeof(SkyboxUniformBlock), &skyboxUniforms);
 }
 
 void GraphicsFeatureSkybox::Submit(const SubmitParameters& parameters)
@@ -89,7 +82,7 @@ void GraphicsFeatureSkybox::Render(const RenderParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	RenderDevice* device = parameters.renderDevice;
+	render::CommandEncoder* encoder = parameters.encoder;
 
 	kokko::EnvironmentTextures envMap;
 	kokko::EnvironmentId envId = parameters.environmentSystem->FindActiveEnvironment();
@@ -101,22 +94,20 @@ void GraphicsFeatureSkybox::Render(const RenderParameters& parameters)
 	const TextureData& envTexture = parameters.textureManager->GetTextureData(envMap.environmentTexture);
 
 	const ShaderData& shader = parameters.shaderManager->GetShaderData(shaderId);
-	device->UseShaderProgram(shader.driverId);
+	encoder->UseShaderProgram(shader.driverId);
 
 	const kokko::TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash("environment_map"_hash);
 	if (uniform != nullptr)
 	{
-		device->SetActiveTextureUnit(0);
-		device->BindTexture(envTexture.textureTarget, envTexture.textureObjectId);
-		device->SetUniformInt(uniform->uniformLocation, 0);
+		encoder->BindTextureToShader(uniform->uniformLocation, 0, envTexture.textureObjectId);
 	}
 
-	device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId);
+	encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId);
 
 	const MeshDrawData* draw = parameters.meshManager->GetDrawData(meshId);
-	device->BindVertexArray(draw->vertexArrayObject);
+	encoder->BindVertexArray(draw->vertexArrayObject);
 
-	device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+	encoder->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 }
 
 }

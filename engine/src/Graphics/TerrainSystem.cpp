@@ -17,8 +17,9 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "Rendering/Renderer.hpp"
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
+#include "Rendering/Renderer.hpp"
 #include "Rendering/RenderViewport.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/Uniform.hpp"
@@ -113,14 +114,7 @@ void TerrainSystem::Initialize()
 	int uniformBytes = uniformBlockStride * tileCount;
 
 	renderDevice->CreateBuffers(1, &uniformBufferId);
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-
-	RenderCommandData::SetBufferStorage bufferStorage{};
-	bufferStorage.target = RenderBufferTarget::UniformBuffer;
-	bufferStorage.size = uniformBytes;
-	bufferStorage.data = nullptr;
-	bufferStorage.dynamicStorage = true;
-	renderDevice->SetBufferStorage(&bufferStorage);
+	renderDevice->SetBufferStorage(uniformBufferId, uniformBytes, nullptr, BufferStorageFlags::Dynamic);
 
 	// Material
 
@@ -129,15 +123,13 @@ void TerrainSystem::Initialize()
 
 	// Sampler
 
-	renderDevice->CreateSamplers(1, &textureSampler);
-
-	RenderCommandData::SetSamplerParameters samplerParams{
-		textureSampler, RenderTextureFilterMode::Nearest, RenderTextureFilterMode::Nearest,
+	RenderSamplerParameters samplerParams{
+		RenderTextureFilterMode::Nearest, RenderTextureFilterMode::Nearest,
 		RenderTextureWrapMode::ClampToEdge, RenderTextureWrapMode::ClampToEdge,
 		RenderTextureWrapMode::ClampToEdge, RenderTextureCompareMode::None,
 		RenderDepthCompareFunc::Always
 	};
-	renderDevice->SetSamplerParameters(&samplerParams);
+	renderDevice->CreateSamplers(1, &samplerParams, &textureSampler);
 
 	// Vertex data
 
@@ -217,7 +209,7 @@ TextureId TerrainSystem::GetAlbedoTextureId(TerrainId id) const
 	return data.textures[id.i].albedoTexture.textureId;
 }
 
-void TerrainSystem::SetAlbedoTexture(TerrainId id, TextureId textureId, unsigned int textureObject)
+void TerrainSystem::SetAlbedoTexture(TerrainId id, TextureId textureId, RenderTextureId textureObject)
 {
 	data.textures[id.i].albedoTexture.textureId = textureId;
 	data.textures[id.i].albedoTexture.textureObjectId = textureObject;
@@ -228,7 +220,7 @@ TextureId TerrainSystem::GetRoughnessTextureId(TerrainId id) const
 	return data.textures[id.i].roughnessTexture.textureId;
 }
 
-void TerrainSystem::SetRoughnessTexture(TerrainId id, TextureId textureId, unsigned int textureObject)
+void TerrainSystem::SetRoughnessTexture(TerrainId id, TextureId textureId, RenderTextureId textureObject)
 {
 	data.textures[id.i].roughnessTexture.textureId = textureId;
 	data.textures[id.i].roughnessTexture.textureObjectId = textureObject;
@@ -241,12 +233,6 @@ void TerrainSystem::Submit(const SubmitParameters& parameters)
 		float depth = 0.0f; // TODO: Calculate
 		parameters.commandList.AddToFullscreenViewport(RenderPassType::OpaqueGeometry, depth, i);
 	}
-}
-
-void TerrainSystem::Render(const RenderParameters& parameters)
-{
-	TerrainId id{ static_cast<uint32_t>(parameters.featureObjectId) };
-	RenderTerrain(id, parameters.fullscreenViewport);
 }
 
 void TerrainSystem::CreateVertexData()
@@ -299,29 +285,23 @@ void TerrainSystem::CreateVertexData()
 	renderDevice->CreateBuffers(1, &vertexData.indexBuffer);
 	vertexData.indexCount = indexCount;
 
-	renderDevice->BindVertexArray(vertexData.vertexArray);
-
-	RenderBufferUsage usage = RenderBufferUsage::StaticDraw;
-
 	// Bind and upload index buffer
-	renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, vertexData.indexBuffer);
-	renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer, indexBytes, indexBuf, usage);
+	renderDevice->SetBufferStorage(vertexData.indexBuffer, indexBytes, indexBuf, BufferStorageFlags::None);
 
 	// Bind and upload vertex buffer
-	renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, vertexData.vertexBuffer);
-	renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer, vertBytes, vertexBuf, usage);
+	renderDevice->SetBufferStorage(vertexData.vertexBuffer, vertBytes, vertexBuf, BufferStorageFlags::None);
 
 	VertexAttribute vertexAttributes[] = { VertexAttribute::pos2 };
 	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
-
 	const VertexAttribute& attr = vertexAttributes[0];
-	renderDevice->EnableVertexAttribute(attr.attrIndex);
 
-	RenderCommandData::SetVertexAttributePointer data{
-		attr.attrIndex, attr.elemCount, attr.elemType, attr.stride, attr.offset
-	};
+	renderDevice->SetVertexArrayVertexBuffer(vertexData.vertexArray, 0, vertexData.vertexBuffer, 0, attr.stride);
+	renderDevice->SetVertexArrayIndexBuffer(vertexData.vertexArray, vertexData.indexBuffer);
 
-	renderDevice->SetVertexAttributePointer(&data);
+	renderDevice->EnableVertexAttribute(vertexData.vertexArray, attr.attrIndex);
+	renderDevice->SetVertexAttribFormat(
+		vertexData.vertexArray, attr.attrIndex, attr.elemCount, attr.elemType, attr.offset);
+	renderDevice->SetVertexAttribBinding(vertexData.vertexArray, attr.attrIndex, 0);
 
 	allocator->Deallocate(indexBuf);
 	allocator->Deallocate(vertexBuf);
@@ -379,9 +359,14 @@ void TerrainSystem::Reallocate(size_t required)
 	data = newData;
 }
 
-void TerrainSystem::RenderTerrain(TerrainId id, const RenderViewport& viewport)
+
+void TerrainSystem::Render(const RenderParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	TerrainId id{ static_cast<uint32_t>(parameters.featureObjectId) };
+	const auto& viewport = parameters.fullscreenViewport;
+	render::CommandEncoder* encoder = parameters.encoder;
 
 	// Select tiles to render
 
@@ -423,13 +408,11 @@ void TerrainSystem::RenderTerrain(TerrainId id, const RenderViewport& viewport)
 
 	unsigned int updateBytes = static_cast<unsigned int>(tilesToRender.GetCount() * uniformBlockStride);
 
-	renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferId);
-	renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer,
-		0, updateBytes, uniformStagingBuffer.GetData());
+	renderDevice->SetBufferSubData(uniformBufferId, 0, updateBytes, uniformStagingBuffer.GetData());
 
 	// Draw
 
-	renderDevice->UseShaderProgram(materialManager->GetMaterialShaderDeviceId(terrainMaterial));
+	encoder->UseShaderProgram(materialManager->GetMaterialShaderDeviceId(terrainMaterial));
 
 	const kokko::UniformData& materialUniforms = materialManager->GetMaterialUniforms(terrainMaterial);
 
@@ -439,37 +422,30 @@ void TerrainSystem::RenderTerrain(TerrainId id, const RenderViewport& viewport)
 
 	if (albedoMap != nullptr)
 	{
-		unsigned int textureObjectId = albedoMap->textureObject;
+		kokko::RenderTextureId textureObjectId = albedoMap->textureObject;
 		if (data.textures[id.i].albedoTexture.textureObjectId != 0)
 			textureObjectId = data.textures[id.i].albedoTexture.textureObjectId;
 
-		renderDevice->SetUniformInt(albedoMap->uniformLocation, 1);
-		renderDevice->SetActiveTextureUnit(1);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureObjectId);
+		encoder->BindTextureToShader(albedoMap->uniformLocation, 1, textureObjectId);
 	}
 
 	if (roughMap != nullptr)
 	{
-		unsigned int textureObjectId = albedoMap->textureObject;
+		kokko::RenderTextureId textureObjectId = albedoMap->textureObject;
 		if (data.textures[id.i].roughnessTexture.textureObjectId != 0)
 			textureObjectId = data.textures[id.i].roughnessTexture.textureObjectId;
-
-		renderDevice->SetUniformInt(roughMap->uniformLocation, 2);
-		renderDevice->SetActiveTextureUnit(2);
-		renderDevice->BindTexture(RenderTextureTarget::Texture2d, textureObjectId);
+		
+		encoder->BindTextureToShader(roughMap->uniformLocation, 1, textureObjectId);
 	}
 
-	renderDevice->BindVertexArray(vertexData.vertexArray);
+	encoder->BindVertexArray(vertexData.vertexArray);
 
-	unsigned int matBufferId = materialManager->GetMaterialUniformBufferId(terrainMaterial);
-	renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, matBufferId);
+	kokko::RenderBufferId matBufferId = materialManager->GetMaterialUniformBufferId(terrainMaterial);
+	encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, matBufferId);
 
 	// For height texture
 
-	renderDevice->BindSampler(0, textureSampler);
-
-	renderDevice->SetUniformInt(heightMap->uniformLocation, 0);
-	renderDevice->SetActiveTextureUnit(0);
+	encoder->BindSampler(0, textureSampler);
 
 	int blocksUsed = 0;
 	for (const auto& tile : tilesToRender)
@@ -477,22 +453,17 @@ void TerrainSystem::RenderTerrain(TerrainId id, const RenderViewport& viewport)
 		intptr_t rangeOffset = blocksUsed * uniformBlockStride;
 		blocksUsed += 1;
 
-		RenderCommandData::BindBufferRange bindRange{
-			RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId,
-			rangeOffset, uniformBlockStride
-		};
-
-		renderDevice->BindBufferRange(&bindRange);
+		encoder->BindBufferRange(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId,
+			rangeOffset, uniformBlockStride);
 
 		if (heightMap != nullptr)
 		{
-			unsigned int heightTex = quadTree.GetTileHeightTexture(tile.level, tile.x, tile.y);
+			RenderTextureId heightTex = quadTree.GetTileHeightTexture(tile.level, tile.x, tile.y);
 
-			renderDevice->BindTexture(RenderTextureTarget::Texture2d, heightTex);
+			encoder->BindTextureToShader(heightMap->uniformLocation, 0, heightTex);
 		}
 
-		renderDevice->DrawIndexed(RenderPrimitiveMode::Triangles, vertexData.indexCount,
-			RenderIndexType::UnsignedShort);
+		encoder->DrawIndexed(RenderPrimitiveMode::Triangles, vertexData.indexCount, RenderIndexType::UnsignedShort);
 	}
 
 	tilesToRender.Clear();

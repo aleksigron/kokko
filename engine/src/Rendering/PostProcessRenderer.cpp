@@ -4,7 +4,7 @@
 
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/RenderCommandData.hpp"
-#include "Rendering/RenderDevice.hpp"
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/Uniform.hpp"
 
 #include "Resources/MeshManager.hpp"
@@ -12,11 +12,11 @@
 #include "Resources/ShaderManager.hpp"
 
 PostProcessRenderer::PostProcessRenderer(
-	RenderDevice* renderDevice,
+	kokko::render::CommandEncoder* encoder,
 	MeshManager* meshManager,
 	ShaderManager* shaderManager,
 	RenderTargetContainer* renderTargetContainer):
-	renderDevice(renderDevice),
+	encoder(encoder),
 	meshManager(meshManager),
 	shaderManager(shaderManager),
 	renderTargetContainer(renderTargetContainer)
@@ -56,7 +56,7 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 	KOKKO_PROFILE_FUNCTION();
 
 	const MeshDrawData* draw = meshManager->GetDrawData(fullscreenMeshId);
-	renderDevice->BindVertexArray(draw->vertexArrayObject);
+	encoder->BindVertexArray(draw->vertexArrayObject);
 
 	for (unsigned int i = 0; i < count; ++i)
 	{
@@ -64,62 +64,46 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 
 		if (pass.enableBlending)
 		{
-			RenderCommandData::BlendFunctionData blendFunction{
-				pass.sourceBlendFactor, pass.destinationBlendFactor
-			};
-
-			renderDevice->BlendingEnable();
-			renderDevice->BlendFunction(&blendFunction);
+			encoder->BlendingEnable();
+			encoder->BlendFunction(pass.sourceBlendFactor, pass.destinationBlendFactor);
 		}
 		else
 		{
-			renderDevice->BlendingDisable();
+			encoder->BlendingDisable();
 		}
 
-		RenderCommandData::ViewportData viewport{
-			0, 0, pass.viewportSize.x, pass.viewportSize.y
-		};
-		renderDevice->Viewport(&viewport);
+		encoder->SetViewport(0, 0, pass.viewportSize.x, pass.viewportSize.y);
 
-		RenderCommandData::BindFramebufferData bindFramebufferCommand{
-			RenderFramebufferTarget::Framebuffer, pass.framebufferId
-		};
-		renderDevice->BindFramebuffer(&bindFramebufferCommand);
+		encoder->BindFramebuffer(pass.framebufferId);
 
 		const ShaderData& shader = shaderManager->GetShaderData(pass.shaderId);
-		renderDevice->UseShaderProgram(shader.driverId);
+		encoder->UseShaderProgram(shader.driverId);
 
-		if (pass.uniformBufferId != 0)
+		if (pass.uniformBufferId != kokko::RenderBufferId(0))
 		{
-			RenderCommandData::BindBufferRange bindBufferRange{
-				RenderBufferTarget::UniformBuffer, pass.uniformBindingPoint, pass.uniformBufferId,
-				pass.uniformBufferRangeStart, pass.uniformBufferRangeSize
-			};
-
-			renderDevice->BindBufferRange(&bindBufferRange);
+			encoder->BindBufferRange(RenderBufferTarget::UniformBuffer,
+				pass.uniformBindingPoint, pass.uniformBufferId,
+				pass.uniformBufferRangeStart, pass.uniformBufferRangeSize);
 		}
 
 		if (pass.textureCount > 0)
 			BindTextures(shader, pass.textureCount, pass.textureNameHashes, pass.textureIds, pass.samplerIds);
 
-		renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+		encoder->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 	}
 }
 
 void PostProcessRenderer::BindTextures(const ShaderData& shader, unsigned int count,
-	const uint32_t* nameHashes, const unsigned int* textures, const unsigned int* samplers)
+	const uint32_t* nameHashes, const kokko::RenderTextureId* textures, const kokko::RenderSamplerId* samplers)
 {
 	for (unsigned int i = 0; i < count; ++i)
 	{
-		if (samplers[i] != 0)
-			renderDevice->BindSampler(i, samplers[i]);
+		encoder->BindSampler(i, samplers[i]);
 
 		const kokko::TextureUniform* tu = shader.uniforms.FindTextureUniformByNameHash(nameHashes[i]);
 		if (tu != nullptr)
 		{
-			renderDevice->SetUniformInt(tu->uniformLocation, i);
-			renderDevice->SetActiveTextureUnit(i);
-			renderDevice->BindTexture(tu->textureTarget, textures[i]);
+			encoder->BindTextureToShader(tu->uniformLocation, i, textures[i]);
 		}
 	}
 }

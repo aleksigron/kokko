@@ -6,6 +6,7 @@
 
 #include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderTypes.hpp"
+#include "Rendering/RenderResourceId.hpp"
 
 class Allocator;
 
@@ -46,78 +47,92 @@ public:
 	virtual void PushDebugGroup(unsigned int id, kokko::ConstStringView message) = 0;
 	virtual void PopDebugGroup() = 0;
 
-	virtual void Clear(const RenderCommandData::ClearMask* data) = 0;
-	virtual void ClearColor(const RenderCommandData::ClearColorData* data) = 0;
-	virtual void ClearDepth(float depth) = 0;
+	//virtual void Clear(const RenderCommandData::ClearMask* data) = 0;
+	//virtual void ClearColor(const RenderCommandData::ClearColorData* data) = 0;
+	//virtual void ClearDepth(float depth) = 0;
 
-	virtual void BlendingEnable() = 0;
-	virtual void BlendingDisable() = 0;
-	virtual void BlendFunction(const RenderCommandData::BlendFunctionData* data) = 0;
-	virtual void BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor) = 0;
+	//virtual void BlendingEnable() = 0;
+	//virtual void BlendingDisable() = 0;
+	//virtual void BlendFunction(const RenderCommandData::BlendFunctionData* data) = 0;
+	//virtual void BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor) = 0;
 
-	virtual void CubemapSeamlessEnable() = 0;
-	virtual void CubemapSeamlessDisable() = 0;
-	virtual void SetClipBehavior(RenderClipOriginMode origin, RenderClipDepthMode depth) = 0;
-	virtual void DepthRange(const RenderCommandData::DepthRangeData* data) = 0;
-	virtual void Viewport(const RenderCommandData::ViewportData* data) = 0;
+	//virtual void CubemapSeamlessEnable() = 0;
+	//virtual void CubemapSeamlessDisable() = 0;
+	//virtual void SetClipBehavior(RenderClipOriginMode origin, RenderClipDepthMode depth) = 0;
+	//virtual void DepthRange(const RenderCommandData::DepthRangeData* data) = 0;
+	//virtual void Viewport(const RenderCommandData::ViewportData* data) = 0;
 
-	virtual void ScissorTestEnable() = 0;
-	virtual void ScissorTestDisable() = 0;
+	//virtual void ScissorTestEnable() = 0;
+	//virtual void ScissorTestDisable() = 0;
 
-	virtual void DepthTestEnable() = 0;
-	virtual void DepthTestDisable() = 0;
+	//virtual void DepthTestEnable() = 0;
+	//virtual void DepthTestDisable() = 0;
 
-	virtual void DepthTestFunction(RenderDepthCompareFunc function) = 0;
+	//virtual void DepthTestFunction(RenderDepthCompareFunc function) = 0;
 
-	virtual void DepthWriteEnable() = 0;
-	virtual void DepthWriteDisable() = 0;
+	//virtual void DepthWriteEnable() = 0;
+	//virtual void DepthWriteDisable() = 0;
 
-	virtual void CullFaceEnable() = 0;
-	virtual void CullFaceDisable() = 0;
-	virtual void CullFaceFront() = 0;
-	virtual void CullFaceBack() = 0;
+	//virtual void CullFaceEnable() = 0;
+	//virtual void CullFaceDisable() = 0;
+	//virtual void CullFaceFront() = 0;
+	//virtual void CullFaceBack() = 0;
 
-	virtual void FramebufferSrgbEnable() = 0;
-	virtual void FramebufferSrgbDisable() = 0;
+	//virtual void FramebufferSrgbEnable() = 0;
+	//virtual void FramebufferSrgbDisable() = 0;
 
-	virtual void CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut) = 0;
-	virtual void DestroyFramebuffers(unsigned int count, unsigned int* framebuffers) = 0;
-	virtual void BindFramebuffer(const RenderCommandData::BindFramebufferData* data) = 0;
-	virtual void BindFramebuffer(RenderFramebufferTarget target, unsigned int framebuffer) = 0;
-	virtual void AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data) = 0;
+	virtual void CreateFramebuffers(unsigned int count, kokko::RenderFramebufferId* framebuffersOut) = 0;
+	virtual void DestroyFramebuffers(unsigned int count, const kokko::RenderFramebufferId* framebuffers) = 0;
+	//virtual void BindFramebuffer(RenderFramebufferTarget target, kokko::RenderFramebufferId framebuffer) = 0;
+	virtual void AttachFramebufferTexture(
+		kokko::RenderFramebufferId framebuffer,
+		RenderFramebufferAttachment attachment,
+		kokko::RenderTextureId texture,
+		int level) = 0;
 	virtual void SetFramebufferDrawBuffers(unsigned int count, const RenderFramebufferAttachment* buffers) = 0;
 	virtual void ReadFramebufferPixels(int x, int y, int width, int height,
 		RenderTextureBaseFormat format, RenderTextureDataType type, void* data) = 0;
 
-	virtual void CreateTextures(unsigned int count, unsigned int* texturesOut) = 0;
-	virtual void DestroyTextures(unsigned int count, unsigned int* textures) = 0;
-	virtual void BindTexture(RenderTextureTarget target, unsigned int texture) = 0;
-	virtual void SetTextureStorage2D(const RenderCommandData::SetTextureStorage2D* data) = 0;
-	virtual void SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data) = 0;
-	virtual void SetTextureSubImage2D(const RenderCommandData::SetTextureSubImage2D* data) = 0;
-	virtual void SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data) = 0;
-	virtual void GenerateTextureMipmaps(RenderTextureTarget target) = 0;
-	virtual void SetActiveTextureUnit(unsigned int textureUnit) = 0;
+	virtual void CreateTextures(RenderTextureTarget type, unsigned int count, kokko::RenderTextureId* texturesOut) = 0;
+	virtual void DestroyTextures(unsigned int count, const kokko::RenderTextureId* textures) = 0;
+	virtual void SetTextureStorage2D(
+		kokko::RenderTextureId texture,
+		int levels,
+		RenderTextureSizedFormat format,
+		int width,
+		int height) = 0;
+	virtual void SetTextureSubImage2D(
+		kokko::RenderTextureId texture,
+		int level,
+		int xOffset,
+		int yOffset,
+		int width,
+		int height,
+		RenderTextureBaseFormat format,
+		RenderTextureDataType type,
+		const void* data) = 0;
+	virtual void SetTextureSubImage3D(
+		kokko::RenderTextureId texture,
+		int level,
+		int xoffset,
+		int yoffset,
+		int zoffset,
+		int width,
+		int height,
+		int depth,
+		RenderTextureBaseFormat format,
+		RenderTextureDataType type,
+		const void* data) = 0;
+	virtual void GenerateTextureMipmaps(kokko::RenderTextureId texture) = 0;
 
-	virtual void SetTextureParameterInt(RenderTextureTarget target, RenderTextureParameter parameter, unsigned int value) = 0;
-	virtual void SetTextureMinFilter(RenderTextureTarget target, RenderTextureFilterMode mode) = 0;
-	virtual void SetTextureMagFilter(RenderTextureTarget target, RenderTextureFilterMode mode) = 0;
-	virtual void SetTextureWrapModeU(RenderTextureTarget target, RenderTextureWrapMode mode) = 0;
-	virtual void SetTextureWrapModeV(RenderTextureTarget target, RenderTextureWrapMode mode) = 0;
-	virtual void SetTextureWrapModeW(RenderTextureTarget target, RenderTextureWrapMode mode) = 0;
-	virtual void SetTextureCompareMode(RenderTextureTarget target, RenderTextureCompareMode mode) = 0;
-	virtual void SetTextureCompareFunc(RenderTextureTarget target, RenderDepthCompareFunc func) = 0;
-
-	virtual void CreateSamplers(unsigned int count, unsigned int* samplersOut) = 0;
-	virtual void DestroySamplers(unsigned int count, unsigned int* samplers) = 0;
-	virtual void BindSampler(unsigned int textureUnit, unsigned int sampler) = 0;
-	virtual void SetSamplerParameters(const RenderCommandData::SetSamplerParameters* data) = 0;
+	virtual void CreateSamplers(uint32_t count, const RenderSamplerParameters* params, kokko::RenderSamplerId* samplersOut) = 0;
+	virtual void DestroySamplers(uint32_t count, const kokko::RenderSamplerId* samplers) = 0;
 
 	virtual unsigned int CreateShaderProgram() = 0;
 	virtual void DestroyShaderProgram(unsigned int shaderProgram) = 0;
 	virtual void AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage) = 0;
 	virtual void LinkShaderProgram(unsigned int shaderProgram) = 0;
-	virtual void UseShaderProgram(unsigned int shaderProgram) = 0;
+	//virtual void UseShaderProgram(unsigned int shaderProgram) = 0;
 	virtual int GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter) = 0;
 	virtual bool GetShaderProgramLinkStatus(unsigned int shaderProgram) = 0;
 	virtual int GetShaderProgramInfoLogLength(unsigned int shaderProgram) = 0;
@@ -133,40 +148,41 @@ public:
 	virtual void GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut) = 0;
 
 	virtual int GetUniformLocation(unsigned int shaderProgram, const char* uniformName) = 0;
-	virtual void SetUniformMat4x4f(int uniform, unsigned int count, const float* values) = 0;
-	virtual void SetUniformVec4f(int uniform, unsigned int count, const float* values) = 0;
-	virtual void SetUniformVec3f(int uniform, unsigned int count, const float* values) = 0;
-	virtual void SetUniformVec2f(int uniform, unsigned int count, const float* values) = 0;
-	virtual void SetUniformFloat(int uniform, float value) = 0;
-	virtual void SetUniformInt(int uniform, int value) = 0;
+	//virtual void SetUniformMat4x4f(int uniform, unsigned int count, const float* values) = 0;
+	//virtual void SetUniformVec4f(int uniform, unsigned int count, const float* values) = 0;
+	//virtual void SetUniformVec3f(int uniform, unsigned int count, const float* values) = 0;
+	//virtual void SetUniformVec2f(int uniform, unsigned int count, const float* values) = 0;
+	//virtual void SetUniformFloat(int uniform, float value) = 0;
+	//virtual void SetUniformInt(int uniform, int value) = 0;
 
-	virtual void CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut) = 0;
-	virtual void DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays) = 0;
-	virtual void BindVertexArray(unsigned int vertexArrayId) = 0;
-	virtual void EnableVertexAttribute(unsigned int index) = 0;
-	virtual void SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data) = 0;
+	virtual void CreateVertexArrays(uint32_t count, kokko::RenderVertexArrayId* vertexArraysOut) = 0;
+	virtual void DestroyVertexArrays(uint32_t count, const kokko::RenderVertexArrayId* vertexArrays) = 0;
+	virtual void EnableVertexAttribute(kokko::RenderVertexArrayId va, uint32_t attributeIndex) = 0;
+	virtual void SetVertexArrayIndexBuffer(kokko::RenderVertexArrayId va, kokko::RenderBufferId buffer) = 0;
+	virtual void SetVertexArrayVertexBuffer(
+		kokko::RenderVertexArrayId va,
+		uint32_t bindingIndex,
+		kokko::RenderBufferId buffer,
+		intptr_t offset,
+		uint32_t stride) = 0;
+	virtual void SetVertexAttribFormat(
+		kokko::RenderVertexArrayId va,
+		uint32_t attributeIndex,
+		uint32_t size,
+		RenderVertexElemType elementType,
+		uint32_t offset) = 0;
+	virtual void SetVertexAttribBinding(
+		kokko::RenderVertexArrayId va,
+		uint32_t attributeIndex,
+		uint32_t bindingIndex) = 0;
 
-	virtual void Draw(RenderPrimitiveMode mode, int offset, int vertexCount) = 0;
-	virtual void DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType) = 0;
-	virtual void DrawInstanced(RenderPrimitiveMode mode, int offset, int vertexCount, int instanceCount) = 0;
-	virtual void DrawIndexedInstanced(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType, int instanceCount) = 0;
-	virtual void DrawIndirect(RenderPrimitiveMode mode, intptr_t offset) = 0;
-	virtual void DrawIndexedIndirect(RenderPrimitiveMode mode, RenderIndexType indexType, intptr_t offset) = 0;
-
-	virtual void CreateBuffers(unsigned int count, unsigned int* buffersOut) = 0;
-	virtual void DestroyBuffers(unsigned int count, unsigned int* buffers) = 0;
-	virtual void BindBuffer(RenderBufferTarget target, unsigned int buffer) = 0;
-	virtual void BindBufferBase(RenderBufferTarget target, unsigned int bindingPoint, unsigned int buffer) = 0;
-	virtual void BindBufferRange(const RenderCommandData::BindBufferRange* data) = 0;
-	virtual void SetBufferStorage(const RenderCommandData::SetBufferStorage* data) = 0;
-	virtual void SetBufferData(RenderBufferTarget target, unsigned int size, const void* data, RenderBufferUsage usage) = 0;
-	virtual void SetBufferSubData(RenderBufferTarget target, unsigned int offset, unsigned int size, const void* data) = 0;
-	virtual void* MapBuffer(RenderBufferTarget target, RenderBufferAccess access) = 0;
-	virtual void* MapBufferRange(const RenderCommandData::MapBufferRange* data) = 0;
-	virtual void UnmapBuffer(RenderBufferTarget target) = 0;
-
-	virtual void DispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ) = 0;
-	virtual void DispatchComputeIndirect(intptr_t offset) = 0;
-
-	virtual void MemoryBarrier(const RenderCommandData::MemoryBarrier& barrier) = 0;
+	virtual void CreateBuffers(unsigned int count, kokko::RenderBufferId* buffersOut) = 0;
+	virtual void DestroyBuffers(unsigned int count, const kokko::RenderBufferId* buffers) = 0;
+	virtual void SetBufferStorage(
+		kokko::RenderBufferId buffer, unsigned int size, const void* data, BufferStorageFlags flags) = 0;
+	virtual void SetBufferSubData(
+		kokko::RenderBufferId buffer, unsigned int offset, unsigned int size, const void* data) = 0;
+	virtual void* MapBufferRange(
+		kokko::RenderBufferId buffer, intptr_t offset, size_t length, BufferMapFlags flags) = 0;
+	virtual void UnmapBuffer(kokko::RenderBufferId buffer) = 0;
 };

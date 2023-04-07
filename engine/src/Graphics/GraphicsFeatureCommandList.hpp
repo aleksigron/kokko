@@ -16,6 +16,7 @@ class GraphicsFeatureCommandList
 public:
 	GraphicsFeatureCommandList(RendererCommandList& list, uint64_t fullscreenViewport, uint64_t featureIndex);
 
+	void AddToStartOfFrame(uint16_t object);
 	void AddToFullscreenViewport(RenderPassType pass, float depth, uint16_t object);
 	void AddToFullscreenViewportWithOrder(RenderPassType pass, uint64_t order, uint16_t object);
 

@@ -7,6 +7,8 @@
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
 
+#include "Rendering/RenderResourceId.hpp"
+
 class Allocator;
 class TextureManager;
 
@@ -22,7 +24,7 @@ class BitmapFont
 private:
 	Allocator* allocator;
 
-	unsigned int textureId;
+	kokko::RenderTextureId textureId;
 	Vec2f textureSize;
 
 	size_t* glyphSkipList;
@@ -50,7 +52,7 @@ public:
 	int GetLineHeight() const { return genericGlyphSize.y; }
 	int GetGlyphWidth() const { return genericGlyphSize.x; }
 
-	unsigned int GetTextureDriverId() const { return textureId; }
+	kokko::RenderTextureId GetTextureDriverId() const { return textureId; }
 	Vec2f GetTextureSize() const { return textureSize; }
 
 	bool LoadFromBDF(TextureManager* textureManager, kokko::ConstStringView content);

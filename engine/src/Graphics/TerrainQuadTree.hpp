@@ -16,6 +16,7 @@ struct TerrainTileId;
 namespace kokko
 {
 
+struct RenderTextureId;
 struct TerrainParameters;
 
 struct TerrainTile
@@ -50,7 +51,7 @@ public:
 	void SetHeight(float height) { terrainHeight = height; }
 
 	const TerrainTile* GetTile(int level, int x, int y);
-	unsigned int GetTileHeightTexture(int level, int x, int y);
+	RenderTextureId GetTileHeightTexture(int level, int x, int y);
 
 	static int GetTilesPerDimension(int level);
 	static int GetTileIndex(int level, int x, int y);
@@ -69,7 +70,7 @@ private:
 	static uint16_t TestData(float x, float y);
 
 	TerrainTile* tiles;
-	uint32_t* tileTextureIds;
+	RenderTextureId* tileTextureIds;
 
 	int treeLevels;
 	int tileCount;

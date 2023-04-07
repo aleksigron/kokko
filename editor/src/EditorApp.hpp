@@ -27,6 +27,11 @@ class Window;
 struct Uid;
 struct EngineSettings;
 
+namespace render
+{
+class CommandEncoder;
+}
+
 namespace editor
 {
 
@@ -53,7 +58,7 @@ public:
 
 	void StartFrame();
 	void Update(kokko::EngineSettings* engineSettings, bool& shouldExitOut);
-	void EndFrame();
+	void EndFrame(render::CommandEncoder* encoder);
 
 	const Framebuffer& GetSceneViewFramebuffer();
 

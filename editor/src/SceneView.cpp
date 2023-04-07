@@ -85,7 +85,7 @@ void SceneView::LateUpdate(EditorContext& context)
 				ImVec2 uv0(0.0f, 1.0f);
 				ImVec2 uv1(1.0f, 0.0f);
 
-				void* texId = reinterpret_cast<void*>(static_cast<size_t>(framebuffer.GetColorTextureId(0)));
+				void* texId = reinterpret_cast<void*>(static_cast<size_t>(framebuffer.GetColorTextureId(0).i));
 
 				ImGui::Image(texId, size, uv0, uv1);
 			}

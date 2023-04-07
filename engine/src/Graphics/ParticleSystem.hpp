@@ -47,6 +47,8 @@ public:
 	void Initialize();
 	void Deinitialize();
 
+	virtual void Upload(const UploadParameters& parameters) override;
+
 	virtual void Submit(const SubmitParameters& parameters) override;
 	virtual void Render(const RenderParameters& parameters) override;
 
@@ -83,7 +85,7 @@ private:
 	ShaderId finishUpdateShaderId;
 	ShaderId renderShaderId;
 
-	unsigned int noiseTextureId;
+	RenderTextureId noiseTextureId;
 
 	enum Buffer {
 		Buffer_Position,
@@ -102,22 +104,21 @@ private:
 
 	struct EmitterData
 	{
-		unsigned int bufferIds[Buffer_COUNT];
-
-		unsigned int aliveListCurrent;
-		unsigned int aliveListNext;
+		RenderBufferId bufferIds[Buffer_COUNT];
+		RenderBufferId aliveListCurrent;
+		RenderBufferId aliveListNext;
 
 		float emitAccumulation;
 		float emitRate;
 
 		EmitterData() :
-			aliveListCurrent(0),
-			aliveListNext(0),
+			aliveListCurrent(),
+			aliveListNext(),
 			emitAccumulation(0),
 			emitRate(0)
 		{
 			for (size_t i = 0; i < Buffer_COUNT; ++i)
-				bufferIds[i] = 0;
+				bufferIds[i] = RenderBufferId();
 		}
 	};
 
@@ -137,8 +138,8 @@ private:
 
 	void ReallocateEmitters(unsigned int requiredCount);
 
-	void InitializeEmitter(ParticleEmitterId id);
-	void DeinitializeEmitter(ParticleEmitterId id);
+	void InitializeEmitter(RenderDevice* renderDevice, ParticleEmitterId id);
+	void DeinitializeEmitter(RenderDevice* renderDevice, ParticleEmitterId id);
 };
 
 }

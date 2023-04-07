@@ -553,7 +553,7 @@ Optional<TextureId> EntityView::DrawTerrainTexture(
 
 	context.temporaryString.Assign("No texture");
 
-	unsigned int textureObjectId = 0;
+	RenderTextureId textureObjectId;
 
 	if (textureId != TextureId::Null)
 	{
@@ -578,7 +578,7 @@ Optional<TextureId> EntityView::DrawTerrainTexture(
 		float side = ImGui::GetFontSize() * 6.0f;
 		ImVec2 size(side, side);
 
-		void* texId = reinterpret_cast<void*>(static_cast<size_t>(textureObjectId));
+		void* texId = reinterpret_cast<void*>(static_cast<size_t>(textureObjectId.i));
 		ImVec2 uv0(0.0f, 1.0f);
 		ImVec2 uv1(1.0f, 0.0f);
 

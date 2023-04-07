@@ -10,6 +10,7 @@
 #include "Math/Vec2.hpp"
 
 #include "Rendering/RenderTypes.hpp"
+#include "Rendering/RenderResourceId.hpp"
 
 #include "Resources/TextureId.hpp"
 
@@ -26,17 +27,8 @@ struct TextureData
 {
 	kokko::Uid uid;
 	Vec2i textureSize;
-	unsigned int textureObjectId;
+	kokko::RenderTextureId textureObjectId;
 	RenderTextureTarget textureTarget;
-};
-
-struct TextureOptions
-{
-	RenderTextureFilterMode minFilter = RenderTextureFilterMode::Linear;
-	RenderTextureFilterMode magFilter = RenderTextureFilterMode::Linear;
-	RenderTextureWrapMode wrapModeU = RenderTextureWrapMode::Repeat;
-	RenderTextureWrapMode wrapModeV = RenderTextureWrapMode::Repeat;
-	bool generateMipmaps = false;
 };
 
 class TextureManager
@@ -92,8 +84,8 @@ public:
 
 	const TextureData& GetTextureData(TextureId id) { return data.texture[id.i]; }
 
-	void Upload_2D(TextureId id, const ImageData& image, const TextureOptions& options);
-	void Upload_Cube(TextureId id, const ImageData* images, const TextureOptions& options);
+	void Upload_2D(TextureId id, const ImageData& image, bool generateMipmaps);
+	void Upload_Cube(TextureId id, const ImageData* images, bool generateMipmaps);
 
 	void AllocateTextureStorage(TextureId id,
 		RenderTextureTarget target, RenderTextureSizedFormat format, int levels, Vec2i size);

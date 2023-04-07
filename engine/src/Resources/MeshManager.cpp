@@ -209,41 +209,37 @@ void MeshManager::UpdateBuffers(unsigned int index, const VertexData& vdata)
 	{
 		// Create vertex array object
 		renderDevice->CreateVertexArrays(1, &bufferData.vertexArrayObject);
-		renderDevice->BindVertexArray(bufferData.vertexArrayObject);
 
 		// Create buffer objects
-		renderDevice->CreateBuffers(1, bufferData.bufferObjects);
+		renderDevice->CreateBuffers(1, &bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
 
-		bufferData.bufferObjects[MeshBufferData::IndexBuffer] = 0;
+		bufferData.bufferObjects[MeshBufferData::IndexBuffer] = kokko::RenderBufferId();
 		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = 0;
 
 		// Bind and upload vertex buffer
-		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer,
-			bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
-
-		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer,
-			vdata.vertexDataSize, vdata.vertexData, vdata.vertexBufferUsage);
+		renderDevice->SetBufferStorage(bufferData.bufferObjects[MeshBufferData::VertexBuffer],
+			vdata.vertexDataSize, vdata.vertexData, BufferStorageFlags::Dynamic);
 
 		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vdata.vertexDataSize;
 	}
 	else
 	{
-		renderDevice->BindVertexArray(bufferData.vertexArrayObject);
-
-		// Bind and update vertex buffer
-		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
-
 		if (vdata.vertexDataSize <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
 		{
 			// Only update the part of the buffer we need
-			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer,
+			renderDevice->SetBufferSubData(bufferData.bufferObjects[MeshBufferData::VertexBuffer],
 				0, vdata.vertexDataSize, vdata.vertexData);
 		}
 		else
 		{
-			// SetBufferData reallocates storage when needed
-			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer,
-				vdata.vertexDataSize, vdata.vertexData, vdata.vertexBufferUsage);
+			// Recreate buffer and upload data
+
+			renderDevice->DestroyBuffers(1, &bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+			renderDevice->CreateBuffers(1, &bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+
+			renderDevice->SetBufferStorage(bufferData.bufferObjects[MeshBufferData::VertexBuffer],
+				vdata.vertexDataSize, vdata.vertexData, BufferStorageFlags::Dynamic);
+
 			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vdata.vertexDataSize;
 		}
 	}
@@ -257,60 +253,57 @@ void MeshManager::UpdateBuffersIndexed(unsigned int index, const IndexedVertexDa
 	{
 		// Create vertex array object
 		renderDevice->CreateVertexArrays(1, &bufferData.vertexArrayObject);
-		renderDevice->BindVertexArray(bufferData.vertexArrayObject);
 
 		// Create buffer objects
 		renderDevice->CreateBuffers(2, bufferData.bufferObjects);
 
 		// Bind and upload index buffer
-		renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer,
-			bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
-		renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer,
-			vdata.indexDataSize, vdata.indexData, vdata.indexBufferUsage);
+		renderDevice->SetBufferStorage(bufferData.bufferObjects[MeshBufferData::IndexBuffer],
+			vdata.indexDataSize, vdata.indexData, BufferStorageFlags::Dynamic);
 		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = vdata.indexDataSize;
 
 		// Bind and upload vertex buffer
-		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer,
-			bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
-		renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer,
-			vdata.vertexDataSize, vdata.vertexData, vdata.vertexBufferUsage);
+		renderDevice->SetBufferStorage(bufferData.bufferObjects[MeshBufferData::VertexBuffer],
+			vdata.vertexDataSize, vdata.vertexData, BufferStorageFlags::Dynamic);
 		bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vdata.vertexDataSize;
 	}
 	else
 	{
-		renderDevice->BindVertexArray(bufferData.vertexArrayObject);
-
-		// Bind and update index buffer
-		renderDevice->BindBuffer(RenderBufferTarget::IndexBuffer, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
-
 		if (vdata.vertexDataSize <= bufferData.bufferSizes[MeshBufferData::IndexBuffer])
 		{
 			// Only update the part of the buffer we need
-			renderDevice->SetBufferSubData(RenderBufferTarget::IndexBuffer,
+			renderDevice->SetBufferSubData(bufferData.bufferObjects[MeshBufferData::IndexBuffer],
 				0, vdata.indexDataSize, vdata.indexData);
 		}
 		else
 		{
-			// SetBufferData reallocates storage when needed
-			renderDevice->SetBufferData(RenderBufferTarget::IndexBuffer,
-				vdata.indexDataSize, vdata.indexData, vdata.indexBufferUsage);
-			bufferData.bufferSizes[MeshBufferData::IndexBuffer] = vdata.vertexDataSize;
-		}
+			// Recreate buffer and upload data
 
-		// Bind and update vertex buffer
-		renderDevice->BindBuffer(RenderBufferTarget::VertexBuffer, bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+			renderDevice->DestroyBuffers(1, &bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
+			renderDevice->CreateBuffers(1, &bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
+
+			renderDevice->SetBufferStorage(bufferData.bufferObjects[MeshBufferData::IndexBuffer],
+				vdata.indexDataSize, vdata.indexData, BufferStorageFlags::Dynamic);
+
+			bufferData.bufferSizes[MeshBufferData::IndexBuffer] = vdata.indexDataSize;
+		}
 
 		if (vdata.vertexDataSize <= bufferData.bufferSizes[MeshBufferData::VertexBuffer])
 		{
 			// Only update the part of the buffer we need
-			renderDevice->SetBufferSubData(RenderBufferTarget::VertexBuffer,
+			renderDevice->SetBufferSubData(bufferData.bufferObjects[MeshBufferData::VertexBuffer],
 				0, vdata.vertexDataSize, vdata.vertexData);
 		}
 		else
 		{
-			// SetBufferData reallocates storage when needed
-			renderDevice->SetBufferData(RenderBufferTarget::VertexBuffer,
-				vdata.vertexDataSize, vdata.vertexData, vdata.vertexBufferUsage);
+			// Recreate buffer and upload data
+
+			renderDevice->DestroyBuffers(1, &bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+			renderDevice->CreateBuffers(1, &bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
+
+			renderDevice->SetBufferStorage(bufferData.bufferObjects[MeshBufferData::VertexBuffer],
+				vdata.vertexDataSize, vdata.vertexData, BufferStorageFlags::Dynamic);
+
 			bufferData.bufferSizes[MeshBufferData::VertexBuffer] = vdata.vertexDataSize;
 		}
 	}
@@ -323,9 +316,9 @@ void MeshManager::DeleteBuffers(MeshBufferData& bufferDataInOut) const
 		renderDevice->DestroyVertexArrays(1, &bufferDataInOut.vertexArrayObject);
 		renderDevice->DestroyBuffers(2, bufferDataInOut.bufferObjects);
 
-		bufferDataInOut.vertexArrayObject = 0;
-		bufferDataInOut.bufferObjects[0] = 0;
-		bufferDataInOut.bufferObjects[1] = 0;
+		bufferDataInOut.vertexArrayObject = kokko::RenderVertexArrayId();
+		bufferDataInOut.bufferObjects[0] = kokko::RenderBufferId();
+		bufferDataInOut.bufferObjects[1] = kokko::RenderBufferId();
 		bufferDataInOut.bufferSizes[0] = 0;
 		bufferDataInOut.bufferSizes[1] = 0;
 	}
@@ -357,21 +350,24 @@ void MeshManager::CreateDrawDataIndexed(unsigned int index, const IndexedVertexD
 	data.uniqueVertexCount[index] = static_cast<int>(vdata.vertexCount);
 }
 
-void MeshManager::SetVertexAttribPointers(const VertexFormat& vertexFormat)
+void MeshManager::SetVertexAttribPointers(unsigned int index, const VertexFormat& vertexFormat)
 {
 	assert(vertexFormat.attributes != nullptr && vertexFormat.attributeCount > 0);
+
+	MeshBufferData& bufferData = data.bufferData[index];
+	kokko::RenderVertexArrayId vertexArray = bufferData.vertexArrayObject;
+
+	renderDevice->SetVertexArrayVertexBuffer(vertexArray, 0,
+		bufferData.bufferObjects[MeshBufferData::VertexBuffer], 0, vertexFormat.attributes[0].stride);
+	renderDevice->SetVertexArrayIndexBuffer(vertexArray, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
 
 	for (unsigned int i = 0; i < vertexFormat.attributeCount; ++i)
 	{
 		const VertexAttribute& attr = vertexFormat.attributes[i];
 
-		renderDevice->EnableVertexAttribute(attr.attrIndex);
-
-		RenderCommandData::SetVertexAttributePointer data{
-			attr.attrIndex, attr.elemCount, attr.elemType, attr.stride, attr.offset
-		};
-
-		renderDevice->SetVertexAttributePointer(&data);
+		renderDevice->EnableVertexAttribute(vertexArray, attr.attrIndex);
+		renderDevice->SetVertexAttribBinding(vertexArray, attr.attrIndex, 0);
+		renderDevice->SetVertexAttribFormat(vertexArray, attr.attrIndex, attr.elemCount, attr.elemType, attr.offset);
 	}
 }
 
@@ -385,7 +381,7 @@ void MeshManager::Upload(MeshId id, const VertexData& vdata)
 
 	UpdateBuffers(index, vdata);
 	CreateDrawData(index, vdata);
-	SetVertexAttribPointers(vdata.vertexFormat);
+	SetVertexAttribPointers(index, vdata.vertexFormat);
 }
 
 void MeshManager::UploadIndexed(MeshId id, const IndexedVertexData& vdata)
@@ -398,5 +394,5 @@ void MeshManager::UploadIndexed(MeshId id, const IndexedVertexData& vdata)
 
 	UpdateBuffersIndexed(index, vdata);
 	CreateDrawDataIndexed(index, vdata);
-	SetVertexAttribPointers(vdata.vertexFormat);
+	SetVertexAttribPointers(index, vdata.vertexFormat);
 }

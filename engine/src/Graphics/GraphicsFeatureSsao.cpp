@@ -53,8 +53,8 @@ GraphicsFeatureSsao::GraphicsFeatureSsao(Allocator* allocator) :
 	renderOrder(0),
 	noiseTextureId(0)
 {
-	uniformBufferIds[0] = 0;
-	uniformBufferIds[1] = 0;
+	uniformBufferIds[0] = RenderBufferId();
+	uniformBufferIds[1] = RenderBufferId();
 
 	shaderIds[0] = ShaderId::Null;
 	shaderIds[1] = ShaderId::Null;
@@ -99,23 +99,17 @@ void GraphicsFeatureSsao::Initialize(const InitializeParameters& parameters)
 		noise[i * 2 + 1] = static_cast<uint16_t>(Random::Uint(0, UINT16_MAX));
 	}
 
-	device->CreateTextures(1, &noiseTextureId);
-	device->BindTexture(RenderTextureTarget::Texture2d, noiseTextureId);
-	device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-	device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
-	device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::Repeat);
-	device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::Repeat);
+	device->CreateTextures(RenderTextureTarget::Texture2d, 1, &noiseTextureId);
+	//device->BindTexture(RenderTextureTarget::Texture2d, noiseTextureId);
+	//device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
+	//device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Nearest);
+	//device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::Repeat);
+	//device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::Repeat);
 
-	RenderCommandData::SetTextureStorage2D noiseStorage{
-		RenderTextureTarget::Texture2d, 1, RenderTextureSizedFormat::RG16, NoiseTextureSize, NoiseTextureSize
-	};
-	device->SetTextureStorage2D(&noiseStorage);
+	device->SetTextureStorage2D(noiseTextureId, 1, RenderTextureSizedFormat::RG16, NoiseTextureSize, NoiseTextureSize);
 
-	RenderCommandData::SetTextureSubImage2D noiseImage{
-		RenderTextureTarget::Texture2d, 0, 0, 0, NoiseTextureSize, NoiseTextureSize,
-		RenderTextureBaseFormat::RG, RenderTextureDataType::UnsignedShort, noise.GetData()
-	};
-	device->SetTextureSubImage2D(&noiseImage);
+	device->SetTextureSubImage2D(noiseTextureId, 0, 0, 0, NoiseTextureSize, NoiseTextureSize,
+		RenderTextureBaseFormat::RG, RenderTextureDataType::UnsignedShort, noise.GetData());
 
 	// Per pass resources
 
@@ -134,18 +128,9 @@ void GraphicsFeatureSsao::Initialize(const InitializeParameters& parameters)
 	for (unsigned int i = 0; i < PassCount; ++i)
 	{
 		// Uniform buffer
-
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[i]);
-
-		RenderCommandData::SetBufferStorage storage{};
-		storage.target = RenderBufferTarget::UniformBuffer;
-		storage.size = uniformSizes[i];
-		storage.data = nullptr;
-		storage.dynamicStorage = true;
-		device->SetBufferStorage(&storage);
+		device->SetBufferStorage(uniformBufferIds[i], uniformSizes[i], nullptr, BufferStorageFlags::Dynamic);
 
 		// Shader
-
 		shaderIds[i] = parameters.shaderManager->FindShaderByPath(shaderPaths[i]);
 	}
 }
@@ -176,14 +161,11 @@ void GraphicsFeatureSsao::Upload(const UploadParameters& parameters)
 	for (size_t i = 0; i < KernelSize; ++i)
 		occlusionUniforms.kernel[i] = kernel[i];
 
-	device->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[PassIdx_Occlusion]);
-	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(OcclusionUniformBlock), &occlusionUniforms);
-
 	BlurUniformBlock blurUniforms;
 	blurUniforms.textureScale = Vec2f(1.0f / framebufferSize.x, 1.0f / framebufferSize.y);
 
-	device->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[PassIdx_Blur]);
-	device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(BlurUniformBlock), &blurUniforms);
+	device->SetBufferSubData(uniformBufferIds[PassIdx_Occlusion], 0, sizeof(OcclusionUniformBlock), &occlusionUniforms);
+	device->SetBufferSubData(uniformBufferIds[PassIdx_Blur], 0, sizeof(BlurUniformBlock), &blurUniforms);
 }
 
 void GraphicsFeatureSsao::Submit(const SubmitParameters& parameters)
@@ -215,9 +197,9 @@ void GraphicsFeatureSsao::Render(const RenderParameters& parameters)
 	occlusionPass.textureIds[0] = parameters.renderGraphResources->GetGeometryBufferNormalTexture();
 	occlusionPass.textureIds[1] = parameters.renderGraphResources->GetGeometryBuffer().GetDepthTextureId();
 	occlusionPass.textureIds[2] = noiseTextureId;
-	occlusionPass.samplerIds[0] = 0;
-	occlusionPass.samplerIds[1] = 0;
-	occlusionPass.samplerIds[2] = 0;
+	occlusionPass.samplerIds[0] = RenderSamplerId();
+	occlusionPass.samplerIds[1] = RenderSamplerId();
+	occlusionPass.samplerIds[2] = RenderSamplerId();
 	occlusionPass.textureCount = 3;
 
 	occlusionPass.uniformBufferId = uniformBufferIds[PassIdx_Occlusion];
@@ -236,7 +218,7 @@ void GraphicsFeatureSsao::Render(const RenderParameters& parameters)
 
 	blurPass.textureNameHashes[0] = "occlusion_map"_hash;
 	blurPass.textureIds[0] = occlusionTarget.colorTexture;
-	blurPass.samplerIds[0] = 0;
+	blurPass.samplerIds[0] = RenderSamplerId();
 	blurPass.textureCount = 1;
 
 	blurPass.uniformBufferId = uniformBufferIds[PassIdx_Blur];

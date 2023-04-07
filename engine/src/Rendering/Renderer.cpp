@@ -41,6 +41,7 @@
 #include "Rendering/PostProcessRenderer.hpp"
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/RenderCommandData.hpp"
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDebugSettings.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderGraphResources.hpp"
@@ -60,6 +61,9 @@
 #include "Resources/ResourceManagers.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
+
+namespace kokko
+{
 
 struct DebugNormalUniformBlock
 {
@@ -88,7 +92,7 @@ Renderer::Renderer(
 	viewportCount(0),
 	viewportIndexFullscreen(0),
 	uniformStagingBuffer(allocator),
-	objectUniformBufferLists{ Array<unsigned int>(allocator) },
+	objectUniformBufferLists{ Array<RenderBufferId>(allocator) },
 	currentFrameIndex(0),
 	scene(scene),
 	cameraSystem(cameraSystem),
@@ -112,7 +116,7 @@ Renderer::Renderer(
 	renderTargetContainer = allocator->MakeNew<RenderTargetContainer>(allocator, renderDevice);
 
 	postProcessRenderer = allocator->MakeNew<PostProcessRenderer>(
-		renderDevice, meshManager, shaderManager, renderTargetContainer);
+		encoder, meshManager, shaderManager, renderTargetContainer);
 
 	shadowMaterial = MaterialId{ 0 };
 
@@ -131,9 +135,6 @@ void Renderer::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	device->CubemapSeamlessEnable();
-	device->SetClipBehavior(RenderClipOriginMode::LowerLeft, RenderClipDepthMode::ZeroToOne);
-
 	int aligment = 0;
 	device->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
 
@@ -150,26 +151,19 @@ void Renderer::Initialize()
 		viewportData = static_cast<RenderViewport*>(buf);
 
 		// Create uniform buffer objects
-		unsigned int buffers[MaxViewportCount];
+		RenderBufferId buffers[MaxViewportCount];
 		device->CreateBuffers(MaxViewportCount, buffers);
 
 		for (size_t i = 0; i < MaxViewportCount; ++i)
 		{
-			viewportData[i].uniformBlockObject = buffers[i];
-			device->BindBuffer(RenderBufferTarget::UniformBuffer, viewportData[i].uniformBlockObject);
-
-			RenderCommandData::SetBufferStorage storage{};
-			storage.target = RenderBufferTarget::UniformBuffer;
-			storage.size = sizeof(ViewportUniformBlock);
-			storage.data = nullptr;
-			storage.dynamicStorage = true;
-			device->SetBufferStorage(&storage);
+			device->SetBufferStorage(buffers[i], sizeof(ViewportUniformBlock), nullptr, BufferStorageFlags::Dynamic);
 
 			kokko::ConstStringView label("Renderer viewport uniform buffer");
-			device->SetObjectLabel(RenderObjectType::Buffer, buffers[i], label);
+			device->SetObjectLabel(RenderObjectType::Buffer, buffers[i].i, label);
+
+			viewportData[i].uniformBlockObject = buffers[i];
 		}
 	}
-
 
 	{
 		const char* path = "engine/materials/forward/shadow_depth.material";
@@ -234,7 +228,7 @@ void Renderer::Deinitialize()
 	{
 		if (objectUniformBufferLists[i].GetCount() > 0)
 		{
-			Array<uint32_t>& list = objectUniformBufferLists[i];
+			Array<RenderBufferId>& list = objectUniformBufferLists[i];
 			device->DestroyBuffers(static_cast<unsigned int>(list.GetCount()), list.GetData());
 			list.Clear();
 		}
@@ -247,7 +241,7 @@ void Renderer::Deinitialize()
 			if (viewportData[i].uniformBlockObject != 0)
 			{
 				device->DestroyBuffers(1, &(viewportData[i].uniformBlockObject));
-				viewportData[i].uniformBlockObject = 0;
+				viewportData[i].uniformBlockObject = RenderBufferId();
 			}
 		}
 
@@ -263,27 +257,27 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 
 
 #ifdef KOKKO_USE_METAL
-    kokko::NativeSurface* surface = window->GetNativeSurface();
-    kokko::TextureHandle texture = window->GetNativeSurfaceTexture();
-    kokko::CommandBuffer* buffer = device->CreateCommandBuffer(allocator);
-    kokko::RenderPassDescriptor passDescriptor;
-    passDescriptor.colorAttachments.PushBack(kokko::RenderPassColorAttachment{
-        texture,
-        kokko::AttachmentLoadAction::Clear,
-        kokko::AttachmentStoreAction::Store,
-        Vec4f(0.0f, 0.6f, 0.7f, 1.0f)
-    });
-    kokko::RenderPass* renderPass = buffer->CreateRenderPass(passDescriptor, allocator);
+	kokko::NativeSurface* surface = window->GetNativeSurface();
+	kokko::TextureHandle texture = window->GetNativeSurfaceTexture();
+	kokko::CommandBuffer* buffer = device->CreateCommandBuffer(allocator);
+	kokko::RenderPassDescriptor passDescriptor;
+	passDescriptor.colorAttachments.PushBack(kokko::RenderPassColorAttachment{
+		texture,
+		kokko::AttachmentLoadAction::Clear,
+		kokko::AttachmentStoreAction::Store,
+		Vec4f(0.0f, 0.6f, 0.7f, 1.0f)
+		});
+	kokko::RenderPass* renderPass = buffer->CreateRenderPass(passDescriptor, allocator);
 
-    allocator->MakeDelete(renderPass);
+	allocator->MakeDelete(renderPass);
 
-    buffer->Present(surface);
-    buffer->Commit();
-    window->ReleaseNativeSurface();
+	buffer->Present(surface);
+	buffer->Commit();
+	window->ReleaseNativeSurface();
 
-    allocator->MakeDelete(buffer);
+	allocator->MakeDelete(buffer);
 
-    return;
+	return;
 #endif
 
 	if (targetFramebuffer.IsInitialized() == false)
@@ -302,18 +296,17 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 	intptr_t objectDrawsProcessed = 0;
 
 	uint64_t lastVpIdx = MaxViewportCount;
-	uint64_t lastShaderProgram = 0;
+	RenderShaderId lastShaderProgram = RenderShaderId();
 	const MeshDrawData* draw = nullptr;
 	MeshId lastMeshId = MeshId{ 0 };
 	MaterialId lastMaterialId = MaterialId{ 0 };
 
-	Array<unsigned int>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
-	
+	Array<RenderBufferId>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
+
 	CameraParameters cameraParams = GetCameraParameters(editorCamera, targetFramebuffer);
 
 	kokko::GraphicsFeature::RenderParameters featureRenderParams
 	{
-		device,
 		postProcessRenderer,
 		meshManager,
 		shaderManager,
@@ -326,6 +319,7 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 			viewportIndicesShadowCascade.end - viewportIndicesShadowCascade.start),
 		renderGraphResources,
 		targetFramebuffer.GetFramebufferId(),
+		encoder,
 		0
 	};
 
@@ -356,8 +350,8 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 				// Update viewport uniform block
 				if (vpIdx != lastVpIdx)
 				{
-					unsigned int ubo = viewportData[vpIdx].uniformBlockObject;
-					device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, ubo);
+					RenderBufferId ubo = viewportData[vpIdx].uniformBlockObject;
+					encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, ubo);
 
 					lastVpIdx = vpIdx;
 				}
@@ -365,19 +359,19 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 				if (matId != lastMaterialId)
 				{
 					lastMaterialId = matId;
-					unsigned int matShaderId = materialManager->GetMaterialShaderDeviceId(matId);
-					unsigned int matUniformBuffer = materialManager->GetMaterialUniformBufferId(matId);
+					RenderShaderId matShaderId = materialManager->GetMaterialShaderDeviceId(matId);
+					RenderBufferId matUniformBuffer = materialManager->GetMaterialUniformBufferId(matId);
 
 					if (matShaderId != lastShaderProgram)
 					{
-						device->UseShaderProgram(matShaderId);
+						encoder->UseShaderProgram(matShaderId);
 						lastShaderProgram = matShaderId;
 					}
 
 					BindMaterialTextures(materialManager->GetMaterialUniforms(matId));
 
 					// Bind material uniform block to shader
-					device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, matUniformBuffer);
+					encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, matUniformBuffer);
 				}
 
 				// Bind object transform uniform block to shader
@@ -386,12 +380,8 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 				intptr_t objectInBuffer = objectDrawsProcessed % objectsPerUniformBuffer;
 				size_t rangeSize = static_cast<size_t>(objectUniformBlockStride);
 
-				RenderCommandData::BindBufferRange bind{
-					RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object,
-					objUniformBuffers[bufferIndex], objectInBuffer * objectUniformBlockStride, rangeSize
-				};
-
-				device->BindBufferRange(&bind);
+				encoder->BindBufferRange(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object,
+					objUniformBuffers[bufferIndex], objectInBuffer * objectUniformBlockStride, rangeSize);
 
 				MeshId mesh = componentSystem->data.mesh[objIdx];
 
@@ -399,9 +389,9 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 				{
 					lastMeshId = mesh;
 					draw = meshManager->GetDrawData(mesh);
-					device->BindVertexArray(draw->vertexArrayObject);
+					encoder->BindVertexArray(draw->vertexArrayObject);
 				}
-				device->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+				encoder->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 
 				objectDrawsProcessed += 1;
 			}
@@ -415,13 +405,13 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 
 				// Reset state cache
 				lastVpIdx = MaxViewportCount;
-				lastShaderProgram = 0;
+				lastShaderProgram = RenderShaderId();
 				draw = nullptr;
 				lastMeshId = MeshId{ 0 };
 				lastMaterialId = MaterialId{ 0 };
 
 				// TODO: manage sampler state more robustly
-				device->BindSampler(0, 0);
+				encoder->BindSampler(0, RenderSamplerId());
 
 				// TODO: Figure how to restore viewport and other relevant state
 			}
@@ -434,7 +424,7 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 
 	currentFrameIndex = (currentFrameIndex + 1) % FramesInFlightCount;
 
-	targetFramebufferId = 0;
+	targetFramebufferId = RenderFramebufferId();
 }
 
 void Renderer::BindMaterialTextures(const kokko::UniformData& materialUniforms) const
@@ -449,9 +439,7 @@ void Renderer::BindMaterialTextures(const kokko::UniformData& materialUniforms) 
 		{
 		case kokko::UniformDataType::Tex2D:
 		case kokko::UniformDataType::TexCube:
-			device->SetActiveTextureUnit(usedTextures);
-			device->BindTexture(uniform.textureTarget, uniform.textureObject);
-			device->SetUniformInt(uniform.uniformLocation, usedTextures);
+			encoder->BindTextureToShader(uniform.uniformLocation, usedTextures, uniform.textureObject);
 			++usedTextures;
 			break;
 
@@ -477,7 +465,7 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 
 	size_t buffersRequired = (objectDrawCount + objectsPerUniformBuffer - 1) / objectsPerUniformBuffer;
 
-	Array<unsigned int>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
+	Array<RenderBufferId>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
 
 	// Create new object transform uniform buffers if needed
 	if (buffersRequired > objUniformBuffers.GetCount())
@@ -490,17 +478,10 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 
 		for (size_t i = currentCount; i < buffersRequired; ++i)
 		{
-			device->BindBuffer(RenderBufferTarget::UniformBuffer, objUniformBuffers[i]);
-
-			RenderCommandData::SetBufferStorage setStorage{};
-			setStorage.target = RenderBufferTarget::UniformBuffer;
-			setStorage.size = ObjectUniformBufferSize;
-			setStorage.dynamicStorage = true;
-
-			device->SetBufferStorage(&setStorage);
+			device->SetBufferStorage(objUniformBuffers[i], ObjectUniformBufferSize, nullptr, BufferStorageFlags::Dynamic);
 
 			kokko::ConstStringView label("Renderer object uniform buffer");
-			device->SetObjectLabel(RenderObjectType::Buffer, objUniformBuffers[i], label);
+			device->SetObjectLabel(RenderObjectType::Buffer, objUniformBuffers[i].i, label);
 		}
 	}
 
@@ -530,10 +511,9 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 			{
 				if (prevBufferIndex >= 0)
 				{
-					KOKKO_PROFILE_SCOPE("Update buffer data");
+					KOKKO_PROFILE_SCOPE("Update cmdBuffer data");
 
-					device->BindBuffer(RenderBufferTarget::UniformBuffer, objUniformBuffers[prevBufferIndex]);
-					device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, ObjectUniformBufferSize, stagingBuffer);
+					device->SetBufferSubData(objUniformBuffers[prevBufferIndex], 0, ObjectUniformBufferSize, stagingBuffer);
 				}
 
 				prevBufferIndex = bufferIndex;
@@ -552,11 +532,10 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 
 	if (prevBufferIndex >= 0)
 	{
-		KOKKO_PROFILE_SCOPE("Update buffer data");
+		KOKKO_PROFILE_SCOPE("Update cmdBuffer data");
 
 		unsigned int updateSize = static_cast<unsigned int>((objectDrawsProcessed % objectsPerUniformBuffer) * objectUniformBlockStride);
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, objUniformBuffers[prevBufferIndex]);
-		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, updateSize, stagingBuffer);
+		device->SetBufferSubData(objUniformBuffers[prevBufferIndex], 0, updateSize, stagingBuffer);
 	}
 }
 
@@ -583,76 +562,45 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 
 		if (viewportIndex == 0)
 		{
-			device->DepthTestEnable();
-			device->DepthTestFunction(RenderDepthCompareFunc::Greater);
-			device->DepthWriteEnable();
-			device->CullFaceEnable();
-			device->CullFaceBack();
-			device->ScissorTestDisable();
-			device->BlendingDisable();
-			device->ClearDepth(0.0f);
+			encoder->DepthTestEnable();
+			encoder->SetDepthTestFunction(RenderDepthCompareFunc::Greater);
+			encoder->DepthWriteEnable();
+			encoder->SetCullFace(RenderCullFace::Back);
+			encoder->ScissorTestDisable();
+			encoder->BlendingDisable();
+			encoder->SetClearDepth(0.0f);
 		}
 
 		if (viewportIndex == viewportIndicesShadowCascade.start)
 		{
+			const auto& shadowBuffer = renderGraphResources->GetShadowBuffer();
 			// Bind shadow framebuffer before any shadow cascade draws
-			device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, renderGraphResources->GetShadowBuffer().GetFramebufferId());
+			encoder->BindFramebuffer(renderGraphResources->GetShadowBuffer().GetFramebufferId());
 
 			// Set viewport size to full framebuffer size before clearing
-
-			RenderCommandData::ViewportData viewport;
-			viewport.x = 0;
-			viewport.y = 0;
-			viewport.w = renderGraphResources->GetShadowBuffer().GetWidth();
-			viewport.h = renderGraphResources->GetShadowBuffer().GetHeight();
-
-			device->Viewport(&viewport);
+			encoder->SetViewport(0, 0, shadowBuffer.GetWidth(), shadowBuffer.GetHeight());
 
 			// Clear shadow framebuffer
-
-			RenderCommandData::ClearMask clearMask{ false, true, false };
-			device->Clear(&clearMask);
-
-			// Enable sRGB conversion for framebuffer
-			// TODO: WHY though?
-			//device->FramebufferSrgbEnable();
+			encoder->Clear(ClearMask{false, true, false});
 		}
 
 		if (viewportIndex >= viewportIndicesShadowCascade.start &&
 			viewportIndex < viewportIndicesShadowCascade.end)
 		{
-			const RenderViewport& viewport = viewportData[viewportIndex];
+			const auto& rect = viewportData[viewportIndex].viewportRectangle;
 
-			RenderCommandData::ViewportData setViewport;
-			setViewport.x = viewport.viewportRectangle.position.x;
-			setViewport.y = viewport.viewportRectangle.position.y;
-			setViewport.w = viewport.viewportRectangle.size.x;
-			setViewport.h = viewport.viewportRectangle.size.y;
-
-			device->Viewport(&setViewport);
+			encoder->SetViewport(rect.position.x, rect.position.y, rect.size.x, rect.size.y);
 		}
 
 		if (viewportIndex == viewportIndexFullscreen)
 		{
-			device->DepthTestFunction(RenderDepthCompareFunc::Greater);
+			const auto& rect = viewportData[viewportIndexFullscreen].viewportRectangle;
 
-			RenderCommandData::ClearColorData clearColor{ 0.0f, 0.0f, 0.0f, 0.0f };
-			device->ClearColor(&clearColor);
-
-			const RenderViewport& viewport = viewportData[viewportIndexFullscreen];
-
-			RenderCommandData::ViewportData setViewport;
-			setViewport.x = viewport.viewportRectangle.position.x;
-			setViewport.y = viewport.viewportRectangle.position.y;
-			setViewport.w = viewport.viewportRectangle.size.x;
-			setViewport.h = viewport.viewportRectangle.size.y;
-
-			device->Viewport(&setViewport);
-
-			device->BindFramebuffer(RenderFramebufferTarget::Framebuffer, renderGraphResources->GetGeometryBuffer().GetFramebufferId());
-
-			RenderCommandData::ClearMask clearMask{ true, true, false };
-			device->Clear(&clearMask);
+			encoder->SetDepthTestFunction(RenderDepthCompareFunc::Greater);
+			encoder->SetClearColor(Vec4f{ 0.0f, 0.0f, 0.0f, 0.0f });
+			encoder->SetViewport(rect.position.x, rect.position.y, rect.size.x, rect.size.y);
+			encoder->BindFramebuffer(renderGraphResources->GetGeometryBuffer().GetFramebufferId());
+			encoder->Clear(ClearMask{ true, true, false });
 		}
 
 		break;
@@ -667,27 +615,20 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 		{
 			if (pass == RenderPassType::Skybox)
 			{
-				device->DepthTestEnable();
-				device->DepthTestFunction(RenderDepthCompareFunc::Equal);
-				device->DepthWriteDisable();
+				const auto& rect = viewportData[viewportIndexFullscreen].viewportRectangle;
 
-				const RenderViewport& viewport = viewportData[viewportIndexFullscreen];
-
-				RenderCommandData::ViewportData setViewport;
-				setViewport.x = viewport.viewportRectangle.position.x;
-				setViewport.y = viewport.viewportRectangle.position.y;
-				setViewport.w = viewport.viewportRectangle.size.x;
-				setViewport.h = viewport.viewportRectangle.size.y;
-
-				device->Viewport(&setViewport);
+				encoder->DepthTestEnable();
+				encoder->SetDepthTestFunction(RenderDepthCompareFunc::Equal);
+				encoder->DepthWriteDisable();
+				encoder->SetViewport(rect.position.x, rect.position.y, rect.size.x, rect.size.y);
 			}
 			else if (pass == RenderPassType::Transparent)
 			{
-				device->DepthTestFunction(RenderDepthCompareFunc::Greater);
-				device->BlendingEnable();
+				encoder->SetDepthTestFunction(RenderDepthCompareFunc::Greater);
+				encoder->BlendingEnable();
 
 				// Set mix blending
-				device->BlendFunction(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+				encoder->BlendFunction(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
 			}
 		}
 		break;
@@ -749,9 +690,18 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	{
 		kokko::GraphicsFeature::UploadParameters featureParameters
 		{
-			device,
+			postProcessRenderer,
+			meshManager,
+			shaderManager,
+			textureManager,
+			environmentSystem,
+			lightManager,
 			cameraParameters,
-			viewportData[viewportIndexFullscreen]
+			viewportData[viewportIndexFullscreen],
+			ArrayView(&viewportData[viewportIndicesShadowCascade.start], viewportIndicesShadowCascade.GetLength()),
+			renderGraphResources,
+			targetFramebufferId,
+			device
 		};
 
 		for (auto feature : graphicsFeatures)
@@ -765,7 +715,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	Mat4x4f cameraProjection = projectionParams.GetProjectionMatrix(true);
 
 	Mat4x4fBijection cullingTransform;
-	
+
 	if (lockCullingCamera)
 		cullingTransform = lockCullingCameraTransform;
 	else
@@ -788,7 +738,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	lightManager->GetDirectionalLights(lightResultArray);
 
 	ViewportUniformBlock viewportUniforms;
-	
+
 	for (size_t i = 0, count = lightResultArray.GetCount(); i < count; ++i)
 	{
 		LightId id = lightResultArray[i];
@@ -831,8 +781,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 				viewportUniforms.V = vp.view.inverse;
 				viewportUniforms.P = vp.projection;
 
-				device->BindBuffer(RenderBufferTarget::UniformBuffer, vp.uniformBlockObject);
-				device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(ViewportUniformBlock), &viewportUniforms);
+				device->SetBufferSubData(vp.uniformBlockObject, 0, sizeof(ViewportUniformBlock), &viewportUniforms);
 			}
 		}
 	}
@@ -867,8 +816,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		viewportUniforms.V = vp.view.inverse;
 		viewportUniforms.P = vp.projection;
 
-		device->BindBuffer(RenderBufferTarget::UniformBuffer, vp.uniformBlockObject);
-		device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(ViewportUniformBlock), &viewportUniforms);
+		device->SetBufferSubData(vp.uniformBlockObject, 0, sizeof(ViewportUniformBlock), &viewportUniforms);
 
 		this->viewportIndexFullscreen = vpIdx;
 	}
@@ -973,18 +921,9 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::Ren
 	{
 		if (normalDebugBufferId == 0)
 		{
-			RenderBufferUsage usage = RenderBufferUsage::DynamicDraw;
-
 			device->CreateBuffers(1, &normalDebugBufferId);
-
-			device->BindBuffer(RenderBufferTarget::UniformBuffer, normalDebugBufferId);
-
-			RenderCommandData::SetBufferStorage storage{};
-			storage.target = RenderBufferTarget::UniformBuffer;
-			storage.size = sizeof(DebugNormalUniformBlock);
-			storage.data = nullptr;
-			storage.dynamicStorage = true;
-			device->SetBufferStorage(&storage);
+			device->SetBufferStorage(
+				normalDebugBufferId, sizeof(DebugNormalUniformBlock), nullptr, BufferStorageFlags::Dynamic);
 		}
 
 		kokko::MeshComponentId component = componentSystem->Lookup(debugEntity);
@@ -998,7 +937,7 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::Ren
 				return;
 
 			const ShaderData& shader = shaderManager->GetShaderData(shaderId);
-			device->UseShaderProgram(shader.driverId);
+			encoder->UseShaderProgram(shader.driverId);
 
 			const Mat4x4f& model = componentSystem->data.transform[component.i];
 			DebugNormalUniformBlock uniforms;
@@ -1007,21 +946,20 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::Ren
 			uniforms.baseColor = Vec4f(0.0f, 1.0f, 1.0f, 1.0f);
 			uniforms.normalLength = 0.03f;
 
-			device->BindBuffer(RenderBufferTarget::UniformBuffer, normalDebugBufferId);
-			device->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0,
+			device->SetBufferSubData(normalDebugBufferId, 0,
 				static_cast<unsigned int>(sizeof(DebugNormalUniformBlock)), &uniforms);
 
-			device->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, normalDebugBufferId);
+			encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, normalDebugBufferId);
 
 			MeshId mesh = componentSystem->GetMeshId(component);
 			if (mesh != MeshId::Null)
 			{
 				int meshVertexCount = meshManager->GetUniqueVertexCount(mesh);
 				const MeshDrawData* draw = meshManager->GetDrawData(mesh);
-				device->BindVertexArray(draw->vertexArrayObject);
+				encoder->BindVertexArray(draw->vertexArrayObject);
 
 				// Geometry shader will turn points into lines
-				device->Draw(RenderPrimitiveMode::Points, 0, meshVertexCount);
+				encoder->Draw(RenderPrimitiveMode::Points, 0, meshVertexCount);
 			}
 		}
 	}
@@ -1058,3 +996,5 @@ void Renderer::RemoveGraphicsFeature(kokko::GraphicsFeature* graphicsFeature)
 		}
 	}
 }
+
+} // namespace kokko

@@ -10,6 +10,7 @@
 #include "Math/BoundingBox.hpp"
 
 #include "Rendering/RenderTypes.hpp"
+#include "Rendering/RenderResourceId.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/MeshId.hpp"
@@ -67,7 +68,7 @@ struct IndexedVertexData : VertexData
 
 struct MeshDrawData
 {
-	unsigned int vertexArrayObject;
+	kokko::RenderVertexArrayId vertexArrayObject;
 	int count;
 	RenderPrimitiveMode primitiveMode;
 
@@ -79,9 +80,9 @@ struct MeshBufferData
 {
 	enum BufferType { VertexBuffer = 0, IndexBuffer = 1 };
 
-	unsigned int vertexArrayObject;
-	unsigned int bufferObjects[2];
-	unsigned int bufferSizes[2];
+	kokko::RenderVertexArrayId vertexArrayObject;
+	kokko::RenderBufferId bufferObjects[2];
+	uint32_t bufferSizes[2];
 };
 
 class MeshManager
@@ -133,7 +134,7 @@ private:
 	void CreateDrawData(unsigned int index, const VertexData& vdata);
 	void CreateDrawDataIndexed(unsigned int index, const IndexedVertexData& vdata);
 
-	void SetVertexAttribPointers(const VertexFormat& vertexFormat);
+	void SetVertexAttribPointers(unsigned int index, const VertexFormat& vertexFormat);
 
 	unsigned int GetIndex(MeshId meshId) const;
 

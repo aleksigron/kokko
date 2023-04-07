@@ -32,7 +32,7 @@ void DebugCulling::UpdateAndDraw(World* world)
 {
 	if (cullingCameraIsLocked)
 	{
-		Renderer* renderer = world->GetRenderer();
+		kokko::Renderer* renderer = world->GetRenderer();
 		CameraSystem* cameraSystem = world->GetCameraSystem();
 
 		textRenderer->AddText(kokko::ConstStringView("Culling camera is locked"), guideTextPosition);

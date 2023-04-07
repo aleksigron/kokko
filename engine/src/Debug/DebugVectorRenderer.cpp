@@ -18,6 +18,7 @@
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
+#include "Rendering/RenderCommandEncoder.hpp"
 
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
@@ -444,7 +445,7 @@ void DebugVectorRenderer::DrawWireFrustum(const Mat4x4f& transform, const Projec
 	this->DrawLine(frustum.points[6], frustum.points[7], color);
 }
 
-void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera)
+void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -458,23 +459,10 @@ void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, co
 
 			renderDevice->CreateBuffers(2, uniformBufferIds);
 
-			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[ObjectBuffer]);
-
-			RenderCommandData::SetBufferStorage transformStorage{};
-			transformStorage.target = RenderBufferTarget::UniformBuffer;
-			transformStorage.size = sizeof(TransformUniformBlock);
-			transformStorage.data = nullptr;
-			transformStorage.dynamicStorage = true;
-			renderDevice->SetBufferStorage(&transformStorage);
-
-			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, uniformBufferIds[MaterialBuffer]);
-
-			RenderCommandData::SetBufferStorage materialStorage{};
-			materialStorage.target = RenderBufferTarget::UniformBuffer;
-			materialStorage.size = sizeof(MaterialBlock);
-			materialStorage.data = nullptr;
-			materialStorage.dynamicStorage = true;
-			renderDevice->SetBufferStorage(&materialStorage);
+			renderDevice->SetBufferStorage(
+				uniformBufferIds[ObjectBuffer], sizeof(TransformUniformBlock), nullptr, BufferStorageFlags::Dynamic);
+			renderDevice->SetBufferStorage(
+				uniformBufferIds[MaterialBuffer], sizeof(MaterialBlock), nullptr, BufferStorageFlags::Dynamic);
 
 			buffersInitialized = true;
 		}
@@ -522,17 +510,11 @@ void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, co
 		TransformUniformBlock objectUniforms;
 		MaterialBlock materialUniforms;
 
-		renderDevice->DepthTestDisable();
-		renderDevice->BlendingDisable();
+		encoder->DepthTestDisable();
+		encoder->BlendingDisable();
+		encoder->SetViewport(viewport.position.x, viewport.position.y, viewport.size.x, viewport.size.y);
 
-		RenderCommandData::ViewportData viewportCommand;
-		viewportCommand.x = viewport.position.x;
-		viewportCommand.y = viewport.position.y;
-		viewportCommand.w = viewport.size.x;
-		viewportCommand.h = viewport.size.y;
-		renderDevice->Viewport(&viewportCommand);
-
-		renderDevice->UseShaderProgram(shader.driverId);
+		encoder->UseShaderProgram(shader.driverId);
 
 		for (unsigned int i = 0; i < primitiveCount; ++i)
 		{
@@ -547,22 +529,16 @@ void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, co
 			objectUniforms.MV = view * primitive.transform;
 			objectUniforms.M = primitive.transform;
 
-			unsigned int objectBufferId = uniformBufferIds[ObjectBuffer];
-			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, objectBufferId);
-			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(TransformUniformBlock), &objectUniforms);
-
-			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, objectBufferId);
+			renderDevice->SetBufferSubData(uniformBufferIds[ObjectBuffer], 0, sizeof(TransformUniformBlock), &objectUniforms);
+			encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferIds[ObjectBuffer]);
 
 			// Update color
 
 			Vec4f colorVec4(primitive.color.r, primitive.color.g, primitive.color.b, primitive.color.a);
 			materialUniforms.color = colorVec4;
 
-			unsigned int materialBufferId = uniformBufferIds[MaterialBuffer];
-			renderDevice->BindBuffer(RenderBufferTarget::UniformBuffer, materialBufferId);
-			renderDevice->SetBufferSubData(RenderBufferTarget::UniformBuffer, 0, sizeof(MaterialBlock), &materialUniforms);
-
-			renderDevice->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, materialBufferId);
+			renderDevice->SetBufferSubData(uniformBufferIds[MaterialBuffer], 0, sizeof(MaterialBlock), &materialUniforms);
+			encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, uniformBufferIds[MaterialBuffer]);
 
 			// Draw
 
@@ -574,12 +550,12 @@ void DebugVectorRenderer::Render(World* world, const ViewRectangle& viewport, co
 				meshId = this->staticMeshes[static_cast<unsigned int>(primitive.type)];
 
 			const MeshDrawData* draw = meshManager->GetDrawData(meshId);
-			renderDevice->BindVertexArray(draw->vertexArrayObject);
+			encoder->BindVertexArray(draw->vertexArrayObject);
 
 			if (draw->indexType != RenderIndexType::None)
-				renderDevice->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+				encoder->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
 			else
-				renderDevice->Draw(draw->primitiveMode, 0, draw->count);
+				encoder->Draw(draw->primitiveMode, 0, draw->count);
 
 		// Clear primitive count
 		}

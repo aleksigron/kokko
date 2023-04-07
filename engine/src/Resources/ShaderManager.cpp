@@ -100,7 +100,7 @@ ShaderId ShaderManager::CreateShader()
 	data.shader[id.i].buffer = nullptr;
 	data.shader[id.i].uniformBlockDefinition = kokko::ConstStringView();
 	data.shader[id.i].transparencyType = TransparencyType::Opaque;
-	data.shader[id.i].driverId = 0;
+	data.shader[id.i].driverId = kokko::RenderShaderId();
 	data.shader[id.i].uniforms = kokko::UniformList();
 
 	++data.count;

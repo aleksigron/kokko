@@ -16,16 +16,16 @@ struct PostProcessRenderPass
 	static const size_t MaxTextureCount = 10;
 
 	uint32_t textureNameHashes[MaxTextureCount];
-	unsigned int textureIds[MaxTextureCount];
-	unsigned int samplerIds[MaxTextureCount];
+	kokko::RenderTextureId textureIds[MaxTextureCount];
+	kokko::RenderSamplerId samplerIds[MaxTextureCount];
 	unsigned int textureCount;
 
-	unsigned int uniformBufferId;
-	unsigned int uniformBindingPoint;
-	unsigned int uniformBufferRangeStart;
-	unsigned int uniformBufferRangeSize;
+	kokko::RenderBufferId uniformBufferId;
+	uint32_t uniformBindingPoint;
+	uint32_t uniformBufferRangeStart;
+	uint32_t uniformBufferRangeSize;
 
-	unsigned int framebufferId;
+	kokko::RenderFramebufferId framebufferId;
 	Vec2i viewportSize;
 
 	ShaderId shaderId;

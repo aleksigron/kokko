@@ -24,6 +24,7 @@
 
 #include "Platform/Window.hpp"
 
+#include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/LightManager.hpp"
@@ -218,7 +219,7 @@ void EditorApp::Update(kokko::EngineSettings* engineSettings, bool& shouldExitOu
 		shouldExitOut = true;
 }
 
-void EditorApp::EndFrame()
+void EditorApp::EndFrame(render::CommandEncoder* encoder)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -237,13 +238,9 @@ void EditorApp::EndFrame()
 	{
 		KOKKO_PROFILE_SCOPE("Clear default framebuffer");
 
-		renderDevice->BindFramebuffer(RenderFramebufferTarget::Framebuffer, 0);
-
-		RenderCommandData::ClearColorData clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };
-		renderDevice->ClearColor(&clearColor);
-
-		RenderCommandData::ClearMask clearMask{ true, false, false };
-		renderDevice->Clear(&clearMask);
+		encoder->BindFramebuffer(RenderFramebufferId());
+		encoder->SetClearColor(Vec4f{ 0.0f, 0.0f, 0.0f, 1.0f });
+		encoder->Clear(ClearMask{ true, false, false });
 	}
 
 	{
