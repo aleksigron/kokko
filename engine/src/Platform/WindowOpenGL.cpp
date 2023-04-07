@@ -59,6 +59,10 @@ GLFWwindow* WindowOpenGL::CreateWindow(const WindowSettings& settings, NativeRen
         gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     }
 
+    GLint majVers = 0, minVers = 0;
+    glGetIntegerv(GL_MAJOR_VERSION, &majVers);
+    glGetIntegerv(GL_MINOR_VERSION, &minVers);
+
     return window;
 }
 

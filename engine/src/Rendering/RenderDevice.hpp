@@ -35,6 +35,8 @@ public:
 
     virtual ~RenderDevice() {}
 
+	virtual void InitializeDefaults() {}
+
     virtual kokko::NativeRenderDevice* GetNativeDevice() { return nullptr; }
 
 	virtual kokko::CommandBuffer* CreateCommandBuffer(Allocator* allocator) { return nullptr; }
@@ -44,52 +46,18 @@ public:
 	virtual void SetDebugMessageCallback(DebugCallbackFn callback) = 0;
 	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label) = 0;
 	virtual void SetObjectPtrLabel(void* ptr, kokko::ConstStringView label) = 0;
-	virtual void PushDebugGroup(unsigned int id, kokko::ConstStringView message) = 0;
-	virtual void PopDebugGroup() = 0;
-
-	//virtual void Clear(const RenderCommandData::ClearMask* data) = 0;
-	//virtual void ClearColor(const RenderCommandData::ClearColorData* data) = 0;
-	//virtual void ClearDepth(float depth) = 0;
-
-	//virtual void BlendingEnable() = 0;
-	//virtual void BlendingDisable() = 0;
-	//virtual void BlendFunction(const RenderCommandData::BlendFunctionData* data) = 0;
-	//virtual void BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor) = 0;
-
-	//virtual void CubemapSeamlessEnable() = 0;
-	//virtual void CubemapSeamlessDisable() = 0;
-	//virtual void SetClipBehavior(RenderClipOriginMode origin, RenderClipDepthMode depth) = 0;
-	//virtual void DepthRange(const RenderCommandData::DepthRangeData* data) = 0;
-	//virtual void Viewport(const RenderCommandData::ViewportData* data) = 0;
-
-	//virtual void ScissorTestEnable() = 0;
-	//virtual void ScissorTestDisable() = 0;
-
-	//virtual void DepthTestEnable() = 0;
-	//virtual void DepthTestDisable() = 0;
-
-	//virtual void DepthTestFunction(RenderDepthCompareFunc function) = 0;
-
-	//virtual void DepthWriteEnable() = 0;
-	//virtual void DepthWriteDisable() = 0;
-
-	//virtual void CullFaceEnable() = 0;
-	//virtual void CullFaceDisable() = 0;
-	//virtual void CullFaceFront() = 0;
-	//virtual void CullFaceBack() = 0;
-
-	//virtual void FramebufferSrgbEnable() = 0;
-	//virtual void FramebufferSrgbDisable() = 0;
 
 	virtual void CreateFramebuffers(unsigned int count, kokko::RenderFramebufferId* framebuffersOut) = 0;
 	virtual void DestroyFramebuffers(unsigned int count, const kokko::RenderFramebufferId* framebuffers) = 0;
-	//virtual void BindFramebuffer(RenderFramebufferTarget target, kokko::RenderFramebufferId framebuffer) = 0;
 	virtual void AttachFramebufferTexture(
 		kokko::RenderFramebufferId framebuffer,
 		RenderFramebufferAttachment attachment,
 		kokko::RenderTextureId texture,
 		int level) = 0;
-	virtual void SetFramebufferDrawBuffers(unsigned int count, const RenderFramebufferAttachment* buffers) = 0;
+	virtual void SetFramebufferDrawBuffers(
+		kokko::RenderFramebufferId framebuffer,
+		unsigned int count,
+		const RenderFramebufferAttachment* buffers) = 0;
 	virtual void ReadFramebufferPixels(int x, int y, int width, int height,
 		RenderTextureBaseFormat format, RenderTextureDataType type, void* data) = 0;
 
@@ -132,7 +100,6 @@ public:
 	virtual void DestroyShaderProgram(unsigned int shaderProgram) = 0;
 	virtual void AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage) = 0;
 	virtual void LinkShaderProgram(unsigned int shaderProgram) = 0;
-	//virtual void UseShaderProgram(unsigned int shaderProgram) = 0;
 	virtual int GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter) = 0;
 	virtual bool GetShaderProgramLinkStatus(unsigned int shaderProgram) = 0;
 	virtual int GetShaderProgramInfoLogLength(unsigned int shaderProgram) = 0;
@@ -148,12 +115,6 @@ public:
 	virtual void GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut) = 0;
 
 	virtual int GetUniformLocation(unsigned int shaderProgram, const char* uniformName) = 0;
-	//virtual void SetUniformMat4x4f(int uniform, unsigned int count, const float* values) = 0;
-	//virtual void SetUniformVec4f(int uniform, unsigned int count, const float* values) = 0;
-	//virtual void SetUniformVec3f(int uniform, unsigned int count, const float* values) = 0;
-	//virtual void SetUniformVec2f(int uniform, unsigned int count, const float* values) = 0;
-	//virtual void SetUniformFloat(int uniform, float value) = 0;
-	//virtual void SetUniformInt(int uniform, int value) = 0;
 
 	virtual void CreateVertexArrays(uint32_t count, kokko::RenderVertexArrayId* vertexArraysOut) = 0;
 	virtual void DestroyVertexArrays(uint32_t count, const kokko::RenderVertexArrayId* vertexArrays) = 0;

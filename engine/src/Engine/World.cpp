@@ -30,6 +30,7 @@ World::World(AllocatorManager* allocManager,
 	Allocator* allocator,
 	Allocator* debugNameAllocator,
 	RenderDevice* renderDevice,
+	kokko::render::CommandEncoder* commandEncoder,
 	kokko::AssetLoader* assetLoader,
 	const kokko::ResourceManagers& resourceManagers) :
 	allocator(allocator),
@@ -56,7 +57,7 @@ World::World(AllocatorManager* allocManager,
 	meshComponentSystem.New(meshComponentSystem.allocator, resourceManagers.meshManager);
 
 	renderer.CreateScope(allocManager, "Renderer", allocator);
-	renderer.New(renderer.allocator, renderDevice, meshComponentSystem.instance, scene.instance,
+	renderer.New(renderer.allocator, renderDevice, commandEncoder, meshComponentSystem.instance, scene.instance,
 		cameraSystem.instance, lightManager.instance, environmentSystem.instance, resourceManagers);
 
 	scriptSystem.CreateScope(allocManager, "ScriptSystem", allocator);

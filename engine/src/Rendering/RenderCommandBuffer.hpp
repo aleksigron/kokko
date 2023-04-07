@@ -14,14 +14,12 @@ struct CommandBuffer
 {
 	explicit CommandBuffer(Allocator* allocator) :
 		commands(allocator),
-		commandData(allocator),
-		commandResources(allocator)
+		commandData(allocator)
 	{
 	}
 
 	Array<uint8_t> commands;
 	Array<uint8_t> commandData;
-	Array<void*> commandResources;
 };
 
 }

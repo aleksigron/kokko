@@ -38,7 +38,10 @@ Debug* Debug::singletonInstance = nullptr;
 static void RenderDebugCallback(const RenderDevice::DebugMessage& message)
 {
 	if (message.severity != RenderDebugSeverity::Notification)
-		kokko::Log::Log(LogLevel::Warning, FMT_STRING("{}"), message.message.str);
+	{
+		LogLevel level = message.type == RenderDebugType::Error ? LogLevel::Error : LogLevel::Warning;
+		kokko::Log::Log(level, FMT_STRING("{}"), message.message.str);
+	}
 }
 
 Debug::Debug(

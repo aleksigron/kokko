@@ -26,8 +26,6 @@ private:
 	size_t ParseCommand(RenderCommandType type, const uint8_t* commandBegin);
 
 	const CommandBuffer* cmdBuffer;
-
-	Array<uint32_t> tempIds;
 };
 
 }

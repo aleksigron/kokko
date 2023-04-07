@@ -37,6 +37,11 @@ class Renderer;
 class RenderDebugSettings;
 class TerrainSystem;
 class Window;
+
+namespace render
+{
+class CommandEncoder;
+}
 }
 
 class World
@@ -46,6 +51,7 @@ public:
 		Allocator* allocator,
 		Allocator* debugNameAllocator,
 		RenderDevice* renderDevice,
+		kokko::render::CommandEncoder* commandEncoder,
 		kokko::AssetLoader* assetLoader,
 		const kokko::ResourceManagers& resourceManagers);
 	~World();
