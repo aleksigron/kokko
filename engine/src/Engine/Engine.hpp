@@ -33,6 +33,7 @@ namespace render
 {
 struct CommandBuffer;
 class CommandEncoder;
+class CommandExecutor;
 }
 }
 
@@ -49,6 +50,7 @@ private:
     RenderDevice* renderDevice;
 	kokko::render::CommandBuffer* commandBuffer;
 	kokko::render::CommandEncoder* commandEncoder;
+	kokko::render::CommandExecutor* commandExecutor;
 
 	InstanceAllocatorPair<kokko::WindowManager> windowManager;
 	Time* time;

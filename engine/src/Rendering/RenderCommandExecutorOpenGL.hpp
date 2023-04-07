@@ -18,7 +18,7 @@ namespace render
 class CommandExecutorOpenGL : public CommandExecutor
 {
 public:
-	CommandExecutorOpenGL(Allocator* allocator);
+	CommandExecutorOpenGL();
 
 	void Execute(const CommandBuffer* commandBuffer) override;
 

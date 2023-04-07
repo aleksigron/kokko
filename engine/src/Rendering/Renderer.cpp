@@ -576,8 +576,9 @@ bool Renderer::ParseControlCommand(uint64_t orderKey)
 		if (viewportIndex == viewportIndicesShadowCascade.start)
 		{
 			const auto& shadowBuffer = renderGraphResources->GetShadowBuffer();
+
 			// Bind shadow framebuffer before any shadow cascade draws
-			encoder->BindFramebuffer(renderGraphResources->GetShadowBuffer().GetFramebufferId());
+			encoder->BindFramebuffer(shadowBuffer.GetFramebufferId());
 
 			// Set viewport size to full framebuffer size before clearing
 			encoder->SetViewport(0, 0, shadowBuffer.GetWidth(), shadowBuffer.GetHeight());
