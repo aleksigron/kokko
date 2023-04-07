@@ -149,22 +149,26 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	case RenderCommandType::DrawIndexed:
 	{
 		auto cmd = reinterpret_cast<const CmdDrawIndexed*>(commandBegin);
-		glDrawElements(ConvertPrimitiveMode(cmd->mode), cmd->indexCount, ConvertIndexType(cmd->indexType), nullptr);
-		return sizeof(*cmd);
-	}
-
-	case RenderCommandType::DrawInstanced:
-	{
-		auto cmd = reinterpret_cast<const CmdDrawInstanced*>(commandBegin);
-		glDrawArraysInstanced(ConvertPrimitiveMode(cmd->mode), cmd->offset, cmd->vertexCount, cmd->instanceCount);
+		glDrawElementsBaseVertex(
+			ConvertPrimitiveMode(cmd->mode),
+			cmd->indexCount,
+			ConvertIndexType(cmd->indexType),
+			reinterpret_cast<const void*>(cmd->indexOffset),
+			cmd->baseVertex);
 		return sizeof(*cmd);
 	}
 
 	case RenderCommandType::DrawIndexedInstanced:
 	{
 		auto cmd = reinterpret_cast<const CmdDrawIndexedInstanced*>(commandBegin);
-		glDrawElementsInstanced(ConvertPrimitiveMode(cmd->mode), cmd->indexCount,
-			ConvertIndexType(cmd->indexType), nullptr, cmd->instanceCount);
+		glDrawElementsInstancedBaseVertexBaseInstance(
+			ConvertPrimitiveMode(cmd->mode),
+			cmd->indexCount,
+			ConvertIndexType(cmd->indexType),
+			reinterpret_cast<const void*>(cmd->indexOffset),
+			cmd->instanceCount,
+			cmd->baseVertex,
+			cmd->baseInstance);
 		return sizeof(*cmd);
 	}
 
@@ -235,6 +239,27 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 		return sizeof(*cmd);
 	}
 
+	case RenderCommandType::SetBlendFunctionSeparate:
+	{
+		auto cmd = reinterpret_cast<const CmdSetBlendFunctionSeparate*>(commandBegin);
+		glBlendFuncSeparatei(
+			cmd->attachmentIndex,
+			ConvertBlendFactor(cmd->srcFactorRgb),
+			ConvertBlendFactor(cmd->dstFactorRgb),
+			ConvertBlendFactor(cmd->srcFactorAlpha),
+			ConvertBlendFactor(cmd->dstFactorAlpha));
+		return sizeof(*cmd);
+	}
+
+	case RenderCommandType::SetBlendEquation:
+	{
+		auto cmd = reinterpret_cast<const CmdSetBlendEquation*>(commandBegin);
+		glBlendEquationi(
+			cmd->attachmentIndex,
+			ConvertBlendEquation(cmd->blendEquation));
+		return sizeof(*cmd);
+	}
+
 	case RenderCommandType::SetCullFace:
 	{
 		auto cmd = reinterpret_cast<const CmdSetCullFace*>(commandBegin);
@@ -271,6 +296,10 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 		glDepthMask(GL_FALSE);
 		return sizeof(Command);
 
+	case RenderCommandType::StencilTestDisable:
+		glDisable(GL_STENCIL_TEST);
+		return sizeof(Command);
+
 	case RenderCommandType::ScissorTestEnable:
 		glEnable(GL_SCISSOR_TEST);
 		return sizeof(Command);
@@ -278,6 +307,13 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	case RenderCommandType::ScissorTestDisable:
 		glDisable(GL_SCISSOR_TEST);
 		return sizeof(Command);
+
+	case RenderCommandType::SetScissorRectangle:
+	{
+		auto cmd = reinterpret_cast<const CmdSetScissorRectangle*>(commandBegin);
+		glScissor(cmd->x, cmd->y, cmd->w, cmd->h);
+		return sizeof(*cmd);
+	}
 
 	case RenderCommandType::SetViewport:
 	{

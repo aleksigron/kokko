@@ -463,7 +463,8 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 			encoder->BindTextureToShader(heightMap->uniformLocation, 0, heightTex);
 		}
 
-		encoder->DrawIndexed(RenderPrimitiveMode::Triangles, vertexData.indexCount, RenderIndexType::UnsignedShort);
+		encoder->DrawIndexed(
+			RenderPrimitiveMode::Triangles, RenderIndexType::UnsignedShort, vertexData.indexCount, 0, 0);
 	}
 
 	tilesToRender.Clear();

@@ -43,6 +43,8 @@ enum class RenderCommandType : uint16_t
 	BlendingEnable,
 	BlendingDisable,
 	BlendFunction,
+	SetBlendFunctionSeparate,
+	SetBlendEquation,
 
 	SetCullFace,
 
@@ -52,8 +54,11 @@ enum class RenderCommandType : uint16_t
 	DepthWriteEnable,
 	DepthWriteDisable,
 
+	StencilTestDisable,
+
 	ScissorTestEnable,
 	ScissorTestDisable,
+	SetScissorRectangle,
 
 	SetViewport,
 
@@ -156,23 +161,20 @@ struct CmdDrawIndexed : public Command
 {
 	RenderPrimitiveMode mode;
 	RenderIndexType indexType;
+	intptr_t indexOffset;
 	int32_t indexCount;
-};
-
-struct CmdDrawInstanced : public Command
-{
-	RenderPrimitiveMode mode;
-	int32_t offset;
-	int32_t vertexCount;
-	int32_t instanceCount;
+	int32_t baseVertex;
 };
 
 struct CmdDrawIndexedInstanced : public Command
 {
 	RenderPrimitiveMode mode;
 	RenderIndexType indexType;
+	intptr_t indexOffset;
 	int32_t indexCount;
+	int32_t baseVertex;
 	int32_t instanceCount;
+	uint32_t baseInstance;
 };
 
 struct CmdDrawIndirect : public Command
@@ -226,6 +228,21 @@ struct CmdBlendFunction : public Command
 	RenderBlendFactor dstFactor;
 };
 
+struct CmdSetBlendFunctionSeparate : public Command
+{
+	uint32_t attachmentIndex;
+	RenderBlendFactor srcFactorRgb;
+	RenderBlendFactor dstFactorRgb;
+	RenderBlendFactor srcFactorAlpha;
+	RenderBlendFactor dstFactorAlpha;
+};
+
+struct CmdSetBlendEquation : public Command
+{
+	uint32_t attachmentIndex;
+	RenderBlendEquation blendEquation;
+};
+
 struct CmdSetCullFace : public Command
 {
 	RenderCullFace cullFace;
@@ -234,6 +251,14 @@ struct CmdSetCullFace : public Command
 struct CmdSetDepthTestFunction : public Command
 {
 	RenderDepthCompareFunc function;
+};
+
+struct CmdSetScissorRectangle : public Command
+{
+	int32_t x;
+	int32_t y;
+	int32_t w;
+	int32_t h;
 };
 
 struct CmdSetViewport : public Command

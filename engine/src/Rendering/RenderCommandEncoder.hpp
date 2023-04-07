@@ -52,9 +52,20 @@ public:
 	// Draw
 
 	void Draw(RenderPrimitiveMode mode, int32_t offset, int32_t vertexCount);
-	void DrawIndexed(RenderPrimitiveMode mode, int32_t indexCount, RenderIndexType indexType);
-	void DrawInstanced(RenderPrimitiveMode mode, int32_t offset, int32_t vertexCount, int32_t instanceCount);
-	void DrawIndexedInstanced(RenderPrimitiveMode mode, int32_t indexCount, RenderIndexType indexType, int32_t instanceCount);
+	void DrawIndexed(
+		RenderPrimitiveMode mode,
+		RenderIndexType indexType,
+		int32_t indexCount,
+		intptr_t indexOffset,
+		int32_t baseVertex);
+	void DrawIndexedInstanced(
+		RenderPrimitiveMode mode,
+		RenderIndexType indexType,
+		int32_t indexCount,
+		intptr_t indexOffset,
+		int32_t instanceCount,
+		int32_t baseVertex,
+		uint32_t baseInstance);
 	void DrawIndirect(RenderPrimitiveMode mode, intptr_t offset);
 	void DrawIndexedIndirect(RenderPrimitiveMode mode, RenderIndexType indexType, intptr_t offset);
 
@@ -75,6 +86,13 @@ public:
 	void BlendingEnable();
 	void BlendingDisable();
 	void BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor);
+	void SetBlendFunctionSeparate(
+		uint32_t attachmentIndex,
+		RenderBlendFactor srcFactorRgb,
+		RenderBlendFactor dstFactorRgb,
+		RenderBlendFactor srcFactorAlpha,
+		RenderBlendFactor dstFactorAlpha);
+	void SetBlendEquation(uint32_t attachmentIndex, RenderBlendEquation equation);
 
 	void SetCullFace(RenderCullFace cullFace);
 
@@ -84,8 +102,11 @@ public:
 	void DepthWriteEnable();
 	void DepthWriteDisable();
 
+	void StencilTestDisable();
+
 	void ScissorTestEnable();
 	void ScissorTestDisable();
+	void SetScissorRectangle(int32_t x, int32_t y, int32_t w, int32_t h);
 
 	void SetViewport(int32_t x, int32_t y, int32_t w, int32_t h);
 

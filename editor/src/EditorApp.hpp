@@ -23,6 +23,7 @@ class AssetLibrary;
 class Filesystem;
 class FilesystemResolverVirtual;
 class Window;
+class ImguiImplOpenGL;
 
 struct Uid;
 struct EngineSettings;
@@ -91,6 +92,7 @@ private:
 	RenderDevice* renderDevice;
 	World* world;
 
+	ImguiImplOpenGL* imguiImplOpenGL;
 	EditorCore* core;
 	FilePickerDialog filePicker;
 

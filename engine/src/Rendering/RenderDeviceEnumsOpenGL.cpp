@@ -279,6 +279,19 @@ uint32_t ConvertBlendFactor(RenderBlendFactor factor)
 	}
 }
 
+uint32_t ConvertBlendEquation(RenderBlendEquation equation)
+{
+	switch (equation)
+	{
+	case RenderBlendEquation::Add: return GL_FUNC_ADD;
+	case RenderBlendEquation::Subtract: return GL_FUNC_SUBTRACT;
+	case RenderBlendEquation::ReverseSubtract: return GL_FUNC_REVERSE_SUBTRACT;
+	case RenderBlendEquation::Min: return GL_MIN;
+	case RenderBlendEquation::Max: return GL_MAX;
+	default: return 0;
+	}
+}
+
 uint32_t ConvertIndexType(RenderIndexType type)
 {
 	switch (type)

@@ -393,7 +393,7 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 					draw = meshManager->GetDrawData(mesh);
 					encoder->BindVertexArray(draw->vertexArrayObject);
 				}
-				encoder->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+				encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
 
 				objectDrawsProcessed += 1;
 			}
