@@ -234,6 +234,7 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderCommandData.hpp
 	src/Rendering/RenderCommandEncoder.cpp
 	src/Rendering/RenderCommandEncoder.hpp
+	src/Rendering/RenderCommandExecutor.cpp
 	src/Rendering/RenderCommandExecutor.hpp
 	src/Rendering/RenderCommandExecutorOpenGL.cpp
 	src/Rendering/RenderCommandExecutorOpenGL.hpp

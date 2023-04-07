@@ -67,7 +67,8 @@ GraphicsFeatureDeferredLighting::GraphicsFeatureDeferredLighting(Allocator* allo
 	meshId(MeshId::Null),
 	renderOrder(0),
 	uniformBufferId(0),
-	brdfLutTextureId(0)
+	brdfLutTextureId(0),
+	depthCompareSampler(0)
 {
 }
 
@@ -114,7 +115,13 @@ void GraphicsFeatureDeferredLighting::Deinitialize(const InitializeParameters& p
 		brdfLutFramebufferId = RenderFramebufferId();
 	}
 
-	if (meshId == MeshId::Null)
+	if (depthCompareSampler != 0)
+	{
+		parameters.renderDevice->DestroySamplers(1, &depthCompareSampler);
+		depthCompareSampler = RenderSamplerId();
+	}
+
+	if (meshId != MeshId::Null)
 	{
 		parameters.meshManager->RemoveMesh(meshId);
 		meshId = MeshId::Null;
@@ -150,6 +157,21 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 		renderDevice->AttachFramebufferTexture(brdfLutFramebufferId, RenderFramebufferAttachment::Color0, brdfLutTextureId, 0);
 	}
 
+	if (depthCompareSampler == 0)
+	{
+		RenderSamplerParameters params
+		{
+			RenderTextureFilterMode::Linear,
+			RenderTextureFilterMode::Linear,
+			RenderTextureWrapMode::ClampToEdge,
+			RenderTextureWrapMode::ClampToEdge,
+			RenderTextureWrapMode::ClampToEdge,
+			RenderTextureCompareMode::CompareRefToTexture,
+			RenderDepthCompareFunc::GreaterThanOrEqual
+		};
+
+		renderDevice->CreateSamplers(1, &params, &depthCompareSampler);
+	}
 
 	LightManager* lightManager = parameters.lightManager;
 
@@ -373,7 +395,7 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 	deferredPass.samplerIds[2] = RenderSamplerId();
 	deferredPass.samplerIds[3] = RenderSamplerId();
 	deferredPass.samplerIds[4] = RenderSamplerId();
-	deferredPass.samplerIds[5] = RenderSamplerId();
+	deferredPass.samplerIds[5] = depthCompareSampler;
 	deferredPass.samplerIds[6] = RenderSamplerId();
 	deferredPass.samplerIds[7] = RenderSamplerId();
 	deferredPass.samplerIds[8] = RenderSamplerId();

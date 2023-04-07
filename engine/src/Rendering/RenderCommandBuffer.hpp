@@ -18,6 +18,12 @@ struct CommandBuffer
 	{
 	}
 
+	void Clear()
+	{
+		commands.Clear();
+		commandData.Clear();
+	}
+
 	Array<uint8_t> commands;
 	Array<uint8_t> commandData;
 };

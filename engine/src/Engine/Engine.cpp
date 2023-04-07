@@ -24,6 +24,7 @@
 #include "Rendering/LightManager.hpp"
 #include "Rendering/RenderCommandBuffer.hpp"
 #include "Rendering/RenderCommandEncoder.hpp"
+#include "Rendering/RenderCommandExecutor.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/Renderer.hpp"
 
@@ -54,6 +55,7 @@ Engine::Engine(
     renderDevice = RenderDevice::Create(systemAllocator);
 	commandBuffer = systemAllocator->MakeNew<kokko::render::CommandBuffer>(systemAllocator);
 	commandEncoder = systemAllocator->MakeNew<kokko::render::CommandEncoder>(systemAllocator, commandBuffer);
+	commandExecutor = kokko::render::CommandExecutor::Create(systemAllocator);
     
     windowManager.CreateScope(allocatorManager, "Window", alloc);
     windowManager.New(windowManager.allocator);
@@ -105,7 +107,9 @@ Engine::~Engine()
 	systemAllocator->MakeDelete(time);
 	windowManager.Delete();
 
+	systemAllocator->MakeDelete(commandExecutor);
 	systemAllocator->MakeDelete(commandEncoder);
+	systemAllocator->MakeDelete(commandBuffer);
     systemAllocator->MakeDelete(renderDevice);
 }
 
@@ -161,6 +165,9 @@ void Engine::Render(const Optional<CameraParameters>& editorCamera, const Frameb
 
 void Engine::EndFrame()
 {
+	commandExecutor->Execute(commandBuffer);
+	commandBuffer->Clear();
+
     kokko::Window* window = windowManager.instance->GetWindow();
     window->Swap();
     windowManager.instance->ProcessEvents();

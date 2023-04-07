@@ -15,7 +15,7 @@ namespace kokko
 namespace render
 {
 
-CommandExecutorOpenGL::CommandExecutorOpenGL(Allocator* allocator) :
+CommandExecutorOpenGL::CommandExecutorOpenGL() :
 	cmdBuffer(nullptr)
 {
 }

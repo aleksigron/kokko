@@ -42,6 +42,7 @@ private:
 	kokko::RenderBufferId uniformBufferId;
 	kokko::RenderFramebufferId brdfLutFramebufferId;
 	kokko::RenderTextureId brdfLutTextureId;
+	kokko::RenderSamplerId depthCompareSampler;
 };
 
 }
