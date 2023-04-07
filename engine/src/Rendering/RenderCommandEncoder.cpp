@@ -17,6 +17,30 @@ CommandEncoder::CommandEncoder(
 {
 }
 
+// ======================
+// ==== DEBUG GROUPS ====
+// ======================
+
+void CommandEncoder::PushDebugGroup(uint32_t id, kokko::ConstStringView message)
+{
+	uint32_t messageOffset = CopyCommandData(message.str, message.len);
+
+	CmdClear data{
+		RenderCommandType::PushDebugGroup,
+		id,
+		messageOffset,
+		message.len
+	};
+
+	CopyCommand(&data, sizeof(data));
+}
+
+void CommandEncoder::PopDebugGroup()
+{
+	Command data{ RenderCommandType::PopDebugGroup };
+	CopyCommand(&data, sizeof(data));
+}
+
 // ===========================
 // ==== CLEAR FRAMEBUFFER ====
 // ===========================
@@ -359,8 +383,17 @@ void CommandEncoder::BindVertexArray(RenderVertexArrayId id)
 
 void CommandEncoder::MemoryBarrier(const MemoryBarrierFlags& barrier)
 {
+	CmdMemoryBarrier data{
+		RenderCommandType::MemoryBarrier,
+		barrier
+	};
 
+	CopyCommand(&data, sizeof(data));
 }
+
+// ===========================
+// ==== COPY COMMAND DATA ====
+// ===========================
 
 void CommandEncoder::CopyCommand(const void* ptr, size_t size)
 {
@@ -377,18 +410,6 @@ uint32_t CommandEncoder::CopyCommandData(const void* ptr, size_t size)
 	std::memcpy(&buffer->commandData[offset], ptr, size);
 
 	return offset;
-}
-
-int32_t CommandEncoder::CopyCommandResource(const void* ptr, size_t size)
-{
-	// TODO: Allow to move existing data
-	void* copy = allocator->Allocate(size);
-	std::memcpy(copy, ptr, size);
-
-	uint32_t index = static_cast<uint32_t>(buffer->commandResources.GetCount());
-	buffer->commandResources.PushBack(copy);
-
-	return index;
 }
 
 } // namespace render

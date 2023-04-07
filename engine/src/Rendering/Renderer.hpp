@@ -65,7 +65,7 @@ private:
 
 	Allocator* allocator;
 	RenderDevice* device;
-	render::CommandEncoder* encoder;
+	kokko::render::CommandEncoder* encoder;
 	MeshComponentSystem* componentSystem;
 
 	RenderGraphResources* renderGraphResources;
@@ -129,6 +129,7 @@ private:
 public:
 	Renderer(Allocator* allocator,
 		RenderDevice* renderDevice,
+		kokko::render::CommandEncoder* commandEncoder,
 		kokko::MeshComponentSystem* componentSystem,
 		Scene* scene,
 		CameraSystem* cameraSystem,

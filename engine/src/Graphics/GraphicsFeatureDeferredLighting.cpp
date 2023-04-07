@@ -13,6 +13,7 @@
 #include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderGraphResources.hpp"
+#include "Rendering/RenderOrder.hpp"
 #include "Rendering/RenderPassType.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 
@@ -126,9 +127,9 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 
 	RenderDevice* renderDevice = parameters.renderDevice;
 
-	if (brdfLutFramebufferId != 0)
+	if (brdfLutFramebufferId != 0) // Delete once the LUT has been rendered
 	{
-		parameters.renderDevice->DestroyFramebuffers(1, &brdfLutFramebufferId);
+		renderDevice->DestroyFramebuffers(1, &brdfLutFramebufferId);
 		brdfLutFramebufferId = RenderFramebufferId();
 	}
 
@@ -298,7 +299,7 @@ void GraphicsFeatureDeferredLighting::Submit(const SubmitParameters& parameters)
 {
 	if (brdfLutFramebufferId != 0)
 	{
-		parameters.commandList.AddToStartOfFrame(UINT16_MAX);
+		parameters.commandList.AddToStartOfFrame(RenderOrderConfiguration::MaxFeatureObjectId);
 	}
 
 	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::OpaqueLighting, renderOrder, 0);
@@ -310,7 +311,7 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 
 	render::CommandEncoder* encoder = parameters.encoder;
 
-	if (brdfLutFramebufferId != 0)
+	if (parameters.featureObjectId == RenderOrderConfiguration::MaxFeatureObjectId)
 	{
 		KOKKO_PROFILE_SCOPE("Calculate BRDF LUT");
 

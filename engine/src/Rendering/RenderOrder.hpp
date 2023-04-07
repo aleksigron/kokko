@@ -7,6 +7,7 @@
 struct RenderOrderConfiguration
 {
 	static const uint64_t CallbackMaterialId = (1 << 12) - 1;
+	static const uint16_t MaxFeatureObjectId = (1 << 14) - 1;
 
 	RenderOrderConfiguration()
 	{

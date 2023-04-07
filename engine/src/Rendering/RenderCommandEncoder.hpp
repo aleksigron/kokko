@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "Core/Array.hpp"
+#include "Core/StringView.hpp"
 
 #include "Math/Vec4.hpp"
 
@@ -25,18 +26,23 @@ class CommandEncoder
 public:
 	CommandEncoder(Allocator* allocator, CommandBuffer* buffer);
 
-	// Clear
+	// Debug groups
 
-	void Clear(ClearMask mask);
-	void SetClearColor(const Vec4f& color);
-	void SetClearDepth(float depth);
+	void PushDebugGroup(uint32_t id, kokko::ConstStringView message);
+	void PopDebugGroup();
 
-	// Buffers
+	// Bind buffers
 
 	void BindBuffer(RenderBufferTarget target, RenderBufferId buffer);
 	void BindBufferBase(RenderBufferTarget target, uint32_t bindingPoint, RenderBufferId buffer);
 	void BindBufferRange(
 		RenderBufferTarget target, uint32_t bindingPoint, RenderBufferId buffer, intptr_t offset, size_t length);
+
+	// Clear
+
+	void Clear(ClearMask mask);
+	void SetClearColor(const Vec4f& color);
+	void SetClearDepth(float depth);
 
 	// Compute
 
@@ -101,7 +107,6 @@ public:
 private:
 	void CopyCommand(const void* ptr, size_t size);
 	uint32_t CopyCommandData(const void* ptr, size_t size);
-	int32_t CopyCommandResource(const void* ptr, size_t size);
 
 	Allocator* allocator;
 	CommandBuffer* buffer;

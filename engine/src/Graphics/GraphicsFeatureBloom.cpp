@@ -164,7 +164,7 @@ void GraphicsFeatureBloom::Upload(const UploadParameters& parameters)
 	Vec2i size(framebufferSize.x / 2, framebufferSize.y / 2);
 
 	RenderTargetContainer* renderTargetContainer = postProcessRenderer->GetRenderTargetContainer();
-	renderTargets[0] = renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F);
+	renderTargets.PushBack(renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F));
 	currentDestination = &renderTargets[0];
 
 	auto extractBlock = reinterpret_cast<ExtractUniforms*>(&uniformStagingBuffer[uniformBlockStride * renderPasses.GetCount()]);
@@ -195,10 +195,11 @@ void GraphicsFeatureBloom::Upload(const UploadParameters& parameters)
 		if (size.x < 2 || size.y < 2)
 			break;
 
-		renderTargets[rtIdx] = renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F);
+		renderTargets.PushBack(renderTargetContainer->AcquireRenderTarget(size, RenderTextureSizedFormat::RGB16F));
 		currentDestination = &renderTargets[rtIdx];
 
-		DownsampleUniforms* block = reinterpret_cast<DownsampleUniforms*>(&uniformStagingBuffer[uniformBlockStride * renderPasses.GetCount()]);
+		DownsampleUniforms* block = 
+			reinterpret_cast<DownsampleUniforms*>(&uniformStagingBuffer[uniformBlockStride * renderPasses.GetCount()]);
 		block->textureScale = Vec2f(1.0f / currentSource->size.x, 1.0f / currentSource->size.y);
 
 		pass.textureIds[0] = currentSource->colorTexture;

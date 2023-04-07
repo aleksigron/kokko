@@ -39,7 +39,6 @@ Optional<RenderTextureSizedFormat> SizedFormatFromBaseFormatAndType(
 	bool preferLinear)
 {
 	bool formatFound = false;
-	RenderTextureSizedFormat sizedFormat;
 
 	if (base == RenderTextureBaseFormat::R)
 	{

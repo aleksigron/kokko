@@ -13,13 +13,16 @@ namespace render
 
 enum class RenderCommandType : uint16_t
 {
-	Clear,
-	SetClearColor,
-	SetClearDepth,
+	PushDebugGroup,
+	PopDebugGroup,
 
 	BindBuffer,
 	BindBufferBase,
 	BindBufferRange,
+
+	Clear,
+	SetClearColor,
+	SetClearDepth,
 
 	DispatchCompute,
 	DispatchComputeIndirect,
@@ -57,6 +60,8 @@ enum class RenderCommandType : uint16_t
 	BindTextureToShader,
 
 	BindVertexArray,
+
+	MemoryBarrier
 };
 
 struct Command
@@ -64,23 +69,15 @@ struct Command
 	RenderCommandType type;
 };
 
-// ===========================
-// ==== CLEAR FRAMEBUFFER ====
-// ===========================
+// ======================
+// ==== DEBUG GROUPS ====
+// ======================
 
-struct CmdClear : public Command
+struct CmdPushDebugGroup : public Command
 {
-	ClearMask mask;
-};
-
-struct CmdSetClearColor : public Command
-{
-	Vec4f color;
-};
-
-struct CmdSetClearDepth : public Command
-{
-	float depth;
+	uint32_t id;
+	uint32_t messageOffset;
+	uint32_t messageLength;
 };
 
 // =================
@@ -107,6 +104,25 @@ struct CmdBindBufferRange : public Command
 	RenderBufferId buffer;
 	intptr_t offset;
 	size_t length;
+};
+
+// ===========================
+// ==== CLEAR FRAMEBUFFER ====
+// ===========================
+
+struct CmdClear : public Command
+{
+	ClearMask mask;
+};
+
+struct CmdSetClearColor : public Command
+{
+	Vec4f color;
+};
+
+struct CmdSetClearDepth : public Command
+{
+	float depth;
 };
 
 // =================
@@ -246,6 +262,15 @@ struct CmdBindTextureToShader : public Command
 struct CmdBindVertexArray : public Command
 {
 	RenderVertexArrayId vertexArrayId;
+};
+
+// ======================
+// ==== VERTEX ARRAY ====
+// ======================
+
+struct CmdMemoryBarrier : public Command
+{
+	MemoryBarrierFlags flags;
 };
 
 }

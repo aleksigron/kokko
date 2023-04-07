@@ -86,7 +86,7 @@ Engine::Engine(
 	kokko::ResourceManagers resManagers = GetResourceManagers();
 
 	world.CreateScope(allocatorManager, "World", alloc);
-	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice,
+	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice, commandEncoder,
 		assetLoader, resManagers);
 }
 
@@ -115,6 +115,8 @@ bool Engine::Initialize(const kokko::WindowSettings& windowSettings)
 
 	if (windowManager.instance->Initialize(windowSettings, renderDevice->GetNativeDevice()) == false)
 		return false;
+
+	renderDevice->InitializeDefaults();
 
 	if (debug.instance->Initialize(windowManager.instance->GetWindow(), meshManager.instance,
 		shaderManager.instance, textureManager.instance) == false)

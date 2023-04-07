@@ -156,12 +156,12 @@ void Framebuffer::Create(
 			renderDevice->AttachFramebufferTexture(framebufferId, colAtt[i], colorTextureIds[i], 0);
 		}
 
-		renderDevice->SetFramebufferDrawBuffers(static_cast<unsigned int>(colorTextureCount), colAtt);
+		renderDevice->SetFramebufferDrawBuffers(framebufferId, static_cast<uint32_t>(colorTextureCount), colAtt);
 	}
 	else
 	{
 		RenderFramebufferAttachment noneAttachment = RenderFramebufferAttachment::None;
-		renderDevice->SetFramebufferDrawBuffers(1, &noneAttachment);
+		renderDevice->SetFramebufferDrawBuffers(framebufferId, 1, &noneAttachment);
 	}
 }
 

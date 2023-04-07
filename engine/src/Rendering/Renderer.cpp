@@ -76,6 +76,7 @@ struct DebugNormalUniformBlock
 Renderer::Renderer(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
+	kokko::render::CommandEncoder* commandEncoder,
 	kokko::MeshComponentSystem* componentSystem,
 	Scene* scene,
 	CameraSystem* cameraSystem,
@@ -84,6 +85,7 @@ Renderer::Renderer(
 	const kokko::ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	device(renderDevice),
+	encoder(commandEncoder),
 	componentSystem(componentSystem),
 	renderGraphResources(nullptr),
 	renderTargetContainer(nullptr),
@@ -687,29 +689,6 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 	CameraParameters cameraParameters = GetCameraParameters(editorCamera, targetFramebuffer);
 
-	{
-		kokko::GraphicsFeature::UploadParameters featureParameters
-		{
-			postProcessRenderer,
-			meshManager,
-			shaderManager,
-			textureManager,
-			environmentSystem,
-			lightManager,
-			cameraParameters,
-			viewportData[viewportIndexFullscreen],
-			ArrayView(&viewportData[viewportIndicesShadowCascade.start], viewportIndicesShadowCascade.GetLength()),
-			renderGraphResources,
-			targetFramebufferId,
-			device
-		};
-
-		for (auto feature : graphicsFeatures)
-		{
-			feature->Upload(featureParameters);
-		}
-	}
-
 	Mat4x4fBijection cameraTransforms = cameraParameters.transform;
 	ProjectionParameters projectionParams = cameraParameters.projection;
 	Mat4x4f cameraProjection = projectionParams.GetProjectionMatrix(true);
@@ -895,6 +874,29 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 			commandList.AddDraw(fsvp, pass, depth, mat, i);
 
 			objectDrawCount += 1;
+		}
+	}
+
+	{
+		kokko::GraphicsFeature::UploadParameters uploadParameters
+		{
+			postProcessRenderer,
+			meshManager,
+			shaderManager,
+			textureManager,
+			environmentSystem,
+			lightManager,
+			cameraParameters,
+			viewportData[viewportIndexFullscreen],
+			ArrayView(&viewportData[viewportIndicesShadowCascade.start], viewportIndicesShadowCascade.GetLength()),
+			renderGraphResources,
+			targetFramebufferId,
+			device
+		};
+
+		for (auto feature : graphicsFeatures)
+		{
+			feature->Upload(uploadParameters);
 		}
 	}
 
