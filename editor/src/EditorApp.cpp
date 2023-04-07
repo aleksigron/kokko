@@ -6,7 +6,6 @@
 #include "ImGuizmo.h"
 
 #include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
 
 #include "Core/Core.hpp"
 
@@ -41,6 +40,7 @@
 #include "EditorConstants.hpp"
 #include "EditorCore.hpp"
 #include "EditorWindow.hpp"
+#include "ImguiImplOpenGL.hpp"
 
 namespace kokko
 {
@@ -59,12 +59,14 @@ EditorApp::EditorApp(Allocator* allocator, Filesystem* filesystem, FilesystemRes
 	currentMainMenuDialog(MainMenuDialog::None),
 	currentDialogId(0)
 {
+	imguiImplOpenGL = allocator->MakeNew<ImguiImplOpenGL>(allocator);
 	core = allocator->MakeNew<EditorCore>(allocator, filesystem, resolver);
 }
 
 EditorApp::~EditorApp()
 {
 	allocator->MakeDelete(core);
+	allocator->MakeDelete(imguiImplOpenGL);
 }
 
 void EditorApp::LoadUserSettings()
@@ -145,8 +147,8 @@ void EditorApp::Initialize(Engine* engine)
 	}
 
 	{
-		KOKKO_PROFILE_SCOPE("ImGui_ImplOpenGL3_Init()");
-		ImGui_ImplOpenGL3_Init();
+		KOKKO_PROFILE_SCOPE("ImguiImplOpenGL::Initialize()");
+		imguiImplOpenGL->Initialize();
 	}
 
 	core->Initialize(engine);
@@ -174,7 +176,7 @@ void EditorApp::Deinitialize()
 #ifdef KOKKO_USE_METAL
     return;
 #endif
-	ImGui_ImplOpenGL3_Shutdown();
+	imguiImplOpenGL->Deinitialize();
 	ImGui_ImplGlfw_Shutdown();
 
 	ImGui::DestroyContext();
@@ -191,7 +193,7 @@ void EditorApp::StartFrame()
 #endif
 	core->ResizeSceneViewFramebufferIfRequested();
 
-	ImGui_ImplOpenGL3_NewFrame();
+	imguiImplOpenGL->NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 
 	ImGui::NewFrame();
@@ -245,7 +247,7 @@ void EditorApp::EndFrame(render::CommandEncoder* encoder)
 
 	{
 		KOKKO_PROFILE_SCOPE("ImGuiRenderBackend::RenderDrawData()");
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		imguiImplOpenGL->RenderDrawData(encoder, ImGui::GetDrawData());
 	}
 
 	Optional<Uid> loadedLevel = core->GetLoadedLevelUid();

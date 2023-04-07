@@ -194,7 +194,7 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 
 		const MeshDrawData* draw = meshManager->GetDrawData(meshId);
 		encoder->BindVertexArray(draw->vertexArrayObject);
-		encoder->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+		encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
 
 		// Clear data
 

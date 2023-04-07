@@ -255,6 +255,15 @@ enum class RenderBlendFactor
 	OneMinusSrc1Alpha
 };
 
+enum class RenderBlendEquation
+{
+	Add,
+	Subtract,
+	ReverseSubtract,
+	Min,
+	Max
+};
+
 enum class RenderIndexType
 {
 	None,

@@ -23,6 +23,7 @@ uint32_t ConvertDepthCompareFunc(RenderDepthCompareFunc func);
 uint32_t ConvertFramebufferTarget(RenderFramebufferTarget target);
 uint32_t ConvertFramebufferAttachment(RenderFramebufferAttachment attachment);
 uint32_t ConvertBlendFactor(RenderBlendFactor factor);
+uint32_t ConvertBlendEquation(RenderBlendEquation equation);
 uint32_t ConvertIndexType(RenderIndexType type);
 uint32_t ConvertPrimitiveMode(RenderPrimitiveMode mode);
 uint32_t ConvertShaderStage(RenderShaderStage stage);

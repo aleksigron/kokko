@@ -421,7 +421,8 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 					renderDevice->AttachFramebufferTexture(
 						framebufferId, RenderFramebufferAttachment::Color0, envMapTexture.textureObjectId, i);
 
-					encoder->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
+					encoder->DrawIndexed(
+						cubeMeshDraw->primitiveMode, cubeMeshDraw->indexType, cubeMeshDraw->count, 0, 0);
 				}
 			}
 
@@ -461,7 +462,8 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 					renderDevice->AttachFramebufferTexture(
 						framebufferId, RenderFramebufferAttachment::Color0, diffuseMapTexture.textureObjectId, i);
 
-					encoder->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
+					encoder->DrawIndexed(
+						cubeMeshDraw->primitiveMode, cubeMeshDraw->indexType, cubeMeshDraw->count, 0, 0);
 				}
 			}
 
@@ -513,7 +515,8 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 						renderDevice->AttachFramebufferTexture(
 							framebufferId, RenderFramebufferAttachment::Color0, specMapTexture.textureObjectId, i);
 
-						encoder->DrawIndexed(cubeMeshDraw->primitiveMode, cubeMeshDraw->count, cubeMeshDraw->indexType);
+						encoder->DrawIndexed(
+							cubeMeshDraw->primitiveMode, cubeMeshDraw->indexType, cubeMeshDraw->count, 0, 0);
 					}
 				}
 			}

@@ -163,39 +163,43 @@ void CommandEncoder::Draw(RenderPrimitiveMode mode, int32_t offset, int32_t vert
 	CopyCommand(&data, sizeof(data));
 }
 
-void CommandEncoder::DrawIndexed(RenderPrimitiveMode mode, int32_t indexCount, RenderIndexType indexType)
+void CommandEncoder::DrawIndexed(
+	RenderPrimitiveMode mode,
+	RenderIndexType indexType,
+	int32_t indexCount,
+	intptr_t indexOffset,
+	int32_t baseVertex)
 {
 	CmdDrawIndexed data{
 		RenderCommandType::DrawIndexed,
 		mode,
 		indexType,
-		indexCount
+		indexOffset,
+		indexCount,
+		baseVertex
 	};
 
 	CopyCommand(&data, sizeof(data));
 }
 
-void CommandEncoder::DrawInstanced(RenderPrimitiveMode mode, int32_t offset, int32_t vertexCount, int32_t instanceCount)
-{
-	CmdDrawInstanced data{
-		RenderCommandType::DrawInstanced,
-		mode,
-		offset,
-		vertexCount,
-		instanceCount
-	};
-
-	CopyCommand(&data, sizeof(data));
-}
-
-void CommandEncoder::DrawIndexedInstanced(RenderPrimitiveMode mode, int32_t indexCount, RenderIndexType indexType, int32_t instanceCount)
+void CommandEncoder::DrawIndexedInstanced(
+	RenderPrimitiveMode mode,
+	RenderIndexType indexType,
+	int32_t indexCount,
+	intptr_t indexOffset,
+	int32_t instanceCount,
+	int32_t baseVertex,
+	uint32_t baseInstance)
 {
 	CmdDrawIndexedInstanced data{
 		RenderCommandType::DrawIndexedInstanced,
 		mode,
 		indexType,
+		indexOffset,
 		indexCount,
-		instanceCount
+		baseVertex,
+		instanceCount,
+		baseInstance
 	};
 
 	CopyCommand(&data, sizeof(data));
@@ -290,6 +294,36 @@ void CommandEncoder::BlendFunction(RenderBlendFactor srcFactor, RenderBlendFacto
 	CopyCommand(&data, sizeof(data));
 }
 
+void CommandEncoder::SetBlendFunctionSeparate(
+	uint32_t attachmentIndex,
+	RenderBlendFactor srcFactorRgb,
+	RenderBlendFactor dstFactorRgb,
+	RenderBlendFactor srcFactorAlpha,
+	RenderBlendFactor dstFactorAlpha)
+{
+	CmdSetBlendFunctionSeparate data{
+		RenderCommandType::SetBlendFunctionSeparate,
+		attachmentIndex,
+		srcFactorRgb,
+		dstFactorRgb,
+		srcFactorAlpha,
+		dstFactorAlpha
+	};
+
+	CopyCommand(&data, sizeof(data));
+}
+
+void CommandEncoder::SetBlendEquation(uint32_t attachmentIndex, RenderBlendEquation equation)
+{
+	CmdSetBlendEquation data{
+		RenderCommandType::SetBlendEquation,
+		attachmentIndex,
+		equation
+	};
+
+	CopyCommand(&data, sizeof(data));
+}
+
 void CommandEncoder::SetCullFace(RenderCullFace cullFace)
 {
 	CmdSetCullFace data{ RenderCommandType::SetCullFace, cullFace };
@@ -326,6 +360,12 @@ void CommandEncoder::DepthWriteDisable()
 	CopyCommand(&data, sizeof(data));
 }
 
+void CommandEncoder::StencilTestDisable()
+{
+	Command data{ RenderCommandType::StencilTestDisable };
+	CopyCommand(&data, sizeof(data));
+}
+
 void CommandEncoder::ScissorTestEnable()
 {
 	Command data{ RenderCommandType::ScissorTestEnable };
@@ -335,6 +375,12 @@ void CommandEncoder::ScissorTestEnable()
 void CommandEncoder::ScissorTestDisable()
 {
 	Command data{ RenderCommandType::ScissorTestDisable };
+	CopyCommand(&data, sizeof(data));
+}
+
+void CommandEncoder::SetScissorRectangle(int32_t x, int32_t y, int32_t w, int32_t h)
+{
+	CmdSetScissorRectangle data{ RenderCommandType::SetScissorRectangle, x, y, w, h };
 	CopyCommand(&data, sizeof(data));
 }
 

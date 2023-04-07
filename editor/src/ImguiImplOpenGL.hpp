@@ -2,14 +2,36 @@
 
 #include "imgui.h"
 
-// Backend API
-bool ImGui_ImplOpenGL3_Init(const char* glsl_version = NULL);
-void ImGui_ImplOpenGL3_Shutdown();
-void ImGui_ImplOpenGL3_NewFrame();
-void ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data);
+#include "Core/Array.hpp"
 
-// (Optional) Called by Init/NewFrame/Shutdown
-bool ImGui_ImplOpenGL3_CreateFontsTexture();
-void ImGui_ImplOpenGL3_DestroyFontsTexture();
-bool ImGui_ImplOpenGL3_CreateDeviceObjects();
-void ImGui_ImplOpenGL3_DestroyDeviceObjects();
+#include "Rendering/RenderResourceId.hpp"
+
+class Allocator;
+
+namespace kokko
+{
+
+namespace render
+{
+class CommandEncoder;
+}
+
+class ImguiImplOpenGL
+{
+public:
+	ImguiImplOpenGL(Allocator* allocator);
+	~ImguiImplOpenGL();
+
+	// Backend API
+	void Initialize();
+	void Deinitialize();
+
+	void NewFrame();
+	void RenderDrawData(render::CommandEncoder* encoder, ImDrawData* draw_data);
+
+private:
+	Array<RenderVertexArrayId> vertexArrays;
+	Array<RenderBufferId> buffers;
+};
+
+}

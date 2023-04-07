@@ -107,7 +107,7 @@ void GraphicsFeatureSkybox::Render(const RenderParameters& parameters)
 	const MeshDrawData* draw = parameters.meshManager->GetDrawData(meshId);
 	encoder->BindVertexArray(draw->vertexArrayObject);
 
-	encoder->DrawIndexed(draw->primitiveMode, draw->count, draw->indexType);
+	encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
 }
 
 }

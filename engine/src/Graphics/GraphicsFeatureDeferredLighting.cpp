@@ -348,7 +348,7 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 
 		const MeshDrawData* meshDraw = parameters.meshManager->GetDrawData(meshId);
 		encoder->BindVertexArray(meshDraw->vertexArrayObject);
-		encoder->DrawIndexed(meshDraw->primitiveMode, meshDraw->count, meshDraw->indexType);
+		encoder->DrawIndexed(meshDraw->primitiveMode, meshDraw->indexType, meshDraw->count, 0, 0);
 	}
 
 
