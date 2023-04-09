@@ -226,6 +226,10 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 			componentCount = 3;
 		else if (accessor.type == cgltf_type_vec4)
 			componentCount = 4;
+		else
+		{
+			assert(false && "Unsupported vertex attribute component count");
+		}
 
 		int attributePos = 0;
 		if (attr.type == cgltf_attribute_type_position)

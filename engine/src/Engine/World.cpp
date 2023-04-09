@@ -34,6 +34,7 @@ World::World(AllocatorManager* allocManager,
 	kokko::AssetLoader* assetLoader,
 	const kokko::ResourceManagers& resourceManagers) :
 	allocator(allocator),
+	commandEncoder(commandEncoder),
 	levelSerializer(allocator),
 	resourceManagers(resourceManagers)
 {
@@ -64,11 +65,13 @@ World::World(AllocatorManager* allocManager,
 	scriptSystem.New(scriptSystem.allocator);
 
 	terrainSystem.CreateScope(allocManager, "TerrainSystem", allocator);
-	terrainSystem.New(terrainSystem.allocator, renderDevice,
-		resourceManagers.materialManager, resourceManagers.shaderManager);
+	terrainSystem.New(
+		terrainSystem.allocator, renderDevice, resourceManagers.shaderManager, resourceManagers.textureManager);
 
 	particleSystem.CreateScope(allocManager, "ParticleEffects", allocator);
-	particleSystem.New(particleSystem.allocator, renderDevice, resourceManagers.shaderManager, resourceManagers.meshManager);
+	particleSystem.New(
+		particleSystem.allocator, renderDevice, resourceManagers.shaderManager, resourceManagers.meshManager);
+
 	levelSerializer.Initialize(this, resourceManagers);
 }
 
@@ -135,6 +138,8 @@ void World::Render(kokko::Window* window, const Optional<CameraParameters>& edit
 
 	unsigned int receiverCount = sizeof(transformUpdateReceivers) / sizeof(transformUpdateReceivers[0]);
 	scene.instance->NotifyUpdatedTransforms(receiverCount, transformUpdateReceivers);
+
+	environmentSystem.instance->Upload(commandEncoder);
 
 	renderer.instance->Render(window, editorCamera, framebuffer);
 }

@@ -25,7 +25,7 @@
 #include "Rendering/Uniform.hpp"
 #include "Rendering/VertexFormat.hpp"
 
-#include "Resources/MaterialManager.hpp"
+#include "Resources/ShaderManager.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/TextureManager.hpp"
 
@@ -50,20 +50,23 @@ struct TerrainUniformBlock
 	alignas(4) float terrainResolution;
 	alignas(4) float heightOrigin;
 	alignas(4) float heightRange;
+
+	alignas(4) float metalness;
+	alignas(4) float roughness;
 };
 
 TerrainSystem::TerrainSystem(
 	Allocator* allocator,
 	RenderDevice* renderDevice,
-	MaterialManager* materialManager,
-	ShaderManager* shaderManager) :
+	ShaderManager* shaderManager,
+	TextureManager* textureManager) :
 	allocator(allocator),
 	renderDevice(renderDevice),
-	materialManager(materialManager),
 	shaderManager(shaderManager),
+	textureManager(textureManager),
 	uniformBlockStride(0),
 	uniformBufferId(0),
-	terrainMaterial(MaterialId::Null),
+	terrainShader(ShaderId::Null),
 	entityMap(allocator),
 	vertexData(VertexData{}),
 	textureSampler(0),
@@ -118,8 +121,9 @@ void TerrainSystem::Initialize()
 
 	// Material
 
-	ConstStringView path("engine/materials/deferred_geometry/terrain.material");
-	terrainMaterial = materialManager->FindMaterialByPath(path);
+	ConstStringView path("engine/shaders/deferred_geometry/terrain.glsl");
+	terrainShader = shaderManager->FindShaderByPath(path);
+	assert(terrainShader != ShaderId::Null);
 
 	// Sampler
 
@@ -292,7 +296,8 @@ void TerrainSystem::CreateVertexData()
 	renderDevice->SetBufferStorage(vertexData.vertexBuffer, vertBytes, vertexBuf, BufferStorageFlags::None);
 
 	VertexAttribute vertexAttributes[] = { VertexAttribute::pos2 };
-	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
+	VertexFormat vertexFormatPos(vertexAttributes, KOKKO_ARRAY_ITEMS(vertexAttributes));
+	vertexFormatPos.CalcOffsetsAndSizeInterleaved();
 	const VertexAttribute& attr = vertexAttributes[0];
 
 	renderDevice->SetVertexArrayVertexBuffer(vertexData.vertexArray, 0, vertexData.vertexBuffer, 0, attr.stride);
@@ -359,7 +364,6 @@ void TerrainSystem::Reallocate(size_t required)
 	data = newData;
 }
 
-
 void TerrainSystem::Render(const RenderParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -388,6 +392,8 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	uniforms.terrainResolution = static_cast<float>(TerrainTile::Resolution);
 	uniforms.heightOrigin = quadTree.GetBottom();
 	uniforms.heightRange = terrainHeight;
+	uniforms.metalness = 0.0f;
+	uniforms.roughness = 0.5f;
 
 	uniformStagingBuffer.Resize(tilesToRender.GetCount() * uniformBlockStride);
 
@@ -410,38 +416,29 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 	renderDevice->SetBufferSubData(uniformBufferId, 0, updateBytes, uniformStagingBuffer.GetData());
 
+	const ShaderData& shader = shaderManager->GetShaderData(terrainShader);
+
 	// Draw
+	encoder->UseShaderProgram(shader.driverId);
 
-	encoder->UseShaderProgram(materialManager->GetMaterialShaderDeviceId(terrainMaterial));
-
-	const kokko::UniformData& materialUniforms = materialManager->GetMaterialUniforms(terrainMaterial);
-
-	const TextureUniform* heightMap = materialUniforms.FindTextureUniformByNameHash("height_map"_hash);
-	const TextureUniform* albedoMap = materialUniforms.FindTextureUniformByNameHash("albedo_map"_hash);
-	const TextureUniform* roughMap = materialUniforms.FindTextureUniformByNameHash("roughness_map"_hash);
+	const TextureUniform* heightMap = shader.uniforms.FindTextureUniformByNameHash("height_map"_hash);
+	const TextureUniform* albedoMap = shader.uniforms.FindTextureUniformByNameHash("albedo_map"_hash);
 
 	if (albedoMap != nullptr)
 	{
-		kokko::RenderTextureId textureObjectId = albedoMap->textureObject;
+		kokko::RenderTextureId textureObjectId;
 		if (data.textures[id.i].albedoTexture.textureObjectId != 0)
 			textureObjectId = data.textures[id.i].albedoTexture.textureObjectId;
+		else
+		{
+			TextureId emptyAlbedoId = textureManager->GetId_White2D();
+			textureObjectId = textureManager->GetTextureData(emptyAlbedoId).textureObjectId;
+		}
 
 		encoder->BindTextureToShader(albedoMap->uniformLocation, 1, textureObjectId);
 	}
 
-	if (roughMap != nullptr)
-	{
-		kokko::RenderTextureId textureObjectId = albedoMap->textureObject;
-		if (data.textures[id.i].roughnessTexture.textureObjectId != 0)
-			textureObjectId = data.textures[id.i].roughnessTexture.textureObjectId;
-		
-		encoder->BindTextureToShader(roughMap->uniformLocation, 1, textureObjectId);
-	}
-
 	encoder->BindVertexArray(vertexData.vertexArray);
-
-	kokko::RenderBufferId matBufferId = materialManager->GetMaterialUniformBufferId(terrainMaterial);
-	encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, matBufferId);
 
 	// For height texture
 

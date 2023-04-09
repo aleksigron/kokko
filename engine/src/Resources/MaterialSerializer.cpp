@@ -129,7 +129,8 @@ bool MaterialSerializer::DeserializeMaterial(MaterialId id, ConstStringView conf
 			(varValue = FindVariableValue(variablesItr->value, uniform.name)) != nullptr &&
 			varValue->IsString())
 		{
-			auto uidParseResult = Uid::FromString(ArrayView(varValue->GetString(), varValue->GetStringLength()));
+			ArrayView uidStrView(varValue->GetString(), varValue->GetStringLength());
+			auto uidParseResult = Uid::FromString(uidStrView);
 
 			if (uidParseResult.HasValue())
 				textureId = textureManager->FindTextureByUid(uidParseResult.GetValue(), isNormalTexture);

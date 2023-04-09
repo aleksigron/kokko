@@ -80,6 +80,7 @@ public:
 
 private:
 	Allocator* allocator;
+	kokko::render::CommandEncoder* commandEncoder;
 
 	LevelSerializer levelSerializer;
 

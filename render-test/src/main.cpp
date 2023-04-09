@@ -15,6 +15,8 @@
 
 #include "Memory/RootAllocator.hpp"
 
+#include "Platform/Window.hpp"
+
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/RenderCommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
@@ -25,6 +27,7 @@
 #include "System/Filesystem.hpp"
 #include "System/FilesystemResolverVirtual.hpp"
 #include "System/Logger.hpp"
+#include "System/WindowManager.hpp"
 #include "System/WindowSettings.hpp"
 
 #include "TestRunnerAssetLoader.hpp"
@@ -295,6 +298,9 @@ int main(int argc, char** argv)
 				}
 			}
 		}
+
+		// Swap window buffers to allow better frame capture
+		engine.GetWindowManager()->GetWindow()->Swap();
 	}
 
 	instr.EndSession();

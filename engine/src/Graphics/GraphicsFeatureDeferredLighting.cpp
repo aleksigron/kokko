@@ -67,9 +67,10 @@ GraphicsFeatureDeferredLighting::GraphicsFeatureDeferredLighting(Allocator* allo
 	meshId(MeshId::Null),
 	renderOrder(0),
 	uniformBufferId(0),
-	brdfLutTextureId(0),
-	depthCompareSampler(0)
+	brdfLutTextureId(0)
 {
+	samplers[0] = RenderSamplerId();
+	samplers[1] = RenderSamplerId();
 }
 
 void GraphicsFeatureDeferredLighting::SetOrder(unsigned int order)
@@ -115,10 +116,11 @@ void GraphicsFeatureDeferredLighting::Deinitialize(const InitializeParameters& p
 		brdfLutFramebufferId = RenderFramebufferId();
 	}
 
-	if (depthCompareSampler != 0)
+	if (samplers[0] != 0)
 	{
-		parameters.renderDevice->DestroySamplers(1, &depthCompareSampler);
-		depthCompareSampler = RenderSamplerId();
+		parameters.renderDevice->DestroySamplers(KOKKO_ARRAY_ITEMS(samplers), samplers);
+		samplers[0] = RenderSamplerId();
+		samplers[1] = RenderSamplerId();
 	}
 
 	if (meshId != MeshId::Null)
@@ -148,19 +150,14 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 		kokko::ConstStringView label("Renderer BRDF LUT");
 		renderDevice->SetObjectLabel(RenderObjectType::Texture, brdfLutTextureId.i, label);
 
-		//device->SetTextureWrapModeU(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		//device->SetTextureWrapModeV(RenderTextureTarget::Texture2d, RenderTextureWrapMode::ClampToEdge);
-		//device->SetTextureMinFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-		//device->SetTextureMagFilter(RenderTextureTarget::Texture2d, RenderTextureFilterMode::Linear);
-
 		renderDevice->CreateFramebuffers(1, &brdfLutFramebufferId);
 		renderDevice->AttachFramebufferTexture(brdfLutFramebufferId, RenderFramebufferAttachment::Color0, brdfLutTextureId, 0);
 	}
 
-	if (depthCompareSampler == 0)
+	if (samplers[0] == 0)
 	{
-		RenderSamplerParameters params
-		{
+		RenderSamplerParameters params[] = {
+		{ // Sampler_DepthCompare
 			RenderTextureFilterMode::Linear,
 			RenderTextureFilterMode::Linear,
 			RenderTextureWrapMode::ClampToEdge,
@@ -168,9 +165,18 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 			RenderTextureWrapMode::ClampToEdge,
 			RenderTextureCompareMode::CompareRefToTexture,
 			RenderDepthCompareFunc::GreaterThanOrEqual
-		};
+		},
+		{ // Sampler_ClampLinear
+			RenderTextureFilterMode::Linear,
+			RenderTextureFilterMode::Linear,
+			RenderTextureWrapMode::ClampToEdge,
+			RenderTextureWrapMode::ClampToEdge,
+			RenderTextureWrapMode::ClampToEdge,
+			RenderTextureCompareMode::None,
+			RenderDepthCompareFunc::Always
+		}};
 
-		renderDevice->CreateSamplers(1, &params, &depthCompareSampler);
+		renderDevice->CreateSamplers(2, params, samplers);
 	}
 
 	LightManager* lightManager = parameters.lightManager;
@@ -339,6 +345,7 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 
 		// Calculate the BRDF LUT
 
+		encoder->BindFramebuffer(brdfLutFramebufferId);
 		encoder->SetViewport(0, 0, BrdfLutSize, BrdfLutSize);
 
 		ConstStringView path("engine/shaders/preprocess/calc_brdf_lut.glsl");
@@ -349,8 +356,9 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 		const MeshDrawData* meshDraw = parameters.meshManager->GetDrawData(meshId);
 		encoder->BindVertexArray(meshDraw->vertexArrayObject);
 		encoder->DrawIndexed(meshDraw->primitiveMode, meshDraw->indexType, meshDraw->count, 0, 0);
-	}
 
+		return;
+	}
 
 	encoder->DepthTestDisable();
 
@@ -395,10 +403,10 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 	deferredPass.samplerIds[2] = RenderSamplerId();
 	deferredPass.samplerIds[3] = RenderSamplerId();
 	deferredPass.samplerIds[4] = RenderSamplerId();
-	deferredPass.samplerIds[5] = depthCompareSampler;
+	deferredPass.samplerIds[5] = samplers[Sampler_DepthCompare];
 	deferredPass.samplerIds[6] = RenderSamplerId();
 	deferredPass.samplerIds[7] = RenderSamplerId();
-	deferredPass.samplerIds[8] = RenderSamplerId();
+	deferredPass.samplerIds[8] = samplers[Sampler_ClampLinear];
 
 	deferredPass.textureCount = 9;
 

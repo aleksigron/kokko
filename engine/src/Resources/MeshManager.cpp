@@ -357,17 +357,17 @@ void MeshManager::SetVertexAttribPointers(unsigned int index, const VertexFormat
 	MeshBufferData& bufferData = data.bufferData[index];
 	kokko::RenderVertexArrayId vertexArray = bufferData.vertexArrayObject;
 
-	renderDevice->SetVertexArrayVertexBuffer(vertexArray, 0,
-		bufferData.bufferObjects[MeshBufferData::VertexBuffer], 0, vertexFormat.attributes[0].stride);
 	renderDevice->SetVertexArrayIndexBuffer(vertexArray, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
 
 	for (unsigned int i = 0; i < vertexFormat.attributeCount; ++i)
 	{
 		const VertexAttribute& attr = vertexFormat.attributes[i];
 
+		renderDevice->SetVertexArrayVertexBuffer(
+			vertexArray, i, bufferData.bufferObjects[MeshBufferData::VertexBuffer], attr.offset, attr.stride);
 		renderDevice->EnableVertexAttribute(vertexArray, attr.attrIndex);
-		renderDevice->SetVertexAttribBinding(vertexArray, attr.attrIndex, 0);
-		renderDevice->SetVertexAttribFormat(vertexArray, attr.attrIndex, attr.elemCount, attr.elemType, attr.offset);
+		renderDevice->SetVertexAttribBinding(vertexArray, attr.attrIndex, i);
+		renderDevice->SetVertexAttribFormat(vertexArray, attr.attrIndex, attr.elemCount, attr.elemType, 0);
 	}
 }
 

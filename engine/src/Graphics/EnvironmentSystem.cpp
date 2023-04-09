@@ -268,9 +268,8 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 			for (unsigned int i = 0; i < CubemapSideCount; ++i)
 			{
-				RenderTextureTarget target = GetCubeTextureTarget(i);
-				renderDevice->SetTextureSubImage2D(envMapTexture.textureObjectId, 0, 0, 0,
-					EmptyTextureSize, EmptyTextureSize, RenderTextureBaseFormat::RGB,
+				renderDevice->SetTextureSubImage3D(envMapTexture.textureObjectId, 0, 0, 0, i,
+					EmptyTextureSize, EmptyTextureSize, 1, RenderTextureBaseFormat::RGB,
 					RenderTextureDataType::UnsignedByte, EmptyTextureBytes);
 			}
 
@@ -283,9 +282,8 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 			for (unsigned int i = 0; i < CubemapSideCount; ++i)
 			{
-				RenderTextureTarget target = GetCubeTextureTarget(i);
-				renderDevice->SetTextureSubImage2D(diffuseMapTexture.textureObjectId, 0, 0, 0,
-					EmptyTextureSize, EmptyTextureSize, RenderTextureBaseFormat::RGB,
+				renderDevice->SetTextureSubImage3D(diffuseMapTexture.textureObjectId,
+					0, 0, 0, i, EmptyTextureSize, EmptyTextureSize, 1, RenderTextureBaseFormat::RGB,
 					RenderTextureDataType::UnsignedByte, EmptyTextureBytes);
 			}
 
@@ -303,9 +301,9 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 				for (unsigned int i = 0; i < CubemapSideCount; ++i)
 				{
-					RenderTextureTarget target = GetCubeTextureTarget(i);
-					renderDevice->SetTextureSubImage2D(specMapTexture.textureObjectId, mip, 0, 0, mipSize, mipSize,
-						RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, EmptyTextureBytes);
+					renderDevice->SetTextureSubImage3D(specMapTexture.textureObjectId,
+						mip, 0, 0, i, mipSize, mipSize, 1, RenderTextureBaseFormat::RGB,
+						RenderTextureDataType::UnsignedByte, EmptyTextureBytes);
 				}
 			}
 
@@ -418,6 +416,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 					BindBufferRange(encoder, UniformBlockBinding::Viewport,
 						viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
+					// TODO: Create framebuffer for each cubemap side
 					renderDevice->AttachFramebufferTexture(
 						framebufferId, RenderFramebufferAttachment::Color0, envMapTexture.textureObjectId, i);
 
