@@ -3,7 +3,12 @@
 
 #stage vertex
 #include "engine/shaders/common/constants.glsl"
-#include "engine/shaders/common/transform_block.glsl"
+
+layout(std140, binding = BLOCK_BINDING_OBJECT) uniform SkyboxUniformBlock
+{
+	mat4x4 transform;
+}
+uniforms;
 
 layout(location = 0) in vec3 vert_pos;
 
@@ -11,7 +16,7 @@ out vec3 fs_w_direction;
 
 void main()
 {
-	gl_Position = transform.MVP * vec4(vert_pos, 1.0);
+	gl_Position = uniforms.transform * vec4(vert_pos, 1.0);
 	fs_w_direction = vert_pos;
 }
 

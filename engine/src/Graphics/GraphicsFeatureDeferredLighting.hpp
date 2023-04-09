@@ -42,7 +42,9 @@ private:
 	kokko::RenderBufferId uniformBufferId;
 	kokko::RenderFramebufferId brdfLutFramebufferId;
 	kokko::RenderTextureId brdfLutTextureId;
-	kokko::RenderSamplerId depthCompareSampler;
+
+	enum SamplerIdx { Sampler_DepthCompare, Sampler_ClampLinear, Sampler_COUNT };
+	kokko::RenderSamplerId samplers[Sampler_COUNT];
 };
 
 }

@@ -1,25 +1,10 @@
 #version 450
 #property height_map tex2d
 #property albedo_map tex2d
-#property metalness float
-#property roughness float
 
 #stage vertex
 #include "engine/shaders/common/constants.glsl"
-
-layout(std140, binding = BLOCK_BINDING_OBJECT) uniform TerrainBlock
-{
-	mat4x4 MVP;
-	mat4x4 MV;
-	vec2 texture_scale;
-	vec2 tile_offset;
-	float tile_scale;
-	float terrain_size;
-	float terrain_resolution;
-	float height_origin;
-	float height_range;
-}
-uniforms;
+#include "engine/shaders/deferred_geometry/terrain_uniform.glsl"
 
 layout(location = VERTEX_ATTR_INDEX_POS) in vec2 position;
 
@@ -62,6 +47,7 @@ void main()
 #include "engine/shaders/common/constants.glsl"
 #include "engine/shaders/common/deferred_frag_output.glsl"
 #include "engine/shaders/common/g_buffer_io.glsl"
+#include "engine/shaders/deferred_geometry/terrain_uniform.glsl"
 
 in VS_TO_FS {
 	vec3 normal;
@@ -76,5 +62,5 @@ void main()
 
 	g_albedo = texture(albedo_map, fs_in.tex_coord).rgb;
 	g_normal = pack_normal(N);
-	g_material = vec3(metalness, roughness, 0.0);
+	g_material = vec3(uniforms.metalness, uniforms.roughness, 0.0);
 }

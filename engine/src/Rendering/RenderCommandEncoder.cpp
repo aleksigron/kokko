@@ -140,7 +140,7 @@ void CommandEncoder::DispatchCompute(uint32_t numGroupsX, uint32_t numGroupsY, u
 void CommandEncoder::DispatchComputeIndirect(intptr_t offset)
 {
 	CmdDispatchComputeIndirect dispatch{
-		RenderCommandType::DispatchCompute,
+		RenderCommandType::DispatchComputeIndirect,
 		offset
 	};
 

@@ -2,9 +2,10 @@
 
 enum class RenderPassType
 {
-	OpaqueGeometry = 0, // Opaque + AlphaTest
+	Setup = 0,
+	OpaqueGeometry = 1, // Opaque + AlphaTest
 	OpaqueLighting = 2,
 	Skybox = 3,
 	Transparent = 4, // TransparentMix + TransparentAdd + TransparentSub
-	PostProcess = 7
+	PostProcess = 5
 };

@@ -267,9 +267,12 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 	{
 		KOKKO_PROFILE_SCOPE("Scan file");
 
+		if (entry.is_regular_file() == false)
+			return;
+
 		const fs::path& currentPath = entry.path();
 		std::filesystem::path currentExt = currentPath.extension();
-		if (entry.is_regular_file() == false || currentExt == metadataExt)
+		if (currentExt == metadataExt)
 			return;
 
 		assetPathStr = currentPath.generic_u8string();
@@ -418,7 +421,7 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 
 	if (scanApp)
 	{
-		const fs::path& assetDir = applicationConfig.assetFolderPath;
+		const fs::path& assetDir = fs::absolute(applicationConfig.assetFolderPath);
 
 		std::error_code appItrError;
 		auto appItr = fs::recursive_directory_iterator(assetDir, appItrError);

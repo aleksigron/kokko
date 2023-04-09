@@ -223,7 +223,7 @@ void ParticleSystem::Render(const RenderParameters& parameters)
 	// Make sure the indirect buffer updates are visible to the dispatch command
 	encoder->MemoryBarrier(shaderStorageBarrier);
 
-	encoder->BindBufferBase(RenderBufferTarget::DispatchIndirectBuffer, 0, emitter.bufferIds[Buffer_Indirect]);
+	encoder->BindBuffer(RenderBufferTarget::DispatchIndirectBuffer, emitter.bufferIds[Buffer_Indirect]);
 
 	const ShaderData& emitShader = shaderManager->GetShaderData(emitShaderId);
 	encoder->UseShaderProgram(emitShader.driverId);
@@ -440,13 +440,6 @@ void ParticleSystem::InitializeEmitter(RenderDevice* renderDevice, ParticleEmitt
 	uint32_t computeUniformBufferSize = static_cast<uint32_t>(sizeof(UpdateParticleBlock));
 	uint32_t renderUniformBufferSize = static_cast<uint32_t>(sizeof(TransformUniformBlock));
 
-	RenderCommandData::SetBufferStorage bufferStorage{};
-	bufferStorage.target = RenderBufferTarget::ShaderStorageBuffer;
-
-	RenderCommandData::SetBufferStorage uniformStorage{};
-	uniformStorage.target = RenderBufferTarget::UniformBuffer;
-	uniformStorage.dynamicStorage = true;
-
 	BufferStorageFlags emptyStorageFlag{};
 
 	BufferStorageFlags dynamicStorageFlag{};
@@ -502,10 +495,10 @@ void ParticleSystem::InitializeEmitter(RenderDevice* renderDevice, ParticleEmitt
 	renderDevice->SetBufferStorage(bufferIds[Buffer_Indirect], indirectBufferSize, nullptr, emptyStorageFlag);
 
 	// Update uniform buffer
-	renderDevice->SetBufferStorage(bufferIds[Buffer_UpdateUniforms], computeUniformBufferSize, nullptr, emptyStorageFlag);
+	renderDevice->SetBufferStorage(bufferIds[Buffer_UpdateUniforms], computeUniformBufferSize, nullptr, dynamicStorageFlag);
 
 	// Render uniform buffer
-	renderDevice->SetBufferStorage(bufferIds[Buffer_RenderTransform], renderUniformBufferSize, nullptr, emptyStorageFlag);
+	renderDevice->SetBufferStorage(bufferIds[Buffer_RenderTransform], renderUniformBufferSize, nullptr, dynamicStorageFlag);
 
 	// Set current and next alive lists
 	emitter.aliveListCurrent = emitter.bufferIds[Buffer_AliveList0];

@@ -65,6 +65,27 @@
 namespace kokko
 {
 
+namespace
+{
+RenderPassType ConvertTransparencyToPass(TransparencyType transparency)
+{
+	switch (transparency)
+	{
+	case TransparencyType::Opaque:
+	case TransparencyType::AlphaTest:
+		return RenderPassType::OpaqueGeometry;
+	case TransparencyType::Skybox:
+		return RenderPassType::Skybox;
+	case TransparencyType::TransparentMix:
+	case TransparencyType::TransparentAdd:
+	case TransparencyType::TransparentSub:
+		return RenderPassType::Transparent;
+	default:
+		return RenderPassType::OpaqueGeometry;
+	}
+}
+}
+
 struct DebugNormalUniformBlock
 {
 	alignas(16) Mat4x4f MVP;
@@ -120,7 +141,8 @@ Renderer::Renderer(
 	postProcessRenderer = allocator->MakeNew<PostProcessRenderer>(
 		encoder, meshManager, shaderManager, renderTargetContainer);
 
-	shadowMaterial = MaterialId{ 0 };
+	shadowMaterial = MaterialId::Null;
+	fallbackMeshMaterial = MaterialId::Null;
 
 	objectUniformBlockStride = 0;
 	objectsPerUniformBuffer = 0;
@@ -871,7 +893,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 			float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
-			auto pass = static_cast<RenderPassType>(componentSystem->data.transparency[i]);
+			RenderPassType pass = ConvertTransparencyToPass(componentSystem->data.transparency[i]);
 			commandList.AddDraw(fsvp, pass, depth, mat, i);
 
 			objectDrawCount += 1;

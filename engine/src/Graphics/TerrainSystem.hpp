@@ -12,18 +12,17 @@
 
 #include "Graphics/GraphicsFeature.hpp"
 
-#include "Resources/MaterialData.hpp"
 #include "Resources/TextureId.hpp"
+#include "Resources/ShaderId.hpp"
 
 class Allocator;
 class RenderDevice;
 class MeshManager;
-class MaterialManager;
 class ShaderManager;
+class TextureManager;
 class Renderer;
 
 struct Entity;
-struct MaterialData;
 
 namespace kokko
 {
@@ -49,8 +48,11 @@ struct TerrainParameters
 class TerrainSystem : public GraphicsFeature
 {
 public:
-	TerrainSystem(Allocator* allocator, RenderDevice* renderDevice,
-		MaterialManager* materialManager, ShaderManager* shaderManager);
+	TerrainSystem(
+		Allocator* allocator,
+		RenderDevice* renderDevice,
+		ShaderManager* shaderManager,
+		TextureManager* textureManager);
 	~TerrainSystem();
 
 	void Initialize();
@@ -86,13 +88,13 @@ public:
 private:
 	Allocator* allocator;
 	RenderDevice* renderDevice;
-	MaterialManager* materialManager;
 	ShaderManager* shaderManager;
+	TextureManager* textureManager;
 	
 	unsigned int uniformBlockStride;
 	RenderBufferId uniformBufferId;
 
-	MaterialId terrainMaterial;
+	ShaderId terrainShader;
 
 	HashMap<unsigned int, TerrainId> entityMap;
 
@@ -143,8 +145,6 @@ private:
 	void DeinitializeTerrain(TerrainId id);
 
 	void Reallocate(size_t required);
-
-	void RenderTerrain(TerrainId id, const RenderViewport& viewport);
 };
 
 }
