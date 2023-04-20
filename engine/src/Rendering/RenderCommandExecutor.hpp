@@ -8,7 +8,7 @@ namespace kokko
 namespace render
 {
 
-class CommandBuffer;
+struct CommandBuffer;
 
 class CommandExecutor
 {

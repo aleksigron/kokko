@@ -13,6 +13,7 @@
 #include "Rendering/CameraSerializer.hpp"
 #include "Rendering/LightSerializer.hpp"
 #include "Rendering/MeshComponentSerializer.hpp"
+#include "Rendering/RenderDevice.hpp"
 
 #include "Graphics/EnvironmentSerializer.hpp"
 #include "Graphics/Scene.hpp"
@@ -21,8 +22,9 @@
 
 static const char* const ComponentTypeKey = "component_type";
 
-LevelSerializer::LevelSerializer(Allocator* allocator) :
+LevelSerializer::LevelSerializer(Allocator* allocator, RenderDevice* renderDevice) :
 	allocator(allocator),
+	renderDevice(renderDevice),
 	world(nullptr),
 	resourceManagers(kokko::ResourceManagers{}),
 	transformSerializer(nullptr),
@@ -57,6 +59,9 @@ void LevelSerializer::Initialize(World* world, const kokko::ResourceManagers& re
 void LevelSerializer::DeserializeFromString(const char* data)
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	// Create scope to mark GPU frame capture
+	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("World_DeserializeLevel"));
 
 	YAML::Node node = YAML::Load(data);
 

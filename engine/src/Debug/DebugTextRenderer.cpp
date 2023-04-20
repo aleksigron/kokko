@@ -64,6 +64,8 @@ bool DebugTextRenderer::Initialize(ShaderManager* shaderManager,
 	this->shaderManager = shaderManager;
 	this->meshManager = meshManager;
 
+	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("DebugText_InitResources"));
+
 	const char* const debugFontFilename = "engine/fonts/gohufont-uni-14.bdf";
 	if (LoadBitmapFont(textureManager, debugFontFilename) == false)
 	{
@@ -150,6 +152,8 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 
 	if (displayData.GetCount() > 0 && font != nullptr)
 	{
+		auto scope = encoder->CreateDebugScope(0, kokko::ConstStringView("DebugText_Render"));
+
 		if (meshId == MeshId::Null)
 		{
 			meshId = meshManager->CreateMesh();
@@ -207,6 +211,8 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 void DebugTextRenderer::CreateAndUploadData()
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("DebugText_UpdateResources"));
 
 	// Make sure vertex indices fit in unsigned short type
 	assert(stringCharCount * 4 < (1 << 16));

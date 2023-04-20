@@ -118,6 +118,8 @@ void TextureManager::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("TextureMan_InitResources"));
+
 	static const unsigned int size = 16;
 	static const unsigned int bytesPerPixel = 3;
 	unsigned char buffer[size * size * bytesPerPixel];
@@ -249,6 +251,9 @@ TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid, bool preferLin
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	if (uid.raw[0] == 0 && uid.raw[1] == 0)
+		KK_LOG_WARN("TextureManager::FindTextureByUid called with zero UID");
+
 	auto* pair = uidMap.Lookup(uid);
 	if (pair != nullptr)
 		return pair->second;
@@ -273,7 +278,7 @@ TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid, bool preferLin
 		}
 		else
 		{
-			KK_LOG_ERROR("Material failed to load correctly");
+			KK_LOG_ERROR("Texture failed to load correctly");
 
 			RemoveTexture(id);
 		}

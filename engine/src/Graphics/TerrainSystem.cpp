@@ -105,6 +105,8 @@ void TerrainSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainSys_InitResources"));
+
 	// Create uniform buffer
 
 	int aligment = 0;
@@ -316,6 +318,8 @@ void TerrainSystem::InitializeTerrain(TerrainId id, const TerrainParameters& par
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainSys_CreateInstanceResources"));
+
 	kokko::TerrainQuadTree& quadTree = data.quadTree[id.i];
 
 	constexpr int treeLevels = 7;
@@ -325,6 +329,8 @@ void TerrainSystem::InitializeTerrain(TerrainId id, const TerrainParameters& par
 void TerrainSystem::DeinitializeTerrain(TerrainId id)
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainSys_DestroyInstanceResources"));
 
 	data.quadTree[id.i].DestroyResources(allocator, renderDevice);
 }

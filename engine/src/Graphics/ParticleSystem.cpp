@@ -76,6 +76,8 @@ void ParticleSystem::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("ParticleSys_InitResources"));
+
 	float vertexBuffer[] = {
 		-1.0f, -1.0f, 0.0f,
 		1.0f, -1.0f, 0.0f,

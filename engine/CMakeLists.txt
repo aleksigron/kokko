@@ -215,6 +215,8 @@ set (KOKKO_SOURCES
 	src/Rendering/CascadedShadowMap.hpp
     src/Rendering/CommandBuffer.cpp
     src/Rendering/CommandBuffer.hpp
+    src/Rendering/CommandEncoderDebugScope.cpp
+    src/Rendering/CommandEncoderDebugScope.hpp
 	src/Rendering/Framebuffer.cpp
 	src/Rendering/Framebuffer.hpp
 	src/Rendering/Light.hpp
@@ -243,6 +245,8 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderDebugSettings.hpp
     src/Rendering/RenderDevice.cpp
 	src/Rendering/RenderDevice.hpp
+    src/Rendering/RenderDeviceDebugScope.cpp
+    src/Rendering/RenderDeviceDebugScope.hpp
     src/Rendering/RenderDeviceEnumsOpenGL.cpp
 	src/Rendering/RenderDeviceEnumsOpenGL.hpp
 	src/Rendering/Renderer.cpp

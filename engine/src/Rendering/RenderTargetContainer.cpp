@@ -82,6 +82,8 @@ bool RenderTargetContainer::ConfirmAllTargetsAreUnused()
 
 void RenderTargetContainer::DestroyAllRenderTargets()
 {
+	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("RenderTargets_DestroyTargets"));
+
 	for (size_t i = 0; i < renderTargetCount; ++i)
 	{
 		renderDevice->DestroyFramebuffers(1, &renderTargets[i].target.framebuffer);

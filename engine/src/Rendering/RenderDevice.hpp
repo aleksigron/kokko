@@ -5,6 +5,7 @@
 #include "Core/StringView.hpp"
 
 #include "Rendering/RenderCommandData.hpp"
+#include "Rendering/RenderDeviceDebugScope.hpp"
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/RenderResourceId.hpp"
 
@@ -19,6 +20,9 @@ class NativeRenderDevice;
 
 class RenderDevice
 {
+private:
+	friend class kokko::RenderDeviceDebugScope;
+
 public:
 	struct DebugMessage
 	{
@@ -46,6 +50,9 @@ public:
 	virtual void SetDebugMessageCallback(DebugCallbackFn callback) = 0;
 	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label) = 0;
 	virtual void SetObjectPtrLabel(void* ptr, kokko::ConstStringView label) = 0;
+	kokko::RenderDeviceDebugScope CreateDebugScope(uint32_t id, kokko::ConstStringView message);
+	virtual void BeginDebugScope(uint32_t id, kokko::ConstStringView message) = 0;
+	virtual void EndDebugScope() = 0;
 
 	virtual void CreateFramebuffers(unsigned int count, kokko::RenderFramebufferId* framebuffersOut) = 0;
 	virtual void DestroyFramebuffers(unsigned int count, const kokko::RenderFramebufferId* framebuffers) = 0;
@@ -54,6 +61,12 @@ public:
 		RenderFramebufferAttachment attachment,
 		kokko::RenderTextureId texture,
 		int level) = 0;
+	virtual void AttachFramebufferTextureLayer(
+		kokko::RenderFramebufferId framebuffer,
+		RenderFramebufferAttachment attachment,
+		kokko::RenderTextureId texture,
+		int level,
+		int layer) = 0;
 	virtual void SetFramebufferDrawBuffers(
 		kokko::RenderFramebufferId framebuffer,
 		unsigned int count,
