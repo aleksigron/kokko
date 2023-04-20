@@ -49,7 +49,7 @@ struct UpdateParticleBlock
 
 ParticleSystem::ParticleSystem(
 	Allocator* allocator,
-	RenderDevice* renderDevice,
+	kokko::render::Device* renderDevice,
 	ShaderManager* shaderManager,
 	MeshManager* meshManager) :
 	allocator(allocator),
@@ -125,7 +125,7 @@ void ParticleSystem::Deinitialize()
 	if (noiseTextureId != 0)
 	{
 		renderDevice->DestroyTextures(1, &noiseTextureId);
-		noiseTextureId = RenderTextureId();
+		noiseTextureId = render::TextureId();
 	}
 }
 
@@ -133,7 +133,7 @@ void ParticleSystem::Upload(const UploadParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	RenderDevice* renderDevice = parameters.renderDevice;
+	kokko::render::Device* renderDevice = parameters.renderDevice;
 
 	double currentTime = Time::GetRunningTime();
 	float deltaTime = Time::GetDeltaTime();
@@ -274,7 +274,7 @@ void ParticleSystem::Render(const RenderParameters& parameters)
 
 	// Swap alive lists
 
-	RenderBufferId tempList = emitter.aliveListNext;
+	render::BufferId tempList = emitter.aliveListNext;
 	emitter.aliveListNext = emitter.aliveListCurrent;
 	emitter.aliveListCurrent = tempList;
 }
@@ -421,12 +421,12 @@ void ParticleSystem::ReallocateEmitters(unsigned int requiredCount)
 	data = newData;
 }
 
-void ParticleSystem::InitializeEmitter(RenderDevice* renderDevice, ParticleEmitterId id)
+void ParticleSystem::InitializeEmitter(kokko::render::Device* renderDevice, ParticleEmitterId id)
 {
 	// Create the GPU buffers we need for updating and rendering our particles
 
 	EmitterData& emitter = data.emitter[id.i];
-	kokko::RenderBufferId* bufferIds = emitter.bufferIds;
+	kokko::render::BufferId* bufferIds = emitter.bufferIds;
 
 	renderDevice->CreateBuffers(Buffer_COUNT, emitter.bufferIds);
 
@@ -465,7 +465,7 @@ void ParticleSystem::InitializeEmitter(RenderDevice* renderDevice, ParticleEmitt
 
 	// Dead list buffer
 	{
-		const kokko::RenderBufferId deadListBuffer = bufferIds[Buffer_DeadList];
+		const kokko::render::BufferId deadListBuffer = bufferIds[Buffer_DeadList];
 
 		renderDevice->SetBufferStorage(deadListBuffer, indexBufferSize, nullptr, mapWriteStorageFlag);
 
@@ -507,7 +507,7 @@ void ParticleSystem::InitializeEmitter(RenderDevice* renderDevice, ParticleEmitt
 	emitter.aliveListNext = emitter.bufferIds[Buffer_AliveList1];
 }
 
-void ParticleSystem::DeinitializeEmitter(RenderDevice* renderDevice, ParticleEmitterId id)
+void ParticleSystem::DeinitializeEmitter(kokko::render::Device* renderDevice, ParticleEmitterId id)
 {
 	EmitterData& emitter = data.emitter[id.i];
 
@@ -516,7 +516,7 @@ void ParticleSystem::DeinitializeEmitter(RenderDevice* renderDevice, ParticleEmi
 		renderDevice->DestroyBuffers(Buffer_COUNT, emitter.bufferIds);
 
 		for (unsigned int i = 0; i < Buffer_COUNT; ++i)
-			emitter.bufferIds[i] = RenderBufferId();
+			emitter.bufferIds[i] = render::BufferId();
 	}
 }
 

@@ -14,7 +14,6 @@
 #include "Resources/ShaderId.hpp"
 
 class Allocator;
-class RenderDevice;
 
 namespace kokko
 {
@@ -22,6 +21,10 @@ namespace kokko
 class AssetLoader;
 class Filesystem;
 
+namespace render
+{
+class Device;
+}
 }
 
 struct ShaderData
@@ -34,7 +37,7 @@ struct ShaderData
 
 	TransparencyType transparencyType;
 
-	kokko::RenderShaderId driverId;
+	kokko::render::ShaderId driverId;
 
 	kokko::UniformList uniforms;
 };
@@ -45,7 +48,7 @@ private:
 	Allocator* allocator;
 	kokko::Filesystem* filesystem;
 	kokko::AssetLoader* assetLoader;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 
 	struct InstanceData
 	{
@@ -68,7 +71,7 @@ public:
 		Allocator* allocator,
 		kokko::Filesystem* filesystem,
 		kokko::AssetLoader* assetLoader,
-		RenderDevice* renderDevice);
+		kokko::render::Device* renderDevice);
 	~ShaderManager();
 
 	ShaderId CreateShader();

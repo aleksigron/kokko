@@ -368,8 +368,8 @@ else()
 list (APPEND KOKKO_SOURCES
     src/Platform/WindowOpenGL.hpp
     src/Platform/WindowOpenGL.cpp
-    src/Rendering/OpenGL/RenderDeviceOpenGL.cpp
-    src/Rendering/OpenGL/RenderDeviceOpenGL.hpp
+    src/Rendering/RenderDeviceOpenGL.cpp
+    src/Rendering/RenderDeviceOpenGL.hpp
 )
 endif()
 

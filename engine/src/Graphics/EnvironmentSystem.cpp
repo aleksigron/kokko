@@ -60,7 +60,7 @@ void ReleaseEnvTextures(TextureManager* textureManager, kokko::EnvironmentTextur
 }
 
 void BindTexture(kokko::render::CommandEncoder* encoder, const ShaderData& shader,
-	uint32_t uniformHash, kokko::RenderTextureId textureId)
+	uint32_t uniformHash, kokko::render::TextureId textureId)
 {
 	const kokko::TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash(uniformHash);
 	if (uniform != nullptr)
@@ -69,7 +69,7 @@ void BindTexture(kokko::render::CommandEncoder* encoder, const ShaderData& shade
 	}
 }
 
-void BindBufferRange(kokko::render::CommandEncoder* encoder, unsigned int binding, kokko::RenderBufferId buffer, intptr_t offset, size_t size)
+void BindBufferRange(kokko::render::CommandEncoder* encoder, unsigned int binding, kokko::render::BufferId buffer, intptr_t offset, size_t size)
 {
 	encoder->BindBufferRange(RenderBufferTarget::UniformBuffer, binding, buffer, offset, size);
 }
@@ -89,7 +89,7 @@ struct CalcSpecularUniforms
 EnvironmentSystem::EnvironmentSystem(
 	Allocator* allocator,
 	kokko::AssetLoader* assetLoader,
-	RenderDevice* renderDevice,
+	kokko::render::Device* renderDevice,
 	ShaderManager* shaderManager,
 	MeshManager* meshManager,
 	TextureManager* textureManager) :
@@ -136,13 +136,13 @@ void EnvironmentSystem::Deinitialize()
 		resourcesUploaded = false;
 
 		renderDevice->DestroySamplers(1, &samplerId);
-		samplerId = RenderSamplerId();
+		samplerId = render::SamplerId();
 
 		renderDevice->DestroyBuffers(1, &specularUniformBufferId);
-		specularUniformBufferId = RenderBufferId();
+		specularUniformBufferId = render::BufferId();
 
 		renderDevice->DestroyBuffers(1, &viewportUniformBufferId);
-		viewportUniformBufferId = RenderBufferId();
+		viewportUniformBufferId = render::BufferId();
 
 		renderDevice->DestroyFramebuffers(framebufferIds.GetCount(), framebufferIds.GetData());
 		framebufferIds.Clear();
@@ -369,7 +369,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 			auto devScope = renderDevice->CreateDebugScope(0, ConstStringView("EnvironSys_CreateMapResources"));
 			auto encScope = encoder->CreateDebugScope(0, ConstStringView("EnvironSys_RenderMapResources"));
 
-			kokko::RenderTextureId equirectTextureId;
+			kokko::render::TextureId equirectTextureId;
 			renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &equirectTextureId);
 			renderDevice->SetTextureStorage2D(equirectTextureId, 1, sizedFormat, equirectWidth, equirectHeight);
 			renderDevice->SetTextureSubImage2D(equirectTextureId, 0, 0, 0, equirectWidth, equirectHeight,
@@ -409,7 +409,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 				for (uint32_t i = 0; i < CubemapSideCount; ++i)
 				{
-					RenderFramebufferId framebuffer = framebufferIds[usedFramebufferCount];
+					render::FramebufferId framebuffer = framebufferIds[usedFramebufferCount];
 					usedFramebufferCount += 1;
 
 					renderDevice->AttachFramebufferTextureLayer(
@@ -426,7 +426,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 			}
 
 			texturesToRemove.PushBack(equirectTextureId);
-			equirectTextureId = RenderTextureId();
+			equirectTextureId = render::TextureId();
 
 			// Calculate diffuse irradiance
 
@@ -453,7 +453,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 				for (uint32_t i = 0; i < CubemapSideCount; ++i)
 				{
-					RenderFramebufferId framebuffer = framebufferIds[usedFramebufferCount];
+					render::FramebufferId framebuffer = framebufferIds[usedFramebufferCount];
 					usedFramebufferCount += 1;
 
 					renderDevice->AttachFramebufferTextureLayer(
@@ -502,7 +502,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 					for (uint32_t i = 0; i < CubemapSideCount; ++i)
 					{
-						RenderFramebufferId framebuffer = framebufferIds[usedFramebufferCount];
+						render::FramebufferId framebuffer = framebufferIds[usedFramebufferCount];
 						usedFramebufferCount += 1;
 
 						renderDevice->AttachFramebufferTextureLayer(
@@ -521,7 +521,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 			assert(usedFramebufferCount == framebufferIds.GetCount());
 
-			encoder->BindSampler(0, RenderSamplerId());
+			encoder->BindSampler(0, render::SamplerId());
 
 			env.textures.environmentTexture = envMapTextureId;
 			env.textures.diffuseIrradianceTexture = diffuseMapTextureId;

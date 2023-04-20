@@ -553,7 +553,7 @@ Optional<TextureId> EntityView::DrawTerrainTexture(
 
 	context.temporaryString.Assign("No texture");
 
-	RenderTextureId textureObjectId;
+	render::TextureId textureObjectId;
 
 	if (textureId != TextureId::Null)
 	{

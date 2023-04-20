@@ -13,7 +13,6 @@ class ShaderManager;
 class TextureManager;
 class Renderer;
 class World;
-class Framebuffer;
 
 class DebugVectorRenderer;
 class DebugTextRenderer;
@@ -33,6 +32,8 @@ class Window;
 namespace render
 {
 class CommandEncoder;
+class Device;
+class Framebuffer;
 }
 }
 
@@ -42,7 +43,7 @@ private:
 	static Debug* singletonInstance;
 
 	Allocator* allocator;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 
 	DebugVectorRenderer* vectorRenderer;
 	DebugTextRenderer* textRenderer;
@@ -71,7 +72,7 @@ private:
 	mode;
 
 public:
-	Debug(Allocator* allocator, AllocatorManager* allocManager, RenderDevice* renderDevice,
+	Debug(Allocator* allocator, AllocatorManager* allocManager, kokko::render::Device* renderDevice,
         kokko::Filesystem* filesystem);
 	~Debug();
 
@@ -84,7 +85,7 @@ public:
 	void Render(
 		kokko::render::CommandEncoder* encoder,
 		World* world,
-		const Framebuffer& framebuffer,
+		const kokko::render::Framebuffer& framebuffer,
 		const Optional<CameraParameters>& editorCamera);
 
 	DebugConsole* GetConsole() { return console; }

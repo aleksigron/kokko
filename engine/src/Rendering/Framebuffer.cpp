@@ -6,6 +6,11 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderTypes.hpp"
 
+namespace kokko
+{
+namespace render
+{
+
 Framebuffer::Framebuffer() :
 	renderDevice(nullptr),
 	width(0),
@@ -16,7 +21,7 @@ Framebuffer::Framebuffer() :
 	depthTextureIsOwned(false)
 {
 	for (size_t i = 0; i < MaxColorTextureCount; ++i)
-		colorTextureIds[i] = kokko::RenderTextureId();
+		colorTextureIds[i] = kokko::render::TextureId();
 }
 
 Framebuffer::Framebuffer(Framebuffer&& other) noexcept :
@@ -46,7 +51,7 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& other) noexcept
 	{
 		colorTextureIds[i] = other.colorTextureIds[i];
 
-		other.colorTextureIds[i] = kokko::RenderTextureId();
+		other.colorTextureIds[i] = kokko::render::TextureId();
 	}
 
 	depthTextureId = other.depthTextureId;
@@ -54,15 +59,15 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& other) noexcept
 
 	other.width = 0;
 	other.height = 0;
-	other.framebufferId = kokko::RenderFramebufferId();
+	other.framebufferId = kokko::render::FramebufferId();
 	other.colorTextureCount = 0;
-	other.depthTextureId = kokko::RenderTextureId();
+	other.depthTextureId = kokko::render::TextureId();
 	other.depthTextureIsOwned = false;
 
 	return *this;
 }
 
-void Framebuffer::SetRenderDevice(RenderDevice* device)
+void Framebuffer::SetRenderDevice(Device* device)
 {
 	renderDevice = device;
 }
@@ -72,19 +77,19 @@ bool Framebuffer::IsInitialized() const
 	return framebufferId != 0;
 }
 
-kokko::RenderFramebufferId Framebuffer::GetFramebufferId() const
+kokko::render::FramebufferId Framebuffer::GetFramebufferId() const
 {
 	return framebufferId;
 }
 
-kokko::RenderTextureId Framebuffer::GetColorTextureId(size_t index) const
+kokko::render::TextureId Framebuffer::GetColorTextureId(size_t index) const
 {
 	assert(index < colorTextureCount);
 
 	return colorTextureIds[index];
 }
 
-kokko::RenderTextureId Framebuffer::GetDepthTextureId() const
+kokko::render::TextureId Framebuffer::GetDepthTextureId() const
 {
 	return depthTextureId;
 }
@@ -172,7 +177,7 @@ void Framebuffer::Destroy()
 	if (framebufferId != 0)
 	{
 		renderDevice->DestroyFramebuffers(1, &framebufferId);
-		framebufferId = kokko::RenderFramebufferId();
+		framebufferId = kokko::render::FramebufferId();
 
 		width = 0;
 		height = 0;
@@ -182,7 +187,7 @@ void Framebuffer::Destroy()
 			renderDevice->DestroyTextures(static_cast<unsigned int>(colorTextureCount), colorTextureIds);
 
 			for (size_t i = 0; i < colorTextureCount; ++i)
-				colorTextureIds[i] = kokko::RenderTextureId();
+				colorTextureIds[i] = kokko::render::TextureId();
 
 			colorTextureCount = 0;
 		}
@@ -192,13 +197,13 @@ void Framebuffer::Destroy()
 			if (depthTextureIsOwned)
 				renderDevice->DestroyTextures(1, &depthTextureId);
 
-			depthTextureId = kokko::RenderTextureId();
+			depthTextureId = kokko::render::TextureId();
 			depthTextureIsOwned = false;
 		}
 	}
 }
 
-void Framebuffer::AttachExternalDepthTexture(kokko::RenderTextureId textureId)
+void Framebuffer::AttachExternalDepthTexture(kokko::render::TextureId textureId)
 {
 	assert(depthTextureId == 0);
 
@@ -212,3 +217,6 @@ void Framebuffer::SetDebugLabel(kokko::ConstStringView label)
 {
 	renderDevice->SetObjectLabel(RenderObjectType::Framebuffer, framebufferId.i, label);
 }
+
+} // namespace render
+} // namespace kokko

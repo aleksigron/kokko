@@ -19,7 +19,7 @@ ShaderManager::ShaderManager(
 	Allocator* allocator,
 	kokko::Filesystem* filesystem,
 	kokko::AssetLoader* assetLoader,
-	RenderDevice* renderDevice) :
+	kokko::render::Device* renderDevice) :
 	allocator(allocator),
 	filesystem(filesystem),
 	assetLoader(assetLoader),
@@ -100,7 +100,7 @@ ShaderId ShaderManager::CreateShader()
 	data.shader[id.i].buffer = nullptr;
 	data.shader[id.i].uniformBlockDefinition = kokko::ConstStringView();
 	data.shader[id.i].transparencyType = TransparencyType::Opaque;
-	data.shader[id.i].driverId = kokko::RenderShaderId();
+	data.shader[id.i].driverId = kokko::render::ShaderId();
 	data.shader[id.i].uniforms = kokko::UniformList();
 
 	++data.count;

@@ -97,7 +97,7 @@ void EditorCore::ResizeSceneViewFramebufferIfRequested()
 	sceneView->ResizeFramebufferIfRequested();
 }
 
-const Framebuffer& EditorCore::GetSceneViewFramebuffer()
+const render::Framebuffer& EditorCore::GetSceneViewFramebuffer()
 {
 	return sceneView->GetFramebuffer();
 }

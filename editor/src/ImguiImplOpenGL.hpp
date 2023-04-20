@@ -30,8 +30,8 @@ public:
 	void RenderDrawData(render::CommandEncoder* encoder, ImDrawData* draw_data);
 
 private:
-	Array<RenderVertexArrayId> vertexArrays;
-	Array<RenderBufferId> buffers;
+	Array<render::VertexArrayId> vertexArrays;
+	Array<render::BufferId> buffers;
 };
 
 }

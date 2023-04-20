@@ -25,7 +25,7 @@ class SceneView : public EditorWindow
 public:
 	SceneView();
 
-	void Initialize(RenderDevice* renderDevice, Window* window);
+	void Initialize(kokko::render::Device* renderDevice, Window* window);
 
 	virtual void Update(EditorContext&) override;
 	virtual void LateUpdate(EditorContext& context) override;
@@ -34,7 +34,7 @@ public:
 
 	void ResizeFramebufferIfRequested();
 
-	const Framebuffer& GetFramebuffer();
+	const kokko::render::Framebuffer& GetFramebuffer();
 	Vec2i GetContentAreaSize();
 
 	CameraParameters GetCameraParameters() const;
@@ -53,7 +53,7 @@ private:
 	bool windowIsHovered;
 
 	EditorCamera editorCamera;
-	Framebuffer framebuffer;
+	kokko::render::Framebuffer framebuffer;
 };
 
 }

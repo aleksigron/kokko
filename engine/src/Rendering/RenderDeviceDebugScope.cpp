@@ -4,27 +4,29 @@
 
 namespace kokko
 {
+namespace render
+{
 
-RenderDeviceDebugScope::RenderDeviceDebugScope(
-	RenderDevice* renderDevice, uint32_t id, kokko::ConstStringView message) :
+DeviceDebugScope::DeviceDebugScope(
+	Device* renderDevice, uint32_t id, kokko::ConstStringView message) :
 	renderDevice(renderDevice)
 {
 	renderDevice->BeginDebugScope(id, message);
 }
 
-RenderDeviceDebugScope::RenderDeviceDebugScope(RenderDeviceDebugScope&& other) noexcept
+DeviceDebugScope::DeviceDebugScope(DeviceDebugScope&& other) noexcept
 {
 	renderDevice = other.renderDevice;
 	other.renderDevice = nullptr;
 }
 
-RenderDeviceDebugScope::~RenderDeviceDebugScope()
+DeviceDebugScope::~DeviceDebugScope()
 {
 	if (renderDevice != nullptr)
 		renderDevice->EndDebugScope();
 }
 
-RenderDeviceDebugScope& RenderDeviceDebugScope::operator=(RenderDeviceDebugScope&& other) noexcept
+DeviceDebugScope& DeviceDebugScope::operator=(DeviceDebugScope&& other) noexcept
 {
 	renderDevice = other.renderDevice;
 	other.renderDevice = nullptr;
@@ -32,4 +34,5 @@ RenderDeviceDebugScope& RenderDeviceDebugScope::operator=(RenderDeviceDebugScope
 	return *this;
 }
 
+} // namespace render
 } // namespace kokko

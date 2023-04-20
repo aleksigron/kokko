@@ -5,7 +5,7 @@
 #include "Rendering/RenderDevice.hpp"
 #include <cassert>
 
-RenderTargetContainer::RenderTargetContainer(Allocator* allocator, RenderDevice* renderDevice) :
+RenderTargetContainer::RenderTargetContainer(Allocator* allocator, kokko::render::Device* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	renderTargetCount(0)
@@ -34,8 +34,8 @@ RenderTarget RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextur
 
 	if (renderTargetCount < MaxRenderTargetCount)
 	{
-		kokko::RenderFramebufferId framebuffer;
-		kokko::RenderTextureId texture;
+		kokko::render::FramebufferId framebuffer;
+		kokko::render::TextureId texture;
 
 		renderDevice->CreateFramebuffers(1, &framebuffer);
 		renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &texture);

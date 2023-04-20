@@ -21,6 +21,11 @@ namespace kokko
 
 class Filesystem;
 
+namespace render
+{
+class Device;
+}
+
 class ShaderLoader
 {
 public:
@@ -32,7 +37,7 @@ public:
 
 	ShaderLoader(Allocator* allocator,
 		Filesystem* filesystem,
-		RenderDevice* renderDevice);
+		kokko::render::Device* renderDevice);
 
 	~ShaderLoader();
 
@@ -51,7 +56,7 @@ private:
 
 	Allocator* allocator;
 	Filesystem* filesystem;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 
 	HashMap<uint32_t, kokko::String> includeFileCache;
 	SortedArray<uint32_t> filesIncludedInStage;

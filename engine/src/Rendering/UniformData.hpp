@@ -73,7 +73,7 @@ public:
 
 	// Set texture values
 
-	void SetTexture(TextureUniform& uniform, TextureId textureId, kokko::RenderTextureId textureObjectId);
+	void SetTexture(TextureUniform& uniform, TextureId textureId, kokko::render::TextureId textureObjectId);
 
 	void WriteToUniformBuffer(uint8_t* uniformBuffer) const;
 

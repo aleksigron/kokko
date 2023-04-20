@@ -52,7 +52,7 @@ Engine::Engine(
 	Allocator* alloc = RootAllocator::GetDefaultAllocator();
     systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 
-    renderDevice = RenderDevice::Create(systemAllocator);
+    renderDevice = kokko::render::Device::Create(systemAllocator);
 	commandBuffer = systemAllocator->MakeNew<kokko::render::CommandBuffer>(systemAllocator);
 	commandEncoder = systemAllocator->MakeNew<kokko::render::CommandEncoder>(systemAllocator, commandBuffer);
 	commandExecutor = kokko::render::CommandExecutor::Create(systemAllocator);
@@ -150,7 +150,7 @@ void Engine::UpdateWorld()
 	world.instance->Update(windowManager.instance->GetWindow()->GetInputManager());
 }
 
-void Engine::Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer)
+void Engine::Render(const Optional<CameraParameters>& editorCamera, const kokko::render::Framebuffer& framebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
 

@@ -29,7 +29,7 @@
 World::World(AllocatorManager* allocManager,
 	Allocator* allocator,
 	Allocator* debugNameAllocator,
-	RenderDevice* renderDevice,
+	kokko::render::Device* renderDevice,
 	kokko::render::CommandEncoder* commandEncoder,
 	kokko::AssetLoader* assetLoader,
 	const kokko::ResourceManagers& resourceManagers) :
@@ -126,7 +126,7 @@ void World::Update(InputManager* inputManager)
 	scriptSystem.instance->UpdateScripts(this, inputManager);
 }
 
-void World::Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer)
+void World::Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const kokko::render::Framebuffer& framebuffer)
 {
 	// Propagate transform updates from Scene to other systems that require it
 	TransformUpdateReceiver* transformUpdateReceivers[] =

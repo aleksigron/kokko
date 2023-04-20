@@ -88,7 +88,7 @@ Optional<RenderTextureSizedFormat> SizedFormatFromBaseFormatAndType(
 
 TextureId TextureId::Null = TextureId{ 0 };
 
-TextureManager::TextureManager(Allocator* allocator, kokko::AssetLoader* assetLoader, RenderDevice* renderDevice) :
+TextureManager::TextureManager(Allocator* allocator, kokko::AssetLoader* assetLoader, kokko::render::Device* renderDevice) :
 	allocator(allocator),
 	assetLoader(assetLoader),
 	renderDevice(renderDevice),
@@ -189,7 +189,7 @@ void TextureManager::Reallocate(unsigned int required)
 
 	for (unsigned int i = data.allocated, end = newData.allocated; i < end; ++i)
 	{
-		newData.texture[i].textureObjectId = kokko::RenderTextureId();
+		newData.texture[i].textureObjectId = kokko::render::TextureId();
 	}
 
 	data = newData;
@@ -241,7 +241,7 @@ void TextureManager::RemoveTexture(TextureId id)
 	{
 		auto objectId = data.texture[id.i].textureObjectId;
 		renderDevice->DestroyTextures(1, &objectId);
-		data.texture[id.i].textureObjectId = kokko::RenderTextureId();
+		data.texture[id.i].textureObjectId = kokko::render::TextureId();
 	}
 
 	--data.count;
@@ -316,7 +316,7 @@ bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> byt
 		textureBytes = stbi_load_from_memory(fileBytesPtr, length, &width, &height, &nrComponents, 0);
 	}
 
-	kokko::RenderTextureId textureObjectId;
+	kokko::render::TextureId textureObjectId;
 
 	if (textureBytes != nullptr)
 	{

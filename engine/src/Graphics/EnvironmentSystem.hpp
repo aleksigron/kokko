@@ -15,7 +15,6 @@
 
 class Allocator;
 class Filesystem;
-class RenderDevice;
 class ShaderManager;
 class MeshManager;
 class TextureManager;
@@ -28,6 +27,7 @@ class AssetLoader;
 namespace render
 {
 class CommandEncoder;
+class Device;
 }
 
 struct EnvironmentId
@@ -70,13 +70,13 @@ private:
 
 	Allocator* allocator;
 	AssetLoader* assetLoader;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
 	TextureManager* textureManager;
 
 	Array<EnvironmentComponent> environmentMaps;
-	Array<RenderTextureId> texturesToRemove;
+	Array<render::TextureId> texturesToRemove;
 
 	HashMap<unsigned int, EnvironmentId> entityMap;
 
@@ -85,10 +85,10 @@ private:
 	size_t viewportBlockStride;
 	size_t specularBlockStride;
 
-	Array<RenderFramebufferId> framebufferIds;
-	RenderBufferId viewportUniformBufferId;
-	RenderBufferId specularUniformBufferId;
-	RenderSamplerId samplerId;
+	Array<render::FramebufferId> framebufferIds;
+	render::BufferId viewportUniformBufferId;
+	render::BufferId specularUniformBufferId;
+	render::SamplerId samplerId;
 	MeshId cubeMeshId;
 
 	bool resourcesUploaded;
@@ -99,7 +99,7 @@ public:
 	EnvironmentSystem(
 		Allocator* allocator,
 		AssetLoader* assetLoader,
-		RenderDevice* renderDevice,
+		kokko::render::Device* renderDevice,
 		ShaderManager* shaderManager,
 		MeshManager* meshManager,
 		TextureManager* textureManager);

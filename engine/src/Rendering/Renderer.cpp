@@ -95,7 +95,7 @@ struct DebugNormalUniformBlock
 
 Renderer::Renderer(
 	Allocator* allocator,
-	RenderDevice* renderDevice,
+	kokko::render::Device* renderDevice,
 	kokko::render::CommandEncoder* commandEncoder,
 	kokko::MeshComponentSystem* componentSystem,
 	Scene* scene,
@@ -114,7 +114,7 @@ Renderer::Renderer(
 	viewportCount(0),
 	viewportIndexFullscreen(0),
 	uniformStagingBuffer(allocator),
-	objectUniformBufferLists{ Array<RenderBufferId>(allocator) },
+	objectUniformBufferLists{ Array<render::BufferId>(allocator) },
 	currentFrameIndex(0),
 	scene(scene),
 	cameraSystem(cameraSystem),
@@ -176,7 +176,7 @@ void Renderer::Initialize()
 			viewportData = static_cast<RenderViewport*>(buf);
 
 			// Create uniform buffer objects
-			RenderBufferId buffers[MaxViewportCount];
+			render::BufferId buffers[MaxViewportCount];
 			device->CreateBuffers(MaxViewportCount, buffers);
 
 			for (size_t i = 0; i < MaxViewportCount; ++i)
@@ -258,7 +258,7 @@ void Renderer::Deinitialize()
 	{
 		if (objectUniformBufferLists[i].GetCount() > 0)
 		{
-			Array<RenderBufferId>& list = objectUniformBufferLists[i];
+			Array<render::BufferId>& list = objectUniformBufferLists[i];
 			device->DestroyBuffers(static_cast<unsigned int>(list.GetCount()), list.GetData());
 			list.Clear();
 		}
@@ -271,7 +271,7 @@ void Renderer::Deinitialize()
 			if (viewportData[i].uniformBlockObject != 0)
 			{
 				device->DestroyBuffers(1, &(viewportData[i].uniformBlockObject));
-				viewportData[i].uniformBlockObject = RenderBufferId();
+				viewportData[i].uniformBlockObject = render::BufferId();
 			}
 		}
 
@@ -281,7 +281,7 @@ void Renderer::Deinitialize()
 	}
 }
 
-void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
+void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCamera, const render::Framebuffer& targetFramebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -326,12 +326,12 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 	intptr_t objectDrawsProcessed = 0;
 
 	uint64_t lastVpIdx = MaxViewportCount;
-	RenderShaderId lastShaderProgram = RenderShaderId();
+	render::ShaderId lastShaderProgram = render::ShaderId();
 	const MeshDrawData* draw = nullptr;
 	MeshId lastMeshId = MeshId{ 0 };
 	MaterialId lastMaterialId = MaterialId{ 0 };
 
-	Array<RenderBufferId>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
+	Array<render::BufferId>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
 
 	CameraParameters cameraParams = GetCameraParameters(editorCamera, targetFramebuffer);
 
@@ -382,7 +382,7 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 				// Update viewport uniform block
 				if (vpIdx != lastVpIdx)
 				{
-					RenderBufferId ubo = viewportData[vpIdx].uniformBlockObject;
+					render::BufferId ubo = viewportData[vpIdx].uniformBlockObject;
 					encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, ubo);
 
 					lastVpIdx = vpIdx;
@@ -391,8 +391,8 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 				if (matId != lastMaterialId)
 				{
 					lastMaterialId = matId;
-					RenderShaderId matShaderId = materialManager->GetMaterialShaderDeviceId(matId);
-					RenderBufferId matUniformBuffer = materialManager->GetMaterialUniformBufferId(matId);
+					render::ShaderId matShaderId = materialManager->GetMaterialShaderDeviceId(matId);
+					render::BufferId matUniformBuffer = materialManager->GetMaterialUniformBufferId(matId);
 
 					if (matShaderId != lastShaderProgram)
 					{
@@ -437,13 +437,13 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 
 				// Reset state cache
 				lastVpIdx = MaxViewportCount;
-				lastShaderProgram = RenderShaderId();
+				lastShaderProgram = render::ShaderId();
 				draw = nullptr;
 				lastMeshId = MeshId{ 0 };
 				lastMaterialId = MaterialId{ 0 };
 
 				// TODO: manage sampler state more robustly
-				encoder->BindSampler(0, RenderSamplerId());
+				encoder->BindSampler(0, render::SamplerId());
 
 				// TODO: Figure how to restore viewport and other relevant state
 			}
@@ -456,7 +456,7 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 
 	currentFrameIndex = (currentFrameIndex + 1) % FramesInFlightCount;
 
-	targetFramebufferId = RenderFramebufferId();
+	targetFramebufferId = render::FramebufferId();
 }
 
 void Renderer::BindMaterialTextures(const kokko::UniformData& materialUniforms) const
@@ -499,7 +499,7 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 
 	size_t buffersRequired = (objectDrawCount + objectsPerUniformBuffer - 1) / objectsPerUniformBuffer;
 
-	Array<RenderBufferId>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
+	Array<render::BufferId>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
 
 	// Create new object transform uniform buffers if needed
 	if (buffersRequired > objUniformBuffers.GetCount())
@@ -674,7 +674,7 @@ float CalculateDepth(const Vec3f& objPos, const Vec3f& eyePos, const Vec3f& eyeF
 	return (Vec3f::Dot(objPos - eyePos, eyeForward) - minusNear) / farMinusNear;
 }
 
-CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
+CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>& editorCamera, const render::Framebuffer& targetFramebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -707,7 +707,7 @@ CameraParameters Renderer::GetCameraParameters(const Optional<CameraParameters>&
 	}
 }
 
-unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer)
+unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& editorCamera, const render::Framebuffer& targetFramebuffer)
 {
 	KOKKO_PROFILE_FUNCTION();
 

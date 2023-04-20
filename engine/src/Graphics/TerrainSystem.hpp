@@ -50,7 +50,7 @@ class TerrainSystem : public GraphicsFeature
 public:
 	TerrainSystem(
 		Allocator* allocator,
-		RenderDevice* renderDevice,
+		kokko::render::Device* renderDevice,
 		ShaderManager* shaderManager,
 		TextureManager* textureManager);
 	~TerrainSystem();
@@ -77,22 +77,22 @@ public:
 	void SetTextureScale(TerrainId id, Vec2f scale) { data.textureScale[id.i] = scale; }
 
 	TextureId GetAlbedoTextureId(TerrainId id) const;
-	void SetAlbedoTexture(TerrainId id, TextureId textureId, RenderTextureId textureObject);
+	void SetAlbedoTexture(TerrainId id, TextureId textureId, render::TextureId textureObject);
 
 	TextureId GetRoughnessTextureId(TerrainId id) const;
-	void SetRoughnessTexture(TerrainId id, TextureId textureId, RenderTextureId textureObject);
+	void SetRoughnessTexture(TerrainId id, TextureId textureId, render::TextureId textureObject);
 
 	virtual void Submit(const SubmitParameters& parameters) override;
 	virtual void Render(const RenderParameters& parameters) override;
 
 private:
 	Allocator* allocator;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 	ShaderManager* shaderManager;
 	TextureManager* textureManager;
 	
 	unsigned int uniformBlockStride;
-	RenderBufferId uniformBufferId;
+	render::BufferId uniformBufferId;
 
 	ShaderId terrainShader;
 
@@ -100,20 +100,20 @@ private:
 
 	struct VertexData
 	{
-		RenderVertexArrayId vertexArray;
-		RenderBufferId vertexBuffer;
-		RenderBufferId indexBuffer;
+		render::VertexArrayId vertexArray;
+		render::BufferId vertexBuffer;
+		render::BufferId indexBuffer;
 
 		int indexCount;
 	};
 	VertexData vertexData;
 
-	RenderSamplerId textureSampler;
+	render::SamplerId textureSampler;
 
 	struct TextureInfo
 	{
 		TextureId textureId;
-		RenderTextureId textureObjectId;
+		render::TextureId textureObjectId;
 	};
 
 	struct TerrainTextures

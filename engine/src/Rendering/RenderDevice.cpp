@@ -9,24 +9,32 @@
 #endif
 
 #ifdef KOKKO_USE_OPENGL
-#include "Rendering/OpenGL/RenderDeviceOpenGL.hpp"
+#include "Rendering/RenderDeviceOpenGL.hpp"
 #endif
 
+namespace kokko
+{
+namespace render
+{
+
 #ifdef KOKKO_USE_METAL
-RenderDevice* RenderDevice::Create(Allocator* allocator)
+kokko::render::Device* Device::Create(Allocator* allocator)
 {
     return allocator->MakeNew<kokko::RenderDeviceMetal>();
 }
 #endif
 
 #ifdef KOKKO_USE_OPENGL
-RenderDevice* RenderDevice::Create(Allocator* allocator)
+kokko::render::Device* Device::Create(Allocator* allocator)
 {
-    return allocator->MakeNew<RenderDeviceOpenGL>();
+    return allocator->MakeNew<DeviceOpenGL>();
 }
 #endif
 
-kokko::RenderDeviceDebugScope RenderDevice::CreateDebugScope(uint32_t id, kokko::ConstStringView message)
+DeviceDebugScope Device::CreateDebugScope(uint32_t id, kokko::ConstStringView message)
 {
-    return kokko::RenderDeviceDebugScope(this, id, message);
+    return DeviceDebugScope(this, id, message);
 }
+
+} // namespace render
+} // namespace kokko

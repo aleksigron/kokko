@@ -57,7 +57,7 @@ struct TextureUniform : ShaderUniform
 {
 	int uniformLocation;
 	TextureId textureId;
-	kokko::RenderTextureId textureObject;
+	kokko::render::TextureId textureObject;
 };
 
 struct UniformTypeInfo

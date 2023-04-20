@@ -39,9 +39,9 @@ private:
 
 	unsigned int renderOrder;
 
-	kokko::RenderBufferId uniformBufferId;
-	kokko::RenderFramebufferId brdfLutFramebufferId;
-	kokko::RenderTextureId brdfLutTextureId;
+	kokko::render::BufferId uniformBufferId;
+	kokko::render::FramebufferId brdfLutFramebufferId;
+	kokko::render::TextureId brdfLutTextureId;
 
 	enum
 	{
@@ -50,7 +50,7 @@ private:
 		Sampler_Mipmap,
 		Sampler_COUNT
 	};
-	kokko::RenderSamplerId samplers[Sampler_COUNT];
+	kokko::render::SamplerId samplers[Sampler_COUNT];
 };
 
 }

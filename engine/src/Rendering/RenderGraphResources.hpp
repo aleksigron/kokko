@@ -16,19 +16,19 @@ namespace kokko
 class RenderGraphResources
 {
 public:
-	RenderGraphResources(RenderDevice* renderDevice, MeshManager* meshManager);
+	RenderGraphResources(kokko::render::Device* renderDevice, MeshManager* meshManager);
 
 	void VerifyResourcesAreCreated(Vec2i fullscreenViewportResolution);
 	void Deinitialize();
 
-	const Framebuffer& GetGeometryBuffer() const;
-	const Framebuffer& GetShadowBuffer() const;
-	const Framebuffer& GetLightAccumulationBuffer() const;
-	const Framebuffer& GetAmbientOcclusionBuffer() const;
+	const render::Framebuffer& GetGeometryBuffer() const;
+	const render::Framebuffer& GetShadowBuffer() const;
+	const render::Framebuffer& GetLightAccumulationBuffer() const;
+	const render::Framebuffer& GetAmbientOcclusionBuffer() const;
 
-	RenderTextureId GetGeometryBufferAlbedoTexture() const;
-	RenderTextureId GetGeometryBufferNormalTexture() const;
-	RenderTextureId GetGeometryBufferMaterialTexture() const;
+	render::TextureId GetGeometryBufferAlbedoTexture() const;
+	render::TextureId GetGeometryBufferNormalTexture() const;
+	render::TextureId GetGeometryBufferMaterialTexture() const;
 
 	Vec2i GetFullscreenViewportSize() const;
 
@@ -38,13 +38,13 @@ private:
 	static constexpr size_t GbufferMaterialIndex = 2;
 	static constexpr size_t GbufferColorCount = 3;
 
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 	MeshManager* meshManager;
 
-	Framebuffer framebufferGbuffer;
-	Framebuffer framebufferShadow;
-	Framebuffer framebufferLightAccumulation;
-	Framebuffer framebufferAmbientOcclusion;
+	render::Framebuffer framebufferGbuffer;
+	render::Framebuffer framebufferShadow;
+	render::Framebuffer framebufferLightAccumulation;
+	render::Framebuffer framebufferAmbientOcclusion;
 
 	Vec2i fullscreenViewportSize;
 };

@@ -12,7 +12,7 @@
 namespace kokko
 {
 
-RenderGraphResources::RenderGraphResources(RenderDevice* renderDevice, MeshManager* meshManager) :
+RenderGraphResources::RenderGraphResources(kokko::render::Device* renderDevice, MeshManager* meshManager) :
 	renderDevice(renderDevice),
 	meshManager(meshManager)
 {
@@ -107,37 +107,37 @@ void RenderGraphResources::Deinitialize()
 	framebufferAmbientOcclusion.Destroy();
 }
 
-const Framebuffer& RenderGraphResources::GetGeometryBuffer() const
+const render::Framebuffer& RenderGraphResources::GetGeometryBuffer() const
 {
 	return framebufferGbuffer;
 }
 
-const Framebuffer& RenderGraphResources::GetShadowBuffer() const
+const render::Framebuffer& RenderGraphResources::GetShadowBuffer() const
 {
 	return framebufferShadow;
 }
 
-const Framebuffer& RenderGraphResources::GetLightAccumulationBuffer() const
+const render::Framebuffer& RenderGraphResources::GetLightAccumulationBuffer() const
 {
 	return framebufferLightAccumulation;
 }
 
-const Framebuffer& RenderGraphResources::GetAmbientOcclusionBuffer() const
+const render::Framebuffer& RenderGraphResources::GetAmbientOcclusionBuffer() const
 {
 	return framebufferAmbientOcclusion;
 }
 
-RenderTextureId RenderGraphResources::GetGeometryBufferAlbedoTexture() const
+render::TextureId RenderGraphResources::GetGeometryBufferAlbedoTexture() const
 {
 	return framebufferGbuffer.GetColorTextureId(GbufferAlbedoIndex);
 }
 
-RenderTextureId RenderGraphResources::GetGeometryBufferNormalTexture() const
+render::TextureId RenderGraphResources::GetGeometryBufferNormalTexture() const
 {
 	return framebufferGbuffer.GetColorTextureId(GbufferNormalIndex);
 }
 
-RenderTextureId RenderGraphResources::GetGeometryBufferMaterialTexture() const
+render::TextureId RenderGraphResources::GetGeometryBufferMaterialTexture() const
 {
 	return framebufferGbuffer.GetColorTextureId(GbufferMaterialIndex);
 }

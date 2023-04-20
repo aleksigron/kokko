@@ -61,12 +61,12 @@ uint32_t ResourceIdMap<ResourceId>::GetDeviceId(ResourceId resourceId) const
 }
 
 // Explicitly instantiate specific types
-template class ResourceIdMap<RenderBufferId>;
-template class ResourceIdMap<RenderFramebufferId>;
-template class ResourceIdMap<RenderSamplerId>;
-template class ResourceIdMap<RenderShaderId>;
-template class ResourceIdMap<RenderTextureId>;
-template class ResourceIdMap<RenderVertexArrayId>;
+template class ResourceIdMap<render::BufferId>;
+template class ResourceIdMap<render::FramebufferId>;
+template class ResourceIdMap<render::SamplerId>;
+template class ResourceIdMap<render::ShaderId>;
+template class ResourceIdMap<render::TextureId>;
+template class ResourceIdMap<render::VertexArrayId>;
 
 ResourceMap::ResourceMap(Allocator* allocator) :
 	bufferIds(allocator),

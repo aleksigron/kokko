@@ -15,7 +15,6 @@ class Filesystem;
 class InputManager;
 class DebugVectorRenderer;
 class Window;
-class Framebuffer;
 
 struct CameraParameters;
 
@@ -41,6 +40,7 @@ class Window;
 namespace render
 {
 class CommandEncoder;
+class Framebuffer;
 }
 }
 
@@ -50,7 +50,7 @@ public:
 	World(AllocatorManager* allocManager,
 		Allocator* allocator,
 		Allocator* debugNameAllocator,
-		RenderDevice* renderDevice,
+		kokko::render::Device* renderDevice,
 		kokko::render::CommandEncoder* commandEncoder,
 		kokko::AssetLoader* assetLoader,
 		const kokko::ResourceManagers& resourceManagers);
@@ -62,7 +62,8 @@ public:
 	void ClearAllEntities();
 
 	void Update(InputManager* inputManager);
-	void Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
+	void Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera,
+		const kokko::render::Framebuffer& framebuffer);
 	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& renderDebug);
 
 	EntityManager* GetEntityManager() { return entityManager.instance; }

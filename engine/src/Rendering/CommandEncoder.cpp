@@ -84,7 +84,7 @@ void CommandEncoder::SetClearDepth(float depth)
 // ==== BUFFERS ====
 // =================
 
-void CommandEncoder::BindBuffer(RenderBufferTarget target, RenderBufferId buffer)
+void CommandEncoder::BindBuffer(RenderBufferTarget target, render::BufferId buffer)
 {
 	CmdBindBuffer data{
 		RenderCommandType::BindBuffer,
@@ -95,7 +95,7 @@ void CommandEncoder::BindBuffer(RenderBufferTarget target, RenderBufferId buffer
 	CopyCommand(&data, sizeof(data));
 }
 
-void CommandEncoder::BindBufferBase(RenderBufferTarget target, uint32_t bindingPoint, RenderBufferId buffer)
+void CommandEncoder::BindBufferBase(RenderBufferTarget target, uint32_t bindingPoint, render::BufferId buffer)
 {
 	CmdBindBufferBase data{
 		RenderCommandType::BindBufferBase,
@@ -110,7 +110,7 @@ void CommandEncoder::BindBufferBase(RenderBufferTarget target, uint32_t bindingP
 void CommandEncoder::BindBufferRange(
 	RenderBufferTarget target,
 	uint32_t bindingPoint,
-	RenderBufferId id,
+	render::BufferId id,
 	intptr_t offset,
 	size_t length)
 {
@@ -237,7 +237,7 @@ void CommandEncoder::DrawIndexedIndirect(RenderPrimitiveMode mode, RenderIndexTy
 // ==== FRAMEBUFFER ====
 // =====================
 
-void CommandEncoder::BindFramebuffer(RenderFramebufferId framebuffer)
+void CommandEncoder::BindFramebuffer(render::FramebufferId framebuffer)
 {
 	CmdBindFramebuffer data{
 		RenderCommandType::BindFramebuffer,
@@ -252,7 +252,7 @@ void CommandEncoder::BindFramebuffer(RenderFramebufferId framebuffer)
 // ==== SAMPLER ====
 // =================
 
-void CommandEncoder::BindSampler(uint32_t textureUnit, RenderSamplerId sampler)
+void CommandEncoder::BindSampler(uint32_t textureUnit, render::SamplerId sampler)
 {
 	CmdBindSampler data{
 		RenderCommandType::BindSampler,
@@ -267,7 +267,7 @@ void CommandEncoder::BindSampler(uint32_t textureUnit, RenderSamplerId sampler)
 // ==== SHADER ====
 // ================
 
-void CommandEncoder::UseShaderProgram(RenderShaderId shader)
+void CommandEncoder::UseShaderProgram(render::ShaderId shader)
 {
 	CmdUseShaderProgram data{
 		RenderCommandType::UseShaderProgram,
@@ -402,7 +402,7 @@ void CommandEncoder::SetViewport(int32_t x, int32_t y, int32_t w, int32_t h)
 void CommandEncoder::BindTextureToShader(
 	int32_t uniformLocation,
 	uint32_t textureUnit,
-	RenderTextureId texture)
+	render::TextureId texture)
 {
 	CmdBindTextureToShader data{
 		RenderCommandType::BindTextureToShader,
@@ -418,7 +418,7 @@ void CommandEncoder::BindTextureToShader(
 // ==== VERTEX ARRAY ====
 // ======================
 
-void CommandEncoder::BindVertexArray(RenderVertexArrayId id)
+void CommandEncoder::BindVertexArray(render::VertexArrayId id)
 {
 	CmdBindVertexArray data{
 		RenderCommandType::BindVertexArray,

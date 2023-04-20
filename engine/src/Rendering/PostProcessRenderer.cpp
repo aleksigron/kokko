@@ -78,7 +78,7 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 		const ShaderData& shader = shaderManager->GetShaderData(pass.shaderId);
 		encoder->UseShaderProgram(shader.driverId);
 
-		if (pass.uniformBufferId != kokko::RenderBufferId(0))
+		if (pass.uniformBufferId != kokko::render::BufferId(0))
 		{
 			encoder->BindBufferRange(RenderBufferTarget::UniformBuffer,
 				pass.uniformBindingPoint, pass.uniformBufferId,
@@ -93,7 +93,7 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 }
 
 void PostProcessRenderer::BindTextures(const ShaderData& shader, unsigned int count,
-	const uint32_t* nameHashes, const kokko::RenderTextureId* textures, const kokko::RenderSamplerId* samplers)
+	const uint32_t* nameHashes, const kokko::render::TextureId* textures, const kokko::render::SamplerId* samplers)
 {
 	for (unsigned int i = 0; i < count; ++i)
 	{

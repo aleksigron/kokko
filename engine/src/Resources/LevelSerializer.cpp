@@ -22,7 +22,7 @@
 
 static const char* const ComponentTypeKey = "component_type";
 
-LevelSerializer::LevelSerializer(Allocator* allocator, RenderDevice* renderDevice) :
+LevelSerializer::LevelSerializer(Allocator* allocator, kokko::render::Device* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	world(nullptr),

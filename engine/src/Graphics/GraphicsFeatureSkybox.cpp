@@ -37,7 +37,7 @@ GraphicsFeatureSkybox::GraphicsFeatureSkybox() :
 
 void GraphicsFeatureSkybox::Initialize(const InitializeParameters& parameters)
 {
-	RenderDevice* device = parameters.renderDevice;
+	kokko::render::Device* device = parameters.renderDevice;
 
 	meshId = parameters.meshManager->CreateMesh();
 	MeshPresets::UploadCube(parameters.meshManager, meshId);
@@ -52,7 +52,7 @@ void GraphicsFeatureSkybox::Initialize(const InitializeParameters& parameters)
 void GraphicsFeatureSkybox::Deinitialize(const InitializeParameters& parameters)
 {
 	parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
-	uniformBufferId = RenderBufferId();
+	uniformBufferId = render::BufferId();
 
 	parameters.meshManager->RemoveMesh(meshId);
 	meshId = MeshId::Null;
@@ -60,7 +60,7 @@ void GraphicsFeatureSkybox::Deinitialize(const InitializeParameters& parameters)
 
 void GraphicsFeatureSkybox::Upload(const UploadParameters& parameters)
 {
-	RenderDevice* device = parameters.renderDevice;
+	kokko::render::Device* device = parameters.renderDevice;
 
 	Mat4x4f cameraProjection = parameters.cameraParameters.projection.GetProjectionMatrix(true);
 	const auto& cameraTransforms = parameters.cameraParameters.transform;

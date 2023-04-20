@@ -114,9 +114,9 @@ int main(int argc, char** argv)
 	constexpr int imageBytes = stride * height;
 	constexpr int totalBytes = imageBytes + stride; // Reserve one row for swapping row order
 
-	Framebuffer framebuffer;
+	kokko::render::Framebuffer framebuffer;
 	RenderTextureSizedFormat colorFormat[] = { RenderTextureSizedFormat::SRGB8 };
-	RenderDevice* renderDevice = engine.GetRenderDevice();
+	kokko::render::Device* renderDevice = engine.GetRenderDevice();
 	kokko::render::CommandEncoder* encoder = engine.GetCommandEncoder();
 	framebuffer.SetRenderDevice(renderDevice);
 	framebuffer.Create(width, height, Optional<RenderTextureSizedFormat>(), ArrayView(colorFormat));

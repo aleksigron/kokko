@@ -24,5 +24,5 @@ struct RenderViewport
 
 	FrustumPlanes frustum;
 
-	kokko::RenderBufferId uniformBlockObject;
+	kokko::render::BufferId uniformBlockObject;
 };

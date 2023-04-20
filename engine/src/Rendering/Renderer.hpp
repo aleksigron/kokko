@@ -64,15 +64,15 @@ private:
 	static const size_t ObjectUniformBufferSize = 512 * 1024;
 
 	Allocator* allocator;
-	RenderDevice* device;
-	kokko::render::CommandEncoder* encoder;
+	kokko::render::Device* device;
+	render::CommandEncoder* encoder;
 	MeshComponentSystem* componentSystem;
 
 	RenderGraphResources* renderGraphResources;
 	RenderTargetContainer* renderTargetContainer;
 	PostProcessRenderer* postProcessRenderer;
 	
-	RenderFramebufferId targetFramebufferId;
+	render::FramebufferId targetFramebufferId;
 
 	RenderViewport* viewportData;
 	unsigned int viewportCount;
@@ -83,7 +83,7 @@ private:
 	MaterialId fallbackMeshMaterial;
 
 	Array<uint8_t> uniformStagingBuffer;
-	Array<RenderBufferId> objectUniformBufferLists[FramesInFlightCount];
+	Array<render::BufferId> objectUniformBufferLists[FramesInFlightCount];
 	unsigned int currentFrameIndex;
 
 	intptr_t objectUniformBlockStride;
@@ -94,7 +94,7 @@ private:
 	Scene* scene;
 	CameraSystem* cameraSystem;
 	LightManager* lightManager;
-	kokko::EnvironmentSystem* environmentSystem;
+	EnvironmentSystem* environmentSystem;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
 	MaterialManager* materialManager;
@@ -108,18 +108,18 @@ private:
 
 	Array<LightId> lightResultArray;
 
-	Array<kokko::GraphicsFeature*> graphicsFeatures;
+	Array<GraphicsFeature*> graphicsFeatures;
 
-	RenderBufferId normalDebugBufferId;
+	render::BufferId normalDebugBufferId;
 
 	void BindMaterialTextures(const kokko::UniformData& materialUniforms) const;
 
 	CameraParameters GetCameraParameters(const Optional<CameraParameters>& editorCamera,
-		const Framebuffer& targetFramebuffer);
+		const render::Framebuffer& targetFramebuffer);
 
 	// Returns the number of object draw commands added
 	unsigned int PopulateCommandList(const Optional<CameraParameters>& editorCamera,
-		const Framebuffer& targetFramebuffer);
+		const render::Framebuffer& targetFramebuffer);
 
 	void UpdateUniformBuffers(size_t objectDrawCount);
 
@@ -128,14 +128,14 @@ private:
 
 public:
 	Renderer(Allocator* allocator,
-		RenderDevice* renderDevice,
-		kokko::render::CommandEncoder* commandEncoder,
-		kokko::MeshComponentSystem* componentSystem,
+		render::Device* renderDevice,
+		render::CommandEncoder* commandEncoder,
+		MeshComponentSystem* componentSystem,
 		Scene* scene,
 		CameraSystem* cameraSystem,
 		LightManager* lightManager,
-		kokko::EnvironmentSystem* environmentSystem,
-		const kokko::ResourceManagers& resourceManagers);
+		EnvironmentSystem* environmentSystem,
+		const ResourceManagers& resourceManagers);
 	~Renderer();
 
 	void Initialize();
@@ -144,7 +144,7 @@ public:
 	void SetLockCullingCamera(bool lockEnable);
 	const Mat4x4f& GetCullingCameraTransform() const;
 
-	void Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const Framebuffer& targetFramebuffer);
+	void Render(Window* window, const Optional<CameraParameters>& editorCamera, const render::Framebuffer& targetFramebuffer);
 
 	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings);
 

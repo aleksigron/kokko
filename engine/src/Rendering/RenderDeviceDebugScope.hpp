@@ -4,24 +4,27 @@
 
 #include "Core/StringView.hpp"
 
-class RenderDevice;
-
 namespace kokko
 {
+namespace render
+{
 
-class RenderDeviceDebugScope
+class Device;
+
+class DeviceDebugScope
 {
 public:
-	RenderDeviceDebugScope(RenderDevice* renderDevice, uint32_t id, kokko::ConstStringView message);
-	RenderDeviceDebugScope(const RenderDeviceDebugScope&) = delete;
-	RenderDeviceDebugScope(RenderDeviceDebugScope&& other) noexcept;
-	~RenderDeviceDebugScope();
+	DeviceDebugScope(Device* renderDevice, uint32_t id, kokko::ConstStringView message);
+	DeviceDebugScope(const DeviceDebugScope&) = delete;
+	DeviceDebugScope(DeviceDebugScope&& other) noexcept;
+	~DeviceDebugScope();
 
-	RenderDeviceDebugScope& operator=(const RenderDeviceDebugScope&) = delete;
-	RenderDeviceDebugScope& operator=(RenderDeviceDebugScope&& other) noexcept;
+	DeviceDebugScope& operator=(const DeviceDebugScope&) = delete;
+	DeviceDebugScope& operator=(DeviceDebugScope&& other) noexcept;
 
 private:
-	RenderDevice* renderDevice;
+	Device* renderDevice;
 };
 
-}
+} // namespace render
+} // namespace kokko

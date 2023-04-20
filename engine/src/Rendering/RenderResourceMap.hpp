@@ -35,12 +35,12 @@ struct ResourceMap
 {
 	explicit ResourceMap(Allocator* allocator);
 
-	ResourceIdMap<RenderBufferId> bufferIds;
-	ResourceIdMap<RenderFramebufferId> framebufferIds;
-	ResourceIdMap<RenderSamplerId> samplerIds;
-	ResourceIdMap<RenderShaderId> shaderIds;
-	ResourceIdMap<RenderTextureId> textureIds;
-	ResourceIdMap<RenderVertexArrayId> vertexArrayIds;
+	ResourceIdMap<render::BufferId> bufferIds;
+	ResourceIdMap<render::FramebufferId> framebufferIds;
+	ResourceIdMap<render::SamplerId> samplerIds;
+	ResourceIdMap<render::ShaderId> shaderIds;
+	ResourceIdMap<render::TextureId> textureIds;
+	ResourceIdMap<render::VertexArrayId> vertexArrayIds;
 };
 
 }

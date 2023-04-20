@@ -18,13 +18,17 @@
 namespace kokko
 {
 class AssetLoader;
+
+namespace render
+{
+class Device;
+}
 }
 
 struct BoundingBox;
 
 class Allocator;
 class Filesystem;
-class RenderDevice;
 
 struct VertexData
 {
@@ -68,7 +72,7 @@ struct IndexedVertexData : VertexData
 
 struct MeshDrawData
 {
-	kokko::RenderVertexArrayId vertexArrayObject;
+	kokko::render::VertexArrayId vertexArrayObject;
 	int count;
 	RenderPrimitiveMode primitiveMode;
 
@@ -80,8 +84,8 @@ struct MeshBufferData
 {
 	enum BufferType { VertexBuffer = 0, IndexBuffer = 1 };
 
-	kokko::RenderVertexArrayId vertexArrayObject;
-	kokko::RenderBufferId bufferObjects[2];
+	kokko::render::VertexArrayId vertexArrayObject;
+	kokko::render::BufferId bufferObjects[2];
 	uint32_t bufferSizes[2];
 };
 
@@ -90,7 +94,7 @@ class MeshManager
 private:
 	Allocator* allocator;
 	kokko::AssetLoader* assetLoader;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 
 	struct InstanceData
 	{
@@ -139,7 +143,7 @@ private:
 	unsigned int GetIndex(MeshId meshId) const;
 
 public:
-	MeshManager(Allocator* allocator, kokko::AssetLoader* assetLoader, RenderDevice* renderDevice);
+	MeshManager(Allocator* allocator, kokko::AssetLoader* assetLoader, kokko::render::Device* renderDevice);
 	~MeshManager();
 
 	MeshId CreateMesh();

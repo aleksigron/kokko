@@ -25,7 +25,7 @@ const MaterialId MaterialId::Null = MaterialId{ 0 };
 MaterialManager::MaterialManager(
 	Allocator* allocator,
 	kokko::AssetLoader* assetLoader,
-	RenderDevice* renderDevice,
+	kokko::render::Device* renderDevice,
 	ShaderManager* shaderManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
@@ -102,8 +102,8 @@ MaterialId MaterialManager::CreateMaterial()
 	data.material[id.i].uid = kokko::Uid();
 	data.material[id.i].transparency = TransparencyType::Opaque;
 	data.material[id.i].shaderId = ShaderId{};
-	data.material[id.i].cachedShaderDeviceId = kokko::RenderShaderId();
-	data.material[id.i].uniformBufferObject = kokko::RenderBufferId();
+	data.material[id.i].cachedShaderDeviceId = kokko::render::ShaderId();
+	data.material[id.i].uniformBufferObject = kokko::render::BufferId();
 	data.material[id.i].uniformData = kokko::UniformData(allocator);
 
 	++data.count;
@@ -220,7 +220,7 @@ void MaterialManager::SetMaterialShader(MaterialId id, ShaderId shaderId)
 	if (shaderId == ShaderId::Null)
 	{
 		material.shaderId = ShaderId::Null;
-		material.cachedShaderDeviceId = kokko::RenderShaderId();
+		material.cachedShaderDeviceId = kokko::render::ShaderId();
 		material.transparency = TransparencyType::Opaque;
 		material.uniformData.Release();
 		return;

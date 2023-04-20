@@ -6,11 +6,13 @@
 #include "Rendering/RenderResourceId.hpp"
 
 class Allocator;
-class RenderDevice;
 
 namespace kokko
 {
-class RenderCommandEncoder;
+namespace render
+{
+class Device;
+}
 }
 
 struct RenderTarget
@@ -19,9 +21,9 @@ struct RenderTarget
 	Vec2i size;
 
 	RenderTextureSizedFormat colorFormat;
-	kokko::RenderTextureId colorTexture;
+	kokko::render::TextureId colorTexture;
 
-	kokko::RenderFramebufferId framebuffer;
+	kokko::render::FramebufferId framebuffer;
 };
 
 class RenderTargetContainer
@@ -36,13 +38,13 @@ private:
 	};
 
 	Allocator* allocator;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 
 	TargetInfo renderTargets[MaxRenderTargetCount];
 	size_t renderTargetCount;
 
 public:
-	RenderTargetContainer(Allocator* allocator, RenderDevice* renderDevice);
+	RenderTargetContainer(Allocator* allocator, kokko::render::Device* renderDevice);
 	~RenderTargetContainer();
 
 	RenderTarget AcquireRenderTarget(Vec2i size, RenderTextureSizedFormat format);

@@ -12,7 +12,7 @@
 
 const MeshId MeshId::Null = MeshId{ 0 };
 
-MeshManager::MeshManager(Allocator* allocator, kokko::AssetLoader* assetLoader, RenderDevice* renderDevice) :
+MeshManager::MeshManager(Allocator* allocator, kokko::AssetLoader* assetLoader, kokko::render::Device* renderDevice) :
 	allocator(allocator),
 	assetLoader(assetLoader),
 	renderDevice(renderDevice),
@@ -213,7 +213,7 @@ void MeshManager::UpdateBuffers(unsigned int index, const VertexData& vdata)
 		// Create buffer objects
 		renderDevice->CreateBuffers(1, &bufferData.bufferObjects[MeshBufferData::VertexBuffer]);
 
-		bufferData.bufferObjects[MeshBufferData::IndexBuffer] = kokko::RenderBufferId();
+		bufferData.bufferObjects[MeshBufferData::IndexBuffer] = kokko::render::BufferId();
 		bufferData.bufferSizes[MeshBufferData::IndexBuffer] = 0;
 
 		// Bind and upload vertex buffer
@@ -316,9 +316,9 @@ void MeshManager::DeleteBuffers(MeshBufferData& bufferDataInOut) const
 		renderDevice->DestroyVertexArrays(1, &bufferDataInOut.vertexArrayObject);
 		renderDevice->DestroyBuffers(2, bufferDataInOut.bufferObjects);
 
-		bufferDataInOut.vertexArrayObject = kokko::RenderVertexArrayId();
-		bufferDataInOut.bufferObjects[0] = kokko::RenderBufferId();
-		bufferDataInOut.bufferObjects[1] = kokko::RenderBufferId();
+		bufferDataInOut.vertexArrayObject = kokko::render::VertexArrayId();
+		bufferDataInOut.bufferObjects[0] = kokko::render::BufferId();
+		bufferDataInOut.bufferObjects[1] = kokko::render::BufferId();
 		bufferDataInOut.bufferSizes[0] = 0;
 		bufferDataInOut.bufferSizes[1] = 0;
 	}
@@ -355,7 +355,7 @@ void MeshManager::SetVertexAttribPointers(unsigned int index, const VertexFormat
 	assert(vertexFormat.attributes != nullptr && vertexFormat.attributeCount > 0);
 
 	MeshBufferData& bufferData = data.bufferData[index];
-	kokko::RenderVertexArrayId vertexArray = bufferData.vertexArrayObject;
+	kokko::render::VertexArrayId vertexArray = bufferData.vertexArrayObject;
 
 	renderDevice->SetVertexArrayIndexBuffer(vertexArray, bufferData.bufferObjects[MeshBufferData::IndexBuffer]);
 
