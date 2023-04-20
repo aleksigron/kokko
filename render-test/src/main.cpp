@@ -18,7 +18,7 @@
 #include "Platform/Window.hpp"
 
 #include "Rendering/CameraParameters.hpp"
-#include "Rendering/RenderCommandEncoder.hpp"
+#include "Rendering/CommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/Framebuffer.hpp"
 

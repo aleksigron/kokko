@@ -4,7 +4,6 @@
 
 #include "Core/StringView.hpp"
 
-#include "Rendering/RenderCommandData.hpp"
 #include "Rendering/RenderDeviceDebugScope.hpp"
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/RenderResourceId.hpp"

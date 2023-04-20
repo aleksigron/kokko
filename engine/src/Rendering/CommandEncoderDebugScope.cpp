@@ -1,6 +1,6 @@
 #include "Rendering/CommandEncoderDebugScope.hpp"
 
-#include "Rendering/RenderCommandEncoder.hpp"
+#include "Rendering/CommandEncoder.hpp"
 
 namespace kokko
 {
