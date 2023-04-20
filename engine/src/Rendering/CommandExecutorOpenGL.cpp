@@ -1,4 +1,4 @@
-#include "Rendering/RenderCommandExecutorOpenGL.hpp"
+#include "Rendering/CommandExecutorOpenGL.hpp"
 
 #include <cassert>
 

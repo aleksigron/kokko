@@ -3,8 +3,7 @@
 #include "Core/Core.hpp"
 
 #include "Rendering/PostProcessRenderPass.hpp"
-#include "Rendering/RenderCommandData.hpp"
-#include "Rendering/RenderCommandEncoder.hpp"
+#include "Rendering/CommandEncoder.hpp"
 #include "Rendering/Uniform.hpp"
 
 #include "Resources/MeshManager.hpp"

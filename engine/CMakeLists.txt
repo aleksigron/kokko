@@ -215,8 +215,14 @@ set (KOKKO_SOURCES
 	src/Rendering/CascadedShadowMap.hpp
     src/Rendering/CommandBuffer.cpp
     src/Rendering/CommandBuffer.hpp
+	src/Rendering/CommandEncoder.cpp
+	src/Rendering/CommandEncoder.hpp
     src/Rendering/CommandEncoderDebugScope.cpp
     src/Rendering/CommandEncoderDebugScope.hpp
+	src/Rendering/CommandExecutor.cpp
+	src/Rendering/CommandExecutor.hpp
+	src/Rendering/CommandExecutorOpenGL.cpp
+	src/Rendering/CommandExecutorOpenGL.hpp
 	src/Rendering/Framebuffer.cpp
 	src/Rendering/Framebuffer.hpp
 	src/Rendering/Light.hpp
@@ -233,13 +239,6 @@ set (KOKKO_SOURCES
 	src/Rendering/RenderCommand.hpp
 	src/Rendering/RenderCommandBuffer.cpp
 	src/Rendering/RenderCommandBuffer.hpp
-	src/Rendering/RenderCommandData.hpp
-	src/Rendering/RenderCommandEncoder.cpp
-	src/Rendering/RenderCommandEncoder.hpp
-	src/Rendering/RenderCommandExecutor.cpp
-	src/Rendering/RenderCommandExecutor.hpp
-	src/Rendering/RenderCommandExecutorOpenGL.cpp
-	src/Rendering/RenderCommandExecutorOpenGL.hpp
 	src/Rendering/RenderDebugFeature.hpp
 	src/Rendering/RenderDebugSettings.cpp
 	src/Rendering/RenderDebugSettings.hpp

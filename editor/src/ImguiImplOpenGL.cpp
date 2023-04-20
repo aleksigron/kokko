@@ -4,7 +4,7 @@
 
 #include "ImguiImplOpenGL.hpp"
 
-#include "Rendering/RenderCommandEncoder.hpp"
+#include "Rendering/CommandEncoder.hpp"
 
 #include <cstdio>
 #include <cstdint>

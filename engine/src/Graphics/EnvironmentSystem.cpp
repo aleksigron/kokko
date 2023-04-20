@@ -14,7 +14,7 @@
 
 #include "Memory/Allocator.hpp"
 
-#include "Rendering/RenderCommandEncoder.hpp"
+#include "Rendering/CommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/Uniform.hpp"
@@ -406,8 +406,6 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 				KOKKO_PROFILE_SCOPE("Mesh equirect to cubemap");
 
 				encoder->SetViewport(0, 0, EnvironmentTextureSize, EnvironmentTextureSize);
-
-				RenderCommandData::ClearMask clearMask{ true, false, false };
 
 				for (uint32_t i = 0; i < CubemapSideCount; ++i)
 				{

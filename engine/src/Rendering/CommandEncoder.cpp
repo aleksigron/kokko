@@ -1,4 +1,4 @@
-#include "Rendering/RenderCommandEncoder.hpp"
+#include "Rendering/CommandEncoder.hpp"
 
 #include "Rendering/RenderCommand.hpp"
 #include "Rendering/RenderCommandBuffer.hpp"

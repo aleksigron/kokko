@@ -5,7 +5,7 @@
 #include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 
-#include "Rendering/RenderCommandEncoder.hpp"
+#include "Rendering/CommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderPassType.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"

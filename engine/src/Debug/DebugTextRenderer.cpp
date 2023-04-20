@@ -9,7 +9,7 @@
 
 #include "Engine/Engine.hpp"
 
-#include "Rendering/RenderCommandEncoder.hpp"
+#include "Rendering/CommandEncoder.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"

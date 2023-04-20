@@ -1,6 +1,6 @@
-#include "Rendering/RenderCommandExecutor.hpp"
+#include "Rendering/CommandExecutor.hpp"
 
-#include "Rendering/RenderCommandExecutorOpenGL.hpp"
+#include "Rendering/CommandExecutorOpenGL.hpp"
 
 namespace kokko
 {
