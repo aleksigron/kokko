@@ -38,10 +38,10 @@ private:
 	static const size_t PassCount = 2;
 	enum { PassIdx_Occlusion = 0, PassIdx_Blur = 1 };
 
-	kokko::RenderBufferId uniformBufferIds[PassCount];
+	kokko::render::BufferId uniformBufferIds[PassCount];
 	ShaderId shaderIds[PassCount];
 
-	kokko::RenderTextureId noiseTextureId;
+	kokko::render::TextureId noiseTextureId;
 };
 
 }

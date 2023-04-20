@@ -296,7 +296,7 @@ void UniformData::SetValueArray(const BufferUniform& uniform, unsigned int count
 			dataStart[i * 16 + j] = values[i][j];
 }
 
-void UniformData::SetTexture(TextureUniform& uniform, TextureId textureId, kokko::RenderTextureId textureObjectId)
+void UniformData::SetTexture(TextureUniform& uniform, TextureId textureId, kokko::render::TextureId textureObjectId)
 {
 	uniform.textureId = textureId;
 	uniform.textureObject = textureObjectId;

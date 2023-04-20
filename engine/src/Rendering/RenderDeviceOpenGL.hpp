@@ -2,7 +2,12 @@
 
 #include "Rendering/RenderDevice.hpp"
 
-class RenderDeviceOpenGL : public RenderDevice
+namespace kokko
+{
+namespace render
+{
+
+class DeviceOpenGL : public Device
 {
 public:
 	struct DebugMessageUserData
@@ -17,7 +22,7 @@ private:
 	virtual void EndDebugScope() override;
 
 public:
-	RenderDeviceOpenGL();
+	DeviceOpenGL();
 
 	virtual void InitializeDefaults() override;
 
@@ -25,23 +30,23 @@ public:
 
 	virtual void SetDebugMessageCallback(DebugCallbackFn callback) override;
 	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label) override;
-	virtual void SetObjectPtrLabel(void* ptr, kokko::ConstStringView label) override;
+	virtual void SetObjectPtrLabel(void* ptr, ConstStringView label) override;
 
-	virtual void CreateFramebuffers(unsigned int count, kokko::RenderFramebufferId* framebuffersOut) override;
-	virtual void DestroyFramebuffers(unsigned int count, const kokko::RenderFramebufferId* framebuffers) override;
+	virtual void CreateFramebuffers(unsigned int count, FramebufferId* framebuffersOut) override;
+	virtual void DestroyFramebuffers(unsigned int count, const FramebufferId* framebuffers) override;
 	virtual void AttachFramebufferTexture(
-		kokko::RenderFramebufferId framebuffer,
+		FramebufferId framebuffer,
 		RenderFramebufferAttachment attachment,
-		kokko::RenderTextureId texture,
+		TextureId texture,
 		int level) override;
 	virtual void AttachFramebufferTextureLayer(
-		kokko::RenderFramebufferId framebuffer,
+		FramebufferId framebuffer,
 		RenderFramebufferAttachment attachment,
-		kokko::RenderTextureId texture,
+		TextureId texture,
 		int level,
 		int layer) override;
 	virtual void SetFramebufferDrawBuffers(
-		kokko::RenderFramebufferId framebuffer,
+		FramebufferId framebuffer,
 		unsigned int count,
 		const RenderFramebufferAttachment* buffers) override;
 	virtual void ReadFramebufferPixels(int x, int y, int width, int height,
@@ -50,18 +55,18 @@ public:
 	virtual void CreateTextures(
 		RenderTextureTarget type,
 		unsigned int count,
-		kokko::RenderTextureId* texturesOut) override;
+		TextureId* texturesOut) override;
 	virtual void DestroyTextures(
 		unsigned int count,
-		const kokko::RenderTextureId* textures) override;
+		const TextureId* textures) override;
 	virtual void SetTextureStorage2D(
-		kokko::RenderTextureId texture,
+		TextureId texture,
 		int levels,
 		RenderTextureSizedFormat format,
 		int width,
 		int height) override;
 	virtual void SetTextureSubImage2D(
-		kokko::RenderTextureId texture,
+		TextureId texture,
 		int level,
 		int xOffset,
 		int yOffset,
@@ -71,7 +76,7 @@ public:
 		RenderTextureDataType type,
 		const void* data) override;
 	virtual void SetTextureSubImage3D(
-		kokko::RenderTextureId texture,
+		TextureId texture,
 		int level,
 		int xoffset,
 		int yoffset,
@@ -82,10 +87,10 @@ public:
 		RenderTextureBaseFormat format,
 		RenderTextureDataType type,
 		const void* data) override;
-	virtual void GenerateTextureMipmaps(kokko::RenderTextureId texture) override;
+	virtual void GenerateTextureMipmaps(TextureId texture) override;
 
-	void CreateSamplers(uint32_t count, const RenderSamplerParameters* params, kokko::RenderSamplerId* samplersOut) override;
-	void DestroySamplers(uint32_t count, const kokko::RenderSamplerId* samplers) override;
+	void CreateSamplers(uint32_t count, const RenderSamplerParameters* params, SamplerId* samplersOut) override;
+	void DestroySamplers(uint32_t count, const SamplerId* samplers) override;
 
 	virtual unsigned int CreateShaderProgram() override;
 	virtual void DestroyShaderProgram(unsigned int shaderProgram) override;
@@ -107,34 +112,37 @@ public:
 
 	virtual int GetUniformLocation(unsigned int shaderProgram, const char* uniformName) override;
 
-	virtual void CreateVertexArrays(uint32_t count, kokko::RenderVertexArrayId* vertexArraysOut) override;
-	virtual void DestroyVertexArrays(uint32_t count, const kokko::RenderVertexArrayId* vertexArrays) override;
-	virtual void EnableVertexAttribute(kokko::RenderVertexArrayId va, uint32_t attributeIndex) override;
-	virtual void SetVertexArrayIndexBuffer(kokko::RenderVertexArrayId va, kokko::RenderBufferId buffer) override;
+	virtual void CreateVertexArrays(uint32_t count, VertexArrayId* vertexArraysOut) override;
+	virtual void DestroyVertexArrays(uint32_t count, const VertexArrayId* vertexArrays) override;
+	virtual void EnableVertexAttribute(VertexArrayId va, uint32_t attributeIndex) override;
+	virtual void SetVertexArrayIndexBuffer(VertexArrayId va, BufferId buffer) override;
 	virtual void SetVertexArrayVertexBuffer(
-		kokko::RenderVertexArrayId va,
+		VertexArrayId va,
 		uint32_t bindingIndex,
-		kokko::RenderBufferId buffer,
+		BufferId buffer,
 		intptr_t offset,
 		uint32_t stride) override;
 	virtual void SetVertexAttribFormat(
-		kokko::RenderVertexArrayId va,
+		VertexArrayId va,
 		uint32_t attributeIndex,
 		uint32_t size,
 		RenderVertexElemType elementType,
 		uint32_t offset) override;
 	virtual void SetVertexAttribBinding(
-		kokko::RenderVertexArrayId va,
+		VertexArrayId va,
 		uint32_t attributeIndex,
 		uint32_t bindingIndex) override;
 
-	virtual void CreateBuffers(unsigned int count, kokko::RenderBufferId* buffersOut) override;
-	virtual void DestroyBuffers(unsigned int count, const kokko::RenderBufferId* buffers) override;
+	virtual void CreateBuffers(unsigned int count, BufferId* buffersOut) override;
+	virtual void DestroyBuffers(unsigned int count, const BufferId* buffers) override;
 	virtual void SetBufferStorage(
-		kokko::RenderBufferId buffer, unsigned int size, const void* data, BufferStorageFlags flags) override;
+		BufferId buffer, unsigned int size, const void* data, BufferStorageFlags flags) override;
 	virtual void SetBufferSubData(
-		kokko::RenderBufferId buffer, unsigned int offset, unsigned int size, const void* data) override;
+		BufferId buffer, unsigned int offset, unsigned int size, const void* data) override;
 	virtual void* MapBufferRange(
-		kokko::RenderBufferId buffer, intptr_t offset, size_t length, BufferMapFlags flags) override;
-	virtual void UnmapBuffer(kokko::RenderBufferId buffer) override;
+		BufferId buffer, intptr_t offset, size_t length, BufferMapFlags flags) override;
+	virtual void UnmapBuffer(BufferId buffer) override;
 };
+
+} // namespace render
+} // namespace kokko

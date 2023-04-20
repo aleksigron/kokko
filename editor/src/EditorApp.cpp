@@ -240,7 +240,7 @@ void EditorApp::EndFrame(render::CommandEncoder* encoder)
 	{
 		KOKKO_PROFILE_SCOPE("Clear default framebuffer");
 
-		encoder->BindFramebuffer(RenderFramebufferId());
+		encoder->BindFramebuffer(render::FramebufferId());
 		encoder->SetClearColor(Vec4f{ 0.0f, 0.0f, 0.0f, 1.0f });
 		encoder->Clear(ClearMask{ true, false, false });
 	}
@@ -260,7 +260,7 @@ void EditorApp::EndFrame(render::CommandEncoder* encoder)
 	}
 }
 
-const Framebuffer& EditorApp::GetSceneViewFramebuffer()
+const render::Framebuffer& EditorApp::GetSceneViewFramebuffer()
 {
 	return core->GetSceneViewFramebuffer();
 }

@@ -50,8 +50,8 @@ private:
 
 	unsigned int uniformBlockStride;
 
-	RenderBufferId uniformBufferId;
-	RenderSamplerId linearSamplerId;
+	render::BufferId uniformBufferId;
+	render::SamplerId linearSamplerId;
 };
 
 }

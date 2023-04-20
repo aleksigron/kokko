@@ -24,7 +24,7 @@ class BitmapFont
 private:
 	Allocator* allocator;
 
-	kokko::RenderTextureId textureId;
+	kokko::render::TextureId textureId;
 	Vec2f textureSize;
 
 	size_t* glyphSkipList;
@@ -52,7 +52,7 @@ public:
 	int GetLineHeight() const { return genericGlyphSize.y; }
 	int GetGlyphWidth() const { return genericGlyphSize.x; }
 
-	kokko::RenderTextureId GetTextureDriverId() const { return textureId; }
+	kokko::render::TextureId GetTextureDriverId() const { return textureId; }
 	Vec2f GetTextureSize() const { return textureSize; }
 
 	bool LoadFromBDF(TextureManager* textureManager, kokko::ConstStringView content);

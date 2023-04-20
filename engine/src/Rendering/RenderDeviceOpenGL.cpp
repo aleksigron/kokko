@@ -1,4 +1,4 @@
-#include "Rendering/OpenGL/RenderDeviceOpenGL.hpp"
+#include "Rendering/RenderDeviceOpenGL.hpp"
 
 #include <cassert>
 
@@ -6,13 +6,20 @@
 
 #include "Rendering/RenderDeviceEnumsOpenGL.hpp"
 
+namespace kokko
+{
+namespace render
+{
+
+namespace
+{
 static void DebugMessageCallback(
 	GLenum source, GLenum type, GLuint id, GLenum severity,
 	GLsizei length, const GLchar* msg, const void* userData)
 {
-	auto* data = static_cast<const RenderDeviceOpenGL::DebugMessageUserData*>(userData);
+	auto* data = static_cast<const DeviceOpenGL::DebugMessageUserData*>(userData);
 
-	RenderDevice::DebugMessage message{
+	Device::DebugMessage message{
 		ConvertDebugSource(source),
 		ConvertDebugType(type),
 		id,
@@ -23,81 +30,82 @@ static void DebugMessageCallback(
 	if (data->callback)
 		data->callback(message);
 }
+}
 
-RenderDeviceOpenGL::RenderDeviceOpenGL() :
+DeviceOpenGL::DeviceOpenGL() :
 	debugUserData{ nullptr }
 {
 }
 
-void RenderDeviceOpenGL::InitializeDefaults()
+void DeviceOpenGL::InitializeDefaults()
 {
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 }
 
-void RenderDeviceOpenGL::GetIntegerValue(RenderDeviceParameter parameter, int* valueOut)
+void DeviceOpenGL::GetIntegerValue(RenderDeviceParameter parameter, int* valueOut)
 {
 	glGetIntegerv(ConvertDeviceParameter(parameter), valueOut);
 }
 
-void RenderDeviceOpenGL::SetDebugMessageCallback(DebugCallbackFn callback)
+void DeviceOpenGL::SetDebugMessageCallback(DebugCallbackFn callback)
 {
 	debugUserData.callback = callback;
 	glDebugMessageCallback(DebugMessageCallback, &debugUserData);
 }
 
-void RenderDeviceOpenGL::SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label)
+void DeviceOpenGL::SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label)
 {
 	glObjectLabel(ConvertObjectType(type), object, static_cast<GLsizei>(label.len), label.str);
 }
 
-void RenderDeviceOpenGL::SetObjectPtrLabel(void* ptr, kokko::ConstStringView label)
+void DeviceOpenGL::SetObjectPtrLabel(void* ptr, kokko::ConstStringView label)
 {
 	glObjectPtrLabel(ptr, static_cast<GLsizei>(label.len), label.str);
 }
 
-void RenderDeviceOpenGL::BeginDebugScope(uint32_t id, kokko::ConstStringView message)
+void DeviceOpenGL::BeginDebugScope(uint32_t id, kokko::ConstStringView message)
 {
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, message.len, message.str);
 }
 
-void RenderDeviceOpenGL::EndDebugScope()
+void DeviceOpenGL::EndDebugScope()
 {
 	glPopDebugGroup();
 }
 
-void RenderDeviceOpenGL::CreateFramebuffers(unsigned int count, kokko::RenderFramebufferId* framebuffersOut)
+void DeviceOpenGL::CreateFramebuffers(unsigned int count, FramebufferId* framebuffersOut)
 {
 	glCreateFramebuffers(count, &framebuffersOut[0].i);
 }
 
-void RenderDeviceOpenGL::DestroyFramebuffers(unsigned int count, const kokko::RenderFramebufferId* framebuffers)
+void DeviceOpenGL::DestroyFramebuffers(unsigned int count, const FramebufferId* framebuffers)
 {
 	glDeleteFramebuffers(count, &framebuffers[0].i);
 }
 
-void RenderDeviceOpenGL::AttachFramebufferTexture(
-	kokko::RenderFramebufferId framebuffer,
+void DeviceOpenGL::AttachFramebufferTexture(
+	FramebufferId framebuffer,
 	RenderFramebufferAttachment attachment,
-	kokko::RenderTextureId texture,
+	TextureId texture,
 	int level)
 {
 	glNamedFramebufferTexture(framebuffer.i, ConvertFramebufferAttachment(attachment), texture.i, level);
 }
 
-void RenderDeviceOpenGL::AttachFramebufferTextureLayer(
-	kokko::RenderFramebufferId framebuffer,
+void DeviceOpenGL::AttachFramebufferTextureLayer(
+	FramebufferId framebuffer,
 	RenderFramebufferAttachment attachment,
-	kokko::RenderTextureId texture,
+	TextureId texture,
 	int level,
 	int layer)
 {
 	glNamedFramebufferTextureLayer(framebuffer.i, ConvertFramebufferAttachment(attachment), texture.i, level, layer);
 }
 
-void RenderDeviceOpenGL::SetFramebufferDrawBuffers(
-	kokko::RenderFramebufferId framebuffer, unsigned int count, const RenderFramebufferAttachment* buffers)
+void DeviceOpenGL::SetFramebufferDrawBuffers(
+	FramebufferId framebuffer, unsigned int count, const RenderFramebufferAttachment* buffers)
 {
 	unsigned int attachments[16];
 
@@ -107,7 +115,7 @@ void RenderDeviceOpenGL::SetFramebufferDrawBuffers(
 	glNamedFramebufferDrawBuffers(framebuffer.i, count, attachments);
 }
 
-void RenderDeviceOpenGL::ReadFramebufferPixels(int x, int y, int width, int height,
+void DeviceOpenGL::ReadFramebufferPixels(int x, int y, int width, int height,
 	RenderTextureBaseFormat format, RenderTextureDataType type, void* data)
 {
 	glReadPixels(x, y, width, height, ConvertTextureBaseFormat(format), ConvertTextureDataType(type), data);
@@ -115,21 +123,21 @@ void RenderDeviceOpenGL::ReadFramebufferPixels(int x, int y, int width, int heig
 
 // TEXTURE
 
-void RenderDeviceOpenGL::CreateTextures(
+void DeviceOpenGL::CreateTextures(
 	RenderTextureTarget type,
 	unsigned int count,
-	kokko::RenderTextureId* texturesOut)
+	TextureId* texturesOut)
 {
 	glCreateTextures(ConvertTextureTarget(type), count, &texturesOut[0].i);
 }
 
-void RenderDeviceOpenGL::DestroyTextures(unsigned int count, const kokko::RenderTextureId* textures)
+void DeviceOpenGL::DestroyTextures(unsigned int count, const TextureId* textures)
 {
 	glDeleteTextures(count, &textures[0].i);
 }
 
-void RenderDeviceOpenGL::SetTextureStorage2D(
-	kokko::RenderTextureId texture,
+void DeviceOpenGL::SetTextureStorage2D(
+	TextureId texture,
 	int levels,
 	RenderTextureSizedFormat format,
 	int width,
@@ -139,8 +147,8 @@ void RenderDeviceOpenGL::SetTextureStorage2D(
 	glTextureStorage2D(texture.i, levels, ConvertTextureSizedFormat(format), width, height);
 }
 
-void RenderDeviceOpenGL::SetTextureSubImage2D(
-	kokko::RenderTextureId texture,
+void DeviceOpenGL::SetTextureSubImage2D(
+	TextureId texture,
 	int level,
 	int xOffset,
 	int yOffset,
@@ -154,8 +162,8 @@ void RenderDeviceOpenGL::SetTextureSubImage2D(
 		ConvertTextureBaseFormat(format), ConvertTextureDataType(type), data);
 }
 
-void RenderDeviceOpenGL::SetTextureSubImage3D(
-	kokko::RenderTextureId texture,
+void DeviceOpenGL::SetTextureSubImage3D(
+	TextureId texture,
 	int level,
 	int xoffset,
 	int yoffset,
@@ -171,13 +179,13 @@ void RenderDeviceOpenGL::SetTextureSubImage3D(
 		ConvertTextureBaseFormat(format), ConvertTextureDataType(type), data);
 }
 
-void RenderDeviceOpenGL::GenerateTextureMipmaps(kokko::RenderTextureId texture)
+void DeviceOpenGL::GenerateTextureMipmaps(TextureId texture)
 {
 	glGenerateTextureMipmap(texture.i);
 }
 
-void RenderDeviceOpenGL::CreateSamplers(
-	uint32_t count, const RenderSamplerParameters* params, kokko::RenderSamplerId* samplersOut)
+void DeviceOpenGL::CreateSamplers(
+	uint32_t count, const RenderSamplerParameters* params, SamplerId* samplersOut)
 {
 	glGenSamplers(count, &samplersOut[0].i);
 
@@ -195,140 +203,140 @@ void RenderDeviceOpenGL::CreateSamplers(
 	}
 }
 
-void RenderDeviceOpenGL::DestroySamplers(uint32_t count, const kokko::RenderSamplerId* samplers)
+void DeviceOpenGL::DestroySamplers(uint32_t count, const SamplerId* samplers)
 {
 	glDeleteSamplers(count, &samplers[0].i);
 }
 
 // SHADER PROGRAM
 
-unsigned int RenderDeviceOpenGL::CreateShaderProgram()
+unsigned int DeviceOpenGL::CreateShaderProgram()
 {
 	return glCreateProgram();
 }
 
-void RenderDeviceOpenGL::DestroyShaderProgram(unsigned int shaderProgram)
+void DeviceOpenGL::DestroyShaderProgram(unsigned int shaderProgram)
 {
 	glDeleteProgram(shaderProgram);
 }
 
-void RenderDeviceOpenGL::AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage)
+void DeviceOpenGL::AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage)
 {
 	glAttachShader(shaderProgram, shaderStage);
 }
 
-void RenderDeviceOpenGL::LinkShaderProgram(unsigned int shaderProgram)
+void DeviceOpenGL::LinkShaderProgram(unsigned int shaderProgram)
 {
 	glLinkProgram(shaderProgram);
 }
 
-int RenderDeviceOpenGL::GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter)
+int DeviceOpenGL::GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter)
 {
 	int value = 0;
 	glGetProgramiv(shaderProgram, parameter, &value);
 	return value;
 }
 
-bool RenderDeviceOpenGL::GetShaderProgramLinkStatus(unsigned int shaderProgram)
+bool DeviceOpenGL::GetShaderProgramLinkStatus(unsigned int shaderProgram)
 {
 	return GetShaderProgramParameterInt(shaderProgram, GL_LINK_STATUS) == GL_TRUE;
 }
 
-int RenderDeviceOpenGL::GetShaderProgramInfoLogLength(unsigned int shaderProgram)
+int DeviceOpenGL::GetShaderProgramInfoLogLength(unsigned int shaderProgram)
 {
 	return GetShaderProgramParameterInt(shaderProgram, GL_INFO_LOG_LENGTH);
 }
 
-void RenderDeviceOpenGL::GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut)
+void DeviceOpenGL::GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut)
 {
 	glGetProgramInfoLog(shaderProgram, maxLength, nullptr, logOut);
 }
 
 // SHADER STAGE
 
-unsigned int RenderDeviceOpenGL::CreateShaderStage(RenderShaderStage stage)
+unsigned int DeviceOpenGL::CreateShaderStage(RenderShaderStage stage)
 {
 	return glCreateShader(ConvertShaderStage(stage));
 }
 
-void RenderDeviceOpenGL::DestroyShaderStage(unsigned int shaderStage)
+void DeviceOpenGL::DestroyShaderStage(unsigned int shaderStage)
 {
 	glDeleteShader(shaderStage);
 }
 
-void RenderDeviceOpenGL::SetShaderStageSource(unsigned int shaderStage, const char* source, int length)
+void DeviceOpenGL::SetShaderStageSource(unsigned int shaderStage, const char* source, int length)
 {
 	glShaderSource(shaderStage, 1, &source, &length);
 }
 
-void RenderDeviceOpenGL::CompileShaderStage(unsigned int shaderStage)
+void DeviceOpenGL::CompileShaderStage(unsigned int shaderStage)
 {
 	glCompileShader(shaderStage);
 }
 
-int RenderDeviceOpenGL::GetShaderStageParameterInt(unsigned int shaderStage, unsigned int parameter)
+int DeviceOpenGL::GetShaderStageParameterInt(unsigned int shaderStage, unsigned int parameter)
 {
 	int value = 0;
 	glGetShaderiv(shaderStage, parameter, &value);
 	return value;
 }
 
-bool RenderDeviceOpenGL::GetShaderStageCompileStatus(unsigned int shaderStage)
+bool DeviceOpenGL::GetShaderStageCompileStatus(unsigned int shaderStage)
 {
 	return GetShaderStageParameterInt(shaderStage, GL_COMPILE_STATUS) == GL_TRUE;
 }
 
-int RenderDeviceOpenGL::GetShaderStageInfoLogLength(unsigned int shaderStage)
+int DeviceOpenGL::GetShaderStageInfoLogLength(unsigned int shaderStage)
 {
 	return GetShaderStageParameterInt(shaderStage, GL_INFO_LOG_LENGTH);
 }
 
-void RenderDeviceOpenGL::GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut)
+void DeviceOpenGL::GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut)
 {
 	glGetShaderInfoLog(shaderStage, maxLength, nullptr, logOut);
 }
 
 // UNIFORM
 
-int RenderDeviceOpenGL::GetUniformLocation(unsigned int shaderProgram, const char* uniformName)
+int DeviceOpenGL::GetUniformLocation(unsigned int shaderProgram, const char* uniformName)
 {
 	return glGetUniformLocation(shaderProgram, uniformName);
 }
 
 // VERTEX ARRAY
 
-void RenderDeviceOpenGL::CreateVertexArrays(uint32_t count, kokko::RenderVertexArrayId* vertexArraysOut)
+void DeviceOpenGL::CreateVertexArrays(uint32_t count, VertexArrayId* vertexArraysOut)
 {
 	glCreateVertexArrays(count, &vertexArraysOut[0].i);
 }
 
-void RenderDeviceOpenGL::DestroyVertexArrays(uint32_t count, const kokko::RenderVertexArrayId* vertexArrays)
+void DeviceOpenGL::DestroyVertexArrays(uint32_t count, const VertexArrayId* vertexArrays)
 {
 	glDeleteVertexArrays(count, &vertexArrays[0].i);
 }
 
-void RenderDeviceOpenGL::EnableVertexAttribute(kokko::RenderVertexArrayId va, uint32_t attributeIndex)
+void DeviceOpenGL::EnableVertexAttribute(VertexArrayId va, uint32_t attributeIndex)
 {
 	glEnableVertexArrayAttrib(va.i, attributeIndex);
 }
 
-void RenderDeviceOpenGL::SetVertexArrayIndexBuffer(kokko::RenderVertexArrayId va, kokko::RenderBufferId buffer)
+void DeviceOpenGL::SetVertexArrayIndexBuffer(VertexArrayId va, BufferId buffer)
 {
 	glVertexArrayElementBuffer(va.i, buffer.i);
 }
 
-void RenderDeviceOpenGL::SetVertexArrayVertexBuffer(
-	kokko::RenderVertexArrayId va,
+void DeviceOpenGL::SetVertexArrayVertexBuffer(
+	VertexArrayId va,
 	uint32_t bindingIndex,
-	kokko::RenderBufferId buffer,
+	BufferId buffer,
 	intptr_t offset,
 	uint32_t stride)
 {
 	glVertexArrayVertexBuffer(va.i, bindingIndex, buffer.i, offset, stride);
 }
 
-void RenderDeviceOpenGL::SetVertexAttribFormat(
-	kokko::RenderVertexArrayId va,
+void DeviceOpenGL::SetVertexAttribFormat(
+	VertexArrayId va,
 	uint32_t attributeIndex,
 	uint32_t size,
 	RenderVertexElemType elementType,
@@ -337,26 +345,26 @@ void RenderDeviceOpenGL::SetVertexAttribFormat(
 	glVertexArrayAttribFormat(va.i, attributeIndex, size, ConvertVertexElemType(elementType), GL_FALSE, offset);
 }
 
-void RenderDeviceOpenGL::SetVertexAttribBinding(
-	kokko::RenderVertexArrayId va,
+void DeviceOpenGL::SetVertexAttribBinding(
+	VertexArrayId va,
 	uint32_t attributeIndex,
 	uint32_t bindingIndex)
 {
 	glVertexArrayAttribBinding(va.i, attributeIndex, bindingIndex);
 }
 
-void RenderDeviceOpenGL::CreateBuffers(unsigned int count, kokko::RenderBufferId* buffersOut)
+void DeviceOpenGL::CreateBuffers(unsigned int count, BufferId* buffersOut)
 {
 	glCreateBuffers(count, &buffersOut[0].i);
 }
 
-void RenderDeviceOpenGL::DestroyBuffers(unsigned int count, const kokko::RenderBufferId* buffers)
+void DeviceOpenGL::DestroyBuffers(unsigned int count, const BufferId* buffers)
 {
 	glDeleteBuffers(count, &buffers[0].i);
 }
 
-void RenderDeviceOpenGL::SetBufferStorage(
-	kokko::RenderBufferId buffer, unsigned int size, const void* data, BufferStorageFlags flags)
+void DeviceOpenGL::SetBufferStorage(
+	BufferId buffer, unsigned int size, const void* data, BufferStorageFlags flags)
 {
 	GLbitfield bits = 0;
 	if (flags.dynamicStorage) bits |= GL_DYNAMIC_STORAGE_BIT;
@@ -368,8 +376,8 @@ void RenderDeviceOpenGL::SetBufferStorage(
 	glNamedBufferStorage(buffer.i, size, data, bits);
 }
 
-void RenderDeviceOpenGL::SetBufferSubData(
-	kokko::RenderBufferId buffer,
+void DeviceOpenGL::SetBufferSubData(
+	BufferId buffer,
 	unsigned int offset,
 	unsigned int size,
 	const void* data)
@@ -377,8 +385,8 @@ void RenderDeviceOpenGL::SetBufferSubData(
 	glNamedBufferSubData(buffer.i, offset, size, data);
 }
 
-void* RenderDeviceOpenGL::MapBufferRange(
-	kokko::RenderBufferId buffer,
+void* DeviceOpenGL::MapBufferRange(
+	BufferId buffer,
 	intptr_t offset,
 	size_t length,
 	BufferMapFlags flags)
@@ -396,7 +404,10 @@ void* RenderDeviceOpenGL::MapBufferRange(
 	return glMapNamedBufferRange(buffer.i, offset, length, bits);
 }
 
-void RenderDeviceOpenGL::UnmapBuffer(kokko::RenderBufferId buffer)
+void DeviceOpenGL::UnmapBuffer(BufferId buffer)
 {
 	glUnmapNamedBuffer(buffer.i);
 }
+
+} // namespace render
+} // namespace kokko

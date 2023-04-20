@@ -92,21 +92,21 @@ struct CmdBeginDebugScope : public Command
 struct CmdBindBuffer : public Command
 {
 	RenderBufferTarget target;
-	RenderBufferId buffer;
+	render::BufferId buffer;
 };
 
 struct CmdBindBufferBase : public Command
 {
 	RenderBufferTarget target;
 	uint32_t bindingPoint;
-	RenderBufferId buffer;
+	render::BufferId buffer;
 };
 
 struct CmdBindBufferRange : public Command
 {
 	RenderBufferTarget target;
 	uint32_t bindingPoint;
-	RenderBufferId buffer;
+	render::BufferId buffer;
 	intptr_t offset;
 	size_t length;
 };
@@ -196,7 +196,7 @@ struct CmdDrawIndexedIndirect : public Command
 
 struct CmdBindFramebuffer : public Command
 {
-	RenderFramebufferId framebuffer;
+	render::FramebufferId framebuffer;
 };
 
 // =================
@@ -206,7 +206,7 @@ struct CmdBindFramebuffer : public Command
 struct CmdBindSampler : public Command
 {
 	uint32_t textureUnit;
-	RenderSamplerId sampler;
+	render::SamplerId sampler;
 };
 
 // ================
@@ -215,7 +215,7 @@ struct CmdBindSampler : public Command
 
 struct CmdUseShaderProgram : public Command
 {
-	RenderShaderId shader;
+	render::ShaderId shader;
 };
 
 // ===============
@@ -277,7 +277,7 @@ struct CmdBindTextureToShader : public Command
 {
 	int32_t uniformLocation;
 	uint32_t textureUnit;
-	RenderTextureId texture;
+	render::TextureId texture;
 };
 
 // ======================
@@ -286,7 +286,7 @@ struct CmdBindTextureToShader : public Command
 
 struct CmdBindVertexArray : public Command
 {
-	RenderVertexArrayId vertexArrayId;
+	render::VertexArrayId vertexArrayId;
 };
 
 // ======================

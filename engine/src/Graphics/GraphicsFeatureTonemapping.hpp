@@ -28,7 +28,7 @@ private:
 	unsigned int renderOrder;
 
 	ShaderId shaderId;
-	kokko::RenderBufferId uniformBufferId;
+	kokko::render::BufferId uniformBufferId;
 };
 
 }

@@ -35,7 +35,7 @@ struct ParticleEmitterId
 class ParticleSystem : public GraphicsFeature, public TransformUpdateReceiver
 {
 public:
-	ParticleSystem(Allocator* allocator, RenderDevice* renderDevice,
+	ParticleSystem(Allocator* allocator, kokko::render::Device* renderDevice,
 		ShaderManager* shaderManager, MeshManager* meshManager);
 	ParticleSystem(const ParticleSystem&) = delete;
 	ParticleSystem(ParticleSystem&&) = delete;
@@ -74,7 +74,7 @@ private:
 	static const intptr_t IndirectOffsetRender = 32;
 
 	Allocator* allocator;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
 
@@ -85,7 +85,7 @@ private:
 	ShaderId finishUpdateShaderId;
 	ShaderId renderShaderId;
 
-	RenderTextureId noiseTextureId;
+	render::TextureId noiseTextureId;
 
 	enum Buffer {
 		Buffer_Position,
@@ -104,9 +104,9 @@ private:
 
 	struct EmitterData
 	{
-		RenderBufferId bufferIds[Buffer_COUNT];
-		RenderBufferId aliveListCurrent;
-		RenderBufferId aliveListNext;
+		render::BufferId bufferIds[Buffer_COUNT];
+		render::BufferId aliveListCurrent;
+		render::BufferId aliveListNext;
 
 		float emitAccumulation;
 		float emitRate;
@@ -118,7 +118,7 @@ private:
 			emitRate(0)
 		{
 			for (size_t i = 0; i < Buffer_COUNT; ++i)
-				bufferIds[i] = RenderBufferId();
+				bufferIds[i] = render::BufferId();
 		}
 	};
 
@@ -138,8 +138,8 @@ private:
 
 	void ReallocateEmitters(unsigned int requiredCount);
 
-	void InitializeEmitter(RenderDevice* renderDevice, ParticleEmitterId id);
-	void DeinitializeEmitter(RenderDevice* renderDevice, ParticleEmitterId id);
+	void InitializeEmitter(kokko::render::Device* renderDevice, ParticleEmitterId id);
+	void DeinitializeEmitter(kokko::render::Device* renderDevice, ParticleEmitterId id);
 };
 
 }

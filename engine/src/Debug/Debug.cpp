@@ -35,7 +35,7 @@
 
 Debug* Debug::singletonInstance = nullptr;
 
-static void RenderDebugCallback(const RenderDevice::DebugMessage& message)
+static void RenderDebugCallback(const kokko::render::Device::DebugMessage& message)
 {
 	if (message.severity != RenderDebugSeverity::Notification)
 	{
@@ -47,7 +47,7 @@ static void RenderDebugCallback(const RenderDevice::DebugMessage& message)
 Debug::Debug(
 	Allocator* allocator,
 	AllocatorManager* allocManager,
-	RenderDevice* renderDevice,
+	kokko::render::Device* renderDevice,
 	kokko::Filesystem* filesystem) :
 	allocator(allocator),
 	renderDevice(renderDevice),
@@ -108,7 +108,7 @@ void Debug::Deinitialize()
 	vectorRenderer->Deinitialize();
 }
 
-void Debug::Render(kokko::render::CommandEncoder* encoder, World* world, const Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera)
+void Debug::Render(kokko::render::CommandEncoder* encoder, World* world, const kokko::render::Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 

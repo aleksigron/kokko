@@ -69,8 +69,8 @@ GraphicsFeatureDeferredLighting::GraphicsFeatureDeferredLighting(Allocator* allo
 	uniformBufferId(0),
 	brdfLutTextureId(0)
 {
-	samplers[0] = RenderSamplerId();
-	samplers[1] = RenderSamplerId();
+	samplers[0] = render::SamplerId();
+	samplers[1] = render::SamplerId();
 }
 
 void GraphicsFeatureDeferredLighting::SetOrder(unsigned int order)
@@ -80,7 +80,7 @@ void GraphicsFeatureDeferredLighting::SetOrder(unsigned int order)
 
 void GraphicsFeatureDeferredLighting::Initialize(const InitializeParameters& parameters)
 {
-	RenderDevice* renderDevice = parameters.renderDevice;
+	kokko::render::Device* renderDevice = parameters.renderDevice;
 
 	renderDevice->CreateBuffers(1, &uniformBufferId);
 	renderDevice->SetBufferStorage(uniformBufferId, sizeof(LightingUniformBlock), nullptr, BufferStorageFlags::Dynamic);
@@ -101,27 +101,27 @@ void GraphicsFeatureDeferredLighting::Deinitialize(const InitializeParameters& p
 	if (uniformBufferId != 0)
 	{
 		parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
-		uniformBufferId = RenderBufferId();
+		uniformBufferId = render::BufferId();
 	}
 
 	if (brdfLutTextureId != 0)
 	{
 		parameters.renderDevice->DestroyTextures(1, &brdfLutTextureId);
-		brdfLutTextureId = RenderTextureId();
+		brdfLutTextureId = render::TextureId();
 	}
 
 	if (brdfLutFramebufferId != 0)
 	{
 		parameters.renderDevice->DestroyFramebuffers(1, &brdfLutFramebufferId);
-		brdfLutFramebufferId = RenderFramebufferId();
+		brdfLutFramebufferId = render::FramebufferId();
 	}
 
 	if (samplers[0] != 0)
 	{
 		parameters.renderDevice->DestroySamplers(KOKKO_ARRAY_ITEMS(samplers), samplers);
-		samplers[0] = RenderSamplerId();
-		samplers[1] = RenderSamplerId();
-		samplers[2] = RenderSamplerId();
+		samplers[0] = render::SamplerId();
+		samplers[1] = render::SamplerId();
+		samplers[2] = render::SamplerId();
 	}
 
 	if (meshId != MeshId::Null)
@@ -135,12 +135,12 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	RenderDevice* renderDevice = parameters.renderDevice;
+	kokko::render::Device* renderDevice = parameters.renderDevice;
 
 	if (brdfLutFramebufferId != 0) // Delete once the LUT has been rendered
 	{
 		renderDevice->DestroyFramebuffers(1, &brdfLutFramebufferId);
-		brdfLutFramebufferId = RenderFramebufferId();
+		brdfLutFramebufferId = render::FramebufferId();
 	}
 
 	if (brdfLutTextureId == 0)
@@ -410,13 +410,13 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 	deferredPass.textureIds[7] = specIrrTexture.textureObjectId;
 	deferredPass.textureIds[8] = brdfLutTextureId;
 
-	deferredPass.samplerIds[0] = RenderSamplerId();
-	deferredPass.samplerIds[1] = RenderSamplerId();
-	deferredPass.samplerIds[2] = RenderSamplerId();
-	deferredPass.samplerIds[3] = RenderSamplerId();
-	deferredPass.samplerIds[4] = RenderSamplerId();
+	deferredPass.samplerIds[0] = render::SamplerId();
+	deferredPass.samplerIds[1] = render::SamplerId();
+	deferredPass.samplerIds[2] = render::SamplerId();
+	deferredPass.samplerIds[3] = render::SamplerId();
+	deferredPass.samplerIds[4] = render::SamplerId();
 	deferredPass.samplerIds[5] = samplers[Sampler_DepthCompare];
-	deferredPass.samplerIds[6] = RenderSamplerId();
+	deferredPass.samplerIds[6] = render::SamplerId();
 	deferredPass.samplerIds[7] = samplers[Sampler_Mipmap];
 	deferredPass.samplerIds[8] = samplers[Sampler_ClampLinear];
 

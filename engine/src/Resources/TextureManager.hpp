@@ -15,19 +15,23 @@
 #include "Resources/TextureId.hpp"
 
 class Allocator;
-class RenderDevice;
 struct ImageData;
 
 namespace kokko
 {
 class AssetLoader;
+
+namespace render
+{
+class Device;
+}
 }
 
 struct TextureData
 {
 	kokko::Uid uid;
 	Vec2i textureSize;
-	kokko::RenderTextureId textureObjectId;
+	kokko::render::TextureId textureObjectId;
 	RenderTextureTarget textureTarget;
 };
 
@@ -36,7 +40,7 @@ class TextureManager
 private:
 	Allocator* allocator;
 	kokko::AssetLoader* assetLoader;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 
 	struct InstanceData
 	{
@@ -66,7 +70,7 @@ private:
 	void Reallocate(unsigned int required);
 
 public:
-	TextureManager(Allocator* allocator, kokko::AssetLoader* assetLoader, RenderDevice* renderDevice);
+	TextureManager(Allocator* allocator, kokko::AssetLoader* assetLoader, kokko::render::Device* renderDevice);
 	~TextureManager();
 
 	void Initialize();

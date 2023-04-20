@@ -17,7 +17,6 @@ class Allocator;
 class Engine;
 class Filesystem;
 class World;
-class Framebuffer;
 
 struct CameraParameters;
 struct EngineSettings;
@@ -26,6 +25,11 @@ namespace kokko
 {
 
 struct Uid;
+
+namespace render
+{
+class Framebuffer;
+}
 
 namespace editor
 {
@@ -44,7 +48,7 @@ public:
 	void Deinitialize();
 
 	void ResizeSceneViewFramebufferIfRequested();
-	const Framebuffer& GetSceneViewFramebuffer();
+	const render::Framebuffer& GetSceneViewFramebuffer();
 	CameraParameters GetEditorCameraParameters() const;
 
 	ArrayView<EditorWindow*> GetWindows();

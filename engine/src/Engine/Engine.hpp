@@ -8,8 +8,6 @@
 class Allocator;
 class AllocatorManager;
 class Debug;
-class Framebuffer;
-class RenderDevice;
 class Time;
 
 class World;
@@ -34,6 +32,8 @@ namespace render
 struct CommandBuffer;
 class CommandEncoder;
 class CommandExecutor;
+class Device;
+class Framebuffer;
 }
 }
 
@@ -47,7 +47,7 @@ private:
 
 	kokko::Filesystem* filesystem;
 	kokko::AssetLoader* assetLoader;
-    RenderDevice* renderDevice;
+    kokko::render::Device* renderDevice;
 	kokko::render::CommandBuffer* commandBuffer;
 	kokko::render::CommandEncoder* commandEncoder;
 	kokko::render::CommandExecutor* commandExecutor;
@@ -73,14 +73,14 @@ public:
 
 	void StartFrame();
 	void UpdateWorld();
-	void Render(const Optional<CameraParameters>& editorCamera, const Framebuffer& framebuffer);
+	void Render(const Optional<CameraParameters>& editorCamera, const kokko::render::Framebuffer& framebuffer);
 	void EndFrame();
 
 	void SetAppPointer(void* app);
 
 	kokko::EngineSettings* GetSettings() { return &settings; }
 	kokko::WindowManager* GetWindowManager() { return windowManager.instance; }
-	RenderDevice* GetRenderDevice() { return renderDevice; }
+	kokko::render::Device* GetRenderDevice() { return renderDevice; }
 	kokko::render::CommandEncoder* GetCommandEncoder() { return commandEncoder; }
 	Debug* GetDebug() { return debug.instance; }
 	kokko::Filesystem* GetFilesystem() { return filesystem; }

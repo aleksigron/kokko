@@ -10,11 +10,16 @@
 
 #include "Rendering/RenderResourceId.hpp"
 
-class RenderDevice;
-
 enum class RenderTextureSizedFormat;
 enum class RenderTextureCompareMode;
 enum class RenderDepthCompareFunc;
+
+namespace kokko
+{
+namespace render
+{
+
+class Device;
 
 class Framebuffer
 {
@@ -29,13 +34,13 @@ public:
 	Framebuffer& operator=(const Framebuffer&) = delete;
 	Framebuffer& operator=(Framebuffer&& other) noexcept;
 
-	void SetRenderDevice(RenderDevice* device);
+	void SetRenderDevice(Device* device);
 
 	bool IsInitialized() const;
 
-	kokko::RenderFramebufferId GetFramebufferId() const;
-	kokko::RenderTextureId GetColorTextureId(size_t index) const;
-	kokko::RenderTextureId GetDepthTextureId() const;
+	kokko::render::FramebufferId GetFramebufferId() const;
+	kokko::render::TextureId GetColorTextureId(size_t index) const;
+	kokko::render::TextureId GetDepthTextureId() const;
 
 	int GetWidth() const;
 	int GetHeight() const;
@@ -45,21 +50,24 @@ public:
 		ArrayView<RenderTextureSizedFormat> colorTextureFormats);
 	void Destroy();
 
-	void AttachExternalDepthTexture(kokko::RenderTextureId textureId);
+	void AttachExternalDepthTexture(kokko::render::TextureId textureId);
 
 	void SetDebugLabel(kokko::ConstStringView label);
 
 private:
-	RenderDevice* renderDevice;
+	Device* renderDevice;
 
 	int width;
 	int height;
 
-	kokko::RenderFramebufferId framebufferId;
+	kokko::render::FramebufferId framebufferId;
 
 	size_t colorTextureCount;
-	kokko::RenderTextureId colorTextureIds[MaxColorTextureCount];
+	kokko::render::TextureId colorTextureIds[MaxColorTextureCount];
 
-	kokko::RenderTextureId depthTextureId;
+	kokko::render::TextureId depthTextureId;
 	bool depthTextureIsOwned;
 };
+
+} // namespace render
+} // namespace kokko

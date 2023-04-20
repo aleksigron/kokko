@@ -31,7 +31,7 @@ struct DebugVectorBlock
 
 DebugVectorRenderer::DebugVectorRenderer(
 	Allocator* allocator,
-	RenderDevice* renderDevice) :
+	kokko::render::Device* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	shaderManager(nullptr),
@@ -237,7 +237,7 @@ void DebugVectorRenderer::Deinitialize()
 	if (uniformBufferId != 0)
 	{
 		renderDevice->DestroyBuffers(1, &uniformBufferId);
-		uniformBufferId = kokko::RenderBufferId();
+		uniformBufferId = kokko::render::BufferId();
 		bufferPrimitivesAllocated = 0;
 	}
 }
@@ -504,7 +504,7 @@ void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* 
 			if (bufferPrimitivesAllocated != 0 && primitiveCount > bufferPrimitivesAllocated)
 			{
 				renderDevice->DestroyBuffers(1, &uniformBufferId);
-				uniformBufferId = kokko::RenderBufferId();
+				uniformBufferId = kokko::render::BufferId();
 				bufferPrimitivesAllocated = 0;
 			}
 

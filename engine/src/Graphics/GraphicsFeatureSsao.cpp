@@ -52,8 +52,8 @@ GraphicsFeatureSsao::GraphicsFeatureSsao(Allocator* allocator) :
 	renderOrder(0),
 	noiseTextureId(0)
 {
-	uniformBufferIds[0] = RenderBufferId();
-	uniformBufferIds[1] = RenderBufferId();
+	uniformBufferIds[0] = render::BufferId();
+	uniformBufferIds[1] = render::BufferId();
 
 	shaderIds[0] = ShaderId::Null;
 	shaderIds[1] = ShaderId::Null;
@@ -68,7 +68,7 @@ void GraphicsFeatureSsao::Initialize(const InitializeParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	RenderDevice* device = parameters.renderDevice;
+	kokko::render::Device* device = parameters.renderDevice;
 
 	kernel.Resize(KernelSize);
 	for (int i = 0; i < KernelSize;)
@@ -140,7 +140,7 @@ void GraphicsFeatureSsao::Upload(const UploadParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	RenderDevice* device = parameters.renderDevice;
+	kokko::render::Device* device = parameters.renderDevice;
 	Vec2i framebufferSize = parameters.fullscreenViewport.viewportRectangle.size;
 
 	float noiseSizef = static_cast<float>(NoiseTextureSize);
@@ -196,9 +196,9 @@ void GraphicsFeatureSsao::Render(const RenderParameters& parameters)
 	occlusionPass.textureIds[0] = parameters.renderGraphResources->GetGeometryBufferNormalTexture();
 	occlusionPass.textureIds[1] = parameters.renderGraphResources->GetGeometryBuffer().GetDepthTextureId();
 	occlusionPass.textureIds[2] = noiseTextureId;
-	occlusionPass.samplerIds[0] = RenderSamplerId();
-	occlusionPass.samplerIds[1] = RenderSamplerId();
-	occlusionPass.samplerIds[2] = RenderSamplerId();
+	occlusionPass.samplerIds[0] = render::SamplerId();
+	occlusionPass.samplerIds[1] = render::SamplerId();
+	occlusionPass.samplerIds[2] = render::SamplerId();
 	occlusionPass.textureCount = 3;
 
 	occlusionPass.uniformBufferId = uniformBufferIds[PassIdx_Occlusion];
@@ -217,7 +217,7 @@ void GraphicsFeatureSsao::Render(const RenderParameters& parameters)
 
 	blurPass.textureNameHashes[0] = "occlusion_map"_hash;
 	blurPass.textureIds[0] = occlusionTarget.colorTexture;
-	blurPass.samplerIds[0] = RenderSamplerId();
+	blurPass.samplerIds[0] = render::SamplerId();
 	blurPass.textureCount = 1;
 
 	blurPass.uniformBufferId = uniformBufferIds[PassIdx_Blur];

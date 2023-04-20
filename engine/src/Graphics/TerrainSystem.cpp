@@ -57,7 +57,7 @@ struct TerrainUniformBlock
 
 TerrainSystem::TerrainSystem(
 	Allocator* allocator,
-	RenderDevice* renderDevice,
+	kokko::render::Device* renderDevice,
 	ShaderManager* shaderManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
@@ -215,7 +215,7 @@ TextureId TerrainSystem::GetAlbedoTextureId(TerrainId id) const
 	return data.textures[id.i].albedoTexture.textureId;
 }
 
-void TerrainSystem::SetAlbedoTexture(TerrainId id, TextureId textureId, RenderTextureId textureObject)
+void TerrainSystem::SetAlbedoTexture(TerrainId id, TextureId textureId, render::TextureId textureObject)
 {
 	data.textures[id.i].albedoTexture.textureId = textureId;
 	data.textures[id.i].albedoTexture.textureObjectId = textureObject;
@@ -226,7 +226,7 @@ TextureId TerrainSystem::GetRoughnessTextureId(TerrainId id) const
 	return data.textures[id.i].roughnessTexture.textureId;
 }
 
-void TerrainSystem::SetRoughnessTexture(TerrainId id, TextureId textureId, RenderTextureId textureObject)
+void TerrainSystem::SetRoughnessTexture(TerrainId id, TextureId textureId, render::TextureId textureObject)
 {
 	data.textures[id.i].roughnessTexture.textureId = textureId;
 	data.textures[id.i].roughnessTexture.textureObjectId = textureObject;
@@ -432,7 +432,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 	if (albedoMap != nullptr)
 	{
-		kokko::RenderTextureId textureObjectId;
+		kokko::render::TextureId textureObjectId;
 		if (data.textures[id.i].albedoTexture.textureObjectId != 0)
 			textureObjectId = data.textures[id.i].albedoTexture.textureObjectId;
 		else
@@ -461,7 +461,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 		if (heightMap != nullptr)
 		{
-			RenderTextureId heightTex = quadTree.GetTileHeightTexture(tile.level, tile.x, tile.y);
+			render::TextureId heightTex = quadTree.GetTileHeightTexture(tile.level, tile.x, tile.y);
 
 			encoder->BindTextureToShader(heightMap->uniformLocation, 0, heightTex);
 		}

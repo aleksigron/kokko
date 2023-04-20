@@ -35,7 +35,7 @@ SceneView::SceneView() :
 	editorCamera.LookAt(position, target);
 }
 
-void SceneView::Initialize(RenderDevice* renderDevice, Window* window)
+void SceneView::Initialize(kokko::render::Device* renderDevice, Window* window)
 {
 	framebuffer.SetRenderDevice(renderDevice);
 
@@ -203,7 +203,7 @@ void SceneView::ResizeFramebufferIfRequested()
 	}
 }
 
-const Framebuffer& SceneView::GetFramebuffer()
+const kokko::render::Framebuffer& SceneView::GetFramebuffer()
 {
 	return framebuffer;
 }

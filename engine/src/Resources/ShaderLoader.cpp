@@ -138,7 +138,7 @@ void AddUniformsAndShaderPath(
 
 			// Since shader is not compiled at this point, we can't know the uniform location
 			uniform.uniformLocation = -1;
-			uniform.textureObject = kokko::RenderTextureId();
+			uniform.textureObject = kokko::render::TextureId();
 
 			++textureUniformsCopied;
 
@@ -260,7 +260,7 @@ void AddUniformsAndShaderPath(
 
 void UpdateTextureUniformLocations(
 	ShaderData& shaderInOut,
-	RenderDevice* renderDevice)
+	kokko::render::Device* renderDevice)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -274,7 +274,7 @@ void UpdateTextureUniformLocations(
 bool Compile(
 	ShaderData& shaderOut,
 	Allocator* allocator,
-	RenderDevice* renderDevice,
+	kokko::render::Device* renderDevice,
 	RenderShaderStage stage,
 	ConstStringView source,
 	unsigned int& shaderIdOut)
@@ -316,7 +316,7 @@ bool CompileAndLink(
 	ShaderData& shaderOut,
 	ArrayView<const ShaderLoader::StageSource> stages,
 	Allocator* allocator,
-	RenderDevice* renderDevice,
+	kokko::render::Device* renderDevice,
 	ConstStringView debugName)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -368,7 +368,7 @@ bool CompileAndLink(
 	// Check link status
 	if (linkSucceeded)
 	{
-		shaderOut.driverId = kokko::RenderShaderId(programId);
+		shaderOut.driverId = kokko::render::ShaderId(programId);
 
 		renderDevice->SetObjectLabel(RenderObjectType::Program, programId, debugName);
 
@@ -376,7 +376,7 @@ bool CompileAndLink(
 	}
 	else
 	{
-		shaderOut.driverId = kokko::RenderShaderId();
+		shaderOut.driverId = kokko::render::ShaderId();
 
 		int infoLogLength = renderDevice->GetShaderProgramInfoLogLength(programId);
 
@@ -406,7 +406,7 @@ bool CompileAndLink(
 const char* const ShaderLoader::LineBreakChars = "\r\n";
 const char* const ShaderLoader::WhitespaceChars = " \t\r\n";
 
-ShaderLoader::ShaderLoader(Allocator* allocator, Filesystem* filesystem, RenderDevice* renderDevice) :
+ShaderLoader::ShaderLoader(Allocator* allocator, Filesystem* filesystem, kokko::render::Device* renderDevice) :
 	allocator(allocator),
 	filesystem(filesystem),
 	renderDevice(renderDevice),

@@ -33,7 +33,7 @@ private:
 	MeshId fullscreenMeshId;
 
 	void BindTextures(const ShaderData& shader, unsigned int count,
-		const uint32_t* nameHashes, const kokko::RenderTextureId* textures, const kokko::RenderSamplerId* samplers);
+		const uint32_t* nameHashes, const kokko::render::TextureId* textures, const kokko::render::SamplerId* samplers);
 
 public:
 	PostProcessRenderer(kokko::render::CommandEncoder* encoder, MeshManager* meshManager,

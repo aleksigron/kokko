@@ -16,8 +16,13 @@ struct TerrainTileId;
 namespace kokko
 {
 
-struct RenderTextureId;
 struct TerrainParameters;
+
+namespace render
+{
+struct TextureId;
+class Device;
+}
 
 struct TerrainTile
 {
@@ -32,9 +37,9 @@ class TerrainQuadTree
 public:
 	TerrainQuadTree();
 
-	void CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels,
+	void CreateResources(Allocator* allocator, kokko::render::Device* renderDevice, int levels,
 		const TerrainParameters& params);
-	void DestroyResources(Allocator* allocator, RenderDevice* renderDevice);
+	void DestroyResources(Allocator* allocator, kokko::render::Device* renderDevice);
 
 	void GetTilesToRender(
 		const FrustumPlanes& frustum, const Mat4x4f& viewProj, Array<TerrainTileId>& resultOut);
@@ -51,7 +56,7 @@ public:
 	void SetHeight(float height) { terrainHeight = height; }
 
 	const TerrainTile* GetTile(int level, int x, int y);
-	RenderTextureId GetTileHeightTexture(int level, int x, int y);
+	render::TextureId GetTileHeightTexture(int level, int x, int y);
 
 	static int GetTilesPerDimension(int level);
 	static int GetTileIndex(int level, int x, int y);
@@ -70,7 +75,7 @@ private:
 	static uint16_t TestData(float x, float y);
 
 	TerrainTile* tiles;
-	RenderTextureId* tileTextureIds;
+	render::TextureId* tileTextureIds;
 
 	int treeLevels;
 	int tileCount;

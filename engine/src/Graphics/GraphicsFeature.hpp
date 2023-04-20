@@ -11,7 +11,6 @@ class Framebuffer;
 class LightManager;
 class MeshManager;
 class PostProcessRenderer;
-class RenderDevice;
 class ShaderManager;
 class TextureManager;
 
@@ -27,6 +26,7 @@ class RenderGraphResources;
 namespace render
 {
 class CommandEncoder;
+class Device;
 }
 
 class GraphicsFeature
@@ -34,7 +34,7 @@ class GraphicsFeature
 public:
 	struct InitializeParameters
 	{
-		RenderDevice* renderDevice;
+		kokko::render::Device* renderDevice;
 		MeshManager* meshManager;
 		ShaderManager* shaderManager;
 	};
@@ -60,12 +60,12 @@ public:
 		const RenderViewport& fullscreenViewport;
 		ArrayView<const RenderViewport> shadowViewports;
 		const RenderGraphResources* renderGraphResources;
-		kokko::RenderFramebufferId finalTargetFramebufferId;
+		kokko::render::FramebufferId finalTargetFramebufferId;
 	};
 
 	struct UploadParameters : public CommonRenderParameters
 	{
-		RenderDevice* renderDevice;
+		kokko::render::Device* renderDevice;
 	};
 
 	struct SubmitParameters

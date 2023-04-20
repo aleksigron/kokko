@@ -17,10 +17,14 @@ namespace kokko
 {
 class AssetLoader;
 class MaterialSerializer;
+
+namespace render
+{
+class Device;
+}
 }
 
 class Allocator;
-class RenderDevice;
 class ShaderManager;
 class TextureManager;
 
@@ -32,16 +36,16 @@ private:
 		kokko::Uid uid;
 		TransparencyType transparency;
 		ShaderId shaderId;
-		kokko::RenderShaderId cachedShaderDeviceId;
+		kokko::render::ShaderId cachedShaderDeviceId;
 
-		kokko::RenderBufferId uniformBufferObject;
+		kokko::render::BufferId uniformBufferObject;
 
 		kokko::UniformData uniformData;
 	};
 
 	Allocator* allocator;
 	kokko::AssetLoader* assetLoader;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 	ShaderManager* shaderManager;
 	TextureManager* textureManager;
 
@@ -67,7 +71,7 @@ public:
 	MaterialManager(
 		Allocator* allocator,
 		kokko::AssetLoader* assetLoader,
-		RenderDevice* renderDevice,
+		kokko::render::Device* renderDevice,
 		ShaderManager* shaderManager,
 		TextureManager* textureManager);
 
@@ -92,9 +96,9 @@ public:
 	kokko::UniformData& GetMaterialUniforms(MaterialId id)
 	{ return data.material[id.i].uniformData; }
 
-	kokko::RenderShaderId GetMaterialShaderDeviceId(MaterialId id) const
+	kokko::render::ShaderId GetMaterialShaderDeviceId(MaterialId id) const
 	{ return data.material[id.i].cachedShaderDeviceId; }
-	kokko::RenderBufferId GetMaterialUniformBufferId(MaterialId id) const
+	kokko::render::BufferId GetMaterialUniformBufferId(MaterialId id) const
 	{ return data.material[id.i].uniformBufferObject; }
 
 	void UpdateUniformsToGPU(MaterialId id);

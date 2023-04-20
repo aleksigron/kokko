@@ -10,7 +10,6 @@ class Allocator;
 class World;
 class ComponentSerializer;
 class TransformSerializer;
-class RenderDevice;
 
 struct Entity;
 struct SceneObjectId;
@@ -24,12 +23,17 @@ class Node;
 namespace kokko
 {
 class String;
+
+namespace render
+{
+class Device;
+}
 }
 
 class LevelSerializer
 {
 public:
-	LevelSerializer(Allocator* allocator, RenderDevice* renderDevice);
+	LevelSerializer(Allocator* allocator, kokko::render::Device* renderDevice);
 	~LevelSerializer();
 
 	void Initialize(World* world, const kokko::ResourceManagers& resourceManagers);
@@ -42,7 +46,7 @@ public:
 
 private:
 	Allocator* allocator;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 	World* world;
 	kokko::ResourceManagers resourceManagers;
 

@@ -35,10 +35,10 @@ public:
 
 	// Bind buffers
 
-	void BindBuffer(RenderBufferTarget target, RenderBufferId buffer);
-	void BindBufferBase(RenderBufferTarget target, uint32_t bindingPoint, RenderBufferId buffer);
+	void BindBuffer(RenderBufferTarget target, render::BufferId buffer);
+	void BindBufferBase(RenderBufferTarget target, uint32_t bindingPoint, render::BufferId buffer);
 	void BindBufferRange(
-		RenderBufferTarget target, uint32_t bindingPoint, RenderBufferId buffer, intptr_t offset, size_t length);
+		RenderBufferTarget target, uint32_t bindingPoint, render::BufferId buffer, intptr_t offset, size_t length);
 
 	// Clear
 
@@ -73,15 +73,15 @@ public:
 
 	// Framebuffer
 
-	void BindFramebuffer(RenderFramebufferId framebuffer);
+	void BindFramebuffer(render::FramebufferId framebuffer);
 
 	// Sampler
 
-	void BindSampler(uint32_t textureUnit, RenderSamplerId sampler);
+	void BindSampler(uint32_t textureUnit, render::SamplerId sampler);
 
 	// Shader
 
-	void UseShaderProgram(RenderShaderId shader);
+	void UseShaderProgram(render::ShaderId shader);
 
 	// State
 
@@ -117,11 +117,11 @@ public:
 	void BindTextureToShader(
 		int32_t uniformLocation,
 		uint32_t textureUnit,
-		RenderTextureId texture);
+		render::TextureId texture);
 
 	// Vertex arrays
 
-	void BindVertexArray(RenderVertexArrayId id);
+	void BindVertexArray(render::VertexArrayId id);
 
 	// Memory barrier
 

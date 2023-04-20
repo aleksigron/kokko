@@ -176,10 +176,10 @@ void ImguiImplOpenGL::RenderDrawData(render::CommandEncoder* encoder, ImDrawData
 	encoder->ScissorTestEnable();
 
 	encoder->SetViewport(0, 0, fb_width, fb_height);
-	encoder->UseShaderProgram(RenderShaderId(g_ShaderHandle));
+	encoder->UseShaderProgram(render::ShaderId(g_ShaderHandle));
 	encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, 0, buffers[uniformBufferIndex]);
 
-	encoder->BindSampler(0, RenderSamplerId());
+	encoder->BindSampler(0, render::SamplerId());
 
 	const auto indexType = sizeof(ImDrawIdx) == 2 ? RenderIndexType::UnsignedShort : RenderIndexType::UnsignedInt;
 
@@ -213,7 +213,7 @@ void ImguiImplOpenGL::RenderDrawData(render::CommandEncoder* encoder, ImDrawData
 					(int)(clip_rect.z - clip_rect.x),
 					(int)(clip_rect.w - clip_rect.y));
 
-				auto texId = RenderTextureId((GLuint)(intptr_t)pcmd->GetTexID());
+				auto texId = render::TextureId((GLuint)(intptr_t)pcmd->GetTexID());
 				encoder->BindTextureToShader(g_UniformLocationTex, 0, texId);
 
 				encoder->DrawIndexed(RenderPrimitiveMode::Triangles, indexType, pcmd->ElemCount,

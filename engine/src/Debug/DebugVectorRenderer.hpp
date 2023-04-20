@@ -21,13 +21,13 @@ namespace kokko
 namespace render
 {
 class CommandEncoder;
+class Device;
 }
 }
 
 struct Entity;
 struct CameraParameters;
 class Allocator;
-class RenderDevice;
 class MeshManager;
 class ShaderManager;
 class World;
@@ -58,7 +58,7 @@ private:
 	};
 
 	Allocator* allocator;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
 
@@ -82,14 +82,14 @@ private:
 
 	ShaderId shaderId;
 
-	kokko::RenderBufferId uniformBufferId;
+	kokko::render::BufferId uniformBufferId;
 	uint32_t bufferPrimitivesAllocated;
 	uint32_t bufferAlignedSize;
 
 	DynamicMesh* GetDynamicMesh(size_t byteSize);
 
 public:
-	DebugVectorRenderer(Allocator* allocator, RenderDevice* renderDevice);
+	DebugVectorRenderer(Allocator* allocator, kokko::render::Device* renderDevice);
 	~DebugVectorRenderer();
 
 	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager);

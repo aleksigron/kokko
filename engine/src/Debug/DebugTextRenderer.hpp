@@ -11,7 +11,6 @@
 #include "Resources/MeshId.hpp"
 
 class Allocator;
-class RenderDevice;
 class BitmapFont;
 class ShaderManager;
 class MeshManager;
@@ -24,9 +23,12 @@ class Filesystem;
 
 namespace render
 {
+
 class CommandEncoder;
-}
-}
+class Device;
+
+} // namespace render
+} // namespace kokko
 
 class DebugTextRenderer
 {
@@ -39,7 +41,7 @@ private:
 	};
 
 	Allocator* allocator;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 	kokko::Filesystem* filesystem;
 	ShaderManager* shaderManager;
 	MeshManager* meshManager;
@@ -57,14 +59,14 @@ private:
 	Array<float> vertexData;
 	Array<unsigned short> indexData;
 
-	kokko::RenderBufferId bufferObjectId;
+	kokko::render::BufferId bufferObjectId;
 
 	void CreateAndUploadData();
 
 	bool LoadBitmapFont(TextureManager* textureManager, const char* filePath);
 
 public:
-	DebugTextRenderer(Allocator* allocator, RenderDevice* renderDevice, kokko::Filesystem* filesystem);
+	DebugTextRenderer(Allocator* allocator, kokko::render::Device* renderDevice, kokko::Filesystem* filesystem);
 	~DebugTextRenderer();
 
 	bool Initialize(ShaderManager* shaderManager,

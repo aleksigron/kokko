@@ -10,8 +10,6 @@
 
 class Allocator;
 class Engine;
-class Framebuffer;
-class RenderDevice;
 class World;
 
 struct CameraParameters;
@@ -31,6 +29,8 @@ struct EngineSettings;
 namespace render
 {
 class CommandEncoder;
+class Device;
+class Framebuffer;
 }
 
 namespace editor
@@ -61,7 +61,7 @@ public:
 	void Update(kokko::EngineSettings* engineSettings, bool& shouldExitOut);
 	void EndFrame(render::CommandEncoder* encoder);
 
-	const Framebuffer& GetSceneViewFramebuffer();
+	const render::Framebuffer& GetSceneViewFramebuffer();
 
 	AssetLibrary* GetAssetLibrary();
 
@@ -89,7 +89,7 @@ private:
 	Engine* engine;
 	FilesystemResolverVirtual* filesystemResolver;
 	Allocator* allocator;
-	RenderDevice* renderDevice;
+	kokko::render::Device* renderDevice;
 	World* world;
 
 	ImguiImplOpenGL* imguiImplOpenGL;

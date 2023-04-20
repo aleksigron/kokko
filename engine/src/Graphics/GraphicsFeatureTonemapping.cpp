@@ -43,7 +43,7 @@ void GraphicsFeatureTonemapping::Initialize(const InitializeParameters& paramete
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	RenderDevice* device = parameters.renderDevice;
+	kokko::render::Device* device = parameters.renderDevice;
 
 	{
 		device->CreateBuffers(1, &uniformBufferId);
@@ -62,12 +62,12 @@ void GraphicsFeatureTonemapping::Initialize(const InitializeParameters& paramete
 void GraphicsFeatureTonemapping::Deinitialize(const InitializeParameters& parameters)
 {
 	parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
-	uniformBufferId = RenderBufferId();
+	uniformBufferId = render::BufferId();
 }
 
 void GraphicsFeatureTonemapping::Upload(const UploadParameters& parameters)
 {
-	RenderDevice* device = parameters.renderDevice;
+	kokko::render::Device* device = parameters.renderDevice;
 
 	TonemapUniformBlock uniforms;
 	uniforms.exposure = 1.0f;
@@ -90,7 +90,7 @@ void GraphicsFeatureTonemapping::Render(const RenderParameters& parameters)
 
 	pass.textureNameHashes[0] = "light_acc_map"_hash;
 	pass.textureIds[0] = resources->GetLightAccumulationBuffer().GetColorTextureId(0);
-	pass.samplerIds[0] = RenderSamplerId();
+	pass.samplerIds[0] = render::SamplerId();
 	pass.textureCount = 1;
 
 	pass.uniformBufferId = uniformBufferId;

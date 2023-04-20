@@ -6,7 +6,6 @@
 
 namespace kokko
 {
-
 namespace render
 {
 

@@ -33,7 +33,7 @@ TerrainQuadTree::TerrainQuadTree() :
 {
 }
 
-void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* renderDevice, int levels,
+void TerrainQuadTree::CreateResources(Allocator* allocator, kokko::render::Device* renderDevice, int levels,
 	const TerrainParameters& params)
 {
 	constexpr int tileResolution = TerrainTile::Resolution;
@@ -66,7 +66,7 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* render
 		}
 	}
 
-	tileTextureIds = static_cast<RenderTextureId*>(
+	tileTextureIds = static_cast<render::TextureId*>(
 		allocator->Allocate(tileCount * sizeof(uint32_t), "TerrainQuadTree.tileTextureIds"));
 	renderDevice->CreateTextures(RenderTextureTarget::Texture2d, tileCount, tileTextureIds);
 
@@ -91,7 +91,7 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, RenderDevice* render
 	}
 }
 
-void TerrainQuadTree::DestroyResources(Allocator* allocator, RenderDevice* renderDevice)
+void TerrainQuadTree::DestroyResources(Allocator* allocator, kokko::render::Device* renderDevice)
 {
 	if (tileTextureIds != nullptr)
 		renderDevice->DestroyTextures(static_cast<unsigned int>(tileCount), tileTextureIds);
@@ -215,7 +215,7 @@ const TerrainTile* TerrainQuadTree::GetTile(int level, int x, int y)
 	return &tiles[GetTileIndex(level, x, y)];
 }
 
-RenderTextureId TerrainQuadTree::GetTileHeightTexture(int level, int x, int y)
+render::TextureId TerrainQuadTree::GetTileHeightTexture(int level, int x, int y)
 {
 	return tileTextureIds[GetTileIndex(level, x, y)];
 }

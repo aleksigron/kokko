@@ -79,7 +79,7 @@ void GraphicsFeatureBloom::Initialize(const InitializeParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	RenderDevice* renderDevice = parameters.renderDevice;
+	kokko::render::Device* renderDevice = parameters.renderDevice;
 
 	ConstStringView extractPath("engine/shaders/post_process/bloom_extract.glsl");
 	ConstStringView downsamplePath("engine/shaders/post_process/bloom_downsample.glsl");
@@ -121,13 +121,13 @@ void GraphicsFeatureBloom::Deinitialize(const InitializeParameters& parameters)
 	if (linearSamplerId != 0)
 	{
 		parameters.renderDevice->DestroySamplers(1, &linearSamplerId);
-		linearSamplerId = RenderSamplerId();
+		linearSamplerId = render::SamplerId();
 	}
 
 	if (uniformBufferId != 0)
 	{
 		parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
-		uniformBufferId = RenderBufferId();
+		uniformBufferId = render::BufferId();
 	}
 }
 
@@ -135,17 +135,17 @@ void GraphicsFeatureBloom::Upload(const UploadParameters& parameters)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	RenderDevice* renderDevice = parameters.renderDevice;
+	kokko::render::Device* renderDevice = parameters.renderDevice;
 	PostProcessRenderer* postProcessRenderer = parameters.postProcessRenderer;
 	Vec2i framebufferSize = parameters.fullscreenViewport.viewportRectangle.size;
 
 	RenderTarget* currentSource = nullptr;
 	RenderTarget* currentDestination = nullptr;
 
-	RenderSamplerId extractPassSampler = linearSamplerId;
-	RenderSamplerId downsamplePassSampler = linearSamplerId;
-	RenderSamplerId upsamplePassSampler = linearSamplerId;
-	RenderSamplerId applyPassSampler = linearSamplerId;
+	render::SamplerId extractPassSampler = linearSamplerId;
+	render::SamplerId downsamplePassSampler = linearSamplerId;
+	render::SamplerId upsamplePassSampler = linearSamplerId;
+	render::SamplerId applyPassSampler = linearSamplerId;
 
 	int iterationCount = 4;
 	float bloomThreshold = 1.2f;
