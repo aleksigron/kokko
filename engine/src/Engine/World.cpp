@@ -35,7 +35,7 @@ World::World(AllocatorManager* allocManager,
 	const kokko::ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	commandEncoder(commandEncoder),
-	levelSerializer(allocator),
+	levelSerializer(allocator, renderDevice),
 	resourceManagers(resourceManagers)
 {
 	entityManager.CreateScope(allocManager, "EntityManager", allocator);

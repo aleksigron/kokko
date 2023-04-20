@@ -57,6 +57,16 @@ void RenderDeviceOpenGL::SetObjectPtrLabel(void* ptr, kokko::ConstStringView lab
 	glObjectPtrLabel(ptr, static_cast<GLsizei>(label.len), label.str);
 }
 
+void RenderDeviceOpenGL::BeginDebugScope(uint32_t id, kokko::ConstStringView message)
+{
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, message.len, message.str);
+}
+
+void RenderDeviceOpenGL::EndDebugScope()
+{
+	glPopDebugGroup();
+}
+
 void RenderDeviceOpenGL::CreateFramebuffers(unsigned int count, kokko::RenderFramebufferId* framebuffersOut)
 {
 	glCreateFramebuffers(count, &framebuffersOut[0].i);
@@ -76,7 +86,18 @@ void RenderDeviceOpenGL::AttachFramebufferTexture(
 	glNamedFramebufferTexture(framebuffer.i, ConvertFramebufferAttachment(attachment), texture.i, level);
 }
 
-void RenderDeviceOpenGL::SetFramebufferDrawBuffers(kokko::RenderFramebufferId framebuffer, unsigned int count, const RenderFramebufferAttachment* buffers)
+void RenderDeviceOpenGL::AttachFramebufferTextureLayer(
+	kokko::RenderFramebufferId framebuffer,
+	RenderFramebufferAttachment attachment,
+	kokko::RenderTextureId texture,
+	int level,
+	int layer)
+{
+	glNamedFramebufferTextureLayer(framebuffer.i, ConvertFramebufferAttachment(attachment), texture.i, level, layer);
+}
+
+void RenderDeviceOpenGL::SetFramebufferDrawBuffers(
+	kokko::RenderFramebufferId framebuffer, unsigned int count, const RenderFramebufferAttachment* buffers)
 {
 	unsigned int attachments[16];
 
@@ -99,7 +120,7 @@ void RenderDeviceOpenGL::CreateTextures(
 	unsigned int count,
 	kokko::RenderTextureId* texturesOut)
 {
-	glCreateTextures(ConvertTextureTarget(type), count, &texturesOut	[0].i);
+	glCreateTextures(ConvertTextureTarget(type), count, &texturesOut[0].i);
 }
 
 void RenderDeviceOpenGL::DestroyTextures(unsigned int count, const kokko::RenderTextureId* textures)
@@ -155,7 +176,8 @@ void RenderDeviceOpenGL::GenerateTextureMipmaps(kokko::RenderTextureId texture)
 	glGenerateTextureMipmap(texture.i);
 }
 
-void RenderDeviceOpenGL::CreateSamplers(uint32_t count, const RenderSamplerParameters* params, kokko::RenderSamplerId* samplersOut)
+void RenderDeviceOpenGL::CreateSamplers(
+	uint32_t count, const RenderSamplerParameters* params, kokko::RenderSamplerId* samplersOut)
 {
 	glGenSamplers(count, &samplersOut[0].i);
 

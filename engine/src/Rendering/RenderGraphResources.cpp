@@ -26,6 +26,8 @@ void RenderGraphResources::VerifyResourcesAreCreated(Vec2i fullscreenViewportRes
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("RenderGraph_InitResources"));
+
 	// Create resolution invariant resources
 
 	if (framebufferShadow.GetFramebufferId() == 0)

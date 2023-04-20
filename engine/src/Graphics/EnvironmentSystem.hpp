@@ -65,8 +65,8 @@ private:
 		bool needsUpload;
 	};
 
-	static const size_t CubemapSideCount = 6;
-	static const size_t SpecularMipmapLevelCount = 6;
+	static const uint32_t CubemapSideCount = 6;
+	static const uint32_t SpecularMipmapLevelCount = 6;
 
 	Allocator* allocator;
 	AssetLoader* assetLoader;
@@ -76,6 +76,7 @@ private:
 	TextureManager* textureManager;
 
 	Array<EnvironmentComponent> environmentMaps;
+	Array<RenderTextureId> texturesToRemove;
 
 	HashMap<unsigned int, EnvironmentId> entityMap;
 
@@ -84,7 +85,7 @@ private:
 	size_t viewportBlockStride;
 	size_t specularBlockStride;
 
-	RenderFramebufferId framebufferId;
+	Array<RenderFramebufferId> framebufferIds;
 	RenderBufferId viewportUniformBufferId;
 	RenderBufferId specularUniformBufferId;
 	RenderSamplerId samplerId;

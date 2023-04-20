@@ -1,18 +1,18 @@
 #version 450
-#property base_color vec4
 
 #stage vertex
-#include "engine/shaders/common/constants.glsl"
-#include "engine/shaders/common/transform_block.glsl"
+#include "engine/shaders/debug/debug_vector_uniform.glsl"
 
 layout(location = 0) in vec3 position;
 
 void main()
 {
-	gl_Position = transform.MVP * vec4(position, 1.0);
+	gl_Position = transform * vec4(position, 1.0);
 }
 
 #stage fragment
+#include "engine/shaders/debug/debug_vector_uniform.glsl"
+
 out vec4 output_color;
 
 void main()

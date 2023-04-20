@@ -21,12 +21,17 @@ CommandEncoder::CommandEncoder(
 // ==== DEBUG GROUPS ====
 // ======================
 
-void CommandEncoder::PushDebugGroup(uint32_t id, kokko::ConstStringView message)
+CommandEncoderDebugScope CommandEncoder::CreateDebugScope(uint32_t id, kokko::ConstStringView message)
+{
+	return CommandEncoderDebugScope(this, id, message);
+}
+
+void CommandEncoder::BeginDebugScope(uint32_t id, kokko::ConstStringView message)
 {
 	uint32_t messageOffset = CopyCommandData(message.str, message.len);
 
-	CmdClear data{
-		RenderCommandType::PushDebugGroup,
+	CmdBeginDebugScope data{
+		RenderCommandType::BeginDebugScope,
 		id,
 		messageOffset,
 		message.len
@@ -35,9 +40,9 @@ void CommandEncoder::PushDebugGroup(uint32_t id, kokko::ConstStringView message)
 	CopyCommand(&data, sizeof(data));
 }
 
-void CommandEncoder::PopDebugGroup()
+void CommandEncoder::EndDebugScope()
 {
-	Command data{ RenderCommandType::PopDebugGroup };
+	Command data{ RenderCommandType::EndDebugScope };
 	CopyCommand(&data, sizeof(data));
 }
 

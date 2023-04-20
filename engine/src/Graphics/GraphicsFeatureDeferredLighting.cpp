@@ -121,6 +121,7 @@ void GraphicsFeatureDeferredLighting::Deinitialize(const InitializeParameters& p
 		parameters.renderDevice->DestroySamplers(KOKKO_ARRAY_ITEMS(samplers), samplers);
 		samplers[0] = RenderSamplerId();
 		samplers[1] = RenderSamplerId();
+		samplers[2] = RenderSamplerId();
 	}
 
 	if (meshId != MeshId::Null)
@@ -156,7 +157,7 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 
 	if (samplers[0] == 0)
 	{
-		RenderSamplerParameters params[] = {
+		RenderSamplerParameters params[Sampler_COUNT] = {
 		{ // Sampler_DepthCompare
 			RenderTextureFilterMode::Linear,
 			RenderTextureFilterMode::Linear,
@@ -174,9 +175,18 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 			RenderTextureWrapMode::ClampToEdge,
 			RenderTextureCompareMode::None,
 			RenderDepthCompareFunc::Always
+		},
+		{ // Sampler_Mipmap
+			RenderTextureFilterMode::LinearMipmap,
+			RenderTextureFilterMode::Linear,
+			RenderTextureWrapMode::ClampToEdge,
+			RenderTextureWrapMode::ClampToEdge,
+			RenderTextureWrapMode::ClampToEdge,
+			RenderTextureCompareMode::None,
+			RenderDepthCompareFunc::Always
 		}};
 
-		renderDevice->CreateSamplers(2, params, samplers);
+		renderDevice->CreateSamplers(KOKKO_ARRAY_ITEMS(params), params, samplers);
 	}
 
 	LightManager* lightManager = parameters.lightManager;
@@ -339,6 +349,10 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 
 	render::CommandEncoder* encoder = parameters.encoder;
 
+	encoder->ScissorTestDisable();
+	encoder->DepthTestDisable();
+	encoder->BlendingDisable();
+
 	if (parameters.featureObjectId == RenderOrderConfiguration::MaxFeatureObjectId)
 	{
 		KOKKO_PROFILE_SCOPE("Calculate BRDF LUT");
@@ -359,8 +373,6 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 
 		return;
 	}
-
-	encoder->DepthTestDisable();
 
 	const RenderGraphResources* resources = parameters.renderGraphResources;
 
@@ -405,7 +417,7 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 	deferredPass.samplerIds[4] = RenderSamplerId();
 	deferredPass.samplerIds[5] = samplers[Sampler_DepthCompare];
 	deferredPass.samplerIds[6] = RenderSamplerId();
-	deferredPass.samplerIds[7] = RenderSamplerId();
+	deferredPass.samplerIds[7] = samplers[Sampler_Mipmap];
 	deferredPass.samplerIds[8] = samplers[Sampler_ClampLinear];
 
 	deferredPass.textureCount = 9;

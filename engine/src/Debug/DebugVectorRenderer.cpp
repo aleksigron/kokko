@@ -23,11 +23,10 @@
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
 
-struct MaterialBlock
+struct DebugVectorBlock
 {
-	static const std::size_t BufferSize = 16;
-
-	Vec4f color;
+	alignas(16) Mat4x4f transform;
+	alignas(16) Vec4f color;
 };
 
 DebugVectorRenderer::DebugVectorRenderer(
@@ -42,7 +41,8 @@ DebugVectorRenderer::DebugVectorRenderer(
 	dynamicMeshAllocated(0),
 	meshesInitialized(false),
 	shaderId(ShaderId{0}),
-	buffersInitialized(false)
+	bufferPrimitivesAllocated(0),
+	bufferAlignedSize(0)
 {
 	primitiveCount = 0;
 	primitiveAllocated = 1024;
@@ -58,6 +58,12 @@ DebugVectorRenderer::~DebugVectorRenderer()
 void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* shaderManager)
 {
 	KOKKO_PROFILE_FUNCTION();
+
+	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("DebugVec_InitResources"));
+
+	int alignment = 0;
+	renderDevice->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &alignment);
+	bufferAlignedSize = Math::RoundUpToMultiple(int(sizeof(DebugVectorBlock)), alignment);
 
 	this->meshManager = meshManager;
 	this->shaderManager = shaderManager;
@@ -228,10 +234,11 @@ void DebugVectorRenderer::Deinitialize()
 		meshesInitialized = false;
 	}
 
-	if (buffersInitialized)
+	if (uniformBufferId != 0)
 	{
-		renderDevice->DestroyBuffers(2, uniformBufferIds);
-		buffersInitialized = false;
+		renderDevice->DestroyBuffers(1, &uniformBufferId);
+		uniformBufferId = kokko::RenderBufferId();
+		bufferPrimitivesAllocated = 0;
 	}
 }
 
@@ -451,34 +458,16 @@ void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* 
 
 	if (primitiveCount > 0)
 	{
-		const ShaderData& shader = shaderManager->GetShaderData(shaderId);
-
-		if (buffersInitialized == false)
-		{
-			RenderBufferUsage usage = RenderBufferUsage::DynamicDraw;
-
-			renderDevice->CreateBuffers(2, uniformBufferIds);
-
-			renderDevice->SetBufferStorage(
-				uniformBufferIds[ObjectBuffer], sizeof(TransformUniformBlock), nullptr, BufferStorageFlags::Dynamic);
-			renderDevice->SetBufferStorage(
-				uniformBufferIds[MaterialBuffer], sizeof(MaterialBlock), nullptr, BufferStorageFlags::Dynamic);
-
-			buffersInitialized = true;
-		}
-
-		Mat4x4f proj;
-		Mat4x4f view;
 		Mat4x4f viewProj;
 		Mat4x4f screenProj = Mat4x4f::ScreenSpaceProjection(viewport.size);
 
 		if (editorCamera.HasValue())
 		{
 			const CameraParameters& cameraParams = editorCamera.GetValue();
-			bool reverseDepth = false;
 
-			proj = cameraParams.projection.GetProjectionMatrix(reverseDepth);
-			view = cameraParams.transform.inverse;
+			bool reverseDepth = false;
+			Mat4x4f proj = cameraParams.projection.GetProjectionMatrix(reverseDepth);
+			Mat4x4f view = cameraParams.transform.inverse;
 			viewProj = proj * view;
 		}
 		else
@@ -497,68 +486,96 @@ void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* 
 			else
 				KK_LOG_ERROR("DebugVectorRenderer: camera's transform couldn't be inverted");
 
-			bool reverseDepth = false;
 
 			CameraId cameraId = cameraSystem->Lookup(cameraEntity);
 			ProjectionParameters projectionParams = cameraSystem->GetProjection(cameraId);
 			projectionParams.SetAspectRatio(viewport.size.x, viewport.size.y);
 
-			proj = projectionParams.GetProjectionMatrix(reverseDepth);
+			bool reverseDepth = false;
+			Mat4x4f proj = projectionParams.GetProjectionMatrix(reverseDepth);
 			viewProj = proj * view;
 		}
 
-		TransformUniformBlock objectUniforms;
-		MaterialBlock materialUniforms;
+		DebugVectorBlock objectUniforms;
 
-		encoder->DepthTestDisable();
-		encoder->BlendingDisable();
-		encoder->SetViewport(viewport.position.x, viewport.position.y, viewport.size.x, viewport.size.y);
-
-		encoder->UseShaderProgram(shader.driverId);
-
-		for (unsigned int i = 0; i < primitiveCount; ++i)
 		{
-			const Primitive& primitive = primitives[i];
+			auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("DebugVec_Upload"));
 
-			// Use view or screen based transform depending on whether this is a screen-space primitive
-			Mat4x4f mvp = (primitive.screenSpace ? screenProj : viewProj) * primitive.transform;
+			if (bufferPrimitivesAllocated != 0 && primitiveCount > bufferPrimitivesAllocated)
+			{
+				renderDevice->DestroyBuffers(1, &uniformBufferId);
+				uniformBufferId = kokko::RenderBufferId();
+				bufferPrimitivesAllocated = 0;
+			}
 
-			// Update object transform uniform buffer
+			if (uniformBufferId == 0)
+			{
+				bufferPrimitivesAllocated = primitiveCount;
+				uint32_t size = bufferAlignedSize * bufferPrimitivesAllocated;
 
-			objectUniforms.MVP = mvp;
-			objectUniforms.MV = view * primitive.transform;
-			objectUniforms.M = primitive.transform;
+				renderDevice->CreateBuffers(1, &uniformBufferId);
+				renderDevice->SetBufferStorage(uniformBufferId, size, nullptr, BufferStorageFlags::Dynamic);
+			}
 
-			renderDevice->SetBufferSubData(uniformBufferIds[ObjectBuffer], 0, sizeof(TransformUniformBlock), &objectUniforms);
-			encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferIds[ObjectBuffer]);
+			for (unsigned int i = 0; i < primitiveCount; ++i)
+			{
+				const Primitive& primitive = primitives[i];
 
-			// Update color
+				// Use view or screen based transform depending on whether this is a screen-space primitive
+				Mat4x4f mvp = (primitive.screenSpace ? screenProj : viewProj) * primitive.transform;
 
-			Vec4f colorVec4(primitive.color.r, primitive.color.g, primitive.color.b, primitive.color.a);
-			materialUniforms.color = colorVec4;
+				// Update uniform buffer
 
-			renderDevice->SetBufferSubData(uniformBufferIds[MaterialBuffer], 0, sizeof(MaterialBlock), &materialUniforms);
-			encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Material, uniformBufferIds[MaterialBuffer]);
+				objectUniforms.transform = mvp;
+				Vec4f colorVec4(primitive.color.r, primitive.color.g, primitive.color.b, primitive.color.a);
+				objectUniforms.color = colorVec4;
 
-			// Draw
+				uint32_t offset = bufferAlignedSize * i;
+				renderDevice->SetBufferSubData(uniformBufferId, offset, sizeof(DebugVectorBlock), &objectUniforms);
+			}
+		}
 
-			MeshId meshId;
+		{
+			auto scope = encoder->CreateDebugScope(0, kokko::ConstStringView("DebugVec_Render"));
 
-			if (primitive.dynamicMeshIndex >= 0)
-				meshId = this->dynamicMeshes[primitive.dynamicMeshIndex].meshId;
-			else
-				meshId = this->staticMeshes[static_cast<unsigned int>(primitive.type)];
+			const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
-			const MeshDrawData* draw = meshManager->GetDrawData(meshId);
-			encoder->BindVertexArray(draw->vertexArrayObject);
+			encoder->DepthTestDisable();
+			encoder->BlendingDisable();
+			encoder->SetViewport(viewport.position.x, viewport.position.y, viewport.size.x, viewport.size.y);
 
-			if (draw->indexType != RenderIndexType::None)
-				encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
-			else
-				encoder->Draw(draw->primitiveMode, 0, draw->count);
+			encoder->UseShaderProgram(shader.driverId);
+
+			// FIXME: A single buffer can no longer be shared between draw calls
+
+			for (unsigned int i = 0; i < primitiveCount; ++i)
+			{
+				const Primitive& primitive = primitives[i];
+
+				uint32_t offset = bufferAlignedSize * i;
+				encoder->BindBufferRange(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object,
+					uniformBufferId, offset, sizeof(DebugVectorBlock));
+
+				// Draw
+
+				MeshId meshId;
+
+				if (primitive.dynamicMeshIndex >= 0)
+					meshId = this->dynamicMeshes[primitive.dynamicMeshIndex].meshId;
+				else
+					meshId = this->staticMeshes[static_cast<unsigned int>(primitive.type)];
+
+				const MeshDrawData* draw = meshManager->GetDrawData(meshId);
+				encoder->BindVertexArray(draw->vertexArrayObject);
+
+				if (draw->indexType != RenderIndexType::None)
+					encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
+				else
+					encoder->Draw(draw->primitiveMode, 0, draw->count);
+			}
+		}
 
 		// Clear primitive count
-		}
 		primitiveCount = 0;
 
 		// Free dynamic meshes for use

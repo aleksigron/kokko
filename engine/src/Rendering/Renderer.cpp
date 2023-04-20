@@ -158,78 +158,85 @@ Renderer::~Renderer()
 void Renderer::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
-
-	int aligment = 0;
-	device->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
-
-	objectUniformBlockStride = (sizeof(TransformUniformBlock) + aligment - 1) / aligment * aligment;
-	objectsPerUniformBuffer = ObjectUniformBufferSize / objectUniformBlockStride;
-
-	postProcessRenderer->Initialize();
-
 	{
-		KOKKO_PROFILE_SCOPE("Allocate viewport data");
+		auto scope = device->CreateDebugScope(0, kokko::ConstStringView("Renderer_InitResources"));
 
-		// Allocate viewport data storage
-		void* buf = allocator->Allocate(sizeof(RenderViewport) * MaxViewportCount, "Renderer::viewportData");
-		viewportData = static_cast<RenderViewport*>(buf);
+		int aligment = 0;
+		device->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
 
-		// Create uniform buffer objects
-		RenderBufferId buffers[MaxViewportCount];
-		device->CreateBuffers(MaxViewportCount, buffers);
+		objectUniformBlockStride = (sizeof(TransformUniformBlock) + aligment - 1) / aligment * aligment;
+		objectsPerUniformBuffer = ObjectUniformBufferSize / objectUniformBlockStride;
 
-		for (size_t i = 0; i < MaxViewportCount; ++i)
+		postProcessRenderer->Initialize();
+
 		{
-			device->SetBufferStorage(buffers[i], sizeof(ViewportUniformBlock), nullptr, BufferStorageFlags::Dynamic);
+			KOKKO_PROFILE_SCOPE("Allocate viewport data");
 
-			kokko::ConstStringView label("Renderer viewport uniform buffer");
-			device->SetObjectLabel(RenderObjectType::Buffer, buffers[i].i, label);
+			// Allocate viewport data storage
+			void* buf = allocator->Allocate(sizeof(RenderViewport) * MaxViewportCount, "Renderer::viewportData");
+			viewportData = static_cast<RenderViewport*>(buf);
 
-			viewportData[i].uniformBlockObject = buffers[i];
+			// Create uniform buffer objects
+			RenderBufferId buffers[MaxViewportCount];
+			device->CreateBuffers(MaxViewportCount, buffers);
+
+			for (size_t i = 0; i < MaxViewportCount; ++i)
+			{
+				device->SetBufferStorage(buffers[i], sizeof(ViewportUniformBlock), nullptr, BufferStorageFlags::Dynamic);
+
+				kokko::ConstStringView label("Renderer viewport uniform buffer");
+				device->SetObjectLabel(RenderObjectType::Buffer, buffers[i].i, label);
+
+				viewportData[i].uniformBlockObject = buffers[i];
+			}
+		}
+
+		{
+			const char* path = "engine/materials/forward/shadow_depth.material";
+			shadowMaterial = materialManager->FindMaterialByPath(kokko::ConstStringView(path));
+		}
+
+		{
+			const char* path = "engine/materials/deferred_geometry/fallback.material";
+			fallbackMeshMaterial = materialManager->FindMaterialByPath(kokko::ConstStringView(path));
 		}
 	}
 
 	{
-		const char* path = "engine/materials/forward/shadow_depth.material";
-		shadowMaterial = materialManager->FindMaterialByPath(kokko::ConstStringView(path));
-	}
+		auto scope = device->CreateDebugScope(0, kokko::ConstStringView("Renderer_InitFeatures"));
 
-	{
-		const char* path = "engine/materials/deferred_geometry/fallback.material";
-		fallbackMeshMaterial = materialManager->FindMaterialByPath(kokko::ConstStringView(path));
-	}
+		// Deferred lighting pass
 
-	// Deferred lighting pass
+		auto ssaoFeature = allocator->MakeNew<kokko::GraphicsFeatureSsao>(allocator);
+		ssaoFeature->SetOrder(0);
 
-	auto ssaoFeature = allocator->MakeNew<kokko::GraphicsFeatureSsao>(allocator);
-	ssaoFeature->SetOrder(0);
+		auto lightingFeature = allocator->MakeNew<kokko::GraphicsFeatureDeferredLighting>(allocator);
+		lightingFeature->SetOrder(1);
 
-	auto lightingFeature = allocator->MakeNew<kokko::GraphicsFeatureDeferredLighting>(allocator);
-	lightingFeature->SetOrder(1);
+		// Post process pass
 
-	// Post process pass
+		auto bloomFeature = allocator->MakeNew<kokko::GraphicsFeatureBloom>(allocator);
+		bloomFeature->SetOrder(0);
 
-	auto bloomFeature = allocator->MakeNew<kokko::GraphicsFeatureBloom>(allocator);
-	bloomFeature->SetOrder(0);
+		auto tonemappingFeature = allocator->MakeNew<kokko::GraphicsFeatureTonemapping>();
+		tonemappingFeature->SetOrder(1);
 
-	auto tonemappingFeature = allocator->MakeNew<kokko::GraphicsFeatureTonemapping>();
-	tonemappingFeature->SetOrder(1);
+		graphicsFeatures.Reserve(5);
+		graphicsFeatures.PushBack(ssaoFeature);
+		graphicsFeatures.PushBack(lightingFeature);
+		graphicsFeatures.PushBack(allocator->MakeNew<kokko::GraphicsFeatureSkybox>());
+		graphicsFeatures.PushBack(bloomFeature);
+		graphicsFeatures.PushBack(tonemappingFeature);
 
-	graphicsFeatures.Reserve(5);
-	graphicsFeatures.PushBack(ssaoFeature);
-	graphicsFeatures.PushBack(lightingFeature);
-	graphicsFeatures.PushBack(allocator->MakeNew<kokko::GraphicsFeatureSkybox>());
-	graphicsFeatures.PushBack(bloomFeature);
-	graphicsFeatures.PushBack(tonemappingFeature);
+		kokko::GraphicsFeature::InitializeParameters parameters;
+		parameters.renderDevice = device;
+		parameters.meshManager = meshManager;
+		parameters.shaderManager = shaderManager;
 
-	kokko::GraphicsFeature::InitializeParameters parameters;
-	parameters.renderDevice = device;
-	parameters.meshManager = meshManager;
-	parameters.shaderManager = shaderManager;
-
-	for (auto feature : graphicsFeatures)
-	{
-		feature->Initialize(parameters);
+		for (auto feature : graphicsFeatures)
+		{
+			feature->Initialize(parameters);
+		}
 	}
 }
 
@@ -346,6 +353,8 @@ void Renderer::Render(kokko::Window* window, const Optional<CameraParameters>& e
 		encoder,
 		0
 	};
+
+	auto scope = encoder->CreateDebugScope(0, kokko::ConstStringView("Renderer_Render"));
 
 	uint64_t* itr = commandList.commands.GetData();
 	uint64_t* end = itr + commandList.commands.GetCount();
@@ -487,6 +496,8 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	auto scope = device->CreateDebugScope(0, kokko::ConstStringView("Renderer_UpdateBuffers"));
+
 	size_t buffersRequired = (objectDrawCount + objectsPerUniformBuffer - 1) / objectsPerUniformBuffer;
 
 	Array<RenderBufferId>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
@@ -535,8 +546,6 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 			{
 				if (prevBufferIndex >= 0)
 				{
-					KOKKO_PROFILE_SCOPE("Update cmdBuffer data");
-
 					device->SetBufferSubData(objUniformBuffers[prevBufferIndex], 0, ObjectUniformBufferSize, stagingBuffer);
 				}
 
@@ -556,8 +565,6 @@ void Renderer::UpdateUniformBuffers(size_t objectDrawCount)
 
 	if (prevBufferIndex >= 0)
 	{
-		KOKKO_PROFILE_SCOPE("Update cmdBuffer data");
-
 		unsigned int updateSize = static_cast<unsigned int>((objectDrawsProcessed % objectsPerUniformBuffer) * objectUniformBlockStride);
 		device->SetBufferSubData(objUniformBuffers[prevBufferIndex], 0, updateSize, stagingBuffer);
 	}
@@ -741,87 +748,90 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 	ViewportUniformBlock viewportUniforms;
 
-	for (size_t i = 0, count = lightResultArray.GetCount(); i < count; ++i)
 	{
-		LightId id = lightResultArray[i];
-
-		if (lightManager->GetShadowCasting(id) &&
-			viewportCount + shadowCascadeCount + 1 <= MaxViewportCount)
+		auto scope = device->CreateDebugScope(0, kokko::ConstStringView("Renderer_UpdateViewports"));
+		for (size_t i = 0, count = lightResultArray.GetCount(); i < count; ++i)
 		{
-			Mat3x3f orientation = lightManager->GetOrientation(id);
-			Vec3f lightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
+			LightId id = lightResultArray[i];
 
-			CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransforms.forward, projectionParams, cascadeViewTransforms, lightProjections);
-
-			viewportIndicesShadowCascade = Range<unsigned int>(viewportCount, viewportCount + shadowCascadeCount);
-
-			for (unsigned int cascade = 0; cascade < shadowCascadeCount; ++cascade)
+			if (lightManager->GetShadowCasting(id) &&
+				viewportCount + shadowCascadeCount + 1 <= MaxViewportCount)
 			{
-				unsigned int vpIdx = viewportCount;
-				viewportCount += 1;
+				Mat3x3f orientation = lightManager->GetOrientation(id);
+				Vec3f lightDir = orientation * Vec3f(0.0f, 0.0f, -1.0f);
 
-				bool reverseDepth = true;
+				CascadedShadowMap::CalculateCascadeFrusta(lightDir, cameraTransforms.forward, projectionParams, cascadeViewTransforms, lightProjections);
 
-				const Mat4x4f& forwardTransform = cascadeViewTransforms[cascade].forward;
-				const Mat4x4f& inverseTransform = cascadeViewTransforms[cascade].inverse;
+				viewportIndicesShadowCascade = Range<unsigned int>(viewportCount, viewportCount + shadowCascadeCount);
 
-				RenderViewport& vp = viewportData[vpIdx];
-				vp.position = (forwardTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-				vp.forward = (forwardTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
-				vp.farMinusNear = lightProjections[cascade].orthographicFar - lightProjections[cascade].orthographicNear;
-				vp.minusNear = -lightProjections[cascade].orthographicNear;
-				vp.objectMinScreenSizePx = shadowViewportMinObjectSize;
-				vp.view.forward = forwardTransform;
-				vp.view.inverse = inverseTransform;
-				vp.projection = lightProjections[cascade].GetProjectionMatrix(reverseDepth);
-				vp.viewProjection = vp.projection * vp.view.inverse;
-				vp.viewportRectangle.size = shadowCascadeSize;
-				vp.viewportRectangle.position = Vec2i(cascade * shadowSide, 0);
-				vp.frustum.Update(lightProjections[cascade], forwardTransform);
+				for (unsigned int cascade = 0; cascade < shadowCascadeCount; ++cascade)
+				{
+					unsigned int vpIdx = viewportCount;
+					viewportCount += 1;
 
-				viewportUniforms.VP = vp.viewProjection;
-				viewportUniforms.V = vp.view.inverse;
-				viewportUniforms.P = vp.projection;
+					bool reverseDepth = true;
 
-				device->SetBufferSubData(vp.uniformBlockObject, 0, sizeof(ViewportUniformBlock), &viewportUniforms);
+					const Mat4x4f& forwardTransform = cascadeViewTransforms[cascade].forward;
+					const Mat4x4f& inverseTransform = cascadeViewTransforms[cascade].inverse;
+
+					RenderViewport& vp = viewportData[vpIdx];
+					vp.position = (forwardTransform * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+					vp.forward = (forwardTransform * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+					vp.farMinusNear = lightProjections[cascade].orthographicFar - lightProjections[cascade].orthographicNear;
+					vp.minusNear = -lightProjections[cascade].orthographicNear;
+					vp.objectMinScreenSizePx = shadowViewportMinObjectSize;
+					vp.view.forward = forwardTransform;
+					vp.view.inverse = inverseTransform;
+					vp.projection = lightProjections[cascade].GetProjectionMatrix(reverseDepth);
+					vp.viewProjection = vp.projection * vp.view.inverse;
+					vp.viewportRectangle.size = shadowCascadeSize;
+					vp.viewportRectangle.position = Vec2i(cascade * shadowSide, 0);
+					vp.frustum.Update(lightProjections[cascade], forwardTransform);
+
+					viewportUniforms.VP = vp.viewProjection;
+					viewportUniforms.V = vp.view.inverse;
+					viewportUniforms.P = vp.projection;
+
+					device->SetBufferSubData(vp.uniformBlockObject, 0, sizeof(ViewportUniformBlock), &viewportUniforms);
+				}
 			}
+		}
+
+		lightResultArray.Clear();
+
+		{
+			// Add the fullscreen viewport
+			unsigned int vpIdx = viewportCount;
+			viewportCount += 1;
+
+			bool reverseDepth = true;
+
+			Rectanglei viewportRect{ 0, 0, targetFramebuffer.GetWidth(), targetFramebuffer.GetHeight() };
+
+			RenderViewport& vp = viewportData[vpIdx];
+			vp.position = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
+			vp.forward = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
+			vp.farMinusNear = projectionParams.perspectiveFar - projectionParams.perspectiveNear;
+			vp.minusNear = -projectionParams.perspectiveNear;
+			vp.objectMinScreenSizePx = mainViewportMinObjectSize;
+			vp.view.forward = cameraTransforms.forward;
+			vp.view.inverse = cameraTransforms.inverse;
+			vp.projection = cameraProjection;
+			vp.viewProjection = vp.projection * vp.view.inverse;
+			vp.viewportRectangle = viewportRect;
+			vp.frustum.Update(projectionParams, cullingTransform.forward);
+
+			viewportUniforms.VP = vp.viewProjection;
+			viewportUniforms.V = vp.view.inverse;
+			viewportUniforms.P = vp.projection;
+
+			device->SetBufferSubData(vp.uniformBlockObject, 0, sizeof(ViewportUniformBlock), &viewportUniforms);
+
+			this->viewportIndexFullscreen = vpIdx;
 		}
 	}
 
-	lightResultArray.Clear();
-
 	unsigned int numShadowViewports = viewportIndicesShadowCascade.GetLength();
-
-	{
-		// Add the fullscreen viewport
-		unsigned int vpIdx = viewportCount;
-		viewportCount += 1;
-
-		bool reverseDepth = true;
-
-		Rectanglei viewportRect{ 0, 0, targetFramebuffer.GetWidth(), targetFramebuffer.GetHeight() };
-
-		RenderViewport& vp = viewportData[vpIdx];
-		vp.position = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, 0.0f, 1.0f)).xyz();
-		vp.forward = (cameraTransforms.forward * Vec4f(0.0f, 0.0f, -1.0f, 0.0f)).xyz();
-		vp.farMinusNear = projectionParams.perspectiveFar - projectionParams.perspectiveNear;
-		vp.minusNear = -projectionParams.perspectiveNear;
-		vp.objectMinScreenSizePx = mainViewportMinObjectSize;
-		vp.view.forward = cameraTransforms.forward;
-		vp.view.inverse = cameraTransforms.inverse;
-		vp.projection = cameraProjection;
-		vp.viewProjection = vp.projection * vp.view.inverse;
-		vp.viewportRectangle = viewportRect;
-		vp.frustum.Update(projectionParams, cullingTransform.forward);
-
-		viewportUniforms.VP = vp.viewProjection;
-		viewportUniforms.V = vp.view.inverse;
-		viewportUniforms.P = vp.projection;
-
-		device->SetBufferSubData(vp.uniformBlockObject, 0, sizeof(ViewportUniformBlock), &viewportUniforms);
-
-		this->viewportIndexFullscreen = vpIdx;
-	}
 
 	// Create control commands for beginning of viewports and render passes
 
@@ -901,6 +911,8 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	}
 
 	{
+		auto scope = device->CreateDebugScope(0, kokko::ConstStringView("Renderer_FeatureUpload"));
+
 		kokko::GraphicsFeature::UploadParameters uploadParameters
 		{
 			postProcessRenderer,

@@ -13,6 +13,9 @@ public:
 private:
 	DebugMessageUserData debugUserData;
 
+	virtual void BeginDebugScope(uint32_t id, kokko::ConstStringView message) override;
+	virtual void EndDebugScope() override;
+
 public:
 	RenderDeviceOpenGL();
 
@@ -31,6 +34,12 @@ public:
 		RenderFramebufferAttachment attachment,
 		kokko::RenderTextureId texture,
 		int level) override;
+	virtual void AttachFramebufferTextureLayer(
+		kokko::RenderFramebufferId framebuffer,
+		RenderFramebufferAttachment attachment,
+		kokko::RenderTextureId texture,
+		int level,
+		int layer) override;
 	virtual void SetFramebufferDrawBuffers(
 		kokko::RenderFramebufferId framebuffer,
 		unsigned int count,

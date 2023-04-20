@@ -51,15 +51,15 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== DEBUG GROUPS ====
 	// ======================
 
-	case RenderCommandType::PushDebugGroup:
+	case RenderCommandType::BeginDebugScope:
 	{
-		auto cmd = reinterpret_cast<const CmdPushDebugGroup*>(commandBegin);
+		auto cmd = reinterpret_cast<const CmdBeginDebugScope*>(commandBegin);
 		auto message = reinterpret_cast<const char*>(&cmdBuffer->commandData[cmd->messageOffset]);
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, cmd->id, cmd->messageLength, message);
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::PopDebugGroup:
+	case RenderCommandType::EndDebugScope:
 		glPopDebugGroup();
 		return sizeof(Command);
 

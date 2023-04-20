@@ -82,10 +82,9 @@ private:
 
 	ShaderId shaderId;
 
-	enum UniformBufferType { ObjectBuffer, MaterialBuffer };
-
-	bool buffersInitialized;
-	kokko::RenderBufferId uniformBufferIds[2];
+	kokko::RenderBufferId uniformBufferId;
+	uint32_t bufferPrimitivesAllocated;
+	uint32_t bufferAlignedSize;
 
 	DynamicMesh* GetDynamicMesh(size_t byteSize);
 

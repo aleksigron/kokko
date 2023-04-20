@@ -9,6 +9,7 @@
 
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/RenderResourceId.hpp"
+#include "Rendering/CommandEncoderDebugScope.hpp"
 
 class Allocator;
 
@@ -26,10 +27,11 @@ class CommandEncoder
 public:
 	CommandEncoder(Allocator* allocator, CommandBuffer* buffer);
 
-	// Debug groups
+	// Debug scope
 
-	void PushDebugGroup(uint32_t id, kokko::ConstStringView message);
-	void PopDebugGroup();
+	CommandEncoderDebugScope CreateDebugScope(uint32_t id, kokko::ConstStringView message);
+	void BeginDebugScope(uint32_t id, kokko::ConstStringView message);
+	void EndDebugScope();
 
 	// Bind buffers
 

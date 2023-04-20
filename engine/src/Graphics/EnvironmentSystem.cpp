@@ -86,7 +86,6 @@ struct CalcSpecularUniforms
 	alignas(16) float roughness;
 };
 
-
 EnvironmentSystem::EnvironmentSystem(
 	Allocator* allocator,
 	kokko::AssetLoader* assetLoader,
@@ -101,10 +100,11 @@ EnvironmentSystem::EnvironmentSystem(
 	meshManager(meshManager),
 	textureManager(textureManager),
 	environmentMaps(allocator),
+	texturesToRemove(allocator),
 	entityMap(allocator),
 	viewportBlockStride(0),
 	specularBlockStride(0),
-	framebufferId(0),
+	framebufferIds(allocator),
 	viewportUniformBufferId(0),
 	specularUniformBufferId(0),
 	samplerId(0),
@@ -144,8 +144,8 @@ void EnvironmentSystem::Deinitialize()
 		renderDevice->DestroyBuffers(1, &viewportUniformBufferId);
 		viewportUniformBufferId = RenderBufferId();
 
-		renderDevice->DestroyFramebuffers(1, &framebufferId);
-		framebufferId = RenderFramebufferId();
+		renderDevice->DestroyFramebuffers(framebufferIds.GetCount(), framebufferIds.GetData());
+		framebufferIds.Clear();
 
 		meshManager->RemoveMesh(cubeMeshId);
 		cubeMeshId = MeshId::Null;
@@ -163,9 +163,17 @@ void EnvironmentSystem::Deinitialize()
 
 void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 {
+	if (texturesToRemove.GetCount() != 0)
+	{
+		renderDevice->DestroyTextures(texturesToRemove.GetCount(), texturesToRemove.GetData());
+		texturesToRemove.Clear();
+	}
+
 	if (resourcesUploaded == false)
 	{
 		resourcesUploaded = true;
+
+		auto scope = renderDevice->CreateDebugScope(0, ConstStringView("EnvironSys_InitResources"));
 
 		// Create cube mesh
 		cubeMeshId = meshManager->CreateMesh();
@@ -173,7 +181,9 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 		// Create framebuffer
 
-		renderDevice->CreateFramebuffers(1, &framebufferId);
+		constexpr uint32_t totalFramebufferCount = CubemapSideCount * 2 + CubemapSideCount * SpecularMipmapLevelCount;
+		framebufferIds.Resize(totalFramebufferCount);
+		renderDevice->CreateFramebuffers(totalFramebufferCount, framebufferIds.GetData());
 
 		// Create viewport uniform buffer
 
@@ -221,7 +231,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 		// Calculate specular uniforms
 
-		specularBlockStride = (sizeof(CalcSpecularUniforms) + alignment - 1) / alignment * alignment;
+		specularBlockStride = Math::RoundUpToMultiple(sizeof(CalcSpecularUniforms), size_t(alignment));
 		unsigned int specularBufferSize = static_cast<unsigned int>(specularBlockStride * SpecularMipmapLevelCount);
 
 		uniformBuffer.Resize(specularBufferSize);
@@ -249,7 +259,6 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 			RenderDepthCompareFunc::Never
 		};
 		renderDevice->CreateSamplers(1, &samplerParams, &samplerId);
-
 
 		{
 			// Upload empty environment map
@@ -339,7 +348,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 				if (assetLoader->LoadAsset(env.sourceTextureUid.GetValue(), fileBytes) == false)
 				{
 					KK_LOG_ERROR("Couldn't read source texture for environment map");
-					return;
+					continue;
 				}
 
 				{
@@ -354,27 +363,23 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 			if (equirectData == nullptr)
 			{
 				KK_LOG_ERROR("Couldn't load source texture for environment map");
-				return;
+				continue;
 			}
+
+			auto devScope = renderDevice->CreateDebugScope(0, ConstStringView("EnvironSys_CreateMapResources"));
+			auto encScope = encoder->CreateDebugScope(0, ConstStringView("EnvironSys_RenderMapResources"));
 
 			kokko::RenderTextureId equirectTextureId;
+			renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &equirectTextureId);
+			renderDevice->SetTextureStorage2D(equirectTextureId, 1, sizedFormat, equirectWidth, equirectHeight);
+			renderDevice->SetTextureSubImage2D(equirectTextureId, 0, 0, 0, equirectWidth, equirectHeight,
+				RenderTextureBaseFormat::RGB, RenderTextureDataType::Float, equirectData);
 
-			{
-				KOKKO_PROFILE_SCOPE("Upload equirectangular environment map");
-
-				renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &equirectTextureId);
-				renderDevice->SetTextureStorage2D(equirectTextureId, 1, sizedFormat, equirectWidth, equirectHeight);
-				renderDevice->SetTextureSubImage2D(equirectTextureId, 0, 0, 0, equirectWidth, equirectHeight,
-					RenderTextureBaseFormat::RGB, RenderTextureDataType::Float, equirectData);
-			}
-
-			{
-				KOKKO_PROFILE_SCOPE("void stbi_image_free()");
-				stbi_image_free(equirectData);
-			}
+			stbi_image_free(equirectData);
 
 			// Create result cubemap texture
 
+			uint32_t usedFramebufferCount = 0;
 			Vec2i envMapSize(EnvironmentTextureSize, EnvironmentTextureSize);
 			TextureId envMapTextureId = textureManager->CreateTexture();
 			textureManager->AllocateTextureStorage(envMapTextureId, RenderTextureTarget::TextureCubeMap, sizedFormat, 1, envMapSize);
@@ -391,14 +396,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 			ShaderId equirectShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/preprocess/equirect_to_cube.glsl"));
 			const ShaderData& equirectShader = shaderManager->GetShaderData(equirectShaderId);
 
-			// Bind common resources
-
 			encoder->BindVertexArray(cubeMeshDraw->vertexArrayObject);
-
-			encoder->BindFramebuffer(framebufferId);
-
-			// Bind shader
-
 			encoder->UseShaderProgram(equirectShader.driverId);
 
 			BindTexture(encoder, equirectShader, "equirectangular_map"_hash, equirectTextureId);
@@ -411,21 +409,25 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 				RenderCommandData::ClearMask clearMask{ true, false, false };
 
-				for (unsigned int i = 0; i < CubemapSideCount; ++i)
+				for (uint32_t i = 0; i < CubemapSideCount; ++i)
 				{
+					RenderFramebufferId framebuffer = framebufferIds[usedFramebufferCount];
+					usedFramebufferCount += 1;
+
+					renderDevice->AttachFramebufferTextureLayer(
+						framebuffer, RenderFramebufferAttachment::Color0, envMapTexture.textureObjectId, 0, i);
+
+					encoder->BindFramebuffer(framebuffer);
+
 					BindBufferRange(encoder, UniformBlockBinding::Viewport,
 						viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
-
-					// TODO: Create framebuffer for each cubemap side
-					renderDevice->AttachFramebufferTexture(
-						framebufferId, RenderFramebufferAttachment::Color0, envMapTexture.textureObjectId, i);
 
 					encoder->DrawIndexed(
 						cubeMeshDraw->primitiveMode, cubeMeshDraw->indexType, cubeMeshDraw->count, 0, 0);
 				}
 			}
 
-			renderDevice->DestroyTextures(1, &equirectTextureId);
+			texturesToRemove.PushBack(equirectTextureId);
 			equirectTextureId = RenderTextureId();
 
 			// Calculate diffuse irradiance
@@ -444,8 +446,6 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 			encoder->UseShaderProgram(calcDiffuseShader.driverId);
 
-			// Apply texture
-
 			BindTexture(encoder, calcDiffuseShader, "environment_map"_hash, envMapTexture.textureObjectId);
 
 			{
@@ -453,13 +453,18 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 				encoder->SetViewport(0, 0, DiffuseTextureSize, DiffuseTextureSize);
 
-				for (unsigned int i = 0; i < CubemapSideCount; ++i)
+				for (uint32_t i = 0; i < CubemapSideCount; ++i)
 				{
+					RenderFramebufferId framebuffer = framebufferIds[usedFramebufferCount];
+					usedFramebufferCount += 1;
+
+					renderDevice->AttachFramebufferTextureLayer(
+						framebuffer, RenderFramebufferAttachment::Color0, diffuseMapTexture.textureObjectId, 0, i);
+
+					encoder->BindFramebuffer(framebuffer);
+
 					BindBufferRange(encoder, UniformBlockBinding::Viewport,
 						viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
-
-					renderDevice->AttachFramebufferTexture(
-						framebufferId, RenderFramebufferAttachment::Color0, diffuseMapTexture.textureObjectId, i);
 
 					encoder->DrawIndexed(
 						cubeMeshDraw->primitiveMode, cubeMeshDraw->indexType, cubeMeshDraw->count, 0, 0);
@@ -477,26 +482,17 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 			const TextureData& specMapTexture = textureManager->GetTextureData(specMapTextureId);
 
-			// TODO: Use sampler to set these properties in Renderer
-			//renderDevice->BindTexture(RenderTextureTarget::TextureCubeMap, specMapTexture.textureObjectId);
-			//renderDevice->SetTextureMinFilter(RenderTextureTarget::TextureCubeMap, RenderTextureFilterMode::LinearMipmap);
-			//renderDevice->SetTextureMagFilter(RenderTextureTarget::TextureCubeMap, RenderTextureFilterMode::Linear);
-
-			// Load shader
-
 			ShaderId calcSpecularShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/preprocess/calc_specular_irradiance.glsl"));
 			const ShaderData& calcSpecularShader = shaderManager->GetShaderData(calcSpecularShaderId);
 
 			encoder->UseShaderProgram(calcSpecularShader.driverId);
-
-			// Apply texture
 
 			BindTexture(encoder, calcSpecularShader, "environment_map"_hash, envMapTexture.textureObjectId);
 
 			{
 				KOKKO_PROFILE_SCOPE("Prefilter specular map");
 
-				for (unsigned int mip = 0; mip < SpecularMipmapLevelCount; ++mip)
+				for (uint32_t mip = 0; mip < SpecularMipmapLevelCount; ++mip)
 				{
 					BindBufferRange(encoder, UniformBlockBinding::Object,
 						specularUniformBufferId, specularBlockStride * mip, sizeof(CalcSpecularUniforms));
@@ -506,13 +502,18 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 
 					encoder->SetViewport(0, 0, static_cast<int>(mipSize), static_cast<int>(mipSize));
 
-					for (unsigned int i = 0; i < CubemapSideCount; ++i)
+					for (uint32_t i = 0; i < CubemapSideCount; ++i)
 					{
+						RenderFramebufferId framebuffer = framebufferIds[usedFramebufferCount];
+						usedFramebufferCount += 1;
+
+						renderDevice->AttachFramebufferTextureLayer(
+							framebuffer, RenderFramebufferAttachment::Color0, specMapTexture.textureObjectId, mip, i);
+
+						encoder->BindFramebuffer(framebuffer);
+
 						BindBufferRange(encoder, UniformBlockBinding::Viewport,
 							viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
-
-						renderDevice->AttachFramebufferTexture(
-							framebufferId, RenderFramebufferAttachment::Color0, specMapTexture.textureObjectId, i);
 
 						encoder->DrawIndexed(
 							cubeMeshDraw->primitiveMode, cubeMeshDraw->indexType, cubeMeshDraw->count, 0, 0);
@@ -520,12 +521,17 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 				}
 			}
 
+			assert(usedFramebufferCount == framebufferIds.GetCount());
+
 			encoder->BindSampler(0, RenderSamplerId());
 
 			env.textures.environmentTexture = envMapTextureId;
 			env.textures.diffuseIrradianceTexture = diffuseMapTextureId;
 			env.textures.specularIrradianceTexture = specMapTextureId;
 			env.needsUpload = false;
+
+			// Only render one environment map per frame
+			break;
 		}
 	}
 }

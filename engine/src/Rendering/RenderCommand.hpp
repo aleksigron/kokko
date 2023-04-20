@@ -13,8 +13,8 @@ namespace render
 
 enum class RenderCommandType : uint16_t
 {
-	PushDebugGroup,
-	PopDebugGroup,
+	BeginDebugScope,
+	EndDebugScope,
 
 	BindBuffer,
 	BindBufferBase,
@@ -78,7 +78,7 @@ struct Command
 // ==== DEBUG GROUPS ====
 // ======================
 
-struct CmdPushDebugGroup : public Command
+struct CmdBeginDebugScope : public Command
 {
 	uint32_t id;
 	uint32_t messageOffset;
