@@ -67,7 +67,7 @@ void DeviceOpenGL::SetObjectPtrLabel(void* ptr, ConstStringView label)
 
 void DeviceOpenGL::BeginDebugScope(uint32_t id, ConstStringView message)
 {
-	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, message.len, message.str);
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, static_cast<uint32_t>(message.len), message.str);
 }
 
 void DeviceOpenGL::EndDebugScope()
