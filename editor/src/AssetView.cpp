@@ -302,7 +302,7 @@ bool AssetView::DrawMaterialProperty(UniformData& uniforms, const BufferUniform&
 	return edited;
 }
 
-bool AssetView::DrawMaterialShaderDropTarget(EditorContext& context, MaterialId materialId)
+bool AssetView::DrawMaterialShaderDropTarget(EditorContext& context, kokko::MaterialId materialId)
 {
 	if (ImGui::BeginDragDropTarget())
 	{

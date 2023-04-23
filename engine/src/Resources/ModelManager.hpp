@@ -12,11 +12,12 @@
 #include "Resources/MeshId.hpp"
 
 class Allocator;
-class MeshManager;
 
 namespace kokko
 {
+
 class AssetLoader;
+class MeshManager;
 
 struct MeshUid;
 
@@ -68,7 +69,6 @@ public:
 private:
 	friend class ModelLoader;
 
-
 	struct ModelData
 	{
 		void* buffer;
@@ -90,4 +90,4 @@ private:
 	Array<ModelData> models;
 };
 
-}
+} // namespace kokko

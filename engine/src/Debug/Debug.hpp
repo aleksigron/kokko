@@ -7,9 +7,6 @@
 
 class Allocator;
 class AllocatorManager;
-class RenderDevice;
-class MeshManager;
-class TextureManager;
 class Renderer;
 
 class DebugTextRenderer;
@@ -25,7 +22,9 @@ namespace kokko
 {
 class DebugVectorRenderer;
 class Filesystem;
+class MeshManager;
 class ShaderManager;
+class TextureManager;
 class Window;
 class World;
 
@@ -78,8 +77,8 @@ public:
 
 	static Debug* Get() { return singletonInstance; }
 
-	bool Initialize(kokko::Window* window, MeshManager* meshManager,
-		kokko::ShaderManager* shaderManager, TextureManager* textureManager);
+	bool Initialize(kokko::Window* window, kokko::MeshManager* meshManager,
+		kokko::ShaderManager* shaderManager, kokko::TextureManager* textureManager);
 	void Deinitialize();
 
 	void Render(

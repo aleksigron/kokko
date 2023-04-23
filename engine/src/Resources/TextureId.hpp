@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 struct TextureId
 {
 	unsigned int i;
@@ -9,3 +12,5 @@ struct TextureId
 	bool operator==(const TextureId& other) const { return i == other.i; }
 	bool operator!=(const TextureId& other) const { return !operator==(other); }
 };
+
+} // namespace kokko

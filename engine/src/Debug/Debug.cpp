@@ -84,8 +84,8 @@ Debug::~Debug()
 	allocator->MakeDelete(vectorRenderer);
 }
 
-bool Debug::Initialize(kokko::Window* window, MeshManager* meshManager,
-	kokko::ShaderManager* shaderManager, TextureManager* textureManager)
+bool Debug::Initialize(kokko::Window* window, kokko::MeshManager* meshManager,
+	kokko::ShaderManager* shaderManager, kokko::TextureManager* textureManager)
 {
 	KOKKO_PROFILE_FUNCTION();
 

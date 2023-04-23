@@ -25,7 +25,6 @@ namespace render
 {
 class Device;
 }
-}
 
 struct TextureData
 {
@@ -46,7 +45,7 @@ private:
 	{
 		unsigned int count;
 		unsigned int allocated;
-		void *buffer;
+		void* buffer;
 
 		unsigned int* freeList;
 		TextureData* texture;
@@ -77,7 +76,7 @@ public:
 
 	TextureId CreateTexture();
 	void RemoveTexture(TextureId id);
-	
+
 	// TODO: Create a way for asset loader or some other mechanism to provide the metadata
 	TextureId FindTextureByUid(const kokko::Uid& uid, bool preferLinear = false);
 	TextureId FindTextureByPath(kokko::ConstStringView path, bool preferLinear = false);
@@ -97,3 +96,5 @@ public:
 private:
 	bool LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool preferLinear);
 };
+
+} // namespace kokko

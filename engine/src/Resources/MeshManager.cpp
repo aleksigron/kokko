@@ -10,6 +10,9 @@
 
 #include "Resources/AssetLoader.hpp"
 
+namespace kokko
+{
+
 const MeshId MeshId::Null = MeshId{ 0 };
 
 MeshManager::MeshManager(Allocator* allocator, kokko::AssetLoader* assetLoader, kokko::render::Device* renderDevice) :
@@ -396,3 +399,5 @@ void MeshManager::UploadIndexed(MeshId id, const IndexedVertexData& vdata)
 	CreateDrawDataIndexed(index, vdata);
 	SetVertexAttribPointers(index, vdata.vertexFormat);
 }
+
+} // namespace kokko

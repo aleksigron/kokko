@@ -7,11 +7,10 @@
 
 #include "Resources/MeshId.hpp"
 
-class MeshManager;
-class RenderDevice;
-
 namespace kokko
 {
+
+class MeshManager;
 
 class RenderGraphResources
 {
@@ -38,7 +37,7 @@ private:
 	static constexpr size_t GbufferMaterialIndex = 2;
 	static constexpr size_t GbufferColorCount = 3;
 
-	kokko::render::Device* renderDevice;
+	render::Device* renderDevice;
 	MeshManager* meshManager;
 
 	render::Framebuffer framebufferGbuffer;

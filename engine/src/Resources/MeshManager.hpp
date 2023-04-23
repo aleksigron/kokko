@@ -15,6 +15,10 @@
 
 #include "Resources/MeshId.hpp"
 
+struct BoundingBox;
+
+class Allocator;
+
 namespace kokko
 {
 class AssetLoader;
@@ -24,11 +28,6 @@ namespace render
 {
 class Device;
 }
-}
-
-struct BoundingBox;
-
-class Allocator;
 
 struct VertexData
 {
@@ -100,7 +99,7 @@ private:
 	{
 		unsigned int count;
 		unsigned int allocated;
-		void *buffer;
+		void* buffer;
 
 		// Linked list of freed indices
 		// This could be combined with index list, since the same index is not used
@@ -161,3 +160,5 @@ public:
 	void Upload(MeshId id, const VertexData& vdata);
 	void UploadIndexed(MeshId id, const IndexedVertexData& vdata);
 };
+
+} // namespace kokko

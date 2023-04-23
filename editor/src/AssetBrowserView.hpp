@@ -10,12 +10,13 @@
 
 class Allocator;
 
-struct TextureId;
-
 struct ImVec2;
 
 namespace kokko
 {
+
+struct TextureId;
+
 namespace editor
 {
 

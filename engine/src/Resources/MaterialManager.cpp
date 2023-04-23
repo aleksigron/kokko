@@ -20,6 +20,9 @@
 
 #include "System/IncludeOpenGL.hpp"
 
+namespace kokko
+{
+
 const MaterialId MaterialId::Null = MaterialId{ 0 };
 
 MaterialManager::MaterialManager(
@@ -273,3 +276,5 @@ void MaterialManager::UpdateUniformsToGPU(MaterialId id)
 			allocator->Deallocate(uniformBuffer);
 	}
 }
+
+} // namespace kokko

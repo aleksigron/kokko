@@ -5,6 +5,9 @@
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/VertexFormat.hpp"
 
+namespace kokko
+{
+
 void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 {
 	static const float vertexData[] = {
@@ -75,3 +78,5 @@ void MeshPresets::UploadPlane(MeshManager* meshManager, MeshId meshId)
 
 	meshManager->UploadIndexed(meshId, data);
 }
+
+} // namespace kokko

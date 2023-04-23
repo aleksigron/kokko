@@ -43,14 +43,14 @@ RenderTextureTarget GetCubeTextureTarget(unsigned int index)
 	return cubeTextureTargets[index];
 }
 
-void ReleaseEnvTextures(TextureManager* textureManager, kokko::EnvironmentTextures& textures)
+void ReleaseEnvTextures(kokko::TextureManager* textureManager, kokko::EnvironmentTextures& textures)
 {
-	auto releaseTexture = [textureManager](TextureId& texture)
+	auto releaseTexture = [textureManager](kokko::TextureId& texture)
 	{
-		if (texture != TextureId::Null)
+		if (texture != kokko::TextureId::Null)
 		{
 			textureManager->RemoveTexture(texture);
-			texture = TextureId::Null;
+			texture = kokko::TextureId::Null;
 		}
 	};
 

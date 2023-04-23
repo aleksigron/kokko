@@ -7,18 +7,18 @@
 #include "Rendering/TransparencyType.hpp"
 
 class Allocator;
-class MeshManager;
 
 struct BoundingBox;
 struct Entity;
 struct Mat4x4f;
-struct MaterialId;
-struct MeshId;
 
 namespace kokko
 {
 
+class MeshManager;
 class Renderer;
+struct MaterialId;
+struct MeshId;
 
 struct MeshComponentId
 {

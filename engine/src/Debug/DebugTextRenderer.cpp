@@ -41,7 +41,7 @@ DebugTextRenderer::DebugTextRenderer(
 	stringData(allocator),
 	displayData(allocator),
 	scaleFactor(1.0f),
-	meshId(MeshId{}),
+	meshId(kokko::MeshId{}),
 	bufferObjectId(0),
 	vertexData(allocator),
 	indexData(allocator)
@@ -59,7 +59,7 @@ DebugTextRenderer::~DebugTextRenderer()
 }
 
 bool DebugTextRenderer::Initialize(kokko::ShaderManager* shaderManager,
-	MeshManager* meshManager, TextureManager* textureManager)
+	kokko::MeshManager* meshManager, kokko::TextureManager* textureManager)
 {
 	this->shaderManager = shaderManager;
 	this->meshManager = meshManager;
@@ -103,7 +103,7 @@ size_t DebugTextRenderer::GetRowCountForTextLength(size_t characterCount) const
 		return 0;
 }
 
-bool DebugTextRenderer::LoadBitmapFont(TextureManager* textureManager, const char* filePath)
+bool DebugTextRenderer::LoadBitmapFont(kokko::TextureManager* textureManager, const char* filePath)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -154,7 +154,7 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 	{
 		auto scope = encoder->CreateDebugScope(0, kokko::ConstStringView("DebugText_Render"));
 
-		if (meshId == MeshId::Null)
+		if (meshId == kokko::MeshId::Null)
 		{
 			meshId = meshManager->CreateMesh();
 		}
@@ -168,9 +168,9 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 		CreateAndUploadData();
 
 		const char* shaderPath = "engine/shaders/debug/debug_text.glsl";
-		ShaderId shaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(shaderPath));
+		kokko::ShaderId shaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(shaderPath));
 
-		if (shaderId == ShaderId::Null)
+		if (shaderId == kokko::ShaderId::Null)
 			return;
 
 		const kokko::ShaderData& shader = shaderManager->GetShaderData(shaderId);
@@ -196,7 +196,7 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 
 		// Draw
 
-		const MeshDrawData* draw = meshManager->GetDrawData(meshId);
+		const kokko::MeshDrawData* draw = meshManager->GetDrawData(meshId);
 		encoder->BindVertexArray(draw->vertexArrayObject);
 		encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
 
@@ -323,7 +323,7 @@ void DebugTextRenderer::CreateAndUploadData()
 	VertexFormat format(attributes, sizeof(attributes) / sizeof(attributes[0]));
 	format.CalcOffsetsAndSizeInterleaved();
 
-	IndexedVertexData data;
+	kokko::IndexedVertexData data;
 	data.vertexFormat = format;
 	data.primitiveMode = RenderPrimitiveMode::Triangles;
 	data.vertexData = vertexData.GetData();

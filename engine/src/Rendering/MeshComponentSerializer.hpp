@@ -17,16 +17,19 @@
 #include "Resources/ModelManager.hpp"
 #include "Resources/ResourceManagers.hpp"
 
+namespace kokko
+{
+
 class MeshComponentSerializer final : public ComponentSerializer
 {
 private:
-	kokko::MeshComponentSystem* meshComponentSystem;
-	kokko::ResourceManagers res;
+	MeshComponentSystem* meshComponentSystem;
+	ResourceManagers res;
 
 public:
 	MeshComponentSerializer(
-		kokko::MeshComponentSystem* meshComponentSystem,
-		const kokko::ResourceManagers& resourceManagers) :
+		MeshComponentSystem* meshComponentSystem,
+		const ResourceManagers& resourceManagers) :
 		meshComponentSystem(meshComponentSystem),
 		res(resourceManagers)
 	{
@@ -45,27 +48,27 @@ public:
 		if (meshNode.IsDefined() && meshNode.IsScalar() &&
 			materialNode.IsDefined() && materialNode.IsScalar())
 		{
-			kokko::MeshComponentId componentId = meshComponentSystem->AddComponent(entity);
+			MeshComponentId componentId = meshComponentSystem->AddComponent(entity);
 
 			const std::string& meshUidStr = meshNode.Scalar();
-			auto meshUidOpt = kokko::MeshUid::FromString(ArrayView(meshUidStr.c_str(), meshUidStr.length()));
+			auto meshUidOpt = MeshUid::FromString(ArrayView(meshUidStr.c_str(), meshUidStr.length()));
 
 			if (meshUidOpt.HasValue())
 			{
-				kokko::MeshUid meshUid = meshUidOpt.GetValue();
-				kokko::ModelId modelId = res.modelManager->FindModelByUid(meshUid.modelUid);
+				MeshUid meshUid = meshUidOpt.GetValue();
+				ModelId modelId = res.modelManager->FindModelByUid(meshUid.modelUid);
 
-				if (modelId != kokko::ModelId::Null)
+				if (modelId != ModelId::Null)
 				{
 					auto modelMeshes = res.modelManager->GetModelMeshes(modelId);
-					
+
 					if (modelMeshes.GetCount() > meshUid.meshIndex)
 						meshComponentSystem->SetMeshId(componentId, modelMeshes[meshUid.meshIndex].meshId);
 				}
 			}
 
 			const std::string& matUidStr = materialNode.Scalar();
-			auto materialUid = kokko::Uid::FromString(ArrayView(matUidStr.c_str(), matUidStr.length()));
+			auto materialUid = Uid::FromString(ArrayView(matUidStr.c_str(), matUidStr.length()));
 
 			if (materialUid.HasValue())
 			{
@@ -85,23 +88,23 @@ public:
 
 	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
 	{
-		kokko::MeshComponentId componentId = meshComponentSystem->Lookup(entity);
-		if (componentId != kokko::MeshComponentId::Null)
+		MeshComponentId componentId = meshComponentSystem->Lookup(entity);
+		if (componentId != MeshComponentId::Null)
 		{
 			MeshId meshId = meshComponentSystem->GetMeshId(componentId);
 
-			Optional<kokko::Uid> modelUidOpt;
+			Optional<Uid> modelUidOpt;
 			if (meshId != MeshId::Null)
 				modelUidOpt = res.meshManager->GetUid(meshId);
 
-			char meshUidStr[kokko::MeshUid::StringLength + 1];
+			char meshUidStr[MeshUid::StringLength + 1];
 			meshUidStr[0] = '\0';
 
 			if (modelUidOpt.HasValue())
 			{
-				kokko::ModelId modelId = res.modelManager->FindModelByUid(modelUidOpt.GetValue());
+				ModelId modelId = res.modelManager->FindModelByUid(modelUidOpt.GetValue());
 
-				if (modelId != kokko::ModelId::Null)
+				if (modelId != ModelId::Null)
 				{
 					auto modelMeshes = res.modelManager->GetModelMeshes(modelId);
 					auto modelMesh = modelMeshes.FindIf(
@@ -109,25 +112,25 @@ public:
 
 					if (modelMesh != nullptr)
 					{
-						kokko::MeshUid meshUid;
+						MeshUid meshUid;
 						meshUid.modelUid = modelUidOpt.GetValue();
 						meshUid.meshIndex = static_cast<uint32_t>(modelMesh - modelMeshes.GetData());
 
 						meshUid.WriteTo(meshUidStr);
-						meshUidStr[kokko::MeshUid::StringLength] = '\0';
+						meshUidStr[MeshUid::StringLength] = '\0';
 					}
 				}
 			}
 
-			char materialUidStr[kokko::Uid::StringLength + 1];
+			char materialUidStr[Uid::StringLength + 1];
 			materialUidStr[0] = '\0';
 
 			MaterialId materialId = meshComponentSystem->GetMaterialId(componentId);
 			if (materialId != MaterialId::Null)
 			{
-				kokko::Uid materialUid = res.materialManager->GetMaterialUid(materialId);
+				Uid materialUid = res.materialManager->GetMaterialUid(materialId);
 				materialUid.WriteTo(materialUidStr);
-				materialUidStr[kokko::Uid::StringLength] = '\0';
+				materialUidStr[Uid::StringLength] = '\0';
 			}
 
 			out << YAML::BeginMap;
@@ -138,3 +141,5 @@ public:
 		}
 	}
 };
+
+} // namespace kokko

@@ -11,10 +11,10 @@ struct cgltf_data;
 struct cgltf_mesh;
 struct cgltf_node;
 
-struct MeshId;
-
 namespace kokko
 {
+
+struct MeshId;
 
 class ModelLoader
 {
@@ -41,4 +41,4 @@ private:
 		ModelMesh& modelMeshOut);
 };
 
-}
+} // namespace kokko

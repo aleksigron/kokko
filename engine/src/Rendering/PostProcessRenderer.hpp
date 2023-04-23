@@ -6,12 +6,12 @@
 
 #include "Rendering/RenderResourceId.hpp"
 
-class MeshManager;
 class RenderTargetContainer;
 
 namespace kokko
 {
 
+class MeshManager;
 class ShaderManager;
 struct PostProcessRenderPass;
 struct ShaderData;

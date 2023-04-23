@@ -10,7 +10,11 @@
 #include "Rendering/RenderResourceId.hpp"
 
 class Allocator;
+
+namespace kokko
+{
 class TextureManager;
+}
 
 struct BitmapGlyph
 {
@@ -55,5 +59,5 @@ public:
 	kokko::render::TextureId GetTextureDriverId() const { return textureId; }
 	Vec2f GetTextureSize() const { return textureSize; }
 
-	bool LoadFromBDF(TextureManager* textureManager, kokko::ConstStringView content);
+	bool LoadFromBDF(kokko::TextureManager* textureManager, kokko::ConstStringView content);
 };

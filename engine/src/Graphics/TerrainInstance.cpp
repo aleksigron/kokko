@@ -1,7 +1,7 @@
 #include "Graphics/TerrainInstance.hpp"
 
 TerrainInstance::TerrainInstance() :
-	meshId(MeshId::Null),
+	meshId(kokko::MeshId::Null),
 	terrainSize(128.0f),
 	terrainResolution(128),
 	textureScale(0.25f, 0.25f),

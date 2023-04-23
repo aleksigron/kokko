@@ -28,7 +28,6 @@ namespace render
 {
 class Device;
 }
-} // namespace kokko
 
 class LevelSerializer
 {
@@ -63,3 +62,5 @@ private:
 
 	SceneObjectId CreateComponents(const YAML::Node& componentSequence, Entity entity, SceneObjectId parent);
 };
+
+} // namespace kokko

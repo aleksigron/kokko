@@ -8,7 +8,7 @@
 
 struct TerrainInstance
 {
-	MeshId meshId;
+	kokko::MeshId meshId;
 
 	float terrainSize;
 	int terrainResolution;
