@@ -14,15 +14,15 @@
 #include "Resources/TextureId.hpp"
 
 class Allocator;
-class MeshManager;
-class TextureManager;
 
 namespace kokko
 {
 
 class AssetLoader;
 class Filesystem;
+class MeshManager;
 class ShaderManager;
+class TextureManager;
 
 namespace render
 {

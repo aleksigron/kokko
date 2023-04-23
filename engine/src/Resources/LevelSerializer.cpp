@@ -22,6 +22,9 @@
 
 static const char* const ComponentTypeKey = "component_type";
 
+namespace kokko
+{
+
 LevelSerializer::LevelSerializer(Allocator* allocator, kokko::render::Device* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
@@ -255,3 +258,5 @@ SceneObjectId LevelSerializer::CreateComponents(const YAML::Node& componentSeque
 
 	return createdTransform;
 }
+
+} // namespace kokko

@@ -19,12 +19,12 @@
 struct Entity;
 struct CameraParameters;
 class Allocator;
-class MeshManager;
 class Window;
 
 namespace kokko
 {
 
+class MeshManager;
 class ShaderManager;
 class World;
 

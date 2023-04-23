@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 struct MeshId
 {
 	unsigned int i;
@@ -9,3 +12,5 @@ struct MeshId
 
 	static const MeshId Null;
 };
+
+} // namespace kokko

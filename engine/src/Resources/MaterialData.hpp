@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 struct MaterialId
 {
 	unsigned int i;
@@ -9,3 +12,5 @@ struct MaterialId
 
 	static const MaterialId Null;
 };
+
+} // namespace kokko

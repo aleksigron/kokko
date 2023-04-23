@@ -16,6 +16,9 @@
 
 #include "System/IncludeOpenGL.hpp"
 
+namespace kokko
+{
+
 namespace
 {
 int MipLevelsFromDimensions(int width, int height)
@@ -409,7 +412,7 @@ void TextureManager::Upload_2D(TextureId id, const ImageData& image, bool genera
 
 	renderDevice->CreateTextures(texture.textureTarget, 1, &texture.textureObjectId);
 
-	const Optional<RenderTextureSizedFormat> format = 
+	const Optional<RenderTextureSizedFormat> format =
 		SizedFormatFromBaseFormatAndType(image.pixelFormat, image.componentDataType, true);
 	assert(format.HasValue());
 
@@ -423,12 +426,12 @@ void TextureManager::Upload_2D(TextureId id, const ImageData& image, bool genera
 		/*
 		RenderCommandData::SetTextureImageCompressed2D textureImage{
 			texture.textureTarget, 0, image.pixelFormat,
-			image.imageSize.x, image.imageSize.y, 
+			image.imageSize.x, image.imageSize.y,
 			static_cast<unsigned int>(image.compressedSize), image.imageData
 		};
 
 		renderDevice->SetTextureSubImageCompressed2D(texture.textureObjectId, 0, image.pixelFormat,
-			image.imageSize.x, image.imageSize.y, 
+			image.imageSize.x, image.imageSize.y,
 			static_cast<unsigned int>(image.compressedSize), image.imageData);
 		*/
 	}
@@ -529,3 +532,5 @@ void TextureManager::AllocateTextureStorage(TextureId id, RenderTextureTarget ta
 		KK_LOG_ERROR("Can't allocate texture storage again");
 	}
 }
+
+} // namespace kokko

@@ -8,19 +8,17 @@
 #include "Rendering/RenderViewport.hpp"
 
 class LightManager;
-class MeshManager;
-class TextureManager;
-
-struct RenderViewport;
 
 namespace kokko
 {
 
 class EnvironmentSystem;
 class GraphicsFeatureCommandList;
+class MeshManager;
 class PostProcessRenderer;
 class RenderGraphResources;
 class ShaderManager;
+class TextureManager;
 
 namespace render
 {
@@ -34,7 +32,7 @@ class GraphicsFeature
 public:
 	struct InitializeParameters
 	{
-		kokko::render::Device* renderDevice;
+		render::Device* renderDevice;
 		MeshManager* meshManager;
 		ShaderManager* shaderManager;
 	};
@@ -51,7 +49,7 @@ public:
 
 		// Component systems
 
-		kokko::EnvironmentSystem* environmentSystem;
+		EnvironmentSystem* environmentSystem;
 		LightManager* lightManager;
 
 		// Render state
@@ -60,12 +58,12 @@ public:
 		const RenderViewport& fullscreenViewport;
 		ArrayView<const RenderViewport> shadowViewports;
 		const RenderGraphResources* renderGraphResources;
-		kokko::render::FramebufferId finalTargetFramebufferId;
+		render::FramebufferId finalTargetFramebufferId;
 	};
 
 	struct UploadParameters : public CommonRenderParameters
 	{
-		kokko::render::Device* renderDevice;
+		render::Device* renderDevice;
 	};
 
 	struct SubmitParameters
@@ -90,4 +88,4 @@ public:
 	virtual void Render(const RenderParameters& parameters) = 0;
 };
 
-}
+} // namepace kokko

@@ -1,14 +1,13 @@
 #pragma once
 
-class MeshManager;
-class MaterialManager;
-class TextureManager;
-
 namespace kokko
 {
 
+class MaterialManager;
+class MeshManager;
 class ModelManager;
 class ShaderManager;
+class TextureManager;
 
 struct ResourceManagers
 {
@@ -19,4 +18,4 @@ struct ResourceManagers
 	TextureManager* textureManager;
 };
 
-}
+} // namespace kokko

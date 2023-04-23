@@ -13,10 +13,10 @@
 #include "Resources/AssetLoader.hpp"
 #include "Resources/ShaderLoader.hpp"
 
-const ShaderId ShaderId::Null = ShaderId{ 0 };
-
 namespace kokko
 {
+
+const ShaderId ShaderId::Null = ShaderId{ 0 };
 
 ShaderManager::ShaderManager(
 	Allocator* allocator,

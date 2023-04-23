@@ -21,9 +21,6 @@
 class Allocator;
 class CameraSystem;
 class LightManager;
-class MeshManager;
-class MaterialManager;
-class TextureManager;
 class RenderDevice;
 class Scene;
 class RenderTargetContainer;
@@ -38,11 +35,14 @@ namespace kokko
 class DebugVectorRenderer;
 class EnvironmentSystem;
 class GraphicsFeature;
+class MaterialManager;
 class MeshComponentSystem;
+class MeshManager;
 class PostProcessRenderer;
 class RenderDebugSettings;
 class RenderGraphResources;
 class ShaderManager;
+class TextureManager;
 class UniformData;
 class Window;
 

@@ -12,13 +12,13 @@
 
 class Allocator;
 class BitmapFont;
-class MeshManager;
-class TextureManager;
 
 namespace kokko
 {
 
 class Filesystem;
+class MeshManager;
+class TextureManager;
 class ShaderManager;
 
 namespace render
@@ -44,7 +44,7 @@ private:
 	kokko::render::Device* renderDevice;
 	kokko::Filesystem* filesystem;
 	kokko::ShaderManager* shaderManager;
-	MeshManager* meshManager;
+	kokko::MeshManager* meshManager;
 
 	BitmapFont* font;
 	size_t stringCharCount;
@@ -55,7 +55,7 @@ private:
 	Vec2f scaledFrameSize;
 	float scaleFactor;
 
-	MeshId meshId;
+	kokko::MeshId meshId;
 	Array<float> vertexData;
 	Array<unsigned short> indexData;
 
@@ -63,14 +63,14 @@ private:
 
 	void CreateAndUploadData();
 
-	bool LoadBitmapFont(TextureManager* textureManager, const char* filePath);
+	bool LoadBitmapFont(kokko::TextureManager* textureManager, const char* filePath);
 
 public:
 	DebugTextRenderer(Allocator* allocator, kokko::render::Device* renderDevice, kokko::Filesystem* filesystem);
 	~DebugTextRenderer();
 
 	bool Initialize(kokko::ShaderManager* shaderManager,
-		MeshManager* meshManager, TextureManager* textureManager);
+		kokko::MeshManager* meshManager, kokko::TextureManager* textureManager);
 
 	bool HasValidFont() const { return font != nullptr; }
 

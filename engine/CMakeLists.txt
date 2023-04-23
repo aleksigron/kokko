@@ -165,6 +165,7 @@ set (KOKKO_SOURCES
 	src/Graphics/ParticleEmitterSerializer.hpp
 	src/Graphics/TerrainInstance.cpp
 	src/Graphics/TerrainInstance.hpp
+	src/Graphics/TerrainSerializer.hpp
 	src/Graphics/TerrainSystem.cpp
 	src/Graphics/TerrainSystem.hpp
 	src/Graphics/TerrainTileId.hpp

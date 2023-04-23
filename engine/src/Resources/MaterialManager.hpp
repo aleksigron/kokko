@@ -13,20 +13,19 @@
 #include "Resources/MaterialData.hpp"
 #include "Resources/ShaderId.hpp"
 
+class Allocator;
+
 namespace kokko
 {
 class AssetLoader;
 class MaterialSerializer;
 class ShaderManager;
+class TextureManager;
 
 namespace render
 {
 class Device;
 }
-}
-
-class Allocator;
-class TextureManager;
 
 class MaterialManager
 {
@@ -103,3 +102,5 @@ public:
 
 	void UpdateUniformsToGPU(MaterialId id);
 };
+
+} // namespace kokko

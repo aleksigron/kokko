@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 struct ShaderId
 {
 	unsigned int i;
@@ -9,3 +12,5 @@ struct ShaderId
 
 	static const ShaderId Null;
 };
+
+} // namespace kokko

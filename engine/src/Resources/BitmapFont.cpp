@@ -55,7 +55,7 @@ const BitmapGlyph* BitmapFont::GetGlyph(unsigned int codePoint) const
 	return nullptr;
 }
 
-bool BitmapFont::LoadFromBDF(TextureManager* textureManager, kokko::ConstStringView content)
+bool BitmapFont::LoadFromBDF(kokko::TextureManager* textureManager, kokko::ConstStringView content)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -267,7 +267,7 @@ bool BitmapFont::LoadFromBDF(TextureManager* textureManager, kokko::ConstStringV
 		imageData.pixelFormat = RenderTextureBaseFormat::R;
 		imageData.componentDataType = RenderTextureDataType::UnsignedByte;
 
-		TextureId id = textureManager->CreateTexture();
+		kokko::TextureId id = textureManager->CreateTexture();
 
 		textureManager->Upload_2D(id, imageData, false);
 

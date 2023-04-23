@@ -10,18 +10,17 @@ class AllocatorManager;
 class Debug;
 class Time;
 
-class MeshManager;
-class MaterialManager;
-class TextureManager;
-
 struct CameraParameters;
 
 namespace kokko
 {
 class AssetLoader;
 class Filesystem;
+class MaterialManager;
+class MeshManager;
 class ModelManager;
 class ShaderManager;
+class TextureManager;
 class WindowManager;
 class World;
 struct ResourceManagers;
@@ -55,11 +54,11 @@ private:
 	InstanceAllocatorPair<kokko::WindowManager> windowManager;
 	Time* time;
 	InstanceAllocatorPair<Debug> debug;
-	InstanceAllocatorPair<MeshManager> meshManager;
+	InstanceAllocatorPair<kokko::MeshManager> meshManager;
 	InstanceAllocatorPair<kokko::ModelManager> modelManager;
-	InstanceAllocatorPair<TextureManager> textureManager;
+	InstanceAllocatorPair<kokko::TextureManager> textureManager;
 	InstanceAllocatorPair<kokko::ShaderManager> shaderManager;
-	InstanceAllocatorPair<MaterialManager> materialManager;
+	InstanceAllocatorPair<kokko::MaterialManager> materialManager;
 	InstanceAllocatorPair<kokko::World> world;
 
 public:
@@ -84,11 +83,11 @@ public:
 	kokko::render::CommandEncoder* GetCommandEncoder() { return commandEncoder; }
 	Debug* GetDebug() { return debug.instance; }
 	kokko::Filesystem* GetFilesystem() { return filesystem; }
-	MeshManager* GetMeshManager() { return meshManager.instance; }
+	kokko::MeshManager* GetMeshManager() { return meshManager.instance; }
 	kokko::ModelManager* GetModelManager() { return modelManager.instance; }
 	kokko::ShaderManager* GetShaderManager() { return shaderManager.instance; }
-	TextureManager* GetTextureManager() { return textureManager.instance; }
-	MaterialManager* GetMaterialManager() { return materialManager.instance; }
+	kokko::TextureManager* GetTextureManager() { return textureManager.instance; }
+	kokko::MaterialManager* GetMaterialManager() { return materialManager.instance; }
 	kokko::World* GetWorld() { return world.instance; }
 
 	kokko::ResourceManagers GetResourceManagers();

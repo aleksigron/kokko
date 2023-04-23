@@ -8,18 +8,17 @@
 
 #include "EditorWindow.hpp"
 
-class MaterialManager;
-class MeshManager;
-class TextureManager;
-
-struct ResourceManagers;
-struct TextureId;
-
 namespace kokko
 {
 
+class MaterialManager;
+class MeshManager;
 class ModelManager;
+class TextureManager;
 class World;
+
+struct ResourceManagers;
+struct TextureId;
 
 namespace editor
 {

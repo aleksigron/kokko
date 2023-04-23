@@ -5,18 +5,18 @@
 #include "EditorWindow.hpp"
 
 class Allocator;
-class MaterialManager;
-class TextureManager;
-struct MaterialId;
 
 namespace kokko
 {
 
 class AssetInfo;
+class MaterialManager;
 class ShaderManager;
+class TextureManager;
 class UniformData;
 
 struct BufferUniform;
+struct MaterialId;
 struct TextureUniform;
 
 namespace editor
@@ -44,7 +44,7 @@ private:
 
 	void DrawMaterial(EditorContext& context, const AssetInfo* asset);
 	bool DrawMaterialProperty(UniformData& uniforms, const BufferUniform& prop);
-	bool DrawMaterialShaderDropTarget(EditorContext& context, MaterialId materialId);
+	bool DrawMaterialShaderDropTarget(EditorContext& context, kokko::MaterialId materialId);
 	bool DrawMaterialTextureDropTarget(
 		EditorContext& context,
 		UniformData& uniforms,

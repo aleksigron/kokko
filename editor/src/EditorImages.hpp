@@ -2,10 +2,11 @@
 
 #include "Resources/TextureId.hpp"
 
-class TextureManager;
-
 namespace kokko
 {
+
+class TextureManager;
+
 namespace editor
 {
 
