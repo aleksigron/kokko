@@ -30,7 +30,7 @@ ModelManager::ModelManager(Allocator* allocator, AssetLoader* assetLoader, MeshM
 
 ModelManager::~ModelManager()
 {
-	for (unsigned int i = 1, count = models.GetCount(); i < count; ++i)
+	for (size_t i = 1, count = models.GetCount(); i < count; ++i)
 	{
 		allocator->Deallocate(models[i].buffer);
 	}

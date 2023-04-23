@@ -33,7 +33,7 @@ void CommandEncoder::BeginDebugScope(uint32_t id, kokko::ConstStringView message
 		CommandType::BeginDebugScope,
 		id,
 		messageOffset,
-		message.len
+		static_cast<uint32_t>(message.len)
 	};
 
 	CopyCommand(&data, sizeof(data));

@@ -122,7 +122,7 @@ size_t EncodingUtf8::FindLastCharacter(kokko::ConstStringView input)
 			continue; // Not first byte of character
 
 		// Check that the character fits in the input
-		if (idx + charBytes <= input.len)
+		if (static_cast<size_t>(idx + charBytes) <= input.len)
 			return static_cast<size_t>(idx);
 	}
 

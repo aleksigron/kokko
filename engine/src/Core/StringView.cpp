@@ -301,9 +301,9 @@ intptr_t StringView<CharType>::FindLast(StringView<const CharType> find) const
 	{
 		bool match = true;
 
-		for (intptr_t findIdx = 0; findIdx < find.len; ++findIdx)
+		for (intptr_t findIdx = 0, end = find.len; findIdx < end; ++findIdx)
 		{
-			if (str[sourceIdx + find.len - findIdx - 1] != find.str[find.len - findIdx - 1])
+			if (str[sourceIdx + end - findIdx - 1] != find.str[end - findIdx - 1])
 			{
 				match = false;
 				break;
