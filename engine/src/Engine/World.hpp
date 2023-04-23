@@ -16,7 +16,6 @@ struct CameraParameters;
 
 class EntityManager;
 class Scene;
-class LightManager;
 class CameraSystem;
 class ScriptSystem;
 
@@ -28,6 +27,7 @@ class AssetLoader;
 class DebugVectorRenderer;
 class EnvironmentSystem;
 class Filesystem;
+class LightManager;
 class MeshComponentSystem;
 class ParticleSystem;
 class Renderer;

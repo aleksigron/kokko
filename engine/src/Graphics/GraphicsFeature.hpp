@@ -7,13 +7,12 @@
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/RenderViewport.hpp"
 
-class LightManager;
-
 namespace kokko
 {
 
 class EnvironmentSystem;
 class GraphicsFeatureCommandList;
+class LightManager;
 class MeshManager;
 class PostProcessRenderer;
 class RenderGraphResources;

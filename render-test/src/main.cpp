@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 		}
 	};
 	kokko::FilesystemResolverVirtual resolver(defaultAlloc);
-	resolver.SetMountPoints(ArrayView(mounts));
+	resolver.SetMountPoints(kokko::ArrayView(mounts));
 
 	kokko::Filesystem filesystem(defaultAlloc, &resolver);
 	kokko::AssetLibrary assetLibrary(defaultAlloc, &filesystem);
@@ -119,17 +119,17 @@ int main(int argc, char** argv)
 	kokko::render::Device* renderDevice = engine.GetRenderDevice();
 	kokko::render::CommandEncoder* encoder = engine.GetCommandEncoder();
 	framebuffer.SetRenderDevice(renderDevice);
-	framebuffer.Create(width, height, Optional<RenderTextureSizedFormat>(), ArrayView(colorFormat));
+	framebuffer.Create(width, height, Optional<RenderTextureSizedFormat>(), kokko::ArrayView(colorFormat));
 
-	Array<uint8_t> resultPixelArray(defaultAlloc);
+	kokko::Array<uint8_t> resultPixelArray(defaultAlloc);
 	resultPixelArray.Resize(totalBytes);
 	uint8_t* resultPixels = resultPixelArray.GetData();
 	uint8_t* swapBuffer = &resultPixels[imageBytes];
 
-	Array<uint8_t> expectationPixelArray(defaultAlloc);
+	kokko::Array<uint8_t> expectationPixelArray(defaultAlloc);
 	expectationPixelArray.Resize(imageBytes);
 
-	Array<uint8_t> expectationFileArray(defaultAlloc);
+	kokko::Array<uint8_t> expectationFileArray(defaultAlloc);
 	kokko::String testLevelContent(defaultAlloc);
 
 	int failedTests = 0;
@@ -227,7 +227,7 @@ int main(int argc, char** argv)
 				const auto resultPath = testFolderPath / "actual.webp";
 				const auto resultPathStr = resultPath.u8string();
 
-				ArrayView<uint8_t> content(resultWebpBuffer, resultWebpSize);
+				kokko::ArrayView<uint8_t> content(resultWebpBuffer, resultWebpSize);
 				if (filesystem.Write(resultPathStr.c_str(), content, false) == false)
 				{
 					KK_LOG_ERROR("Writing test result failed: {}", resultPathStr.c_str());

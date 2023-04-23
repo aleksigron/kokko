@@ -6,7 +6,7 @@
 
 TEST_CASE("SortedArray sorts inserted items")
 {
-	SortedArray<int> a(Allocator::GetDefault());
+	kokko::SortedArray<int> a(Allocator::GetDefault());
 
 	CHECK(a.GetCount() == 0);
 	a.Insert(2);
@@ -19,7 +19,7 @@ TEST_CASE("SortedArray sorts inserted items")
 
 TEST_CASE("SortedArray InsertUnique only allows unique items")
 {
-	SortedArray<int> a(Allocator::GetDefault());
+	kokko::SortedArray<int> a(Allocator::GetDefault());
 
 	a.InsertUnique(2);
 	CHECK(a.GetCount() == 1);
@@ -36,7 +36,7 @@ TEST_CASE("SortedArray InsertUnique only allows unique items")
 
 TEST_CASE("SortedArray Contains correctly finds items")
 {
-	SortedArray<int> a(Allocator::GetDefault());
+	kokko::SortedArray<int> a(Allocator::GetDefault());
 
 	a.Insert(2);
 	a.Insert(1);
@@ -52,7 +52,7 @@ TEST_CASE("SortedArray Contains correctly finds items")
 
 TEST_CASE("SortedArray Find correctly finds items")
 {
-	SortedArray<int> a(Allocator::GetDefault());
+	kokko::SortedArray<int> a(Allocator::GetDefault());
 
 	a.Insert(0);
 	a.Insert(1);

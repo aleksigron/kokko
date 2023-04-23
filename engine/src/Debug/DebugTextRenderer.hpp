@@ -48,16 +48,16 @@ private:
 
 	BitmapFont* font;
 	size_t stringCharCount;
-	Array<char> stringData;
-	Array<DisplayData> displayData;
+	kokko::Array<char> stringData;
+	kokko::Array<DisplayData> displayData;
 
 	Vec2f frameSize;
 	Vec2f scaledFrameSize;
 	float scaleFactor;
 
 	kokko::MeshId meshId;
-	Array<float> vertexData;
-	Array<unsigned short> indexData;
+	kokko::Array<float> vertexData;
+	kokko::Array<unsigned short> indexData;
 
 	kokko::render::BufferId bufferObjectId;
 

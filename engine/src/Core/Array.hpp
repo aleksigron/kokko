@@ -10,6 +10,9 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 template <typename ValueType>
 class Array
 {
@@ -336,3 +339,5 @@ public:
 	Iterator begin() { return Iterator(data); }
 	Iterator end() { return Iterator(data + count); }
 };
+
+} // namespace kokko

@@ -95,7 +95,7 @@ void DeserializeVecArray(
 	kokko::UniformData& uniformData,
 	const kokko::BufferUniform& uniform,
 	const rapidjson::Value* jsonValue,
-	Array<unsigned char>& cacheBuffer)
+	kokko::Array<unsigned char>& cacheBuffer)
 {
 	T* buffer = nullptr;
 	unsigned int valueCount = 0;
@@ -141,7 +141,7 @@ void DeserializeArray(
 	kokko::UniformData& uniformData,
 	const kokko::BufferUniform& uniform,
 	const rapidjson::Value* jsonValue,
-	Array<unsigned char>& cacheBuffer)
+	kokko::Array<unsigned char>& cacheBuffer)
 {
 	T* buffer = nullptr;
 	unsigned int valueCount = 0;

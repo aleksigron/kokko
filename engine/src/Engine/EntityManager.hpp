@@ -17,15 +17,15 @@ private:
 	Allocator* debugNameAllocator;
 
 	uint32_t entityRangeEnd;
-	SortedArray<uint32_t> freeIndices;
+	kokko::SortedArray<uint32_t> freeIndices;
 
 	// Map from entity id to index in the debug name array
 	HashMap<unsigned int, unsigned int> debugNameMap;
 
 	// Debug names array indices that are free to use
-	Array<unsigned int> debugNameFreelist;
+	kokko::Array<unsigned int> debugNameFreelist;
 
-	Array<kokko::String> debugNames;
+	kokko::Array<kokko::String> debugNames;
 
 	char unnamedEntityBuffer[32];
 

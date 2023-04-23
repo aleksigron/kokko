@@ -19,7 +19,7 @@ private:
 		bool operator==(const AllocationInfo& other) const { return ptr == other.ptr; }
 	};
 
-	SortedArray<AllocationInfo> allocations;
+	kokko::SortedArray<AllocationInfo> allocations;
 
 public:
 	TraceAllocator(const char* memoryScope, Allocator* allocator);

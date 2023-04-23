@@ -9,6 +9,9 @@
 #include "Math/Math.hpp"
 #include "Math/Intersect3D.hpp"
 
+namespace kokko
+{
+
 const LightId LightId::Null = LightId{ 0 };
 const char* LightManager::LightTypeNames[] = { "directional", "point", "spot" };
 const char* LightManager::LightTypeDisplayNames[] = { "Directional", "Point", "Spot" };
@@ -97,7 +100,7 @@ float LightManager::CalculateDefaultRadius(Vec4f colorAndIntensity)
 void LightManager::NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms)
 {
 	Vec4f origin(0.0f, 0.0f, 0.0f, 1.0f);
-	
+
 	for (unsigned int entityIdx = 0; entityIdx < count; ++entityIdx)
 	{
 		LightId id = this->Lookup(entities[entityIdx]);
@@ -218,3 +221,5 @@ void LightManager::GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& fru
 				output.PushBack(LightId{ i });
 	}
 }
+
+} // namespace kokko

@@ -2,6 +2,9 @@
 
 #include <cstddef>
 
+namespace kokko
+{
+
 template <typename ValueType>
 class ArrayView
 {
@@ -38,7 +41,7 @@ public:
 		count -= amount;
 		return *this;
 	}
-	
+
 	ArrayView<ValueType>& TrimEnd(size_t amount)
 	{
 		count -= amount;
@@ -81,3 +84,5 @@ private:
 	ValueType* data;
 	size_t count;
 };
+
+} // namespace kokko

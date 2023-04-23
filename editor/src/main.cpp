@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 			kokko::ConstStringView(EditorConst::EditorResourcePath)
 		}
 	};
-	resolver.SetMountPoints(ArrayView(mounts));
+	resolver.SetMountPoints(kokko::ArrayView(mounts));
 
 	Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
 	kokko::editor::EditorApp editor(appAllocator, &filesystem, &resolver);

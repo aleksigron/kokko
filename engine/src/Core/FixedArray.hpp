@@ -7,6 +7,9 @@
 
 #include "Core/ArrayView.hpp"
 
+namespace kokko
+{
+
 template <typename ValueType, size_t Capacity>
 class FixedArray
 {
@@ -15,11 +18,11 @@ private:
     ValueType data[Capacity];
 
 public:
-	constexpr unsigned int GetCapacity() const { return Capacity; }
+    constexpr unsigned int GetCapacity() const { return Capacity; }
     FixedArray() : count(0)
     {
     }
-    
+
     ~FixedArray()
     {
         for (size_t i = 0; i < count; ++i)
@@ -27,9 +30,9 @@ public:
     }
 
     size_t GetCount() const { return this->count; }
-    
-	ValueType* GetData() { return data; }
-	const ValueType* GetData() const { return data; }
+
+    ValueType* GetData() { return data; }
+    const ValueType* GetData() const { return data; }
 
     ValueType& GetFront() { return this->data[0]; }
     const ValueType& GetFront() const { return this->data[0]; }
@@ -40,11 +43,11 @@ public:
     ArrayView<ValueType> GetView() { return ArrayView(data, count); }
     ArrayView<const ValueType> GetView() const { return ArrayView(data, count); }
 
-	ValueType& At(unsigned int index) { return data[index]; }
-	const ValueType& At(unsigned int index) const { return data[index]; }
+    ValueType& At(unsigned int index) { return data[index]; }
+    const ValueType& At(unsigned int index) const { return data[index]; }
 
-	ValueType& operator[](unsigned int index) { return data[index]; }
-	const ValueType& operator[](unsigned int index) const { return data[index]; }
+    ValueType& operator[](unsigned int index) { return data[index]; }
+    const ValueType& operator[](unsigned int index) const { return data[index]; }
 
     ValueType& PushBack()
     {
@@ -75,7 +78,7 @@ public:
 
         count = 0;
     }
-    
+
     class Iterator
     {
     private:
@@ -112,3 +115,5 @@ public:
     Iterator begin() { return Iterator(data); }
     Iterator end() { return Iterator(data + count); }
 };
+
+} // namespace kokko

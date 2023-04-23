@@ -79,7 +79,7 @@ bool BitmapFont::LoadFromBDF(kokko::TextureManager* textureManager, kokko::Const
 	Vec2f glyphSize(0.0f, 0.0f);
 	Vec2f glyphSafeSize(0.0f, 0.0f);
 
-	Array<unsigned char> textureBuffer(allocator);
+	kokko::Array<unsigned char> textureBuffer(allocator);
 	Vec2i glyphsOnAxes(0, 0);
 
 	size_t spacesInLine[7];
