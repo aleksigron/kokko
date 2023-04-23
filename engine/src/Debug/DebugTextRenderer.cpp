@@ -58,7 +58,7 @@ DebugTextRenderer::~DebugTextRenderer()
 	}
 }
 
-bool DebugTextRenderer::Initialize(ShaderManager* shaderManager,
+bool DebugTextRenderer::Initialize(kokko::ShaderManager* shaderManager,
 	MeshManager* meshManager, TextureManager* textureManager)
 {
 	this->shaderManager = shaderManager;
@@ -173,7 +173,7 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 		if (shaderId == ShaderId::Null)
 			return;
 
-		const ShaderData& shader = shaderManager->GetShaderData(shaderId);
+		const kokko::ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
 		kokko::ConstStringView uniformName("glyph_tex");
 		const kokko::TextureUniform* textureUniform = shader.uniforms.FindTextureUniformByName(uniformName);

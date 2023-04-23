@@ -59,7 +59,7 @@ void ReleaseEnvTextures(TextureManager* textureManager, kokko::EnvironmentTextur
 	releaseTexture(textures.specularIrradianceTexture);
 }
 
-void BindTexture(kokko::render::CommandEncoder* encoder, const ShaderData& shader,
+void BindTexture(kokko::render::CommandEncoder* encoder, const kokko::ShaderData& shader,
 	uint32_t uniformHash, kokko::render::TextureId textureId)
 {
 	const kokko::TextureUniform* uniform = shader.uniforms.FindTextureUniformByNameHash(uniformHash);
@@ -88,8 +88,8 @@ struct CalcSpecularUniforms
 
 EnvironmentSystem::EnvironmentSystem(
 	Allocator* allocator,
-	kokko::AssetLoader* assetLoader,
-	kokko::render::Device* renderDevice,
+	AssetLoader* assetLoader,
+	render::Device* renderDevice,
 	ShaderManager* shaderManager,
 	MeshManager* meshManager,
 	TextureManager* textureManager) :
@@ -651,4 +651,4 @@ void EnvironmentSystem::LoadEmptyEnvironmentMap()
 	KOKKO_PROFILE_FUNCTION();
 }
 
-}
+} // namespace kokko

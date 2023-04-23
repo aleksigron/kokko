@@ -14,8 +14,6 @@
 #include "Resources/TextureId.hpp"
 
 class Allocator;
-class Filesystem;
-class ShaderManager;
 class MeshManager;
 class TextureManager;
 
@@ -23,6 +21,8 @@ namespace kokko
 {
 
 class AssetLoader;
+class Filesystem;
+class ShaderManager;
 
 namespace render
 {

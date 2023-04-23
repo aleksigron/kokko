@@ -49,4 +49,4 @@ private:
 	Vec2i fullscreenViewportSize;
 };
 
-}
+} // namespace kokko

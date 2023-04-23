@@ -2,7 +2,6 @@
 
 #stage vertex
 #include "engine/shaders/common/constants.glsl"
-#include "engine/shaders/common/viewport_block.glsl"
 
 layout (location = VERTEX_ATTR_INDEX_POS) in vec3 position;
 

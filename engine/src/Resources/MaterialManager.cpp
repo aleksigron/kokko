@@ -26,7 +26,7 @@ MaterialManager::MaterialManager(
 	Allocator* allocator,
 	kokko::AssetLoader* assetLoader,
 	kokko::render::Device* renderDevice,
-	ShaderManager* shaderManager,
+	kokko::ShaderManager* shaderManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
 	assetLoader(assetLoader),
@@ -226,7 +226,7 @@ void MaterialManager::SetMaterialShader(MaterialId id, ShaderId shaderId)
 		return;
 	}
 
-	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
+	const kokko::ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
 	material.shaderId = shaderId;
 	material.cachedShaderDeviceId = shader.driverId;

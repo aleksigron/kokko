@@ -137,7 +137,7 @@ Renderer::Renderer(
 
 	renderTargetContainer = allocator->MakeNew<RenderTargetContainer>(allocator, renderDevice);
 
-	postProcessRenderer = allocator->MakeNew<PostProcessRenderer>(
+	postProcessRenderer = allocator->MakeNew<kokko::PostProcessRenderer>(
 		encoder, meshManager, shaderManager, renderTargetContainer);
 
 	shadowMaterial = MaterialId::Null;

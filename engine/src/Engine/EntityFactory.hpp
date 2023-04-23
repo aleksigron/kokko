@@ -2,11 +2,12 @@
 
 #include "Core/ArrayView.hpp"
 
-class World;
 struct Entity;
 
 namespace kokko
 {
+
+class World;
 
 enum class EntityComponentType
 {
@@ -37,4 +38,4 @@ private:
 	static const char* const ComponentNames[ComponentTypeCount];
 };
 
-}
+} // namespace kokko

@@ -25,7 +25,6 @@ namespace render
 {
 class Device;
 }
-}
 
 struct ShaderData
 {
@@ -85,3 +84,5 @@ public:
 		return data.shader[id.i];
 	}
 };
+
+} // namespace kokko

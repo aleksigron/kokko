@@ -1,12 +1,16 @@
 #pragma once
 
-class AppSettings;
+namespace kokko
+{
 class World;
+}
+
+class AppSettings;
 class InputManager;
 
 struct ScriptContext
 {
 	void* app;
-	World* world;
+	kokko::World* world;
 	InputManager* inputManager;
 };

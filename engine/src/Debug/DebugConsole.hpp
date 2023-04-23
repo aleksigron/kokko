@@ -10,10 +10,10 @@
 
 class Allocator;
 class DebugTextRenderer;
-class DebugVectorRenderer;
 
 namespace kokko
 {
+class DebugVectorRenderer;
 class Window;
 }
 
@@ -30,7 +30,7 @@ private:
 
 	Allocator* allocator;
 	DebugTextRenderer* textRenderer;
-	DebugVectorRenderer* vectorRenderer;
+	kokko::DebugVectorRenderer* vectorRenderer;
 
 	Rectanglef drawArea;
 
@@ -51,7 +51,7 @@ public:
 	DebugConsole(
 		Allocator* allocator,
 		DebugTextRenderer* textRenderer,
-		DebugVectorRenderer* vectorRenderer);
+		kokko::DebugVectorRenderer* vectorRenderer);
 	~DebugConsole();
 
 	void RequestFocus();

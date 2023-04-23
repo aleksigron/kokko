@@ -21,14 +21,11 @@
 class Allocator;
 class CameraSystem;
 class LightManager;
-class ShaderManager;
 class MeshManager;
 class MaterialManager;
 class TextureManager;
 class RenderDevice;
 class Scene;
-class DebugVectorRenderer;
-class PostProcessRenderer;
 class RenderTargetContainer;
 class Framebuffer;
 
@@ -38,11 +35,14 @@ struct RenderViewport;
 namespace kokko
 {
 
+class DebugVectorRenderer;
 class EnvironmentSystem;
 class GraphicsFeature;
 class MeshComponentSystem;
+class PostProcessRenderer;
 class RenderDebugSettings;
 class RenderGraphResources;
+class ShaderManager;
 class UniformData;
 class Window;
 

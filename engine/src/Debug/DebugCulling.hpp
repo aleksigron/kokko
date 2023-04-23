@@ -2,25 +2,29 @@
 
 #include "Math/Vec2.hpp"
 
-class World;
 class DebugTextRenderer;
+
+namespace kokko
+{
 class DebugVectorRenderer;
+class World;
+}
 
 class DebugCulling
 {
 private:
 	DebugTextRenderer* textRenderer;
-	DebugVectorRenderer* vectorRenderer;
+	kokko::DebugVectorRenderer* vectorRenderer;
 
 	bool cullingCameraIsLocked;
 
 	Vec2f guideTextPosition;
 
 public:
-	DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer);
+	DebugCulling(DebugTextRenderer* textRenderer, kokko::DebugVectorRenderer* vectorRenderer);
 	~DebugCulling();
 
-	void UpdateAndDraw(World* world);
+	void UpdateAndDraw(kokko::World* world);
 
 	void SetLockCullingCamera(bool lockCullingCamera);
 	void SetGuideTextPosition(const Vec2f& pos) { guideTextPosition = pos; }

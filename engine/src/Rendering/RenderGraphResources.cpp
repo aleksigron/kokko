@@ -147,4 +147,4 @@ Vec2i RenderGraphResources::GetFullscreenViewportSize() const
 	return fullscreenViewportSize;
 }
 
-}
+} // namespace kokko

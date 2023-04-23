@@ -4,6 +4,9 @@
 
 #include "Core/BitfieldVariable.hpp"
 
+namespace kokko
+{
+
 struct RenderOrderConfiguration
 {
 	static const uint64_t CallbackMaterialId = (1 << 12) - 1;
@@ -71,3 +74,5 @@ struct RenderOrderConfiguration
 	uint64_t maxTransparentDepth;
 	uint64_t maxOpaqueDepth;
 };
+
+} // namespace kokko

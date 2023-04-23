@@ -1,7 +1,6 @@
 #pragma once
 
 class MeshManager;
-class ShaderManager;
 class MaterialManager;
 class TextureManager;
 
@@ -9,6 +8,7 @@ namespace kokko
 {
 
 class ModelManager;
+class ShaderManager;
 
 struct ResourceManagers
 {

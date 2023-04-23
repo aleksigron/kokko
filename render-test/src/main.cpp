@@ -163,7 +163,7 @@ int main(int argc, char** argv)
 		{
 			KOKKO_PROFILE_SCOPE(testNameStr.c_str());
 
-			World* world = engine.GetWorld();
+			kokko::World* world = engine.GetWorld();
 			world->ClearAllEntities();
 
 			{

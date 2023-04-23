@@ -23,7 +23,7 @@ public:
 	void Execute(const CommandBuffer* commandBuffer) override;
 
 private:
-	size_t ParseCommand(RenderCommandType type, const uint8_t* commandBegin);
+	size_t ParseCommand(CommandType type, const uint8_t* commandBegin);
 
 	const CommandBuffer* cmdBuffer;
 };

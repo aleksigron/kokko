@@ -38,9 +38,9 @@ public:
 
 	bool IsInitialized() const;
 
-	kokko::render::FramebufferId GetFramebufferId() const;
-	kokko::render::TextureId GetColorTextureId(size_t index) const;
-	kokko::render::TextureId GetDepthTextureId() const;
+	FramebufferId GetFramebufferId() const;
+	TextureId GetColorTextureId(size_t index) const;
+	TextureId GetDepthTextureId() const;
 
 	int GetWidth() const;
 	int GetHeight() const;
@@ -50,9 +50,9 @@ public:
 		ArrayView<RenderTextureSizedFormat> colorTextureFormats);
 	void Destroy();
 
-	void AttachExternalDepthTexture(kokko::render::TextureId textureId);
+	void AttachExternalDepthTexture(TextureId textureId);
 
-	void SetDebugLabel(kokko::ConstStringView label);
+	void SetDebugLabel(ConstStringView label);
 
 private:
 	Device* renderDevice;
@@ -60,12 +60,12 @@ private:
 	int width;
 	int height;
 
-	kokko::render::FramebufferId framebufferId;
+	FramebufferId framebufferId;
 
 	size_t colorTextureCount;
-	kokko::render::TextureId colorTextureIds[MaxColorTextureCount];
+	TextureId colorTextureIds[MaxColorTextureCount];
 
-	kokko::render::TextureId depthTextureId;
+	TextureId depthTextureId;
 	bool depthTextureIsOwned;
 };
 

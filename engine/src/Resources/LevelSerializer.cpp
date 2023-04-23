@@ -40,7 +40,7 @@ LevelSerializer::~LevelSerializer()
 	allocator->MakeDelete(transformSerializer);
 }
 
-void LevelSerializer::Initialize(World* world, const kokko::ResourceManagers& resourceManagers)
+void LevelSerializer::Initialize(kokko::World* world, const kokko::ResourceManagers& resourceManagers)
 {
 	this->world = world;
 	this->resourceManagers = resourceManagers;

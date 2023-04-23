@@ -47,7 +47,7 @@ struct RenderPassStencilAttachment : public RenderPassAttachment
     uint32_t clearStencil;
 };
 
-}
+} // namespace kokko
 
 enum class RenderDeviceParameter
 {

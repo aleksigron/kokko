@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 enum class RenderPassType
 {
 	Setup = 0,
@@ -9,3 +12,5 @@ enum class RenderPassType
 	Transparent = 4, // TransparentMix + TransparentAdd + TransparentSub
 	PostProcess = 5
 };
+
+}

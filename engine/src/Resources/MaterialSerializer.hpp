@@ -4,7 +4,6 @@
 
 class Allocator;
 class MaterialManager;
-class ShaderManager;
 class TextureManager;
 
 struct MaterialId;
@@ -12,6 +11,7 @@ struct MaterialId;
 namespace kokko
 {
 
+class ShaderManager;
 class String;
 
 class MaterialSerializer

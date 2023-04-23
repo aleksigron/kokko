@@ -18,6 +18,7 @@
 namespace kokko
 {
 class AssetLoader;
+class Filesystem;
 
 namespace render
 {
@@ -28,7 +29,6 @@ class Device;
 struct BoundingBox;
 
 class Allocator;
-class Filesystem;
 
 struct VertexData
 {

@@ -2,7 +2,6 @@
 
 #include "Rendering/RenderCommand.hpp"
 #include "Rendering/RenderCommandBuffer.hpp"
-#include "Rendering/RenderResourceMap.hpp"
 
 namespace kokko
 {
@@ -31,7 +30,7 @@ void CommandEncoder::BeginDebugScope(uint32_t id, kokko::ConstStringView message
 	uint32_t messageOffset = CopyCommandData(message.str, message.len);
 
 	CmdBeginDebugScope data{
-		RenderCommandType::BeginDebugScope,
+		CommandType::BeginDebugScope,
 		id,
 		messageOffset,
 		message.len
@@ -42,7 +41,7 @@ void CommandEncoder::BeginDebugScope(uint32_t id, kokko::ConstStringView message
 
 void CommandEncoder::EndDebugScope()
 {
-	Command data{ RenderCommandType::EndDebugScope };
+	Command data{ CommandType::EndDebugScope };
 	CopyCommand(&data, sizeof(data));
 }
 
@@ -53,7 +52,7 @@ void CommandEncoder::EndDebugScope()
 void CommandEncoder::Clear(ClearMask mask)
 {
 	CmdClear data{
-		RenderCommandType::Clear,
+		CommandType::Clear,
 		mask
 	};
 
@@ -63,7 +62,7 @@ void CommandEncoder::Clear(ClearMask mask)
 void CommandEncoder::SetClearColor(const Vec4f& color)
 {
 	CmdSetClearColor data{
-		RenderCommandType::SetClearColor,
+		CommandType::SetClearColor,
 		color
 	};
 
@@ -73,7 +72,7 @@ void CommandEncoder::SetClearColor(const Vec4f& color)
 void CommandEncoder::SetClearDepth(float depth)
 {
 	CmdSetClearDepth data{
-		RenderCommandType::SetClearDepth,
+		CommandType::SetClearDepth,
 		depth
 	};
 
@@ -87,7 +86,7 @@ void CommandEncoder::SetClearDepth(float depth)
 void CommandEncoder::BindBuffer(RenderBufferTarget target, render::BufferId buffer)
 {
 	CmdBindBuffer data{
-		RenderCommandType::BindBuffer,
+		CommandType::BindBuffer,
 		target,
 		buffer
 	};
@@ -98,7 +97,7 @@ void CommandEncoder::BindBuffer(RenderBufferTarget target, render::BufferId buff
 void CommandEncoder::BindBufferBase(RenderBufferTarget target, uint32_t bindingPoint, render::BufferId buffer)
 {
 	CmdBindBufferBase data{
-		RenderCommandType::BindBufferBase,
+		CommandType::BindBufferBase,
 		target,
 		bindingPoint,
 		buffer
@@ -115,7 +114,7 @@ void CommandEncoder::BindBufferRange(
 	size_t length)
 {
 	CmdBindBufferRange data{
-		RenderCommandType::BindBufferRange,
+		CommandType::BindBufferRange,
 		target,
 		bindingPoint,
 		id,
@@ -133,7 +132,7 @@ void CommandEncoder::BindBufferRange(
 void CommandEncoder::DispatchCompute(uint32_t numGroupsX, uint32_t numGroupsY, uint32_t numGroupsZ)
 {
 	CmdDispatchCompute dispatch{
-		RenderCommandType::DispatchCompute,
+		CommandType::DispatchCompute,
 		numGroupsX,
 		numGroupsY,
 		numGroupsZ,
@@ -145,7 +144,7 @@ void CommandEncoder::DispatchCompute(uint32_t numGroupsX, uint32_t numGroupsY, u
 void CommandEncoder::DispatchComputeIndirect(intptr_t offset)
 {
 	CmdDispatchComputeIndirect dispatch{
-		RenderCommandType::DispatchComputeIndirect,
+		CommandType::DispatchComputeIndirect,
 		offset
 	};
 
@@ -159,7 +158,7 @@ void CommandEncoder::DispatchComputeIndirect(intptr_t offset)
 void CommandEncoder::Draw(RenderPrimitiveMode mode, int32_t offset, int32_t vertexCount)
 {
 	CmdDraw data{
-		RenderCommandType::Draw,
+		CommandType::Draw,
 		mode,
 		offset,
 		vertexCount
@@ -176,7 +175,7 @@ void CommandEncoder::DrawIndexed(
 	int32_t baseVertex)
 {
 	CmdDrawIndexed data{
-		RenderCommandType::DrawIndexed,
+		CommandType::DrawIndexed,
 		mode,
 		indexType,
 		indexOffset,
@@ -197,7 +196,7 @@ void CommandEncoder::DrawIndexedInstanced(
 	uint32_t baseInstance)
 {
 	CmdDrawIndexedInstanced data{
-		RenderCommandType::DrawIndexedInstanced,
+		CommandType::DrawIndexedInstanced,
 		mode,
 		indexType,
 		indexOffset,
@@ -213,7 +212,7 @@ void CommandEncoder::DrawIndexedInstanced(
 void CommandEncoder::DrawIndirect(RenderPrimitiveMode mode, intptr_t offset)
 {
 	CmdDrawIndirect data{
-		RenderCommandType::DrawIndirect,
+		CommandType::DrawIndirect,
 		mode,
 		offset
 	};
@@ -224,7 +223,7 @@ void CommandEncoder::DrawIndirect(RenderPrimitiveMode mode, intptr_t offset)
 void CommandEncoder::DrawIndexedIndirect(RenderPrimitiveMode mode, RenderIndexType indexType, intptr_t offset)
 {
 	CmdDrawIndexedIndirect data{
-		RenderCommandType::DrawIndexedIndirect,
+		CommandType::DrawIndexedIndirect,
 		mode,
 		indexType,
 		offset
@@ -240,7 +239,7 @@ void CommandEncoder::DrawIndexedIndirect(RenderPrimitiveMode mode, RenderIndexTy
 void CommandEncoder::BindFramebuffer(render::FramebufferId framebuffer)
 {
 	CmdBindFramebuffer data{
-		RenderCommandType::BindFramebuffer,
+		CommandType::BindFramebuffer,
 		framebuffer,
 	};
 
@@ -255,7 +254,7 @@ void CommandEncoder::BindFramebuffer(render::FramebufferId framebuffer)
 void CommandEncoder::BindSampler(uint32_t textureUnit, render::SamplerId sampler)
 {
 	CmdBindSampler data{
-		RenderCommandType::BindSampler,
+		CommandType::BindSampler,
 		textureUnit,
 		sampler
 	};
@@ -270,7 +269,7 @@ void CommandEncoder::BindSampler(uint32_t textureUnit, render::SamplerId sampler
 void CommandEncoder::UseShaderProgram(render::ShaderId shader)
 {
 	CmdUseShaderProgram data{
-		RenderCommandType::UseShaderProgram,
+		CommandType::UseShaderProgram,
 		shader
 	};
 
@@ -283,19 +282,19 @@ void CommandEncoder::UseShaderProgram(render::ShaderId shader)
 
 void CommandEncoder::BlendingEnable()
 {
-	Command data{ RenderCommandType::BlendingEnable };
+	Command data{ CommandType::BlendingEnable };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::BlendingDisable()
 {
-	Command data{ RenderCommandType::BlendingDisable };
+	Command data{ CommandType::BlendingDisable };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor)
 {
-	CmdBlendFunction data{ RenderCommandType::BlendFunction, srcFactor, dstFactor };
+	CmdBlendFunction data{ CommandType::BlendFunction, srcFactor, dstFactor };
 	CopyCommand(&data, sizeof(data));
 }
 
@@ -307,7 +306,7 @@ void CommandEncoder::SetBlendFunctionSeparate(
 	RenderBlendFactor dstFactorAlpha)
 {
 	CmdSetBlendFunctionSeparate data{
-		RenderCommandType::SetBlendFunctionSeparate,
+		CommandType::SetBlendFunctionSeparate,
 		attachmentIndex,
 		srcFactorRgb,
 		dstFactorRgb,
@@ -321,7 +320,7 @@ void CommandEncoder::SetBlendFunctionSeparate(
 void CommandEncoder::SetBlendEquation(uint32_t attachmentIndex, RenderBlendEquation equation)
 {
 	CmdSetBlendEquation data{
-		RenderCommandType::SetBlendEquation,
+		CommandType::SetBlendEquation,
 		attachmentIndex,
 		equation
 	};
@@ -331,67 +330,67 @@ void CommandEncoder::SetBlendEquation(uint32_t attachmentIndex, RenderBlendEquat
 
 void CommandEncoder::SetCullFace(RenderCullFace cullFace)
 {
-	CmdSetCullFace data{ RenderCommandType::SetCullFace, cullFace };
+	CmdSetCullFace data{ CommandType::SetCullFace, cullFace };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::DepthTestEnable()
 {
-	Command data{ RenderCommandType::DepthTestEnable };
+	Command data{ CommandType::DepthTestEnable };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::DepthTestDisable()
 {
-	Command data{ RenderCommandType::DepthTestDisable };
+	Command data{ CommandType::DepthTestDisable };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::SetDepthTestFunction(RenderDepthCompareFunc function)
 {
-	CmdSetDepthTestFunction data{ RenderCommandType::SetDepthTestFunction, function };
+	CmdSetDepthTestFunction data{ CommandType::SetDepthTestFunction, function };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::DepthWriteEnable()
 {
-	Command data{ RenderCommandType::DepthWriteEnable };
+	Command data{ CommandType::DepthWriteEnable };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::DepthWriteDisable()
 {
-	Command data{ RenderCommandType::DepthWriteDisable };
+	Command data{ CommandType::DepthWriteDisable };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::StencilTestDisable()
 {
-	Command data{ RenderCommandType::StencilTestDisable };
+	Command data{ CommandType::StencilTestDisable };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::ScissorTestEnable()
 {
-	Command data{ RenderCommandType::ScissorTestEnable };
+	Command data{ CommandType::ScissorTestEnable };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::ScissorTestDisable()
 {
-	Command data{ RenderCommandType::ScissorTestDisable };
+	Command data{ CommandType::ScissorTestDisable };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::SetScissorRectangle(int32_t x, int32_t y, int32_t w, int32_t h)
 {
-	CmdSetScissorRectangle data{ RenderCommandType::SetScissorRectangle, x, y, w, h };
+	CmdSetScissorRectangle data{ CommandType::SetScissorRectangle, x, y, w, h };
 	CopyCommand(&data, sizeof(data));
 }
 
 void CommandEncoder::SetViewport(int32_t x, int32_t y, int32_t w, int32_t h)
 {
-	CmdSetViewport data{ RenderCommandType::SetViewport, x, y, w, h };
+	CmdSetViewport data{ CommandType::SetViewport, x, y, w, h };
 	CopyCommand(&data, sizeof(data));
 }
 
@@ -405,7 +404,7 @@ void CommandEncoder::BindTextureToShader(
 	render::TextureId texture)
 {
 	CmdBindTextureToShader data{
-		RenderCommandType::BindTextureToShader,
+		CommandType::BindTextureToShader,
 		uniformLocation,
 		textureUnit,
 		texture
@@ -421,7 +420,7 @@ void CommandEncoder::BindTextureToShader(
 void CommandEncoder::BindVertexArray(render::VertexArrayId id)
 {
 	CmdBindVertexArray data{
-		RenderCommandType::BindVertexArray,
+		CommandType::BindVertexArray,
 		id
 	};
 
@@ -435,7 +434,7 @@ void CommandEncoder::BindVertexArray(render::VertexArrayId id)
 void CommandEncoder::MemoryBarrier(const MemoryBarrierFlags& barrier)
 {
 	CmdMemoryBarrier data{
-		RenderCommandType::MemoryBarrier,
+		CommandType::MemoryBarrier,
 		barrier
 	};
 

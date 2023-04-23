@@ -6,7 +6,6 @@
 
 class Allocator;
 class MaterialManager;
-class ShaderManager;
 class TextureManager;
 struct MaterialId;
 
@@ -14,6 +13,7 @@ namespace kokko
 {
 
 class AssetInfo;
+class ShaderManager;
 class UniformData;
 
 struct BufferUniform;

@@ -28,5 +28,5 @@ struct CommandBuffer
 	Array<uint8_t> commandData;
 };
 
-}
-}
+} // namespace render
+} // namespace kokko

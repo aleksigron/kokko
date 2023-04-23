@@ -39,5 +39,5 @@ private:
 	String name;
 };
 
-}
-}
+} // namespace editor
+} // namespace kokko

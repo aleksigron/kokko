@@ -10,6 +10,9 @@
 #include "Resources/MeshPresets.hpp"
 #include "Resources/ShaderManager.hpp"
 
+namespace kokko
+{
+
 PostProcessRenderer::PostProcessRenderer(
 	kokko::render::CommandEncoder* encoder,
 	MeshManager* meshManager,
@@ -93,7 +96,7 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 }
 
 void PostProcessRenderer::BindTextures(const ShaderData& shader, unsigned int count,
-	const uint32_t* nameHashes, const kokko::render::TextureId* textures, const kokko::render::SamplerId* samplers)
+	const uint32_t* nameHashes, const render::TextureId* textures, const render::SamplerId* samplers)
 {
 	for (unsigned int i = 0; i < count; ++i)
 	{
@@ -106,3 +109,5 @@ void PostProcessRenderer::BindTextures(const ShaderData& shader, unsigned int co
 		}
 	}
 }
+
+} // namespace kokko

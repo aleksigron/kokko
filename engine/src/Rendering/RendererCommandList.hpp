@@ -9,6 +9,9 @@
 
 class Allocator;
 
+namespace kokko
+{
+
 enum class RendererCommandType
 {
 	Control = 0,
@@ -75,3 +78,5 @@ struct RendererCommandList
 
 	void Clear();
 };
+
+} // namespace kokko

@@ -12,7 +12,7 @@
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/Renderer.hpp"
 
-DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
+DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, kokko::DebugVectorRenderer* vectorRenderer) :
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
 	cullingCameraIsLocked(false)
@@ -28,7 +28,7 @@ void DebugCulling::SetLockCullingCamera(bool lockCullingCamera)
 	cullingCameraIsLocked = lockCullingCamera;
 }
 
-void DebugCulling::UpdateAndDraw(World* world)
+void DebugCulling::UpdateAndDraw(kokko::World* world)
 {
 	if (cullingCameraIsLocked)
 	{

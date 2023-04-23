@@ -12,14 +12,13 @@
 #include "Rendering/RenderTypes.hpp"
 
 class Allocator;
-class RenderDevice;
-
-struct ShaderData;
 
 namespace kokko
 {
 
 class Filesystem;
+
+struct ShaderData;
 
 namespace render
 {
@@ -50,7 +49,6 @@ public:
 	static constexpr size_t MaxStageCount = 3;
 
 private:
-
 	static const char* const LineBreakChars;
 	static const char* const WhitespaceChars;
 
@@ -94,4 +92,4 @@ private:
 		String& processedSourceOut);
 };
 
-}
+} // namespace kokko

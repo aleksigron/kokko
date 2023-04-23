@@ -48,10 +48,10 @@ public:
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) = 0;
 
 	virtual void SetDebugMessageCallback(DebugCallbackFn callback) = 0;
-	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label) = 0;
-	virtual void SetObjectPtrLabel(void* ptr, kokko::ConstStringView label) = 0;
-	DeviceDebugScope CreateDebugScope(uint32_t id, kokko::ConstStringView message);
-	virtual void BeginDebugScope(uint32_t id, kokko::ConstStringView message) = 0;
+	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, ConstStringView label) = 0;
+	virtual void SetObjectPtrLabel(void* ptr, ConstStringView label) = 0;
+	DeviceDebugScope CreateDebugScope(uint32_t id, ConstStringView message);
+	virtual void BeginDebugScope(uint32_t id, ConstStringView message) = 0;
 	virtual void EndDebugScope() = 0;
 
 	virtual void CreateFramebuffers(unsigned int count, FramebufferId* framebuffersOut) = 0;

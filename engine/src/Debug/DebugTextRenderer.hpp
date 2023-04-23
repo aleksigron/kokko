@@ -12,7 +12,6 @@
 
 class Allocator;
 class BitmapFont;
-class ShaderManager;
 class MeshManager;
 class TextureManager;
 
@@ -20,6 +19,7 @@ namespace kokko
 {
 
 class Filesystem;
+class ShaderManager;
 
 namespace render
 {
@@ -43,7 +43,7 @@ private:
 	Allocator* allocator;
 	kokko::render::Device* renderDevice;
 	kokko::Filesystem* filesystem;
-	ShaderManager* shaderManager;
+	kokko::ShaderManager* shaderManager;
 	MeshManager* meshManager;
 
 	BitmapFont* font;
@@ -69,7 +69,7 @@ public:
 	DebugTextRenderer(Allocator* allocator, kokko::render::Device* renderDevice, kokko::Filesystem* filesystem);
 	~DebugTextRenderer();
 
-	bool Initialize(ShaderManager* shaderManager,
+	bool Initialize(kokko::ShaderManager* shaderManager,
 		MeshManager* meshManager, TextureManager* textureManager);
 
 	bool HasValidFont() const { return font != nullptr; }
