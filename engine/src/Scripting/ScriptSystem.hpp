@@ -22,9 +22,9 @@ private:
 	void* app;
 	Allocator* allocator;
 
-	Array<NativeScriptComponent*> scripts;
-	Array<NativeScriptComponent*> scriptsToInit;
-	Array<NativeScriptComponent*> scriptsToDestroy;
+	kokko::Array<NativeScriptComponent*> scripts;
+	kokko::Array<NativeScriptComponent*> scriptsToInit;
+	kokko::Array<NativeScriptComponent*> scriptsToDestroy;
 
 	HashMap<unsigned int, unsigned int> entityMap;
 

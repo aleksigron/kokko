@@ -16,6 +16,9 @@
 
 class Allocator;
 
+namespace kokko
+{
+
 class LightManager : public TransformUpdateReceiver
 {
 private:
@@ -28,7 +31,7 @@ private:
 	{
 		unsigned int count;
 		unsigned int allocated;
-		void *buffer;
+		void* buffer;
 
 		Entity* entity;
 		Vec3f* position;
@@ -107,3 +110,5 @@ public:
 	void GetDirectionalLights(Array<LightId>& output);
 	void GetNonDirectionalLightsWithinFrustum(const FrustumPlanes& frustum, Array<LightId>& output);
 };
+
+} // namespace kokko

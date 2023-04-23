@@ -6,7 +6,7 @@
 
 TEST_CASE("Array can hold items")
 {
-	Array<int> a(Allocator::GetDefault());
+	kokko::Array<int> a(Allocator::GetDefault());
 
 	CHECK(a.GetCount() == 0);
 	a.PushBack(1);
@@ -19,7 +19,7 @@ TEST_CASE("Array can hold items")
 
 TEST_CASE("Array multiple items can be inserted")
 {
-	Array<int> a(Allocator::GetDefault());
+	kokko::Array<int> a(Allocator::GetDefault());
 
 	int values[] = { 0, 1, 2 };
 	a.Insert(0, values, 3);
@@ -32,7 +32,7 @@ TEST_CASE("Array multiple items can be inserted")
 
 TEST_CASE("Array items can be removed")
 {
-	Array<int> a(Allocator::GetDefault());
+	kokko::Array<int> a(Allocator::GetDefault());
 
 	int values[] = { 0, 1, 2 };
 	a.Insert(0, values, 3);
@@ -48,7 +48,7 @@ TEST_CASE("Array items can be removed")
 
 TEST_CASE("Array can be iterated")
 {
-	Array<int> a(Allocator::GetDefault());
+	kokko::Array<int> a(Allocator::GetDefault());
 
 	int values[] = { 0, 1, 2 };
 	a.Insert(0, values, 3);
@@ -57,8 +57,8 @@ TEST_CASE("Array can be iterated")
 
 	{
 		int iterationCount = 0;
-		Array<int>::Iterator itr = a.begin();
-		Array<int>::Iterator end = a.end();
+		kokko::Array<int>::Iterator itr = a.begin();
+		kokko::Array<int>::Iterator end = a.end();
 		for (; itr != end; ++itr)
 		{
 			CHECK(*itr == iterationCount);
@@ -81,7 +81,7 @@ TEST_CASE("Array memory is allocated and released")
 	Allocator* allocator = Allocator::GetDefault();
 	MetricAllocator metricAllocator(nullptr, allocator);
 	{
-		Array<int> a(&metricAllocator);
+		kokko::Array<int> a(&metricAllocator);
 
 		int values[] = { 0, 1, 2 };
 		a.Insert(0, values, 3);

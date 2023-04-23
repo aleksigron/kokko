@@ -4,6 +4,9 @@
 
 #include "Core/Array.hpp"
 
+namespace kokko
+{
+
 template <typename ValueType>
 class SortedArray
 {
@@ -130,3 +133,5 @@ public:
 	typename Array<ValueType>::Iterator begin() { return a.begin(); }
 	typename Array<ValueType>::Iterator end() { return a.end(); }
 };
+
+} // namespace kokko

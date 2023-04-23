@@ -12,6 +12,9 @@
 
 class ParticleSystem;
 
+namespace kokko
+{
+
 class LightSerializer final : public ComponentSerializer
 {
 private:
@@ -144,3 +147,5 @@ public:
 		}
 	}
 };
+
+} // namespace kokko

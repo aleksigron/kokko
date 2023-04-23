@@ -63,8 +63,8 @@ private:
 	data;
 
 	HashMap<unsigned int, SceneObjectId> entityMap;
-	SortedArray<unsigned int> updatedEntities;
-	Array<Mat4x4f> updatedTransforms;
+	kokko::SortedArray<unsigned int> updatedEntities;
+	kokko::Array<Mat4x4f> updatedTransforms;
 
 	void Reallocate(unsigned int required);
 

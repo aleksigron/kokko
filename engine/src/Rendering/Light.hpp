@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 enum class LightType
 {
 	Directional,
@@ -16,3 +19,5 @@ struct LightId
 
 	static const LightId Null;
 };
+
+} // namespace kokko
