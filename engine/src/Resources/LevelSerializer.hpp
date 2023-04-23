@@ -7,7 +7,6 @@
 #include "Resources/ResourceManagers.hpp"
 
 class Allocator;
-class World;
 class ComponentSerializer;
 class TransformSerializer;
 
@@ -23,12 +22,13 @@ class Node;
 namespace kokko
 {
 class String;
+class World;
 
 namespace render
 {
 class Device;
 }
-}
+} // namespace kokko
 
 class LevelSerializer
 {
@@ -36,7 +36,7 @@ public:
 	LevelSerializer(Allocator* allocator, kokko::render::Device* renderDevice);
 	~LevelSerializer();
 
-	void Initialize(World* world, const kokko::ResourceManagers& resourceManagers);
+	void Initialize(kokko::World* world, const kokko::ResourceManagers& resourceManagers);
 
 	void DeserializeFromString(const char* data);
 	void SerializeToString(kokko::String& out);
@@ -47,7 +47,7 @@ public:
 private:
 	Allocator* allocator;
 	kokko::render::Device* renderDevice;
-	World* world;
+	kokko::World* world;
 	kokko::ResourceManagers resourceManagers;
 
 	TransformSerializer* transformSerializer;

@@ -104,7 +104,7 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 	}
 	case EntityComponentType::Environment:
 	{
-		kokko::EnvironmentSystem* environmentSystem = world->GetEnvironmentSystem();
+		EnvironmentSystem* environmentSystem = world->GetEnvironmentSystem();
 		EnvironmentId envId = environmentSystem->Lookup(entity);
 		if (envId == EnvironmentId::Null)
 			envId = environmentSystem->AddComponent(entity);
@@ -169,7 +169,7 @@ void EntityFactory::RemoveComponentIfExists(World* world, Entity entity, EntityC
 	}
 	case EntityComponentType::Environment:
 	{
-		kokko::EnvironmentSystem* environmentSystem = world->GetEnvironmentSystem();
+		EnvironmentSystem* environmentSystem = world->GetEnvironmentSystem();
 		EnvironmentId envId = environmentSystem->Lookup(entity);
 		if (envId != EnvironmentId::Null)
 			environmentSystem->RemoveComponent(envId);

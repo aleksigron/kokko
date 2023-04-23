@@ -329,8 +329,8 @@ TEST_CASE("StringView can find last substring")
 
 // Explicit template instantiation, we don't need any other types than these
 
-template class StringView<char>;
-template class StringView<const char>;
+template struct StringView<char>;
+template struct StringView<const char>;
 
 uint32_t Hash32(const ConstStringView& value, uint32_t seed)
 {

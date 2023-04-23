@@ -174,6 +174,7 @@ set (KOKKO_SOURCES
 	src/Graphics/TransformUpdateReceiver.hpp
 	src/Graphics/Scene.cpp
 	src/Graphics/Scene.hpp
+	src/Math/BoundingBox.cpp
 	src/Math/BoundingBox.hpp
 	src/Math/Frustum.hpp
 	src/Math/Intersect3D.cpp
@@ -259,9 +260,8 @@ set (KOKKO_SOURCES
     src/Rendering/RenderPass.cpp
     src/Rendering/RenderPassDescriptor.hpp
 	src/Rendering/RenderPassType.hpp
+	src/Rendering/RenderResourceId.cpp
 	src/Rendering/RenderResourceId.hpp
-	src/Rendering/RenderResourceMap.cpp
-	src/Rendering/RenderResourceMap.hpp
 	src/Rendering/RenderTargetContainer.cpp
 	src/Rendering/RenderTargetContainer.hpp
     src/Rendering/RenderTypes.cpp

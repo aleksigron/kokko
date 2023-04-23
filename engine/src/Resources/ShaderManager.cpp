@@ -15,6 +15,9 @@
 
 const ShaderId ShaderId::Null = ShaderId{ 0 };
 
+namespace kokko
+{
+
 ShaderManager::ShaderManager(
 	Allocator* allocator,
 	kokko::Filesystem* filesystem,
@@ -121,7 +124,7 @@ void ShaderManager::RemoveShader(ShaderId id)
 		allocator->Deallocate(data.shader[id.i].buffer);
 		data.shader[id.i].buffer = nullptr;
 	}
-	 
+
 	// If material isn't the last one, add it to the freelist
 	if (id.i < data.count - 1)
 	{
@@ -190,3 +193,5 @@ ShaderId ShaderManager::FindShaderByPath(kokko::ConstStringView path)
 
 	return ShaderId::Null;
 }
+
+} // namespace kokko

@@ -9,12 +9,9 @@ class Allocator;
 class AllocatorManager;
 class RenderDevice;
 class MeshManager;
-class ShaderManager;
 class TextureManager;
 class Renderer;
-class World;
 
-class DebugVectorRenderer;
 class DebugTextRenderer;
 class DebugGraph;
 class DebugCulling;
@@ -26,8 +23,11 @@ struct CameraParameters;
 
 namespace kokko
 {
+class DebugVectorRenderer;
 class Filesystem;
+class ShaderManager;
 class Window;
+class World;
 
 namespace render
 {
@@ -45,7 +45,7 @@ private:
 	Allocator* allocator;
 	kokko::render::Device* renderDevice;
 
-	DebugVectorRenderer* vectorRenderer;
+	kokko::DebugVectorRenderer* vectorRenderer;
 	DebugTextRenderer* textRenderer;
 	DebugGraph* graph;
 	DebugCulling* culling;
@@ -79,18 +79,18 @@ public:
 	static Debug* Get() { return singletonInstance; }
 
 	bool Initialize(kokko::Window* window, MeshManager* meshManager,
-		ShaderManager* shaderManager, TextureManager* textureManager);
+		kokko::ShaderManager* shaderManager, TextureManager* textureManager);
 	void Deinitialize();
 
 	void Render(
 		kokko::render::CommandEncoder* encoder,
-		World* world,
+		kokko::World* world,
 		const kokko::render::Framebuffer& framebuffer,
 		const Optional<CameraParameters>& editorCamera);
 
 	DebugConsole* GetConsole() { return console; }
 	DebugTextRenderer* GetTextRenderer() { return textRenderer; }
-	DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer; }
+	kokko::DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer; }
 
 	void RequestBeginProfileSession();
 

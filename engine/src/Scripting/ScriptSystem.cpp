@@ -32,7 +32,7 @@ void ScriptSystem::AddScriptInternal(Entity entity, NativeScriptComponent* scrip
 	mapPair->second = static_cast<unsigned int>(scriptIndex);
 }
 
-void ScriptSystem::UpdateScripts(World* world, InputManager* inputManager)
+void ScriptSystem::UpdateScripts(kokko::World* world, InputManager* inputManager)
 {
 	KOKKO_PROFILE_FUNCTION();
 

@@ -24,6 +24,7 @@
 #include "Rendering/Framebuffer.hpp"
 #include "Rendering/Renderer.hpp"
 #include "Rendering/RenderDevice.hpp"
+#include "Rendering/RenderTypes.hpp"
 
 #include "Resources/BitmapFont.hpp"
 #include "Resources/ShaderManager.hpp"
@@ -59,7 +60,7 @@ Debug::Debug(
 	nextFrameRateUpdate(-1.0),
 	mode(DebugMode::None)
 {
-	vectorRenderer = allocator->MakeNew<DebugVectorRenderer>(allocator, renderDevice);
+	vectorRenderer = allocator->MakeNew<kokko::DebugVectorRenderer>(allocator, renderDevice);
 	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator, renderDevice, filesystem);
 	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
 	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
@@ -84,7 +85,7 @@ Debug::~Debug()
 }
 
 bool Debug::Initialize(kokko::Window* window, MeshManager* meshManager,
-	ShaderManager* shaderManager, TextureManager* textureManager)
+	kokko::ShaderManager* shaderManager, TextureManager* textureManager)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -108,7 +109,8 @@ void Debug::Deinitialize()
 	vectorRenderer->Deinitialize();
 }
 
-void Debug::Render(kokko::render::CommandEncoder* encoder, World* world, const kokko::render::Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera)
+void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
+	const kokko::render::Framebuffer& framebuffer, const Optional<CameraParameters>& editorCamera)
 {
 	KOKKO_PROFILE_FUNCTION();
 

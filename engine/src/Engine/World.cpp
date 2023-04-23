@@ -26,13 +26,16 @@
 
 #include "Platform/Window.hpp"
 
+namespace kokko
+{
+
 World::World(AllocatorManager* allocManager,
 	Allocator* allocator,
 	Allocator* debugNameAllocator,
-	kokko::render::Device* renderDevice,
-	kokko::render::CommandEncoder* commandEncoder,
-	kokko::AssetLoader* assetLoader,
-	const kokko::ResourceManagers& resourceManagers) :
+	render::Device* renderDevice,
+	render::CommandEncoder* commandEncoder,
+	AssetLoader* assetLoader,
+	const ResourceManagers& resourceManagers) :
 	allocator(allocator),
 	commandEncoder(commandEncoder),
 	levelSerializer(allocator, renderDevice),
@@ -126,7 +129,7 @@ void World::Update(InputManager* inputManager)
 	scriptSystem.instance->UpdateScripts(this, inputManager);
 }
 
-void World::Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera, const kokko::render::Framebuffer& framebuffer)
+void World::Render(Window* window, const Optional<CameraParameters>& editorCamera, const render::Framebuffer& framebuffer)
 {
 	// Propagate transform updates from Scene to other systems that require it
 	TransformUpdateReceiver* transformUpdateReceivers[] =
@@ -144,7 +147,9 @@ void World::Render(kokko::Window* window, const Optional<CameraParameters>& edit
 	renderer.instance->Render(window, editorCamera, framebuffer);
 }
 
-void World::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& renderDebug)
+void World::DebugRender(DebugVectorRenderer* vectorRenderer, const RenderDebugSettings& renderDebug)
 {
 	renderer.instance->DebugRender(vectorRenderer, renderDebug);
 }
+
+} // namespace kokko

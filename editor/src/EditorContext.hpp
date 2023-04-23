@@ -7,13 +7,13 @@
 #include "Engine/Entity.hpp"
 
 class Allocator;
-class World;
 
 namespace kokko
 {
 
 class AssetLibrary;
 class FilesystemResolver;
+class World;
 
 struct EngineSettings;
 

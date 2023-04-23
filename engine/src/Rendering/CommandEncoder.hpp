@@ -135,5 +135,5 @@ private:
 	CommandBuffer* buffer;
 };
 
-}
-}
+} // namespace render
+} // namespace kokko

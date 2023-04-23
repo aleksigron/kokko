@@ -2,14 +2,14 @@
 
 #include <cstdint>
 
+namespace kokko
+{
+
 class Renderer;
 
 struct RendererCommandList;
 
 enum class RenderPassType;
-
-namespace kokko
-{
 
 class GraphicsFeatureCommandList
 {
@@ -28,4 +28,4 @@ private:
 	friend class Renderer;
 };
 
-}
+} // namespace kokko

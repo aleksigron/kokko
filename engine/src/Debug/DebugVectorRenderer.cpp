@@ -23,6 +23,9 @@
 #include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
 
+namespace kokko
+{
+
 struct DebugVectorBlock
 {
 	alignas(16) Mat4x4f transform;
@@ -31,7 +34,7 @@ struct DebugVectorBlock
 
 DebugVectorRenderer::DebugVectorRenderer(
 	Allocator* allocator,
-	kokko::render::Device* renderDevice) :
+	render::Device* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	shaderManager(nullptr),
@@ -40,14 +43,14 @@ DebugVectorRenderer::DebugVectorRenderer(
 	dynamicMeshCount(0),
 	dynamicMeshAllocated(0),
 	meshesInitialized(false),
-	shaderId(ShaderId{0}),
+	shaderId(ShaderId{ 0 }),
 	bufferPrimitivesAllocated(0),
 	bufferAlignedSize(0)
 {
 	primitiveCount = 0;
 	primitiveAllocated = 1024;
 
-	std::size_t primitivesSize = sizeof(Primitive) * primitiveAllocated;
+	size_t primitivesSize = sizeof(Primitive) * primitiveAllocated;
 	primitives = static_cast<Primitive*>(allocator->Allocate(primitivesSize, "DebugVectorRenderer.primitives"));
 }
 
@@ -59,7 +62,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("DebugVec_InitResources"));
+	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("DebugVec_InitResources"));
 
 	int alignment = 0;
 	renderDevice->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &alignment);
@@ -71,7 +74,7 @@ void DebugVectorRenderer::Initialize(MeshManager* meshManager, ShaderManager* sh
 	// Initialize shaders
 
 	const char* shaderPath = "engine/shaders/debug/debug_vector.glsl";
-	shaderId = shaderManager->FindShaderByPath(kokko::ConstStringView(shaderPath));
+	shaderId = shaderManager->FindShaderByPath(ConstStringView(shaderPath));
 
 	// Initialize meshes
 
@@ -237,7 +240,7 @@ void DebugVectorRenderer::Deinitialize()
 	if (uniformBufferId != 0)
 	{
 		renderDevice->DestroyBuffers(1, &uniformBufferId);
-		uniformBufferId = kokko::render::BufferId();
+		uniformBufferId = render::BufferId();
 		bufferPrimitivesAllocated = 0;
 	}
 }
@@ -584,3 +587,4 @@ void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* 
 	}
 }
 
+} // namespace kokko

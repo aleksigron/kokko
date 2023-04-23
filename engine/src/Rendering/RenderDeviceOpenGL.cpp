@@ -24,7 +24,7 @@ static void DebugMessageCallback(
 		ConvertDebugType(type),
 		id,
 		ConvertDebugSeverity(severity),
-		kokko::ConstStringView(msg, static_cast<unsigned int>(length))
+		ConstStringView(msg, static_cast<unsigned int>(length))
 	};
 
 	if (data->callback)
@@ -55,17 +55,17 @@ void DeviceOpenGL::SetDebugMessageCallback(DebugCallbackFn callback)
 	glDebugMessageCallback(DebugMessageCallback, &debugUserData);
 }
 
-void DeviceOpenGL::SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label)
+void DeviceOpenGL::SetObjectLabel(RenderObjectType type, unsigned int object, ConstStringView label)
 {
 	glObjectLabel(ConvertObjectType(type), object, static_cast<GLsizei>(label.len), label.str);
 }
 
-void DeviceOpenGL::SetObjectPtrLabel(void* ptr, kokko::ConstStringView label)
+void DeviceOpenGL::SetObjectPtrLabel(void* ptr, ConstStringView label)
 {
 	glObjectPtrLabel(ptr, static_cast<GLsizei>(label.len), label.str);
 }
 
-void DeviceOpenGL::BeginDebugScope(uint32_t id, kokko::ConstStringView message)
+void DeviceOpenGL::BeginDebugScope(uint32_t id, ConstStringView message)
 {
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, message.len, message.str);
 }

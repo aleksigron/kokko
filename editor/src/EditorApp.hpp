@@ -10,7 +10,6 @@
 
 class Allocator;
 class Engine;
-class World;
 
 struct CameraParameters;
 
@@ -20,8 +19,9 @@ namespace kokko
 class AssetLibrary;
 class Filesystem;
 class FilesystemResolverVirtual;
-class Window;
 class ImguiImplOpenGL;
+class Window;
+class World;
 
 struct Uid;
 struct EngineSettings;
@@ -105,5 +105,5 @@ private:
 	uint64_t currentDialogId;
 };
 
-}
-}
+} // namespace editor
+} // namespace kokko

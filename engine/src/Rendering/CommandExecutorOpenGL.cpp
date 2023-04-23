@@ -7,7 +7,6 @@
 #include "Rendering/RenderCommandBuffer.hpp"
 #include "Rendering/RenderCommand.hpp"
 #include "Rendering/RenderDeviceEnumsOpenGL.hpp"
-#include "Rendering/RenderResourceMap.hpp"
 
 namespace kokko
 {
@@ -29,7 +28,7 @@ void CommandExecutorOpenGL::Execute(const CommandBuffer* commandBuffer)
 	while (commandOffset < end)
 	{
 		const uint8_t* commandBegin = &cmdBuffer->commands[commandOffset];
-		RenderCommandType type = *reinterpret_cast<const RenderCommandType*>(commandBegin);
+		CommandType type = *reinterpret_cast<const CommandType*>(commandBegin);
 		size_t bytesProcessed = ParseCommand(type, commandBegin);
 
 		if (bytesProcessed == 0)
@@ -43,7 +42,7 @@ void CommandExecutorOpenGL::Execute(const CommandBuffer* commandBuffer)
 	}
 }
 
-size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t* commandBegin)
+size_t CommandExecutorOpenGL::ParseCommand(CommandType type, const uint8_t* commandBegin)
 {
 	switch (type)
 	{
@@ -51,7 +50,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== DEBUG GROUPS ====
 	// ======================
 
-	case RenderCommandType::BeginDebugScope:
+	case CommandType::BeginDebugScope:
 	{
 		auto cmd = reinterpret_cast<const CmdBeginDebugScope*>(commandBegin);
 		auto message = reinterpret_cast<const char*>(&cmdBuffer->commandData[cmd->messageOffset]);
@@ -59,7 +58,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::EndDebugScope:
+	case CommandType::EndDebugScope:
 		glPopDebugGroup();
 		return sizeof(Command);
 
@@ -67,21 +66,21 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== BIND BUFFERS ====
 	// ======================
 
-	case RenderCommandType::BindBuffer:
+	case CommandType::BindBuffer:
 	{
 		auto cmd = reinterpret_cast<const CmdBindBuffer*>(commandBegin);
 		glBindBuffer(ConvertBufferTarget(cmd->target), cmd->buffer.i);
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::BindBufferBase:
+	case CommandType::BindBufferBase:
 	{
 		auto cmd = reinterpret_cast<const CmdBindBufferBase*>(commandBegin);
 		glBindBufferBase(ConvertBufferTarget(cmd->target), cmd->bindingPoint, cmd->buffer.i);
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::BindBufferRange:
+	case CommandType::BindBufferRange:
 	{
 		auto cmd = reinterpret_cast<const CmdBindBufferRange*>(commandBegin);
 		glBindBufferRange(ConvertBufferTarget(cmd->target), cmd->bindingPoint, cmd->buffer.i, cmd->offset, cmd->length);
@@ -92,7 +91,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== CLEAR FRAMEBUFFER ====
 	// ===========================
 
-	case RenderCommandType::Clear:
+	case CommandType::Clear:
 	{
 		auto cmd = reinterpret_cast<const CmdClear*>(commandBegin);
 		GLbitfield mask = 0;
@@ -103,14 +102,14 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::SetClearColor:
+	case CommandType::SetClearColor:
 	{
 		auto cmd = reinterpret_cast<const CmdSetClearColor*>(commandBegin);
 		glClearColor(cmd->color.x, cmd->color.y, cmd->color.z, cmd->color.w);
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::SetClearDepth:
+	case CommandType::SetClearDepth:
 	{
 		auto cmd = reinterpret_cast<const CmdSetClearDepth*>(commandBegin);
 		glClearDepth(cmd->depth);
@@ -121,14 +120,14 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== COMPUTE ====
 	// =================
 
-	case RenderCommandType::DispatchCompute:
+	case CommandType::DispatchCompute:
 	{
 		auto cmd = reinterpret_cast<const CmdDispatchCompute*>(commandBegin);
 		glDispatchCompute(cmd->numGroupsX, cmd->numGroupsY, cmd->numGroupsZ);
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::DispatchComputeIndirect:
+	case CommandType::DispatchComputeIndirect:
 	{
 		auto cmd = reinterpret_cast<const CmdDispatchComputeIndirect*>(commandBegin);
 		glDispatchComputeIndirect(cmd->offset);
@@ -139,14 +138,14 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== DRAW COMMANDS ====
 	// =======================
 
-	case RenderCommandType::Draw:
+	case CommandType::Draw:
 	{
 		auto cmd = reinterpret_cast<const CmdDraw*>(commandBegin);
 		glDrawArrays(ConvertPrimitiveMode(cmd->mode), cmd->offset, cmd->vertexCount);
 		return sizeof(*cmd);
 	}
 	
-	case RenderCommandType::DrawIndexed:
+	case CommandType::DrawIndexed:
 	{
 		auto cmd = reinterpret_cast<const CmdDrawIndexed*>(commandBegin);
 		glDrawElementsBaseVertex(
@@ -158,7 +157,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::DrawIndexedInstanced:
+	case CommandType::DrawIndexedInstanced:
 	{
 		auto cmd = reinterpret_cast<const CmdDrawIndexedInstanced*>(commandBegin);
 		glDrawElementsInstancedBaseVertexBaseInstance(
@@ -172,14 +171,14 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::DrawIndirect:
+	case CommandType::DrawIndirect:
 	{
 		auto cmd = reinterpret_cast<const CmdDrawIndirect*>(commandBegin);
 		glDrawArraysIndirect(ConvertPrimitiveMode(cmd->mode), reinterpret_cast<const void*>(cmd->offset));
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::DrawIndexedIndirect:
+	case CommandType::DrawIndexedIndirect:
 	{
 		auto cmd = reinterpret_cast<const CmdDrawIndexedIndirect*>(commandBegin);
 		glDrawElementsIndirect(ConvertPrimitiveMode(cmd->mode), ConvertIndexType(cmd->indexType),
@@ -191,7 +190,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== FRAMEBUFFER ====
 	// =====================
 
-	case RenderCommandType::BindFramebuffer:
+	case CommandType::BindFramebuffer:
 	{
 		auto cmd = reinterpret_cast<const CmdBindFramebuffer*>(commandBegin);
 		glBindFramebuffer(GL_FRAMEBUFFER, cmd->framebuffer.i);
@@ -202,7 +201,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== SAMPLER ====
 	// =================
 
-	case RenderCommandType::BindSampler:
+	case CommandType::BindSampler:
 	{
 		auto cmd = reinterpret_cast<const CmdBindSampler*>(commandBegin);
 		glBindSampler(cmd->textureUnit, cmd->sampler.i);
@@ -213,7 +212,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== SHADER ====
 	// ================
 
-	case RenderCommandType::UseShaderProgram:
+	case CommandType::UseShaderProgram:
 	{
 		auto cmd = reinterpret_cast<const CmdUseShaderProgram*>(commandBegin);
 		glUseProgram(cmd->shader.i);
@@ -224,22 +223,22 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== STATE ====
 	// ===============
 
-	case RenderCommandType::BlendingEnable:
+	case CommandType::BlendingEnable:
 		glEnable(GL_BLEND);
 		return sizeof(Command);
 
-	case RenderCommandType::BlendingDisable:
+	case CommandType::BlendingDisable:
 		glDisable(GL_BLEND);
 		return sizeof(Command);
 
-	case RenderCommandType::BlendFunction:
+	case CommandType::BlendFunction:
 	{
 		auto cmd = reinterpret_cast<const CmdBlendFunction*>(commandBegin);
 		glBlendFunc(ConvertBlendFactor(cmd->srcFactor), ConvertBlendFactor(cmd->dstFactor));
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::SetBlendFunctionSeparate:
+	case CommandType::SetBlendFunctionSeparate:
 	{
 		auto cmd = reinterpret_cast<const CmdSetBlendFunctionSeparate*>(commandBegin);
 		glBlendFuncSeparatei(
@@ -251,7 +250,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::SetBlendEquation:
+	case CommandType::SetBlendEquation:
 	{
 		auto cmd = reinterpret_cast<const CmdSetBlendEquation*>(commandBegin);
 		glBlendEquationi(
@@ -260,7 +259,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::SetCullFace:
+	case CommandType::SetCullFace:
 	{
 		auto cmd = reinterpret_cast<const CmdSetCullFace*>(commandBegin);
 		if (cmd->cullFace != RenderCullFace::None)
@@ -273,49 +272,49 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::DepthTestEnable:
+	case CommandType::DepthTestEnable:
 		glEnable(GL_DEPTH_TEST);
 		return sizeof(Command);
 
-	case RenderCommandType::DepthTestDisable:
+	case CommandType::DepthTestDisable:
 		glDisable(GL_DEPTH_TEST);
 		return sizeof(Command);
 
-	case RenderCommandType::SetDepthTestFunction:
+	case CommandType::SetDepthTestFunction:
 	{
 		auto cmd = reinterpret_cast<const CmdSetDepthTestFunction*>(commandBegin);
 		glDepthFunc(ConvertDepthCompareFunc(cmd->function));
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::DepthWriteEnable:
+	case CommandType::DepthWriteEnable:
 		glDepthMask(GL_TRUE);
 		return sizeof(Command);
 
-	case RenderCommandType::DepthWriteDisable:
+	case CommandType::DepthWriteDisable:
 		glDepthMask(GL_FALSE);
 		return sizeof(Command);
 
-	case RenderCommandType::StencilTestDisable:
+	case CommandType::StencilTestDisable:
 		glDisable(GL_STENCIL_TEST);
 		return sizeof(Command);
 
-	case RenderCommandType::ScissorTestEnable:
+	case CommandType::ScissorTestEnable:
 		glEnable(GL_SCISSOR_TEST);
 		return sizeof(Command);
 
-	case RenderCommandType::ScissorTestDisable:
+	case CommandType::ScissorTestDisable:
 		glDisable(GL_SCISSOR_TEST);
 		return sizeof(Command);
 
-	case RenderCommandType::SetScissorRectangle:
+	case CommandType::SetScissorRectangle:
 	{
 		auto cmd = reinterpret_cast<const CmdSetScissorRectangle*>(commandBegin);
 		glScissor(cmd->x, cmd->y, cmd->w, cmd->h);
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::SetViewport:
+	case CommandType::SetViewport:
 	{
 		auto cmd = reinterpret_cast<const CmdSetViewport*>(commandBegin);
 		glViewport(cmd->x, cmd->y, cmd->w, cmd->h);
@@ -326,7 +325,7 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== TEXTURE ====
 	// =================
 
-	case RenderCommandType::BindTextureToShader:
+	case CommandType::BindTextureToShader:
 	{
 		auto cmd = reinterpret_cast<const CmdBindTextureToShader*>(commandBegin);
 		glBindTextureUnit(cmd->textureUnit, cmd->texture.i);
@@ -338,14 +337,14 @@ size_t CommandExecutorOpenGL::ParseCommand(RenderCommandType type, const uint8_t
 	// ==== VERTEX ARRAY ====
 	// ======================
 
-	case RenderCommandType::BindVertexArray:
+	case CommandType::BindVertexArray:
 	{
 		auto cmd = reinterpret_cast<const CmdBindVertexArray*>(commandBegin);
 		glBindVertexArray(cmd->vertexArrayId.i);
 		return sizeof(*cmd);
 	}
 
-	case RenderCommandType::MemoryBarrier:
+	case CommandType::MemoryBarrier:
 	{
 		auto cmd = reinterpret_cast<const CmdMemoryBarrier*>(commandBegin);
 		GLbitfield flags = 0;

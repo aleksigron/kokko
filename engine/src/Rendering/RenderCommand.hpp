@@ -11,7 +11,7 @@ namespace kokko
 namespace render
 {
 
-enum class RenderCommandType : uint16_t
+enum class CommandType : uint16_t
 {
 	BeginDebugScope,
 	EndDebugScope,
@@ -71,7 +71,7 @@ enum class RenderCommandType : uint16_t
 
 struct Command
 {
-	RenderCommandType type;
+	CommandType type;
 };
 
 // ======================
@@ -298,5 +298,5 @@ struct CmdMemoryBarrier : public Command
 	MemoryBarrierFlags flags;
 };
 
-}
-}
+} // namespace render
+} // namespace kokko

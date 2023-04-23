@@ -9,13 +9,14 @@
 
 #include "EditorWindow.hpp"
 
-class World;
-
 struct SceneObjectId;
 struct EditorContext;
 
 namespace kokko
 {
+
+class World;
+
 namespace editor
 {
 
@@ -39,5 +40,5 @@ public:
 	virtual void Update(EditorContext& context) override;
 };
 
-}
-}
+} // namespace editor
+} // namespace kokko

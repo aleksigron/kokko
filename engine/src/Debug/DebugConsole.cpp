@@ -19,7 +19,7 @@
 DebugConsole::DebugConsole(
 	Allocator* allocator,
 	DebugTextRenderer* textRenderer,
-	DebugVectorRenderer* vectorRenderer) :
+	kokko::DebugVectorRenderer* vectorRenderer) :
 	allocator(allocator),
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),

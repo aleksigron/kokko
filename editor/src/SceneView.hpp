@@ -9,7 +9,6 @@
 #include "EditorWindow.hpp"
 
 class Window;
-class World;
 
 struct CameraParameters;
 struct EditorWindowInfo;
@@ -17,6 +16,9 @@ struct EditorContext;
 
 namespace kokko
 {
+
+class World;
+
 namespace editor
 {
 

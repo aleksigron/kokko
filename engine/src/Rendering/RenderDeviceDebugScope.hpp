@@ -14,7 +14,7 @@ class Device;
 class DeviceDebugScope
 {
 public:
-	DeviceDebugScope(Device* renderDevice, uint32_t id, kokko::ConstStringView message);
+	DeviceDebugScope(Device* renderDevice, uint32_t id, ConstStringView message);
 	DeviceDebugScope(const DeviceDebugScope&) = delete;
 	DeviceDebugScope(DeviceDebugScope&& other) noexcept;
 	~DeviceDebugScope();

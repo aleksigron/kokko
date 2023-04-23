@@ -17,6 +17,7 @@ namespace kokko
 {
 class AssetLoader;
 class MaterialSerializer;
+class ShaderManager;
 
 namespace render
 {
@@ -25,7 +26,6 @@ class Device;
 }
 
 class Allocator;
-class ShaderManager;
 class TextureManager;
 
 class MaterialManager
@@ -46,7 +46,7 @@ private:
 	Allocator* allocator;
 	kokko::AssetLoader* assetLoader;
 	kokko::render::Device* renderDevice;
-	ShaderManager* shaderManager;
+	kokko::ShaderManager* shaderManager;
 	TextureManager* textureManager;
 
 	struct InstanceData
@@ -72,7 +72,7 @@ public:
 		Allocator* allocator,
 		kokko::AssetLoader* assetLoader,
 		kokko::render::Device* renderDevice,
-		ShaderManager* shaderManager,
+		kokko::ShaderManager* shaderManager,
 		TextureManager* textureManager);
 
 	~MaterialManager();

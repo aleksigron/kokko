@@ -3,6 +3,9 @@
 #include "Core/Core.hpp"
 #include "Core/Sort.hpp"
 
+namespace kokko
+{
+
 void RendererCommandList::AddControl(
 	unsigned int viewport,
 	RenderPassType pass,
@@ -158,3 +161,5 @@ void RendererCommandList::Clear()
 	commands.Clear();
 	commandData.Clear();
 }
+
+} // namespace kokko

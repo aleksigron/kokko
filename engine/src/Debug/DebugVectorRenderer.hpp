@@ -16,22 +16,23 @@
 #include "Resources/MeshId.hpp"
 #include "Resources/ShaderId.hpp"
 
+struct Entity;
+struct CameraParameters;
+class Allocator;
+class MeshManager;
+class Window;
+
 namespace kokko
 {
+
+class ShaderManager;
+class World;
+
 namespace render
 {
 class CommandEncoder;
 class Device;
 }
-}
-
-struct Entity;
-struct CameraParameters;
-class Allocator;
-class MeshManager;
-class ShaderManager;
-class World;
-class Window;
 
 class DebugVectorRenderer
 {
@@ -58,7 +59,7 @@ private:
 	};
 
 	Allocator* allocator;
-	kokko::render::Device* renderDevice;
+	render::Device* renderDevice;
 	MeshManager* meshManager;
 	ShaderManager* shaderManager;
 
@@ -82,14 +83,14 @@ private:
 
 	ShaderId shaderId;
 
-	kokko::render::BufferId uniformBufferId;
+	render::BufferId uniformBufferId;
 	uint32_t bufferPrimitivesAllocated;
 	uint32_t bufferAlignedSize;
 
 	DynamicMesh* GetDynamicMesh(size_t byteSize);
 
 public:
-	DebugVectorRenderer(Allocator* allocator, kokko::render::Device* renderDevice);
+	DebugVectorRenderer(Allocator* allocator, render::Device* renderDevice);
 	~DebugVectorRenderer();
 
 	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager);
@@ -107,5 +108,7 @@ public:
 
 	void DrawWireFrustum(const Mat4x4f& transform, const ProjectionParameters& projection, const Color& color);
 
-	void Render(kokko::render::CommandEncoder* encoder, World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
+	void Render(render::CommandEncoder* encoder, World* world, const ViewRectangle& viewport, const Optional<CameraParameters>& editorCamera);
 };
+
+} // namespace kokko

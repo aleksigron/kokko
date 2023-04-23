@@ -10,11 +10,7 @@
 
 class Allocator;
 class AllocatorManager;
-class RenderDevice;
-class Filesystem;
 class InputManager;
-class DebugVectorRenderer;
-class Window;
 
 struct CameraParameters;
 
@@ -29,7 +25,9 @@ class ComponentSerializer;
 namespace kokko
 {
 class AssetLoader;
+class DebugVectorRenderer;
 class EnvironmentSystem;
+class Filesystem;
 class MeshComponentSystem;
 class ParticleSystem;
 class Renderer;
@@ -40,8 +38,8 @@ class Window;
 namespace render
 {
 class CommandEncoder;
+class Device;
 class Framebuffer;
-}
 }
 
 class World
@@ -50,10 +48,10 @@ public:
 	World(AllocatorManager* allocManager,
 		Allocator* allocator,
 		Allocator* debugNameAllocator,
-		kokko::render::Device* renderDevice,
-		kokko::render::CommandEncoder* commandEncoder,
-		kokko::AssetLoader* assetLoader,
-		const kokko::ResourceManagers& resourceManagers);
+		render::Device* renderDevice,
+		render::CommandEncoder* commandEncoder,
+		AssetLoader* assetLoader,
+		const ResourceManagers& resourceManagers);
 	~World();
 
 	void Initialize();
@@ -62,39 +60,41 @@ public:
 	void ClearAllEntities();
 
 	void Update(InputManager* inputManager);
-	void Render(kokko::Window* window, const Optional<CameraParameters>& editorCamera,
-		const kokko::render::Framebuffer& framebuffer);
-	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& renderDebug);
+	void Render(Window* window, const Optional<CameraParameters>& editorCamera,
+		const render::Framebuffer& framebuffer);
+	void DebugRender(DebugVectorRenderer* vectorRenderer, const RenderDebugSettings& renderDebug);
 
 	EntityManager* GetEntityManager() { return entityManager.instance; }
 	Scene* GetScene() { return scene.instance; }
-	kokko::Renderer* GetRenderer() { return renderer.instance; }
-	kokko::MeshComponentSystem* GetMeshComponentSystem() { return meshComponentSystem.instance; }
+	Renderer* GetRenderer() { return renderer.instance; }
+	MeshComponentSystem* GetMeshComponentSystem() { return meshComponentSystem.instance; }
 	LightManager* GetLightManager() { return lightManager.instance; }
 	CameraSystem* GetCameraSystem() { return cameraSystem.instance; }
-	kokko::EnvironmentSystem* GetEnvironmentSystem() { return environmentSystem.instance; }
+	EnvironmentSystem* GetEnvironmentSystem() { return environmentSystem.instance; }
 	ScriptSystem* GetScriptSystem() { return scriptSystem.instance; }
-	kokko::TerrainSystem* GetTerrainSystem() { return terrainSystem.instance; }
-	kokko::ParticleSystem* GetParticleSystem() { return particleSystem.instance; }
+	TerrainSystem* GetTerrainSystem() { return terrainSystem.instance; }
+	ParticleSystem* GetParticleSystem() { return particleSystem.instance; }
 
 	LevelSerializer* GetSerializer() { return &levelSerializer; }
 
 private:
 	Allocator* allocator;
-	kokko::render::CommandEncoder* commandEncoder;
+	render::CommandEncoder* commandEncoder;
 
 	LevelSerializer levelSerializer;
 
 	InstanceAllocatorPair<EntityManager> entityManager;
 	InstanceAllocatorPair<LightManager> lightManager;
 	InstanceAllocatorPair<CameraSystem> cameraSystem;
-	InstanceAllocatorPair<kokko::EnvironmentSystem> environmentSystem;
+	InstanceAllocatorPair<EnvironmentSystem> environmentSystem;
 	InstanceAllocatorPair<Scene> scene;
-	InstanceAllocatorPair<kokko::MeshComponentSystem> meshComponentSystem;
-	InstanceAllocatorPair<kokko::Renderer> renderer;
+	InstanceAllocatorPair<MeshComponentSystem> meshComponentSystem;
+	InstanceAllocatorPair<Renderer> renderer;
 	InstanceAllocatorPair<ScriptSystem> scriptSystem;
-	InstanceAllocatorPair<kokko::TerrainSystem> terrainSystem;
-	InstanceAllocatorPair<kokko::ParticleSystem> particleSystem;
+	InstanceAllocatorPair<TerrainSystem> terrainSystem;
+	InstanceAllocatorPair<ParticleSystem> particleSystem;
 
-	kokko::ResourceManagers resourceManagers;
+	ResourceManagers resourceManagers;
 };
+
+} // namespace kokko

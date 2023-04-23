@@ -6,9 +6,12 @@
 #include "Math/Vec3.hpp"
 #include "Math/Rectangle.hpp"
 
-class DebugVectorRenderer;
-
 class Allocator;
+
+namespace kokko
+{
+class DebugVectorRenderer;
+}
 
 class DebugGraph
 {
@@ -19,7 +22,7 @@ private:
 		double time;
 	};
 
-	DebugVectorRenderer* vectorRenderer;
+	kokko::DebugVectorRenderer* vectorRenderer;
 	Rectanglef drawArea;
 	Queue<DataPoint> data;
 	Array<Vec3f> pointStorage;
@@ -27,7 +30,7 @@ private:
 	double timeRange;
 
 public:
-	DebugGraph(Allocator* allocator, DebugVectorRenderer* vr);
+	DebugGraph(Allocator* allocator, kokko::DebugVectorRenderer* vr);
 	~DebugGraph();
 
 	void SetDrawArea(const Rectanglef& area) { drawArea = area; }

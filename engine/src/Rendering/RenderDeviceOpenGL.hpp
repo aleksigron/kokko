@@ -18,7 +18,7 @@ public:
 private:
 	DebugMessageUserData debugUserData;
 
-	virtual void BeginDebugScope(uint32_t id, kokko::ConstStringView message) override;
+	virtual void BeginDebugScope(uint32_t id, ConstStringView message) override;
 	virtual void EndDebugScope() override;
 
 public:
@@ -29,7 +29,7 @@ public:
 	virtual void GetIntegerValue(RenderDeviceParameter parameter, int* valueOut) override;
 
 	virtual void SetDebugMessageCallback(DebugCallbackFn callback) override;
-	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label) override;
+	virtual void SetObjectLabel(RenderObjectType type, unsigned int object, ConstStringView label) override;
 	virtual void SetObjectPtrLabel(void* ptr, ConstStringView label) override;
 
 	virtual void CreateFramebuffers(unsigned int count, FramebufferId* framebuffersOut) override;

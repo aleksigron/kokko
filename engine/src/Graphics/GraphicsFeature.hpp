@@ -7,11 +7,8 @@
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/RenderViewport.hpp"
 
-class Framebuffer;
 class LightManager;
 class MeshManager;
-class PostProcessRenderer;
-class ShaderManager;
 class TextureManager;
 
 struct RenderViewport;
@@ -21,12 +18,15 @@ namespace kokko
 
 class EnvironmentSystem;
 class GraphicsFeatureCommandList;
+class PostProcessRenderer;
 class RenderGraphResources;
+class ShaderManager;
 
 namespace render
 {
 class CommandEncoder;
 class Device;
+class Framebuffer;
 }
 
 class GraphicsFeature

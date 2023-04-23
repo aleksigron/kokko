@@ -11,6 +11,9 @@
 
 struct MeshDrawData;
 
+namespace kokko
+{
+
 struct PostProcessRenderPass
 {
 	static const size_t MaxTextureCount = 10;
@@ -34,3 +37,5 @@ struct PostProcessRenderPass
 	RenderBlendFactor sourceBlendFactor;
 	RenderBlendFactor destinationBlendFactor;
 };
+
+} // namespace kokko

@@ -7,8 +7,12 @@
 
 #include "Engine/Entity.hpp"
 
-class InputManager;
+namespace kokko
+{
 class World;
+}
+
+class InputManager;
 class Allocator;
 class NativeScriptComponent;
 
@@ -60,5 +64,5 @@ public:
 			return nullptr;
 	}
 
-	void UpdateScripts(World* world, InputManager* inputManager);
+	void UpdateScripts(kokko::World* world, InputManager* inputManager);
 };

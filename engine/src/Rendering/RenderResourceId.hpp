@@ -2,9 +2,10 @@
 
 #include <cstdint>
 
-#define DEFINE_RENDER_RESOURCE_ID(name) struct name\
+#define DECLARE_RENDER_RESOURCE_ID(name, defaultName) struct name\
 {\
 	uint32_t i;\
+	static const name defaultName;\
 	name() : i(0) {}\
 	explicit name(uint32_t v) : i(v) {}\
 	bool operator==(const name& other) const { return i == other.i; }\
@@ -18,14 +19,14 @@ namespace kokko
 namespace render
 {
 
-DEFINE_RENDER_RESOURCE_ID(BufferId);
-DEFINE_RENDER_RESOURCE_ID(FramebufferId);
-DEFINE_RENDER_RESOURCE_ID(SamplerId);
-DEFINE_RENDER_RESOURCE_ID(ShaderId);
-DEFINE_RENDER_RESOURCE_ID(TextureId);
-DEFINE_RENDER_RESOURCE_ID(VertexArrayId);
+DECLARE_RENDER_RESOURCE_ID(BufferId, Null);
+DECLARE_RENDER_RESOURCE_ID(FramebufferId, Default);
+DECLARE_RENDER_RESOURCE_ID(SamplerId, Null);
+DECLARE_RENDER_RESOURCE_ID(ShaderId, Null);
+DECLARE_RENDER_RESOURCE_ID(TextureId, Null);
+DECLARE_RENDER_RESOURCE_ID(VertexArrayId, Null);
 
 }
 }
 
-#undef DEFINE_RENDER_RESOURCE_ID
+#undef DECLARE_RENDER_RESOURCE_ID

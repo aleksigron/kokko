@@ -8,7 +8,6 @@
 
 #include "EditorWindow.hpp"
 
-class World;
 class MaterialManager;
 class MeshManager;
 class TextureManager;
@@ -20,6 +19,7 @@ namespace kokko
 {
 
 class ModelManager;
+class World;
 
 namespace editor
 {

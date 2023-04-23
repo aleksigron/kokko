@@ -15,8 +15,6 @@
 
 class Allocator;
 class Engine;
-class Filesystem;
-class World;
 
 struct CameraParameters;
 struct EngineSettings;
@@ -25,6 +23,8 @@ namespace kokko
 {
 
 struct Uid;
+class Filesystem;
+class World;
 
 namespace render
 {

@@ -9,7 +9,7 @@
 #include "System/Time.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
-DebugGraph::DebugGraph(Allocator* allocator, DebugVectorRenderer* vr) :
+DebugGraph::DebugGraph(Allocator* allocator, kokko::DebugVectorRenderer* vr) :
 	vectorRenderer(vr),
 	data(allocator),
 	pointStorage(allocator),
