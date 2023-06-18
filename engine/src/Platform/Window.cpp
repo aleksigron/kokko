@@ -21,7 +21,6 @@ namespace kokko
 Window::Window(Allocator* allocator) :
     allocator(allocator),
     windowHandle(nullptr),
-    inputManager(nullptr),
     framebufferResizeCallbacks(allocator),
     windowResizeCallbacks(allocator),
     maximizeCallbacks(allocator),
@@ -36,8 +35,6 @@ Window::Window(Allocator* allocator) :
 
 Window::~Window()
 {
-    allocator->MakeDelete(inputManager);
-
     if (windowHandle != nullptr)
     {
         glfwDestroyWindow(windowHandle);
@@ -76,7 +73,7 @@ bool Window::Initialize(const WindowSettings& settings, NativeRenderDevice* devi
         int maximized = glfwGetWindowAttrib(windowHandle, GLFW_MAXIMIZED);
         currentMaximizeState = maximized == GLFW_TRUE;
 
-        inputManager = allocator->MakeNew<InputManager>(allocator);
+        inputManager = MakeUnique<InputManager>(allocator, allocator);
         inputManager->Initialize(windowHandle);
 
         glfwSetWindowUserPointer(windowHandle, this);

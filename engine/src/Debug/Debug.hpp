@@ -2,6 +2,7 @@
 
 #include "Core/Optional.hpp"
 #include "Core/StringView.hpp"
+#include "Core/UniquePtr.hpp"
 
 #include "Math/Vec2.hpp"
 
@@ -44,12 +45,12 @@ private:
 	Allocator* allocator;
 	kokko::render::Device* renderDevice;
 
-	kokko::DebugVectorRenderer* vectorRenderer;
-	DebugTextRenderer* textRenderer;
-	DebugGraph* graph;
-	DebugCulling* culling;
-	DebugConsole* console;
-	DebugMemoryStats* memoryStats;
+	kokko::UniquePtr<kokko::DebugVectorRenderer> vectorRenderer;
+	kokko::UniquePtr<DebugTextRenderer> textRenderer;
+	kokko::UniquePtr<DebugGraph> graph;
+	kokko::UniquePtr<DebugCulling> culling;
+	kokko::UniquePtr<DebugConsole> console;
+	kokko::UniquePtr<DebugMemoryStats> memoryStats;
 
 	kokko::Window* window;
 
@@ -87,9 +88,9 @@ public:
 		const kokko::render::Framebuffer& framebuffer,
 		const Optional<CameraParameters>& editorCamera);
 
-	DebugConsole* GetConsole() { return console; }
-	DebugTextRenderer* GetTextRenderer() { return textRenderer; }
-	kokko::DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer; }
+	DebugConsole* GetConsole() { return console.Get(); }
+	DebugTextRenderer* GetTextRenderer() { return textRenderer.Get(); }
+	kokko::DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer.Get(); }
 
 	void RequestBeginProfileSession();
 

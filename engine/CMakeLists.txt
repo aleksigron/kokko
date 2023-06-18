@@ -98,6 +98,7 @@ set (KOKKO_SOURCES
 	src/Core/TypeTraits.hpp
 	src/Core/Uid.cpp
 	src/Core/Uid.hpp
+	src/Core/UniquePtr.hpp
 	src/Debug/Debug.cpp
 	src/Debug/Debug.hpp
 	src/Debug/DebugConsole.cpp

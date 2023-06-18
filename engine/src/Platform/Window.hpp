@@ -2,6 +2,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/Pair.hpp"
+#include "Core/UniquePtr.hpp"
 
 #include "Math/Vec2.hpp"
 
@@ -84,7 +85,7 @@ public:
     void SetCursorMode(CursorMode mode);
     CursorMode GetCursorMode() const;
 
-    InputManager* GetInputManager() { return inputManager; }
+    InputManager* GetInputManager() { return inputManager.Get(); }
 
     GLFWwindow* GetGlfwWindow() { return windowHandle; }
     void SetGlfwWindow(GLFWwindow* window) { windowHandle = window; }
@@ -103,7 +104,7 @@ public:
 private:
     Allocator* allocator;
     GLFWwindow* windowHandle;
-    InputManager* inputManager;
+    UniquePtr<InputManager> inputManager;
 
     Array<Pair<ResizeCallbackFn, void*>> framebufferResizeCallbacks;
     Array<Pair<ResizeCallbackFn, void*>> windowResizeCallbacks;

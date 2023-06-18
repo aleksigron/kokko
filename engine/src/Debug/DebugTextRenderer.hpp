@@ -2,6 +2,7 @@
 
 #include "Core/Array.hpp"
 #include "Core/StringView.hpp"
+#include "Core/UniquePtr.hpp"
 
 #include "Math/Rectangle.hpp"
 #include "Math/Vec2.hpp"
@@ -46,7 +47,7 @@ private:
 	kokko::ShaderManager* shaderManager;
 	kokko::MeshManager* meshManager;
 
-	BitmapFont* font;
+	kokko::UniquePtr<BitmapFont> font;
 	size_t stringCharCount;
 	kokko::Array<char> stringData;
 	kokko::Array<DisplayData> displayData;
@@ -79,7 +80,7 @@ public:
 
 	Vec2f GetScaledFrameSize() const { return scaledFrameSize; }
 
-	const BitmapFont* GetFont() const { return font; }
+	const BitmapFont* GetFont() const { return font.Get(); }
 
 	size_t GetRowCountForTextLength(size_t characterCount) const;
 

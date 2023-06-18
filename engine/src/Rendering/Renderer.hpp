@@ -8,6 +8,7 @@
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
 #include "Core/Range.hpp"
+#include "Core/UniquePtr.hpp"
 
 #include "Math/Mat4x4.hpp"
 
@@ -67,9 +68,9 @@ private:
 	render::CommandEncoder* encoder;
 	MeshComponentSystem* componentSystem;
 
-	RenderGraphResources* renderGraphResources;
-	RenderTargetContainer* renderTargetContainer;
-	PostProcessRenderer* postProcessRenderer;
+	UniquePtr<RenderGraphResources> renderGraphResources;
+	UniquePtr<RenderTargetContainer> renderTargetContainer;
+	UniquePtr<PostProcessRenderer> postProcessRenderer;
 	
 	render::FramebufferId targetFramebufferId;
 
