@@ -53,8 +53,9 @@ Engine::Engine(
     systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 
     renderDevice = kokko::render::Device::Create(systemAllocator);
-	commandBuffer = systemAllocator->MakeNew<kokko::render::CommandBuffer>(systemAllocator);
-	commandEncoder = systemAllocator->MakeNew<kokko::render::CommandEncoder>(systemAllocator, commandBuffer);
+	commandBuffer = kokko::MakeUnique<kokko::render::CommandBuffer>(systemAllocator, systemAllocator);
+	commandEncoder = kokko::MakeUnique<kokko::render::CommandEncoder>(
+		systemAllocator, systemAllocator, commandBuffer.Get());
 	commandExecutor = kokko::render::CommandExecutor::Create(systemAllocator);
     
     windowManager.CreateScope(allocatorManager, "Window", alloc);
@@ -62,7 +63,7 @@ Engine::Engine(
 
     kokko::Window* mainWindow = windowManager.instance->GetWindow();
 
-	time = systemAllocator->MakeNew<Time>();
+	time = kokko::MakeUnique<Time>(systemAllocator);
 
 	debug.CreateScope(allocatorManager, "Debug", alloc);
 	debug.New(debug.allocator, allocatorManager, renderDevice, filesystem);
@@ -88,8 +89,8 @@ Engine::Engine(
 	kokko::ResourceManagers resManagers = GetResourceManagers();
 
 	world.CreateScope(allocatorManager, "World", alloc);
-	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice, commandEncoder,
-		assetLoader, resManagers);
+	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice,
+		commandEncoder.Get(), assetLoader, resManagers);
 }
 
 Engine::~Engine()
@@ -104,12 +105,9 @@ Engine::~Engine()
 	modelManager.Delete();
 	meshManager.Delete();
 	debug.Delete();
-	systemAllocator->MakeDelete(time);
 	windowManager.Delete();
 
 	systemAllocator->MakeDelete(commandExecutor);
-	systemAllocator->MakeDelete(commandEncoder);
-	systemAllocator->MakeDelete(commandBuffer);
     systemAllocator->MakeDelete(renderDevice);
 }
 
@@ -159,13 +157,13 @@ void Engine::Render(const Optional<CameraParameters>& editorCamera, const kokko:
 
 	if (settings.enableDebugTools)
 	{
-		debug.instance->Render(commandEncoder, world.instance, framebuffer, editorCamera);
+		debug.instance->Render(commandEncoder.Get(), world.instance, framebuffer, editorCamera);
 	}
 }
 
 void Engine::EndFrame()
 {
-	commandExecutor->Execute(commandBuffer);
+	commandExecutor->Execute(commandBuffer.Get());
 	commandBuffer->Clear();
 
     kokko::Window* window = windowManager.instance->GetWindow();

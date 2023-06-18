@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Optional.hpp"
+#include "Core/UniquePtr.hpp"
 
 #include "Engine/EngineSettings.hpp"
 #include "Engine/InstanceAllocatorPair.hpp"
@@ -47,12 +48,12 @@ private:
 	kokko::Filesystem* filesystem;
 	kokko::AssetLoader* assetLoader;
     kokko::render::Device* renderDevice;
-	kokko::render::CommandBuffer* commandBuffer;
-	kokko::render::CommandEncoder* commandEncoder;
+	kokko::UniquePtr<kokko::render::CommandBuffer> commandBuffer;
+	kokko::UniquePtr<kokko::render::CommandEncoder> commandEncoder;
 	kokko::render::CommandExecutor* commandExecutor;
 
 	InstanceAllocatorPair<kokko::WindowManager> windowManager;
-	Time* time;
+	kokko::UniquePtr<Time> time;
 	InstanceAllocatorPair<Debug> debug;
 	InstanceAllocatorPair<kokko::MeshManager> meshManager;
 	InstanceAllocatorPair<kokko::ModelManager> modelManager;
@@ -80,7 +81,7 @@ public:
 	kokko::EngineSettings* GetSettings() { return &settings; }
 	kokko::WindowManager* GetWindowManager() { return windowManager.instance; }
 	kokko::render::Device* GetRenderDevice() { return renderDevice; }
-	kokko::render::CommandEncoder* GetCommandEncoder() { return commandEncoder; }
+	kokko::render::CommandEncoder* GetCommandEncoder() { return commandEncoder.Get(); }
 	Debug* GetDebug() { return debug.instance; }
 	kokko::Filesystem* GetFilesystem() { return filesystem; }
 	kokko::MeshManager* GetMeshManager() { return meshManager.instance; }

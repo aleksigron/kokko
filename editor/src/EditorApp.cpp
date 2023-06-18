@@ -53,20 +53,17 @@ EditorApp::EditorApp(Allocator* allocator, Filesystem* filesystem, FilesystemRes
 	allocator(allocator),
 	renderDevice(nullptr),
 	world(nullptr),
-	core(nullptr),
 	project(allocator),
 	exitRequested(false),
 	currentMainMenuDialog(MainMenuDialog::None),
 	currentDialogId(0)
 {
-	imguiImplOpenGL = allocator->MakeNew<ImguiImplOpenGL>(allocator);
-	core = allocator->MakeNew<EditorCore>(allocator, filesystem, resolver);
+	imguiImplOpenGL = kokko::MakeUnique<ImguiImplOpenGL>(allocator, allocator);
+	core = kokko::MakeUnique<EditorCore>(allocator, allocator, filesystem, resolver);
 }
 
 EditorApp::~EditorApp()
 {
-	allocator->MakeDelete(core);
-	allocator->MakeDelete(imguiImplOpenGL);
 }
 
 void EditorApp::LoadUserSettings()

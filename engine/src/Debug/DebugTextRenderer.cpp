@@ -36,7 +36,6 @@ DebugTextRenderer::DebugTextRenderer(
 	filesystem(filesystem),
 	shaderManager(nullptr),
 	meshManager(nullptr),
-	font(nullptr),
 	stringCharCount(0),
 	stringData(allocator),
 	displayData(allocator),
@@ -50,8 +49,6 @@ DebugTextRenderer::DebugTextRenderer(
 
 DebugTextRenderer::~DebugTextRenderer()
 {
-	allocator->MakeDelete(font);
-
 	if (bufferObjectId != 0)
 	{
 		renderDevice->DestroyBuffers(1, &bufferObjectId);
@@ -111,7 +108,7 @@ bool DebugTextRenderer::LoadBitmapFont(kokko::TextureManager* textureManager, co
 
 	if (filesystem->ReadText(filePath, content))
 	{
-		font = allocator->MakeNew<BitmapFont>(allocator);
+		font = kokko::MakeUnique<BitmapFont>(allocator, allocator);
 		return font->LoadFromBDF(textureManager, content.GetRef());
 	}
 	else

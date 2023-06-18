@@ -60,13 +60,12 @@ Debug::Debug(
 	nextFrameRateUpdate(-1.0),
 	mode(DebugMode::None)
 {
-	vectorRenderer = allocator->MakeNew<kokko::DebugVectorRenderer>(allocator, renderDevice);
-	textRenderer = allocator->MakeNew<DebugTextRenderer>(allocator, renderDevice, filesystem);
-	graph = allocator->MakeNew<DebugGraph>(allocator, vectorRenderer);
-	culling = allocator->MakeNew<DebugCulling>(textRenderer, vectorRenderer);
-	console = allocator->MakeNew<DebugConsole>(allocator, textRenderer, vectorRenderer);
-
-	memoryStats = allocator->MakeNew<DebugMemoryStats>(allocManager, textRenderer);
+	vectorRenderer = kokko::MakeUnique<kokko::DebugVectorRenderer>(allocator, allocator, renderDevice);
+	textRenderer = kokko::MakeUnique<DebugTextRenderer>(allocator, allocator, renderDevice, filesystem);
+	graph = kokko::MakeUnique<DebugGraph>(allocator, allocator, vectorRenderer.Get());
+	culling = kokko::MakeUnique<DebugCulling>(allocator, textRenderer.Get(), vectorRenderer.Get());
+	console = kokko::MakeUnique<DebugConsole>(allocator, allocator, textRenderer.Get(), vectorRenderer.Get());
+	memoryStats = kokko::MakeUnique<DebugMemoryStats>(allocator, allocManager, textRenderer.Get());
 
 	singletonInstance = this;
 }
@@ -74,14 +73,6 @@ Debug::Debug(
 Debug::~Debug()
 {
 	singletonInstance = nullptr;
-
-	allocator->MakeDelete(memoryStats);
-
-	allocator->MakeDelete(console);
-	allocator->MakeDelete(culling);
-	allocator->MakeDelete(graph);
-	allocator->MakeDelete(textRenderer);
-	allocator->MakeDelete(vectorRenderer);
 }
 
 bool Debug::Initialize(kokko::Window* window, kokko::MeshManager* meshManager,

@@ -107,8 +107,6 @@ Renderer::Renderer(
 	device(renderDevice),
 	encoder(commandEncoder),
 	componentSystem(componentSystem),
-	renderGraphResources(nullptr),
-	renderTargetContainer(nullptr),
 	targetFramebufferId(0),
 	viewportData(nullptr),
 	viewportCount(0),
@@ -133,12 +131,10 @@ Renderer::Renderer(
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	renderGraphResources = allocator->MakeNew<kokko::RenderGraphResources>(renderDevice, meshManager);
-
-	renderTargetContainer = allocator->MakeNew<RenderTargetContainer>(allocator, renderDevice);
-
-	postProcessRenderer = allocator->MakeNew<kokko::PostProcessRenderer>(
-		encoder, meshManager, shaderManager, renderTargetContainer);
+	renderGraphResources = MakeUnique<kokko::RenderGraphResources>(allocator, renderDevice, meshManager);
+	renderTargetContainer = MakeUnique<RenderTargetContainer>(allocator, allocator, renderDevice);
+	postProcessRenderer = MakeUnique<kokko::PostProcessRenderer>(
+		allocator, encoder, meshManager, shaderManager, renderTargetContainer.Get());
 
 	shadowMaterial = MaterialId::Null;
 	fallbackMeshMaterial = MaterialId::Null;
@@ -149,9 +145,6 @@ Renderer::Renderer(
 
 Renderer::~Renderer()
 {
-	allocator->MakeDelete(postProcessRenderer);
-	allocator->MakeDelete(renderTargetContainer);
-	allocator->MakeDelete(renderGraphResources);
 }
 
 void Renderer::Initialize()
@@ -337,7 +330,7 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 
 	kokko::GraphicsFeature::RenderParameters featureRenderParams
 	{
-		postProcessRenderer,
+		postProcessRenderer.Get(),
 		meshManager,
 		shaderManager,
 		textureManager,
@@ -347,7 +340,7 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 		viewportData[viewportIndexFullscreen],
 		ArrayView(viewportData + viewportIndicesShadowCascade.start,
 			viewportIndicesShadowCascade.end - viewportIndicesShadowCascade.start),
-		renderGraphResources,
+		renderGraphResources.Get(),
 		targetFramebuffer.GetFramebufferId(),
 		encoder,
 		0
@@ -914,7 +907,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 
 		kokko::GraphicsFeature::UploadParameters uploadParameters
 		{
-			postProcessRenderer,
+			postProcessRenderer.Get(),
 			meshManager,
 			shaderManager,
 			textureManager,
@@ -923,7 +916,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 			cameraParameters,
 			viewportData[viewportIndexFullscreen],
 			ArrayView(&viewportData[viewportIndicesShadowCascade.start], viewportIndicesShadowCascade.GetLength()),
-			renderGraphResources,
+			renderGraphResources.Get(),
 			targetFramebufferId,
 			device
 		};

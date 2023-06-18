@@ -11,16 +11,12 @@
 
 InputManager::InputManager(Allocator* allocator):
 	windowHandle(nullptr),
-	allocator(allocator),
-	inputSource(nullptr),
-	gameInputView(nullptr)
+	allocator(allocator)
 {
 }
 
 InputManager::~InputManager()
 {
-	allocator->MakeDelete(gameInputView);
-	allocator->MakeDelete(inputSource);
 }
 
 void InputManager::Initialize(GLFWwindow* windowHandle)
@@ -29,10 +25,10 @@ void InputManager::Initialize(GLFWwindow* windowHandle)
 
 	this->windowHandle = windowHandle;
 
-	inputSource = allocator->MakeNew<InputSource>();
+	inputSource = kokko::MakeUnique<InputSource>(allocator);
 	inputSource->Initialize(windowHandle);
 
-	gameInputView = allocator->MakeNew<FilterInputView>(inputSource, "GameInputView");
+	gameInputView = allocator->MakeNew<FilterInputView>(inputSource.Get(), "GameInputView");
 }
 
 void InputManager::Update()

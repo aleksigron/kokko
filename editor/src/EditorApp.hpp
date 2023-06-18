@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include "Core/UniquePtr.hpp"
+
 #include "Math/Vec2.hpp"
 
 #include "EditorProject.hpp"
@@ -92,8 +94,8 @@ private:
 	kokko::render::Device* renderDevice;
 	World* world;
 
-	ImguiImplOpenGL* imguiImplOpenGL;
-	EditorCore* core;
+	UniquePtr<ImguiImplOpenGL> imguiImplOpenGL;
+	UniquePtr<EditorCore> core;
 	FilePickerDialog filePicker;
 
 	EditorProject project;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/UniquePtr.hpp"
+
 struct GLFWwindow;
 
 class KeyboardInput;
@@ -19,7 +21,7 @@ private:
 
 	Allocator* allocator;
 
-	InputSource* inputSource;
+	kokko::UniquePtr<InputSource> inputSource;
 	InputView* gameInputView;
 
 	void UpdateInputViews();
@@ -33,6 +35,6 @@ public:
 
 	void OnTextInputEnableChanged(bool textInputEnabled);
 
-	InputSource* GetInputSource() { return inputSource; }
+	InputSource* GetInputSource() { return inputSource.Get(); }
 	InputView* GetGameInputView() { return gameInputView; }
 };
