@@ -5,13 +5,12 @@
 #include "Core/Core.hpp"
 #include "Core/String.hpp"
 
-#include "Debug/DebugConsole.hpp"
-
 namespace kokko
 {
 
 Logger::Logger(Allocator* allocator) :
 	fileHandle(nullptr),
+	receiver(nullptr),
 	formatBuffer(allocator)
 {
 }
@@ -23,6 +22,11 @@ Logger::~Logger()
 		FILE* file = static_cast<FILE*>(fileHandle);
 		std::fclose(file);
 	}
+}
+
+void Logger::SetReceiver(Receiver* receiver)
+{
+	this->receiver = receiver;
 }
 
 bool Logger::OpenLogFile(const char* filePath, bool append)
@@ -47,8 +51,6 @@ bool Logger::OpenLogFile(const char* filePath, bool append)
 
 void Logger::Log(const char* text, size_t length, LogLevel level)
 {
-    // TODO: Reimplement debug console
-
 	if (fileHandle != nullptr)
 	{
 		FILE* file = static_cast<FILE*>(fileHandle);
@@ -56,6 +58,11 @@ void Logger::Log(const char* text, size_t length, LogLevel level)
 		// Write to log file
 		std::fwrite(text, 1, length, file);
 		std::fputc('\n', file);
+	}
+
+	if (receiver != nullptr)
+	{
+		receiver->Log(text, length, level);
 	}
 
 	// Write to standard output (console)

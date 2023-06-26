@@ -13,7 +13,6 @@ class Renderer;
 class DebugTextRenderer;
 class DebugGraph;
 class DebugCulling;
-class DebugConsole;
 class DebugMemoryStats;
 
 struct ViewRectangle;
@@ -49,7 +48,6 @@ private:
 	kokko::UniquePtr<DebugTextRenderer> textRenderer;
 	kokko::UniquePtr<DebugGraph> graph;
 	kokko::UniquePtr<DebugCulling> culling;
-	kokko::UniquePtr<DebugConsole> console;
 	kokko::UniquePtr<DebugMemoryStats> memoryStats;
 
 	kokko::Window* window;
@@ -88,7 +86,6 @@ public:
 		const kokko::render::Framebuffer& framebuffer,
 		const Optional<CameraParameters>& editorCamera);
 
-	DebugConsole* GetConsole() { return console.Get(); }
 	DebugTextRenderer* GetTextRenderer() { return textRenderer.Get(); }
 	kokko::DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer.Get(); }
 

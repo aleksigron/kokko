@@ -20,6 +20,7 @@
 #include "System/WindowManager.hpp"
 #include "System/WindowSettings.hpp"
 
+#include "ConsoleLogger.hpp"
 #include "EditorApp.hpp"
 #include "EditorAssetLoader.hpp"
 #include "EditorConstants.hpp"
@@ -59,6 +60,8 @@ int main(int argc, char** argv)
 	Allocator* defaultAlloc = RootAllocator::GetDefaultAllocator();
 	kokko::Logger logger(defaultAlloc);
 	kokko::Log::SetLogInstance(&logger);
+	kokko::editor::ConsoleLogger consoleLogger(defaultAlloc);
+	logger.SetReceiver(&consoleLogger);
 
 	Instrumentation& instr = Instrumentation::Get();
 	instr.BeginSession("unit_test_trace.json");
@@ -123,7 +126,7 @@ int main(int argc, char** argv)
 	{
 		kokko::render::CommandEncoder* commandEncoder = engine.GetCommandEncoder();
 
-		editor.Initialize(&engine);
+		editor.Initialize(&engine, &consoleLogger);
 
 		engine.SetAppPointer(&editor);
 

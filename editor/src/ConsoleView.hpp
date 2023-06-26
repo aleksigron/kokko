@@ -4,35 +4,32 @@
 #include "Core/String.hpp"
 #include "Core/StringView.hpp"
 
-#include "Math/Rectangle.hpp"
-
 #include "System/LogLevel.hpp"
 
+#include "EditorWindow.hpp"
+
+struct ImGuiInputTextCallbackData;
+
 class Allocator;
-class DebugTextRenderer;
 
 namespace kokko
 {
-class DebugVectorRenderer;
-class Window;
-}
 
-class DebugConsole
+namespace editor
+{
+
+class ConsoleView : public EditorWindow
 {
 private:
 	struct LogEntry
 	{
-		kokko::ConstStringView text;
-		size_t lengthWithPad;
-		int rows;
+		const char* text;
+		uint32_t length;
+		uint32_t lengthWithPad;
 		LogLevel level;
 	};
 
 	Allocator* allocator;
-	DebugTextRenderer* textRenderer;
-	kokko::DebugVectorRenderer* vectorRenderer;
-
-	Rectanglef drawArea;
 
 	Queue<LogEntry> entries;
 
@@ -44,25 +41,22 @@ private:
 	unsigned int totalWarningCount;
 	unsigned int totalErrorCount;
 
-	kokko::String inputValue;
-	double lastTextInputTime;
+	char inputBuffer[2048];
+
+	int TextEditCallback(ImGuiInputTextCallbackData* data);
 
 public:
-	DebugConsole(
-		Allocator* allocator,
-		DebugTextRenderer* textRenderer,
-		kokko::DebugVectorRenderer* vectorRenderer);
-	~DebugConsole();
+	ConsoleView(Allocator* allocator);
+	~ConsoleView();
 
-	void RequestFocus();
-	void ReleaseFocus();
+	virtual void Update(EditorContext& context) override;
 
 	unsigned int GetTotalWarningCount() const { return totalWarningCount; }
 	unsigned int GetTotalErrorCount() const { return totalErrorCount; }
 
-	void SetDrawArea(const Rectanglef& area);
-
 	void AddLogEntry(kokko::ConstStringView text, LogLevel level = LogLevel::Info);
-
-	void UpdateAndDraw();
+	void AddCommandEntry(kokko::ConstStringView text);
 };
+
+} // namespace editor
+} // namespace kokko

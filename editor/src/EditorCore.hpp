@@ -34,6 +34,7 @@ class Framebuffer;
 namespace editor
 {
 
+class ConsoleLogger;
 class EditorProject;
 class EditorWindow;
 class SceneView;
@@ -44,7 +45,7 @@ public:
 	EditorCore(Allocator* allocator, Filesystem* filesystem, FilesystemResolver* resolver);
 	~EditorCore();
 
-	void Initialize(Engine* engine);
+	void Initialize(Engine* engine, ConsoleLogger* consoleLogger);
 	void Deinitialize();
 
 	void ResizeSceneViewFramebufferIfRequested();

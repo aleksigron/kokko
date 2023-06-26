@@ -86,7 +86,7 @@ const EditorUserSettings& EditorApp::GetUserSettings() const
 	return userSettings;
 }
 
-void EditorApp::Initialize(Engine* engine)
+void EditorApp::Initialize(Engine* engine, ConsoleLogger* consoleLogger)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -148,7 +148,7 @@ void EditorApp::Initialize(Engine* engine)
 		imguiImplOpenGL->Initialize();
 	}
 
-	core->Initialize(engine);
+	core->Initialize(engine, consoleLogger);
 
 	if (userSettings.lastOpenedProject.empty())
 		return;
@@ -212,7 +212,7 @@ void EditorApp::Update(kokko::EngineSettings* engineSettings, bool& shouldExitOu
 
 	core->Update();
 
-	//ImGui::ShowDemoWindow();
+	ImGui::ShowDemoWindow();
 
 	if (exitRequested)
 		shouldExitOut = true;
