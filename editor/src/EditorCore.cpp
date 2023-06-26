@@ -19,6 +19,8 @@
 
 #include "AssetBrowserView.hpp"
 #include "AssetView.hpp"
+#include "ConsoleLogger.hpp"
+#include "ConsoleView.hpp"
 #include "DebugView.hpp"
 #include "EditorConstants.hpp"
 #include "EditorProject.hpp"
@@ -54,7 +56,7 @@ EditorCore::~EditorCore()
 		allocator->MakeDelete(window);
 }
 
-void EditorCore::Initialize(Engine* engine)
+void EditorCore::Initialize(Engine* engine, ConsoleLogger* consoleLogger)
 {
 	editorContext.project = nullptr;
 	editorContext.world = engine->GetWorld();
@@ -84,6 +86,10 @@ void EditorCore::Initialize(Engine* engine)
 	DebugView* debugView = allocator->MakeNew<DebugView>();
 	debugView->Initialize(engine->GetDebug());
 	editorWindows.PushBack(debugView);
+
+	ConsoleView* consoleView = allocator->MakeNew<ConsoleView>(allocator);
+	editorWindows.PushBack(consoleView);
+	consoleLogger->SetConsoleView(consoleView);
 }
 
 void EditorCore::Deinitialize()

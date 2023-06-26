@@ -9,7 +9,6 @@
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugGraph.hpp"
 #include "Debug/DebugCulling.hpp"
-#include "Debug/DebugConsole.hpp"
 #include "Debug/DebugMemoryStats.hpp"
 #include "Debug/Instrumentation.hpp"
 
@@ -64,7 +63,6 @@ Debug::Debug(
 	textRenderer = kokko::MakeUnique<DebugTextRenderer>(allocator, allocator, renderDevice, filesystem);
 	graph = kokko::MakeUnique<DebugGraph>(allocator, allocator, vectorRenderer.Get());
 	culling = kokko::MakeUnique<DebugCulling>(allocator, textRenderer.Get(), vectorRenderer.Get());
-	console = kokko::MakeUnique<DebugConsole>(allocator, allocator, textRenderer.Get(), vectorRenderer.Get());
 	memoryStats = kokko::MakeUnique<DebugMemoryStats>(allocator, allocManager, textRenderer.Get());
 
 	singletonInstance = this;
@@ -133,7 +131,6 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 	textArea.size.x = trScaledFrameSize.x;
 	textArea.size.y = trScaledFrameSize.y - scaledLineHeight;
 
-	console->SetDrawArea(textArea);
 	memoryStats->SetDrawArea(textArea);
 
 	Rectanglef graphArea;
@@ -190,13 +187,6 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 			//window->SetSwapInterval(vsync ? 1 : 0);
 		}
 
-		// Check console switching
-
-		if (oldMode != DebugMode::Console && this->mode == DebugMode::Console)
-			console->RequestFocus();
-		else if (oldMode == DebugMode::Console && this->mode != DebugMode::Console)
-			console->ReleaseFocus();
-
 		// Check culling camera controller switching
 
 		kokko::Renderer* renderer = world->GetRenderer();
@@ -229,50 +219,17 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 		nextFrameRateUpdate = now + 0.15;
 	}
 
-	unsigned int errs = console->GetTotalErrorCount();
-	unsigned int wrns = console->GetTotalWarningCount();
-
-	int glyphWidth = font->GetGlyphWidth();
-	int lineHeight = font->GetLineHeight();
-
-	if (errs > 0)
-	{
-		Rectanglef rect;
-		rect.position.x = 1.0f;
-		rect.position.y = 0.0f;
-		rect.size.x = static_cast<float>(6 * glyphWidth) - 1.0f;
-		rect.size.y = static_cast<float>(lineHeight);
-
-		Color red(1.0f, 0.0f, 0.0f);
-		vectorRenderer->DrawRectangleScreen(rect, red);
-	}
-
-	if (wrns > 0)
-	{
-		Rectanglef rect;
-		rect.position.x = static_cast<float>(7 * glyphWidth) + 1.0f;
-		rect.position.y = 0.0f;
-		rect.size.x = static_cast<float>(6 * glyphWidth) - 1.0f;
-		rect.size.y = static_cast<float>(lineHeight);
-
-		Color yellow(1.0f, 1.0f, 0.0f);
-		vectorRenderer->DrawRectangleScreen(rect, yellow);
-	}
-
 	double currentFrameRate = 1.0 / currentFrameTime;
 
 	// Draw debug mode guide
 	char buffer[128];
-	const char* format = "E: %-3u W: %-3u [F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile  [F8]Vsync: %c, %.1f fps";
-	std::snprintf(buffer, sizeof(buffer), format, errs, wrns, logChar, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
+	const char* format = "[F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile  [F8]Vsync: %c, %.1f fps";
+	std::snprintf(buffer, sizeof(buffer), format, logChar, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
 	textRenderer->AddText(kokko::ConstStringView(buffer), Vec2f(0.0f, 0.0f));
 
 	// Add frame time to debug graph
 	graph->AddDataPoint(Time::GetDeltaTime());
 	graph->Update();
-
-	if (mode == DebugMode::Console)
-		console->UpdateAndDraw();
 
 	if (mode == DebugMode::FrameTime)
 		graph->DrawToVectorRenderer();

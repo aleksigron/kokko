@@ -39,6 +39,10 @@ set (EDITOR_SOURCES
 	src/AssetBrowserView.hpp
 	src/AssetView.cpp
 	src/AssetView.hpp
+	src/ConsoleLogger.cpp
+	src/ConsoleLogger.hpp
+	src/ConsoleView.cpp
+	src/ConsoleView.hpp
 	src/DebugView.cpp
 	src/DebugView.hpp
 	src/EditorApp.cpp

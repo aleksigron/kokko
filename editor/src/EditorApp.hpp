@@ -38,6 +38,7 @@ class Framebuffer;
 namespace editor
 {
 
+class ConsoleLogger;
 class EditorCore;
 
 enum class EditorWindowType;
@@ -56,7 +57,7 @@ public:
 	void LoadUserSettings();
 	const EditorUserSettings& GetUserSettings() const;
 
-	void Initialize(Engine* engine);
+	void Initialize(Engine* engine, ConsoleLogger* consoleLogger);
 	void Deinitialize();
 
 	void StartFrame();
