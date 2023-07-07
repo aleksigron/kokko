@@ -62,7 +62,6 @@ private:
 	enum class DebugMode
 	{
 		None,
-		Console,
 		FrameTime,
 		Culling,
 		MemoryStats

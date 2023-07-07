@@ -36,8 +36,7 @@ ConsoleView::ConsoleView(Allocator* allocator) :
 	totalWarningCount(0),
 	totalErrorCount(0)
 {
-
-	memset(inputBuffer, 0, sizeof(inputBuffer));
+	std::memset(inputBuffer, 0, sizeof(inputBuffer));
 }
 
 ConsoleView::~ConsoleView()
@@ -77,7 +76,6 @@ void ConsoleView::AddLogEntry(kokko::ConstStringView text, LogLevel level)
 		}
 	}
 
-
 	size_t index = (stringDataFirst + stringDataUsed) % stringDataAllocated;
 	size_t padding = 0;
 
@@ -115,11 +113,6 @@ void ConsoleView::AddLogEntry(kokko::ConstStringView text, LogLevel level)
 	}
 }
 
-void ConsoleView::AddCommandEntry(kokko::ConstStringView text)
-{
-
-}
-
 void ConsoleView::Update(EditorContext& context)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -127,9 +120,10 @@ void ConsoleView::Update(EditorContext& context)
 	if (windowIsOpen)
 	{
 		ImGui::SetNextWindowSize(ImVec2(600, 450), ImGuiCond_FirstUseEver);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		if (ImGui::Begin(windowTitle, &windowIsOpen))
 		{
-			const float reserveFooter = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+			const float reserveFooter = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing() + 1;
 			ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveFooter), false, ImGuiWindowFlags_HorizontalScrollbar);
 			//if (ImGui::BeginPopupContextWindow())
 			//{
@@ -162,6 +156,7 @@ void ConsoleView::Update(EditorContext& context)
 			// - Split them into same height items would be simpler and facilitate random-seeking into your list.
 			// - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+			ImGui::PushFont(context.monospaceFont);
 
 			for (int i = 0; i < entries.GetCount(); i++)
 			{
@@ -169,25 +164,26 @@ void ConsoleView::Update(EditorContext& context)
 				//if (!Filter.PassFilter(item))
 				//	continue;
 
-				// Normally you would store more information in your item than just a string.
-				// (e.g. make Items[] an array of structure, store color/type etc.)
-				ImVec4 color;
-				bool has_color = false;
-				//if (strstr(item, "[error]")) { color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); has_color = true; }
-				//else if (strncmp(item, "# ", 2) == 0) { color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f); has_color = true; }
-				if (has_color)
-					ImGui::PushStyleColor(ImGuiCol_Text, color);
+				Optional<ImVec4> color;
+				if (entry.level == LogLevel::Error)
+					color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
+				else if (entry.level == LogLevel::Warning)
+					color = ImVec4(1.0f, 1.0f, 0.4f, 1.0f);
+				if (color.HasValue())
+					ImGui::PushStyleColor(ImGuiCol_Text, color.GetValue());
 				ImGui::TextUnformatted(entry.text);
-				if (has_color)
+				if (color.HasValue())
 					ImGui::PopStyleColor();
 			}
 
-			//if (ScrollToBottom || (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
-			//	ImGui::SetScrollHereY(1.0f);
-			//ScrollToBottom = false;
+			// Auto-scroll
+			if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+				ImGui::SetScrollHereY(1.0f);
 
-			ImGui::PopStyleVar();
+			ImGui::PopFont();
+			ImGui::PopStyleVar(); // ImGuiStyleVar_ItemSpacing
 			ImGui::EndChild();
+			
 			ImGui::Separator();
 
 			bool reclaimFocus = false;
@@ -195,20 +191,21 @@ void ConsoleView::Update(EditorContext& context)
 				ConsoleView* console = static_cast<ConsoleView*>(data->UserData);
 				return console->TextEditCallback(data);
 			};
+
+			ImGui::PushItemWidth(-1);
+			ImGui::PushFont(context.monospaceFont);
 			ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_EnterReturnsTrue |
 				ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-			ImGui::PushItemWidth(-1);
 			if (ImGui::InputText("##Input", inputBuffer, IM_ARRAYSIZE(inputBuffer), input_flags, callback, (void*)this))
 			{
 				// TODO: Execute
-				//char* s = inputBuffer;
-				//Strtrim(s);
-				//if (s[0])
-				//	ExecCommand(s);
-				//strcpy(s, "");
+				AddLogEntry(ConstStringView(inputBuffer));
+
+				inputBuffer[0] = '\0';
 
 				reclaimFocus = true;
 			}
+			ImGui::PopFont();
 			ImGui::PopItemWidth();
 
 			// Auto-focus on window apparition
@@ -221,6 +218,7 @@ void ConsoleView::Update(EditorContext& context)
 			ImGui::SetWindowFocus();
 
 		ImGui::End();
+		ImGui::PopStyleVar(); // ImGuiStyleVar_WindowPadding
 	}
 }
 
@@ -326,94 +324,6 @@ int ConsoleView::TextEditCallback(ImGuiInputTextCallbackData* data)
 	*/
 	return 0;
 }
-
-/*
-
-void ConsoleView::UpdateAndDraw()
-{
-	//InputView* input = window->GetInputManager()->GetGameInputView();
-    InputView* input = nullptr;
-    if (input == nullptr)
-        return;
-
-	if (input->GetKeyDown(KeyCode::Enter))
-	{
-		this->AddLogEntry(this->inputValue.GetRef());
-		this->inputValue.Clear();
-	}
-
-	if (input->GetKeyDown(KeyCode::Backspace))
-	{
-		size_t currentLength = this->inputValue.GetLength();
-
-		if (currentLength > 0)
-		{
-			size_t newLen = EncodingUtf8::FindLastCharacter(this->inputValue.GetRef());
-
-			if (newLen < currentLength)
-				this->inputValue.Resize(newLen);
-			else // This should only happen if the inputValue somehow becomes invalid UTF-8 text
-				this->inputValue.Clear();
-		}
-	}
-
-	Color white(1.0f, 1.0f, 1.0f);
-
-	const BitmapFont* font = textRenderer->GetFont();
-	int lineHeight = font->GetLineHeight();
-	Vec2f areaSize = this->drawArea.size;
-	Vec2f areaPos = this->drawArea.position;
-
-	// Input text
-
-	Vec2f inputPos(areaPos.x, areaPos.y + areaSize.y - lineHeight);
-	textRenderer->AddText(this->inputValue.GetRef(), inputPos);
-	
-	// Input field separator
-
-	Rectanglef separatorRectangle;
-	separatorRectangle.position = inputPos + Vec2f(0.0f, -1.0f);
-	separatorRectangle.size = Vec2f(areaSize.x, 1);
-	vectorRenderer->DrawRectangleScreen(separatorRectangle, white);
-
-	// Input field caret
-
-	double now = Time::GetRunningTime();
-	bool showCaret = std::fmod(now - lastTextInputTime, 0.9) < 0.45;
-
-	if (showCaret)
-	{
-		size_t chars = EncodingUtf8::CountCharacters(inputValue.GetRef());
-
-		Rectanglef caretRectangle;
-		caretRectangle.position.x = static_cast<float>(chars * font->GetGlyphWidth());
-		caretRectangle.position.y = inputPos.y;
-		caretRectangle.size.x = 1.0f;
-		caretRectangle.size.y = static_cast<float>(lineHeight);
-
-		vectorRenderer->DrawRectangleScreen(caretRectangle, white);
-	}
-
-	// Go over each entry
-	// Add them to the DebugTextRenderer
-	int rowsUsed = 1; // 1 row for input
-
-	for (size_t end = entries.GetCount(); end > 0; --end)
-	{
-		LogEntry& entry = entries[end - 1];
-
-		rowsUsed += entry.rows;
-
-		Rectanglef area;
-		area.position.x = areaPos.x;
-		area.position.y = areaPos.y + areaSize.y - (lineHeight * rowsUsed);
-		area.size.x = areaSize.x;
-		area.size.y = static_cast<float>(lineHeight * entry.rows);
-
-		textRenderer->AddText(entry.text, area);
-	}
-}
-	*/
 
 } // namespace editor
 } // namespace kokko

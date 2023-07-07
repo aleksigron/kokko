@@ -6,6 +6,8 @@
 
 #include "Engine/Entity.hpp"
 
+class ImFont;
+
 class Allocator;
 
 namespace kokko
@@ -38,6 +40,8 @@ struct EditorContext
 	Optional<Uid> selectedAsset;
 	Optional<Uid> editingAsset;
 
+	ImFont* monospaceFont;
+
 	String temporaryString;
 
 	explicit EditorContext(Allocator* allocator, FilesystemResolver* filesystemResolver) :
@@ -47,6 +51,7 @@ struct EditorContext
 		world(nullptr),
 		engineSettings(nullptr),
 		selectedEntity(Entity::Null),
+		monospaceFont(nullptr),
 		temporaryString(allocator)
 	{
 	}
