@@ -116,9 +116,11 @@ void EditorApp::Initialize(Engine* engine, ConsoleLogger* consoleLogger)
 	{
 		KOKKO_PROFILE_SCOPE("ImGui AddFontFromFileTTF()");
 
-		float fontSize = std::floor(15.0f * scale);
+		float regularFontSize = std::floor(15.0f * scale);
+		float monoFontSize = std::floor(16.0f * scale);
 		// TODO: Read from virtual filesystem
-		io.Fonts->AddFontFromFileTTF("editor/res/fonts/roboto/Roboto-Regular.ttf", fontSize);
+		io.Fonts->AddFontFromFileTTF("editor/res/fonts/roboto/Roboto-Medium.ttf", regularFontSize);
+		io.Fonts->AddFontFromFileTTF("editor/res/fonts/roboto-mono/RobotoMono-Medium.ttf", monoFontSize);
 	}
 
 	ImGui::StyleColorsDark();
@@ -520,7 +522,8 @@ void EditorApp::OnProjectChanged()
 
 	KK_LOG_INFO("Editor project changed to {}", name.GetCStr());
 
-	engine->GetWindowManager()->GetWindow()->SetWindowTitle(name.GetCStr());
+	String windowTitle = name + " - Kokko Engine";
+	engine->GetWindowManager()->GetWindow()->SetWindowTitle(windowTitle.GetCStr());
 
 	core->NotifyProjectChanged(&project);
 }

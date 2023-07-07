@@ -61,6 +61,7 @@ void EditorCore::Initialize(Engine* engine, ConsoleLogger* consoleLogger)
 	editorContext.project = nullptr;
 	editorContext.world = engine->GetWorld();
 	editorContext.engineSettings = engine->GetSettings();
+	editorContext.monospaceFont = ImGui::GetIO().Fonts->Fonts[1];
 
 	images.LoadImages(engine->GetTextureManager());
 

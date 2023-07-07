@@ -155,10 +155,6 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 		{
 			this->mode = DebugMode::None;
 		}
-		else if (input->GetKeyDown(KeyCode::F1))
-		{
-			this->mode = DebugMode::Console;
-		}
 		else if (input->GetKeyDown(KeyCode::F2))
 		{
 			this->mode = DebugMode::FrameTime;
@@ -205,7 +201,6 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 		}
 	}
 
-	char logChar = (mode == DebugMode::Console) ? '*' : ' ';
 	char timeChar = (mode == DebugMode::FrameTime) ? '*' : ' ';
 	char cullChar = (mode == DebugMode::Culling) ? '*' : ' ';
 	char memChar = (mode == DebugMode::MemoryStats) ? '*' : ' ';
@@ -223,8 +218,8 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 
 	// Draw debug mode guide
 	char buffer[128];
-	const char* format = "[F1]Console%c [F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile  [F8]Vsync: %c, %.1f fps";
-	std::snprintf(buffer, sizeof(buffer), format, logChar, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
+	const char* format = "[F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile  [F8]Vsync: %c, %.1f fps";
+	std::snprintf(buffer, sizeof(buffer), format, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
 	textRenderer->AddText(kokko::ConstStringView(buffer), Vec2f(0.0f, 0.0f));
 
 	// Add frame time to debug graph

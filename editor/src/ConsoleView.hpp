@@ -55,7 +55,6 @@ public:
 	unsigned int GetTotalErrorCount() const { return totalErrorCount; }
 
 	void AddLogEntry(kokko::ConstStringView text, LogLevel level = LogLevel::Info);
-	void AddCommandEntry(kokko::ConstStringView text);
 };
 
 } // namespace editor
