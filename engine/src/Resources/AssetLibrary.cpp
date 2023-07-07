@@ -482,11 +482,33 @@ AssetInfo::AssetInfo(Allocator* allocator, ConstStringView virtualMount, ConstSt
 	virtualPath.Append('/');
 	virtualPath.Append(relativePath);
 
-	this->virtualMount = virtualPath.GetRef().SubStr(0, virtualMount.len);
-	this->pathRelativeToMount = virtualPath.GetRef().SubStr(virtualMount.len + 1);
+	const ConstStringView virtualPathView = virtualPath.GetRef();
+
+	this->virtualMount = virtualPathView.SubStr(0, virtualMount.len);
+	this->pathRelativeToMount = virtualPathView.SubStr(virtualMount.len + 1);
 	
-	intptr_t lastSlash = this->pathRelativeToMount.FindLast(ConstStringView("/", 1));
-	this->filename = virtualPath.GetRef().SubStr(lastSlash + 1);
+	intptr_t lastSlash = virtualPathView.FindLast(ConstStringView("/", 1));
+	this->filename = virtualPathView.SubStr(lastSlash + 1);
+}
+
+TEST_CASE("AssetInfo.VirtualPathParts")
+{
+	Uid uid;
+	uid.raw[0] = 877228993468580528;
+	uid.raw[1] = 6433944024937364386;
+
+	AssetInfo assetInfo(
+		Allocator::GetDefault(),
+		ConstStringView("engine"),
+		ConstStringView("materials/deferred_geometry/fallback.material"),
+		uid,
+		12570451739923486631,
+		AssetType::Material);
+
+	CHECK(assetInfo.GetVirtualPath().GetRef() == ConstStringView("engine/materials/deferred_geometry/fallback.material"));
+	CHECK(assetInfo.GetFilename() == ConstStringView("fallback.material"));
+	CHECK(assetInfo.GetUid() == uid);
+	CHECK(assetInfo.GetType() == AssetType::Material);
 }
 
 }
