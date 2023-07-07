@@ -79,6 +79,15 @@ void AssetView::Update(EditorContext& context)
 					}
 				}
 			}
+			else // No asset selected
+			{
+				const char* const text = "No asset selected";
+				ImVec2 region = ImGui::GetContentRegionAvail();
+				ImVec2 textSize = ImGui::CalcTextSize(text);
+				ImVec2 pos((region.x - textSize.x) / 2.0f, (region.y - textSize.y) / 2.0f);
+				ImGui::SetCursorPos(pos);
+				ImGui::Text(text);
+			}
 		}
 
 		if (requestFocus)
