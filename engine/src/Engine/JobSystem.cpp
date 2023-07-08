@@ -337,7 +337,7 @@ static void ResetTestData(TestJobData* data, size_t count)
 TEST_CASE("JobSystem")
 {
 	constexpr size_t IterationCount = 5;
-	constexpr size_t DataCount = 1'000'000;
+	constexpr size_t DataCount = 5'000'000;
 
 	TestJobConstantData jobConstantData;
 	jobConstantData.deltaTime = 0.01f;
@@ -357,7 +357,7 @@ TEST_CASE("JobSystem")
 	{
 		ResetTestData(results, DataCount);
 
-		JobSystem jobSystem(allocator, 5);
+		JobSystem jobSystem(allocator, 7);
 		Job* job;
 
 		{

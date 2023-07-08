@@ -17,6 +17,8 @@ JobAllocator::JobAllocator(Allocator* allocator) :
 	const size_t maxJobs = JobSystem::MaxJobsPerThreadPerFrame;
 	void* buf = allocator->AllocateAligned(sizeof(Job) * maxJobs, KK_CACHE_LINE);
 	jobs = static_cast<Job*>(buf);
+
+	std::memset(padding, 0, sizeof(padding));
 }
 
 JobAllocator::~JobAllocator()
@@ -27,6 +29,8 @@ JobAllocator::~JobAllocator()
 Job* JobAllocator::AllocateJob()
 {
 	size_t index = jobIndex.fetch_add(1);
+
+	assert(index < JobSystem::MaxJobsPerThreadPerFrame);
 
 	return &jobs[index];
 }
