@@ -99,7 +99,7 @@ EnvironmentSystem::EnvironmentSystem(
 	shaderManager(shaderManager),
 	meshManager(meshManager),
 	textureManager(textureManager),
-	environmentMaps(allocator),
+	components(allocator),
 	texturesToRemove(allocator),
 	entityMap(allocator),
 	viewportBlockStride(0),
@@ -111,8 +111,8 @@ EnvironmentSystem::EnvironmentSystem(
 	cubeMeshId(MeshId::Null),
 	resourcesUploaded(false)
 {
-	environmentMaps.Reserve(4);
-	environmentMaps.PushBack(); // Reserve index 0 as EnvironmentId::Null
+	components.Reserve(4);
+	components.PushBack(); // Reserve index 0 as EnvironmentId::Null
 }
 
 EnvironmentSystem::~EnvironmentSystem()
@@ -153,12 +153,12 @@ void EnvironmentSystem::Deinitialize()
 		ReleaseEnvTextures(textureManager, emptyEnvironmentMap);
 	}
 
-	for (size_t i = 1, count = environmentMaps.GetCount(); i < count; ++i)
+	for (size_t i = 1, count = components.GetCount(); i < count; ++i)
 	{
-		ReleaseEnvTextures(textureManager, environmentMaps[i].textures);
+		ReleaseEnvTextures(textureManager, components[i].textures);
 	}
 
-	environmentMaps.Resize(1);
+	components.Resize(1);
 }
 
 void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
@@ -325,9 +325,9 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 	// Upload any environment textures that need it
 	// TODO: Do rendering in a separate function
 
-	for (size_t i = 0, end = environmentMaps.GetCount(); i < end; ++i)
+	for (size_t i = 0, end = components.GetCount(); i < end; ++i)
 	{
-		auto& env = environmentMaps[i];
+		auto& env = components[i];
 		if (env.needsUpload && env.sourceTextureUid.HasValue())
 		{
 			static const int EnvironmentTextureSize = 1024;
@@ -542,13 +542,15 @@ EnvironmentId EnvironmentSystem::Lookup(Entity entity)
 
 EnvironmentId EnvironmentSystem::AddComponent(Entity entity)
 {
-	EnvironmentId id{ static_cast<unsigned int>(environmentMaps.GetCount()) };
+	EnvironmentId id{ static_cast<unsigned int>(components.GetCount()) };
 
 	auto mapPair = entityMap.Insert(entity.id);
 	mapPair->second = id;
 
-	environmentMaps.PushBack();
-	environmentMaps[id.i].entity = entity;
+	components.PushBack();
+	components[id.i].entity = entity;
+	components[id.i].exposure = 1.0f;
+	components[id.i].needsUpload = false;
 
 	return id;
 }
@@ -556,46 +558,46 @@ EnvironmentId EnvironmentSystem::AddComponent(Entity entity)
 void EnvironmentSystem::RemoveComponent(EnvironmentId id)
 {
 	assert(id != EnvironmentId::Null);
-	assert(id.i < environmentMaps.GetCount());
+	assert(id.i < components.GetCount());
 
 	// Release textures
-	textureManager->RemoveTexture(environmentMaps[id.i].textures.environmentTexture);
-	textureManager->RemoveTexture(environmentMaps[id.i].textures.diffuseIrradianceTexture);
-	textureManager->RemoveTexture(environmentMaps[id.i].textures.specularIrradianceTexture);
+	textureManager->RemoveTexture(components[id.i].textures.environmentTexture);
+	textureManager->RemoveTexture(components[id.i].textures.diffuseIrradianceTexture);
+	textureManager->RemoveTexture(components[id.i].textures.specularIrradianceTexture);
 
-	environmentMaps[id.i].textures = EnvironmentTextures();
+	components[id.i].textures = EnvironmentTextures();
 
 	// Remove from entity map
-	Entity entity = environmentMaps[id.i].entity;
+	Entity entity = components[id.i].entity;
 	auto* pair = entityMap.Lookup(entity.id);
 	if (pair != nullptr)
 		entityMap.Remove(pair);
 
-	if (environmentMaps.GetCount() > 2 && id.i + 1 < environmentMaps.GetCount()) // We need to swap another object
+	if (components.GetCount() > 2 && id.i + 1 < components.GetCount()) // We need to swap another object
 	{
-		size_t swapIdx = environmentMaps.GetCount() - 1;
+		size_t swapIdx = components.GetCount() - 1;
 
 		// Update the swapped objects id in the entity map
-		auto* swapKv = entityMap.Lookup(environmentMaps[swapIdx].entity.id);
+		auto* swapKv = entityMap.Lookup(components[swapIdx].entity.id);
 		if (swapKv != nullptr)
 			swapKv->second = id;
 
-		environmentMaps[id.i].entity = environmentMaps[swapIdx].entity;
-		environmentMaps[id.i].sourceTextureUid = environmentMaps[swapIdx].sourceTextureUid;
-		environmentMaps[id.i].textures = environmentMaps[swapIdx].textures;
+		components[id.i].entity = components[swapIdx].entity;
+		components[id.i].sourceTextureUid = components[swapIdx].sourceTextureUid;
+		components[id.i].textures = components[swapIdx].textures;
 	}
 
-	environmentMaps.PopBack();
+	components.PopBack();
 }
 
 void EnvironmentSystem::RemoveAll()
 {
-	for (size_t i = 1, count = environmentMaps.GetCount(); i < count; ++i)
+	for (size_t i = 1, count = components.GetCount(); i < count; ++i)
 	{
-		ReleaseEnvTextures(textureManager, environmentMaps[i].textures);
+		ReleaseEnvTextures(textureManager, components[i].textures);
 	}
 
-	environmentMaps.Resize(1);
+	components.Resize(1);
 	entityMap.Clear();
 }
 
@@ -605,7 +607,7 @@ void EnvironmentSystem::SetEnvironmentTexture(EnvironmentId id, const kokko::Uid
 
 	assert(id != EnvironmentId::Null);
 
-	auto& component = environmentMaps[id.i];
+	auto& component = components[id.i];
 
 	if (component.sourceTextureUid.HasValue() &&
 		component.sourceTextureUid.GetValue() == textureUid)
@@ -618,11 +620,18 @@ void EnvironmentSystem::SetEnvironmentTexture(EnvironmentId id, const kokko::Uid
 	component.needsUpload = true;
 }
 
+void EnvironmentSystem::SetExposure(EnvironmentId id, float exposure)
+{
+	assert(id != EnvironmentId::Null);
+	auto& component = components[id.i];
+	component.exposure = exposure;
+}
+
 EnvironmentId EnvironmentSystem::FindActiveEnvironment()
 {
-	for (size_t i = 1, count = environmentMaps.GetCount(); i < count; ++i)
+	for (size_t i = 1, count = components.GetCount(); i < count; ++i)
 	{
-		if (environmentMaps[i].sourceTextureUid.HasValue())
+		if (components[i].sourceTextureUid.HasValue())
 			return EnvironmentId{ static_cast<unsigned int>(i) };
 	}
 
@@ -632,13 +641,19 @@ EnvironmentId EnvironmentSystem::FindActiveEnvironment()
 EnvironmentTextures EnvironmentSystem::GetEnvironmentMap(EnvironmentId id) const
 {
 	assert(id != EnvironmentId::Null);
-	return environmentMaps[id.i].textures;
+	return components[id.i].textures;
 }
 
 Optional<Uid> EnvironmentSystem::GetSourceTextureUid(EnvironmentId id) const
 {
 	assert(id != EnvironmentId::Null);
-	return environmentMaps[id.i].sourceTextureUid;
+	return components[id.i].sourceTextureUid;
+}
+
+float EnvironmentSystem::GetExposure(EnvironmentId id) const
+{
+	assert(id != EnvironmentId::Null);
+	return components[id.i].exposure;
 }
 
 EnvironmentTextures EnvironmentSystem::GetEmptyEnvironmentMap() const
