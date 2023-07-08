@@ -5,6 +5,7 @@
 #include "Core/ArrayView.hpp"
 
 #include "Rendering/CameraParameters.hpp"
+#include "Rendering/RenderDebugSettings.hpp"
 #include "Rendering/RenderViewport.hpp"
 
 namespace kokko
@@ -15,6 +16,7 @@ class GraphicsFeatureCommandList;
 class LightManager;
 class MeshManager;
 class PostProcessRenderer;
+class RenderDebugSettings;
 class RenderGraphResources;
 class ShaderManager;
 class TextureManager;
@@ -53,6 +55,7 @@ public:
 
 		// Render state
 
+		const RenderDebugSettings& renderDebug;
 		const CameraParameters& cameraParameters;
 		const RenderViewport& fullscreenViewport;
 		ArrayView<const RenderViewport> shadowViewports;

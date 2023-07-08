@@ -54,6 +54,10 @@ void DebugView::Update(EditorContext& context)
 			if (ImGui::Checkbox("Draw mesh normals", &drawNormals))
 				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawNormals, drawNormals);
 
+			bool drawTerrain = features.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawTerrainTiles);
+			if (ImGui::Checkbox("Draw terrain tiles", &drawTerrain))
+				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawTerrainTiles, drawTerrain);
+
 			if (ImGui::Button("Capture profile"))
 			{
 				debug->RequestBeginProfileSession();

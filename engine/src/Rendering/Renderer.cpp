@@ -102,7 +102,8 @@ Renderer::Renderer(
 	CameraSystem* cameraSystem,
 	LightManager* lightManager,
 	kokko::EnvironmentSystem* environmentSystem,
-	const kokko::ResourceManagers& resourceManagers) :
+	const kokko::ResourceManagers& resourceManagers,
+	const RenderDebugSettings* renderDebug) :
 	allocator(allocator),
 	device(renderDevice),
 	encoder(commandEncoder),
@@ -122,6 +123,7 @@ Renderer::Renderer(
 	meshManager(resourceManagers.meshManager),
 	materialManager(resourceManagers.materialManager),
 	textureManager(resourceManagers.textureManager),
+	renderDebug(renderDebug),
 	lockCullingCamera(false),
 	commandList(allocator),
 	objectVisibility(allocator),
@@ -336,6 +338,7 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 		textureManager,
 		environmentSystem,
 		lightManager,
+		*renderDebug,
 		cameraParams,
 		viewportData[viewportIndexFullscreen],
 		ArrayView(viewportData + viewportIndicesShadowCascade.start,
@@ -913,6 +916,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 			textureManager,
 			environmentSystem,
 			lightManager,
+			*renderDebug,
 			cameraParameters,
 			viewportData[viewportIndexFullscreen],
 			ArrayView(&viewportData[viewportIndicesShadowCascade.start], viewportIndicesShadowCascade.GetLength()),
@@ -940,13 +944,13 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	return objectDrawCount;
 }
 
-void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings)
+void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	Entity debugEntity = settings.GetDebugEntity();
+	Entity debugEntity = renderDebug->GetDebugEntity();
 	if (debugEntity != Entity::Null &&
-		settings.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawNormals))
+		renderDebug->IsFeatureEnabled(RenderDebugFeatureFlag::DrawNormals))
 	{
 		if (normalDebugBufferId == 0)
 		{
@@ -993,7 +997,7 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::Ren
 		}
 	}
 
-	if (settings.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawBounds))
+	if (renderDebug->IsFeatureEnabled(RenderDebugFeatureFlag::DrawBounds))
 	{
 		Color color(1.0f, 1.0f, 1.0f, 1.0f);
 

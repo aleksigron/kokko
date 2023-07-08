@@ -90,7 +90,7 @@ Engine::Engine(
 
 	world.CreateScope(allocatorManager, "World", alloc);
 	world.New(allocatorManager, world.allocator, debugNameAllocator, renderDevice,
-		commandEncoder.Get(), assetLoader, resManagers);
+		commandEncoder.Get(), assetLoader, resManagers, &(settings.renderDebug));
 }
 
 Engine::~Engine()
@@ -153,7 +153,7 @@ void Engine::Render(const Optional<CameraParameters>& editorCamera, const kokko:
 	KOKKO_PROFILE_FUNCTION();
 
 	world.instance->Render(windowManager.instance->GetWindow(), editorCamera, framebuffer);
-	world.instance->DebugRender(debug.instance->GetVectorRenderer(), settings.renderDebug);
+	world.instance->DebugRender(debug.instance->GetVectorRenderer());
 
 	if (settings.enableDebugTools)
 	{

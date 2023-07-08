@@ -6,7 +6,7 @@ A simple cross-platform game engine using OpenGL. I hope that little by little, 
 
 Build and tests are being run on CI with Windows and Linux. Windows is tested much more regularly, so if you run into issues with Linux support, please report them with GitHub issues.
 
-![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20220213.jpg)
+![Screenshot](https://aleksigron.blob.core.windows.net/public/kokko-20230708.png)
 
 ## Features
 

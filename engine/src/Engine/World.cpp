@@ -35,7 +35,8 @@ World::World(AllocatorManager* allocManager,
 	render::Device* renderDevice,
 	render::CommandEncoder* commandEncoder,
 	AssetLoader* assetLoader,
-	const ResourceManagers& resourceManagers) :
+	const ResourceManagers& resourceManagers,
+	const RenderDebugSettings* renderDebug) :
 	allocator(allocator),
 	commandEncoder(commandEncoder),
 	levelSerializer(allocator, renderDevice),
@@ -62,7 +63,7 @@ World::World(AllocatorManager* allocManager,
 
 	renderer.CreateScope(allocManager, "Renderer", allocator);
 	renderer.New(renderer.allocator, renderDevice, commandEncoder, meshComponentSystem.instance, scene.instance,
-		cameraSystem.instance, lightManager.instance, environmentSystem.instance, resourceManagers);
+		cameraSystem.instance, lightManager.instance, environmentSystem.instance, resourceManagers, renderDebug);
 
 	scriptSystem.CreateScope(allocManager, "ScriptSystem", allocator);
 	scriptSystem.New(scriptSystem.allocator);
@@ -147,9 +148,9 @@ void World::Render(Window* window, const Optional<CameraParameters>& editorCamer
 	renderer.instance->Render(window, editorCamera, framebuffer);
 }
 
-void World::DebugRender(DebugVectorRenderer* vectorRenderer, const RenderDebugSettings& renderDebug)
+void World::DebugRender(DebugVectorRenderer* vectorRenderer)
 {
-	renderer.instance->DebugRender(vectorRenderer, renderDebug);
+	renderer.instance->DebugRender(vectorRenderer);
 }
 
 } // namespace kokko

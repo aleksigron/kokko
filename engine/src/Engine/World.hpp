@@ -51,7 +51,8 @@ public:
 		render::Device* renderDevice,
 		render::CommandEncoder* commandEncoder,
 		AssetLoader* assetLoader,
-		const ResourceManagers& resourceManagers);
+		const ResourceManagers& resourceManagers,
+		const RenderDebugSettings* renderDebug);
 	~World();
 
 	void Initialize();
@@ -62,7 +63,7 @@ public:
 	void Update(InputManager* inputManager);
 	void Render(Window* window, const Optional<CameraParameters>& editorCamera,
 		const render::Framebuffer& framebuffer);
-	void DebugRender(DebugVectorRenderer* vectorRenderer, const RenderDebugSettings& renderDebug);
+	void DebugRender(DebugVectorRenderer* vectorRenderer);
 
 	EntityManager* GetEntityManager() { return entityManager.instance; }
 	Scene* GetScene() { return scene.instance; }
