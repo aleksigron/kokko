@@ -685,6 +685,10 @@ void EntityView::DrawEnvironmentComponent(EditorContext& context, World* world)
 				ImGui::EndDragDropTarget();
 			}
 
+			float exposure = envSystem->GetExposure(envId);
+			if (ImGui::DragFloat("Exposure", &exposure, 0.0025f, 0.0025f, 10.0f))
+				envSystem->SetExposure(envId, exposure);
+
 			if (componentVisible == false)
 				envSystem->RemoveComponent(envId);
 		}

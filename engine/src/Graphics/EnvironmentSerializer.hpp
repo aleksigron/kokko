@@ -31,6 +31,7 @@ public:
 	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
 	{
 		YAML::Node textureNode = map["source_texture"];
+		YAML::Node exposureNode = map["exposure"];
 
 		if (textureNode.IsDefined() && textureNode.IsScalar())
 		{
@@ -43,6 +44,9 @@ public:
 				envSystem->SetEnvironmentTexture(envId, uidResult.GetValue());
 			else
 				KK_LOG_WARN("EnvironmentSerializer: Parsing source texture UID from string failed");
+
+			if (exposureNode.IsDefined() && exposureNode.IsScalar())
+				envSystem->SetExposure(envId, exposureNode.as<float>());
 		}
 	}
 
@@ -61,9 +65,12 @@ public:
 				textureUidStr = textureUidBuf;
 			}
 
+			float exposure = envSystem->GetExposure(envId);
+
 			out << YAML::BeginMap;
 			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "environment";
 			out << YAML::Key << "source_texture" << YAML::Value << textureUidStr;
+			out << YAML::Key << "exposure" << YAML::Value << exposure;
 			out << YAML::EndMap;
 		}
 	}

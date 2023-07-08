@@ -62,6 +62,7 @@ private:
 		Entity entity;
 		Optional<Uid> sourceTextureUid;
 		EnvironmentTextures textures;
+		float exposure;
 		bool needsUpload;
 	};
 
@@ -75,7 +76,7 @@ private:
 	MeshManager* meshManager;
 	TextureManager* textureManager;
 
-	Array<EnvironmentComponent> environmentMaps;
+	Array<EnvironmentComponent> components;
 	Array<render::TextureId> texturesToRemove;
 
 	HashMap<unsigned int, EnvironmentId> entityMap;
@@ -122,11 +123,13 @@ public:
 	void RemoveAll();
 
 	void SetEnvironmentTexture(EnvironmentId id, const kokko::Uid& textureUid);
+	void SetExposure(EnvironmentId id, float exposure);
 
 	EnvironmentId FindActiveEnvironment();
 
 	EnvironmentTextures GetEnvironmentMap(EnvironmentId id) const;
 	Optional<Uid> GetSourceTextureUid(EnvironmentId id) const;
+	float GetExposure(EnvironmentId id) const;
 	EnvironmentTextures GetEmptyEnvironmentMap() const;
 };
 

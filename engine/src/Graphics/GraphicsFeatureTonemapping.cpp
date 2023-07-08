@@ -2,6 +2,7 @@
 
 #include "Core/Core.hpp"
 
+#include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 
 #include "Rendering/RenderDevice.hpp"
@@ -67,11 +68,14 @@ void GraphicsFeatureTonemapping::Deinitialize(const InitializeParameters& parame
 
 void GraphicsFeatureTonemapping::Upload(const UploadParameters& parameters)
 {
-	kokko::render::Device* device = parameters.renderDevice;
-
 	TonemapUniformBlock uniforms;
 	uniforms.exposure = 1.0f;
 
+	kokko::EnvironmentId envId = parameters.environmentSystem->FindActiveEnvironment();
+	if (envId != kokko::EnvironmentId::Null)
+		uniforms.exposure = parameters.environmentSystem->GetExposure(envId);
+
+	kokko::render::Device* device = parameters.renderDevice;
 	device->SetBufferSubData(uniformBufferId, 0, sizeof(TonemapUniformBlock), &uniforms);
 }
 
