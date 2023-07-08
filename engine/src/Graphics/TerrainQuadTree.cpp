@@ -100,16 +100,17 @@ void TerrainQuadTree::DestroyResources(Allocator* allocator, kokko::render::Devi
 	allocator->Deallocate(tileTextureIds);
 }
 
-void TerrainQuadTree::GetTilesToRender(
-	const FrustumPlanes& frustum, const Mat4x4f& viewProj, Array<TerrainTileId>& resultOut)
+void TerrainQuadTree::GetTilesToRender(const FrustumPlanes& frustum, const Mat4x4f& viewProj,
+	const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut)
 {
-	RenderTile(TerrainTileId{}, frustum, viewProj, resultOut);
+	RenderTile(TerrainTileId{}, frustum, viewProj, renderDebug, resultOut);
 }
 
 void TerrainQuadTree::RenderTile(
 	const TerrainTileId& id,
 	const FrustumPlanes& frustum,
 	const Mat4x4f& vp,
+	const RenderDebugSettings& renderDebug,
 	Array<TerrainTileId>& resultOut)
 {
 	float tileScale = GetTileScale(id.level);
@@ -176,17 +177,20 @@ void TerrainQuadTree::RenderTile(
 	{
 		resultOut.PushBack(id);
 
-		Vec3f scale = tileSize;
-		scale.y = 0.0f;
+		if (renderDebug.IsFeatureEnabled(RenderDebugFeatureFlag::DrawTerrainTiles))
+		{
+			Vec3f scale = tileSize;
+			scale.y = 0.0f;
 
-		Mat4x4f transform = Mat4x4f::Translate(tileBounds.center) * Mat4x4f::Scale(scale);
+			Mat4x4f transform = Mat4x4f::Translate(tileBounds.center) * Mat4x4f::Scale(scale);
 
-		vr->DrawWireCube(transform, col);
+			vr->DrawWireCube(transform, col);
 
-		char buf[32];
-		auto [out, size] = fmt::format_to_n(buf, sizeof(buf), "{:.3f}", sizeMaxAxis);
+			char buf[32];
+			auto [out, size] = fmt::format_to_n(buf, sizeof(buf), "{:.3f}", sizeMaxAxis);
 
-		tr->AddTextNormalized(ConstStringView(buf, size), screenCoord.xy());
+			tr->AddTextNormalized(ConstStringView(buf, size), screenCoord.xy());
+		}
 	}
 	else
 	{
@@ -199,7 +203,7 @@ void TerrainQuadTree::RenderTile(
 				tileId.x = id.x * 2 + x;
 				tileId.y = id.y * 2 + y;
 
-				RenderTile(tileId, frustum, vp, resultOut);
+				RenderTile(tileId, frustum, vp, renderDebug, resultOut);
 			}
 		}
 	}

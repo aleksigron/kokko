@@ -99,6 +99,7 @@ private:
 	MeshManager* meshManager;
 	MaterialManager* materialManager;
 	TextureManager* textureManager;
+	const RenderDebugSettings* renderDebug;
 
 	bool lockCullingCamera;
 	Mat4x4fBijection lockCullingCameraTransform;
@@ -135,7 +136,8 @@ public:
 		CameraSystem* cameraSystem,
 		LightManager* lightManager,
 		EnvironmentSystem* environmentSystem,
-		const ResourceManagers& resourceManagers);
+		const ResourceManagers& resourceManagers,
+		const RenderDebugSettings* renderDebug);
 	~Renderer();
 
 	void Initialize();
@@ -146,7 +148,7 @@ public:
 
 	void Render(Window* window, const Optional<CameraParameters>& editorCamera, const render::Framebuffer& targetFramebuffer);
 
-	void DebugRender(DebugVectorRenderer* vectorRenderer, const kokko::RenderDebugSettings& settings);
+	void DebugRender(DebugVectorRenderer* vectorRenderer);
 
 	// Transfers ownership to Renderer
 	void AddGraphicsFeature(kokko::GraphicsFeature* graphicsFeature);

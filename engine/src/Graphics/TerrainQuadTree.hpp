@@ -16,6 +16,8 @@ struct TerrainTileId;
 namespace kokko
 {
 
+class RenderDebugSettings;
+
 struct TerrainParameters;
 
 namespace render
@@ -41,8 +43,8 @@ public:
 		const TerrainParameters& params);
 	void DestroyResources(Allocator* allocator, kokko::render::Device* renderDevice);
 
-	void GetTilesToRender(
-		const FrustumPlanes& frustum, const Mat4x4f& viewProj, Array<TerrainTileId>& resultOut);
+	void GetTilesToRender(const FrustumPlanes& frustum, const Mat4x4f& viewProj,
+		const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut);
 
 	int GetLevelCount() const;
 
@@ -68,6 +70,7 @@ private:
 		const TerrainTileId& id,
 		const FrustumPlanes& frustum,
 		const Mat4x4f& vp,
+		const RenderDebugSettings& renderDebug,
 		Array<TerrainTileId>& resultOut);
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);

@@ -214,7 +214,7 @@ void EditorApp::Update(kokko::EngineSettings* engineSettings, bool& shouldExitOu
 
 	core->Update();
 
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 
 	if (exitRequested)
 		shouldExitOut = true;
