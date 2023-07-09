@@ -25,4 +25,6 @@ layout(std140, binding = BLOCK_BINDING_OBJECT) uniform Lighting
 	float shadow_bias_offset;
 	float shadow_bias_factor;
 	float shadow_bias_clamp;
+
+	float irradiance_intensity;
 };

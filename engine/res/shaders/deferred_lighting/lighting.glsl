@@ -228,7 +228,7 @@ void main()
 
 	float ao = texture(ssao_map, fs_in.tex_coord).r;
 
-	vec3 ambient = (diff_irr + spec_irr) * albedo * ao;
+	vec3 ambient = (diff_irr + spec_irr) * irradiance_intensity * albedo * ao;
 
 	color = ambient + Lo;
 }
