@@ -9,7 +9,7 @@
 #include "Core/Hash.hpp"
 #include "Core/String.hpp"
 
-#include "EditorConstants.hpp"
+#include "App/EditorConstants.hpp"
 
 namespace kokko
 {

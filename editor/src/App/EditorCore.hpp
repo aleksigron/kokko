@@ -8,10 +8,10 @@
 
 #include "Resources/AssetLibrary.hpp"
 
-#include "FilePickerDialog.hpp"
+#include "App/EditorImages.hpp"
+#include "App/EditorContext.hpp"
 
-#include "EditorImages.hpp"
-#include "EditorContext.hpp"
+#include "Views/FilePickerDialog.hpp"
 
 class Allocator;
 class Engine;

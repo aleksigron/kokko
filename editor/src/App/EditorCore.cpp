@@ -17,16 +17,18 @@
 #include "System/Filesystem.hpp"
 #include "System/WindowManager.hpp"
 
-#include "AssetBrowserView.hpp"
-#include "AssetView.hpp"
-#include "ConsoleLogger.hpp"
-#include "ConsoleView.hpp"
-#include "DebugView.hpp"
-#include "EditorConstants.hpp"
-#include "EditorProject.hpp"
-#include "EntityListView.hpp"
-#include "EntityView.hpp"
-#include "SceneView.hpp"
+#include "App/EditorConstants.hpp"
+#include "App/EditorProject.hpp"
+
+#include "System/ConsoleLogger.hpp"
+
+#include "Views/AssetBrowserView.hpp"
+#include "Views/AssetView.hpp"
+#include "Views/ConsoleView.hpp"
+#include "Views/DebugView.hpp"
+#include "Views/EntityListView.hpp"
+#include "Views/EntityView.hpp"
+#include "Views/SceneView.hpp"
 
 namespace kokko
 {

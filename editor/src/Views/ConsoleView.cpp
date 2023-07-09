@@ -18,7 +18,7 @@
 #include "System/Time.hpp"
 #include "Platform/Window.hpp"
 
-#include "EditorContext.hpp"
+#include "App/EditorContext.hpp"
 
 namespace kokko
 {

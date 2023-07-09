@@ -1,6 +1,6 @@
-#include "ConsoleLogger.hpp"
+#include "System/ConsoleLogger.hpp"
 
-#include "ConsoleView.hpp"
+#include "Views/ConsoleView.hpp"
 
 namespace kokko
 {

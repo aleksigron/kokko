@@ -13,7 +13,7 @@
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/RenderTypes.hpp"
 
-#include "EditorContext.hpp"
+#include "App/EditorContext.hpp"
 
 namespace kokko
 {

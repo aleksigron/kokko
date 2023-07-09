@@ -10,7 +10,7 @@
 
 #include "System/Time.hpp"
 
-#include "EditorContext.hpp"
+#include "App/EditorContext.hpp"
 
 namespace kokko
 {
