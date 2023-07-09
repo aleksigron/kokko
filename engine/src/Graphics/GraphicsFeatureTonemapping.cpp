@@ -5,6 +5,7 @@
 #include "Graphics/EnvironmentSystem.hpp"
 #include "Graphics/GraphicsFeatureCommandList.hpp"
 
+#include "Rendering/CameraSystem.hpp"
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderGraphResources.hpp"
 #include "Rendering/RenderPassType.hpp"
@@ -71,9 +72,14 @@ void GraphicsFeatureTonemapping::Upload(const UploadParameters& parameters)
 	TonemapUniformBlock uniforms;
 	uniforms.exposure = 1.0f;
 
-	kokko::EnvironmentId envId = parameters.environmentSystem->FindActiveEnvironment();
-	if (envId != kokko::EnvironmentId::Null)
-		uniforms.exposure = parameters.environmentSystem->GetExposure(envId);
+	Entity cameraEntity = parameters.cameraSystem->GetActiveCamera();
+	if (cameraEntity != Entity::Null)
+	{
+		kokko::CameraId cameraId = parameters.cameraSystem->Lookup(cameraEntity);
+
+		if (cameraId != kokko::CameraId::Null)
+			uniforms.exposure = parameters.cameraSystem->GetExposure(cameraId);
+	}
 
 	kokko::render::Device* device = parameters.renderDevice;
 	device->SetBufferSubData(uniformBufferId, 0, sizeof(TonemapUniformBlock), &uniforms);

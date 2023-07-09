@@ -20,7 +20,6 @@
 #include "Resources/MaterialData.hpp"
 
 class Allocator;
-class CameraSystem;
 class Scene;
 class RenderTargetContainer;
 class Framebuffer;
@@ -31,6 +30,7 @@ struct RenderViewport;
 namespace kokko
 {
 
+class CameraSystem;
 class DebugVectorRenderer;
 class EnvironmentSystem;
 class GraphicsFeature;

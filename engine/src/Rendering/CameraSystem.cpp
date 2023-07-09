@@ -4,6 +4,9 @@
 
 #include "Rendering/CameraParameters.hpp"
 
+namespace kokko
+{
+
 const CameraId CameraId::Null = CameraId{ 0 };
 const char* CameraSystem::ProjectionTypeNames[] = { "perspective", "orthographic" };
 const char* CameraSystem::ProjectionTypeDisplayNames[] = { "Perspective", "Orthographic" };
@@ -47,19 +50,19 @@ void CameraSystem::Reallocate(unsigned int required)
 	entityMap.Reserve(required);
 
 	InstanceData newData;
-	unsigned int bytes = required * (sizeof(Entity) + sizeof(ProjectionParameters));
+	unsigned int bytes = required * (sizeof(Entity) + sizeof(CameraComponent));
 
 	newData.buffer = allocator->Allocate(bytes, "CameraSystem.data.buffer");
 	newData.count = data.count;
 	newData.allocated = required;
 
 	newData.entity = static_cast<Entity*>(newData.buffer);
-	newData.projection = reinterpret_cast<ProjectionParameters*>(newData.entity + required);
+	newData.components = reinterpret_cast<CameraComponent*>(newData.entity + required);
 
 	if (data.buffer != nullptr)
 	{
 		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
-		std::memcpy(newData.projection, data.projection, data.count * sizeof(ProjectionParameters));
+		std::memcpy(newData.components, data.components, data.count * sizeof(CameraComponent));
 
 		allocator->Deallocate(data.buffer);
 	}
@@ -92,7 +95,7 @@ void CameraSystem::AddCamera(unsigned int count, const Entity* entities, CameraI
 		mapPair->second.i = id;
 
 		data.entity[id] = e;
-		data.projection[id] = ProjectionParameters{};
+		data.components[id] = CameraComponent{ ProjectionParameters(), 1.0f };
 
 		cameraIdsOut[i].i = id;
 	}
@@ -128,7 +131,7 @@ void CameraSystem::RemoveCamera(CameraId id)
 			swapKv->second = id;
 
 		data.entity[id.i] = data.entity[swapIdx];
-		data.projection[id.i] = data.projection[swapIdx];
+		data.components[id.i] = data.components[swapIdx];
 	}
 
 	--data.count;
@@ -144,12 +147,22 @@ void CameraSystem::RemoveAll()
 
 const ProjectionParameters& CameraSystem::GetProjection(CameraId id) const
 {
-	return data.projection[id.i];
+	return data.components[id.i].projection;
 }
 
-void CameraSystem::SetProjection(CameraId id, const ProjectionParameters& parameters) const
+void CameraSystem::SetProjection(CameraId id, const ProjectionParameters& parameters)
 {
-	data.projection[id.i] = parameters;
+	data.components[id.i].projection = parameters;
+}
+
+float CameraSystem::GetExposure(CameraId id) const
+{
+	return data.components[id.i].exposure;
+}
+
+void CameraSystem::SetExposure(CameraId id, float exposure)
+{
+	data.components[id.i].exposure = exposure;
 }
 
 Entity CameraSystem::GetActiveCamera() const
@@ -161,4 +174,5 @@ void CameraSystem::SetActiveCamera(Entity entity)
 {
 	activeCamera = entity;
 }
- 
+
+} // namespace kokko

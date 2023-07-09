@@ -62,7 +62,7 @@ private:
 		Entity entity;
 		Optional<Uid> sourceTextureUid;
 		EnvironmentTextures textures;
-		float exposure;
+		float intensity;
 		bool needsUpload;
 	};
 
@@ -123,13 +123,13 @@ public:
 	void RemoveAll();
 
 	void SetEnvironmentTexture(EnvironmentId id, const kokko::Uid& textureUid);
-	void SetExposure(EnvironmentId id, float exposure);
+	void SetIntensity(EnvironmentId id, float intensity);
 
 	EnvironmentId FindActiveEnvironment();
 
 	EnvironmentTextures GetEnvironmentMap(EnvironmentId id) const;
 	Optional<Uid> GetSourceTextureUid(EnvironmentId id) const;
-	float GetExposure(EnvironmentId id) const;
+	float GetIntensity(EnvironmentId id) const;
 	EnvironmentTextures GetEmptyEnvironmentMap() const;
 };
 
