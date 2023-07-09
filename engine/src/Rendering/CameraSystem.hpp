@@ -18,7 +18,14 @@
 
 class Allocator;
 
-struct ProjectionParameters;
+namespace kokko
+{
+
+struct CameraComponent
+{
+	ProjectionParameters projection;
+	float exposure;
+};
 
 struct CameraId
 {
@@ -53,8 +60,12 @@ public:
 	void RemoveAll();
 
 	Entity GetEntity(CameraId id) const { return data.entity[id.i]; }
+
 	const ProjectionParameters& GetProjection(CameraId id) const;
-	void SetProjection(CameraId id, const ProjectionParameters& parameters) const;
+	void SetProjection(CameraId id, const ProjectionParameters& parameters);
+
+	float GetExposure(CameraId id) const;
+	void SetExposure(CameraId id, float exposure);
 
 	Entity GetActiveCamera() const;
 	void SetActiveCamera(Entity entity);
@@ -75,7 +86,7 @@ private:
 		void* buffer;
 
 		Entity* entity;
-		ProjectionParameters* projection;
+		CameraComponent* components;
 	}
 	data;
 
@@ -83,3 +94,5 @@ private:
 
 	void Reallocate(unsigned int required);
 };
+
+} // namespace kokko

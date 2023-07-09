@@ -16,7 +16,6 @@ struct CameraParameters;
 
 class EntityManager;
 class Scene;
-class CameraSystem;
 class ScriptSystem;
 
 class ComponentSerializer;
@@ -24,6 +23,7 @@ class ComponentSerializer;
 namespace kokko
 {
 class AssetLoader;
+class CameraSystem;
 class DebugVectorRenderer;
 class EnvironmentSystem;
 class Filesystem;

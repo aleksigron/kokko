@@ -549,7 +549,7 @@ EnvironmentId EnvironmentSystem::AddComponent(Entity entity)
 
 	components.PushBack();
 	components[id.i].entity = entity;
-	components[id.i].exposure = 1.0f;
+	components[id.i].intensity = 1.0f;
 	components[id.i].needsUpload = false;
 
 	return id;
@@ -620,11 +620,11 @@ void EnvironmentSystem::SetEnvironmentTexture(EnvironmentId id, const kokko::Uid
 	component.needsUpload = true;
 }
 
-void EnvironmentSystem::SetExposure(EnvironmentId id, float exposure)
+void EnvironmentSystem::SetIntensity(EnvironmentId id, float intensity)
 {
 	assert(id != EnvironmentId::Null);
 	auto& component = components[id.i];
-	component.exposure = exposure;
+	component.intensity = intensity;
 }
 
 EnvironmentId EnvironmentSystem::FindActiveEnvironment()
@@ -650,10 +650,10 @@ Optional<Uid> EnvironmentSystem::GetSourceTextureUid(EnvironmentId id) const
 	return components[id.i].sourceTextureUid;
 }
 
-float EnvironmentSystem::GetExposure(EnvironmentId id) const
+float EnvironmentSystem::GetIntensity(EnvironmentId id) const
 {
 	assert(id != EnvironmentId::Null);
-	return components[id.i].exposure;
+	return components[id.i].intensity;
 }
 
 EnvironmentTextures EnvironmentSystem::GetEmptyEnvironmentMap() const

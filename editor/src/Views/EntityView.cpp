@@ -411,6 +411,10 @@ void EntityView::DrawCameraComponent(Entity selectedEntity, World* world)
 			if (edited)
 				cameraSystem->SetProjection(cameraId, params);
 
+			float exposure = cameraSystem->GetExposure(cameraId);
+			if (ImGui::DragFloat("Exposure", &exposure, 0.0025f, 0.0025f, 10.0f))
+				cameraSystem->SetExposure(cameraId, exposure);
+
 			if (componentVisible == false)
 				cameraSystem->RemoveCamera(cameraId);
 		}
@@ -685,9 +689,9 @@ void EntityView::DrawEnvironmentComponent(EditorContext& context, World* world)
 				ImGui::EndDragDropTarget();
 			}
 
-			float exposure = envSystem->GetExposure(envId);
-			if (ImGui::DragFloat("Exposure", &exposure, 0.0025f, 0.0025f, 10.0f))
-				envSystem->SetExposure(envId, exposure);
+			float exposure = envSystem->GetIntensity(envId);
+			if (ImGui::DragFloat("Intensity", &exposure, 0.0025f, 0.0025f, 10.0f))
+				envSystem->SetIntensity(envId, exposure);
 
 			if (componentVisible == false)
 				envSystem->RemoveComponent(envId);

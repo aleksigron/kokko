@@ -10,6 +10,9 @@
 
 #include "Rendering/CameraSystem.hpp"
 
+namespace kokko
+{
+
 class CameraSerializer final : public ComponentSerializer
 {
 public:
@@ -94,6 +97,10 @@ public:
 
 		CameraId cameraId = cameraSystem->AddCamera(entity);
 		cameraSystem->SetProjection(cameraId, params);
+
+		YAML::Node exposureNode = map["exposure"];
+		if (exposureNode.IsDefined() && exposureNode.IsScalar())
+			cameraSystem->SetExposure(cameraId, exposureNode.as<float>());
 	}
 
 	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
@@ -105,6 +112,7 @@ public:
 			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "camera";
 
 			const ProjectionParameters& params = cameraSystem->GetProjection(cameraId);
+			float exposure = cameraSystem->GetExposure(cameraId);
 
 			out << YAML::Key << "projection_type" << YAML::Value << CameraSystem::GetProjectionTypeName(params.projection);
 
@@ -121,6 +129,8 @@ public:
 				out << YAML::Key << "far" << YAML::Value << params.orthographicFar;
 			}
 
+			out << YAML::Key << "exposure" << YAML::Value << exposure;
+
 			out << YAML::EndMap;
 		}
 	}
@@ -128,3 +138,5 @@ public:
 private:
 	CameraSystem* cameraSystem;
 };
+
+} // namespace kokko

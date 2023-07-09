@@ -33,14 +33,14 @@ void DebugCulling::UpdateAndDraw(kokko::World* world)
 	if (cullingCameraIsLocked)
 	{
 		kokko::Renderer* renderer = world->GetRenderer();
-		CameraSystem* cameraSystem = world->GetCameraSystem();
+		kokko::CameraSystem* cameraSystem = world->GetCameraSystem();
 
 		textRenderer->AddText(kokko::ConstStringView("Culling camera is locked"), guideTextPosition);
 
 		const Mat4x4f& transform = renderer->GetCullingCameraTransform();
 
 		Entity cameraEntity = cameraSystem->GetActiveCamera();
-		CameraId cameraId = cameraSystem->Lookup(cameraEntity);
+		kokko::CameraId cameraId = cameraSystem->Lookup(cameraEntity);
 		ProjectionParameters params = cameraSystem->GetProjection(cameraId);
 		params.perspectiveFar = params.perspectiveFar < 10.0f ? params.perspectiveFar : 10.0f;
 

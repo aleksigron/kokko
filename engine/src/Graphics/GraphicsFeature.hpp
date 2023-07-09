@@ -11,6 +11,7 @@
 namespace kokko
 {
 
+class CameraSystem;
 class EnvironmentSystem;
 class GraphicsFeatureCommandList;
 class LightManager;
@@ -50,6 +51,7 @@ public:
 
 		// Component systems
 
+		CameraSystem* cameraSystem;
 		EnvironmentSystem* environmentSystem;
 		LightManager* lightManager;
 

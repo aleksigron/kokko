@@ -476,7 +476,7 @@ void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* 
 		else
 		{
 			Scene* scene = world->GetScene();
-			CameraSystem* cameraSystem = world->GetCameraSystem();
+			kokko::CameraSystem* cameraSystem = world->GetCameraSystem();
 
 			Entity cameraEntity = cameraSystem->GetActiveCamera();
 			SceneObjectId cameraSceneObject = scene->Lookup(cameraEntity);
@@ -489,8 +489,7 @@ void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* 
 			else
 				KK_LOG_ERROR("DebugVectorRenderer: camera's transform couldn't be inverted");
 
-
-			CameraId cameraId = cameraSystem->Lookup(cameraEntity);
+			kokko::CameraId cameraId = cameraSystem->Lookup(cameraEntity);
 			ProjectionParameters projectionParams = cameraSystem->GetProjection(cameraId);
 			projectionParams.SetAspectRatio(viewport.size.x, viewport.size.y);
 

@@ -72,8 +72,8 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 	}
 	case EntityComponentType::Camera:
 	{
-		CameraSystem* cameraSystem = world->GetCameraSystem();
-		CameraId cameraId = cameraSystem->Lookup(entity);
+		kokko::CameraSystem* cameraSystem = world->GetCameraSystem();
+		kokko::CameraId cameraId = cameraSystem->Lookup(entity);
 		if (cameraId == CameraId::Null)
 			cameraSystem->AddCamera(entity);
 		break;
