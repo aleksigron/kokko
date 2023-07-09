@@ -113,10 +113,19 @@ void EntityView::Update(EditorContext& context)
 
 void EntityView::DrawButtons(Entity selectedEntity, World* world)
 {
+	float availWidth = ImGui::GetContentRegionAvailWidth();
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.05f, 0.0f, 1.0f));
+	if (ImGui::Button("Destroy entity", ImVec2(availWidth, 0.0f)))
+		requestDestroyEntity = selectedEntity;
+	ImGui::PopStyleColor();
+
+	ImGui::Separator();
+	ImGui::Spacing();
+
 	bool addComponent = false;
 	EntityComponentType addComponentType;
 
-	ImGui::PushItemWidth(ImGui::GetFontSize() * 9.0f);
+	ImGui::PushItemWidth(-1);
 	if (ImGui::BeginCombo("##AddComponentCombo", "Add component...", ImGuiComboFlags_NoArrowButton))
 	{
 		for (size_t i = 0; i < EntityFactory::ComponentTypeCount; ++i)
@@ -134,13 +143,6 @@ void EntityView::DrawButtons(Entity selectedEntity, World* world)
 
 	if (addComponent)
 		EntityFactory::AddComponent(world, selectedEntity, addComponentType);
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("Destroy entity"))
-	{
-		requestDestroyEntity = selectedEntity;
-	}
 }
 
 void EntityView::DrawSceneComponent(Entity selectedEntity, World* world)
