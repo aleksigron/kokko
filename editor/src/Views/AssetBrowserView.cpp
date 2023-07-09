@@ -10,10 +10,10 @@
 
 #include "System/FilesystemResolver.hpp"
 
-#include "EditorConstants.hpp"
-#include "EditorContext.hpp"
-#include "EditorImages.hpp"
-#include "EditorProject.hpp"
+#include "App/EditorConstants.hpp"
+#include "App/EditorContext.hpp"
+#include "App/EditorImages.hpp"
+#include "App/EditorProject.hpp"
 
 namespace kokko
 {

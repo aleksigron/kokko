@@ -6,9 +6,10 @@
 
 #include "Math/Vec2.hpp"
 
-#include "EditorProject.hpp"
-#include "EditorUserSettings.hpp"
-#include "FilePickerDialog.hpp"
+#include "App/EditorProject.hpp"
+#include "App/EditorUserSettings.hpp"
+
+#include "Views/FilePickerDialog.hpp"
 
 class Allocator;
 class Engine;

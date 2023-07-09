@@ -20,10 +20,11 @@
 #include "System/WindowManager.hpp"
 #include "System/WindowSettings.hpp"
 
-#include "ConsoleLogger.hpp"
-#include "EditorApp.hpp"
-#include "EditorAssetLoader.hpp"
-#include "EditorConstants.hpp"
+#include "App/EditorApp.hpp"
+#include "App/EditorConstants.hpp"
+
+#include "System/ConsoleLogger.hpp"
+#include "System/EditorAssetLoader.hpp"
 
 namespace
 {

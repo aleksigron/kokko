@@ -26,8 +26,8 @@
 #include "Resources/MeshUid.hpp"
 #include "Resources/TextureManager.hpp"
 
-#include "EditorConstants.hpp"
-#include "EditorContext.hpp"
+#include "App/EditorConstants.hpp"
+#include "App/EditorContext.hpp"
 
 namespace kokko
 {

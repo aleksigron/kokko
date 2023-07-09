@@ -1,12 +1,12 @@
 #pragma once
 
-#include "EditorCamera.hpp"
-
 #include "Math/Vec2.hpp"
 
 #include "Rendering/Framebuffer.hpp"
 
-#include "EditorWindow.hpp"
+#include "App/EditorCamera.hpp"
+
+#include "Views/EditorWindow.hpp"
 
 class Window;
 

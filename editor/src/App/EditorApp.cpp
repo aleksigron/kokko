@@ -37,10 +37,12 @@
 #include "System/InputManager.hpp"
 #include "System/WindowManager.hpp"
 
-#include "EditorConstants.hpp"
-#include "EditorCore.hpp"
-#include "EditorWindow.hpp"
-#include "ImguiImplOpenGL.hpp"
+#include "App/EditorConstants.hpp"
+#include "App/EditorCore.hpp"
+
+#include "Views/EditorWindow.hpp"
+
+#include "System/ImguiImplOpenGL.hpp"
 
 namespace kokko
 {
