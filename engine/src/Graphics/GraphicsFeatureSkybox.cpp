@@ -24,6 +24,7 @@ namespace
 struct SkyboxUniformBlock
 {
 	alignas(16) Mat4x4f transform;
+	alignas(4) float intensity;
 };
 
 } // Anynomous namespace
@@ -61,6 +62,7 @@ void GraphicsFeatureSkybox::Deinitialize(const InitializeParameters& parameters)
 void GraphicsFeatureSkybox::Upload(const UploadParameters& parameters)
 {
 	kokko::render::Device* device = parameters.renderDevice;
+	EnvironmentSystem* envSystem = parameters.environmentSystem;
 
 	Mat4x4f cameraProjection = parameters.cameraParameters.projection.GetProjectionMatrix(true);
 	const auto& cameraTransforms = parameters.cameraParameters.transform;
@@ -69,6 +71,11 @@ void GraphicsFeatureSkybox::Upload(const UploadParameters& parameters)
 
 	SkyboxUniformBlock skyboxUniforms;
 	skyboxUniforms.transform = cameraProjection * cameraTransforms.inverse * Mat4x4f::Translate(cameraPos);
+	skyboxUniforms.intensity = 1.0f;
+
+	EnvironmentId envId = envSystem->FindActiveEnvironment();
+	if (envId != EnvironmentId::Null)
+		skyboxUniforms.intensity = envSystem->GetIntensity(envId);
 
 	device->SetBufferSubData(uniformBufferId, 0, sizeof(SkyboxUniformBlock), &skyboxUniforms);
 }

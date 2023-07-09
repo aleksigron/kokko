@@ -57,6 +57,7 @@ struct LightingUniformBlock
 	alignas(4) float shadowBiasOffset;
 	alignas(4) float shadowBiasFactor;
 	alignas(4) float shadowBiasClamp;
+	alignas(4) float irradianceIntensity;
 };
 
 } // Anonymous namespace
@@ -190,6 +191,7 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 	}
 
 	LightManager* lightManager = parameters.lightManager;
+	EnvironmentSystem* envSystem = parameters.environmentSystem;
 
 	// Both SSAO and deferred lighting passes use these
 
@@ -328,6 +330,11 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 		lightingUniforms.shadowBiasOffset = 0.001f;
 		lightingUniforms.shadowBiasFactor = 0.0019f;
 		lightingUniforms.shadowBiasClamp = 0.01f;
+
+		lightingUniforms.irradianceIntensity = 1.0f;
+		EnvironmentId envId = envSystem->FindActiveEnvironment();
+		if (envId != EnvironmentId::Null)
+			lightingUniforms.irradianceIntensity = envSystem->GetIntensity(envId);
 
 		renderDevice->SetBufferSubData(uniformBufferId, 0, sizeof(LightingUniformBlock), &lightingUniforms);
 	}
