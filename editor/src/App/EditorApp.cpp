@@ -127,8 +127,14 @@ void EditorApp::Initialize(Engine* engine, ConsoleLogger* consoleLogger)
 
 	ImGui::StyleColorsDark();
 
-	// Update style colors to linear space
 	ImVec4* imguiColors = ImGui::GetStyle().Colors;
+
+	// Update window and popup backgrounds to be more opaque
+	imguiColors[ImGuiCol_WindowBg].w = 0.98f;
+	imguiColors[ImGuiCol_PopupBg].w = 0.98f;
+	imguiColors[ImGuiCol_FrameBg].w = 0.98f;
+
+	// Update style colors to linear space
 	for (size_t i = 0; i < ImGuiCol_COUNT; ++i)
 	{
 		ImVec4 color = imguiColors[i];
@@ -139,6 +145,9 @@ void EditorApp::Initialize(Engine* engine, ConsoleLogger* consoleLogger)
 
 		imguiColors[i] = color;
 	}
+
+	// No rounding on tab headers
+	ImGui::GetStyle().TabRounding = 0.0f;
 
 	GLFWwindow* glfwWindow = engine->GetWindowManager()->GetWindow()->GetGlfwWindow();
 
@@ -216,7 +225,7 @@ void EditorApp::Update(kokko::EngineSettings* engineSettings, bool& shouldExitOu
 
 	core->Update();
 
-	//ImGui::ShowDemoWindow();
+	ImGui::ShowDemoWindow();
 
 	if (exitRequested)
 		shouldExitOut = true;
@@ -453,18 +462,30 @@ bool EditorApp::CreateProject(const std::filesystem::path& directory, ConstStrin
 	fs::file_status stat = fs::status(directory, err);
 
 	if (err)
+	{
+		KK_LOG_ERROR("Could not retrieve filesystem information for selected path.");
 		return false;
+	}
 
 	if (fs::is_directory(stat) == false)
+	{
+		KK_LOG_ERROR("The selected path is not a folder.");
 		return false;
+	}
 
 	// Check that the directory is empty
 	for (const auto& entry : fs::directory_iterator(directory))
+	{
+		KK_LOG_ERROR("The selected folder is not empty.");
 		return false;
+	}
 
 	// Create assets folder
 	if (fs::create_directory(directory / EditorConstants::AssetDirectoryName) == false)
+	{
+		KK_LOG_ERROR("Could not create the asset folder.");
 		return false;
+	}
 
 	project.SetRootPath(directory);
 	project.SetName(name);
@@ -473,6 +494,9 @@ bool EditorApp::CreateProject(const std::filesystem::path& directory, ConstStrin
 	{
 		project.SetRootPath(fs::path());
 		project.SetName(ConstStringView());
+
+		KK_LOG_ERROR("Could not open project file for writing.");
+
 		return false;
 	}
 
@@ -489,6 +513,8 @@ bool EditorApp::OpenProject(const std::filesystem::path& projectDir)
 
 		return true;
 	}
+
+	KK_LOG_ERROR("Could not open the project from the selected path.");
 
 	return false;
 }

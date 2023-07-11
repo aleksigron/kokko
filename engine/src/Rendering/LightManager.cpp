@@ -90,6 +90,8 @@ void LightManager::Reallocate(unsigned int required)
 
 float LightManager::CalculateDefaultRadius(Vec4f colorAndIntensity)
 {
+	// TODO: This does not behave as expected with HDR rendering
+	// The concept does not work at all when there is variable exposure
 	const float thresholdInv = 256.0f / 5.0f;
 	Vec3f color = colorAndIntensity.xyz() * colorAndIntensity.w;
 

@@ -35,6 +35,15 @@ namespace kokko
 namespace editor
 {
 
+namespace
+{
+void RelativeAssetPathToVirtual(const std::filesystem::path& pathRelativeToAssets, String& result)
+{
+	std::string pathStdStr = EngineConstants::VirtualMountAssets + ('/' + pathRelativeToAssets.generic_u8string());
+	result.Assign(ConstStringView(pathStdStr.c_str(), pathStdStr.length()));
+}
+}
+
 EditorCore::EditorCore(Allocator* allocator, Filesystem* filesystem, FilesystemResolver* resolver) :
 	allocator(allocator),
 	filesystem(filesystem),
@@ -219,9 +228,13 @@ void EditorCore::SaveLevel()
 	editorContext.world->GetSerializer()->SerializeToString(content);
 	ArrayView<const uint8_t> contentView(reinterpret_cast<const uint8_t*>(content.GetData()), content.GetLength());
 
-	if (editorContext.assetLibrary->UpdateAssetContent(asset->GetUid(), contentView) == false)
+	if (editorContext.assetLibrary->UpdateAssetContent(asset->GetUid(), contentView))
 	{
-		KK_LOG_ERROR("EditorCore: Failed to update level asset content");
+		KK_LOG_INFO("Level {} saved", asset->GetVirtualPath().GetCStr());
+	}
+	else
+	{
+		KK_LOG_ERROR("Failed to update level {} asset content", asset->GetVirtualPath().GetCStr());
 	}
 }
 
@@ -231,10 +244,8 @@ void EditorCore::SaveLevelAs(const std::filesystem::path& pathRelativeToAssets)
 	editorContext.world->GetSerializer()->SerializeToString(content);
 	ArrayView<const uint8_t> contentView(reinterpret_cast<const uint8_t*>(content.GetData()), content.GetLength());
 
-	// TODO: Extract to a function
-	std::string pathStdStr = EngineConstants::VirtualMountAssets + ('/' + pathRelativeToAssets.generic_u8string());
 	String pathStr(allocator);
-	pathStr.Assign(ConstStringView(pathStdStr.c_str(), pathStdStr.length()));
+	RelativeAssetPathToVirtual(pathRelativeToAssets, pathStr);
 
 	auto asset = editorContext.assetLibrary->FindAssetByVirtualPath(pathStr);
 	Optional<Uid> assetUid;
@@ -253,7 +264,7 @@ void EditorCore::SaveLevelAs(const std::filesystem::path& pathRelativeToAssets)
 		// Update asset
 		if (editorContext.assetLibrary->UpdateAssetContent(asset->GetUid(), contentView) == false)
 		{
-			KK_LOG_ERROR("EditorCore: Failed to update level asset content");
+			KK_LOG_ERROR("EditorCore: Failed to update level {} asset content", asset->GetVirtualPath().GetCStr());
 		}
 	}
 	else
@@ -299,5 +310,5 @@ void EditorCore::PasteEntity()
 	}
 }
 
-}
-}
+} // namespace editor
+} // namespace kokko

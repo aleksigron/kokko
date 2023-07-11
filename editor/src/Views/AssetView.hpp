@@ -40,10 +40,8 @@ private:
 	ShaderManager* shaderManager;
 	TextureManager* textureManager;
 
-	String textStore;
-
 	void DrawMaterial(EditorContext& context, const AssetInfo* asset);
-	bool DrawMaterialProperty(UniformData& uniforms, const BufferUniform& prop);
+	bool DrawMaterialProperty(EditorContext& context, UniformData& uniforms, const BufferUniform& prop);
 	bool DrawMaterialShaderDropTarget(EditorContext& context, kokko::MaterialId materialId);
 	bool DrawMaterialTextureDropTarget(
 		EditorContext& context,
