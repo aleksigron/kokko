@@ -100,7 +100,7 @@ void EntityListView::DrawEntityListButtons(World* world)
 
 	ImGui::Spacing();
 	ImGui::Indent(spacingH);
-	float availWidth = ImGui::GetContentRegionAvailWidth();
+	float availWidth = ImGui::GetContentRegionAvail().x;
 	ImGui::SetNextItemWidth(availWidth - spacingH);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 4.0f));
 	if (ImGui::BeginCombo("##CreateEntityCombo", "Create entity...", ImGuiComboFlags_NoArrowButton))

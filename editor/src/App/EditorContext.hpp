@@ -6,7 +6,7 @@
 
 #include "Engine/Entity.hpp"
 
-class ImFont;
+struct ImFont;
 
 class Allocator;
 
