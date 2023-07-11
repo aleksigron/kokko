@@ -156,7 +156,7 @@ void AssetBrowserView::Update(EditorContext& context)
 							for (fs::directory_iterator itr(currentDirAbsolute), end; itr != end; ++itr, ++index)
 							{
 								ImGui::PushID(index);
-								DrawEntry(context, *itr, columnWidth, nullptr);
+								DrawEntry(context, *itr, columnWidth);
 								ImGui::PopID();
 							}
 						}
@@ -208,7 +208,7 @@ void AssetBrowserView::DrawRootEntry(EditorContext& context, float columnWidth, 
 	ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
 	bool selected = selectedPath == name;
 	ImGui::TableNextColumn();
-	ImVec2 buttonSize(columnWidth, columnWidth);
+	ImVec2 buttonSize(columnWidth, columnWidth + ImGui::GetFrameHeight());
 	ImVec2 cursorStartPos = ImGui::GetCursorPos();
 	if (ImGui::Selectable("##AssetBrowserItem", selected, selectableFlags, buttonSize))
 	{
@@ -229,8 +229,7 @@ void AssetBrowserView::DrawRootEntry(EditorContext& context, float columnWidth, 
 void AssetBrowserView::DrawEntry(
 	EditorContext& context,
 	const std::filesystem::directory_entry& entry,
-	float columnWidth,
-	const char* overrideName)
+	float columnWidth)
 {
 	namespace fs = std::filesystem;
 
@@ -247,7 +246,10 @@ void AssetBrowserView::DrawEntry(
 	
 	ImGui::TableNextColumn();
 
-	ImVec2 buttonSize(columnWidth, columnWidth);
+	std::string fileStr = entryPath.filename().u8string();
+	ImVec2 textSize = ImGui::CalcTextSize(fileStr.c_str(), nullptr, false, columnWidth);
+	float padding = ImGui::GetStyle().FramePadding.y * 2.0f;
+	ImVec2 buttonSize(columnWidth, columnWidth + textSize.y + padding);
 	ImVec2 cursorStartPos = ImGui::GetCursorPos();
 
 	if (ImGui::Selectable("##AssetBrowserItem", selected, selectableFlags, buttonSize))
@@ -269,13 +271,6 @@ void AssetBrowserView::DrawEntry(
 			}
 		}
 	}
-
-	std::string fileStr;
-	
-	if (overrideName)
-		fileStr = overrideName;
-	else
-		fileStr = entryPath.filename().u8string();
 
 	if (isFile)
 	{

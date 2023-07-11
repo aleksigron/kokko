@@ -43,8 +43,7 @@ private:
 	void DrawEntry(
 		EditorContext& context,
 		const std::filesystem::directory_entry& entry,
-		float columnWidth,
-		const char* overrideName);
+		float columnWidth);
 
 	void DrawIconAndName(ImVec2 startPos, TextureId icon, float iconSize, const char* name);
 
