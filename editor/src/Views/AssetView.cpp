@@ -26,8 +26,7 @@ AssetView::AssetView(Allocator* allocator) :
 	allocator(allocator),
 	materialManager(nullptr),
 	shaderManager(nullptr),
-	textureManager(nullptr),
-	textStore(allocator)
+	textureManager(nullptr)
 {
 }
 
@@ -111,6 +110,7 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 
 	bool edited = false;
 
+	String& textStore = context.temporaryString;
 	textStore.Assign(asset->GetFilename());
 	ImGui::Text("%s", textStore.GetCStr());
 
@@ -123,7 +123,7 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 		auto shaderAsset = context.assetLibrary->FindAssetByUid(shader.uid);
 		if (shaderAsset != nullptr)
 		{
-			textStore.Assign(asset->GetFilename());
+			textStore.Assign(shaderAsset->GetFilename());
 		}
 	}
 
@@ -136,7 +136,7 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 	{
 		for (auto& uniform : uniforms.GetBufferUniforms())
 		{
-			edited |= DrawMaterialProperty(uniforms, uniform);
+			edited |= DrawMaterialProperty(context, uniforms, uniform);
 		}
 	}
 
@@ -189,10 +189,11 @@ void AssetView::DrawMaterial(EditorContext& context, const AssetInfo* asset)
 	}
 }
 
-bool AssetView::DrawMaterialProperty(UniformData& uniforms, const BufferUniform& prop)
+bool AssetView::DrawMaterialProperty(EditorContext& context, UniformData& uniforms, const BufferUniform& prop)
 {
 	bool edited = false;
 
+	String& textStore = context.temporaryString;
 	textStore.Assign(prop.name);
 
 	const char* unsupportedPropertyType = nullptr;
@@ -386,8 +387,8 @@ void AssetView::DrawTexture(EditorContext& context, const AssetInfo* asset)
 		return;
 	}
 
-	textStore.Assign(asset->GetFilename());
-	ImGui::Text("%s", textStore.GetCStr());
+	context.temporaryString.Assign(asset->GetFilename());
+	ImGui::Text("%s", context.temporaryString.GetCStr());
 
 	const TextureData& texture = textureManager->GetTextureData(textureId);
 

@@ -90,12 +90,19 @@ void EntityListView::Update(EditorContext& context)
 			ImGui::SetWindowFocus();
 
 		ImGui::End();
-		ImGui::PopStyleVar();
+		ImGui::PopStyleVar(); // ImGuiStyleVar_WindowPadding
 	}
 }
 
 void EntityListView::DrawEntityListButtons(World* world)
 {
+	const float spacingH = std::floor(ImGui::GetFontSize() * 0.4f);
+
+	ImGui::Spacing();
+	ImGui::Indent(spacingH);
+	float availWidth = ImGui::GetContentRegionAvailWidth();
+	ImGui::SetNextItemWidth(availWidth - spacingH);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 4.0f));
 	if (ImGui::BeginCombo("##CreateEntityCombo", "Create entity...", ImGuiComboFlags_NoArrowButton))
 	{
 		if (ImGui::Selectable("Empty"))
@@ -125,6 +132,10 @@ void EntityListView::DrawEntityListButtons(World* world)
 
 		ImGui::EndCombo();
 	}
+	ImGui::PopStyleVar(); // ImGuiStyleVar_WindowPadding
+	ImGui::Unindent(spacingH);
+	ImGui::Separator();
+	ImGui::Spacing();
 }
 
 void EntityListView::DrawEntityNode(EditorContext& context, World* world, Entity entity, SceneObjectId sceneObj)
