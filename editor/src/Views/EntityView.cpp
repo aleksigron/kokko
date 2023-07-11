@@ -113,7 +113,7 @@ void EntityView::Update(EditorContext& context)
 
 void EntityView::DrawButtons(Entity selectedEntity, World* world)
 {
-	float availWidth = ImGui::GetContentRegionAvailWidth();
+	float availWidth = ImGui::GetContentRegionAvail().x;
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.05f, 0.0f, 1.0f));
 	if (ImGui::Button("Destroy entity", ImVec2(availWidth, 0.0f)))
 		requestDestroyEntity = selectedEntity;

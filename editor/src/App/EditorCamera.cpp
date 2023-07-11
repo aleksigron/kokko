@@ -59,7 +59,7 @@ static float GetKeyValue0to1(ImGuiIO& io, KeyCode key)
 
 void EditorCamera::Update(bool windowIsActive)
 {
-	static const int MouseButtonLook = 1;
+	static const ImGuiMouseButton MouseButtonLook = ImGuiMouseButton_Right;
 
 	float targetSpeed = 4.0f;
 	Vec3f moveDir;
@@ -69,12 +69,12 @@ void EditorCamera::Update(bool windowIsActive)
 	if (windowIsActive && io.WantTextInput == false)
 	{
 		// Update mouseLookActive state
-		if (mouseLookActive == false && io.MouseDown[MouseButtonLook])
+		if (mouseLookActive == false && ImGui::IsMouseDown(MouseButtonLook))
 		{
 			mouseLookActive = true;
 			window->SetCursorMode(Window::CursorMode::Disabled);
 		}
-		else if (mouseLookActive == true && io.MouseDown[MouseButtonLook] == false)
+		else if (mouseLookActive == true && ImGui::IsMouseDown(MouseButtonLook) == false)
 		{
 			mouseLookActive = false;
 			window->SetCursorMode(Window::CursorMode::Normal);
@@ -120,10 +120,10 @@ void EditorCamera::Update(bool windowIsActive)
 		if (moveDir.SqrMagnitude() > 1.0f)
 			moveDir.Normalize();
 
-		if (io.KeyMods & ImGuiKeyModFlags_Shift)
+		if (io.KeyMods & ImGuiModFlags_Shift)
 			targetSpeed *= 4.0f;
 
-		if (io.KeyMods & ImGuiKeyModFlags_Ctrl)
+		if (io.KeyMods & ImGuiModFlags_Ctrl)
 			targetSpeed *= 0.125f;
 	}
 
