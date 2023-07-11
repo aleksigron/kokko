@@ -30,6 +30,10 @@ public:
 	// Model mesh needs its own type because its payload contains
 	// the model UID as well as the mesh index
 	static const char* const ModelMeshDragDropType;
+
+	// Default asset content when new asset is created
+
+	static const char* const NewAssetContentMaterial;
 };
 
 }

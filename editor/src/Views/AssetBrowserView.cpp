@@ -59,7 +59,30 @@ void AssetBrowserView::Update(EditorContext& context)
 		{
 			if (context.project != nullptr)
 			{
-				const fs::path& root = context.project->GetAssetPath();
+				bool createEnabled = currentVirtualRoot == "assets";
+
+				const char* const createAssetText = "Create asset...";
+				ImVec2 textSize = ImGui::CalcTextSize(createAssetText);
+				float width = textSize.x + 2.0f * ImGui::GetStyle().FramePadding.x;
+				ImGui::SetNextItemWidth(width);
+				
+				if (!createEnabled)
+					ImGui::BeginDisabled();
+
+				if (ImGui::BeginCombo("##CreateEntityCombo", createAssetText, ImGuiComboFlags_NoArrowButton))
+				{
+					if (ImGui::Selectable("Material"))
+					{
+						CreateMaterial(context);
+					}
+
+					ImGui::EndCombo();
+				}
+
+				if (!createEnabled)
+					ImGui::EndDisabled();
+
+				ImGui::SameLine();
 
 				if (ImGui::Button("Go to parent"))
 				{
@@ -89,7 +112,7 @@ void AssetBrowserView::Update(EditorContext& context)
 				}
 
 				ImGuiInputTextFlags dirTextFlags = ImGuiInputTextFlags_ReadOnly;
-				ImGui::SetNextItemWidth(-FLT_MIN);
+				ImGui::SetNextItemWidth(-1);
 				ImGui::InputText("##AssetBrowserPath", curDirStr.GetData(), curDirStr.GetLength() + 1, dirTextFlags);
 
 				ImGuiStyle& style = ImGui::GetStyle();
@@ -336,6 +359,53 @@ void AssetBrowserView::SelectPath(EditorContext& context, const std::filesystem:
 	}
 
 	context.selectedAsset = Optional<Uid>();
+}
+
+Optional<Uid> AssetBrowserView::CreateMaterial(EditorContext& context)
+{
+	String relativePath = currentDirectory + "/New.material";
+
+	const AssetInfo* existingAsset = nullptr;
+	int attempt = 0;
+	do
+	{
+		if (attempt > 0)
+		{
+			relativePath.Resize(512);
+			auto result = fmt::format_to_n(relativePath.GetData(), relativePath.GetLength(),
+				"{}/New {}.material", currentDirectory.GetCStr(), attempt);
+
+			if (result.size > relativePath.GetLength())
+				break;
+
+			relativePath.Resize(result.size);
+		}
+
+		String filePathStr = EngineConstants::VirtualMountAssets + ('/' + relativePath);
+		existingAsset = context.assetLibrary->FindAssetByVirtualPath(filePathStr);
+		attempt += 1;
+	} while (existingAsset != nullptr && attempt < 10);
+
+	if (existingAsset != nullptr)
+	{
+		KK_LOG_ERROR("Couldn't create new material. Too many files named \"New.material\".");
+		return Optional<Uid>();
+	}
+
+	ConstStringView pathRef = relativePath.GetRef();
+	ArrayView<const uint8_t> contentView(
+		reinterpret_cast<const uint8_t*>(EditorConstants::NewAssetContentMaterial),
+		std::strlen(EditorConstants::NewAssetContentMaterial));
+
+	// Create asset
+	Optional<Uid> assetUid = context.assetLibrary->CreateAsset(AssetType::Material, pathRef, contentView);
+
+	if (assetUid.HasValue())
+		KK_LOG_INFO("Material {} created", relativePath.GetCStr());
+	else
+		KK_LOG_ERROR("Failed to create new material asset");
+
+	return assetUid;
 }
 
 Optional<String> AssetBrowserView::AbsolutePathToVirtual(EditorContext& context, ConstStringView absolute)

@@ -5,6 +5,7 @@
 #include "Core/Optional.hpp"
 #include "Core/String.hpp"
 #include "Core/StringView.hpp"
+#include "Core/Uid.hpp"
 
 #include "EditorWindow.hpp"
 
@@ -49,6 +50,8 @@ private:
 
 	void MoveToPath(EditorContext& context, const std::filesystem::path& path);
 	void SelectPath(EditorContext& context, const std::filesystem::path& path, bool editAsset);
+
+	Optional<Uid> CreateMaterial(EditorContext& context);
 
 	// Absolute path is any path that comes from std::filesystem::directory_entry
 	Optional<String> AbsolutePathToVirtual(EditorContext& context, ConstStringView absolute);
