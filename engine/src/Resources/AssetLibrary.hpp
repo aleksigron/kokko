@@ -41,6 +41,8 @@ public:
 	void UpdateFilename(ConstStringView newFilename);
 
 	const String& GetVirtualPath() const { return virtualPath; }
+	ConstStringView GetRelativeFolderPath() const { return relativeFolderPath; }
+	ConstStringView GetRelativeFilePath() const { return relativeFilePath; }
 	ConstStringView GetFilename() const { return filename; }
 	Uid GetUid() const { return uid; }
 	AssetType GetType() const { return type; }
