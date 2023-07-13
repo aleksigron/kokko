@@ -26,8 +26,11 @@ AssetBrowserView::AssetBrowserView(Allocator* allocator) :
 	currentVirtualRoot(allocator),
 	currentDirectory(allocator),
 	selectedPath(allocator),
+	renameItemIndex(0),
+	renameFocusApplied(false),
 	editorImages(nullptr),
-	pathStore(allocator)
+	pathStore(allocator),
+	renameBuffer(allocator)
 {
 }
 
@@ -51,138 +54,126 @@ void AssetBrowserView::Update(EditorContext& context)
 {
 	namespace fs = std::filesystem;
 
-	if (windowIsOpen)
+	if (windowIsOpen == false)
+		return;
+
+	ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+
+	if (ImGui::Begin(windowTitle, &windowIsOpen))
 	{
-		ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-
-		if (ImGui::Begin(windowTitle, &windowIsOpen))
+		if (context.project != nullptr)
 		{
-			if (context.project != nullptr)
-			{
-				bool createEnabled = currentVirtualRoot == "assets";
+			bool createEnabled = currentVirtualRoot == "assets";
 
-				const char* const createAssetText = "Create asset...";
-				ImVec2 textSize = ImGui::CalcTextSize(createAssetText);
-				float width = textSize.x + 2.0f * ImGui::GetStyle().FramePadding.x;
-				ImGui::SetNextItemWidth(width);
+			const char* const createAssetText = "Create asset...";
+			ImVec2 textSize = ImGui::CalcTextSize(createAssetText);
+			float width = textSize.x + 2.0f * ImGui::GetStyle().FramePadding.x;
+			ImGui::SetNextItemWidth(width);
 				
-				if (!createEnabled)
-					ImGui::BeginDisabled();
+			if (!createEnabled)
+				ImGui::BeginDisabled();
 
-				if (ImGui::BeginCombo("##CreateEntityCombo", createAssetText, ImGuiComboFlags_NoArrowButton))
+			if (ImGui::BeginCombo("##CreateAssetCombo", createAssetText, ImGuiComboFlags_NoArrowButton))
+			{
+				if (ImGui::Selectable("Material"))
 				{
-					if (ImGui::Selectable("Material"))
-					{
-						CreateMaterial(context);
-					}
-
-					ImGui::EndCombo();
+					CreateMaterial(context);
 				}
 
-				if (!createEnabled)
-					ImGui::EndDisabled();
+				ImGui::EndCombo();
+			}
 
-				ImGui::SameLine();
+			if (!createEnabled)
+				ImGui::EndDisabled();
 
-				if (ImGui::Button("Go to parent"))
+			ImGui::SameLine();
+
+			if (ImGui::Button("Go to parent"))
+			{
+				if (currentDirectory.GetLength() == 0)
+					currentVirtualRoot.Clear();
+				else
 				{
-					if (currentDirectory.GetLength() == 0)
-						currentVirtualRoot.Clear();
+					intptr_t slash = currentDirectory.GetRef().FindLast(ConstStringView("/"));
+
+					if (slash > 0)
+						currentDirectory.Resize(slash);
 					else
-					{
-						intptr_t slash = currentDirectory.GetRef().FindLast(ConstStringView("/"));
-
-						if (slash > 0)
-							currentDirectory.Resize(slash);
-						else
-							currentDirectory.Clear();
-					}
-					selectedPath.Clear();
-					selectedPathFs.clear();
+						currentDirectory.Clear();
 				}
+				selectedPath.Clear();
+				selectedPathFs.clear();
+			}
 
-				ImGui::SameLine();
+			ImGui::SameLine();
 
-				String curDirStr(allocator);
-				curDirStr.Append(currentVirtualRoot);
-				if (currentDirectory.GetLength() != 0)
+			String curDirStr(allocator);
+			curDirStr.Append(currentVirtualRoot);
+			if (currentDirectory.GetLength() != 0)
+			{
+				curDirStr.Append('/');
+				curDirStr.Append(currentDirectory);
+			}
+
+			ImGuiInputTextFlags dirTextFlags = ImGuiInputTextFlags_ReadOnly;
+			ImGui::SetNextItemWidth(-1);
+			ImGui::InputText("##AssetBrowserPath", curDirStr.GetData(), curDirStr.GetLength() + 1, dirTextFlags);
+
+			ImGuiStyle& style = ImGui::GetStyle();
+			float scrollbarWidth = style.ScrollbarSize;
+
+			float fontSize = ImGui::GetFontSize();
+			float columnWidth = fontSize * 8.0f;
+			float cellWidth = columnWidth + style.CellPadding.x * 2.0f;
+
+			float availableWidth = ImGui::GetContentRegionAvail().x - scrollbarWidth;
+			int columnCount = static_cast<int>(availableWidth / cellWidth);
+
+			if (columnCount < 1)
+				columnCount = 1;
+
+			if (ImGui::BeginTable("AssetBrowserTable", columnCount, ImGuiTableFlags_ScrollY))
+			{
+				SetUpColumns(columnCount, columnWidth);
+
+				if (currentVirtualRoot.GetLength() == 0)
 				{
-					curDirStr.Append('/');
-					curDirStr.Append(currentDirectory);
-				}
-
-				ImGuiInputTextFlags dirTextFlags = ImGuiInputTextFlags_ReadOnly;
-				ImGui::SetNextItemWidth(-1);
-				ImGui::InputText("##AssetBrowserPath", curDirStr.GetData(), curDirStr.GetLength() + 1, dirTextFlags);
-
-				ImGuiStyle& style = ImGui::GetStyle();
-				float scrollbarWidth = style.ScrollbarSize;
-
-				float fontSize = ImGui::GetFontSize();
-				float columnWidth = fontSize * 8.0f;
-				float cellWidth = columnWidth + style.CellPadding.x * 2.0f;
-
-				float availableWidth = ImGui::GetContentRegionAvail().x - scrollbarWidth;
-				int columnCount = static_cast<int>(availableWidth / cellWidth);
-
-				if (columnCount < 1)
-					columnCount = 1;
-
-				if (ImGui::BeginTable("AssetBrowserTable", columnCount, ImGuiTableFlags_ScrollY))
-				{
-					SetUpColumns(columnCount, columnWidth);
-
-					if (currentVirtualRoot.GetLength() == 0)
-					{
-						static const char* const mounts[] = { "engine", "assets" };
+					static const char* const mounts[] = { "engine", "assets" };
 						
-						size_t count = sizeof(mounts) / sizeof(mounts[0]);
-						for (size_t i = 0; i < count; ++i)
-						{
-							ImGui::PushID(static_cast<int>(i));
-							DrawRootEntry(context, columnWidth, mounts[i]);
-							ImGui::PopID();
-						}
-					}
-					else
+					size_t count = sizeof(mounts) / sizeof(mounts[0]);
+					for (size_t i = 0; i < count; ++i)
 					{
-						String virtualPath = RelativePathToVirtual(currentDirectory.GetRef());
-
-						int index = 1;
-						FilesystemResolver* resolver = context.filesystemResolver;
-						if (resolver->ResolvePath(virtualPath.GetCStr(), context.temporaryString))
-						{
-							fs::path currentDirAbsolute = context.temporaryString.GetCStr();
-							for (fs::directory_iterator itr(currentDirAbsolute), end; itr != end; ++itr, ++index)
-							{
-								ImGui::PushID(index);
-								DrawEntry(context, *itr, columnWidth);
-								ImGui::PopID();
-							}
-						}
-
-						/*
-						* Notes
-						* 1. Root virtual folders engine and assets
-						* 2. Root virtual folder doesn't need to get resolved to display in a list
-						* 3. Once a root virtual folder is moved into, it needs to be resolved to real path in order to iterate through it's children
-						* 4. currentDirectory and selectedPath need to be stored as virtual paths
-						* 5. When a directory entry is shown it can use the full path from the entry
-						* 6. Moving into one of the directories or selecting a file or directory requires us to convert the full patch to a virtual path
-						* 7. How to find the correct virtual root? Maybe save the virtual root folder when we enter it. 
-						*/
+						ImGui::PushID(static_cast<int>(i));
+						DrawRootEntry(context, columnWidth, mounts[i]);
+						ImGui::PopID();
 					}
-
-					ImGui::EndTable();
 				}
+				else
+				{
+					DrawEntries(context, columnWidth);
+				}
+
+				ImGui::EndTable();
+
+				/*
+				* Notes
+				* 1. Root virtual folders engine and assets
+				* 2. Root virtual folder doesn't need to get resolved to display in a list
+				* 3. Once a root virtual folder is moved into, it needs to be resolved to
+				*    real path in order to iterate through it's children
+				* 4. currentDirectory and selectedPath need to be stored as virtual paths
+				* 5. When a directory entry is shown it can use the full path from the entry
+				* 6. Moving into one of the directories or selecting a file or directory
+				*    requires us to convert the full path to a virtual path
+				*/
 			}
 		}
-
-		if (requestFocus)
-			ImGui::SetWindowFocus();
-
-		ImGui::End();
 	}
+
+	if (requestFocus)
+		ImGui::SetWindowFocus();
+
+	ImGui::End();
 }
 
 void AssetBrowserView::SetUpColumns(int columnCount, float columnWidth)
@@ -198,7 +189,7 @@ void AssetBrowserView::SetUpColumns(int columnCount, float columnWidth)
 			width = columnWidth;
 
 		ImGui::PushID(col);
-		ImGui::TableSetupColumn("Column", flags, width);
+		ImGui::TableSetupColumn(nullptr, flags, width);
 		ImGui::PopID();
 	}
 }
@@ -226,75 +217,144 @@ void AssetBrowserView::DrawRootEntry(EditorContext& context, float columnWidth, 
 	DrawIconAndName(cursorStartPos, editorImages->folderIcon, columnWidth, name);
 }
 
-void AssetBrowserView::DrawEntry(
-	EditorContext& context,
-	const std::filesystem::directory_entry& entry,
-	float columnWidth)
+void AssetBrowserView::DrawEntries(EditorContext& context, float columnWidth)
 {
 	namespace fs = std::filesystem;
 
-	bool isDir = entry.is_directory();
-	bool isFile = entry.is_regular_file();
+	String virtualPath = RelativePathToVirtual(currentDirectory.GetRef());
 
-	if (isFile && entry.path().extension() == EngineConstants::MetadataExtension)
-		return;
-
-	const std::filesystem::path& entryPath = entry.path();
-
-	ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
-	bool selected = entryPath == selectedPathFs;
-	
-	ImGui::TableNextColumn();
-
-	std::string fileStr = entryPath.filename().u8string();
-	ImVec2 textSize = ImGui::CalcTextSize(fileStr.c_str(), nullptr, false, columnWidth);
-	float padding = ImGui::GetStyle().FramePadding.y * 2.0f;
-	ImVec2 buttonSize(columnWidth, columnWidth + textSize.y + padding);
-	ImVec2 cursorStartPos = ImGui::GetCursorPos();
-
-	if (ImGui::Selectable("##AssetBrowserItem", selected, selectableFlags, buttonSize))
+	int index = 1;
+	FilesystemResolver* resolver = context.filesystemResolver;
+	if (resolver->ResolvePath(virtualPath.GetCStr(), context.temporaryString))
 	{
-		if (isFile)
-		{
-			bool editAsset = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-			SelectPath(context, entryPath, editAsset);
-		}
-		else if (isDir)
-		{
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-			{
-				MoveToPath(context, entryPath);
-			}
-			else
-			{
-				SelectPath(context, entryPath, false);
-			}
-		}
-	}
+		const float framePaddingV = ImGui::GetStyle().FramePadding.y * 2.0f;
+		ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_AllowDoubleClick;
 
-	if (isFile)
-	{
-		if (ImGui::BeginDragDropSource())
+		fs::path currentDirAbsolute = context.temporaryString.GetCStr();
+		for (fs::directory_iterator itr(currentDirAbsolute), end; itr != end; ++itr, ++index)
 		{
-			std::string absolutePath = entryPath.u8string();
-			auto result = AbsolutePathToVirtual(context, ConstStringView(absolutePath.c_str(), absolutePath.length()));
-			if (result.HasValue())
+			fs::directory_entry entry = *itr;
+			bool isDir = entry.is_directory();
+			bool isFile = entry.is_regular_file();
+
+			if (isFile && entry.path().extension() == EngineConstants::MetadataExtension)
+				continue;
+
+			ImGui::PushID(index);
+
+			const fs::path& entryPath = entry.path();
+
+			bool selected = entryPath == selectedPathFs;
+			bool renameEnabled = renameItemIndex == index;
+			TextureId iconTexId = isDir ? editorImages->folderIcon : editorImages->genericFileIcon;
+
+			ImGui::TableNextColumn();
+			
+			std::string fileStr = entryPath.filename().u8string();
+			ImVec2 textSize = ImGui::CalcTextSize(fileStr.c_str(), nullptr, false, columnWidth);
+			if (renameEnabled)
+				textSize.y = ImGui::GetFontSize();
+
+			ImVec2 buttonSize(columnWidth, columnWidth + textSize.y + framePaddingV);
+			ImVec2 cursorStartPos = ImGui::GetCursorPos();
+
+			if (!renameEnabled)
 			{
-				if (auto asset = context.assetLibrary->FindAssetByVirtualPath(result.GetValue()))
+				if (ImGui::Selectable("##AssetBrowserItem", selected, selectableFlags, buttonSize))
 				{
-					Uid uid = asset->GetUid();
-					ImGui::SetDragDropPayload(EditorConstants::AssetDragDropType, &uid, sizeof(Uid));
+					if (isFile)
+					{
+						bool editAsset = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+						SelectPath(context, entryPath, editAsset);
+					}
+					else if (isDir)
+					{
+						if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+						{
+							MoveToPath(context, entryPath);
+						}
+						else
+						{
+							SelectPath(context, entryPath, false);
+						}
+					}
+				}
 
-					ImGui::Text("%s", fileStr.c_str());
+				if (ImGui::BeginPopupContextItem())
+				{
+					if (ImGui::Selectable("Rename"))
+					{
+						renameItemIndex = index;
+						renameBuffer.Resize(256);
+						size_t filenameLen = std::min(fileStr.size(), renameBuffer.GetLength() - 1);
+						std::memcpy(renameBuffer.GetData(), fileStr.c_str(), filenameLen);
+						renameBuffer[filenameLen] = '\0';
+					}
+					if (ImGui::Selectable("Delete"))
+						KK_LOG_ERROR("Delete asset not implemented.");
+
+					ImGui::EndPopup();
+				}
+
+				if (isFile)
+				{
+					if (ImGui::BeginDragDropSource())
+					{
+						if (auto asset = FindAssetByAbsolutePath(context, entryPath))
+						{
+							Uid uid = asset->GetUid();
+							ImGui::SetDragDropPayload(EditorConstants::AssetDragDropType, &uid, sizeof(Uid));
+
+							ImGui::Text("%s", fileStr.c_str());
+						}
+
+						ImGui::EndDragDropSource();
+					}
+				}
+
+				DrawIconAndName(cursorStartPos, iconTexId, columnWidth, fileStr.c_str());
+			}
+			else // renameEnabled
+			{
+				void* image = editorImages->GetImGuiTextureId(iconTexId);
+				ImVec2 uv0(0.0f, 1.0f);
+				ImVec2 uv1(1.0f, 0.0f);
+
+				ImGui::SetCursorPos(cursorStartPos);
+				ImGui::Image(image, ImVec2(columnWidth, columnWidth), uv0, uv1);
+
+				if (renameFocusApplied == false)
+				{
+					renameFocusApplied = true;
+					ImGui::SetKeyboardFocusHere();
+				}
+				ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+				ImGui::SetNextItemWidth(-1);
+				if (ImGui::InputText("##RenameAsset", renameBuffer.GetData(), renameBuffer.GetLength(), flags))
+				{
+					if (auto asset = FindAssetByAbsolutePath(context, entryPath))
+					{
+						auto newFilename = ConstStringView(renameBuffer.GetCStr());
+						if (context.assetLibrary->RenameAsset(asset->GetUid(), newFilename))
+							KK_LOG_INFO("Asset was renamed to {}", renameBuffer.GetCStr());
+						else
+							KK_LOG_ERROR("Asset rename failed");
+					}
+					else
+						KK_LOG_ERROR("Existing asset was not found while renaming the asset");
+
+					ResetRename();
+				}
+				if (ImGui::IsItemDeactivated() || ImGui::IsKeyReleased(ImGuiKey_Escape))
+				{
+					// Cancel rename
+					ResetRename();
 				}
 			}
 
-			ImGui::EndDragDropSource();
+			ImGui::PopID();
 		}
 	}
-
-	TextureId texId = isDir ? editorImages->folderIcon : editorImages->genericFileIcon;
-	DrawIconAndName(cursorStartPos, texId, columnWidth, fileStr.c_str());
 }
 
 void AssetBrowserView::DrawIconAndName(ImVec2 startPos, TextureId icon, float iconSize, const char* name)
@@ -444,6 +504,23 @@ String AssetBrowserView::RelativePathToVirtual(ConstStringView path) const
 	}
 
 	return str;
+}
+
+const AssetInfo* AssetBrowserView::FindAssetByAbsolutePath(EditorContext& context, const std::filesystem::path& path)
+{
+	std::string absolutePath = path.u8string();
+	auto result = AbsolutePathToVirtual(context, ConstStringView(absolutePath.c_str(), absolutePath.length()));
+	if (result.HasValue())
+		return context.assetLibrary->FindAssetByVirtualPath(result.GetValue());
+
+	return nullptr;
+}
+
+void AssetBrowserView::ResetRename()
+{
+	renameItemIndex = 0;
+	renameFocusApplied = false;
+	renameBuffer.Clear();
 }
 
 }
