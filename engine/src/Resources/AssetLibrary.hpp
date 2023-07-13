@@ -38,6 +38,8 @@ public:
 	AssetInfo(Allocator* allocator, ConstStringView virtualMount, ConstStringView relativePath,
 		Uid uid, uint64_t contentHash, AssetType type);
 
+	void UpdateFilename(ConstStringView newFilename);
+
 	const String& GetVirtualPath() const { return virtualPath; }
 	ConstStringView GetFilename() const { return filename; }
 	Uid GetUid() const { return uid; }
@@ -46,18 +48,18 @@ public:
 private:
 	friend class AssetLibrary;
 
-	// Holds complete virtual path, lower members are referencing parts of this string
+	// Holds complete virtual path, string view members are referencing parts of this string
 	String virtualPath;
 
 	ConstStringView virtualMount;
-	ConstStringView pathRelativeToMount;
+	ConstStringView relativeFolderPath; // Relative to the mounted folder
+	ConstStringView relativeFilePath; // Relative to the mounted folder
 	ConstStringView filename;
 
 	Uid uid;
 	uint64_t contentHash;
 	AssetType type;
 };
-
 
 class AssetLibrary
 {
@@ -69,6 +71,7 @@ public:
 	const AssetInfo* FindAssetByVirtualPath(const String& virtualPath);
 
 	Optional<Uid> CreateAsset(AssetType type, ConstStringView pathRelativeToAssets, ArrayView<const uint8_t> content);
+	bool RenameAsset(const Uid& uid, ConstStringView newFilename);
 	bool UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> content);
 
 	void SetAppScopeConfig(const AssetScopeConfiguration& config);

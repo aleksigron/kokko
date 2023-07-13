@@ -14,6 +14,8 @@
 
 #include "System/Filesystem.hpp"
 
+#include "Engine/EngineConstants.hpp"
+
 namespace kokko
 {
 namespace
@@ -31,7 +33,7 @@ void CreateMetadataJson(rapidjson::Document& document, uint64_t hash, const kokk
 	document.AddMember("hash", hashValue, alloc);
 
 	rapidjson::Value uidValue(uidStrBuf, kokko::Uid::StringLength, alloc);
-	document.AddMember("uid", uidValue, alloc);
+	document.AddMember("uid", uidValue, alloc);	
 }
 
 bool WriteDocumentToFile(
@@ -66,7 +68,7 @@ bool IsTextAsset(AssetType type)
 	default:
 		return false;
 	}
-}
+}	
 
 void NormalizeLineEndings(ArrayView<const uint8_t> bytes, String& resultOut)
 {
@@ -185,6 +187,64 @@ Optional<Uid> AssetLibrary::CreateAsset(AssetType type, ConstStringView pathRela
 	pathPair->second = assetRefIndex;
 
 	return assetUid;
+}
+
+bool AssetLibrary::RenameAsset(const Uid& uid, ConstStringView newFilename)
+{
+	auto uidMapPair = uidToIndexMap.Lookup(uid);
+	if (uidMapPair == nullptr)
+		return false;
+
+	AssetInfo& asset = assets[uidMapPair->second];
+
+	auto pathMapPair = pathToIndexMap.Lookup(asset.virtualPath);
+	if (pathMapPair == nullptr)
+		return false;
+
+	namespace fs = std::filesystem;
+	const fs::path& assetDir = projectConfig.assetFolderPath;
+	const auto& filePath = asset.relativeFilePath;
+	const auto& folderPath = asset.relativeFolderPath;
+	fs::path oldAssetPath = assetDir / fs::path(filePath.str, filePath.str + filePath.len);
+	fs::path newAssetPath = assetDir / fs::path(folderPath.str, folderPath.str + folderPath.len) /
+		fs::path(newFilename.str, newFilename.str + newFilename.len);
+	
+	std::error_code renameError;
+	std::filesystem::rename(oldAssetPath, newAssetPath, renameError);
+
+	if (renameError)
+	{
+		KK_LOG_ERROR("Asset file rename failed.");
+		return false;
+	}
+
+	// Rename meta file as well
+
+	fs::path oldMetaPath = oldAssetPath;
+	oldMetaPath.concat(EngineConstants::MetadataExtension);
+	fs::path newMetaPath = newAssetPath;
+	newMetaPath.concat(EngineConstants::MetadataExtension);
+
+	std::filesystem::rename(oldMetaPath, newMetaPath, renameError);
+
+	if (renameError)
+	{
+		KK_LOG_ERROR("Meta file rename failed, reversing asset file rename.");
+		std::filesystem::rename(newAssetPath, oldAssetPath, renameError);
+
+		if (renameError)
+			KK_LOG_ERROR("Asset file rename reversal failed. Filesystem left in an inconsistent state.");
+
+		return false;
+	}
+
+	pathToIndexMap.Remove(pathMapPair);
+	asset.UpdateFilename(newFilename);
+
+	pathMapPair = pathToIndexMap.Insert(asset.GetVirtualPath());
+	pathMapPair->second = uidMapPair->second;
+
+	return true;
 }
 
 bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> content)
@@ -483,12 +543,27 @@ AssetInfo::AssetInfo(Allocator* allocator, ConstStringView virtualMount, ConstSt
 	virtualPath.Append(relativePath);
 
 	const ConstStringView virtualPathView = virtualPath.GetRef();
+	intptr_t lastSlash = virtualPathView.FindLast(ConstStringView("/", 1));
 
 	this->virtualMount = virtualPathView.SubStr(0, virtualMount.len);
-	this->pathRelativeToMount = virtualPathView.SubStr(virtualMount.len + 1);
-	
-	intptr_t lastSlash = virtualPathView.FindLast(ConstStringView("/", 1));
+	this->relativeFolderPath = virtualPathView.SubStrPos(virtualMount.len + 1, lastSlash);
+	this->relativeFilePath = virtualPathView.SubStr(virtualMount.len + 1);
 	this->filename = virtualPathView.SubStr(lastSlash + 1);
+}
+
+void AssetInfo::UpdateFilename(ConstStringView newFilename)
+{
+	size_t lenWithoutFilename = virtualPath.GetLength() - filename.len;
+	virtualPath.Resize(lenWithoutFilename);
+	virtualPath.Reserve(lenWithoutFilename + newFilename.len);
+	virtualPath.Append(newFilename);
+
+	// If virtualPath got re-allocated, we need to update string views pointing into it
+	const ConstStringView virtualPathView = virtualPath.GetRef();
+	virtualMount = virtualPathView.SubStr(0, virtualMount.len);
+	relativeFolderPath = virtualPathView.SubStrPos(virtualMount.len, lenWithoutFilename - 1);
+	relativeFilePath = virtualPathView.SubStr(virtualMount.len + 1);
+	filename = virtualPathView.SubStr(lenWithoutFilename);
 }
 
 TEST_CASE("AssetInfo.VirtualPathParts")
@@ -509,6 +584,12 @@ TEST_CASE("AssetInfo.VirtualPathParts")
 	CHECK(assetInfo.GetFilename() == ConstStringView("fallback.material"));
 	CHECK(assetInfo.GetUid() == uid);
 	CHECK(assetInfo.GetType() == AssetType::Material);
+
+	assetInfo.UpdateFilename(ConstStringView("testing_new_filename_for_test_test.material"));
+
+	CHECK(assetInfo.GetVirtualPath() ==
+		ConstStringView("engine/materials/deferred_geometry/testing_new_filename_for_test_test.material"));
+	CHECK(assetInfo.GetFilename() == ConstStringView("testing_new_filename_for_test_test.material"));
 }
 
 }
