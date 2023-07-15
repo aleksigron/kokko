@@ -348,7 +348,6 @@ void DebugVectorRenderer::DrawLineChainScreen(size_t count, const Vec3f* points,
 		VertexData data;
 		data.vertexFormat = vertexFormatPos;
 		data.primitiveMode = RenderPrimitiveMode::LineStrip;
-		data.vertexBufferUsage = RenderBufferUsage::DynamicDraw;
 		data.vertexData = reinterpret_cast<const float*>(points);
 		data.vertexDataSize = static_cast<unsigned int>(requiredBufferSize);
 		data.vertexCount = static_cast<unsigned int>(count);

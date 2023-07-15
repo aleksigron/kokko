@@ -71,15 +71,15 @@ private:
 
 	struct ModelData
 	{
-		void* buffer;
+		void* buffer = nullptr;
 
 		kokko::Uid uid;
 
-		ModelNode* nodes;
-		uint32_t nodeCount;
+		ModelNode* nodes = nullptr;
+		uint32_t nodeCount = 0;
 
-		uint32_t meshCount;
-		ModelMesh* meshes;
+		uint32_t meshCount = 0;
+		ModelMesh* meshes = nullptr;
 	};
 
 	Allocator* allocator;
