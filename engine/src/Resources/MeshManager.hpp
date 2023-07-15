@@ -32,7 +32,6 @@ class Device;
 struct VertexData
 {
 	VertexData() :
-		vertexBufferUsage(RenderBufferUsage::StaticDraw),
 		primitiveMode(RenderPrimitiveMode::Triangles),
 		vertexData(nullptr),
 		vertexDataSize(0),
@@ -41,32 +40,28 @@ struct VertexData
 	}
 
 	VertexFormat vertexFormat;
-	RenderBufferUsage vertexBufferUsage;
 
 	RenderPrimitiveMode primitiveMode;
 
 	const void* vertexData;
-	unsigned int vertexDataSize;
-
-	unsigned int vertexCount;
+	size_t vertexDataSize;
+	uint32_t vertexCount;
 };
 
 struct IndexedVertexData : VertexData
 {
 	IndexedVertexData() :
-		indexBufferUsage(RenderBufferUsage::StaticDraw),
 		indexData(nullptr),
 		indexDataSize(0),
-		indexCount(0)
+		indexCount(0),
+		indexType(RenderIndexType::UnsignedShort)
 	{
 	}
 
-	RenderBufferUsage indexBufferUsage;
-
 	const void* indexData;
-	unsigned int indexDataSize;
-
-	unsigned int indexCount;
+	size_t indexDataSize;
+	uint32_t indexCount;
+	RenderIndexType indexType;
 };
 
 struct MeshDrawData

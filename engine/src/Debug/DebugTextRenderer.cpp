@@ -326,11 +326,9 @@ void DebugTextRenderer::CreateAndUploadData()
 	data.vertexData = vertexData.GetData();
 	data.vertexDataSize = vertexData.GetCount() * sizeof(vertexData[0]);
 	data.vertexCount = vertexData.GetCount() / static_cast<int>(componentCount);
-	data.vertexBufferUsage = RenderBufferUsage::DynamicDraw;
 	data.indexData = indexData.GetData();
 	data.indexDataSize = indexData.GetCount() * sizeof(indexData[0]);
-	data.indexCount = static_cast<unsigned int>(indexData.GetCount());
-	data.indexBufferUsage = RenderBufferUsage::DynamicDraw;
+	data.indexCount = static_cast<uint32_t>(indexData.GetCount());
 
 	meshManager->UploadIndexed(meshId, data);
 

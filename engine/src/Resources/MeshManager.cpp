@@ -348,7 +348,7 @@ void MeshManager::CreateDrawDataIndexed(unsigned int index, const IndexedVertexD
 	drawData.primitiveMode = vdata.primitiveMode;
 	drawData.vertexArrayObject = data.bufferData[index].vertexArrayObject;
 	drawData.count = static_cast<int>(vdata.indexCount);
-	drawData.indexType = RenderIndexType::UnsignedShort;
+	drawData.indexType = vdata.indexType;
 
 	data.uniqueVertexCount[index] = static_cast<int>(vdata.vertexCount);
 }

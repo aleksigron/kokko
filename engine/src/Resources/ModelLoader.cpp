@@ -105,16 +105,19 @@ bool ModelLoader::LoadFromBuffer(ModelManager::ModelData& model, ArrayView<const
 		return false;
 	}
 
-	size_t bufferBytes = sizeof(ModelNode) * countResult.nodeCount +
-		sizeof(ModelMesh) * countResult.meshCount + countResult.totalStringLength;
+	constexpr size_t alignment = 16;
+	const size_t nodeBytes = Math::RoundUpToMultiple(sizeof(ModelNode) * countResult.nodeCount, alignment);
+	const size_t meshBytes = Math::RoundUpToMultiple(sizeof(ModelMesh) * countResult.meshCount, alignment);
+	const size_t strBytes = countResult.totalStringLength;
+	const size_t bufferBytes = nodeBytes + meshBytes + strBytes;
 
 	model.buffer = allocator->Allocate(bufferBytes, "ModelLoader.LoadFromBuffer() model.buffer");
 
-	textBuffer = ArrayView<char>(static_cast<char*>(model.buffer), countResult.totalStringLength);
+	textBuffer = ArrayView<char>(static_cast<char*>(model.buffer) + nodeBytes + meshBytes, strBytes);
 	uid = model.uid;
 
-	model.nodes = reinterpret_cast<ModelNode*>(textBuffer.GetData() + countResult.totalStringLength);
-	model.meshes = reinterpret_cast<ModelMesh*>(model.nodes + countResult.nodeCount);
+	model.nodes = static_cast<ModelNode*>(model.buffer);
+	model.meshes = reinterpret_cast<ModelMesh*>(static_cast<uint8_t*>(model.buffer) + nodeBytes);
 
 	// These are used as counters to know how many have been inserted
 	model.nodeCount = 0; 
@@ -197,6 +200,8 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 
 	cgltf_buffer* cgltfVertexBuffer = nullptr;
 	size_t vertexCount = 0;
+	size_t vertexBufferStartOffset = 0;
+	size_t vertexBufferEndOffset = 0;
 
 	BoundingBox meshBounds;
 
@@ -209,13 +214,20 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 
 		cgltf_accessor& accessor = *attr.data;
 
-		// Make sure all vertex attributes come from same buffer
-		assert(cgltfVertexBuffer == nullptr || accessor.buffer_view->buffer == cgltfVertexBuffer);
-		cgltfVertexBuffer = accessor.buffer_view->buffer;
+		if (cgltfVertexBuffer == nullptr)
+		{
+			cgltfVertexBuffer = accessor.buffer_view->buffer;
+			vertexBufferStartOffset = cgltfVertexBuffer->size;
+			vertexCount = accessor.count;
+		}
+		else
+		{
+			// Make sure all vertex attributes come from same buffer
+			assert(accessor.buffer_view->buffer == cgltfVertexBuffer);
 
-		// Make sure all attributes have same number of vertices
-		assert(vertexCount == 0 || accessor.count == vertexCount);
-		vertexCount = accessor.count;
+			// Make sure all attributes have same number of vertices
+			assert(accessor.count == vertexCount);
+		}
 
 		int componentCount = 0;
 		if (accessor.type == cgltf_type_scalar)
@@ -254,13 +266,23 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 		RenderVertexElemType componentType = RenderVertexElemType::Float;
 		assert(accessor.component_type == cgltf_component_type_r_32f);
 
+		size_t attributeStart = accessor.offset + accessor.buffer_view->offset;
+		size_t attributeEnd = attributeStart + accessor.count * accessor.stride;
+		vertexBufferStartOffset = std::min(vertexBufferStartOffset, attributeStart);
+		vertexBufferEndOffset = std::max(vertexBufferEndOffset, attributeEnd);
+
 		attributes[attributeCount].attrIndex = attributePos;
 		attributes[attributeCount].elemCount = componentCount;
-		attributes[attributeCount].offset = accessor.offset + accessor.buffer_view->offset;
+		attributes[attributeCount].offset = attributeStart;
 		attributes[attributeCount].stride = accessor.stride;
 		attributes[attributeCount].elemType = componentType;
 
 		attributeCount += 1;
+	}
+
+	for (size_t attrIdx = 0; attrIdx < attributeCount; ++attrIdx)
+	{
+		attributes[attrIdx].offset -= vertexBufferStartOffset;
 	}
 
 	VertexFormat format(attributes, attributeCount);
@@ -293,15 +315,26 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 		uint8_t* indexBuffer = indexBufferStart + prim.indices->offset + prim.indices->buffer_view->offset;
 		size_t indexBufferSize = prim.indices->buffer_view->size - prim.indices->offset;
 
+		RenderIndexType indexType = RenderIndexType::None;
+		if (prim.indices->component_type == cgltf_component_type_r_32u)
+			indexType = RenderIndexType::UnsignedInt;
+		else if (prim.indices->component_type == cgltf_component_type_r_16u)
+			indexType = RenderIndexType::UnsignedShort;
+		else if (prim.indices->component_type == cgltf_component_type_r_8u)
+			indexType = RenderIndexType::UnsignedByte;
+		else
+			assert(false && "Unsupported index type");
+
 		IndexedVertexData indexedVertexData;
 		indexedVertexData.vertexFormat = format;
 		indexedVertexData.primitiveMode = primitiveMode;
-		indexedVertexData.vertexData = cgltfVertexBuffer->data;
-		indexedVertexData.vertexDataSize = cgltfVertexBuffer->size;
+		indexedVertexData.vertexData = static_cast<const uint8_t*>(cgltfVertexBuffer->data) + vertexBufferStartOffset;
+		indexedVertexData.vertexDataSize = vertexBufferEndOffset - vertexBufferStartOffset;
 		indexedVertexData.vertexCount = static_cast<int>(vertexCount);
 		indexedVertexData.indexData = indexBuffer;
 		indexedVertexData.indexDataSize = indexBufferSize;
 		indexedVertexData.indexCount = prim.indices->count;
+		indexedVertexData.indexType = indexType;
 
 		modelManager->meshManager->UploadIndexed(meshId, indexedVertexData);
 	}
@@ -310,8 +343,8 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 		VertexData nonindexedVertexData;
 		nonindexedVertexData.vertexFormat = format;
 		nonindexedVertexData.primitiveMode = primitiveMode;
-		nonindexedVertexData.vertexData = cgltfVertexBuffer->data;
-		nonindexedVertexData.vertexDataSize = cgltfVertexBuffer->size;
+		nonindexedVertexData.vertexData = static_cast<const uint8_t*>(cgltfVertexBuffer->data) + vertexBufferStartOffset;
+		nonindexedVertexData.vertexDataSize = vertexBufferEndOffset - vertexBufferStartOffset;
 		nonindexedVertexData.vertexCount = vertexCount;
 
 		modelManager->meshManager->Upload(meshId, nonindexedVertexData);

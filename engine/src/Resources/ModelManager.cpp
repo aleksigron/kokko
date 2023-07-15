@@ -63,6 +63,11 @@ ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)
 		}
 		else
 		{
+			char uidStr[Uid::StringLength + 1];
+			uid.WriteTo(uidStr);
+			uidStr[Uid::StringLength] = '\0';
+
+			KK_LOG_ERROR("Model with UID {} failed to be loaded.", uidStr);
 			models.PopBack();
 		}
 	}
