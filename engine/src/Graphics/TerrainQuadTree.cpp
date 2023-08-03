@@ -10,7 +10,7 @@
 
 #include "Graphics/TerrainSystem.hpp"
 
-#include "Math/BoundingBox.hpp"
+#include "Math/AABB.hpp"
 #include "Math/Frustum.hpp"
 #include "Math/Intersect3D.hpp"
 
@@ -121,7 +121,7 @@ void TerrainQuadTree::RenderTile(
 	Vec3f tileMin = levelOrigin + Vec3f(id.x * tileWidth, terrainBottom, id.y * tileWidth);
 	Vec3f tileSize(tileWidth, terrainHeight, tileWidth);
 
-	BoundingBox tileBounds;
+	AABB tileBounds;
 	tileBounds.extents = tileSize * 0.5f;
 	tileBounds.center = tileMin + tileBounds.extents;
 

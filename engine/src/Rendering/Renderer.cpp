@@ -24,8 +24,8 @@
 #include "Graphics/GraphicsFeatureTonemapping.hpp"
 #include "Graphics/Scene.hpp"
 
+#include "Math/AABB.hpp"
 #include "Math/Rectangle.hpp"
-#include "Math/BoundingBox.hpp"
 #include "Math/Intersect3D.hpp"
 
 #include "Memory/Allocator.hpp"
@@ -1004,7 +1004,7 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer)
 		Color color(1.0f, 1.0f, 1.0f, 1.0f);
 
 		// Draw bounds
-		BoundingBox* bounds = componentSystem->data.bounds;
+		AABB* bounds = componentSystem->data.bounds;
 		for (unsigned int idx = 1, count = componentSystem->data.count; idx < count; ++idx)
 		{
 			Vec3f pos = bounds[idx].center;

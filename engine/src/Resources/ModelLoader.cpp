@@ -203,7 +203,7 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 	size_t vertexBufferStartOffset = 0;
 	size_t vertexBufferEndOffset = 0;
 
-	BoundingBox meshBounds;
+	AABB meshBounds;
 
 	for (size_t i = 0; i < prim.attributes_count; ++i)
 	{

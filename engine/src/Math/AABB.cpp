@@ -1,17 +1,20 @@
-#include "Math/BoundingBox.hpp"
+#include "Math/AABB.hpp"
 
 #include <cmath>
 #include <algorithm>
 #include <limits>
 
-BoundingBox BoundingBox::Transform(const Mat4x4f& m) const
+namespace kokko
+{
+
+AABB AABB::Transform(const Mat4x4f& m) const
 {
 	Mat4x4f absm;
 
 	for (int i = 0; i < 16; ++i)
 		absm[i] = std::abs(m[i]);
 
-	BoundingBox result;
+	AABB result;
 
 	result.center = (m * Vec4f(this->center, 1.0f)).xyz();
 	result.extents = (absm * Vec4f(this->extents, 0.0f)).xyz();
@@ -19,7 +22,7 @@ BoundingBox BoundingBox::Transform(const Mat4x4f& m) const
 	return result;
 }
 
-void BoundingBox::UpdateToContain(unsigned int count, const Vec3f* points)
+void AABB::UpdateToContain(unsigned int count, const Vec3f* points)
 {
 	constexpr float fmax = std::numeric_limits<float>::max();
 	constexpr float fmin = std::numeric_limits<float>::min();
@@ -42,3 +45,5 @@ void BoundingBox::UpdateToContain(unsigned int count, const Vec3f* points)
 	extents = difference * 0.5f;
 	center = minimum + extents;
 }
+
+} // namespace kokko

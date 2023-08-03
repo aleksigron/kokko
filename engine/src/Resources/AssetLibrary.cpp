@@ -576,15 +576,15 @@ void AssetInfo::UpdateFilename(ConstStringView newFilename)
 TEST_CASE("AssetInfo.VirtualPathParts")
 {
 	Uid uid;
-	uid.raw[0] = 877228993468580528;
-	uid.raw[1] = 6433944024937364386;
+	uid.raw[0] = 877228993468580528ull;
+	uid.raw[1] = 6433944024937364386ull;
 
 	AssetInfo assetInfo(
 		Allocator::GetDefault(),
 		ConstStringView("engine"),
 		ConstStringView("materials/deferred_geometry/fallback.material"),
 		uid,
-		12570451739923486631,
+		12570451739923486631ull,
 		AssetType::Material);
 
 	CHECK(assetInfo.GetVirtualPath() == ConstStringView("engine/materials/deferred_geometry/fallback.material"));

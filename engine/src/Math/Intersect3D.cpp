@@ -5,12 +5,12 @@
 #include "Core/Core.hpp"
 #include "Core/BitPack.hpp"
 
-#include "Math/BoundingBox.hpp"
+#include "Math/AABB.hpp"
 #include "Math/Frustum.hpp"
 #include "Math/Mat4x4.hpp"
 #include "Math/Vec2.hpp"
 
-bool Intersect::FrustumAabb(const FrustumPlanes& frustum, const BoundingBox& bounds)
+bool Intersect::FrustumAabb(const FrustumPlanes& frustum, const kokko::AABB& bounds)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -37,7 +37,7 @@ bool Intersect::FrustumAabb(const FrustumPlanes& frustum, const BoundingBox& bou
 void Intersect::FrustumAabbN(
 	const FrustumPlanes& frustum,
 	unsigned int count,
-	const BoundingBox* bounds,
+	const kokko::AABB* bounds,
 	BitPack* intersectedOut)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -79,7 +79,7 @@ void Intersect::FrustumAABBMinSize(
 	const Mat4x4f& viewProjection,
 	float minimumSize,
 	unsigned int count,
-	const BoundingBox* bounds,
+	const kokko::AABB* bounds,
 	BitPack* intersectedOut)
 {
 	KOKKO_PROFILE_FUNCTION();

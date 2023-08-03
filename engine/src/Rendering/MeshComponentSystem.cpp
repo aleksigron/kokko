@@ -4,7 +4,7 @@
 
 #include "Engine/Entity.hpp"
 
-#include "Math/BoundingBox.hpp"
+#include "Math/AABB.hpp"
 #include "Math/Mat4x4.hpp"
 
 #include "Resources/MaterialData.hpp"
@@ -47,7 +47,7 @@ void MeshComponentSystem::NotifyUpdatedTransforms(size_t count, const Entity* en
 
 			if (meshId != MeshId::Null)
 			{
-				const BoundingBox* bounds = meshManager->GetBoundingBox(meshId);
+				const AABB* bounds = meshManager->GetBoundingBox(meshId);
 				data.bounds[dataIdx] = bounds->Transform(transforms[entityIdx]);
 			}
 
@@ -88,7 +88,7 @@ void MeshComponentSystem::AddComponents(unsigned int count, const Entity* entiti
 		data.mesh[id] = MeshId::Null;
 		data.material[id] = MaterialId::Null;
 		data.transparency[id] = TransparencyType::Opaque;
-		data.bounds[id] = BoundingBox();
+		data.bounds[id] = AABB();
 		data.transform[id] = Mat4x4f();
 
 		idsOut[i].i = id;
@@ -172,7 +172,7 @@ void MeshComponentSystem::Reallocate(unsigned int required)
 
 	InstanceData newData;
 	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(MaterialId) +
-		sizeof(TransparencyType) + sizeof(BoundingBox) + sizeof(Mat4x4f));
+		sizeof(TransparencyType) + sizeof(AABB) + sizeof(Mat4x4f));
 
 	newData.buffer = this->allocator->Allocate(bytes, "MeshComponentSystem.data.buffer");
 	newData.count = data.count;
@@ -182,7 +182,7 @@ void MeshComponentSystem::Reallocate(unsigned int required)
 	newData.mesh = reinterpret_cast<MeshId*>(newData.entity + required);
 	newData.material = reinterpret_cast<MaterialId*>(newData.mesh + required);
 	newData.transparency = reinterpret_cast<TransparencyType*>(newData.material + required);
-	newData.bounds = reinterpret_cast<BoundingBox*>(newData.transparency + required);
+	newData.bounds = reinterpret_cast<AABB*>(newData.transparency + required);
 	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
 
 	if (data.buffer != nullptr)
@@ -191,7 +191,7 @@ void MeshComponentSystem::Reallocate(unsigned int required)
 		std::memcpy(newData.mesh, data.mesh, data.count * sizeof(MeshId));
 		std::memcpy(newData.material, data.material, data.count * sizeof(MaterialId));
 		std::memcpy(newData.transparency, data.transparency, data.count * sizeof(TransparencyType));
-		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
+		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(AABB));
 		std::memcpy(newData.transform, data.transform, data.count * sizeof(Mat4x4f));
 
 		this->allocator->Deallocate(data.buffer);
