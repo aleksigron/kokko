@@ -51,7 +51,7 @@ void MeshManager::Reallocate(unsigned int required)
 	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
 
 	size_t objectBytes = sizeof(unsigned int) * 2 + sizeof(MeshDrawData) + sizeof(int) +
-		sizeof(MeshBufferData) + sizeof(BoundingBox) + sizeof(MeshId) + sizeof(kokko::Uid) + sizeof(bool);
+		sizeof(MeshBufferData) + sizeof(AABB) + sizeof(MeshId) + sizeof(kokko::Uid) + sizeof(bool);
 
 	InstanceData newData;
 	newData.buffer = allocator->Allocate(required * objectBytes, "MeshManager.data.buffer");
@@ -63,7 +63,7 @@ void MeshManager::Reallocate(unsigned int required)
 	newData.drawData = reinterpret_cast<MeshDrawData*>(newData.indexList + newData.allocated);
 	newData.bufferData = reinterpret_cast<MeshBufferData*>(newData.drawData + newData.allocated);
 	newData.uniqueVertexCount = reinterpret_cast<int*>(newData.bufferData + newData.allocated);
-	newData.bounds = reinterpret_cast<BoundingBox*>(newData.bufferData + newData.allocated);
+	newData.bounds = reinterpret_cast<AABB*>(newData.bufferData + newData.allocated);
 	newData.meshId = reinterpret_cast<MeshId*>(newData.bounds + newData.allocated);
 	newData.uid = reinterpret_cast<kokko::Uid*>(newData.meshId + newData.allocated);
 	newData.uidExists = reinterpret_cast<bool*>(newData.uid + newData.allocated);
@@ -81,7 +81,7 @@ void MeshManager::Reallocate(unsigned int required)
 		std::memcpy(newData.drawData, data.drawData, data.count * sizeof(MeshDrawData));
 		std::memcpy(newData.bufferData, data.bufferData, data.count * sizeof(MeshBufferData));
 		std::memcpy(newData.uniqueVertexCount, data.uniqueVertexCount, data.count * sizeof(int));
-		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(BoundingBox));
+		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(AABB));
 		std::memcpy(newData.meshId, data.meshId, data.count * sizeof(MeshId));
 		std::memcpy(newData.uid, data.uid, data.count * sizeof(kokko::Uid));
 		std::memcpy(newData.uidExists, data.uidExists, data.count * sizeof(bool));
@@ -116,7 +116,7 @@ MeshId MeshManager::CreateMesh()
 	data.drawData[index] = MeshDrawData{};
 	data.bufferData[index] = MeshBufferData{};
 	data.uniqueVertexCount[index] = 0;
-	data.bounds[index] = BoundingBox();
+	data.bounds[index] = AABB();
 	data.meshId[index] = id;
 	data.uid[index] = kokko::Uid();
 	data.uidExists[index] = false;
@@ -184,12 +184,12 @@ void MeshManager::SetUid(MeshId id, const kokko::Uid& uid)
 	data.uidExists[index] = true;
 }
 
-const BoundingBox* MeshManager::GetBoundingBox(MeshId id) const
+const AABB* MeshManager::GetBoundingBox(MeshId id) const
 {
 	return &data.bounds[GetIndex(id)];
 }
 
-void MeshManager::SetBoundingBox(MeshId id, const BoundingBox& bounds)
+void MeshManager::SetBoundingBox(MeshId id, const AABB& bounds)
 {
 	data.bounds[GetIndex(id)] = bounds;
 }

@@ -174,8 +174,8 @@ set (KOKKO_SOURCES
 	src/Graphics/TransformUpdateReceiver.hpp
 	src/Graphics/Scene.cpp
 	src/Graphics/Scene.hpp
-	src/Math/BoundingBox.cpp
-	src/Math/BoundingBox.hpp
+	src/Math/AABB.cpp
+	src/Math/AABB.hpp
 	src/Math/Frustum.hpp
 	src/Math/Intersect3D.cpp
 	src/Math/Intersect3D.hpp

@@ -7,15 +7,13 @@
 #include "Core/StringView.hpp"
 #include "Core/Uid.hpp"
 
-#include "Math/BoundingBox.hpp"
+#include "Math/AABB.hpp"
 
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/RenderResourceId.hpp"
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/MeshId.hpp"
-
-struct BoundingBox;
 
 class Allocator;
 
@@ -112,15 +110,15 @@ private:
 		MeshDrawData* drawData;
 		MeshBufferData* bufferData;
 		int* uniqueVertexCount; // Used for rendering normal visualization
-		BoundingBox* bounds;
+		AABB* bounds;
 		MeshId* meshId;
-		kokko::Uid* uid;
+		Uid* uid;
 		bool* uidExists;
 	}
 	data;
 
 	unsigned int freeListFirst;
-	HashMap<kokko::Uid, MeshId> uidMap;
+	HashMap<Uid, MeshId> uidMap;
 
 	void Reallocate(unsigned int required);
 
@@ -137,17 +135,17 @@ private:
 	unsigned int GetIndex(MeshId meshId) const;
 
 public:
-	MeshManager(Allocator* allocator, kokko::AssetLoader* assetLoader, kokko::render::Device* renderDevice);
+	MeshManager(Allocator* allocator, AssetLoader* assetLoader, render::Device* renderDevice);
 	~MeshManager();
 
 	MeshId CreateMesh();
 	void RemoveMesh(MeshId id);
 
-	Optional<kokko::Uid> GetUid(MeshId id) const;
-	void SetUid(MeshId id, const kokko::Uid& uid);
+	Optional<Uid> GetUid(MeshId id) const;
+	void SetUid(MeshId id, const Uid& uid);
 
-	const BoundingBox* GetBoundingBox(MeshId id) const;
-	void SetBoundingBox(MeshId id, const BoundingBox& bounds);
+	const AABB* GetBoundingBox(MeshId id) const;
+	void SetBoundingBox(MeshId id, const AABB& bounds);
 
 	const MeshDrawData* GetDrawData(MeshId id) const;
 	int GetUniqueVertexCount(MeshId id) const;

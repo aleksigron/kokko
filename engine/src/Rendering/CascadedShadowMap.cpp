@@ -6,7 +6,6 @@
 #include "Math/Vec2.hpp"
 #include "Math/Math.hpp"
 #include "Math/Frustum.hpp"
-#include "Math/BoundingBox.hpp"
 
 namespace CascadedShadowMap
 {

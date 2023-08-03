@@ -8,7 +8,6 @@
 
 class Allocator;
 
-struct BoundingBox;
 struct Entity;
 struct Mat4x4f;
 
@@ -17,6 +16,8 @@ namespace kokko
 
 class MeshManager;
 class Renderer;
+
+struct AABB;
 struct MaterialId;
 struct MeshId;
 
@@ -71,7 +72,7 @@ private:
 		MeshId* mesh;
 		MaterialId* material;
 		TransparencyType* transparency;
-		BoundingBox* bounds;
+		AABB* bounds;
 		Mat4x4f* transform;
 	}
 	data;

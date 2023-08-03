@@ -46,7 +46,7 @@ void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 
 	meshManager->UploadIndexed(meshId, data);
 
-	BoundingBox bounds;
+	AABB bounds;
 	bounds.center = Vec3f(0.0f, 0.0f, 0.0f);
 	bounds.extents = Vec3f(0.5f, 0.5f, 0.5f);
 	meshManager->SetBoundingBox(meshId, bounds);

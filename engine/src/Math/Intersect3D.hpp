@@ -2,10 +2,14 @@
 
 #include "Math/Vec3.hpp"
 
-struct BoundingBox;
 struct Mat4x4f;
 struct FrustumPlanes;
 struct BitPack;
+
+namespace kokko
+{
+struct AABB;
+}
 
 namespace Intersect
 {
@@ -14,7 +18,7 @@ namespace Intersect
 	*/
 	bool FrustumAabb(
 	const FrustumPlanes& frustum,
-	const BoundingBox& bounds);
+	const kokko::AABB& bounds);
 
 	/*
 	* Calculate visibility for bounding boxes
@@ -22,7 +26,7 @@ namespace Intersect
 	void FrustumAabbN(
 		const FrustumPlanes& frustum,
 		unsigned int count,
-		const BoundingBox* bounds,
+		const kokko::AABB* bounds,
 		BitPack* intersectedOut);
 
 	/*
@@ -33,7 +37,7 @@ namespace Intersect
 		const Mat4x4f& viewProjection,
 		float minimumSize,
 		unsigned int count,
-		const BoundingBox* bounds,
+		const kokko::AABB* bounds,
 		BitPack* intersectedOut);
 
 	/*
