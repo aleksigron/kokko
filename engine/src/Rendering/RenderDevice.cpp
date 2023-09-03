@@ -20,7 +20,7 @@ namespace render
 #ifdef KOKKO_USE_METAL
 kokko::render::Device* Device::Create(Allocator* allocator)
 {
-    return allocator->MakeNew<kokko::RenderDeviceMetal>();
+    return allocator->MakeNew<kokko::render::DeviceMetal>();
 }
 #endif
 

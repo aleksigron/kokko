@@ -11,7 +11,10 @@
 namespace kokko
 {
 
-RenderDeviceMetal::RenderDeviceMetal()
+namespace render
+{
+
+DeviceMetal::DeviceMetal()
 {
     pool = NS::TransferPtr(NS::AutoreleasePool::alloc()->init());
 
@@ -21,635 +24,394 @@ RenderDeviceMetal::RenderDeviceMetal()
     assert(queue);
 }
 
-RenderDeviceMetal::~RenderDeviceMetal()
+DeviceMetal::~DeviceMetal()
 {
 }
 
-NativeRenderDevice* RenderDeviceMetal::GetNativeDevice()
+NativeRenderDevice* DeviceMetal::GetNativeDevice()
 {
     return reinterpret_cast<NativeRenderDevice*>(device.get());
 }
 
-kokko::CommandBuffer* RenderDeviceMetal::CreateCommandBuffer(Allocator* allocator)
+kokko::CommandBuffer* DeviceMetal::CreateCommandBuffer(Allocator* allocator)
 {
     return allocator->MakeNew<kokko::CommandBufferMetal>(queue.get());
 }
 
-void RenderDeviceMetal::SetDebugMessageCallback(DebugCallbackFn callback)
+void DeviceMetal::GetIntegerValue(RenderDeviceParameter parameter, int* valueOut)
 {
-	//debugUserData.callback = callback;
-	//glDebugMessageCallback(DebugMessageCallback, &debugUserData);
+    //glGetIntegerv(ConvertDeviceParameter(parameter), valueOut);
 }
 
-void RenderDeviceMetal::SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label)
+void DeviceMetal::SetDebugMessageCallback(DebugCallbackFn callback)
 {
-	//glObjectLabel(ConvertObjectType(type), object, static_cast<GLsizei>(label.len), label.str);
+    //debugUserData.callback = callback;
+    //glDebugMessageCallback(DebugMessageCallback, &debugUserData);
 }
 
-void RenderDeviceMetal::SetObjectPtrLabel(void* ptr, kokko::ConstStringView label)
+void DeviceMetal::SetObjectLabel(RenderObjectType type, unsigned int object, kokko::ConstStringView label)
 {
-	//glObjectPtrLabel(ptr, static_cast<GLsizei>(label.len), label.str);
+    //glObjectLabel(ConvertObjectType(type), object, static_cast<GLsizei>(label.len), label.str);
 }
 
-void RenderDeviceMetal::GetIntegerValue(RenderDeviceParameter parameter, int* valueOut)
+void DeviceMetal::SetObjectPtrLabel(void* ptr, kokko::ConstStringView label)
 {
-	//glGetIntegerv(ConvertDeviceParameter(parameter), valueOut);
+    //glObjectPtrLabel(ptr, static_cast<GLsizei>(label.len), label.str);
 }
 
-void RenderDeviceMetal::PushDebugGroup(unsigned int id, kokko::ConstStringView message)
+void DeviceMetal::BeginDebugScope(uint32_t id, ConstStringView message)
 {
-	//glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, static_cast<GLsizei>(message.len), message.str);
+    //glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, static_cast<uint32_t>(message.len), message.str);
 }
 
-void RenderDeviceMetal::PopDebugGroup()
+void DeviceMetal::EndDebugScope()
 {
-	//glPopDebugGroup();
+    //glPopDebugGroup();
 }
 
-void RenderDeviceMetal::Clear(const RenderCommandData::ClearMask* data)
+void DeviceMetal::CreateFramebuffers(unsigned int count, FramebufferId* framebuffersOut)
 {
-	unsigned int mask = 0;
-/*
-	if (data->color) mask |= GL_COLOR_BUFFER_BIT;
-	if (data->depth) mask |= GL_DEPTH_BUFFER_BIT;
-	if (data->stencil) mask |= GL_STENCIL_BUFFER_BIT;
-
-	glClear(mask);*/
+    // glCreateFramebuffers(count, &framebuffersOut[0].i);
 }
 
-void RenderDeviceMetal::ClearColor(const RenderCommandData::ClearColorData* data)
+void DeviceMetal::DestroyFramebuffers(unsigned int count, const FramebufferId* framebuffers)
 {
-	//glClearColor(data->r, data->g, data->b, data->a);
+    // glDeleteFramebuffers(count, &framebuffers[0].i);
 }
 
-void RenderDeviceMetal::ClearDepth(float depth)
+void DeviceMetal::AttachFramebufferTexture(
+    FramebufferId framebuffer,
+    RenderFramebufferAttachment attachment,
+    TextureId texture,
+    int level)
 {
-	//glClearDepth(depth);
+    // glNamedFramebufferTexture(framebuffer.i, ConvertFramebufferAttachment(attachment), texture.i, level);
 }
 
-void RenderDeviceMetal::BlendingEnable()
+void DeviceMetal::AttachFramebufferTextureLayer(
+    FramebufferId framebuffer,
+    RenderFramebufferAttachment attachment,
+    TextureId texture,
+    int level,
+    int layer)
 {
-	//glEnable(GL_BLEND);
+    // glNamedFramebufferTextureLayer(framebuffer.i, ConvertFramebufferAttachment(attachment), texture.i, level, layer);
 }
 
-void RenderDeviceMetal::BlendingDisable()
+void DeviceMetal::SetFramebufferDrawBuffers(
+    FramebufferId framebuffer,
+    unsigned int count,
+    const RenderFramebufferAttachment* buffers)
 {
-	//glDisable(GL_BLEND);
+//    unsigned int attachments[16];
+//
+//    for (unsigned int i = 0; i < count; ++i)
+//        attachments[i] = ConvertFramebufferAttachment(buffers[i]);
+//
+//    glNamedFramebufferDrawBuffers(framebuffer.i, count, attachments);
 }
 
-void RenderDeviceMetal::BlendFunction(const RenderCommandData::BlendFunctionData* data)
+void DeviceMetal::ReadFramebufferPixels(int x, int y, int width, int height,
+    RenderTextureBaseFormat format, RenderTextureDataType type, void* data)
 {
-	//BlendFunction(data->srcFactor, data->dstFactor);
-}
-
-void RenderDeviceMetal::BlendFunction(RenderBlendFactor srcFactor, RenderBlendFactor dstFactor)
-{
-	//glBlendFunc(ConvertBlendFactor(srcFactor), ConvertBlendFactor(dstFactor));
-}
-
-void RenderDeviceMetal::CubemapSeamlessEnable()
-{
-	//glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-}
-
-void RenderDeviceMetal::CubemapSeamlessDisable()
-{
-	//glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-}
-
-void RenderDeviceMetal::SetClipBehavior(RenderClipOriginMode origin, RenderClipDepthMode depth)
-{
-	//glClipControl(ConvertClipOriginMode(origin), ConvertClipDepthMode(depth));
-}
-
-void RenderDeviceMetal::DepthRange(const RenderCommandData::DepthRangeData* data)
-{
-	//glDepthRange(data->near, data->far);
-}
-
-void RenderDeviceMetal::Viewport(const RenderCommandData::ViewportData* data)
-{
-	//glViewport(data->x, data->y, data->w, data->h);
-}
-
-void RenderDeviceMetal::ScissorTestEnable()
-{
-	//glEnable(GL_SCISSOR_TEST);
-}
-
-void RenderDeviceMetal::ScissorTestDisable()
-{
-	//glDisable(GL_SCISSOR_TEST);
-}
-
-void RenderDeviceMetal::DepthTestEnable()
-{
-	//glEnable(GL_DEPTH_TEST);
-}
-
-void RenderDeviceMetal::DepthTestDisable()
-{
-	//glDisable(GL_DEPTH_TEST);
-}
-
-void RenderDeviceMetal::DepthTestFunction(RenderDepthCompareFunc function)
-{
-	//glDepthFunc(ConvertDepthCompareFunc(function));
-}
-
-void RenderDeviceMetal::DepthWriteEnable()
-{
-	//glDepthMask(GL_TRUE);
-}
-
-void RenderDeviceMetal::DepthWriteDisable()
-{
-	//glDepthMask(GL_FALSE);
-}
-
-// CULL FACE
-
-void RenderDeviceMetal::CullFaceEnable()
-{
-	//glEnable(GL_CULL_FACE);
-}
-
-void RenderDeviceMetal::CullFaceDisable()
-{
-	//glDisable(GL_CULL_FACE);
-}
-
-void RenderDeviceMetal::CullFaceFront()
-{
-	//glCullFace(GL_FRONT);
-}
-
-void RenderDeviceMetal::CullFaceBack()
-{
-	//glCullFace(GL_BACK);
-}
-
-// FRAMEBUFFER
-
-void RenderDeviceMetal::FramebufferSrgbEnable()
-{
-	//glEnable(GL_FRAMEBUFFER_SRGB);
-}
-
-void RenderDeviceMetal::FramebufferSrgbDisable()
-{
-	//glDisable(GL_FRAMEBUFFER_SRGB);
-}
-
-void RenderDeviceMetal::CreateFramebuffers(unsigned int count, unsigned int* framebuffersOut)
-{
-	//glGenFramebuffers(count, framebuffersOut);
-}
-
-void RenderDeviceMetal::DestroyFramebuffers(unsigned int count, unsigned int* framebuffers)
-{
-	//glDeleteFramebuffers(count, framebuffers);
-}
-
-void RenderDeviceMetal::BindFramebuffer(const RenderCommandData::BindFramebufferData* data)
-{
-	//BindFramebuffer(data->target, data->framebuffer);
-}
-
-void RenderDeviceMetal::BindFramebuffer(RenderFramebufferTarget target, unsigned int framebuffer)
-{
-	//glBindFramebuffer(ConvertFramebufferTarget(target), framebuffer);
-}
-
-void RenderDeviceMetal::AttachFramebufferTexture2D(const RenderCommandData::AttachFramebufferTexture2D* data)
-{
-	//glFramebufferTexture2D(ConvertFramebufferTarget(data->target), ConvertFramebufferAttachment(data->attachment),
-	//	ConvertTextureTarget(data->textureTarget), data->texture, data->mipLevel);
-}
-
-void RenderDeviceMetal::SetFramebufferDrawBuffers(unsigned int count, const RenderFramebufferAttachment* buffers)
-{
-	unsigned int attachments[16];
-
-	//for (unsigned int i = 0; i < count; ++i)
-    //  attachments[i] = ConvertFramebufferAttachment(buffers[i]);
-
-	//glDrawBuffers(count, attachments);
+    //glReadPixels(x, y, width, height, ConvertTextureBaseFormat(format), ConvertTextureDataType(type), data);
 }
 
 // TEXTURE
 
-void RenderDeviceMetal::CreateTextures(unsigned int count, unsigned int* texturesOut)
+void DeviceMetal::CreateTextures(
+    RenderTextureTarget type,
+    unsigned int count,
+    TextureId* texturesOut)
 {
-	//glGenTextures(count, texturesOut);
+    //glCreateTextures(ConvertTextureTarget(type), count, &texturesOut[0].i);
 }
 
-void RenderDeviceMetal::DestroyTextures(unsigned int count, unsigned int* textures)
+void DeviceMetal::DestroyTextures(unsigned int count, const TextureId* textures)
 {
-	//glDeleteTextures(count, textures);
+    //glDeleteTextures(count, &textures[0].i);
 }
 
-void RenderDeviceMetal::BindTexture(RenderTextureTarget target, unsigned int texture)
+void DeviceMetal::SetTextureStorage2D(
+    TextureId texture,
+    int levels,
+    RenderTextureSizedFormat format,
+    int width,
+    int height)
 {
-	//glBindTexture(ConvertTextureTarget(target), texture);
+    //assert(levels > 0 && width > 0 && height > 0);
+    //glTextureStorage2D(texture.i, levels, ConvertTextureSizedFormat(format), width, height);
 }
 
-void RenderDeviceMetal::SetTextureStorage2D(const RenderCommandData::SetTextureStorage2D* data)
+void DeviceMetal::SetTextureSubImage2D(
+    TextureId texture,
+    int level,
+    int xOffset,
+    int yOffset,
+    int width,
+    int height,
+    RenderTextureBaseFormat format,
+    RenderTextureDataType type,
+    const void* data)
 {
-	//glTexStorage2D(ConvertTextureTarget(data->target), data->levels,
-	//	ConvertTextureSizedFormat(data->format), data->width, data->height);
+    //glTextureSubImage2D(texture.i, level, xOffset, yOffset, width, height,
+    //    ConvertTextureBaseFormat(format), ConvertTextureDataType(type), data);
 }
 
-void RenderDeviceMetal::SetTextureImage2D(const RenderCommandData::SetTextureImage2D* data)
+void DeviceMetal::SetTextureSubImage3D(
+    TextureId texture,
+    int level,
+    int xoffset,
+    int yoffset,
+    int zoffset,
+    int width,
+    int height,
+    int depth,
+    RenderTextureBaseFormat format,
+    RenderTextureDataType type,
+    const void* data)
 {
-	//glTexImage2D(ConvertTextureTarget(data->target), data->mipLevel, data->internalFormat,
-	//	data->width, data->height, 0, data->format, data->type, data->data);
+    //glTextureSubImage3D(texture.i, level, xoffset, yoffset, zoffset, width, height, depth,
+    //    ConvertTextureBaseFormat(format), ConvertTextureDataType(type), data);
 }
 
-void RenderDeviceMetal::SetTextureSubImage2D(const RenderCommandData::SetTextureSubImage2D* data)
+void DeviceMetal::GenerateTextureMipmaps(TextureId texture)
 {
-	//glTexSubImage2D(ConvertTextureTarget(data->target), data->mipLevel, data->xOffset, data->yOffset,
-	//	data->width, data->height, ConvertTextureBaseFormat(data->format),
-	//	ConvertTextureDataType(data->type), data->data);
+    //glGenerateTextureMipmap(texture.i);
 }
 
-void RenderDeviceMetal::SetTextureImageCompressed2D(const RenderCommandData::SetTextureImageCompressed2D* data)
+// SAMPLERS
+
+void DeviceMetal::CreateSamplers(
+    uint32_t count, const RenderSamplerParameters* params, SamplerId* samplersOut)
 {
-	//glCompressedTexImage2D(ConvertTextureTarget(data->target), data->mipLevel, data->internalFormat,
-	//	data->width, data->height, 0, data->dataSize, data->data);
+//    glGenSamplers(count, &samplersOut[0].i);
+//
+//    for (uint32_t i = 0; i < count; ++i)
+//    {
+//        unsigned int sampler = samplersOut[i].i;
+//        const RenderSamplerParameters& data = params[i];
+//        glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, ConvertTextureFilterMode(data.minFilter));
+//        glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, ConvertTextureFilterMode(data.magFilter));
+//        glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, ConvertTextureWrapMode(data.wrapModeU));
+//        glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, ConvertTextureWrapMode(data.wrapModeV));
+//        glSamplerParameteri(sampler, GL_TEXTURE_WRAP_R, ConvertTextureWrapMode(data.wrapModeW));
+//        glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_MODE, ConvertTextureCompareMode(data.compareMode));
+//        glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_FUNC, ConvertDepthCompareFunc(data.compareFunc));
+//    }
 }
 
-void RenderDeviceMetal::GenerateTextureMipmaps(RenderTextureTarget target)
+void DeviceMetal::DestroySamplers(uint32_t count, const SamplerId* samplers)
 {
-	//glGenerateMipmap(ConvertTextureTarget(target));
-}
-
-void RenderDeviceMetal::SetActiveTextureUnit(unsigned int textureUnit)
-{
-	//glActiveTexture(GL_TEXTURE0 + textureUnit);
-}
-
-void RenderDeviceMetal::SetTextureParameterInt(RenderTextureTarget target, RenderTextureParameter parameter, unsigned int value)
-{
-	//glTexParameteri(ConvertTextureTarget(target), ConvertTextureParameter(parameter), value);
-}
-
-void RenderDeviceMetal::SetTextureMinFilter(RenderTextureTarget target, RenderTextureFilterMode mode)
-{
-	//SetTextureParameterInt(target, RenderTextureParameter::MinificationFilter, ConvertTextureFilterMode(mode));
-}
-
-void RenderDeviceMetal::SetTextureMagFilter(RenderTextureTarget target, RenderTextureFilterMode mode)
-{
-	//SetTextureParameterInt(target, RenderTextureParameter::MagnificationFilter, ConvertTextureFilterMode(mode));
-}
-
-void RenderDeviceMetal::SetTextureWrapModeU(RenderTextureTarget target, RenderTextureWrapMode mode)
-{
-	//SetTextureParameterInt(target, RenderTextureParameter::WrapModeU, ConvertTextureWrapMode(mode));
-}
-
-void RenderDeviceMetal::SetTextureWrapModeV(RenderTextureTarget target, RenderTextureWrapMode mode)
-{
-	//SetTextureParameterInt(target, RenderTextureParameter::WrapModeV, ConvertTextureWrapMode(mode));
-}
-
-void RenderDeviceMetal::SetTextureWrapModeW(RenderTextureTarget target, RenderTextureWrapMode mode)
-{
-	//SetTextureParameterInt(target, RenderTextureParameter::WrapModeW, ConvertTextureWrapMode(mode));
-}
-
-void RenderDeviceMetal::SetTextureCompareMode(RenderTextureTarget target, RenderTextureCompareMode mode)
-{
-	//SetTextureParameterInt(target, RenderTextureParameter::CompareMode, ConvertTextureCompareMode(mode));
-}
-
-void RenderDeviceMetal::SetTextureCompareFunc(RenderTextureTarget target, RenderDepthCompareFunc func)
-{
-	//SetTextureParameterInt(target, RenderTextureParameter::CompareFunc, ConvertDepthCompareFunc(func));
-}
-
-void RenderDeviceMetal::CreateSamplers(unsigned int count, unsigned int* samplersOut)
-{
-	//glGenSamplers(count, samplersOut);
-}
-
-void RenderDeviceMetal::DestroySamplers(unsigned int count, unsigned int* samplers)
-{
-	//glDeleteSamplers(count, samplers);
-}
-
-void RenderDeviceMetal::BindSampler(unsigned int textureUnit, unsigned int sampler)
-{
-	//glBindSampler(textureUnit, sampler);
-}
-
-void RenderDeviceMetal::SetSamplerParameters(const RenderCommandData::SetSamplerParameters* data)
-{
-	/*glSamplerParameteri(data->sampler, GL_TEXTURE_MIN_FILTER, ConvertTextureFilterMode(data->minFilter));
-	glSamplerParameteri(data->sampler, GL_TEXTURE_MAG_FILTER, ConvertTextureFilterMode(data->magFilter));
-	glSamplerParameteri(data->sampler, GL_TEXTURE_WRAP_S, ConvertTextureWrapMode(data->wrapModeU));
-	glSamplerParameteri(data->sampler, GL_TEXTURE_WRAP_T, ConvertTextureWrapMode(data->wrapModeV));
-	glSamplerParameteri(data->sampler, GL_TEXTURE_WRAP_R, ConvertTextureWrapMode(data->wrapModeW));
-	glSamplerParameteri(data->sampler, GL_TEXTURE_COMPARE_MODE, ConvertTextureCompareMode(data->compareMode));
-	glSamplerParameteri(data->sampler, GL_TEXTURE_COMPARE_FUNC, ConvertDepthCompareFunc(data->compareFunc));*/
+//    glDeleteSamplers(count, &samplers[0].i);
 }
 
 // SHADER PROGRAM
 
-unsigned int RenderDeviceMetal::CreateShaderProgram()
+unsigned int DeviceMetal::CreateShaderProgram()
 {
-	//return glCreateProgram();
+    //return glCreateProgram();
 }
 
-void RenderDeviceMetal::DestroyShaderProgram(unsigned int shaderProgram)
+void DeviceMetal::DestroyShaderProgram(unsigned int shaderProgram)
 {
-	//glDeleteProgram(shaderProgram);
+    //glDeleteProgram(shaderProgram);
 }
 
-void RenderDeviceMetal::AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage)
+void DeviceMetal::AttachShaderStageToProgram(unsigned int shaderProgram, unsigned int shaderStage)
 {
-	//glAttachShader(shaderProgram, shaderStage);
+    //glAttachShader(shaderProgram, shaderStage);
 }
 
-void RenderDeviceMetal::LinkShaderProgram(unsigned int shaderProgram)
+void DeviceMetal::LinkShaderProgram(unsigned int shaderProgram)
 {
-	//glLinkProgram(shaderProgram);
+    //glLinkProgram(shaderProgram);
 }
 
-void RenderDeviceMetal::UseShaderProgram(unsigned int shaderProgram)
+int DeviceMetal::GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter)
 {
-	//glUseProgram(shaderProgram);
+    int value = 0;
+    //glGetProgramiv(shaderProgram, parameter, &value);
+    return value;
 }
 
-int RenderDeviceMetal::GetShaderProgramParameterInt(unsigned int shaderProgram, unsigned int parameter)
+bool DeviceMetal::GetShaderProgramLinkStatus(unsigned int shaderProgram)
 {
-	int value = 0;
-	//glGetProgramiv(shaderProgram, parameter, &value);
-	return value;
+    //return GetShaderProgramParameterInt(shaderProgram, GL_LINK_STATUS) == GL_TRUE;
 }
 
-bool RenderDeviceMetal::GetShaderProgramLinkStatus(unsigned int shaderProgram)
+int DeviceMetal::GetShaderProgramInfoLogLength(unsigned int shaderProgram)
 {
-	//return GetShaderProgramParameterInt(shaderProgram, GL_LINK_STATUS) == GL_TRUE;
+    //return GetShaderProgramParameterInt(shaderProgram, GL_INFO_LOG_LENGTH);
 }
 
-int RenderDeviceMetal::GetShaderProgramInfoLogLength(unsigned int shaderProgram)
+void DeviceMetal::GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut)
 {
-	//return GetShaderProgramParameterInt(shaderProgram, GL_INFO_LOG_LENGTH);
-}
-
-void RenderDeviceMetal::GetShaderProgramInfoLog(unsigned int shaderProgram, unsigned int maxLength, char* logOut)
-{
-	//glGetProgramInfoLog(shaderProgram, maxLength, nullptr, logOut);
+    //glGetProgramInfoLog(shaderProgram, maxLength, nullptr, logOut);
 }
 
 // SHADER STAGE
 
-unsigned int RenderDeviceMetal::CreateShaderStage(RenderShaderStage stage)
+unsigned int DeviceMetal::CreateShaderStage(RenderShaderStage stage)
 {
-	//return glCreateShader(ConvertShaderStage(stage));
+    //return glCreateShader(ConvertShaderStage(stage));
 }
 
-void RenderDeviceMetal::DestroyShaderStage(unsigned int shaderStage)
+void DeviceMetal::DestroyShaderStage(unsigned int shaderStage)
 {
-	//glDeleteShader(shaderStage);
+    //glDeleteShader(shaderStage);
 }
 
-void RenderDeviceMetal::SetShaderStageSource(unsigned int shaderStage, const char* source, int length)
+void DeviceMetal::SetShaderStageSource(unsigned int shaderStage, const char* source, int length)
 {
-	//glShaderSource(shaderStage, 1, &source, &length);
+    //glShaderSource(shaderStage, 1, &source, &length);
 }
 
-void RenderDeviceMetal::CompileShaderStage(unsigned int shaderStage)
+void DeviceMetal::CompileShaderStage(unsigned int shaderStage)
 {
-	//glCompileShader(shaderStage);
+    //glCompileShader(shaderStage);
 }
 
-int RenderDeviceMetal::GetShaderStageParameterInt(unsigned int shaderStage, unsigned int parameter)
+int DeviceMetal::GetShaderStageParameterInt(unsigned int shaderStage, unsigned int parameter)
 {
-	int value = 0;
-	//glGetShaderiv(shaderStage, parameter, &value);
-	return value;
+    int value = 0;
+    //glGetShaderiv(shaderStage, parameter, &value);
+    return value;
 }
 
-bool RenderDeviceMetal::GetShaderStageCompileStatus(unsigned int shaderStage)
+bool DeviceMetal::GetShaderStageCompileStatus(unsigned int shaderStage)
 {
-	//return GetShaderStageParameterInt(shaderStage, GL_COMPILE_STATUS) == GL_TRUE;
+    //return GetShaderStageParameterInt(shaderStage, GL_COMPILE_STATUS) == GL_TRUE;
     return false;
 }
 
-int RenderDeviceMetal::GetShaderStageInfoLogLength(unsigned int shaderStage)
+int DeviceMetal::GetShaderStageInfoLogLength(unsigned int shaderStage)
 {
-	//return GetShaderStageParameterInt(shaderStage, GL_INFO_LOG_LENGTH);
+    //return GetShaderStageParameterInt(shaderStage, GL_INFO_LOG_LENGTH);
     return 0;
 }
 
-void RenderDeviceMetal::GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut)
+void DeviceMetal::GetShaderStageInfoLog(unsigned int shaderStage, unsigned int maxLength, char* logOut)
 {
-	//glGetShaderInfoLog(shaderStage, maxLength, nullptr, logOut);
+    //glGetShaderInfoLog(shaderStage, maxLength, nullptr, logOut);
 }
 
 // UNIFORM
 
-int RenderDeviceMetal::GetUniformLocation(unsigned int shaderProgram, const char* uniformName)
+int DeviceMetal::GetUniformLocation(unsigned int shaderProgram, const char* uniformName)
 {
-	//return glGetUniformLocation(shaderProgram, uniformName);
+    //return glGetUniformLocation(shaderProgram, uniformName);
     return 0;
-}
-
-void RenderDeviceMetal::SetUniformMat4x4f(int uniform, unsigned int count, const float* values)
-{
-	//glUniformMatrix4fv(uniform, count, GL_FALSE, values);
-}
-
-void RenderDeviceMetal::SetUniformVec4f(int uniform, unsigned int count, const float* values)
-{
-	//glUniform4fv(uniform, count, values);
-}
-
-void RenderDeviceMetal::SetUniformVec3f(int uniform, unsigned int count, const float* values)
-{
-	//glUniform3fv(uniform, count, values);
-}
-
-void RenderDeviceMetal::SetUniformVec2f(int uniform, unsigned int count, const float* values)
-{
-	//glUniform2fv(uniform, count, values);
-}
-
-void RenderDeviceMetal::SetUniformFloat(int uniform, float value)
-{
-	//glUniform1f(uniform, value);
-}
-
-void RenderDeviceMetal::SetUniformInt(int uniform, int value)
-{
-	//glUniform1i(uniform, value);
 }
 
 // VERTEX ARRAY
 
-void RenderDeviceMetal::CreateVertexArrays(unsigned int count, unsigned int* vertexArraysOut)
+void DeviceMetal::CreateVertexArrays(uint32_t count, VertexArrayId* vertexArraysOut)
 {
-	//glGenVertexArrays(count, vertexArraysOut);
+//    glCreateVertexArrays(count, &vertexArraysOut[0].i);
 }
 
-void RenderDeviceMetal::DestroyVertexArrays(unsigned int count, unsigned int* vertexArrays)
+void DeviceMetal::DestroyVertexArrays(uint32_t count, const VertexArrayId* vertexArrays)
 {
-	//glDeleteVertexArrays(count, vertexArrays);
+//    glDeleteVertexArrays(count, &vertexArrays[0].i);
 }
 
-void RenderDeviceMetal::BindVertexArray(unsigned int vertexArrayId)
+void DeviceMetal::EnableVertexAttribute(VertexArrayId va, uint32_t attributeIndex)
 {
-	//glBindVertexArray(vertexArrayId);
+//    glEnableVertexArrayAttrib(va.i, attributeIndex);
 }
 
-void RenderDeviceMetal::EnableVertexAttribute(unsigned int index)
+void DeviceMetal::SetVertexArrayIndexBuffer(VertexArrayId va, BufferId buffer)
 {
-	//glEnableVertexAttribArray(index);
+//    glVertexArrayElementBuffer(va.i, buffer.i);
 }
 
-void RenderDeviceMetal::SetVertexAttributePointer(const RenderCommandData::SetVertexAttributePointer* data)
+void DeviceMetal::SetVertexArrayVertexBuffer(
+    VertexArrayId va,
+    uint32_t bindingIndex,
+    BufferId buffer,
+    intptr_t offset,
+    uint32_t stride)
 {
-	//glVertexAttribPointer(data->attributeIndex, data->elementCount, ConvertVertexElemType(data->elementType),
-	//	GL_FALSE, data->stride, reinterpret_cast<void*>(data->offset));
+//    glVertexArrayVertexBuffer(va.i, bindingIndex, buffer.i, offset, stride);
 }
 
-void RenderDeviceMetal::Draw(RenderPrimitiveMode mode, int offset, int vertexCount)
+void DeviceMetal::SetVertexAttribFormat(
+    VertexArrayId va,
+    uint32_t attributeIndex,
+    uint32_t size,
+    RenderVertexElemType elementType,
+    uint32_t offset)
 {
-	//glDrawArrays(ConvertPrimitiveMode(mode), offset, vertexCount);
+//    glVertexArrayAttribFormat(va.i, attributeIndex, size, ConvertVertexElemType(elementType), GL_FALSE, offset);
 }
 
-void RenderDeviceMetal::DrawIndexed(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType)
+void DeviceMetal::SetVertexAttribBinding(
+    VertexArrayId va,
+    uint32_t attributeIndex,
+    uint32_t bindingIndex)
 {
-	//glDrawElements(ConvertPrimitiveMode(mode), indexCount, ConvertIndexType(indexType), nullptr);
+//    glVertexArrayAttribBinding(va.i, attributeIndex, bindingIndex);
 }
 
-void RenderDeviceMetal::DrawInstanced(RenderPrimitiveMode mode, int offset, int vertexCount, int instanceCount)
+// BUFFERS
+
+void DeviceMetal::CreateBuffers(unsigned int count, BufferId* buffersOut)
 {
-	//glDrawArraysInstanced(ConvertPrimitiveMode(mode), offset, vertexCount, instanceCount);
+//    glCreateBuffers(count, &buffersOut[0].i);
 }
 
-void RenderDeviceMetal::DrawIndexedInstanced(RenderPrimitiveMode mode, int indexCount, RenderIndexType indexType, int instanceCount)
+void DeviceMetal::DestroyBuffers(unsigned int count, const BufferId* buffers)
 {
-	//glDrawElementsInstanced(ConvertPrimitiveMode(mode), indexCount, ConvertIndexType(indexType), nullptr, instanceCount);
+//    glDeleteBuffers(count, &buffers[0].i);
 }
 
-void RenderDeviceMetal::DrawIndirect(RenderPrimitiveMode mode, intptr_t offset)
+void DeviceMetal::SetBufferStorage(
+    BufferId buffer, unsigned int size, const void* data, BufferStorageFlags flags)
 {
-	//glDrawArraysIndirect(ConvertPrimitiveMode(mode), reinterpret_cast<const void*>(offset));
+//    GLbitfield bits = 0;
+//    if (flags.dynamicStorage) bits |= GL_DYNAMIC_STORAGE_BIT;
+//    if (flags.mapReadAccess) bits |= GL_MAP_READ_BIT;
+//    if (flags.mapWriteAccess) bits |= GL_MAP_WRITE_BIT;
+//    if (flags.mapPersistent) bits |= GL_MAP_PERSISTENT_BIT;
+//    if (flags.mapCoherent) bits |= GL_MAP_COHERENT_BIT;
+//
+//    glNamedBufferStorage(buffer.i, size, data, bits);
 }
 
-void RenderDeviceMetal::DrawIndexedIndirect(RenderPrimitiveMode mode, RenderIndexType indexType, intptr_t offset)
+void DeviceMetal::SetBufferSubData(
+    BufferId buffer,
+    unsigned int offset,
+    unsigned int size,
+    const void* data)
 {
-	//glDrawElementsIndirect(ConvertPrimitiveMode(mode), ConvertIndexType(indexType), reinterpret_cast<const void*>(offset));
+//    glNamedBufferSubData(buffer.i, offset, size, data);
 }
 
-void RenderDeviceMetal::CreateBuffers(unsigned int count, unsigned int* buffersOut)
+void* DeviceMetal::MapBufferRange(
+    BufferId buffer,
+    intptr_t offset,
+    size_t length,
+    BufferMapFlags flags)
 {
-	//glGenBuffers(count, buffersOut);
+//    GLbitfield bits = 0;
+//    if (flags.readAccess) bits |= GL_MAP_READ_BIT;
+//    if (flags.writeAccess) bits |= GL_MAP_WRITE_BIT;
+//    if (flags.invalidateRange) bits |= GL_MAP_INVALIDATE_RANGE_BIT;
+//    if (flags.invalidateBuffer) bits |= GL_MAP_INVALIDATE_BUFFER_BIT;
+//    if (flags.flushExplicit) bits |= GL_MAP_FLUSH_EXPLICIT_BIT;
+//    if (flags.unsynchronized) bits |= GL_MAP_UNSYNCHRONIZED_BIT;
+//    if (flags.persistent) bits |= GL_MAP_PERSISTENT_BIT;
+//    if (flags.coherent) bits |= GL_MAP_COHERENT_BIT;
+//
+//    return glMapNamedBufferRange(buffer.i, offset, length, bits);
 }
 
-void RenderDeviceMetal::DestroyBuffers(unsigned int count, unsigned int* buffers)
+void DeviceMetal::UnmapBuffer(BufferId buffer)
 {
-	//glDeleteBuffers(count, buffers);
+//    glUnmapNamedBuffer(buffer.i);
 }
 
-void RenderDeviceMetal::BindBuffer(RenderBufferTarget target, unsigned int buffer)
-{
-	//glBindBuffer(ConvertBufferTarget(target), buffer);
-}
-
-void RenderDeviceMetal::BindBufferBase(RenderBufferTarget target, unsigned int bindingPoint, unsigned int buffer)
-{
-	//glBindBufferBase(ConvertBufferTarget(target), bindingPoint, buffer);
-}
-
-void RenderDeviceMetal::BindBufferRange(const RenderCommandData::BindBufferRange* data)
-{
-	//glBindBufferRange(ConvertBufferTarget(data->target), data->bindingPoint, data->buffer, data->offset, data->length);
-}
-
-void RenderDeviceMetal::SetBufferStorage(const RenderCommandData::SetBufferStorage* data)
-{
-	/*GLbitfield bits = 0;
-	if (data->dynamicStorage) bits |= GL_DYNAMIC_STORAGE_BIT;
-	if (data->mapReadAccess) bits |= GL_MAP_READ_BIT;
-	if (data->mapWriteAccess) bits |= GL_MAP_WRITE_BIT;
-	if (data->mapPersistent) bits |= GL_MAP_PERSISTENT_BIT;
-	if (data->mapCoherent) bits |= GL_MAP_COHERENT_BIT;
-
-	glBufferStorage(ConvertBufferTarget(data->target), data->size, data->data, bits);*/
-}
-
-void RenderDeviceMetal::SetBufferData(RenderBufferTarget target, unsigned int size, const void* data, RenderBufferUsage usage)
-{
-	//glBufferData(ConvertBufferTarget(target), size, data, ConvertBufferUsage(usage));
-}
-
-void RenderDeviceMetal::SetBufferSubData(RenderBufferTarget target, unsigned int offset, unsigned int size, const void* data)
-{
-	//glBufferSubData(ConvertBufferTarget(target), offset, size, data);
-}
-
-void* RenderDeviceMetal::MapBuffer(RenderBufferTarget target, RenderBufferAccess access)
-{
-	//return glMapBuffer(ConvertBufferTarget(target), ConvertBufferAccess(access));
-    return nullptr;
-}
-
-void* RenderDeviceMetal::MapBufferRange(const RenderCommandData::MapBufferRange* data)
-{
-	/*GLbitfield bits = 0;
-	if (data->readAccess) bits |= GL_MAP_READ_BIT;
-	if (data->writeAccess) bits |= GL_MAP_WRITE_BIT;
-	if (data->invalidateRange) bits |= GL_MAP_INVALIDATE_RANGE_BIT;
-	if (data->invalidateBuffer) bits |= GL_MAP_INVALIDATE_BUFFER_BIT;
-	if (data->flushExplicit) bits |= GL_MAP_FLUSH_EXPLICIT_BIT;
-	if (data->unsynchronized) bits |= GL_MAP_UNSYNCHRONIZED_BIT;
-	if (data->persistent) bits |= GL_MAP_PERSISTENT_BIT;
-	if (data->coherent) bits |= GL_MAP_COHERENT_BIT;
-
-	return glMapBufferRange(ConvertBufferTarget(data->target), data->offset, data->length, bits);*/
-    return nullptr;
-}
-
-void RenderDeviceMetal::UnmapBuffer(RenderBufferTarget target)
-{
-	//glUnmapBuffer(ConvertBufferTarget(target));
-}
-
-void RenderDeviceMetal::DispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ)
-{
-	//glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);
-}
-
-void RenderDeviceMetal::DispatchComputeIndirect(intptr_t offset)
-{
-	//glDispatchComputeIndirect(offset);
-}
-
-void RenderDeviceMetal::MemoryBarrier(const RenderCommandData::MemoryBarrier& barrier)
-{
-	/*GLbitfield bits = 0;
-	if (barrier.vertexAttribArray) bits |= GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT;
-	if (barrier.elementArray) bits |= GL_ELEMENT_ARRAY_BARRIER_BIT;
-	if (barrier.uniform) bits |= GL_UNIFORM_BARRIER_BIT;
-	if (barrier.textureFetch) bits |= GL_TEXTURE_FETCH_BARRIER_BIT;
-	if (barrier.shaderImageAccess) bits |= GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
-	if (barrier.command) bits |= GL_COMMAND_BARRIER_BIT;
-	if (barrier.pixelBuffer) bits |= GL_PIXEL_BUFFER_BARRIER_BIT;
-	if (barrier.textureUpdate) bits |= GL_TEXTURE_UPDATE_BARRIER_BIT;
-	if (barrier.bufferUpdate) bits |= GL_BUFFER_UPDATE_BARRIER_BIT;
-	if (barrier.clientMappedBuffer) bits |= GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT;
-	if (barrier.framebuffer) bits |= GL_FRAMEBUFFER_BARRIER_BIT;
-	if (barrier.transformFeedback) bits |= GL_TRANSFORM_FEEDBACK_BARRIER_BIT;
-	if (barrier.atomicCounter) bits |= GL_ATOMIC_COUNTER_BARRIER_BIT;
-	if (barrier.shaderStorage) bits |= GL_SHADER_STORAGE_BARRIER_BIT;
-	if (barrier.queryBuffer) bits |= GL_QUERY_BUFFER_BARRIER_BIT;
-
-	glMemoryBarrier(bits);*/
-}
+} // namespace render
 
 } // namespace kokko
