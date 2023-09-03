@@ -170,7 +170,7 @@ ShaderId ShaderManager::FindShaderByUid(const kokko::Uid& uid)
 		}
 		else
 		{
-			KK_LOG_ERROR("Material failed to load correctly");
+			KK_LOG_ERROR("Shader failed to load correctly");
 
 			RemoveShader(id);
 		}

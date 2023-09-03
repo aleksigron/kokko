@@ -95,7 +95,12 @@ World::~World()
 
 void World::Initialize()
 {
-	renderer.instance->Initialize();
+    renderer.instance->Initialize();
+    
+#ifdef KOKKO_USE_METAL
+    return;
+#endif
+
 	terrainSystem.instance->Initialize();
 	particleSystem.instance->Initialize();
 	environmentSystem.instance->Initialize();
