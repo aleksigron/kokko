@@ -613,33 +613,30 @@ bool ShaderLoader::ProcessShaderStages(
 	KOKKO_PROFILE_FUNCTION();
 
 	bool processSuccess = true;
+    int failingStageIndex = -1;
 
 	for (size_t i = 0, count = stages.GetCount(); i < count; ++i)
 	{
 		if (ProcessStage(versionStr, shaderOut.uniformBlockDefinition, shaderPath,
 			stages[i].source, processedStageSources[i]) == false)
-			processSuccess = false;
+            failingStageIndex = static_cast<int>(i);
 	}
 
-	bool compileSuccess = false;
+    if (failingStageIndex >= 0)
+        return false;
 
-	if (processSuccess)
-	{
-		StageSource stageSources[MaxStageCount];
+    StageSource stageSources[MaxStageCount];
 
-		for (size_t i = 0, count = stages.GetCount(); i < count; ++i)
-			stageSources[i] = StageSource{ stages[i].stage, processedStageSources[i].GetRef() };
+    for (size_t i = 0, count = stages.GetCount(); i < count; ++i)
+        stageSources[i] = StageSource{ stages[i].stage, processedStageSources[i].GetRef() };
 
-		ArrayView<const StageSource> stageSourceRef(stageSources, stages.GetCount());
+    ArrayView<const StageSource> stageSourceRef(stageSources, stages.GetCount());
 
-		if (CompileAndLink(shaderOut, stageSourceRef, allocator, renderDevice, debugName))
-		{
-			UpdateTextureUniformLocations(shaderOut, renderDevice);
-			compileSuccess = true;
-		}
-	}
+    if (CompileAndLink(shaderOut, stageSourceRef, allocator, renderDevice, debugName) == false)
+        return false;
 
-	return compileSuccess;
+    UpdateTextureUniformLocations(shaderOut, renderDevice);
+    return true;
 }
 
 bool ShaderLoader::ProcessStage(

@@ -163,6 +163,10 @@ void EnvironmentSystem::Deinitialize()
 
 void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 {
+#ifdef KOKKO_USE_METAL
+    return;
+#endif
+
 	if (texturesToRemove.GetCount() != 0)
 	{
 		renderDevice->DestroyTextures(texturesToRemove.GetCount(), texturesToRemove.GetData());
