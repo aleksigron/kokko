@@ -19,7 +19,7 @@ jobs:
               name: "Windows MSVC",
               os: windows-latest,
               generator: "",
-              build_type: release,
+              build_type: Release,
               cc: "cl", cxx: "cl",
               dependencies: "",
               build_product: "kokko-editor.exe"
@@ -28,7 +28,7 @@ jobs:
               name: "Linux GCC",
               os: ubuntu-latest,
               generator: "",
-              build_type: release,
+              build_type: Release,
               cc: "gcc", cxx: "g++",
               dependencies: "sudo apt-get update && sudo apt-get install xorg-dev",
               build_product: "kokko-editor"
@@ -37,7 +37,7 @@ jobs:
               name: "MacOS Clang",
               os: macos-latest,
               generator: "-G Xcode",
-              build_type: release,
+              build_type: Release,
               cc: "clang", cxx: "clang",
               dependencies: "",
               build_product: "kokko-editor"
@@ -64,4 +64,5 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --parallel 3
 
     - name: Run tests
-      run: ${{github.workspace}}/build/bin/${{matrix.config.build_type}}/${{matrix.config.build_product}} --exit=true
+      run: |
+        ${{github.workspace}}/build/bin/${{matrix.config.build_type}}/${{matrix.config.build_product}} --exit=true
