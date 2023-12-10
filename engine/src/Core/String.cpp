@@ -70,6 +70,8 @@ String::String(String&& s) noexcept
 String::String(Allocator* allocator, const char* s) :
 	allocator(allocator)
 {
+	assert(allocator != nullptr);
+
 	length = std::strlen(s);
 	allocated = CalculateAllocationSize(0, length);
 
@@ -86,6 +88,8 @@ String::String(Allocator* allocator, const char* s) :
 String::String(Allocator* allocator, ConstStringView s) :
 	allocator(allocator)
 {
+	assert(allocator != nullptr);
+
 	length = s.len;
 	allocated = CalculateAllocationSize(0, length);
 
@@ -109,18 +113,16 @@ String& String::operator=(const String& s)
 {
 	size_t newLength = s.GetLength();
 
-	if (newLength > allocated)
+	if (this->allocator != s.allocator || newLength > allocated)
 	{
-		if (allocator != nullptr)
-			allocator->Deallocate(string);
-
-		allocator = s.allocator;
+		if (string != nullptr)
+			this->allocator->Deallocate(string);
 
 		allocated = CalculateAllocationSize(allocated, newLength);
-		string = static_cast<char*>(allocator->Allocate(allocated + 1, "String"));
+		string = static_cast<char*>(s.allocator->Allocate(allocated + 1, "String"));
 	}
-	else
-		allocator = s.allocator;
+
+	this->allocator = s.allocator;
 
 	if (newLength > 0)
 	{
@@ -171,6 +173,8 @@ ConstStringView String::GetRef() const
 
 void String::Append(ConstStringView s)
 {
+	assert(allocator != nullptr);
+
 	if (s.len != 0)
 	{
 		size_t requiredLength = length + s.len;
@@ -254,6 +258,8 @@ TEST_CASE("String.Assign")
 
 void String::Reserve(size_t reserveLength)
 {
+	assert(allocator != nullptr);
+
 	if (reserveLength > allocated)
 	{
 		size_t bufferSize = reserveLength + 1;
@@ -273,6 +279,8 @@ void String::Reserve(size_t reserveLength)
 
 void String::Resize(size_t size)
 {
+	assert(allocator != nullptr);
+
 	if (size > length)
 	{
 		if (size > allocated)
