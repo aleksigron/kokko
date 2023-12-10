@@ -1,11 +1,14 @@
 #include "EditorProject.hpp"
 
-#include <fstream>
+#include <cstdio>
 
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 
 #include "Core/Core.hpp"
+#include "Core/String.hpp"
 #include "Core/StringView.hpp"
+
+#include "System/Filesystem.hpp"
 
 #include "EditorConstants.hpp"
 
@@ -18,6 +21,7 @@ namespace editor
 {
 
 EditorProject::EditorProject(Allocator* allocator) :
+	allocator(allocator),
 	rootPathString(allocator),
 	name(allocator)
 {
@@ -27,17 +31,21 @@ bool EditorProject::SerializeToFile()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	std::ofstream outStream(rootPath / ProjectFilename);
+	std::string filePath = (rootPath / ProjectFilename).u8string();
 
-	if (outStream.is_open() == false)
+	FILE* file = std::fopen(filePath.c_str(), "w");
+
+	if (file == nullptr)
 		return false;
 
-	YAML::Emitter out(outStream);
+	ryml::Tree tree;
+	ryml::NodeRef root = tree.rootref();
+	root |= ryml::MAP;
 
-	out << YAML::BeginMap;
-	out << YAML::Key << NameKey;
-	out << YAML::Value << name.GetCStr();
-	out << YAML::EndMap;
+	root[NameKey] << name.GetCStr();
+
+	ryml::emit_yaml(tree, tree.root_id(), file);
+	std::fclose(file);
 
 	return true;
 }
@@ -46,20 +54,23 @@ bool EditorProject::DeserializeFromFile(const std::filesystem::path& projectRoot
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	std::ifstream inStream(projectRootPath / ProjectFilename);
+	std::string filePath = (projectRootPath / ProjectFilename).u8string();
 
-	if (inStream.is_open() == false)
+	Filesystem fs;
+	String contents(allocator);
+	if (fs.ReadText(filePath.c_str(), contents) == false)
 		return false;
 
-	YAML::Node node = YAML::Load(inStream);
+	ryml::Tree tree = ryml::parse_in_place(ryml::substr(contents.GetData(), contents.GetLength()));
+	ryml::ConstNodeRef node = tree.rootref();
 
-	if (node.IsMap())
+	if (node.is_map())
 	{
-		const YAML::Node nameNode = node[NameKey];
-		if (nameNode.IsDefined() && nameNode.IsScalar())
+		auto nameNode = node.find_child(NameKey);
+		if (nameNode.valid() && nameNode.has_val())
 		{
-			const std::string& nameStr = nameNode.Scalar();
-			name.Assign(ConstStringView(nameStr.c_str(), nameStr.size()));
+			auto nameStr = nameNode.val();
+			name.Assign(ConstStringView(nameStr.str, nameStr.len));
 
 			SetRootPath(projectRootPath);
 

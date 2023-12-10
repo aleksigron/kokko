@@ -70,7 +70,7 @@ EditorApp::~EditorApp()
 
 void EditorApp::LoadUserSettings()
 {
-	if (userSettings.DeserializeFromFile(EditorConstants::UserSettingsFilePath) == false)
+	if (userSettings.DeserializeFromFile(EditorConstants::UserSettingsFilePath, allocator) == false)
 	{
 		KK_LOG_INFO("Failed to open editor_user_settings.yml, should open project dialog.");
 		return;

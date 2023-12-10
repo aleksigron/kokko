@@ -175,7 +175,8 @@ int main(int argc, char** argv)
 					continue;
 				}
 
-				world->GetSerializer()->DeserializeFromString(testLevelContent.GetCStr());
+				world->GetSerializer()->DeserializeFromString(
+					kokko::MutableStringView(testLevelContent.GetData(), testLevelContent.GetLength()));
 			}
 
 			{

@@ -7,19 +7,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 set(PLATFORM_MACOS 1)
 endif()
 
-include_directories(
-	src
-	${PROJECT_ROOT}/deps/doctest
-	${PROJECT_ROOT}/deps/cgltf/include
-	${PROJECT_ROOT}/deps/fmt/include
-	${PROJECT_ROOT}/deps/glad/include
-	${PROJECT_ROOT}/deps/glfw/include
-    ${PROJECT_ROOT}/deps/metal-cpp
-	${PROJECT_ROOT}/deps/rapidjson/include
-	${PROJECT_ROOT}/deps/stb_image/include
-	${PROJECT_ROOT}/deps/xxhash
-	${PROJECT_ROOT}/deps/yaml-cpp/include
-)
+# Define source files
 
 set (CGLTF_SOURCES
 	${PROJECT_ROOT}/deps/cgltf/include/cgltf/cgltf.h
@@ -325,7 +313,6 @@ set (KOKKO_SOURCES
 	src/System/Filesystem.cpp
 	src/System/Filesystem.hpp
 	src/System/FilesystemResolver.hpp
-	src/System/FilesystemResolverIdentity.hpp
 	src/System/FilesystemResolverVirtual.cpp
 	src/System/FilesystemResolverVirtual.hpp
 	src/System/IncludeOpenGL.hpp
@@ -373,6 +360,8 @@ list (APPEND KOKKO_SOURCES
 )
 endif()
 
+# Source groups for IDEs
+
 source_group(Dependencies\\cgltf FILES ${CGLTF_SOURCES})
 source_group(Dependencies\\fmt FILES ${FMT_SOURCES})
 source_group(Dependencies\\glad FILES ${GLAD_SOURCES})
@@ -380,8 +369,12 @@ source_group(Dependencies\\stb_image FILES ${STB_IMAGE_SOURCES})
 source_group(Dependencies\\xxhash FILES ${XXHASH_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${KOKKO_SOURCES})
 
+# Create kokko library
+
 add_library(${KOKKO_LIB} OBJECT ${DEPS_SOURCES} ${KOKKO_SOURCES})
 set_target_properties(${KOKKO_LIB} PROPERTIES FOLDER "kokko")
+
+# Add subdirectories
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -392,11 +385,29 @@ add_subdirectory(${PROJECT_ROOT}/deps/glfw glfw-build)
 set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(${PROJECT_ROOT}/deps/yaml-cpp yaml-cpp-build)
+add_subdirectory(${PROJECT_ROOT}/deps/rapidyaml rapidyaml-build)
+
+# Set kokko library include directories and link libraries
+
+target_include_directories(${KOKKO_LIB} PUBLIC
+	src
+	${PROJECT_ROOT}/deps/doctest
+	${PROJECT_ROOT}/deps/cgltf/include
+	${PROJECT_ROOT}/deps/fmt/include
+	${PROJECT_ROOT}/deps/glad/include
+	${PROJECT_ROOT}/deps/glfw/include
+    ${PROJECT_ROOT}/deps/metal-cpp
+	${PROJECT_ROOT}/deps/rapidjson/include
+	${PROJECT_ROOT}/deps/rapidyaml/ext/c4core/src
+	${PROJECT_ROOT}/deps/rapidyaml/src
+	${PROJECT_ROOT}/deps/stb_image/include
+	${PROJECT_ROOT}/deps/xxhash
+	${PROJECT_ROOT}/deps/yaml-cpp/include
+)
 
 target_link_libraries(${KOKKO_LIB}
     PUBLIC glfw
-    PUBLIC yaml-cpp
+    PUBLIC ryml::ryml
 )
 
 if(${PLATFORM_MACOS})

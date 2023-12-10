@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 
 #include "Engine/Entity.hpp"
 
@@ -18,22 +18,22 @@ public:
 	{
 	}
 
-	void Serialize(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
+	void Serialize(c4::yml::NodeRef& componentArray, Entity entity, SceneObjectId sceneObj)
 	{
 		if (sceneObj != SceneObjectId::Null)
 		{
 			const SceneEditTransform& transform = scene->GetEditTransform(sceneObj);
 
-			out << YAML::BeginMap;
-			out << YAML::Key << "component_type" << YAML::Value << "transform";
-			out << YAML::Key << "position" << YAML::Value << transform.translation;
-			out << YAML::Key << "rotation" << YAML::Value << transform.rotation;
-			out << YAML::Key << "scale" << YAML::Value << transform.scale;
-			out << YAML::EndMap;
+			ryml::NodeRef componentNode = componentArray.append_child();
+			componentNode |= ryml::MAP;
+			componentNode["component_type"] = "transform";
+			componentNode["position"] << transform.translation;
+			componentNode["rotation"] << transform.rotation;
+			componentNode["scale"] << transform.scale;
 		}
 	}
 
-	SceneObjectId Deserialize(const YAML::Node& map, Entity entity, SceneObjectId parent)
+	SceneObjectId Deserialize(const c4::yml::ConstNodeRef& map, Entity entity, SceneObjectId parent)
 	{
 		SceneObjectId sceneObject = scene->AddSceneObject(entity);
 
@@ -42,17 +42,17 @@ public:
 
 		SceneEditTransform transform;
 
-		YAML::Node positionNode = map["position"];
-		if (positionNode.IsDefined() && positionNode.IsSequence())
-			transform.translation = positionNode.as<Vec3f>();
+		auto positionNode = map.find_child("position");
+		if (positionNode.valid() && positionNode.has_val())
+			positionNode >> transform.translation;
 
-		YAML::Node rotationNode = map["rotation"];
-		if (rotationNode.IsDefined() && rotationNode.IsSequence())
-			transform.rotation = rotationNode.as<Vec3f>();
+		auto rotationNode = map.find_child("rotation");
+		if (rotationNode.valid() && rotationNode.has_val())
+			rotationNode >> transform.rotation;
 
-		YAML::Node scaleNode = map["scale"];
-		if (scaleNode.IsDefined() && scaleNode.IsSequence())
-			transform.scale = scaleNode.as<Vec3f>();
+		auto scaleNode = map.find_child("scale");
+		if (scaleNode.valid() && scaleNode.has_val())
+			scaleNode >> transform.scale;
 
 		scene->SetEditTransform(sceneObject, transform);
 

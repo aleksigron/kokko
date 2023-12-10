@@ -5,6 +5,8 @@
 #include "Core/Optional.hpp"
 #include "Core/Uid.hpp"
 
+class Allocator;
+
 namespace kokko
 {
 namespace editor
@@ -20,7 +22,7 @@ struct EditorUserSettings
 	int windowHeight = 0;
 
 	bool SerializeToFile(const char* filePath);
-	bool DeserializeFromFile(const char* filePath);
+	bool DeserializeFromFile(const char* filePath, Allocator* allocator);
 };
 
 }

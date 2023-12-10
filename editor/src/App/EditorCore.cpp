@@ -204,7 +204,8 @@ void EditorCore::OpenLevel(Uid levelAssetUid)
 
 		if (filesystem->ReadText(asset->GetVirtualPath().GetCStr(), sceneConfig))
 		{
-			editorContext.world->GetSerializer()->DeserializeFromString(sceneConfig.GetData());
+			editorContext.world->GetSerializer()->DeserializeFromString(
+				MutableStringView(sceneConfig.GetData(), sceneConfig.GetLength()));
 
 			editorContext.loadedLevel = levelAssetUid;
 			return;
@@ -306,7 +307,7 @@ void EditorCore::PasteEntity()
 
 		SceneObjectId parent = SceneObjectId::Null;
 
-		serializer->DeserializeEntitiesFromString(copiedEntity.GetCStr(), parent);
+		serializer->DeserializeEntitiesFromString(copiedEntity.GetRef(), parent);
 	}
 }
 

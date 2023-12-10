@@ -77,7 +77,7 @@ const char* EntityManager::GetDebugNameWithFallback(Entity entity)
 	}
 }
 
-void EntityManager::SetDebugName(Entity entity, const char* name)
+void EntityManager::SetDebugName(Entity entity, kokko::ConstStringView name)
 {
 	auto* pair = debugNameMap.Lookup(entity.id);
 
@@ -100,9 +100,7 @@ void EntityManager::SetDebugName(Entity entity, const char* name)
 		pair->second = nameIndex;
 	}
 
-	kokko::String& nameString = debugNames.At(pair->second);
-	nameString.Clear();
-	nameString.Append(name);
+	debugNames.At(pair->second).Assign(name);
 }
 
 void EntityManager::ClearDebugName(Entity entity)

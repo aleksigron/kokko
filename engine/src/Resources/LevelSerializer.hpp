@@ -13,10 +13,13 @@ class TransformSerializer;
 struct Entity;
 struct SceneObjectId;
 
-namespace YAML
+namespace c4
 {
-class Emitter;
-class Node;
+namespace yml
+{
+class ConstNodeRef;
+class NodeRef;
+}
 }
 
 namespace kokko
@@ -37,10 +40,10 @@ public:
 
 	void Initialize(kokko::World* world, const kokko::ResourceManagers& resourceManagers);
 
-	void DeserializeFromString(const char* data);
+	void DeserializeFromString(MutableStringView data);
 	void SerializeToString(kokko::String& out);
 
-	void DeserializeEntitiesFromString(const char* data, SceneObjectId parent);
+	void DeserializeEntitiesFromString(ConstStringView data, SceneObjectId parent);
 	void SerializeEntitiesToString(ArrayView<Entity> serializeEntities, kokko::String& serializedOut);
 
 private:
@@ -53,14 +56,14 @@ private:
 	Array<ComponentSerializer*> componentSerializers;
 
 	// Serialization
-	void WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj);
+	void WriteEntity(c4::yml::NodeRef& entitySeq, Entity entity, SceneObjectId sceneObj);
 
 	// Deserialization
 
 	// If parent is set to other than Null, will create children for that object
-	void CreateObjects(const YAML::Node& objectSequence, SceneObjectId parent);
+	void CreateObjects(const c4::yml::ConstNodeRef& objectSeq, SceneObjectId parent);
 
-	SceneObjectId CreateComponents(const YAML::Node& componentSequence, Entity entity, SceneObjectId parent);
+	SceneObjectId CreateComponents(const c4::yml::ConstNodeRef& componentSeq, Entity entity, SceneObjectId parent);
 };
 
 } // namespace kokko

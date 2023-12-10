@@ -31,6 +31,7 @@ public:
 	void SetName(ConstStringView name);
 
 private:
+	Allocator* allocator;
 	std::filesystem::path rootPath;
 	String rootPathString;
 

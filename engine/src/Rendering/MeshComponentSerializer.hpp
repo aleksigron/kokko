@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 
 #include "Core/Hash.hpp"
 
@@ -40,18 +40,18 @@ public:
 		return "mesh"_hash;
 	}
 
-	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
+	virtual void DeserializeComponent(const c4::yml::ConstNodeRef& map, Entity entity) override
 	{
-		YAML::Node meshNode = map["mesh"];
-		YAML::Node materialNode = map["material"];
+		auto meshNode = map.find_child("mesh");
+		auto materialNode = map.find_child("material");
 
-		if (meshNode.IsDefined() && meshNode.IsScalar() &&
-			materialNode.IsDefined() && materialNode.IsScalar())
+		if (meshNode.valid() && meshNode.has_val() &&
+			materialNode.valid() && materialNode.has_val())
 		{
 			MeshComponentId componentId = meshComponentSystem->AddComponent(entity);
 
-			const std::string& meshUidStr = meshNode.Scalar();
-			auto meshUidOpt = MeshUid::FromString(ArrayView(meshUidStr.c_str(), meshUidStr.length()));
+			auto meshUidStr = meshNode.val();
+			auto meshUidOpt = MeshUid::FromString(ArrayView(meshUidStr.str, meshUidStr.len));
 
 			if (meshUidOpt.HasValue())
 			{
@@ -67,8 +67,8 @@ public:
 				}
 			}
 
-			const std::string& matUidStr = materialNode.Scalar();
-			auto materialUid = Uid::FromString(ArrayView(matUidStr.c_str(), matUidStr.length()));
+			auto matUidStr = materialNode.val();
+			auto materialUid = Uid::FromString(ArrayView(matUidStr.str, matUidStr.len));
 
 			if (materialUid.HasValue())
 			{
@@ -86,7 +86,7 @@ public:
 		}
 	}
 
-	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
+	virtual void SerializeComponent(c4::yml::NodeRef& componentArray, Entity entity) override
 	{
 		MeshComponentId componentId = meshComponentSystem->Lookup(entity);
 		if (componentId != MeshComponentId::Null)
@@ -133,11 +133,12 @@ public:
 				materialUidStr[Uid::StringLength] = '\0';
 			}
 
-			out << YAML::BeginMap;
-			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "mesh";
-			out << YAML::Key << "mesh" << YAML::Value << meshUidStr;
-			out << YAML::Key << "material" << YAML::Value << materialUidStr;
-			out << YAML::EndMap;
+			ryml::NodeRef componentNode = componentArray.append_child();
+			componentNode |= ryml::MAP;
+			componentNode[GetComponentTypeKey()] = "mesh";
+
+			componentNode["mesh"] << meshUidStr;
+			componentNode["material"] << materialUidStr;
 		}
 	}
 };

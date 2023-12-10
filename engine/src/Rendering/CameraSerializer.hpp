@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 
 #include "Core/Core.hpp"
 #include "Core/Hash.hpp"
@@ -26,7 +26,7 @@ public:
 		return "camera"_hash;
 	}
 
-	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
+	virtual void DeserializeComponent(const c4::yml::ConstNodeRef& map, Entity entity) override
 	{
 		ProjectionParameters params;
 		params.projection = ProjectionType::Perspective;
@@ -38,11 +38,11 @@ public:
 		params.orthographicFar = 10.0f;
 		params.SetAspectRatio(16.0f, 9.0f);
 
-		YAML::Node typeNode = map["projection_type"];
-		if (typeNode.IsDefined() && typeNode.IsScalar())
+		auto typeNode = map.find_child("projection_type");
+		if (typeNode.valid() && typeNode.has_val())
 		{
-			const std::string& typeStr = typeNode.Scalar();
-			uint32_t typeHash = kokko::HashString(typeStr.data(), typeStr.size());
+			auto typeStr = typeNode.val();
+			uint32_t typeHash = kokko::HashString(typeStr.str, typeStr.len);
 
 			switch (typeHash)
 			{
@@ -65,18 +65,19 @@ public:
 			return;
 		}
 
-		YAML::Node fovNode = map["field_of_view"];
-		if (fovNode.IsDefined() && fovNode.IsScalar())
-			params.perspectiveFieldOfView = fovNode.as<float>();
+		auto fovNode = map.find_child("field_of_view");
+		if (fovNode.valid() && fovNode.has_val() && fovNode.val().is_real())
+			fovNode >> params.perspectiveFieldOfView;
 
-		YAML::Node heightNode = map["orthographic_height"];
-		if (heightNode.IsDefined() && heightNode.IsScalar())
-			params.orthographicHeight = heightNode.as<float>();
+		auto heightNode = map.find_child("orthographic_height");
+		if (heightNode.valid() && heightNode.has_val() && heightNode.val().is_real())
+			heightNode >> params.orthographicHeight;
 
-		YAML::Node nearNode = map["near"];
-		if (nearNode.IsDefined() && nearNode.IsScalar())
+		auto nearNode = map.find_child("near");
+		if (nearNode.valid() && nearNode.has_val() && nearNode.val().is_real())
 		{
-			float near = nearNode.as<float>();
+			float near;
+			nearNode >> near;
 
 			if (params.projection == ProjectionType::Perspective)
 				params.perspectiveNear = near;
@@ -84,10 +85,11 @@ public:
 				params.orthographicNear = near;
 		}
 
-		YAML::Node farNode = map["far"];
-		if (farNode.IsDefined() && farNode.IsScalar())
+		auto farNode = map.find_child("far");
+		if (farNode.valid() && farNode.has_val() && farNode.val().is_real())
 		{
-			float far = farNode.as<float>();
+			float far;
+			farNode >> far;
 
 			if (params.projection == ProjectionType::Perspective)
 				params.perspectiveFar = far;
@@ -98,40 +100,43 @@ public:
 		CameraId cameraId = cameraSystem->AddCamera(entity);
 		cameraSystem->SetProjection(cameraId, params);
 
-		YAML::Node exposureNode = map["exposure"];
-		if (exposureNode.IsDefined() && exposureNode.IsScalar())
-			cameraSystem->SetExposure(cameraId, exposureNode.as<float>());
+		auto exposureNode = map.find_child("exposure");
+		if (exposureNode.valid() && exposureNode.has_val())
+		{
+			float exposure;
+			exposureNode >> exposure;
+			cameraSystem->SetExposure(cameraId, exposure);
+		}
 	}
 
-	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
+	virtual void SerializeComponent(c4::yml::NodeRef& componentArray, Entity entity) override
 	{
 		CameraId cameraId = cameraSystem->Lookup(entity);
 		if (cameraId != CameraId::Null)
 		{
-			out << YAML::BeginMap;
-			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "camera";
+			ryml::NodeRef componentNode = componentArray.append_child();
+			componentNode |= ryml::MAP;
+			componentNode[GetComponentTypeKey()] = "camera";
 
 			const ProjectionParameters& params = cameraSystem->GetProjection(cameraId);
 			float exposure = cameraSystem->GetExposure(cameraId);
 
-			out << YAML::Key << "projection_type" << YAML::Value << CameraSystem::GetProjectionTypeName(params.projection);
+			componentNode["projection_type"] << CameraSystem::GetProjectionTypeName(params.projection);
 
 			if (params.projection == ProjectionType::Perspective)
 			{
-				out << YAML::Key << "field_of_view" << YAML::Value << params.perspectiveFieldOfView;
-				out << YAML::Key << "near" << YAML::Value << params.perspectiveNear;
-				out << YAML::Key << "far" << YAML::Value << params.perspectiveFar;
+				componentNode["field_of_view"] << params.perspectiveFieldOfView;
+				componentNode["near"] << params.perspectiveNear;
+				componentNode["far"] << params.perspectiveFar;
 			}
 			else
 			{
-				out << YAML::Key << "orthographic_height" << YAML::Value << params.orthographicHeight;
-				out << YAML::Key << "near" << YAML::Value << params.orthographicNear;
-				out << YAML::Key << "far" << YAML::Value << params.orthographicFar;
+				componentNode["orthographic_height"] << params.orthographicHeight;
+				componentNode["near"] << params.orthographicNear;
+				componentNode["far"] << params.orthographicFar;
 			}
 
-			out << YAML::Key << "exposure" << YAML::Value << exposure;
-
-			out << YAML::EndMap;
+			componentNode["exposure"] << exposure;
 		}
 	}
 
