@@ -69,7 +69,7 @@ The editor interface and workflow are in an early state and are currently being 
 
 [rapidjson](https://github.com/Tencent/rapidjson) is used to read JSON formatted asset files.
 
-[yaml-cpp](https://github.com/jbeder/yaml-cpp) is used to read and write YAML formatted asset files.
+[rapidyaml](https://github.com/biojppm/rapidyaml) is used to read and write YAML formatted asset files.
 
 [fmt](https://github.com/fmtlib/fmt) is used for logging formatting.
 

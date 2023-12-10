@@ -4,10 +4,13 @@
 
 struct Entity;
 
-namespace YAML
+namespace c4
 {
-	class Node;
-	class Emitter;
+namespace yml
+{
+class ConstNodeRef;
+class NodeRef;
+}
 }
 
 class ComponentSerializer
@@ -18,6 +21,6 @@ public:
 	static constexpr const char* GetComponentTypeKey() { return "component_type"; }
 
 	virtual uint32_t GetComponentTypeNameHash() = 0;
-	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) = 0;
-	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) = 0;
+	virtual void DeserializeComponent(const c4::yml::ConstNodeRef& map, Entity entity) = 0;
+	virtual void SerializeComponent(c4::yml::NodeRef& componentArray, Entity entity) = 0;
 };

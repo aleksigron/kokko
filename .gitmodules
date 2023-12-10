@@ -4,9 +4,6 @@
 [submodule "deps/imgui"]
 	path = deps/imgui
 	url = https://github.com/ocornut/imgui/
-[submodule "deps/yaml-cpp"]
-	path = deps/yaml-cpp
-	url = https://github.com/jbeder/yaml-cpp/
 [submodule "deps/rapidjson"]
 	path = deps/rapidjson
 	url = https://github.com/Tencent/rapidjson
@@ -19,3 +16,6 @@
 [submodule "deps/libwebp"]
 	path = deps/libwebp
 	url = https://chromium.googlesource.com/webm/libwebp
+[submodule "deps/rapidyaml"]
+	path = deps/rapidyaml
+	url = https://github.com/biojppm/rapidyaml

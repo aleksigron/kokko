@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 
 #include "Core/Hash.hpp"
 
@@ -28,15 +28,15 @@ public:
 		return "environment"_hash;
 	}
 
-	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
+	virtual void DeserializeComponent(const c4::yml::ConstNodeRef& map, Entity entity) override
 	{
-		YAML::Node textureNode = map["source_texture"];
-		YAML::Node intensityNode = map["intensity"];
+		auto textureNode = map.find_child("source_texture");
+		auto intensityNode = map.find_child("intensity");
 
-		if (textureNode.IsDefined() && textureNode.IsScalar())
+		if (textureNode.valid() && textureNode.has_val())
 		{
-			const std::string& textureUidStr = textureNode.Scalar();
-			auto uidResult = kokko::Uid::FromString(ArrayView(textureUidStr.c_str(), textureUidStr.length()));
+			auto textureUidStr = textureNode.val();
+			auto uidResult = kokko::Uid::FromString(ArrayView(textureUidStr.str, textureUidStr.len));
 
 			EnvironmentId envId = envSystem->AddComponent(entity);
 
@@ -45,12 +45,16 @@ public:
 			else
 				KK_LOG_WARN("EnvironmentSerializer: Parsing source texture UID from string failed");
 
-			if (intensityNode.IsDefined() && intensityNode.IsScalar())
-				envSystem->SetIntensity(envId, intensityNode.as<float>());
+			if (intensityNode.valid() && intensityNode.has_val() && intensityNode.val().is_real())
+			{
+				float intensity;
+				intensityNode >> intensity;
+				envSystem->SetIntensity(envId, intensity);
+			}
 		}
 	}
 
-	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
+	virtual void SerializeComponent(c4::yml::NodeRef& componentArray, Entity entity) override
 	{
 		EnvironmentId envId = envSystem->Lookup(entity);
 		if (envId != EnvironmentId::Null)
@@ -67,11 +71,12 @@ public:
 
 			float intensity = envSystem->GetIntensity(envId);
 
-			out << YAML::BeginMap;
-			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "environment";
-			out << YAML::Key << "source_texture" << YAML::Value << textureUidStr;
-			out << YAML::Key << "intensity" << YAML::Value << intensity;
-			out << YAML::EndMap;
+			ryml::NodeRef componentNode = componentArray.append_child();
+			componentNode |= ryml::MAP;
+			componentNode[GetComponentTypeKey()] = "environment";
+
+			componentNode["source_texture"] << textureUidStr;
+			componentNode["intensity"] << intensity;
 		}
 	}
 };

@@ -50,7 +50,7 @@ public:
 	*/
 	const char* GetDebugNameWithFallback(Entity entity);
 
-	void SetDebugName(Entity entity, const char* name);
+	void SetDebugName(Entity entity, kokko::ConstStringView name);
 	void ClearDebugName(Entity entity);
 
 	class Iterator

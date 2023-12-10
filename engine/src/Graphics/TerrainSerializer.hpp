@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 
 #include "Core/Hash.hpp"
 #include "Core/Uid.hpp"
@@ -30,33 +30,33 @@ public:
 		return "terrain"_hash;
 	}
 
-	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
+	virtual void DeserializeComponent(const c4::yml::ConstNodeRef& map, Entity entity) override
 	{
 		TerrainParameters terrain;
 
-		YAML::Node sizeNode = map["terrain_size"];
-		if (sizeNode.IsDefined() && sizeNode.IsScalar())
-			terrain.terrainSize = sizeNode.as<float>();
+		auto sizeNode = map.find_child("terrain_size");
+		if (sizeNode.valid() && sizeNode.has_val() && sizeNode.val().is_real())
+			sizeNode >> terrain.terrainSize;
 
-		YAML::Node scaleNode = map["texture_scale"];
-		if (scaleNode.IsDefined() && scaleNode.IsSequence())
-			terrain.textureScale = scaleNode.as<Vec2f>();
+		auto scaleNode = map.find_child("texture_scale");
+		if (scaleNode.valid() && scaleNode.has_val())
+			scaleNode >> terrain.textureScale;
 
-		YAML::Node minNode = map["terrain_bottom"];
-		if (minNode.IsDefined() && minNode.IsScalar())
-			terrain.heightOrigin = minNode.as<float>();
+		auto minNode = map.find_child("terrain_bottom");
+		if (minNode.valid() && minNode.has_val() && minNode.val().is_real())
+			minNode >> terrain.heightOrigin;
 
-		YAML::Node maxNode = map["terrain_height"];
-		if (maxNode.IsDefined() && maxNode.IsScalar())
-			terrain.heightRange = maxNode.as<float>();
+		auto maxNode = map.find_child("terrain_height");
+		if (maxNode.valid() && maxNode.has_val() && maxNode.val().is_real())
+			maxNode >> terrain.heightRange;
 
 		TerrainId id = terrainSystem->AddTerrain(entity, terrain);
 
-		YAML::Node albedoNode = map["albedo_texture"];
-		if (albedoNode.IsDefined() && albedoNode.IsScalar())
+		auto albedoNode = map.find_child("albedo_texture");
+		if (albedoNode.valid() && albedoNode.has_val())
 		{
-			const std::string& uidStr = albedoNode.Scalar();
-			auto uidOpt = Uid::FromString(ArrayView(uidStr.c_str(), uidStr.length()));
+			auto uidSubstr = albedoNode.val();
+			auto uidOpt = Uid::FromString(ArrayView(uidSubstr.str, uidSubstr.len));
 			if (uidOpt.HasValue())
 			{
 				TextureId textureId = textureManager->FindTextureByUid(uidOpt.GetValue());
@@ -69,11 +69,11 @@ public:
 			}
 		}
 
-		YAML::Node roughnessNode = map["roughness_texture"];
-		if (roughnessNode.IsDefined() && roughnessNode.IsScalar())
+		auto roughnessNode = map.find_child("roughness_texture");
+		if (roughnessNode.valid() && roughnessNode.has_val())
 		{
-			const std::string& uidStr = roughnessNode.Scalar();
-			auto uidOpt = Uid::FromString(ArrayView(uidStr.c_str(), uidStr.length()));
+			auto uidSubstr = roughnessNode.val();
+			auto uidOpt = Uid::FromString(ArrayView(uidSubstr.str, uidSubstr.len));
 			if (uidOpt.HasValue())
 			{
 				TextureId textureId = textureManager->FindTextureByUid(uidOpt.GetValue());
@@ -87,23 +87,24 @@ public:
 		}
 	}
 
-	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
+	virtual void SerializeComponent(c4::yml::NodeRef& componentArray, Entity entity) override
 	{
 		TerrainId terrainId = terrainSystem->Lookup(entity);
 		if (terrainId != TerrainId::Null)
 		{
-			out << YAML::BeginMap;
-			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "terrain";
+			ryml::NodeRef componentNode = componentArray.append_child();
+			componentNode |= ryml::MAP;
+			componentNode[GetComponentTypeKey()] = "terrain";
 
 			float size = terrainSystem->GetSize(terrainId);
 			float heightOrigin = terrainSystem->GetBottom(terrainId);
 			float heightRange = terrainSystem->GetHeight(terrainId);
 			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
 
-			out << YAML::Key << "terrain_size" << YAML::Value << size;
-			out << YAML::Key << "texture_scale" << YAML::Value << textureScale;
-			out << YAML::Key << "terrain_bottom" << YAML::Value << heightOrigin;
-			out << YAML::Key << "terrain_height" << YAML::Value << heightRange;
+			componentNode["terrain_size"] << size;
+			componentNode["texture_scale"] << textureScale;
+			componentNode["terrain_bottom"] << heightOrigin;
+			componentNode["terrain_height"] << heightRange;
 
 			char uidStr[Uid::StringLength + 1];
 
@@ -113,7 +114,7 @@ public:
 				const TextureData& texture = textureManager->GetTextureData(albedoTextureId);
 				texture.uid.WriteTo(ArrayView(uidStr));
 				uidStr[Uid::StringLength] = '\0';
-				out << YAML::Key << "albedo_texture" << YAML::Value << uidStr;
+				componentNode["albedo_texture"] << uidStr;
 			}
 
 			TextureId roughnessTextureId = terrainSystem->GetRoughnessTextureId(terrainId);
@@ -122,10 +123,8 @@ public:
 				const TextureData& texture = textureManager->GetTextureData(roughnessTextureId);
 				texture.uid.WriteTo(ArrayView(uidStr));
 				uidStr[Uid::StringLength] = '\0';
-				out << YAML::Key << "roughness_texture" << YAML::Value << uidStr;
+				componentNode["roughness_texture"] << uidStr;
 			}
-
-			out << YAML::EndMap;
 		}
 	}
 

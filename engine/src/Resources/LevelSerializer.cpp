@@ -1,6 +1,6 @@
 #include "Resources/LevelSerializer.hpp"
 
-#include <sstream>
+#include "ryml.hpp"
 
 #include "Engine/ComponentSerializer.hpp"
 #include "Engine/EntityManager.hpp"
@@ -24,6 +24,19 @@ static const char* const ComponentTypeKey = "component_type";
 
 namespace kokko
 {
+
+namespace
+{
+
+void EmitYamlTreeToString(const ryml::Tree& tree, String& out)
+{
+	// Figure out how long output we need, resize string and then output
+	ryml::csubstr output = ryml::emit_yaml(tree, tree.root_id(), ryml::substr{}, false);
+	out.Resize(output.len);
+	output = ryml::emit_yaml(tree, tree.root_id(), ryml::substr(out.GetData(), out.GetLength()), false);
+}
+
+} // namespace
 
 LevelSerializer::LevelSerializer(Allocator* allocator, kokko::render::Device* renderDevice) :
 	allocator(allocator),
@@ -59,17 +72,17 @@ void LevelSerializer::Initialize(kokko::World* world, const kokko::ResourceManag
 	componentSerializers.PushBack(allocator->MakeNew<kokko::EnvironmentSerializer>(world->GetEnvironmentSystem()));
 }
 
-void LevelSerializer::DeserializeFromString(const char* data)
+void LevelSerializer::DeserializeFromString(MutableStringView data)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	// Create scope to mark GPU frame capture
 	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("World_DeserializeLevel"));
 
-	YAML::Node node = YAML::Load(data);
+	ryml::Tree tree = ryml::parse_in_place(ryml::substr(data.str, data.len));
 
-	const YAML::Node objects = node["objects"];
-	if (objects.IsDefined() && objects.IsSequence())
+	auto objects = tree.rootref().find_child("objects");
+	if (objects.valid() && objects.is_seq())
 	{
 		CreateObjects(objects, SceneObjectId::Null);
 	}
@@ -79,37 +92,33 @@ void LevelSerializer::SerializeToString(kokko::String& out)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	std::stringstream outStream;
-	YAML::Emitter emitter(outStream);
+	ryml::Tree tree;
+	ryml::NodeRef root = tree.rootref();
+	root |= ryml::MAP;
 
 	EntityManager* entityManager = world->GetEntityManager();
 	Scene* scene = world->GetScene();
 
-	emitter << YAML::BeginMap;
-
-	emitter << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
+	auto entitySeq = root["objects"];
+	entitySeq |= ryml::SEQ;
 
 	for (Entity entity : *entityManager)
 	{
 		SceneObjectId sceneObj = scene->Lookup(entity);
 		if (sceneObj == SceneObjectId::Null || scene->GetParent(sceneObj) == SceneObjectId::Null)
-			WriteEntity(emitter, entity, sceneObj);
+			WriteEntity(entitySeq, entity, sceneObj);
 	}
-	emitter << YAML::EndSeq; // objects
 
-	emitter << YAML::EndMap;
-
-	std::string str = outStream.str();
-	out.Assign(kokko::ConstStringView(str.c_str(), str.length()));
+	EmitYamlTreeToString(tree, out);
 }
 
-void LevelSerializer::DeserializeEntitiesFromString(const char* data, SceneObjectId parent)
+void LevelSerializer::DeserializeEntitiesFromString(ConstStringView data, SceneObjectId parent)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	YAML::Node node = YAML::Load(data);
+	ryml::Tree tree = ryml::parse_in_arena(ryml::csubstr(data.str, data.len));
 
-	CreateObjects(node, parent);
+	CreateObjects(tree.rootref(), parent);
 }
 
 void LevelSerializer::SerializeEntitiesToString(ArrayView<Entity> serializeEntities, kokko::String& serializedOut)
@@ -118,91 +127,85 @@ void LevelSerializer::SerializeEntitiesToString(ArrayView<Entity> serializeEntit
 
 	Scene* scene = world->GetScene();
 
-	YAML::Emitter emitter;
-
-	emitter << YAML::BeginSeq;
+	ryml::Tree tree;
+	ryml::NodeRef root = tree.rootref();
+	root |= ryml::SEQ;
+	
 	for (Entity entity : serializeEntities)
 	{
 		SceneObjectId sceneObj = scene->Lookup(entity);
-		WriteEntity(emitter, entity, sceneObj);
+		WriteEntity(root, entity, sceneObj);
 	}
-	emitter << YAML::EndSeq;
 
-	serializedOut.Assign(kokko::ConstStringView(emitter.c_str(), emitter.size()));
+	EmitYamlTreeToString(tree, serializedOut);
 }
 
-void LevelSerializer::WriteEntity(YAML::Emitter& out, Entity entity, SceneObjectId sceneObj)
+void LevelSerializer::WriteEntity(c4::yml::NodeRef& entitySeq, Entity entity, SceneObjectId sceneObj)
 {
 	EntityManager* entityManager = world->GetEntityManager();
 	Scene* scene = world->GetScene();
 
-	out << YAML::BeginMap;
+	ryml::NodeRef entityNode = entitySeq.append_child();
+	entityNode |= ryml::MAP;
 
 	const char* name = entityManager->GetDebugName(entity);
 	if (name != nullptr)
-		out << YAML::Key << "entity_name" << YAML::Value << name;
+		entityNode["entity_name"] = "mesh";
 
-	out << YAML::Key << "components" << YAML::Value << YAML::BeginSeq;
+	ryml::NodeRef componentArray = entityNode["components"];
+	componentArray |= ryml::SEQ;
 
-	transformSerializer->Serialize(out, entity, sceneObj);
+	transformSerializer->Serialize(componentArray, entity, sceneObj);
 
 	for (ComponentSerializer* serializer : componentSerializers)
 	{
-		serializer->SerializeComponent(out, entity);
+		serializer->SerializeComponent(componentArray, entity);
 	}
-
-	out << YAML::EndSeq; // components
 
 	SceneObjectId firstChild = scene->GetFirstChild(sceneObj);
 	if (firstChild != SceneObjectId::Null)
 	{
-		out << YAML::Key << "children" << YAML::Value << YAML::BeginSeq;
+		ryml::NodeRef childArray = entityNode["children"];
+		childArray |= ryml::SEQ;
 
 		SceneObjectId child = firstChild;
 		while (child != SceneObjectId::Null)
 		{
 			Entity childEntity = scene->GetEntity(child);
 
-			WriteEntity(out, childEntity, child);
+			WriteEntity(childArray, childEntity, child);
 
 			child = scene->GetNextSibling(child);
 		}
-
-		out << YAML::EndSeq;
 	}
-
-	out << YAML::EndMap;
 }
 
-void LevelSerializer::CreateObjects(const YAML::Node& childSequence, SceneObjectId parent)
+void LevelSerializer::CreateObjects(const c4::yml::ConstNodeRef& objectSeq, SceneObjectId parent)
 {
-	YAML::const_iterator itr = childSequence.begin();
-	YAML::const_iterator end = childSequence.end();
-
-	for (; itr != end; ++itr)
+	for (auto node : objectSeq)
 	{
-		if (itr->IsMap())
+		if (node.is_map())
 		{
 			EntityManager* entityManager = world->GetEntityManager();
 			Entity entity = entityManager->Create();
 
 			SceneObjectId createdTransform = SceneObjectId::Null;
 
-			const YAML::Node entityNameNode = (*itr)["entity_name"];
-			if (entityNameNode.IsDefined() && entityNameNode.IsScalar())
+			auto entityNameNode = node.find_child("entity_name");
+			if (entityNameNode.valid() && entityNameNode.has_val())
 			{
-				const std::string& nameStr = entityNameNode.Scalar();
-				entityManager->SetDebugName(entity, nameStr.c_str());
+				auto nameStr = entityNameNode.val();
+				entityManager->SetDebugName(entity, ConstStringView(nameStr.str, nameStr.len));
 			}
 
-			const YAML::Node componentsNode = (*itr)["components"];
-			if (componentsNode.IsDefined() && componentsNode.IsSequence())
+			auto componentsNode = node.find_child("components");
+			if (componentsNode.valid() && componentsNode.is_seq())
 			{
 				createdTransform = CreateComponents(componentsNode, entity, parent);
 			}
 
-			const YAML::Node childrenNode = (*itr)["children"];
-			if (childrenNode.IsDefined() && childrenNode.IsSequence())
+			auto childrenNode = node.find_child("children");
+			if (childrenNode.valid() && childrenNode.is_seq())
 			{
 				if (createdTransform != SceneObjectId::Null)
 					CreateObjects(childrenNode, createdTransform);
@@ -213,25 +216,23 @@ void LevelSerializer::CreateObjects(const YAML::Node& childSequence, SceneObject
 	}
 }
 
-SceneObjectId LevelSerializer::CreateComponents(const YAML::Node& componentSequence, Entity entity, SceneObjectId parent)
+SceneObjectId LevelSerializer::CreateComponents(
+	const c4::yml::ConstNodeRef& componentSeq, Entity entity, SceneObjectId parent)
 {
-	YAML::const_iterator itr = componentSequence.begin();
-	YAML::const_iterator end = componentSequence.end();
-
 	SceneObjectId createdTransform = SceneObjectId::Null;
 
-	for (; itr != end; ++itr)
+	for (auto node : componentSeq)
 	{
-		if (itr->IsMap())
+		if (node.is_map())
 		{
-			YAML::Node typeNode = (*itr)[ComponentTypeKey];
-			if (typeNode.IsDefined() && typeNode.IsScalar())
+			auto typeNode = node.find_child(ComponentTypeKey);
+			if (typeNode.valid() && typeNode.has_val())
 			{
-				const std::string& typeStr = typeNode.Scalar();
+				auto typeStr = typeNode.val();
 				uint32_t typeHash = kokko::HashString(typeStr.data(), typeStr.size());
 
 				if (typeHash == "transform"_hash)
-					createdTransform = transformSerializer->Deserialize(*itr, entity, parent);
+					createdTransform = transformSerializer->Deserialize(node, entity, parent);
 				else
 				{
 					ComponentSerializer* foundSerializer = nullptr;
@@ -246,7 +247,7 @@ SceneObjectId LevelSerializer::CreateComponents(const YAML::Node& componentSeque
 					}
 
 					if (foundSerializer != nullptr)
-						foundSerializer->DeserializeComponent(*itr, entity);
+						foundSerializer->DeserializeComponent(node, entity);
 					else
 						KK_LOG_ERROR("LevelSerializer: Unknown component type");
 				}

@@ -75,7 +75,7 @@ void EntityView::Update(EditorContext& context)
 					if (ImGui::InputText("Name", inputBuf, sizeof(inputBuf)))
 					{
 						if (StringIsEmpty(inputBuf) == false)
-							entityManager->SetDebugName(context.selectedEntity, inputBuf);
+							entityManager->SetDebugName(context.selectedEntity, ConstStringView(inputBuf));
 						else
 							entityManager->ClearDebugName(context.selectedEntity);
 					}

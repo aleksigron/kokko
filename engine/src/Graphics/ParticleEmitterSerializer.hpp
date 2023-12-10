@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 
 #include "Core/Hash.hpp"
 
@@ -22,31 +22,30 @@ public:
 		return "particle"_hash;
 	}
 
-	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
+	virtual void DeserializeComponent(const c4::yml::ConstNodeRef& map, Entity entity) override
 	{
 		kokko::ParticleEmitterId id = particleSystem->AddEmitter(entity);
 
 		float emitRate = 0.0f;
 
-		YAML::Node rateNode = map["emit_rate"];
-		if (rateNode.IsDefined() && rateNode.IsScalar())
-			emitRate = rateNode.as<float>();
+		auto rateNode = map.find_child("emit_rate");
+		if (rateNode.valid() && rateNode.has_val() && rateNode.val().is_real())
+			rateNode >> emitRate;
 
 		particleSystem->SetEmitRate(id, emitRate);
 	}
 
-	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
+	virtual void SerializeComponent(c4::yml::NodeRef& componentArray, Entity entity) override
 	{
 		kokko::ParticleEmitterId emitterId = particleSystem->Lookup(entity);
 		if (emitterId != kokko::ParticleEmitterId::Null)
 		{
-			out << YAML::BeginMap;
-			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "particle";
+			ryml::NodeRef componentNode = componentArray.append_child();
+			componentNode |= ryml::MAP;
+			componentNode[GetComponentTypeKey()] = "particle";
 
 			float emitRate = particleSystem->GetEmitRate(emitterId);
-			out << YAML::Key << "emit_rate" << YAML::Value << emitRate;
-
-			out << YAML::EndMap;
+			componentNode["emit_rate"] << emitRate;
 		}
 	}
 

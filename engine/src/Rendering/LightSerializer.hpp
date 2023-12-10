@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 
 #include "Core/Core.hpp"
 #include "Core/Hash.hpp"
@@ -31,15 +31,15 @@ public:
 		return "light"_hash;
 	}
 
-	virtual void DeserializeComponent(const YAML::Node& map, Entity entity) override
+	virtual void DeserializeComponent(const c4::yml::ConstNodeRef& map, Entity entity) override
 	{
 		LightType type;
 
-		YAML::Node typeNode = map["type"];
-		if (typeNode.IsDefined() && typeNode.IsScalar())
+		auto typeNode = map.find_child("type");
+		if (typeNode.valid() && typeNode.has_val())
 		{
-			const std::string& typeStr = typeNode.Scalar();
-			uint32_t typeHash = kokko::HashString(typeStr.data(), typeStr.size());
+			auto typeStr = typeNode.val();
+			uint32_t typeHash = kokko::HashString(typeStr.str, typeStr.len);
 
 			switch (typeHash)
 			{
@@ -68,29 +68,29 @@ public:
 
 
 		Vec3f color(1.0f, 1.0f, 1.0f);
-		YAML::Node colorNode = map["color"];
-		if (colorNode.IsDefined() && colorNode.IsSequence())
-			color = colorNode.as<Vec3f>();
+		auto colorNode = map.find_child("color");
+		if (colorNode.valid() && colorNode.has_val())
+			colorNode >> color;
 
 		float intensity = -1.0f;
-		YAML::Node intensityNode = map["intensity"];
-		if (intensityNode.IsDefined() && intensityNode.IsScalar())
-			intensity = intensityNode.as<float>();
+		auto intensityNode = map.find_child("intensity");
+		if (intensityNode.valid() && intensityNode.has_val())
+			intensityNode >> intensity;
 
 		float radius = -1.0f;
-		YAML::Node radiusNode = map["radius"];
-		if (radiusNode.IsDefined() && radiusNode.IsScalar())
-			radius = radiusNode.as<float>();
+		auto radiusNode = map.find_child("radius");
+		if (radiusNode.valid() && radiusNode.has_val())
+			radiusNode >> radius;
 
 		float angle = 1.0f;
-		YAML::Node angleNode = map["spot_angle"];
-		if (angleNode.IsDefined() && angleNode.IsScalar())
-			angle = angleNode.as<float>();
+		auto angleNode = map.find_child("spot_angle");
+		if (angleNode.valid() && angleNode.has_val())
+			angleNode >> angle;
 
 		bool shadowCasting = false;
-		YAML::Node shadowNode = map["cast_shadow"];
-		if (shadowNode.IsDefined() && shadowNode.IsScalar())
-			shadowCasting = shadowNode.as<bool>();
+		auto shadowNode = map.find_child("cast_shadow");
+		if (shadowNode.valid() && shadowNode.has_val())
+			shadowNode >> shadowCasting;
 
 		LightId lightId = lightManager->AddLight(entity);
 		lightManager->SetLightType(lightId, type);
@@ -111,39 +111,38 @@ public:
 		lightManager->SetShadowCasting(lightId, shadowCasting);
 	}
 
-	virtual void SerializeComponent(YAML::Emitter& out, Entity entity) override
+	virtual void SerializeComponent(c4::yml::NodeRef& componentArray, Entity entity) override
 	{
 		LightId lightId = lightManager->Lookup(entity);
 		if (lightId != LightId::Null)
 		{
-			out << YAML::BeginMap;
-			out << YAML::Key << GetComponentTypeKey() << YAML::Value << "light";
+			ryml::NodeRef componentNode = componentArray.append_child();
+			componentNode |= ryml::MAP;
+			componentNode[GetComponentTypeKey()] = "light";
 
 			LightType lightType = lightManager->GetLightType(lightId);
-			out << YAML::Key << "type" << YAML::Value << LightManager::GetLightTypeName(lightType);
+			componentNode["type"] << LightManager::GetLightTypeName(lightType);
 
 			Vec3f lightColor = lightManager->GetColor(lightId);
-			out << YAML::Key << "color" << YAML::Value << lightColor;
+			componentNode["color"] << lightColor;
 
 			float lightIntensity = lightManager->GetIntensity(lightId);
-			out << YAML::Key << "intensity" << YAML::Value << lightIntensity;
+			componentNode["intensity"] << lightIntensity;
 
 			if (lightType != LightType::Directional)
 			{
 				float radius = lightManager->GetRadius(lightId);
-				out << YAML::Key << "radius" << YAML::Value << radius;
+				componentNode["radius"] << radius;
 			}
 
 			if (lightType == LightType::Spot)
 			{
 				float spotAngle = lightManager->GetSpotAngle(lightId);
-				out << YAML::Key << "spot_angle" << YAML::Value << spotAngle;
+				componentNode["spot_angle"] << spotAngle;
 			}
 
 			bool shadowCasting = lightManager->GetShadowCasting(lightId);
-			out << YAML::Key << "cast_shadow" << YAML::Value << shadowCasting;
-
-			out << YAML::EndMap;
+			componentNode["cast_shadow"] << shadowCasting;
 		}
 	}
 };

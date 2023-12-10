@@ -1,13 +1,35 @@
 #include "Resources/YamlCustomTypes.hpp"
 
-YAML::Emitter& operator<<(YAML::Emitter& out, const Vec3<float>& v)
+template<class T>
+bool from_chars(ryml::csubstr buf, Vec2<T>* v)
 {
-    out << YAML::Flow << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
-    return out;
+    size_t ret = ryml::unformat(buf, "({},{})", v->x, v->y);
+    return ret != ryml::yml::npos;
 }
 
-YAML::Emitter& operator<<(YAML::Emitter& out, const Vec2<float>& v)
+template bool from_chars<float>(ryml::csubstr buf, Vec2<float>* v);
+
+template<class T>
+bool from_chars(ryml::csubstr buf, Vec3<T>* v)
 {
-    out << YAML::Flow << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
-    return out;
+    size_t ret = ryml::unformat(buf, "({},{},{})", v->x, v->y, v->z);
+    return ret != ryml::yml::npos;
 }
+
+template bool from_chars<float>(ryml::csubstr buf, Vec3<float>* v);
+
+template<class T>
+size_t to_chars(ryml::substr buf, const Vec2<T>& v)
+{
+    return ryml::format(buf, "({},{})", v.x, v.y);
+}
+
+template size_t to_chars<float>(ryml::substr buf, const Vec2<float>& v);
+
+template<class T>
+size_t to_chars(ryml::substr buf, const Vec3<T>& v)
+{
+    return ryml::format(buf, "({},{},{})", v.x, v.y, v.z);
+}
+
+template size_t to_chars<float>(ryml::substr buf, const Vec3<float>& v);

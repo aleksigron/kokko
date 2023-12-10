@@ -1,10 +1,13 @@
 #include "EditorUserSettings.hpp"
 
-#include <fstream>
+#include <cstdio>
 
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 
 #include "Core/Core.hpp"
+#include "Core/String.hpp"
+
+#include "System/Filesystem.hpp"
 
 static const char LastProjectKey[] = "last_opened_project";
 static const char LastLevelKey[] = "last_opened_level";
@@ -21,19 +24,18 @@ bool EditorUserSettings::SerializeToFile(const char* filePath)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	std::ofstream outStream(filePath);
+	FILE* file = std::fopen(filePath, "w");
 
-	if (outStream.is_open() == false)
+	if (file == nullptr)
 		return false;
 
-	YAML::Emitter out(outStream);
-
-	out << YAML::BeginMap;
+	ryml::Tree tree;
+	ryml::NodeRef root = tree.rootref();
+	root |= ryml::MAP;
 
 	if (lastOpenedProject.empty() == false)
 	{
-		out << YAML::Key << LastProjectKey;
-		out << YAML::Value << lastOpenedProject.u8string();
+		root[LastProjectKey] << lastOpenedProject.u8string().c_str();
 	}
 
 	if (lastOpenedLevel.HasValue())
@@ -42,59 +44,60 @@ bool EditorUserSettings::SerializeToFile(const char* filePath)
 		lastOpenedLevel.GetValue().WriteTo(ArrayView(levelUidBuf));
 		levelUidBuf[Uid::StringLength] = '\0';
 
-		out << YAML::Key << LastLevelKey;
-		out << YAML::Value << levelUidBuf;
+		root[LastLevelKey] << levelUidBuf;
 	}
 
-	out << YAML::Key << WindowMaximizedKey << YAML::Value << windowMaximized;
-	out << YAML::Key << WindowWidthKey << YAML::Value << windowWidth;
-	out << YAML::Key << WindowHeightKey << YAML::Value << windowHeight;
+	root[WindowMaximizedKey] << windowMaximized;
+	root[WindowWidthKey] << windowWidth;
+	root[WindowHeightKey] << windowHeight;
 
-	out << YAML::EndMap;
+	ryml::emit_yaml(tree, tree.root_id(), file);
+	std::fclose(file);
 
 	return true;
 }
 
-bool EditorUserSettings::DeserializeFromFile(const char* filePath)
+bool EditorUserSettings::DeserializeFromFile(const char* filePath, Allocator* allocator)
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	std::ifstream inStream(filePath);
-
-	if (inStream.is_open() == false)
+	Filesystem fs;
+	String contents(allocator);
+	if (fs.ReadText(filePath, contents) == false)
 		return false;
 
-	YAML::Node node = YAML::Load(inStream);
+	ryml::Tree tree = ryml::parse_in_place(ryml::substr(contents.GetData(), contents.GetLength()));
+	ryml::ConstNodeRef node = tree.rootref();
 
-	if (node.IsMap() == false)
+	if (node.is_map() == false)
 		return false;
 
-	const YAML::Node projectPathNode = node[LastProjectKey];
-	if (projectPathNode.IsDefined() && projectPathNode.IsScalar())
-		lastOpenedProject = std::filesystem::u8path(projectPathNode.Scalar());
+	auto projectPathNode = node.find_child(LastProjectKey);
+	if (projectPathNode.valid() && projectPathNode.has_val())
+		lastOpenedProject = std::filesystem::u8path(projectPathNode.val().begin(), projectPathNode.val().end());
 
-	const YAML::Node levelNode = node[LastLevelKey];
-	if (levelNode.IsDefined() && levelNode.IsScalar())
+	auto levelNode = node.find_child(LastLevelKey);
+	if (levelNode.valid() && levelNode.has_val())
 	{
-		const std::string& levelString = levelNode.Scalar();
-		auto uidResult = Uid::FromString(ArrayView(levelString.c_str(), levelString.length()));
+		auto levelString = levelNode.val();
+		auto uidResult = Uid::FromString(ArrayView(levelString.str, levelString.len));
 		if (uidResult.HasValue())
 		{
 			lastOpenedLevel = uidResult.GetValue();
 		}
 	}
 
-	const YAML::Node windowMaximizedNode = node[WindowMaximizedKey];
-	if (windowMaximizedNode.IsDefined() && windowMaximizedNode.IsScalar())
-		windowMaximized = windowMaximizedNode.as<bool>();
+	auto windowMaximizedNode = node.find_child(WindowMaximizedKey);
+	if (windowMaximizedNode.valid() && windowMaximizedNode.has_val())
+		windowMaximizedNode >> windowMaximized;
 
-	const YAML::Node windowWidthNode = node[WindowWidthKey];
-	if (windowWidthNode.IsDefined() && windowWidthNode.IsScalar())
-		windowWidth = windowWidthNode.as<int>();
+	auto windowWidthNode = node.find_child(WindowWidthKey);
+	if (windowWidthNode.valid() && windowWidthNode.has_val() && windowWidthNode.val().is_integer())
+		windowWidthNode >> windowWidth;
 
-	const YAML::Node windowHeightNode = node[WindowHeightKey];
-	if (windowHeightNode.IsDefined() && windowHeightNode.IsScalar())
-		windowHeight = windowHeightNode.as<int>();
+	auto windowHeightNode = node.find_child(WindowHeightKey);
+	if (windowHeightNode.valid() && windowHeightNode.has_val() && windowHeightNode.val().is_integer())
+		windowHeightNode >> windowHeight;
 
 	return true;
 }
