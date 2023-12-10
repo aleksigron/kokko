@@ -14,10 +14,15 @@ class FilesystemResolver;
 class Filesystem
 {
 public:
-	explicit Filesystem(Allocator* allocator);
+	// Creates a filesystem instance with no path resolver
+	// It will use the passed in path as is in read and write functions
+	Filesystem();
+
+	// 
 	Filesystem(Allocator* allocator, kokko::FilesystemResolver* resolver);
 
-	void SetResolver(kokko::FilesystemResolver* resolver);
+	// Allocator is also needed for temporary 
+	void SetResolver(Allocator* allocator, kokko::FilesystemResolver* resolver);
 
 	bool ReadBinary(const char* path, Array<uint8_t>& output);
 	bool ReadText(const char* path, kokko::String& output);
