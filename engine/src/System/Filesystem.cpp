@@ -1,5 +1,6 @@
 #include "System/Filesystem.hpp"
 
+#include <cassert>
 #include <cstdio>
 
 #include "Core/Core.hpp"
@@ -9,9 +10,9 @@
 namespace kokko
 {
 
-Filesystem::Filesystem(Allocator* allocator) :
+Filesystem::Filesystem() :
 	resolver(nullptr),
-	pathStore(allocator)
+	pathStore(nullptr)
 {
 }
 
@@ -21,14 +22,17 @@ Filesystem::Filesystem(Allocator* allocator, kokko::FilesystemResolver* resolver
 {
 }
 
-void Filesystem::SetResolver(kokko::FilesystemResolver* resolver)
+void Filesystem::SetResolver(Allocator* allocator, kokko::FilesystemResolver* resolver)
 {
+	assert(allocator != nullptr && resolver != nullptr);
+
 	this->resolver = resolver;
+	this->pathStore.SetAllocator(allocator);
 }
 
 bool Filesystem::ReadBinary(const char* path, Array<uint8_t>& output)
 {
-	if (resolver->ResolvePath(path, pathStore))
+	if (resolver && resolver->ResolvePath(path, pathStore))
 	{
 		bool result = ReadBinaryInternal(pathStore.GetCStr(), output);
 		pathStore.Clear();
@@ -42,7 +46,7 @@ bool Filesystem::ReadBinary(const char* path, Array<uint8_t>& output)
 
 bool Filesystem::ReadText(const char* path, kokko::String& output)
 {
-	if (resolver->ResolvePath(path, pathStore))
+	if (resolver && resolver->ResolvePath(path, pathStore))
 	{
 		bool result = ReadTextInternal(pathStore.GetCStr(), output);
 		pathStore.Clear();
@@ -56,7 +60,7 @@ bool Filesystem::ReadText(const char* path, kokko::String& output)
 
 bool Filesystem::Write(const char* path, ArrayView<const uint8_t> content, bool append)
 {
-	if (resolver->ResolvePath(path, pathStore))
+	if (resolver && resolver->ResolvePath(path, pathStore))
 	{
 		bool result = WriteInternal(pathStore.GetCStr(), content, append);
 		pathStore.Clear();
