@@ -42,14 +42,37 @@ struct ModelNode
 
 struct ModelMesh
 {
-	MeshId meshId;
+	uint16_t primitiveOffset;
+	uint16_t primitiveCount;
 	const char* name;
+};
+
+struct ModelPrimitive
+{
+	uint32_t vertexOffset;
+	uint32_t indexOffset;
+	uint32_t count;
 };
 
 struct ModelMeshId
 {
 	ModelId modelId;
 	uint32_t meshIndex;
+};
+
+struct ModelData
+{
+	void* buffer = nullptr;
+
+	kokko::Uid uid;
+
+	ModelNode* nodes = nullptr;
+	ModelMesh* meshes = nullptr;
+	ModelPrimitive* primitives = nullptr;
+
+	uint32_t nodeCount = 0;
+	uint32_t meshCount = 0;
+	uint32_t primitiveCount = 0;
 };
 
 class ModelManager
@@ -63,25 +86,11 @@ public:
 
 	kokko::Uid GetModelUid(ModelId id) const;
 
-	ArrayView<const ModelMesh> GetModelMeshes(ModelId id) const;
 	ArrayView<const ModelNode> GetModelNodes(ModelId id) const;
+	ArrayView<const ModelMesh> GetModelMeshes(ModelId id) const;
+	ArrayView<const ModelPrimitive> GetModelPrimitives(ModelId id) const;
 
 private:
-	friend class ModelLoader;
-
-	struct ModelData
-	{
-		void* buffer = nullptr;
-
-		kokko::Uid uid;
-
-		ModelNode* nodes = nullptr;
-		uint32_t nodeCount = 0;
-
-		uint32_t meshCount = 0;
-		ModelMesh* meshes = nullptr;
-	};
-
 	Allocator* allocator;
 	AssetLoader* assetLoader;
 	MeshManager* meshManager;

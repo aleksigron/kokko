@@ -7,11 +7,6 @@
 #include "Resources/ModelLoader.hpp"
 #include "Resources/MeshUid.hpp"
 
-namespace
-{
-
-} // Anonymous namespace
-
 namespace kokko
 {
 
@@ -52,9 +47,9 @@ ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)
 		ModelData& model = models.PushBack();
 		model.uid = uid;
 
-		ModelLoader loader(this);
+		ModelLoader loader(allocator, this);
 
-		if (loader.LoadFromBuffer(model, file.GetView()))
+		if (loader.LoadFromBuffer(&model, file.GetView()))
 		{
 			pair = uidMap.Insert(uid);
 			pair->second = id;
@@ -105,5 +100,10 @@ ArrayView<const ModelNode> ModelManager::GetModelNodes(ModelId id) const
 	return ArrayView<const ModelNode>(model.nodes, model.nodeCount);
 }
 
+ArrayView<const ModelPrimitive> ModelManager::GetModelPrimitives(ModelId id) const
+{
+	const ModelData& model = models[id.i];
+	return ArrayView<const ModelPrimitive>(model.primitives, model.primitiveCount);
+}
 
 }
