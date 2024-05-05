@@ -264,7 +264,7 @@ enum class RenderBlendEquation
 	Max
 };
 
-enum class RenderIndexType
+enum class RenderIndexType : uint8_t
 {
 	None,
 	UnsignedByte,
@@ -272,7 +272,7 @@ enum class RenderIndexType
 	UnsignedInt
 };
 
-enum class RenderPrimitiveMode
+enum class RenderPrimitiveMode : uint8_t
 {
 	Points,
 	LineStrip,

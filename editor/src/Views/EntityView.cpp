@@ -23,7 +23,7 @@
 #include "Resources/MaterialManager.hpp"
 #include "Resources/MeshManager.hpp"
 #include "Resources/ModelManager.hpp"
-#include "Resources/MeshUid.hpp"
+#include "Resources/MeshId.hpp"
 #include "Resources/TextureManager.hpp"
 
 #include "App/EditorConstants.hpp"
@@ -209,44 +209,28 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 			MeshId meshId = meshComponentSystem->GetMeshId(meshComponent);
 			if (meshId != MeshId::Null)
 			{
-				Optional<Uid> modelUid = meshManager->GetUid(meshId);
+				auto modelMeshes = modelManager->GetModelMeshes(meshId.modelId);
+				auto modelUid = modelManager->GetModelUid(meshId.modelId);
 
-				if (modelUid.HasValue())
+				if (meshId.meshIndex < modelMeshes.GetCount())
 				{
-					ModelId modelId = modelManager->FindModelByUid(modelUid.GetValue());
-
-					if (modelId != ModelId::Null)
+					const ModelMesh* modelMesh = &modelMeshes[meshId.meshIndex];
+					if (auto asset = context.assetLibrary->FindAssetByUid(modelUid))
 					{
-						auto modelMeshes = modelManager->GetModelMeshes(modelId);
-						auto modelMesh = modelMeshes.FindIf(
-							[meshId](auto& val) { return val.meshId == meshId; });
+						context.temporaryString.Clear();
+						context.temporaryString.Append(asset->GetFilename());
+						context.temporaryString.Append('/');
 
-						if (modelMesh != nullptr)
-						{
-							if (auto asset = context.assetLibrary->FindAssetByUid(modelUid.GetValue()))
-							{
-								context.temporaryString.Clear();
-								context.temporaryString.Append(asset->GetFilename());
-								context.temporaryString.Append('/');
-
-								if (modelMesh->name != nullptr)
-									context.temporaryString.Append(modelMesh->name);
-								else
-									context.temporaryString.Append("Unnamed mesh");
-							}
-							else
-								KK_LOG_ERROR("Model not found in asset library");
-						}
+						if (modelMesh->name != nullptr)
+							context.temporaryString.Append(modelMesh->name);
 						else
-							KK_LOG_ERROR("Mesh not found in model");
+							context.temporaryString.Append("Unnamed mesh");
 					}
 					else
-						KK_LOG_ERROR("Mesh's original model not found");
+						KK_LOG_ERROR("Model not found in asset library");
 				}
 				else
-				{
-					context.temporaryString.Assign("Runtime-generated mesh");
-				}
+					KK_LOG_ERROR("Mesh not found in model");
 			}
 
 			ImGui::InputText("Mesh", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);
@@ -292,7 +276,7 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 
 							if (modelMeshes.GetCount() > meshIndex)
 							{
-								meshComponentSystem->SetMeshId(meshComponent, modelMeshes[meshIndex].meshId);
+								meshComponentSystem->SetMeshId(meshComponent, MeshId{newModelId, static_cast<uint32_t>(meshIndex)});
 
 								SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
 								if (sceneObj != SceneObjectId::Null)

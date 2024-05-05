@@ -16,6 +16,7 @@ class EnvironmentSystem;
 class GraphicsFeatureCommandList;
 class LightManager;
 class MeshManager;
+class ModelManager;
 class PostProcessRenderer;
 class RenderDebugSettings;
 class RenderGraphResources;
@@ -36,6 +37,7 @@ public:
 	{
 		render::Device* renderDevice;
 		MeshManager* meshManager;
+		ModelManager* modelManager;
 		ShaderManager* shaderManager;
 	};
 
@@ -46,6 +48,7 @@ public:
 		// Resource managers
 
 		MeshManager* meshManager;
+		ModelManager* modelManager;
 		ShaderManager* shaderManager;
 		TextureManager* textureManager;
 

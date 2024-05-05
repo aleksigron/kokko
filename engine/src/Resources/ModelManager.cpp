@@ -5,22 +5,19 @@
 
 #include "Resources/AssetLoader.hpp"
 #include "Resources/ModelLoader.hpp"
-#include "Resources/MeshUid.hpp"
+#include "Resources/MeshId.hpp"
 
-namespace
-{
-
-} // Anonymous namespace
+#include "Rendering/RenderDevice.hpp"
 
 namespace kokko
 {
 
 const ModelId ModelId::Null = ModelId{ 0 };
 
-ModelManager::ModelManager(Allocator* allocator, AssetLoader* assetLoader, MeshManager* meshManager) :
+ModelManager::ModelManager(Allocator* allocator, AssetLoader* assetLoader, render::Device* renderDevice) :
 	allocator(allocator),
 	assetLoader(assetLoader),
-	meshManager(meshManager),
+	renderDevice(renderDevice),
 	uidMap(allocator),
 	models(allocator)
 {
@@ -52,10 +49,13 @@ ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)
 		ModelData& model = models.PushBack();
 		model.uid = uid;
 
-		ModelLoader loader(this);
+		Array<uint8_t> geometryBuffer(allocator);
+		ModelLoader loader(allocator);
 
-		if (loader.LoadFromBuffer(model, file.GetView()))
+		if (loader.LoadGlbFromBuffer(&model, &geometryBuffer, file.GetView()))
 		{
+			CreateRenderData(model, geometryBuffer);
+
 			pair = uidMap.Insert(uid);
 			pair->second = id;
 
@@ -105,5 +105,53 @@ ArrayView<const ModelNode> ModelManager::GetModelNodes(ModelId id) const
 	return ArrayView<const ModelNode>(model.nodes, model.nodeCount);
 }
 
+ArrayView<const ModelPrimitive> ModelManager::GetModelPrimitives(ModelId id) const
+{
+	const ModelData& model = models[id.i];
+	return ArrayView<const ModelPrimitive>(model.primitives, model.primitiveCount);
+}
+
+void ModelManager::CreateRenderData(ModelData& model, Array<uint8_t>& geometryBuffer)
+{
+	renderDevice->CreateBuffers(1, &model.bufferId);
+
+	uint32_t bufferSize = static_cast<uint32_t>(geometryBuffer.GetCount());
+	renderDevice->SetBufferStorage(model.bufferId, bufferSize, geometryBuffer.GetData(), BufferStorageFlags::None);
+
+	// Update buffers
+
+	for (uint32_t meshIdx = 0; meshIdx < model.meshCount; ++meshIdx)
+	{
+		ModelMesh& mesh = model.meshes[meshIdx];
+
+		// TODO
+		// data.uniqueVertexCount[index] = static_cast<int>(vdata.vertexCount);
+
+		for (uint16_t primIdx = mesh.primitiveOffset, primEnd = mesh.primitiveOffset + mesh.primitiveCount; primIdx < primEnd; ++primIdx)
+		{
+			ModelPrimitive& primitive = model.primitives[primIdx];
+			VertexFormat& vertexFormat = primitive.vertexFormat;
+
+			assert(vertexFormat.attributes != nullptr && vertexFormat.attributeCount > 0);
+
+			// Create vertex array object
+			renderDevice->CreateVertexArrays(1, &primitive.vertexArrayId);
+			kokko::render::VertexArrayId va = primitive.vertexArrayId;
+
+			// TODO: Only if indexed
+			renderDevice->SetVertexArrayIndexBuffer(va, model.bufferId);
+
+			for (unsigned int i = 0; i < vertexFormat.attributeCount; ++i)
+			{
+				const VertexAttribute& attr = vertexFormat.attributes[i];
+
+				renderDevice->SetVertexArrayVertexBuffer(va, i, model.bufferId, attr.offset, attr.stride);
+				renderDevice->EnableVertexAttribute(va, attr.attrIndex);
+				renderDevice->SetVertexAttribBinding(va, attr.attrIndex, i);
+				renderDevice->SetVertexAttribFormat(va, attr.attrIndex, attr.elemCount, attr.elemType, 0);
+			}
+		}
+	}
+}
 
 }

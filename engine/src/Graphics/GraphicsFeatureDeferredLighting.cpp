@@ -17,7 +17,7 @@
 #include "Rendering/RenderPassType.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 
-#include "Resources/MeshManager.hpp"
+#include "Resources/ModelManager.hpp"
 #include "Resources/MeshPresets.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
@@ -93,7 +93,7 @@ void GraphicsFeatureDeferredLighting::Initialize(const InitializeParameters& par
 	shaderId = parameters.shaderManager->FindShaderByPath(shaderPath);
 
 	// Create screen filling quad
-	meshId = parameters.meshManager->CreateMesh();
+	meshId = parameters.modelManager->CreateMesh();
 	MeshPresets::UploadPlane(parameters.meshManager, meshId);
 }
 

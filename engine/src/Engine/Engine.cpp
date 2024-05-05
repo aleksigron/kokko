@@ -74,7 +74,7 @@ Engine::Engine(
 	meshManager.New(meshManager.allocator, assetLoader, renderDevice);
 
 	modelManager.CreateScope(allocatorManager, "ModelManager", alloc);
-	modelManager.New(modelManager.allocator, assetLoader, meshManager.instance);
+	modelManager.New(modelManager.allocator, assetLoader, renderDevice);
 
 	textureManager.CreateScope(allocatorManager, "TextureManager", alloc);
 	textureManager.New(textureManager.allocator, assetLoader, renderDevice);

@@ -1,4 +1,4 @@
-#include "Resources/MeshUid.hpp"
+#include "Resources/MeshId.hpp"
 
 #include <cassert>
 

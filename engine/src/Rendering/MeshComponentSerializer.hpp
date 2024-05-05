@@ -12,8 +12,8 @@
 #include "Rendering/MeshComponentSystem.hpp"
 
 #include "Resources/MaterialManager.hpp"
-#include "Resources/MeshManager.hpp"
-#include "Resources/MeshUid.hpp"
+#include "Resources/ModelManager.hpp"
+#include "Resources/MeshId.hpp"
 #include "Resources/ModelManager.hpp"
 #include "Resources/ResourceManagers.hpp"
 
@@ -63,7 +63,7 @@ public:
 					auto modelMeshes = res.modelManager->GetModelMeshes(modelId);
 
 					if (modelMeshes.GetCount() > meshUid.meshIndex)
-						meshComponentSystem->SetMeshId(componentId, modelMeshes[meshUid.meshIndex].meshId);
+						meshComponentSystem->SetMeshId(componentId, MeshId{modelId, meshUid.meshIndex});
 				}
 			}
 
@@ -93,9 +93,10 @@ public:
 		{
 			MeshId meshId = meshComponentSystem->GetMeshId(componentId);
 
+			bool validMesh = false;
 			Optional<Uid> modelUidOpt;
 			if (meshId != MeshId::Null)
-				modelUidOpt = res.meshManager->GetUid(meshId);
+				modelUidOpt = res.modelManager->GetModelUid(meshId.modelId);
 
 			char meshUidStr[MeshUid::StringLength + 1];
 			meshUidStr[0] = '\0';
@@ -106,19 +107,14 @@ public:
 
 				if (modelId != ModelId::Null)
 				{
-					auto modelMeshes = res.modelManager->GetModelMeshes(modelId);
-					auto modelMesh = modelMeshes.FindIf(
-						[meshId](auto& val) { return val.meshId == meshId; });
+					MeshUid meshUid;
+					meshUid.modelUid = modelUidOpt.GetValue();
+					meshUid.meshIndex = meshId.meshIndex;
 
-					if (modelMesh != nullptr)
-					{
-						MeshUid meshUid;
-						meshUid.modelUid = modelUidOpt.GetValue();
-						meshUid.meshIndex = static_cast<uint32_t>(modelMesh - modelMeshes.GetData());
+					meshUid.WriteTo(meshUidStr);
+					meshUidStr[MeshUid::StringLength] = '\0';
 
-						meshUid.WriteTo(meshUidStr);
-						meshUidStr[MeshUid::StringLength] = '\0';
-					}
+					validMesh = true;
 				}
 			}
 
@@ -137,7 +133,9 @@ public:
 			componentNode |= ryml::MAP;
 			componentNode[GetComponentTypeKey()] = "mesh";
 
-			componentNode["mesh"] << meshUidStr;
+			if (validMesh)
+				componentNode["mesh"] << meshUidStr;
+
 			componentNode["material"] << materialUidStr;
 		}
 	}

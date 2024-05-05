@@ -280,13 +280,12 @@ set (KOKKO_SOURCES
 	src/Resources/MaterialManager.hpp
 	src/Resources/MaterialSerializer.cpp
 	src/Resources/MaterialSerializer.hpp
+	src/Resources/MeshId.cpp
 	src/Resources/MeshId.hpp
 	src/Resources/MeshManager.cpp
 	src/Resources/MeshManager.hpp
 	src/Resources/MeshPresets.cpp
 	src/Resources/MeshPresets.hpp
-	src/Resources/MeshUid.cpp
-	src/Resources/MeshUid.hpp
 	src/Resources/ModelLoader.cpp
 	src/Resources/ModelLoader.hpp
 	src/Resources/ModelManager.cpp

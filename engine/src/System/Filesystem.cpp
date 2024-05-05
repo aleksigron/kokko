@@ -32,6 +32,8 @@ void Filesystem::SetResolver(Allocator* allocator, kokko::FilesystemResolver* re
 
 bool Filesystem::ReadBinary(const char* path, Array<uint8_t>& output)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (resolver && resolver->ResolvePath(path, pathStore))
 	{
 		bool result = ReadBinaryInternal(pathStore.GetCStr(), output);
@@ -46,6 +48,8 @@ bool Filesystem::ReadBinary(const char* path, Array<uint8_t>& output)
 
 bool Filesystem::ReadText(const char* path, kokko::String& output)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (resolver && resolver->ResolvePath(path, pathStore))
 	{
 		bool result = ReadTextInternal(pathStore.GetCStr(), output);
@@ -60,6 +64,8 @@ bool Filesystem::ReadText(const char* path, kokko::String& output)
 
 bool Filesystem::Write(const char* path, ArrayView<const uint8_t> content, bool append)
 {
+	KOKKO_PROFILE_FUNCTION();
+	
 	if (resolver && resolver->ResolvePath(path, pathStore))
 	{
 		bool result = WriteInternal(pathStore.GetCStr(), content, append);

@@ -10,29 +10,19 @@
 
 struct VertexAttribute
 {
-	VertexAttribute() :
-		attrIndex(0),
-		elemCount(0),
-		offset(0),
-		stride(0),
-		elemType(RenderVertexElemType::Float)
-	{
-	}
+	VertexAttribute() = default;
 
 	VertexAttribute(unsigned int attrIndex, int elemCount) :
 		attrIndex(attrIndex),
-		elemCount(elemCount),
-		offset(0),
-		stride(0),
-		elemType(RenderVertexElemType::Float)
+		elemCount(elemCount)
 	{
 	}
 
-	unsigned int attrIndex;
-	int elemCount;
-	uintptr_t offset;
-	int stride;
-	RenderVertexElemType elemType;
+	unsigned int attrIndex = 0;
+	int elemCount = 0;
+	uintptr_t offset = 0;
+	int stride = 0;
+	RenderVertexElemType elemType = RenderVertexElemType::Float;
 
 	static VertexAttribute pos2;
 	static VertexAttribute pos3;
@@ -58,20 +48,15 @@ struct VertexAttribute
 
 struct VertexFormat
 {
-	VertexFormat() :
-		attributes(nullptr),
-		attributeCount(0)
-	{
-	}
-
+	VertexFormat() = default;
 	VertexFormat(VertexAttribute* attributes, unsigned int attributeCount) :
 		attributes(attributes),
 		attributeCount(attributeCount)
 	{
 	}
 
-	VertexAttribute* attributes;
-	unsigned int attributeCount;
+	VertexAttribute* attributes = nullptr;
+	unsigned int attributeCount = 0;
 
 	void CalcOffsetsAndSizeInterleaved()
 	{
