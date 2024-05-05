@@ -14,7 +14,7 @@ struct Mat4x4f;
 namespace kokko
 {
 
-class MeshManager;
+class ModelManager;
 class Renderer;
 
 struct AABB;
@@ -36,7 +36,7 @@ class MeshComponentSystem : public TransformUpdateReceiver
 	friend class kokko::Renderer;
 
 public:
-	MeshComponentSystem(Allocator* allocator, MeshManager* meshManager);
+	MeshComponentSystem(Allocator* allocator, ModelManager* modelManager);
 	~MeshComponentSystem();
 
 	virtual void NotifyUpdatedTransforms(size_t count, const Entity* entities, const Mat4x4f* transforms) override;
@@ -60,7 +60,7 @@ private:
 	void Reallocate(unsigned int required);
 
 	Allocator* allocator;
-	MeshManager* meshManager;
+	ModelManager* modelManager;
 
 	struct InstanceData
 	{

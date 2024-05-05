@@ -59,7 +59,7 @@ World::World(AllocatorManager* allocManager,
 		resourceManagers.shaderManager, resourceManagers.meshManager, resourceManagers.textureManager);
 
 	meshComponentSystem.CreateScope(allocManager, "MeshComponentSystem", allocator);
-	meshComponentSystem.New(meshComponentSystem.allocator, resourceManagers.meshManager);
+	meshComponentSystem.New(meshComponentSystem.allocator, resourceManagers.modelManager);
 
 	renderer.CreateScope(allocManager, "Renderer", allocator);
 	renderer.New(renderer.allocator, renderDevice, commandEncoder, meshComponentSystem.instance, scene.instance,

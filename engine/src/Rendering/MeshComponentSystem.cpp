@@ -8,16 +8,17 @@
 #include "Math/Mat4x4.hpp"
 
 #include "Resources/MaterialData.hpp"
-#include "Resources/MeshManager.hpp"
+#include "Resources/ModelManager.hpp"
+#include "Resources/MeshId.hpp"
 
 namespace kokko
 {
 
 const MeshComponentId MeshComponentId::Null = MeshComponentId{ 0 };
 
-MeshComponentSystem::MeshComponentSystem(Allocator* allocator, MeshManager* meshManager) :
+MeshComponentSystem::MeshComponentSystem(Allocator* allocator, ModelManager* modelManager) :
 	allocator(allocator),
-	meshManager(meshManager),
+	modelManager(modelManager),
 	data{},
 	entityMap(allocator)
 {
@@ -47,8 +48,8 @@ void MeshComponentSystem::NotifyUpdatedTransforms(size_t count, const Entity* en
 
 			if (meshId != MeshId::Null)
 			{
-				const AABB* bounds = meshManager->GetBoundingBox(meshId);
-				data.bounds[dataIdx] = bounds->Transform(transforms[entityIdx]);
+				const AABB& bounds = modelManager->GetModelMeshes(meshId.modelId)[meshId.meshIndex].aabb;
+				data.bounds[dataIdx] = bounds.Transform(transforms[entityIdx]);
 			}
 
 			// Set world transform

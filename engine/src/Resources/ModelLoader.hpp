@@ -2,11 +2,13 @@
 
 #include <cstdint>
 
+#include "Core/Array.hpp"
 #include "Core/ArrayView.hpp"
+#include "Core/Range.hpp"
+#include "Core/SortedArray.hpp"
 #include "Core/Uid.hpp"
 
-#include "Resources/ModelManager.hpp"
-
+struct cgltf_buffer_view;
 struct cgltf_data;
 struct cgltf_mesh;
 struct cgltf_node;
@@ -14,31 +16,35 @@ struct cgltf_node;
 namespace kokko
 {
 
-struct MeshId;
+struct ModelData;
+struct ModelMesh;
 
 class ModelLoader
 {
 public:
-	ModelLoader(ModelManager* modelManager);
+	ModelLoader(Allocator* allocator);
 
-	bool LoadFromBuffer(ModelManager::ModelData& model, ArrayView<const uint8_t> buffer);
+	bool LoadGlbFromBuffer(ModelData* modelOut, Array<uint8_t>* geometryBufferOut, ArrayView<const uint8_t> buffer);
 
 private:
 	Allocator* allocator;
-	ModelManager* modelManager;
+
+	ModelData* outputModel = nullptr;
 
 	ArrayView<char> textBuffer;
-	Uid uid;
+
+	Array<uint8_t>* geometryBuffer;
+	size_t geometryBufferUsed = 0;
+
+	SortedArray<cgltf_buffer_view*> uniqueGeometryBufferViews;
+	Array<Range<size_t>> geometryBufferViewRangeMap;
 	
 	void LoadNode(
-		ModelManager::ModelData& model,
 		int16_t parent,
 		cgltf_data* data,
 		cgltf_node* node);
 
-	bool LoadMesh(
-		cgltf_mesh* cgltfMesh,
-		ModelMesh& modelMeshOut);
+	bool LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut);
 };
 
 } // namespace kokko

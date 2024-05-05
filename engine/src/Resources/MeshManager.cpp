@@ -91,6 +91,7 @@ void MeshManager::Reallocate(unsigned int required)
 
 	data = newData;
 }
+/*
 
 MeshId MeshManager::CreateMesh()
 {
@@ -399,5 +400,5 @@ void MeshManager::UploadIndexed(MeshId id, const IndexedVertexData& vdata)
 	CreateDrawDataIndexed(index, vdata);
 	SetVertexAttribPointers(index, vdata.vertexFormat);
 }
-
+*/
 } // namespace kokko

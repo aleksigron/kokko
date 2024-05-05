@@ -138,8 +138,8 @@ public:
 	MeshManager(Allocator* allocator, AssetLoader* assetLoader, render::Device* renderDevice);
 	~MeshManager();
 
-	MeshId CreateMesh();
-	void RemoveMesh(MeshId id);
+	//MeshId CreateMesh();
+	//void RemoveMesh(MeshId id);
 
 	Optional<Uid> GetUid(MeshId id) const;
 	void SetUid(MeshId id, const Uid& uid);
