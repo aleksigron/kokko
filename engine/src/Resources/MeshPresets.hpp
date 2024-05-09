@@ -2,13 +2,13 @@
 
 namespace kokko
 {
-struct MeshId;
-class MeshManager;
+struct ModelId;
+class ModelManager;
 
 namespace MeshPresets
 {
-void UploadCube(MeshManager* meshManager, MeshId meshId);
-void UploadPlane(MeshManager* meshManager, MeshId meshId);
+ModelId CreateCube(ModelManager* modelManager);
+ModelId CreatePlane(ModelManager* modelManager);
 }
 
 } // namespace kokko

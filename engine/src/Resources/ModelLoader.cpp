@@ -12,6 +12,7 @@
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/ModelManager.hpp"
+#include "ModelLoader.hpp"
 
 /*
 Let's try to put some kind of procedure in here so I can think
@@ -102,7 +103,71 @@ ModelLoader::ModelLoader(Allocator* allocator) :
 {
 }
 
-bool ModelLoader::LoadGlbFromBuffer(ModelData* modelOut, Array<uint8_t>* geometryBufferOut, ArrayView<const uint8_t> buffer)
+bool ModelLoader::LoadRuntime(ModelData *modelOut, Array<uint8_t> *geometryBufferOut, const ModelCreateInfo &createInfo)
+{
+	KOKKO_PROFILE_FUNCTION();
+
+	outputModel = modelOut;
+	geometryBuffer = geometryBufferOut;
+	
+	constexpr size_t alignment = 16;
+	const size_t vertexBytes = Math::RoundUpToMultiple(createInfo.vertexDataSize, alignment);
+	const size_t indexBytes = Math::RoundUpToMultiple(createInfo.indexDataSize, alignment);
+	const size_t geometryBufferBytes = vertexBytes + indexBytes;
+	geometryBuffer->Resize(geometryBufferBytes);
+
+	// Copy geometry buffers into one buffer
+
+	memcpy(geometryBuffer->GetData(), createInfo.vertexData, createInfo.vertexDataSize);
+	memcpy(geometryBuffer->GetData() + vertexBytes, createInfo.indexData, createInfo.indexDataSize);
+
+	// Allocate model info buffers
+
+	const size_t meshBytes = Math::RoundUpToMultiple(sizeof(ModelMesh), alignment);
+	const size_t primBytes = Math::RoundUpToMultiple(sizeof(ModelPrimitive), alignment);
+	const size_t attrBytes = Math::RoundUpToMultiple(sizeof(VertexAttribute) * createInfo.vertexFormat.attributeCount, alignment);
+	const size_t infoBytes = meshBytes + primBytes + attrBytes;
+
+	outputModel->buffer = allocator->Allocate(infoBytes, "ModelLoader model.buffer");
+	uint8_t* byteBuffer = static_cast<uint8_t*>(outputModel->buffer);
+
+	outputModel->nodes = nullptr;
+	outputModel->meshes = reinterpret_cast<ModelMesh*>(byteBuffer);
+	outputModel->primitives = reinterpret_cast<ModelPrimitive*>(byteBuffer + meshBytes);
+	outputModel->attributes = reinterpret_cast<VertexAttribute*>(byteBuffer + meshBytes + primBytes);
+
+	ModelMesh& mesh = outputModel->meshes[0];
+	mesh.primitiveCount = 1;
+	mesh.primitiveOffset = 0;
+	mesh.indexType = createInfo.indexType;
+	mesh.primitiveMode = createInfo.primitiveMode;
+	mesh.name = nullptr;
+	mesh.aabb = AABB();
+
+	ModelPrimitive& primitive = outputModel->primitives[0];
+	primitive.uniqueVertexCount = createInfo.vertexCount;
+	primitive.indexOffset = 0;
+	primitive.count = createInfo.indexCount;
+	primitive.vertexFormat.attributes = outputModel->attributes;
+	primitive.vertexFormat.attributeCount = createInfo.vertexFormat.attributeCount;
+
+	for (uint32_t attrIdx = 0; attrIdx < createInfo.vertexFormat.attributeCount; ++attrIdx)
+	{
+		const VertexAttribute& attributeIn = createInfo.vertexFormat.attributes[attrIdx];
+		outputModel->attributes[attrIdx] = attributeIn;
+	}
+
+	outputModel->nodeCount = 0;
+	outputModel->meshCount = 1;
+	outputModel->primitiveCount = 1;
+	outputModel->attributeCount = createInfo.vertexFormat.attributeCount;
+
+	Reset();
+
+    return true;
+}
+
+bool ModelLoader::LoadGlbFromBuffer(ModelData *modelOut, Array<uint8_t> *geometryBufferOut, ArrayView<const uint8_t> buffer)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -204,11 +269,9 @@ bool ModelLoader::LoadGlbFromBuffer(ModelData* modelOut, Array<uint8_t>* geometr
 		cgltf_mesh* cgltfMesh = &data->meshes[i];
 		size_t meshIndex = outputModel->meshCount;
 		ModelMesh& modelMesh = outputModel->meshes[meshIndex];
-		if (LoadMesh(cgltfMesh, modelMesh))
+		if (LoadGltfMesh(cgltfMesh, modelMesh))
 			outputModel->meshCount += 1;
 	}
-
-	// TODO: Upload GPU data
 
 	// Load nodes
 
@@ -221,25 +284,32 @@ bool ModelLoader::LoadGlbFromBuffer(ModelData* modelOut, Array<uint8_t>* geometr
 
 		lastSiblingIndex = outputModel->nodeCount;
 
-		LoadNode(-1, data, scene->nodes[i]);
+		LoadGltfNode(-1, data, scene->nodes[i]);
 	}
 
 	cgltf_free(data);
 
+	Reset();
+
+	return true;
+}
+
+// === PRIVATE METHODS ===
+
+void ModelLoader::Reset()
+{
 	outputModel = nullptr;
 	textBuffer = ArrayView<char>();
 	geometryBuffer = nullptr;
 	geometryBufferUsed = 0;
 	uniqueGeometryBufferViews.Clear();
 	geometryBufferViewRangeMap.Clear();
-
-	return true;
 }
 
-void ModelLoader::LoadNode(
-	int16_t parent,
-	cgltf_data* data,
-	cgltf_node* node)
+void ModelLoader::LoadGltfNode(
+    int16_t parent,
+    cgltf_data *data,
+    cgltf_node *node)
 {
 	int16_t thisNodeIndex = static_cast<int16_t>(outputModel->nodeCount);
 	ModelNode& modelNode = outputModel->nodes[outputModel->nodeCount];
@@ -273,11 +343,11 @@ void ModelLoader::LoadNode(
 		
 		lastSiblingIndex = outputModel->nodeCount;
 
-		LoadNode(thisNodeIndex, data, node->children[i]);
+		LoadGltfNode(thisNodeIndex, data, node->children[i]);
 	}
 }
 
-bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
+bool ModelLoader::LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 {
 	if (cgltfMesh->primitives_count == 0)
 		return false;
@@ -427,6 +497,7 @@ bool ModelLoader::LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 		}
 		
 		ModelPrimitive& modelPrim = outputModel->primitives[primitiveOffset + primIdx];
+		modelPrim.uniqueVertexCount = vertexCount;
 		modelPrim.count = cgltfPrim.indices != nullptr ? cgltfPrim.indices->count : vertexCount;
 		modelPrim.indexOffset = 0;
 

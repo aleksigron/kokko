@@ -14,7 +14,7 @@
 class Allocator;
 class RenderDevice;
 class ShaderManager;
-class MeshManager;
+class ModelManager;
 class Renderer;
 
 struct Entity;
@@ -36,7 +36,7 @@ class ParticleSystem : public GraphicsFeature, public TransformUpdateReceiver
 {
 public:
 	ParticleSystem(Allocator* allocator, kokko::render::Device* renderDevice,
-		ShaderManager* shaderManager, MeshManager* meshManager);
+		ShaderManager* shaderManager, ModelManager* modelManager);
 	ParticleSystem(const ParticleSystem&) = delete;
 	ParticleSystem(ParticleSystem&&) = delete;
 	~ParticleSystem();
@@ -76,9 +76,9 @@ private:
 	Allocator* allocator;
 	kokko::render::Device* renderDevice;
 	ShaderManager* shaderManager;
-	MeshManager* meshManager;
+	ModelManager* modelManager;
 
-	MeshId quadMeshId;
+	ModelId quadMeshId;
 	ShaderId initUpdateShaderId;
 	ShaderId emitShaderId;
 	ShaderId simulateShaderId;

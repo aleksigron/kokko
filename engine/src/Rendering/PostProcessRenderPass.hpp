@@ -9,8 +9,6 @@
 
 #include "Resources/ShaderId.hpp"
 
-struct MeshDrawData;
-
 namespace kokko
 {
 

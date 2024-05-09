@@ -21,7 +21,6 @@
 
 #include "Resources/AssetLibrary.hpp"
 #include "Resources/MaterialManager.hpp"
-#include "Resources/MeshManager.hpp"
 #include "Resources/ModelManager.hpp"
 #include "Resources/MeshId.hpp"
 #include "Resources/TextureManager.hpp"
@@ -47,7 +46,6 @@ EntityView::EntityView() :
 void EntityView::Initialize(const ResourceManagers& resourceManagers)
 {
 	materialManager = resourceManagers.materialManager;
-	meshManager = resourceManagers.meshManager;
 	modelManager = resourceManagers.modelManager;
 	textureManager = resourceManagers.textureManager;
 }
@@ -212,25 +210,32 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 				auto modelMeshes = modelManager->GetModelMeshes(meshId.modelId);
 				auto modelUid = modelManager->GetModelUid(meshId.modelId);
 
-				if (meshId.meshIndex < modelMeshes.GetCount())
+				if (modelUid.HasValue())
 				{
-					const ModelMesh* modelMesh = &modelMeshes[meshId.meshIndex];
-					if (auto asset = context.assetLibrary->FindAssetByUid(modelUid))
+					if (meshId.meshIndex < modelMeshes.GetCount())
 					{
-						context.temporaryString.Clear();
-						context.temporaryString.Append(asset->GetFilename());
-						context.temporaryString.Append('/');
+						const ModelMesh* modelMesh = &modelMeshes[meshId.meshIndex];
+						if (auto asset = context.assetLibrary->FindAssetByUid(modelUid.GetValue()))
+						{
+							context.temporaryString.Clear();
+							context.temporaryString.Append(asset->GetFilename());
+							context.temporaryString.Append('/');
 
-						if (modelMesh->name != nullptr)
-							context.temporaryString.Append(modelMesh->name);
+							if (modelMesh->name != nullptr)
+								context.temporaryString.Append(modelMesh->name);
+							else
+								context.temporaryString.Append("Unnamed mesh");
+						}
 						else
-							context.temporaryString.Append("Unnamed mesh");
+							KK_LOG_ERROR("Model not found in asset library");
 					}
 					else
-						KK_LOG_ERROR("Model not found in asset library");
+						KK_LOG_ERROR("Mesh not found in model");
 				}
 				else
-					KK_LOG_ERROR("Mesh not found in model");
+				{
+					context.temporaryString.Assign("Runtime generated mesh");
+				}
 			}
 
 			ImGui::InputText("Mesh", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);

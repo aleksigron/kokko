@@ -282,8 +282,6 @@ set (KOKKO_SOURCES
 	src/Resources/MaterialSerializer.hpp
 	src/Resources/MeshId.cpp
 	src/Resources/MeshId.hpp
-	src/Resources/MeshManager.cpp
-	src/Resources/MeshManager.hpp
 	src/Resources/MeshPresets.cpp
 	src/Resources/MeshPresets.hpp
 	src/Resources/ModelLoader.cpp

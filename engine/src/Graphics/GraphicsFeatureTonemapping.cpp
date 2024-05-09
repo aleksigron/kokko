@@ -13,7 +13,6 @@
 #include "Rendering/PostProcessRenderPass.hpp"
 #include "Rendering/StaticUniformBuffer.hpp"
 
-#include "Resources/MeshManager.hpp"
 #include "Resources/ShaderManager.hpp"
 
 namespace kokko

@@ -4,7 +4,6 @@
 #include "Core/Core.hpp"
 
 #include "Resources/AssetLoader.hpp"
-#include "Resources/ModelLoader.hpp"
 #include "Resources/MeshId.hpp"
 
 #include "Rendering/RenderDevice.hpp"
@@ -12,12 +11,11 @@
 namespace kokko
 {
 
-const ModelId ModelId::Null = ModelId{ 0 };
-
 ModelManager::ModelManager(Allocator* allocator, AssetLoader* assetLoader, render::Device* renderDevice) :
 	allocator(allocator),
 	assetLoader(assetLoader),
 	renderDevice(renderDevice),
+	modelLoader(allocator),
 	uidMap(allocator),
 	models(allocator)
 {
@@ -48,11 +46,11 @@ ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)
 		unsigned int id = static_cast<unsigned int>(models.GetCount());
 		ModelData& model = models.PushBack();
 		model.uid = uid;
+		model.hasUid = true;
 
 		Array<uint8_t> geometryBuffer(allocator);
-		ModelLoader loader(allocator);
 
-		if (loader.LoadGlbFromBuffer(&model, &geometryBuffer, file.GetView()))
+		if (modelLoader.LoadGlbFromBuffer(&model, &geometryBuffer, file.GetView()))
 		{
 			CreateRenderData(model, geometryBuffer);
 
@@ -88,25 +86,62 @@ ModelId ModelManager::FindModelByPath(const ConstStringView& path)
 	return ModelId::Null;
 }
 
-kokko::Uid ModelManager::GetModelUid(ModelId id) const
+ModelId ModelManager::CreateModel(const ModelCreateInfo& info)
 {
-	return models[id.i].uid;
+	KOKKO_PROFILE_FUNCTION();
+
+	unsigned int id = static_cast<unsigned int>(models.GetCount());
+	ModelData& model = models.PushBack();
+
+	Array<uint8_t> geometryBuffer(allocator);
+
+	if (modelLoader.LoadRuntime(&model, &geometryBuffer, info))
+	{
+		CreateRenderData(model, geometryBuffer);
+
+		return ModelId{id};
+	}
+
+    return ModelId::Null;
+}
+
+void ModelManager::RemoveModel(ModelId id)
+{
+	// TODO: Implement
+	// Need to do some kind of freelist to know how to reuse removed models
+}
+
+void ModelManager::SetMeshAABB(MeshId id, const AABB& bounds)
+{
+	assert(id != MeshId::Null);
+	const ModelData& model = models[id.modelId.i];
+	assert(id.meshIndex < model.meshCount);
+	model.meshes[id.meshIndex].aabb = bounds;
+}
+
+Optional<Uid> ModelManager::GetModelUid(ModelId id) const
+{
+	assert(id != ModelId::Null);
+	return models[id.i].hasUid ? Optional(models[id.i].uid) : Optional<Uid>();
 }
 
 ArrayView<const ModelMesh> ModelManager::GetModelMeshes(ModelId id) const
 {
+	assert(id != ModelId::Null);
 	const ModelData& model = models[id.i];
 	return ArrayView<const ModelMesh>(model.meshes, model.meshCount);
 }
 
 ArrayView<const ModelNode> ModelManager::GetModelNodes(ModelId id) const
 {
+	assert(id != ModelId::Null);
 	const ModelData& model = models[id.i];
 	return ArrayView<const ModelNode>(model.nodes, model.nodeCount);
 }
 
 ArrayView<const ModelPrimitive> ModelManager::GetModelPrimitives(ModelId id) const
 {
+	assert(id != ModelId::Null);
 	const ModelData& model = models[id.i];
 	return ArrayView<const ModelPrimitive>(model.primitives, model.primitiveCount);
 }

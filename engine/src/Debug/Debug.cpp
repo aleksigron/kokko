@@ -60,9 +60,9 @@ Debug::Debug(
 	mode(DebugMode::None)
 {
 	vectorRenderer = kokko::MakeUnique<kokko::DebugVectorRenderer>(allocator, allocator, renderDevice);
-	textRenderer = kokko::MakeUnique<DebugTextRenderer>(allocator, allocator, renderDevice, filesystem);
+	textRenderer = kokko::MakeUnique<kokko::DebugTextRenderer>(allocator, allocator, renderDevice, filesystem);
 	graph = kokko::MakeUnique<DebugGraph>(allocator, allocator, vectorRenderer.Get());
-	culling = kokko::MakeUnique<DebugCulling>(allocator, textRenderer.Get(), vectorRenderer.Get());
+	culling = kokko::MakeUnique<kokko::DebugCulling>(allocator, textRenderer.Get(), vectorRenderer.Get());
 	memoryStats = kokko::MakeUnique<DebugMemoryStats>(allocator, allocManager, textRenderer.Get());
 
 	singletonInstance = this;
@@ -73,7 +73,7 @@ Debug::~Debug()
 	singletonInstance = nullptr;
 }
 
-bool Debug::Initialize(kokko::Window* window, kokko::MeshManager* meshManager,
+bool Debug::Initialize(kokko::Window* window, kokko::ModelManager* modelManager,
 	kokko::ShaderManager* shaderManager, kokko::TextureManager* textureManager)
 {
 	KOKKO_PROFILE_FUNCTION();
@@ -85,10 +85,10 @@ bool Debug::Initialize(kokko::Window* window, kokko::MeshManager* meshManager,
 
 	this->window = window;
 
-	if (textRenderer->Initialize(shaderManager, meshManager, textureManager) == false)
+	if (textRenderer->Initialize(shaderManager, modelManager, textureManager) == false)
 		return false;
 
-	vectorRenderer->Initialize(meshManager, shaderManager);
+	vectorRenderer->Initialize(modelManager, shaderManager);
 
 	return true;
 }

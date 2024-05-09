@@ -6,7 +6,6 @@
 #include "Core/Array.hpp"
 
 class Allocator;
-class RenderDevice;
 
 struct FrustumPlanes;
 struct Mat4x4f;

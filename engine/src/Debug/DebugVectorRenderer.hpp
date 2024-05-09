@@ -24,7 +24,7 @@ class Window;
 namespace kokko
 {
 
-class MeshManager;
+class ModelManager;
 class ShaderManager;
 class World;
 
@@ -43,43 +43,28 @@ private:
 		Line,
 		WireCube,
 		WireSphere,
-		Rectangle,
-
-		// Dynamic
-		LineChain
+		Rectangle
 	};
 
 	struct Primitive
 	{
 		Mat4x4f transform;
 		Color color;
-		int dynamicMeshIndex;
 		PrimitiveType type;
 		bool screenSpace;
 	};
 
 	Allocator* allocator;
 	render::Device* renderDevice;
-	MeshManager* meshManager;
+	ModelManager* modelManager;
 	ShaderManager* shaderManager;
 
 	Primitive* primitives;
 	unsigned int primitiveCount;
 	unsigned int primitiveAllocated;
 
-	struct DynamicMesh
-	{
-		MeshId meshId;
-		size_t bufferSize;
-		bool used;
-	};
-
-	DynamicMesh* dynamicMeshes;
-	unsigned int dynamicMeshCount;
-	unsigned int dynamicMeshAllocated;
-
 	bool meshesInitialized;
-	MeshId staticMeshes[4];
+	ModelId staticMeshes[4];
 
 	ShaderId shaderId;
 
@@ -87,17 +72,14 @@ private:
 	uint32_t bufferPrimitivesAllocated;
 	uint32_t bufferAlignedSize;
 
-	DynamicMesh* GetDynamicMesh(size_t byteSize);
-
 public:
 	DebugVectorRenderer(Allocator* allocator, render::Device* renderDevice);
 	~DebugVectorRenderer();
 
-	void Initialize(MeshManager* meshManager, ShaderManager* shaderManager);
+	void Initialize(ModelManager* modelManager, ShaderManager* shaderManager);
 	void Deinitialize();
 
 	void DrawLineScreen(const Vec2f& start, const Vec2f& end, const Color& color);
-	void DrawLineChainScreen(size_t count, const Vec3f* points, const Color& color);
 	void DrawLine(const Vec3f& start, const Vec3f& end, const Color& color);
 
 	void DrawWireCube(const Mat4x4f& transform, const Color& color);

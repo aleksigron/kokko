@@ -11,7 +11,7 @@
 
 #include "Debug/DebugTextRenderer.hpp"
 
-DebugMemoryStats::DebugMemoryStats(AllocatorManager* allocatorManager, DebugTextRenderer* textRenderer) :
+DebugMemoryStats::DebugMemoryStats(AllocatorManager* allocatorManager, kokko::DebugTextRenderer* textRenderer) :
 	allocatorManager(allocatorManager),
 	textRenderer(textRenderer)
 {

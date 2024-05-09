@@ -22,7 +22,7 @@ public:
 private:
 	ShaderId shaderId;
 
-	MeshId meshId;
+	ModelId meshId;
 	render::BufferId uniformBufferId;
 };
 

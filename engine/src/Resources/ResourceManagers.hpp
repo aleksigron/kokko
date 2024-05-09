@@ -11,7 +11,6 @@ class TextureManager;
 
 struct ResourceManagers
 {
-	MeshManager* meshManager;
 	ModelManager* modelManager;
 	ShaderManager* shaderManager;
 	MaterialManager* materialManager;

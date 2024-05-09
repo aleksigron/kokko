@@ -18,12 +18,14 @@ namespace kokko
 
 struct ModelData;
 struct ModelMesh;
+struct ModelCreateInfo;
 
 class ModelLoader
 {
 public:
 	ModelLoader(Allocator* allocator);
 
+	bool LoadRuntime(ModelData* modelOut, Array<uint8_t>* geometryBufferOut, const ModelCreateInfo& createInfo);
 	bool LoadGlbFromBuffer(ModelData* modelOut, Array<uint8_t>* geometryBufferOut, ArrayView<const uint8_t> buffer);
 
 private:
@@ -38,13 +40,15 @@ private:
 
 	SortedArray<cgltf_buffer_view*> uniqueGeometryBufferViews;
 	Array<Range<size_t>> geometryBufferViewRangeMap;
+
+	void Reset();
 	
-	void LoadNode(
+	void LoadGltfNode(
 		int16_t parent,
 		cgltf_data* data,
 		cgltf_node* node);
 
-	bool LoadMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut);
+	bool LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut);
 };
 
 } // namespace kokko

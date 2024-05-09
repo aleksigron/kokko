@@ -14,6 +14,8 @@
 #include "Rendering/RenderResourceId.hpp"
 #include "Rendering/VertexFormat.hpp"
 
+#include "Resources/ModelLoader.hpp"
+
 class Allocator;
 
 namespace kokko
@@ -24,6 +26,7 @@ namespace render
 class Device;
 }
 
+struct MeshId;
 struct ModelId;
 class AssetLoader;
 class MeshManager;
@@ -52,6 +55,7 @@ struct ModelMesh
 
 struct ModelPrimitive
 {
+	uint32_t uniqueVertexCount;
 	uint32_t indexOffset;
 	uint32_t count;
 
@@ -76,6 +80,26 @@ struct ModelData
 	uint32_t attributeCount = 0;
 
 	render::BufferId bufferId;
+
+	bool hasUid = false;
+};
+
+struct ModelCreateInfo
+{
+	// For now, only support creating single mesh models at runtime
+
+	VertexFormat vertexFormat;
+
+	RenderPrimitiveMode primitiveMode = RenderPrimitiveMode::Triangles;
+
+	const void* vertexData = nullptr;
+	size_t vertexDataSize = 0;
+	uint32_t vertexCount = 0;
+
+	const void* indexData = nullptr;
+	size_t indexDataSize = 0;
+	uint32_t indexCount = 0;
+	RenderIndexType indexType = RenderIndexType::None;
 };
 
 class ModelManager
@@ -83,11 +107,23 @@ class ModelManager
 public:
 	ModelManager(Allocator* allocator, AssetLoader* assetLoader, render::Device* renderDevice);
 	~ModelManager();
+	
+	// Model create & delete
 
 	ModelId FindModelByUid(const kokko::Uid& uid);
 	ModelId FindModelByPath(const ConstStringView& path);
 
-	kokko::Uid GetModelUid(ModelId id) const;
+	ModelId CreateModel(const ModelCreateInfo& modelCreateInfo);
+
+	void RemoveModel(ModelId id);
+
+	// Model info setters
+
+	void SetMeshAABB(MeshId id, const AABB& bounds);
+
+	// Model info getters
+
+	Optional<Uid> GetModelUid(ModelId id) const;
 
 	ArrayView<const ModelNode> GetModelNodes(ModelId id) const;
 	ArrayView<const ModelMesh> GetModelMeshes(ModelId id) const;
@@ -98,7 +134,8 @@ private:
 	AssetLoader* assetLoader;
 	render::Device* renderDevice;
 
-	HashMap<kokko::Uid, uint32_t> uidMap;
+	ModelLoader modelLoader;
+	HashMap<Uid, uint32_t> uidMap;
 	Array<ModelData> models;
 
 	void CreateRenderData(ModelData& model, Array<uint8_t>& geometryBuffer);

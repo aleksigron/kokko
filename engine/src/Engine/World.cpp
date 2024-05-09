@@ -56,7 +56,7 @@ World::World(AllocatorManager* allocManager,
 
 	environmentSystem.CreateScope(allocManager, "EnvironmentSystem", allocator);
 	environmentSystem.New(environmentSystem.allocator, assetLoader, renderDevice,
-		resourceManagers.shaderManager, resourceManagers.meshManager, resourceManagers.textureManager);
+		resourceManagers.shaderManager, resourceManagers.modelManager, resourceManagers.textureManager);
 
 	meshComponentSystem.CreateScope(allocManager, "MeshComponentSystem", allocator);
 	meshComponentSystem.New(meshComponentSystem.allocator, resourceManagers.modelManager);
@@ -74,7 +74,7 @@ World::World(AllocatorManager* allocManager,
 
 	particleSystem.CreateScope(allocManager, "ParticleEffects", allocator);
 	particleSystem.New(
-		particleSystem.allocator, renderDevice, resourceManagers.shaderManager, resourceManagers.meshManager);
+		particleSystem.allocator, renderDevice, resourceManagers.shaderManager, resourceManagers.modelManager);
 
 	levelSerializer.Initialize(this, resourceManagers);
 }

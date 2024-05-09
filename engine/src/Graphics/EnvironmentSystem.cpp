@@ -20,8 +20,8 @@
 #include "Rendering/Uniform.hpp"
 
 #include "Resources/AssetLoader.hpp"
-#include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
+#include "Resources/ModelManager.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
@@ -91,13 +91,13 @@ EnvironmentSystem::EnvironmentSystem(
 	AssetLoader* assetLoader,
 	render::Device* renderDevice,
 	ShaderManager* shaderManager,
-	MeshManager* meshManager,
+	ModelManager* modelManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
 	assetLoader(assetLoader),
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
-	meshManager(meshManager),
+	modelManager(modelManager),
 	textureManager(textureManager),
 	components(allocator),
 	texturesToRemove(allocator),
@@ -108,7 +108,7 @@ EnvironmentSystem::EnvironmentSystem(
 	viewportUniformBufferId(0),
 	specularUniformBufferId(0),
 	samplerId(0),
-	cubeMeshId(MeshId::Null),
+	cubeMeshId(ModelId::Null),
 	resourcesUploaded(false)
 {
 	components.Reserve(4);
@@ -147,8 +147,8 @@ void EnvironmentSystem::Deinitialize()
 		renderDevice->DestroyFramebuffers(framebufferIds.GetCount(), framebufferIds.GetData());
 		framebufferIds.Clear();
 
-		meshManager->RemoveMesh(cubeMeshId);
-		cubeMeshId = MeshId::Null;
+		modelManager->RemoveModel(cubeMeshId);
+		cubeMeshId = ModelId::Null;
 
 		ReleaseEnvTextures(textureManager, emptyEnvironmentMap);
 	}
@@ -180,8 +180,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 		auto scope = renderDevice->CreateDebugScope(0, ConstStringView("EnvironSys_InitResources"));
 
 		// Create cube mesh
-		cubeMeshId = meshManager->CreateMesh();
-		MeshPresets::UploadCube(meshManager, cubeMeshId);
+		cubeMeshId = MeshPresets::CreateCube(modelManager);
 
 		// Create framebuffer
 
@@ -393,14 +392,15 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 			encoder->ScissorTestDisable();
 			encoder->BindSampler(0, samplerId);
 
-			const MeshDrawData* cubeMeshDraw = meshManager->GetDrawData(cubeMeshId);
+			auto& mesh = modelManager->GetModelMeshes(cubeMeshId)[0];
+			auto& prim = modelManager->GetModelPrimitives(cubeMeshId)[0];
 
 			// Load shader
 
 			ShaderId equirectShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/preprocess/equirect_to_cube.glsl"));
 			const ShaderData& equirectShader = shaderManager->GetShaderData(equirectShaderId);
 
-			encoder->BindVertexArray(cubeMeshDraw->vertexArrayObject);
+			encoder->BindVertexArray(prim.vertexArrayId);
 			encoder->UseShaderProgram(equirectShader.driverId);
 
 			BindTexture(encoder, equirectShader, "equirectangular_map"_hash, equirectTextureId);
@@ -424,8 +424,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 					BindBufferRange(encoder, UniformBlockBinding::Viewport,
 						viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-					encoder->DrawIndexed(
-						cubeMeshDraw->primitiveMode, cubeMeshDraw->indexType, cubeMeshDraw->count, 0, 0);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
 				}
 			}
 
@@ -468,8 +467,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 					BindBufferRange(encoder, UniformBlockBinding::Viewport,
 						viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-					encoder->DrawIndexed(
-						cubeMeshDraw->primitiveMode, cubeMeshDraw->indexType, cubeMeshDraw->count, 0, 0);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
 				}
 			}
 
@@ -517,8 +515,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 						BindBufferRange(encoder, UniformBlockBinding::Viewport,
 							viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-						encoder->DrawIndexed(
-							cubeMeshDraw->primitiveMode, cubeMeshDraw->indexType, cubeMeshDraw->count, 0, 0);
+						encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
 					}
 				}
 			}

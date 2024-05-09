@@ -37,7 +37,7 @@ class GraphicsFeature;
 class LightManager;
 class MaterialManager;
 class MeshComponentSystem;
-class MeshManager;
+class ModelManager;
 class PostProcessRenderer;
 class RenderDebugSettings;
 class RenderGraphResources;
@@ -96,7 +96,7 @@ private:
 	LightManager* lightManager;
 	EnvironmentSystem* environmentSystem;
 	ShaderManager* shaderManager;
-	MeshManager* meshManager;
+	ModelManager* modelManager;
 	MaterialManager* materialManager;
 	TextureManager* textureManager;
 	const RenderDebugSettings* renderDebug;

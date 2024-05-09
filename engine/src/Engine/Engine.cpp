@@ -29,7 +29,6 @@
 #include "Rendering/Renderer.hpp"
 
 #include "Resources/MaterialManager.hpp"
-#include "Resources/MeshManager.hpp"
 #include "Resources/ModelManager.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
@@ -70,9 +69,6 @@ Engine::Engine(
 
 	debugNameAllocator = allocatorManager->CreateAllocatorScope("EntityDebugNames", alloc);
 
-	meshManager.CreateScope(allocatorManager, "MeshManager", alloc);
-	meshManager.New(meshManager.allocator, assetLoader, renderDevice);
-
 	modelManager.CreateScope(allocatorManager, "ModelManager", alloc);
 	modelManager.New(modelManager.allocator, assetLoader, renderDevice);
 
@@ -103,7 +99,6 @@ Engine::~Engine()
 	shaderManager.Delete();
 	textureManager.Delete();
 	modelManager.Delete();
-	meshManager.Delete();
 	debug.Delete();
 	windowManager.Delete();
 
@@ -120,7 +115,7 @@ bool Engine::Initialize(const kokko::WindowSettings& windowSettings)
 
 	renderDevice->InitializeDefaults();
 
-	if (debug.instance->Initialize(windowManager.instance->GetWindow(), meshManager.instance,
+	if (debug.instance->Initialize(windowManager.instance->GetWindow(), modelManager.instance,
 		shaderManager.instance, textureManager.instance) == false)
 		return false;
 
@@ -182,7 +177,6 @@ void Engine::SetAppPointer(void* app)
 kokko::ResourceManagers Engine::GetResourceManagers()
 {
 	kokko::ResourceManagers resManagers;
-	resManagers.meshManager = meshManager.instance;
 	resManagers.modelManager = modelManager.instance;
 	resManagers.shaderManager = shaderManager.instance;
 	resManagers.materialManager = materialManager.instance;

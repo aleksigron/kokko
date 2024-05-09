@@ -17,7 +17,7 @@
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/BitmapFont.hpp"
-#include "Resources/MeshManager.hpp"
+#include "Resources/ModelManager.hpp"
 #include "Resources/ShaderManager.hpp"
 
 #include "System/Filesystem.hpp"
@@ -27,6 +27,9 @@ struct UniformBlock
 	alignas(16) Vec2f shadowOffset;
 };
 
+namespace kokko
+{
+
 DebugTextRenderer::DebugTextRenderer(
 	Allocator* allocator,
 	kokko::render::Device* renderDevice,
@@ -35,12 +38,12 @@ DebugTextRenderer::DebugTextRenderer(
 	renderDevice(renderDevice),
 	filesystem(filesystem),
 	shaderManager(nullptr),
-	meshManager(nullptr),
+	modelManager(nullptr),
 	stringCharCount(0),
 	stringData(allocator),
 	displayData(allocator),
 	scaleFactor(1.0f),
-	meshId(kokko::MeshId{}),
+	meshId(kokko::ModelId{}),
 	bufferObjectId(0),
 	vertexData(allocator),
 	indexData(allocator)
@@ -56,10 +59,10 @@ DebugTextRenderer::~DebugTextRenderer()
 }
 
 bool DebugTextRenderer::Initialize(kokko::ShaderManager* shaderManager,
-	kokko::MeshManager* meshManager, kokko::TextureManager* textureManager)
+	kokko::ModelManager* modelManager, kokko::TextureManager* textureManager)
 {
 	this->shaderManager = shaderManager;
-	this->meshManager = meshManager;
+	this->modelManager = modelManager;
 
 	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("DebugText_InitResources"));
 
@@ -151,11 +154,6 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 	{
 		auto scope = encoder->CreateDebugScope(0, kokko::ConstStringView("DebugText_Render"));
 
-		if (meshId == kokko::MeshId::Null)
-		{
-			meshId = meshManager->CreateMesh();
-		}
-
 		if (bufferObjectId == 0)
 		{
 			renderDevice->CreateBuffers(1, &bufferObjectId);
@@ -193,9 +191,11 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 
 		// Draw
 
-		const kokko::MeshDrawData* draw = meshManager->GetDrawData(meshId);
-		encoder->BindVertexArray(draw->vertexArrayObject);
-		encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
+		auto mesh = modelManager->GetModelMeshes(meshId)[0];
+		auto prim = modelManager->GetModelPrimitives(meshId)[0];
+		
+		encoder->BindVertexArray(prim.vertexArrayId);
+		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
 
 		// Clear data
 
@@ -320,17 +320,22 @@ void DebugTextRenderer::CreateAndUploadData()
 	VertexFormat format(attributes, sizeof(attributes) / sizeof(attributes[0]));
 	format.CalcOffsetsAndSizeInterleaved();
 
-	kokko::IndexedVertexData data;
-	data.vertexFormat = format;
-	data.primitiveMode = RenderPrimitiveMode::Triangles;
-	data.vertexData = vertexData.GetData();
-	data.vertexDataSize = vertexData.GetCount() * sizeof(vertexData[0]);
-	data.vertexCount = vertexData.GetCount() / static_cast<int>(componentCount);
-	data.indexData = indexData.GetData();
-	data.indexDataSize = indexData.GetCount() * sizeof(indexData[0]);
-	data.indexCount = static_cast<uint32_t>(indexData.GetCount());
+	kokko::ModelCreateInfo info;
+	info.vertexFormat = format;
+	info.primitiveMode = RenderPrimitiveMode::Triangles;
+	info.vertexData = vertexData.GetData();
+	info.vertexDataSize = vertexData.GetCount() * sizeof(vertexData[0]);
+	info.vertexCount = vertexData.GetCount() / static_cast<int>(componentCount);
+	info.indexData = indexData.GetData();
+	info.indexDataSize = indexData.GetCount() * sizeof(indexData[0]);
+	info.indexCount = static_cast<uint32_t>(indexData.GetCount());
 
-	meshManager->UploadIndexed(meshId, data);
+	if (meshId != kokko::ModelId::Null)
+	{
+		modelManager->RemoveModel(meshId);
+	}
+
+	meshId = modelManager->CreateModel(info);
 
 	// Update shadow offset
 
@@ -340,3 +345,5 @@ void DebugTextRenderer::CreateAndUploadData()
 
 	renderDevice->SetBufferSubData(bufferObjectId, 0, sizeof(UniformBlock), &uniforms);
 }
+
+} // namespace kokko

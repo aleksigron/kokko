@@ -20,7 +20,7 @@ namespace kokko
 
 class AssetLoader;
 class Filesystem;
-class MeshManager;
+class ModelManager;
 class ShaderManager;
 class TextureManager;
 
@@ -73,7 +73,7 @@ private:
 	AssetLoader* assetLoader;
 	kokko::render::Device* renderDevice;
 	ShaderManager* shaderManager;
-	MeshManager* meshManager;
+	ModelManager* modelManager;
 	TextureManager* textureManager;
 
 	Array<EnvironmentComponent> components;
@@ -90,7 +90,7 @@ private:
 	render::BufferId viewportUniformBufferId;
 	render::BufferId specularUniformBufferId;
 	render::SamplerId samplerId;
-	MeshId cubeMeshId;
+	ModelId cubeMeshId;
 
 	bool resourcesUploaded;
 
@@ -102,7 +102,7 @@ public:
 		AssetLoader* assetLoader,
 		kokko::render::Device* renderDevice,
 		ShaderManager* shaderManager,
-		MeshManager* meshManager,
+		ModelManager* modelManager,
 		TextureManager* textureManager);
 	EnvironmentSystem(const EnvironmentSystem&) = delete;
 	EnvironmentSystem(EnvironmentSystem&&) = delete;

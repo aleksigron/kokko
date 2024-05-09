@@ -35,7 +35,7 @@ private:
 
 	ShaderId shaderId;
 
-	MeshId meshId;
+	ModelId meshId;
 
 	unsigned int renderOrder;
 

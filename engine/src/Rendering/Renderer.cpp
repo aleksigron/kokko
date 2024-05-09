@@ -55,8 +55,8 @@
 #include "Rendering/RenderPass.hpp"
 
 #include "Resources/MaterialManager.hpp"
-#include "Resources/MeshManager.hpp"
 #include "Resources/MeshPresets.hpp"
+#include "Resources/ModelManager.hpp"
 #include "Resources/ResourceManagers.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
@@ -120,7 +120,7 @@ Renderer::Renderer(
 	lightManager(lightManager),
 	environmentSystem(environmentSystem),
 	shaderManager(resourceManagers.shaderManager),
-	meshManager(resourceManagers.meshManager),
+	modelManager(resourceManagers.modelManager),
 	materialManager(resourceManagers.materialManager),
 	textureManager(resourceManagers.textureManager),
 	renderDebug(renderDebug),
@@ -133,10 +133,10 @@ Renderer::Renderer(
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	renderGraphResources = MakeUnique<kokko::RenderGraphResources>(allocator, renderDevice, meshManager);
+	renderGraphResources = MakeUnique<kokko::RenderGraphResources>(allocator, renderDevice);
 	renderTargetContainer = MakeUnique<RenderTargetContainer>(allocator, allocator, renderDevice);
 	postProcessRenderer = MakeUnique<kokko::PostProcessRenderer>(
-		allocator, encoder, meshManager, shaderManager, renderTargetContainer.Get());
+		allocator, encoder, modelManager, shaderManager, renderTargetContainer.Get());
 
 	shadowMaterial = MaterialId::Null;
 	fallbackMeshMaterial = MaterialId::Null;
@@ -224,7 +224,7 @@ void Renderer::Initialize()
 
 		kokko::GraphicsFeature::InitializeParameters parameters;
 		parameters.renderDevice = device;
-		parameters.meshManager = meshManager;
+		parameters.modelManager = modelManager;
 		parameters.shaderManager = shaderManager;
 
 		for (auto feature : graphicsFeatures)
@@ -238,7 +238,7 @@ void Renderer::Deinitialize()
 {
 	kokko::GraphicsFeature::InitializeParameters parameters;
 	parameters.renderDevice = device;
-	parameters.meshManager = meshManager;
+	parameters.modelManager = modelManager;
 	parameters.shaderManager = shaderManager;
 
 	for (auto feature : graphicsFeatures)
@@ -322,8 +322,6 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 
 	uint64_t lastVpIdx = MaxViewportCount;
 	render::ShaderId lastShaderProgram = render::ShaderId();
-	const MeshDrawData* draw = nullptr;
-	MeshId lastMeshId = MeshId{ 0 };
 	MaterialId lastMaterialId = MaterialId{ 0 };
 
 	Array<render::BufferId>& objUniformBuffers = objectUniformBufferLists[currentFrameIndex];
@@ -333,7 +331,7 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 	kokko::GraphicsFeature::RenderParameters featureRenderParams
 	{
 		postProcessRenderer.Get(),
-		meshManager,
+		modelManager,
 		shaderManager,
 		textureManager,
 		cameraSystem,
@@ -412,15 +410,15 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 				encoder->BindBufferRange(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object,
 					objUniformBuffers[bufferIndex], objectInBuffer * objectUniformBlockStride, rangeSize);
 
-				MeshId mesh = componentSystem->data.mesh[objIdx];
-
-				if (mesh != lastMeshId)
+				MeshId meshId = componentSystem->data.mesh[objIdx];
+				auto& mesh = modelManager->GetModelMeshes(meshId.modelId)[meshId.meshIndex];
+				auto primitives = modelManager->GetModelPrimitives(meshId.modelId);
+				for (uint16_t primIdx = mesh.primitiveOffset, end = mesh.primitiveOffset + mesh.primitiveCount; primIdx != end; ++primIdx)
 				{
-					lastMeshId = mesh;
-					draw = meshManager->GetDrawData(mesh);
-					encoder->BindVertexArray(draw->vertexArrayObject);
+					auto& prim = primitives[primIdx];
+					encoder->BindVertexArray(prim.vertexArrayId);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
 				}
-				encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
 
 				objectDrawsProcessed += 1;
 			}
@@ -435,8 +433,6 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 				// Reset state cache
 				lastVpIdx = MaxViewportCount;
 				lastShaderProgram = render::ShaderId();
-				draw = nullptr;
-				lastMeshId = MeshId{ 0 };
 				lastMaterialId = MaterialId{ 0 };
 
 				// TODO: manage sampler state more robustly
@@ -912,7 +908,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		kokko::GraphicsFeature::UploadParameters uploadParameters
 		{
 			postProcessRenderer.Get(),
-			meshManager,
+			modelManager,
 			shaderManager,
 			textureManager,
 			cameraSystem,
@@ -986,15 +982,20 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer)
 
 			encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, normalDebugBufferId);
 
-			MeshId mesh = componentSystem->GetMeshId(component);
-			if (mesh != MeshId::Null)
+			MeshId meshId = componentSystem->GetMeshId(component);
+			if (meshId != MeshId::Null)
 			{
-				int meshVertexCount = meshManager->GetUniqueVertexCount(mesh);
-				const MeshDrawData* draw = meshManager->GetDrawData(mesh);
-				encoder->BindVertexArray(draw->vertexArrayObject);
+				auto& mesh = modelManager->GetModelMeshes(meshId.modelId)[meshId.meshIndex];
+				auto primitives = modelManager->GetModelPrimitives(meshId.modelId);
+				for (uint16_t idx = mesh.primitiveOffset, end = mesh.primitiveOffset + mesh.primitiveCount; idx != end; ++idx)
+				{
+					auto& prim = primitives[idx];
+					int meshVertexCount = prim.uniqueVertexCount;
+					encoder->BindVertexArray(prim.vertexArrayId);
 
-				// Geometry shader will turn points into lines
-				encoder->Draw(RenderPrimitiveMode::Points, 0, meshVertexCount);
+					// Geometry shader will turn points into lines
+					encoder->Draw(RenderPrimitiveMode::Points, 0, meshVertexCount);
+				}
 			}
 		}
 	}
