@@ -19,7 +19,7 @@
 #include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/Uniform.hpp"
 
-#include "Resources/MeshManager.hpp"
+#include "Resources/ModelManager.hpp"
 #include "Resources/MeshPresets.hpp"
 #include "Resources/ShaderManager.hpp"
 
@@ -51,12 +51,12 @@ ParticleSystem::ParticleSystem(
 	Allocator* allocator,
 	kokko::render::Device* renderDevice,
 	ShaderManager* shaderManager,
-	MeshManager* meshManager) :
+	ModelManager* modelManager) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
-	meshManager(meshManager),
-	quadMeshId(MeshId{ 0 }),
+	modelManager(modelManager),
+	quadMeshId(ModelId::Null),
 	initUpdateShaderId(ShaderId{ 0 }),
 	emitShaderId(ShaderId{ 0 }),
 	simulateShaderId(ShaderId{ 0 }),
@@ -89,15 +89,14 @@ void ParticleSystem::Initialize()
 	VertexFormat format(vertexAttr, sizeof(vertexAttr) / sizeof(vertexAttr[0]));
 	format.CalcOffsetsAndSizeInterleaved();
 
-	VertexData vertexData;
-	vertexData.vertexFormat = format;
-	vertexData.primitiveMode = RenderPrimitiveMode::TriangleStrip;
-	vertexData.vertexData = vertexBuffer;
-	vertexData.vertexDataSize = sizeof(vertexBuffer);
-	vertexData.vertexCount = sizeof(vertexBuffer) / sizeof(vertexBuffer[0]);
+	ModelCreateInfo modelInfo;
+	modelInfo.vertexFormat = format;
+	modelInfo.primitiveMode = RenderPrimitiveMode::TriangleStrip;
+	modelInfo.vertexData = vertexBuffer;
+	modelInfo.vertexDataSize = sizeof(vertexBuffer);
+	modelInfo.vertexCount = sizeof(vertexBuffer) / sizeof(vertexBuffer[0]);
 
-	quadMeshId = meshManager->CreateMesh();
-	meshManager->Upload(quadMeshId, vertexData);
+	quadMeshId = modelManager->CreateModel(modelInfo);
 
 	initUpdateShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView("engine/shaders/particles/particle_init_update.glsl"));
 	emitShaderId = shaderManager->FindShaderByPath(kokko::ConstStringView("engine/shaders/particles/particle_emit.glsl"));
@@ -268,9 +267,10 @@ void ParticleSystem::Render(const RenderParameters& parameters)
 	const ShaderData& renderShader = shaderManager->GetShaderData(renderShaderId);
 	encoder->UseShaderProgram(renderShader.driverId);
 
-	const MeshDrawData* draw = meshManager->GetDrawData(quadMeshId);
-	encoder->BindVertexArray(draw->vertexArrayObject);
-	encoder->DrawIndirect(draw->primitiveMode, IndirectOffsetRender);
+	auto& mesh = modelManager->GetModelMeshes(quadMeshId)[0];
+	auto& prim = modelManager->GetModelPrimitives(quadMeshId)[0];
+	encoder->BindVertexArray(prim.vertexArrayId);
+	encoder->DrawIndirect(mesh.primitiveMode, IndirectOffsetRender);
 
 	// Swap alive lists
 

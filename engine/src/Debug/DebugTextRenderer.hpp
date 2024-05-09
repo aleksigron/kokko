@@ -18,7 +18,7 @@ namespace kokko
 {
 
 class Filesystem;
-class MeshManager;
+class ModelManager;
 class TextureManager;
 class ShaderManager;
 
@@ -29,7 +29,6 @@ class CommandEncoder;
 class Device;
 
 } // namespace render
-} // namespace kokko
 
 class DebugTextRenderer
 {
@@ -42,36 +41,36 @@ private:
 	};
 
 	Allocator* allocator;
-	kokko::render::Device* renderDevice;
-	kokko::Filesystem* filesystem;
-	kokko::ShaderManager* shaderManager;
-	kokko::MeshManager* meshManager;
+	render::Device* renderDevice;
+	Filesystem* filesystem;
+	ShaderManager* shaderManager;
+	ModelManager* modelManager;
 
-	kokko::UniquePtr<BitmapFont> font;
+	UniquePtr<BitmapFont> font;
 	size_t stringCharCount;
-	kokko::Array<char> stringData;
-	kokko::Array<DisplayData> displayData;
+	Array<char> stringData;
+	Array<DisplayData> displayData;
 
 	Vec2f frameSize;
 	Vec2f scaledFrameSize;
 	float scaleFactor;
 
-	kokko::MeshId meshId;
-	kokko::Array<float> vertexData;
-	kokko::Array<unsigned short> indexData;
+	ModelId meshId;
+	Array<float> vertexData;
+	Array<unsigned short> indexData;
 
-	kokko::render::BufferId bufferObjectId;
+	render::BufferId bufferObjectId;
 
 	void CreateAndUploadData();
 
-	bool LoadBitmapFont(kokko::TextureManager* textureManager, const char* filePath);
+	bool LoadBitmapFont(TextureManager* textureManager, const char* filePath);
 
 public:
-	DebugTextRenderer(Allocator* allocator, kokko::render::Device* renderDevice, kokko::Filesystem* filesystem);
+	DebugTextRenderer(Allocator* allocator, render::Device* renderDevice, Filesystem* filesystem);
 	~DebugTextRenderer();
 
-	bool Initialize(kokko::ShaderManager* shaderManager,
-		kokko::MeshManager* meshManager, kokko::TextureManager* textureManager);
+	bool Initialize(ShaderManager* shaderManager,
+		ModelManager* modelManager, TextureManager* textureManager);
 
 	bool HasValidFont() const { return font != nullptr; }
 
@@ -87,17 +86,19 @@ public:
 	/**
 	 * Add a text to be rendered this frame at a specified normalized position.
 	 */
-	void AddTextNormalized(kokko::ConstStringView str, Vec2f position);
+	void AddTextNormalized(ConstStringView str, Vec2f position);
 
 	/**
 	 * Add a text to be rendered this frame at a specified pixel position.
 	 */
-	void AddText(kokko::ConstStringView str, Vec2f position);
+	void AddText(ConstStringView str, Vec2f position);
 
 	/**
 	 * Add a text to be rendered this frame in a specified area.
 	 */
-	void AddText(kokko::ConstStringView str, const Rectanglef& area);
+	void AddText(ConstStringView str, const Rectanglef& area);
 
-	void Render(kokko::render::CommandEncoder* encoder);
+	void Render(render::CommandEncoder* encoder);
 };
+
+} // namespace kokko

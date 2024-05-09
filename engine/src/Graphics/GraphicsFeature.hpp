@@ -36,7 +36,6 @@ public:
 	struct InitializeParameters
 	{
 		render::Device* renderDevice;
-		MeshManager* meshManager;
 		ModelManager* modelManager;
 		ShaderManager* shaderManager;
 	};
@@ -47,7 +46,6 @@ public:
 
 		// Resource managers
 
-		MeshManager* meshManager;
 		ModelManager* modelManager;
 		ShaderManager* shaderManager;
 		TextureManager* textureManager;

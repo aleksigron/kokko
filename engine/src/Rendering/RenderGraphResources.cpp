@@ -6,15 +6,11 @@
 #include "Rendering/RenderDevice.hpp"
 #include "Rendering/RenderTypes.hpp"
 
-#include "Resources/MeshManager.hpp"
-#include "Resources/MeshPresets.hpp"
-
 namespace kokko
 {
 
-RenderGraphResources::RenderGraphResources(kokko::render::Device* renderDevice, MeshManager* meshManager) :
-	renderDevice(renderDevice),
-	meshManager(meshManager)
+RenderGraphResources::RenderGraphResources(kokko::render::Device* renderDevice) :
+	renderDevice(renderDevice)
 {
 	framebufferGbuffer.SetRenderDevice(renderDevice);
 	framebufferShadow.SetRenderDevice(renderDevice);

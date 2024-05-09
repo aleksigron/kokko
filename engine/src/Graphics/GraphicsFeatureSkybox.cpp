@@ -11,7 +11,7 @@
 #include "Rendering/StaticUniformBuffer.hpp"
 #include "Rendering/Uniform.hpp"
 
-#include "Resources/MeshManager.hpp"
+#include "Resources/ModelManager.hpp"
 #include "Resources/MeshPresets.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
@@ -31,7 +31,7 @@ struct SkyboxUniformBlock
 
 GraphicsFeatureSkybox::GraphicsFeatureSkybox() :
 	shaderId(ShaderId::Null),
-	meshId(MeshId::Null),
+	meshId(ModelId::Null),
 	uniformBufferId(0)
 {
 }
@@ -40,8 +40,7 @@ void GraphicsFeatureSkybox::Initialize(const InitializeParameters& parameters)
 {
 	kokko::render::Device* device = parameters.renderDevice;
 
-	meshId = parameters.meshManager->CreateMesh();
-	MeshPresets::UploadCube(parameters.meshManager, meshId);
+	meshId = MeshPresets::CreateCube(parameters.modelManager);
 
 	auto shaderPath = ConstStringView("engine/shaders/skybox/skybox.glsl");
 	shaderId = parameters.shaderManager->FindShaderByPath(shaderPath);
@@ -55,8 +54,8 @@ void GraphicsFeatureSkybox::Deinitialize(const InitializeParameters& parameters)
 	parameters.renderDevice->DestroyBuffers(1, &uniformBufferId);
 	uniformBufferId = render::BufferId();
 
-	parameters.meshManager->RemoveMesh(meshId);
-	meshId = MeshId::Null;
+	parameters.modelManager->RemoveModel(meshId);
+	meshId = ModelId::Null;
 }
 
 void GraphicsFeatureSkybox::Upload(const UploadParameters& parameters)
@@ -111,10 +110,10 @@ void GraphicsFeatureSkybox::Render(const RenderParameters& parameters)
 
 	encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId);
 
-	const MeshDrawData* draw = parameters.meshManager->GetDrawData(meshId);
-	encoder->BindVertexArray(draw->vertexArrayObject);
-
-	encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
+	auto& mesh = parameters.modelManager->GetModelMeshes(meshId)[0];
+	auto& prim = parameters.modelManager->GetModelPrimitives(meshId)[0];
+	encoder->BindVertexArray(prim.vertexArrayId);
+	encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
 }
 
 }

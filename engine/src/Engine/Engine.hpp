@@ -55,7 +55,6 @@ private:
 	InstanceAllocatorPair<kokko::WindowManager> windowManager;
 	kokko::UniquePtr<Time> time;
 	InstanceAllocatorPair<Debug> debug;
-	InstanceAllocatorPair<kokko::MeshManager> meshManager;
 	InstanceAllocatorPair<kokko::ModelManager> modelManager;
 	InstanceAllocatorPair<kokko::TextureManager> textureManager;
 	InstanceAllocatorPair<kokko::ShaderManager> shaderManager;
@@ -84,7 +83,6 @@ public:
 	kokko::render::CommandEncoder* GetCommandEncoder() { return commandEncoder.Get(); }
 	Debug* GetDebug() { return debug.instance; }
 	kokko::Filesystem* GetFilesystem() { return filesystem; }
-	kokko::MeshManager* GetMeshManager() { return meshManager.instance; }
 	kokko::ModelManager* GetModelManager() { return modelManager.instance; }
 	kokko::ShaderManager* GetShaderManager() { return shaderManager.instance; }
 	kokko::TextureManager* GetTextureManager() { return textureManager.instance; }

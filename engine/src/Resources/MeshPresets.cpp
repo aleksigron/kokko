@@ -1,6 +1,7 @@
 #include "Resources/MeshPresets.hpp"
 
-#include "Resources/MeshManager.hpp"
+#include "Resources/MeshId.hpp"
+#include "Resources/ModelManager.hpp"
 
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/VertexFormat.hpp"
@@ -8,7 +9,7 @@
 namespace kokko
 {
 
-void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
+ModelId MeshPresets::CreateCube(ModelManager* modelManager)
 {
 	static const float vertexData[] = {
 		-0.5f, -0.5f, -0.5f,
@@ -34,25 +35,27 @@ void MeshPresets::UploadCube(MeshManager* meshManager, MeshId meshId)
 	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
 	vertexFormatPos.CalcOffsetsAndSizeInterleaved();
 
-	IndexedVertexData data;
-	data.vertexFormat = vertexFormatPos;
-	data.primitiveMode = RenderPrimitiveMode::Triangles;
-	data.vertexData = vertexData;
-	data.vertexDataSize = sizeof(vertexData);
-	data.vertexCount = sizeof(vertexData) / (sizeof(vertexData[0]) * 3);
-	data.indexData = indexData;
-	data.indexDataSize = sizeof(indexData);
-	data.indexCount = sizeof(indexData) / sizeof(indexData[0]);
+	ModelCreateInfo info;
+	info.vertexFormat = vertexFormatPos;
+	info.primitiveMode = RenderPrimitiveMode::Triangles;
+	info.vertexData = vertexData;
+	info.vertexDataSize = sizeof(vertexData);
+	info.vertexCount = sizeof(vertexData) / (sizeof(vertexData[0]) * 3);
+	info.indexData = indexData;
+	info.indexDataSize = sizeof(indexData);
+	info.indexCount = sizeof(indexData) / sizeof(indexData[0]);
 
-	meshManager->UploadIndexed(meshId, data);
+	ModelId modelId = modelManager->CreateModel(info);
 
 	AABB bounds;
 	bounds.center = Vec3f(0.0f, 0.0f, 0.0f);
 	bounds.extents = Vec3f(0.5f, 0.5f, 0.5f);
-	meshManager->SetBoundingBox(meshId, bounds);
+	modelManager->SetMeshAABB(MeshId{modelId, 0}, bounds);
+
+	return modelId;
 }
 
-void MeshPresets::UploadPlane(MeshManager* meshManager, MeshId meshId)
+ModelId MeshPresets::CreatePlane(ModelManager* modelManager)
 {
 	static const float vertexData[] = {
 		-1.0f, -1.0f, 0.0f,
@@ -67,16 +70,23 @@ void MeshPresets::UploadPlane(MeshManager* meshManager, MeshId meshId)
 	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
 	vertexFormatPos.CalcOffsetsAndSizeInterleaved();
 
-	IndexedVertexData data;
-	data.vertexFormat = vertexFormatPos;
-	data.vertexData = vertexData;
-	data.vertexDataSize = sizeof(vertexData);
-	data.vertexCount = sizeof(vertexData) / (sizeof(vertexData[0]) * 3);
-	data.indexData = indexData;
-	data.indexDataSize = sizeof(indexData);
-	data.indexCount = sizeof(indexData) / sizeof(indexData[0]);
+	ModelCreateInfo info;
+	info.vertexFormat = vertexFormatPos;
+	info.vertexData = vertexData;
+	info.vertexDataSize = sizeof(vertexData);
+	info.vertexCount = sizeof(vertexData) / (sizeof(vertexData[0]) * 3);
+	info.indexData = indexData;
+	info.indexDataSize = sizeof(indexData);
+	info.indexCount = sizeof(indexData) / sizeof(indexData[0]);
 
-	meshManager->UploadIndexed(meshId, data);
+	ModelId modelId = modelManager->CreateModel(info);
+
+	AABB bounds;
+	bounds.center = Vec3f(0.0f, 0.0f, 0.0f);
+	bounds.extents = Vec3f(0.5f, 0.5f, 0.5f);
+	modelManager->SetMeshAABB(MeshId{modelId, 0}, bounds);
+
+	return modelId;
 }
 
 } // namespace kokko

@@ -65,7 +65,7 @@ struct LightingUniformBlock
 GraphicsFeatureDeferredLighting::GraphicsFeatureDeferredLighting(Allocator* allocator) :
 	lightResultArray(allocator),
 	shaderId(ShaderId::Null),
-	meshId(MeshId::Null),
+	meshId(ModelId::Null),
 	renderOrder(0),
 	uniformBufferId(0),
 	brdfLutTextureId(0)
@@ -93,8 +93,7 @@ void GraphicsFeatureDeferredLighting::Initialize(const InitializeParameters& par
 	shaderId = parameters.shaderManager->FindShaderByPath(shaderPath);
 
 	// Create screen filling quad
-	meshId = parameters.modelManager->CreateMesh();
-	MeshPresets::UploadPlane(parameters.meshManager, meshId);
+	meshId = MeshPresets::CreatePlane(parameters.modelManager);
 }
 
 void GraphicsFeatureDeferredLighting::Deinitialize(const InitializeParameters& parameters)
@@ -125,10 +124,10 @@ void GraphicsFeatureDeferredLighting::Deinitialize(const InitializeParameters& p
 		samplers[2] = render::SamplerId();
 	}
 
-	if (meshId != MeshId::Null)
+	if (meshId != ModelId::Null)
 	{
-		parameters.meshManager->RemoveMesh(meshId);
-		meshId = MeshId::Null;
+		parameters.modelManager->RemoveModel(meshId);
+		meshId = ModelId::Null;
 	}
 }
 
@@ -374,9 +373,10 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 		const ShaderData& calcBrdfShader = parameters.shaderManager->GetShaderData(calcBrdfShaderId);
 		encoder->UseShaderProgram(calcBrdfShader.driverId);
 
-		const MeshDrawData* meshDraw = parameters.meshManager->GetDrawData(meshId);
-		encoder->BindVertexArray(meshDraw->vertexArrayObject);
-		encoder->DrawIndexed(meshDraw->primitiveMode, meshDraw->indexType, meshDraw->count, 0, 0);
+		auto& mesh = parameters.modelManager->GetModelMeshes(meshId)[0];
+		auto& prim = parameters.modelManager->GetModelPrimitives(meshId)[0];
+		encoder->BindVertexArray(prim.vertexArrayId);
+		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
 
 		return;
 	}

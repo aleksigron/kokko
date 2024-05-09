@@ -12,7 +12,10 @@
 #include "Rendering/CameraSystem.hpp"
 #include "Rendering/Renderer.hpp"
 
-DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, kokko::DebugVectorRenderer* vectorRenderer) :
+namespace kokko
+{
+
+DebugCulling::DebugCulling(DebugTextRenderer* textRenderer, DebugVectorRenderer* vectorRenderer) :
 	textRenderer(textRenderer),
 	vectorRenderer(vectorRenderer),
 	cullingCameraIsLocked(false)
@@ -28,7 +31,7 @@ void DebugCulling::SetLockCullingCamera(bool lockCullingCamera)
 	cullingCameraIsLocked = lockCullingCamera;
 }
 
-void DebugCulling::UpdateAndDraw(kokko::World* world)
+void DebugCulling::UpdateAndDraw(World* world)
 {
 	if (cullingCameraIsLocked)
 	{
@@ -49,3 +52,5 @@ void DebugCulling::UpdateAndDraw(kokko::World* world)
 		vectorRenderer->DrawWireFrustum(transform, params, white);
 	}
 }
+
+} // namespace kokko

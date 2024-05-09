@@ -6,7 +6,7 @@
 #include "Rendering/CommandEncoder.hpp"
 #include "Rendering/Uniform.hpp"
 
-#include "Resources/MeshManager.hpp"
+#include "Resources/ModelManager.hpp"
 #include "Resources/MeshPresets.hpp"
 #include "Resources/ShaderManager.hpp"
 
@@ -15,15 +15,15 @@ namespace kokko
 
 PostProcessRenderer::PostProcessRenderer(
 	kokko::render::CommandEncoder* encoder,
-	MeshManager* meshManager,
+	ModelManager* modelManager,
 	ShaderManager* shaderManager,
 	RenderTargetContainer* renderTargetContainer):
 	encoder(encoder),
-	meshManager(meshManager),
+	modelManager(modelManager),
 	shaderManager(shaderManager),
 	renderTargetContainer(renderTargetContainer)
 {
-	fullscreenMeshId = MeshId{ 0 };
+	fullscreenMeshId = ModelId::Null;
 }
 
 PostProcessRenderer::~PostProcessRenderer()
@@ -35,16 +35,15 @@ void PostProcessRenderer::Initialize()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	fullscreenMeshId = meshManager->CreateMesh();
-	MeshPresets::UploadPlane(meshManager, fullscreenMeshId);
+	fullscreenMeshId = MeshPresets::CreatePlane(modelManager);
 }
 
 void PostProcessRenderer::Deinitialize()
 {
-	if (fullscreenMeshId != MeshId::Null)
+	if (fullscreenMeshId != ModelId::Null)
 	{
-		meshManager->RemoveMesh(fullscreenMeshId);
-		fullscreenMeshId = MeshId{ 0 };
+		modelManager->RemoveModel(fullscreenMeshId);
+		fullscreenMeshId = ModelId::Null;
 	}
 }
 
@@ -57,8 +56,9 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	const MeshDrawData* draw = meshManager->GetDrawData(fullscreenMeshId);
-	encoder->BindVertexArray(draw->vertexArrayObject);
+	auto& mesh = modelManager->GetModelMeshes(fullscreenMeshId)[0];
+	auto& prim = modelManager->GetModelPrimitives(fullscreenMeshId)[0];
+	encoder->BindVertexArray(prim.vertexArrayId);
 
 	for (unsigned int i = 0; i < count; ++i)
 	{
@@ -91,7 +91,7 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 		if (pass.textureCount > 0)
 			BindTextures(shader, pass.textureCount, pass.textureNameHashes, pass.textureIds, pass.samplerIds);
 
-		encoder->DrawIndexed(draw->primitiveMode, draw->indexType, draw->count, 0, 0);
+		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
 	}
 }
 

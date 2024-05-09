@@ -11,7 +11,7 @@ class RenderTargetContainer;
 namespace kokko
 {
 
-class MeshManager;
+class ModelManager;
 class ShaderManager;
 struct PostProcessRenderPass;
 struct ShaderData;
@@ -25,17 +25,17 @@ class PostProcessRenderer
 {
 private:
 	render::CommandEncoder* encoder;
-	MeshManager* meshManager;
+	ModelManager* modelManager;
 	ShaderManager* shaderManager;
 	RenderTargetContainer* renderTargetContainer;
 
-	MeshId fullscreenMeshId;
+	ModelId fullscreenMeshId;
 
 	void BindTextures(const ShaderData& shader, unsigned int count,
 		const uint32_t* nameHashes, const render::TextureId* textures, const render::SamplerId* samplers);
 
 public:
-	PostProcessRenderer(render::CommandEncoder* encoder, MeshManager* meshManager,
+	PostProcessRenderer(render::CommandEncoder* encoder, ModelManager* modelManager,
 		ShaderManager* shaderManager, RenderTargetContainer* renderTargetContainer);
 	~PostProcessRenderer();
 

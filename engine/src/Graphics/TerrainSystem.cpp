@@ -26,7 +26,6 @@
 #include "Rendering/VertexFormat.hpp"
 
 #include "Resources/ShaderManager.hpp"
-#include "Resources/MeshManager.hpp"
 #include "Resources/TextureManager.hpp"
 
 namespace kokko

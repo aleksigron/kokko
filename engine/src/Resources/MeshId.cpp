@@ -12,6 +12,9 @@
 namespace kokko
 {
 
+const ModelId ModelId::Null = ModelId{0};
+const MeshId MeshId::Null = MeshId{0, 0};
+
 Optional<MeshUid> MeshUid::FromString(ArrayView<const char> str)
 {
 	if (str.GetCount() < MeshUid::StringLength)

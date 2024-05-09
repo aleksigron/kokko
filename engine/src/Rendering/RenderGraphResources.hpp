@@ -5,17 +5,15 @@
 #include "Rendering/Framebuffer.hpp"
 #include "Rendering/RenderResourceId.hpp"
 
-#include "Resources/MeshId.hpp"
-
 namespace kokko
 {
 
-class MeshManager;
+class ModelManager;
 
 class RenderGraphResources
 {
 public:
-	RenderGraphResources(kokko::render::Device* renderDevice, MeshManager* meshManager);
+	RenderGraphResources(kokko::render::Device* renderDevice);
 
 	void VerifyResourcesAreCreated(Vec2i fullscreenViewportResolution);
 	void Deinitialize();
@@ -38,7 +36,6 @@ private:
 	static constexpr size_t GbufferColorCount = 3;
 
 	render::Device* renderDevice;
-	MeshManager* meshManager;
 
 	render::Framebuffer framebufferGbuffer;
 	render::Framebuffer framebufferShadow;

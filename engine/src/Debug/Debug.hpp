@@ -10,9 +10,7 @@ class Allocator;
 class AllocatorManager;
 class Renderer;
 
-class DebugTextRenderer;
 class DebugGraph;
-class DebugCulling;
 class DebugMemoryStats;
 
 struct ViewRectangle;
@@ -20,9 +18,11 @@ struct CameraParameters;
 
 namespace kokko
 {
+class DebugCulling;
+class DebugTextRenderer;
 class DebugVectorRenderer;
 class Filesystem;
-class MeshManager;
+class ModelManager;
 class ShaderManager;
 class TextureManager;
 class Window;
@@ -45,9 +45,9 @@ private:
 	kokko::render::Device* renderDevice;
 
 	kokko::UniquePtr<kokko::DebugVectorRenderer> vectorRenderer;
-	kokko::UniquePtr<DebugTextRenderer> textRenderer;
+	kokko::UniquePtr<kokko::DebugTextRenderer> textRenderer;
 	kokko::UniquePtr<DebugGraph> graph;
-	kokko::UniquePtr<DebugCulling> culling;
+	kokko::UniquePtr<kokko::DebugCulling> culling;
 	kokko::UniquePtr<DebugMemoryStats> memoryStats;
 
 	kokko::Window* window;
@@ -75,7 +75,7 @@ public:
 
 	static Debug* Get() { return singletonInstance; }
 
-	bool Initialize(kokko::Window* window, kokko::MeshManager* meshManager,
+	bool Initialize(kokko::Window* window, kokko::ModelManager* modelManager,
 		kokko::ShaderManager* shaderManager, kokko::TextureManager* textureManager);
 	void Deinitialize();
 
@@ -85,7 +85,7 @@ public:
 		const kokko::render::Framebuffer& framebuffer,
 		const Optional<CameraParameters>& editorCamera);
 
-	DebugTextRenderer* GetTextRenderer() { return textRenderer.Get(); }
+	kokko::DebugTextRenderer* GetTextRenderer() { return textRenderer.Get(); }
 	kokko::DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer.Get(); }
 
 	void RequestBeginProfileSession();

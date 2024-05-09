@@ -76,7 +76,8 @@ void DebugGraph::DrawToVectorRenderer()
 			pointStorage[i] = pos;
 		}
 
-		vectorRenderer->DrawLineChainScreen(count, pointStorage.GetData(), color);
+		// TODO: Reimplement with Dear ImGui
+		//vectorRenderer->DrawLineChainScreen(count, pointStorage.GetData(), color);
 	}
 }
 
