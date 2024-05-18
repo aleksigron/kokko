@@ -8,14 +8,21 @@
 #include "Rendering/RenderCommand.hpp"
 #include "Rendering/RenderDeviceEnumsOpenGL.hpp"
 
+namespace
+{
+constexpr size_t MaxCommandHistoryCount = 64;
+}
+
 namespace kokko
 {
 
 namespace render
 {
 
-CommandExecutorOpenGL::CommandExecutorOpenGL() :
-	cmdBuffer(nullptr)
+CommandExecutorOpenGL::CommandExecutorOpenGL(Allocator* allocator) :
+	cmdBuffer(nullptr),
+	debugScopeStack(allocator),
+	commandHistory(allocator)
 {
 }
 
@@ -23,6 +30,8 @@ void CommandExecutorOpenGL::Execute(const CommandBuffer* commandBuffer)
 {
 	cmdBuffer = commandBuffer;
 	uint32_t commandOffset = 0;
+
+	commandHistory.Clear();
 
 	uint32_t end = static_cast<uint32_t>(cmdBuffer->commands.GetCount());
 	while (commandOffset < end)
@@ -37,6 +46,11 @@ void CommandExecutorOpenGL::Execute(const CommandBuffer* commandBuffer)
 			KK_LOG_ERROR("Unrecognized command type: {}", static_cast<uint32_t>(type));
 			break;
 		}
+
+		if (commandHistory.GetCount() == MaxCommandHistoryCount)
+			commandHistory.Pop();
+
+		commandHistory.Push(type);
 
 		commandOffset += static_cast<uint32_t>(bytesProcessed);
 	}
@@ -55,10 +69,12 @@ size_t CommandExecutorOpenGL::ParseCommand(CommandType type, const uint8_t* comm
 		auto cmd = reinterpret_cast<const CmdBeginDebugScope*>(commandBegin);
 		auto message = reinterpret_cast<const char*>(&cmdBuffer->commandData[cmd->messageOffset]);
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, cmd->id, cmd->messageLength, message);
+		debugScopeStack.PushBack(ConstStringView(message, cmd->messageLength));
 		return sizeof(*cmd);
 	}
 
 	case CommandType::EndDebugScope:
+		debugScopeStack.PopBack();
 		glPopDebugGroup();
 		return sizeof(Command);
 

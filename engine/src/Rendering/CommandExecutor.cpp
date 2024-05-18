@@ -10,7 +10,7 @@ namespace render
 
 CommandExecutor* CommandExecutor::Create(Allocator* allocator)
 {
-	return allocator->MakeNew<CommandExecutorOpenGL>();
+	return allocator->MakeNew<CommandExecutorOpenGL>(allocator);
 }
 
 }

@@ -191,11 +191,11 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 
 		// Draw
 
-		auto mesh = modelManager->GetModelMeshes(meshId)[0];
-		auto prim = modelManager->GetModelPrimitives(meshId)[0];
+		auto& mesh = modelManager->GetModelMeshes(meshId)[0];
+		auto& prim = modelManager->GetModelPrimitives(meshId)[0];
 		
 		encoder->BindVertexArray(prim.vertexArrayId);
-		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
+		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
 
 		// Clear data
 
@@ -329,6 +329,7 @@ void DebugTextRenderer::CreateAndUploadData()
 	info.indexData = indexData.GetData();
 	info.indexDataSize = indexData.GetCount() * sizeof(indexData[0]);
 	info.indexCount = static_cast<uint32_t>(indexData.GetCount());
+	info.indexType = RenderIndexType::UnsignedShort;
 
 	if (meshId != kokko::ModelId::Null)
 	{

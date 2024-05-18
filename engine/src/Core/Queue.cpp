@@ -2,6 +2,9 @@
 
 #include "doctest/doctest.h"
 
+namespace kokko
+{
+
 TEST_CASE("Queue.Push")
 {
 	Allocator* allocator = Allocator::GetDefault();
@@ -96,3 +99,5 @@ TEST_CASE("Queue.PushPop")
 
 	CHECK(queue.GetCount() == 23);
 }
+
+} // namespace kokko

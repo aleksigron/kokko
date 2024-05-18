@@ -44,6 +44,7 @@ ModelId MeshPresets::CreateCube(ModelManager* modelManager)
 	info.indexData = indexData;
 	info.indexDataSize = sizeof(indexData);
 	info.indexCount = sizeof(indexData) / sizeof(indexData[0]);
+	info.indexType = RenderIndexType::UnsignedShort;
 
 	ModelId modelId = modelManager->CreateModel(info);
 
@@ -78,6 +79,7 @@ ModelId MeshPresets::CreatePlane(ModelManager* modelManager)
 	info.indexData = indexData;
 	info.indexDataSize = sizeof(indexData);
 	info.indexCount = sizeof(indexData) / sizeof(indexData[0]);
+	info.indexType = RenderIndexType::UnsignedShort;
 
 	ModelId modelId = modelManager->CreateModel(info);
 
