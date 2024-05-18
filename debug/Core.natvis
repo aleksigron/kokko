@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="kokko::Array&lt;*&gt;">
+		<DisplayString>{{ size={count} }}</DisplayString>
+		<Expand>
+			<Item Name="[size]">count</Item>
+			<Item Name="[capacity]">allocated</Item>
+			<ArrayItems>
+				<Size>count</Size>
+				<ValuePointer>data</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="kokko::Queue&lt;*&gt;">
+		<DisplayString>{{ size={count} }}</DisplayString>
+		<Expand>
+			<Item Name="[size]">count</Item>
+			<Item Name="[capacity]">allocated</Item>
+			<IndexListItems>
+				<Size>count</Size>
+				<ValueNode>data[(start + $i) &amp; (allocated - 1)]</ValueNode>
+			</IndexListItems>
+		</Expand>
+	</Type>
+	<Type Name="kokko::StringView&lt;*&gt;">
+		<DisplayString>{str,[len]}</DisplayString>
+		<StringView>str,[len]</StringView>
+		<Expand>
+			<Item Name="[string]">str,[len]</Item>
+			<Item Name="[size]">len</Item>
+		</Expand>
+	</Type>
+</AutoVisualizer>

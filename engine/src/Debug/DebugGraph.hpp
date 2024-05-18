@@ -24,7 +24,7 @@ private:
 
 	kokko::DebugVectorRenderer* vectorRenderer;
 	Rectanglef drawArea;
-	Queue<DataPoint> data;
+	kokko::Queue<DataPoint> data;
 	kokko::Array<Vec3f> pointStorage;
 
 	double timeRange;

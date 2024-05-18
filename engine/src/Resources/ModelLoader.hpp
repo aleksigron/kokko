@@ -43,11 +43,7 @@ private:
 
 	void Reset();
 	
-	void LoadGltfNode(
-		int16_t parent,
-		cgltf_data* data,
-		cgltf_node* node);
-
+	void LoadGltfNode(int16_t parent, cgltf_data* data, cgltf_node* node);
 	bool LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut);
 };
 

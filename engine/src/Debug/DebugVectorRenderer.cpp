@@ -123,6 +123,7 @@ void DebugVectorRenderer::Initialize(ModelManager* modelManager, ShaderManager* 
 		modelInfo.indexData = cubeIndexData;
 		modelInfo.indexDataSize = sizeof(cubeIndexData);
 		modelInfo.indexCount = sizeof(cubeIndexData) / sizeof(cubeIndexData[0]);
+		modelInfo.indexType = RenderIndexType::UnsignedShort;
 
 		ModelId& cubeMeshId = staticMeshes[static_cast<unsigned int>(PrimitiveType::WireCube)];
 		cubeMeshId = modelManager->CreateModel(modelInfo);
@@ -183,6 +184,7 @@ void DebugVectorRenderer::Initialize(ModelManager* modelManager, ShaderManager* 
 		modelInfo.indexData = sphereIndexData;
 		modelInfo.indexDataSize = sizeof(sphereIndexData);
 		modelInfo.indexCount = sizeof(sphereIndexData) / sizeof(sphereIndexData[0]);
+		modelInfo.indexType = RenderIndexType::UnsignedShort;
 
 		ModelId& sphereMeshId = staticMeshes[static_cast<unsigned int>(PrimitiveType::WireSphere)];
 		sphereMeshId = modelManager->CreateModel(modelInfo);
@@ -207,6 +209,7 @@ void DebugVectorRenderer::Initialize(ModelManager* modelManager, ShaderManager* 
 		modelInfo.indexData = rectangleIndexData;
 		modelInfo.indexDataSize = sizeof(rectangleIndexData);
 		modelInfo.indexCount = sizeof(rectangleIndexData) / sizeof(rectangleIndexData[0]);
+		modelInfo.indexType = RenderIndexType::UnsignedShort;
 
 		ModelId& rectangleMeshId = staticMeshes[static_cast<unsigned int>(PrimitiveType::Rectangle)];
 		rectangleMeshId = modelManager->CreateModel(modelInfo);

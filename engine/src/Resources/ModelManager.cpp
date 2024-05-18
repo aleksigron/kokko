@@ -90,6 +90,8 @@ ModelId ModelManager::CreateModel(const ModelCreateInfo& info)
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	assert(info.indexType == RenderIndexType::None || (info.indexData != nullptr && info.indexDataSize != 0 && info.indexCount != 0));
+
 	unsigned int id = static_cast<unsigned int>(models.GetCount());
 	ModelData& model = models.PushBack();
 
@@ -159,9 +161,6 @@ void ModelManager::CreateRenderData(ModelData& model, Array<uint8_t>& geometryBu
 	{
 		ModelMesh& mesh = model.meshes[meshIdx];
 
-		// TODO
-		// data.uniqueVertexCount[index] = static_cast<int>(vdata.vertexCount);
-
 		for (uint16_t primIdx = mesh.primitiveOffset, primEnd = mesh.primitiveOffset + mesh.primitiveCount; primIdx < primEnd; ++primIdx)
 		{
 			ModelPrimitive& primitive = model.primitives[primIdx];
@@ -173,8 +172,8 @@ void ModelManager::CreateRenderData(ModelData& model, Array<uint8_t>& geometryBu
 			renderDevice->CreateVertexArrays(1, &primitive.vertexArrayId);
 			kokko::render::VertexArrayId va = primitive.vertexArrayId;
 
-			// TODO: Only if indexed
-			renderDevice->SetVertexArrayIndexBuffer(va, model.bufferId);
+			if (mesh.indexType != RenderIndexType::None)
+				renderDevice->SetVertexArrayIndexBuffer(va, model.bufferId);
 
 			for (unsigned int i = 0; i < vertexFormat.attributeCount; ++i)
 			{

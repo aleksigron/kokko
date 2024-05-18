@@ -12,6 +12,9 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 template <typename ValueType>
 class Queue
 {
@@ -164,4 +167,17 @@ public:
 			count += 1;
 		}
 	}
+
+	void Clear()
+	{
+		for (size_t i = 0; i != count; ++i)
+		{
+			data[this->GetArrayIndex(i)].~ValueType(); // Run destructor
+		}
+
+		count = 0;
+		start = 0;
+	}
 };
+
+} // namespace kokko

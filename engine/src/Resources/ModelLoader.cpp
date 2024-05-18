@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "cgltf/cgltf.h"
+#include "doctest/doctest.h"
 
 #include "Core/CString.hpp"
 #include "Core/SortedArray.hpp"
@@ -49,7 +50,7 @@ void CountModelNodeResources(CountResult& resultInOut, cgltf_node* node)
 		CountModelNodeResources(resultInOut, node->children[i]);
 }
 
-CountResult CountModelResources(cgltf_data* model, kokko::SortedArray<cgltf_buffer_view*> uniqueGeometryBufferViews)
+CountResult CountModelResources(cgltf_data* model, kokko::SortedArray<cgltf_buffer_view*>& uniqueGeometryBufferViews)
 {
 	cgltf_scene& scene = model->scenes[0];
 
@@ -110,7 +111,7 @@ bool ModelLoader::LoadRuntime(ModelData *modelOut, Array<uint8_t> *geometryBuffe
 	outputModel = modelOut;
 	geometryBuffer = geometryBufferOut;
 	
-	constexpr size_t alignment = 16;
+	constexpr size_t alignment = 8;
 	const size_t vertexBytes = Math::RoundUpToMultiple(createInfo.vertexDataSize, alignment);
 	const size_t indexBytes = Math::RoundUpToMultiple(createInfo.indexDataSize, alignment);
 	const size_t geometryBufferBytes = vertexBytes + indexBytes;
@@ -119,7 +120,8 @@ bool ModelLoader::LoadRuntime(ModelData *modelOut, Array<uint8_t> *geometryBuffe
 	// Copy geometry buffers into one buffer
 
 	memcpy(geometryBuffer->GetData(), createInfo.vertexData, createInfo.vertexDataSize);
-	memcpy(geometryBuffer->GetData() + vertexBytes, createInfo.indexData, createInfo.indexDataSize);
+	if (createInfo.indexType != RenderIndexType::None)
+		memcpy(geometryBuffer->GetData() + vertexBytes, createInfo.indexData, createInfo.indexDataSize);
 
 	// Allocate model info buffers
 
@@ -146,8 +148,8 @@ bool ModelLoader::LoadRuntime(ModelData *modelOut, Array<uint8_t> *geometryBuffe
 
 	ModelPrimitive& primitive = outputModel->primitives[0];
 	primitive.uniqueVertexCount = createInfo.vertexCount;
-	primitive.indexOffset = 0;
-	primitive.count = createInfo.indexCount;
+	primitive.indexOffset = vertexBytes;
+	primitive.count = createInfo.indexType != RenderIndexType::None ? createInfo.indexCount : createInfo.vertexCount;
 	primitive.vertexFormat.attributes = outputModel->attributes;
 	primitive.vertexFormat.attributeCount = createInfo.vertexFormat.attributeCount;
 
@@ -216,7 +218,7 @@ bool ModelLoader::LoadGlbFromBuffer(ModelData *modelOut, Array<uint8_t> *geometr
 	if (countResult.primitiveCount > 1) {
 		KK_LOG_INFO("ModelLoader: MULTI_PRIMITIVE");
 	}
-
+	 
 	size_t geometryBufferBytes = countResult.totalGeometryBytes;
 	geometryBuffer->Resize(geometryBufferBytes);
 
@@ -230,7 +232,8 @@ bool ModelLoader::LoadGlbFromBuffer(ModelData *modelOut, Array<uint8_t> *geometr
 		assert(geometryBufferUsed + bufferView->size <= geometryBufferBytes);
 
 		uint8_t* dest = geometryBuffer->GetData() + geometryBufferUsed;
-		memcpy(dest, bufferView->data, bufferView->size);
+		const uint8_t* bufferData = static_cast<const uint8_t*>(bufferView->buffer->data);
+		memcpy(dest, bufferData + bufferView->offset, bufferView->size);
 
 		geometryBufferViewRangeMap.PushBack(Range<size_t>(geometryBufferUsed, geometryBufferUsed + bufferView->size));
 		geometryBufferUsed += bufferView->size;
@@ -238,7 +241,7 @@ bool ModelLoader::LoadGlbFromBuffer(ModelData *modelOut, Array<uint8_t> *geometr
 
 	// Allocate model info buffers
 
-	constexpr size_t alignment = 16;
+	constexpr size_t alignment = 8;
 	const size_t nodeBytes = Math::RoundUpToMultiple(sizeof(ModelNode) * countResult.nodeCount, alignment);
 	const size_t meshBytes = Math::RoundUpToMultiple(sizeof(ModelMesh) * countResult.meshCount, alignment);
 	const size_t primBytes = Math::RoundUpToMultiple(sizeof(ModelPrimitive) * countResult.primitiveCount, alignment);
@@ -511,7 +514,7 @@ bool ModelLoader::LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 			}
 			else
 			{
-				assert(false && "Geometry buffer not found in range map");
+				assert(false && "Index geometry buffer view not found in range map");
 			}
 		}
 
@@ -521,9 +524,11 @@ bool ModelLoader::LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 		modelMeshOut.primitiveCount += 1;
 	}
 
-	AABB meshBounds;
-	meshBounds.center = (boundsMin + boundsMax) * 0.5f;
-	meshBounds.extents = (boundsMax - boundsMin) * 0.5f;
+	modelMeshOut.primitiveMode = primitiveMode;
+	modelMeshOut.indexType = indexType;
+
+	modelMeshOut.aabb.center = (boundsMin + boundsMax) * 0.5f;
+	modelMeshOut.aabb.extents = (boundsMax - boundsMin) * 0.5f;
 
 	if (cgltfMesh->name != nullptr)
 	{
@@ -537,6 +542,58 @@ bool ModelLoader::LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 		modelMeshOut.name = nullptr;
 
 	return true;
+}
+
+TEST_CASE("ModelLoader.NonIndexedRuntimeModel")
+{
+	Allocator* allocator = Allocator::GetDefault();
+	VertexAttribute vertexAttributes[] = { VertexAttribute::pos3 };
+	VertexFormat vertexFormatPos(vertexAttributes, sizeof(vertexAttributes) / sizeof(vertexAttributes[0]));
+	ModelLoader modelLoader(allocator);
+
+	float vertexData[] = {
+		1.0f, 2.0f, 8.0f,
+		3.5f, 2.75f, -1.9625f
+	};
+
+	ModelCreateInfo modelInfo;
+	modelInfo.vertexFormat = vertexFormatPos;
+	modelInfo.primitiveMode = RenderPrimitiveMode::Lines;
+	modelInfo.vertexData = vertexData;
+	modelInfo.vertexDataSize = sizeof(vertexData);
+	modelInfo.vertexCount = 2;
+
+	ModelData model;
+
+	Array<uint8_t> geometryBuffer(allocator);
+
+	CHECK(modelLoader.LoadRuntime(&model, &geometryBuffer, modelInfo) == true);
+	CHECK(geometryBuffer.GetCount() >= sizeof(vertexData));
+
+	const float* p = reinterpret_cast<const float*>(geometryBuffer.GetData());
+	for (size_t i = 0, count = KOKKO_ARRAY_ITEMS(vertexData); i != count; ++i)
+	{
+		CHECK(p[i] == vertexData[i]);
+	}
+
+	CHECK(model.attributeCount == KOKKO_ARRAY_ITEMS(vertexAttributes));
+	// Mesh attributes are not directly accessed through ModelData.attributes
+	// So no need to double test them
+
+	CHECK(model.meshCount == 1);
+	CHECK(model.meshes[0].indexType == RenderIndexType::None);
+	CHECK(model.meshes[0].primitiveCount == 1);
+	CHECK(model.meshes[0].primitiveOffset == 0);
+	CHECK(model.meshes[0].primitiveMode == modelInfo.primitiveMode);
+
+	CHECK(model.primitiveCount == 1);
+	CHECK(model.primitives[0].count == modelInfo.vertexCount);
+	CHECK(model.primitives[0].uniqueVertexCount == modelInfo.vertexCount);
+	CHECK(model.primitives[0].vertexFormat.attributeCount == KOKKO_ARRAY_ITEMS(vertexAttributes));
+	CHECK(model.primitives[0].vertexFormat.attributes[0].elemCount == vertexAttributes[0].elemCount);
+	CHECK(model.primitives[0].vertexFormat.attributes[0].elemType == vertexAttributes[0].elemType);
+
+	CHECK(model.nodeCount == 0);
 }
 
 } // namespace kokko

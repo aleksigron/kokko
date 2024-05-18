@@ -1,5 +1,7 @@
 #include "Rendering/CommandEncoder.hpp"
 
+#include <cassert>
+
 #include "Rendering/RenderCommand.hpp"
 #include "Rendering/RenderCommandBuffer.hpp"
 
@@ -174,6 +176,8 @@ void CommandEncoder::DrawIndexed(
 	intptr_t indexOffset,
 	int32_t baseVertex)
 {
+	assert(indexType != RenderIndexType::None);
+
 	CmdDrawIndexed data{
 		CommandType::DrawIndexed,
 		mode,
