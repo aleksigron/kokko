@@ -417,7 +417,7 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 				{
 					auto& prim = primitives[primIdx];
 					encoder->BindVertexArray(prim.vertexArrayId);
-					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
 				}
 
 				objectDrawsProcessed += 1;

@@ -35,7 +35,7 @@ private:
 
 	ArrayView<char> textBuffer;
 
-	Array<uint8_t>* geometryBuffer;
+	Array<uint8_t>* geometryBuffer = nullptr;
 	size_t geometryBufferUsed = 0;
 
 	SortedArray<cgltf_buffer_view*> uniqueGeometryBufferViews;

@@ -91,7 +91,7 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 		if (pass.textureCount > 0)
 			BindTextures(shader, pass.textureCount, pass.textureNameHashes, pass.textureIds, pass.samplerIds);
 
-		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
+		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
 	}
 }
 

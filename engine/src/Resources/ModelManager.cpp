@@ -161,7 +161,8 @@ void ModelManager::CreateRenderData(ModelData& model, Array<uint8_t>& geometryBu
 	{
 		ModelMesh& mesh = model.meshes[meshIdx];
 
-		for (uint16_t primIdx = mesh.primitiveOffset, primEnd = mesh.primitiveOffset + mesh.primitiveCount; primIdx < primEnd; ++primIdx)
+		uint16_t primIdx = mesh.primitiveOffset, primEnd = mesh.primitiveOffset + mesh.primitiveCount;
+		for (; primIdx != primEnd; ++primIdx)
 		{
 			ModelPrimitive& primitive = model.primitives[primIdx];
 			VertexFormat& vertexFormat = primitive.vertexFormat;
@@ -175,14 +176,15 @@ void ModelManager::CreateRenderData(ModelData& model, Array<uint8_t>& geometryBu
 			if (mesh.indexType != RenderIndexType::None)
 				renderDevice->SetVertexArrayIndexBuffer(va, model.bufferId);
 
-			for (unsigned int i = 0; i < vertexFormat.attributeCount; ++i)
+			for (uint32_t bindingIndex = 0; bindingIndex < vertexFormat.attributeCount; ++bindingIndex)
 			{
-				const VertexAttribute& attr = vertexFormat.attributes[i];
+				const VertexAttribute& attr = vertexFormat.attributes[bindingIndex];
 
-				renderDevice->SetVertexArrayVertexBuffer(va, i, model.bufferId, attr.offset, attr.stride);
+				// TODO: Use a single binding point when attributes are interleaved
+				renderDevice->SetVertexArrayVertexBuffer(va, bindingIndex, model.bufferId, attr.offset, attr.stride);
 				renderDevice->EnableVertexAttribute(va, attr.attrIndex);
-				renderDevice->SetVertexAttribBinding(va, attr.attrIndex, i);
 				renderDevice->SetVertexAttribFormat(va, attr.attrIndex, attr.elemCount, attr.elemType, 0);
+				renderDevice->SetVertexAttribBinding(va, attr.attrIndex, bindingIndex);
 			}
 		}
 	}

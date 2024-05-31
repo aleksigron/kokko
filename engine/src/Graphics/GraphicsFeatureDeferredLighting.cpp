@@ -376,7 +376,7 @@ void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)
 		auto& mesh = parameters.modelManager->GetModelMeshes(meshId)[0];
 		auto& prim = parameters.modelManager->GetModelPrimitives(meshId)[0];
 		encoder->BindVertexArray(prim.vertexArrayId);
-		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
+		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
 
 		return;
 	}

@@ -424,7 +424,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 					BindBufferRange(encoder, UniformBlockBinding::Viewport,
 						viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
 				}
 			}
 
@@ -467,7 +467,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 					BindBufferRange(encoder, UniformBlockBinding::Viewport,
 						viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
 				}
 			}
 
@@ -515,7 +515,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 						BindBufferRange(encoder, UniformBlockBinding::Viewport,
 							viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-						encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
+						encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
 					}
 				}
 			}
