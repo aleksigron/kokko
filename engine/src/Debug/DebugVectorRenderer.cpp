@@ -451,7 +451,7 @@ void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* 
 				encoder->BindVertexArray(prim.vertexArrayId);
 
 				if (mesh.indexType != RenderIndexType::None)
-					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, 0, 0);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
 				else
 					encoder->Draw(mesh.primitiveMode, 0, prim.count);
 			}
