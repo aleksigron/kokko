@@ -16,19 +16,18 @@ ModelManager::ModelManager(Allocator* allocator, AssetLoader* assetLoader, rende
 	assetLoader(assetLoader),
 	renderDevice(renderDevice),
 	modelLoader(allocator),
-	uidMap(allocator),
-	models(allocator)
+	uidMap(allocator)
 {
-	models.Reserve(32);
-	models.PushBack(ModelData{}); // Reserve index 0 for ModelId::Null
+	Reallocate(16);
+
+	data.slotsUsed = 1; // Reserve index 0 for ModelId::Null
 }
 
 ModelManager::~ModelManager()
 {
-	for (size_t i = 1, count = models.GetCount(); i < count; ++i)
-	{
-		allocator->Deallocate(models[i].buffer);
-	}
+	for (size_t i = 1; i < data.slotsUsed; ++i)
+		if (data.model[i].buffer != nullptr)
+			allocator->Deallocate(data.model[i].buffer);
 }
 
 ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)
@@ -43,8 +42,8 @@ ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)
 
 	if (assetLoader->LoadAsset(uid, file))
 	{
-		unsigned int id = static_cast<unsigned int>(models.GetCount());
-		ModelData& model = models.PushBack();
+		uint32_t id = AcquireSlot();
+		ModelData& model = data.model[id];
 		model.uid = uid;
 		model.hasUid = true;
 
@@ -66,7 +65,7 @@ ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)
 			uidStr[Uid::StringLength] = '\0';
 
 			KK_LOG_ERROR("Model with UID {} failed to be loaded.", uidStr);
-			models.PopBack();
+			ReleaseSlot(id);
 		}
 	}
 
@@ -92,8 +91,8 @@ ModelId ModelManager::CreateModel(const ModelCreateInfo& info)
 
 	assert(info.indexType == RenderIndexType::None || (info.indexData != nullptr && info.indexDataSize != 0 && info.indexCount != 0));
 
-	unsigned int id = static_cast<unsigned int>(models.GetCount());
-	ModelData& model = models.PushBack();
+	uint32_t id = AcquireSlot();
+	ModelData& model = data.model[id];
 
 	Array<uint8_t> geometryBuffer(allocator);
 
@@ -104,19 +103,32 @@ ModelId ModelManager::CreateModel(const ModelCreateInfo& info)
 		return ModelId{id};
 	}
 
+	ReleaseSlot(id);
     return ModelId::Null;
 }
 
 void ModelManager::RemoveModel(ModelId id)
 {
-	// TODO: Implement
-	// Need to do some kind of freelist to know how to reuse removed models
+	assert(id != ModelId::Null);
+
+	ModelData& model = data.model[id.i];
+
+	if (model.hasUid)
+		if (auto mapPair = uidMap.Lookup(model.uid))
+			uidMap.Remove(mapPair);
+
+	ReleaseRenderData(model);
+
+	allocator->Deallocate(model.buffer);
+	model.buffer = nullptr;
+
+	ReleaseSlot(id.i);
 }
 
 void ModelManager::SetMeshAABB(MeshId id, const AABB& bounds)
 {
 	assert(id != MeshId::Null);
-	const ModelData& model = models[id.modelId.i];
+	const ModelData& model = data.model[id.modelId.i];
 	assert(id.meshIndex < model.meshCount);
 	model.meshes[id.meshIndex].aabb = bounds;
 }
@@ -124,28 +136,91 @@ void ModelManager::SetMeshAABB(MeshId id, const AABB& bounds)
 Optional<Uid> ModelManager::GetModelUid(ModelId id) const
 {
 	assert(id != ModelId::Null);
-	return models[id.i].hasUid ? Optional(models[id.i].uid) : Optional<Uid>();
+	return data.model[id.i].hasUid ? Optional(data.model[id.i].uid) : Optional<Uid>();
 }
 
 ArrayView<const ModelMesh> ModelManager::GetModelMeshes(ModelId id) const
 {
 	assert(id != ModelId::Null);
-	const ModelData& model = models[id.i];
+	const ModelData& model = data.model[id.i];
 	return ArrayView<const ModelMesh>(model.meshes, model.meshCount);
 }
 
 ArrayView<const ModelNode> ModelManager::GetModelNodes(ModelId id) const
 {
 	assert(id != ModelId::Null);
-	const ModelData& model = models[id.i];
+	const ModelData& model = data.model[id.i];
 	return ArrayView<const ModelNode>(model.nodes, model.nodeCount);
 }
 
 ArrayView<const ModelMeshPart> ModelManager::GetModelMeshParts(ModelId id) const
 {
 	assert(id != ModelId::Null);
-	const ModelData& model = models[id.i];
+	const ModelData& model = data.model[id.i];
 	return ArrayView<const ModelMeshPart>(model.meshParts, model.meshPartCount);
+}
+
+uint32_t ModelManager::AcquireSlot()
+{
+	uint32_t id;
+
+	if (data.freelistFirst != 0)
+	{
+		id = data.freelistFirst;
+		uint32_t nextFree = data.freelist[data.freelistFirst];
+		data.freelist[data.freelistFirst] = 0;
+		data.freelistFirst = nextFree;
+	}
+	else
+	{
+		if (data.slotsUsed == data.allocated)
+			Reallocate(data.slotsUsed + 1);
+
+		id = data.slotsUsed;
+		data.slotsUsed += 1;
+	}
+	
+	return id;
+}
+
+void ModelManager::ReleaseSlot(uint32_t id)
+{
+	// Add to freelist
+	data.freelist[id] = data.freelistFirst;
+	data.freelistFirst = id;
+}
+
+void ModelManager::Reallocate(uint32_t required)
+{
+	if (required <= data.allocated)
+		return;
+
+	required = static_cast<uint32_t>(Math::UpperPowerOfTwo(required));
+
+	constexpr size_t bytesPerInstance = sizeof(data.freelist[0]) + sizeof(data.model[0]);
+
+	InstanceData newData;
+	newData.buffer = allocator->Allocate(bytesPerInstance * required, "ModelManager.data.buffer");
+	newData.slotsUsed = data.slotsUsed;
+	newData.allocated = required;
+
+	newData.freelist = static_cast<uint32_t*>(newData.buffer);
+	newData.model = reinterpret_cast<ModelData*>(newData.freelist + required);
+
+	if (data.buffer == nullptr)
+	{
+		memset(newData.freelist, 0, sizeof(uint32_t) * required);
+	}
+	else
+	{
+		memcpy(newData.freelist, data.freelist, data.slotsUsed * sizeof(uint32_t));
+		memset(newData.freelist + data.slotsUsed * sizeof(uint32_t), 0, sizeof(uint32_t) * (required - data.slotsUsed));
+		memcpy(newData.model, data.model, data.slotsUsed * sizeof(ModelData));
+
+		allocator->Deallocate(data.buffer);
+	}
+
+	data = newData;
 }
 
 void ModelManager::CreateRenderData(ModelData& model, Array<uint8_t>& geometryBuffer)
@@ -187,6 +262,21 @@ void ModelManager::CreateRenderData(ModelData& model, Array<uint8_t>& geometryBu
 				renderDevice->SetVertexAttribBinding(va, attr.attrIndex, bindingIndex);
 			}
 		}
+	}
+}
+
+void ModelManager::ReleaseRenderData(ModelData& model)
+{
+	for (uint32_t partIndex = 0; partIndex != model.meshPartCount; ++partIndex)
+	{
+		renderDevice->DestroyVertexArrays(1, &model.meshParts[partIndex].vertexArrayId);
+		model.meshParts[partIndex].vertexArrayId = render::VertexArrayId::Null;
+	}
+
+	if (model.bufferId != render::BufferId::Null)
+	{
+		renderDevice->DestroyBuffers(1, &model.bufferId);
+		model.bufferId = render::BufferId::Null;
 	}
 }
 

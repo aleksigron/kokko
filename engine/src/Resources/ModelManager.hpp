@@ -136,9 +136,26 @@ private:
 
 	ModelLoader modelLoader;
 	HashMap<Uid, uint32_t> uidMap;
-	Array<ModelData> models;
+
+	struct InstanceData
+	{
+		uint32_t slotsUsed = 0; // Slots at the start of the buffer that have been used at some point
+		uint32_t allocated = 0; // Slots allocated in the buffer
+		uint32_t freelistFirst = 0;
+
+		void* buffer = nullptr;
+
+		uint32_t* freelist = nullptr; // Each node points to the next node in the freelist
+		ModelData* model = nullptr;
+	}
+	data;
+
+	uint32_t AcquireSlot();
+	void ReleaseSlot(uint32_t id);
+	void Reallocate(uint32_t required);
 
 	void CreateRenderData(ModelData& model, Array<uint8_t>& geometryBuffer);
+	void ReleaseRenderData(ModelData& model);
 };
 
 } // namespace kokko
