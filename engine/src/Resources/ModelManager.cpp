@@ -141,11 +141,11 @@ ArrayView<const ModelNode> ModelManager::GetModelNodes(ModelId id) const
 	return ArrayView<const ModelNode>(model.nodes, model.nodeCount);
 }
 
-ArrayView<const ModelPrimitive> ModelManager::GetModelPrimitives(ModelId id) const
+ArrayView<const ModelMeshPart> ModelManager::GetModelMeshParts(ModelId id) const
 {
 	assert(id != ModelId::Null);
 	const ModelData& model = models[id.i];
-	return ArrayView<const ModelPrimitive>(model.primitives, model.primitiveCount);
+	return ArrayView<const ModelMeshPart>(model.meshParts, model.meshPartCount);
 }
 
 void ModelManager::CreateRenderData(ModelData& model, Array<uint8_t>& geometryBuffer)
@@ -161,17 +161,17 @@ void ModelManager::CreateRenderData(ModelData& model, Array<uint8_t>& geometryBu
 	{
 		ModelMesh& mesh = model.meshes[meshIdx];
 
-		uint16_t primIdx = mesh.primitiveOffset, primEnd = mesh.primitiveOffset + mesh.primitiveCount;
+		uint16_t primIdx = mesh.partOffset, primEnd = mesh.partOffset + mesh.partCount;
 		for (; primIdx != primEnd; ++primIdx)
 		{
-			ModelPrimitive& primitive = model.primitives[primIdx];
-			VertexFormat& vertexFormat = primitive.vertexFormat;
+			ModelMeshPart& part = model.meshParts[primIdx];
+			VertexFormat& vertexFormat = part.vertexFormat;
 
 			assert(vertexFormat.attributes != nullptr && vertexFormat.attributeCount > 0);
 
 			// Create vertex array object
-			renderDevice->CreateVertexArrays(1, &primitive.vertexArrayId);
-			kokko::render::VertexArrayId va = primitive.vertexArrayId;
+			renderDevice->CreateVertexArrays(1, &part.vertexArrayId);
+			kokko::render::VertexArrayId va = part.vertexArrayId;
 
 			if (mesh.indexType != RenderIndexType::None)
 				renderDevice->SetVertexArrayIndexBuffer(va, model.bufferId);

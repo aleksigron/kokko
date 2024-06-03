@@ -192,10 +192,10 @@ void DebugTextRenderer::Render(kokko::render::CommandEncoder* encoder)
 		// Draw
 
 		auto& mesh = modelManager->GetModelMeshes(meshId)[0];
-		auto& prim = modelManager->GetModelPrimitives(meshId)[0];
+		auto& part = modelManager->GetModelMeshParts(meshId)[0];
 		
-		encoder->BindVertexArray(prim.vertexArrayId);
-		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
+		encoder->BindVertexArray(part.vertexArrayId);
+		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
 
 		// Clear data
 

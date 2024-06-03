@@ -412,12 +412,12 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 
 				MeshId meshId = componentSystem->data.mesh[objIdx];
 				auto& mesh = modelManager->GetModelMeshes(meshId.modelId)[meshId.meshIndex];
-				auto primitives = modelManager->GetModelPrimitives(meshId.modelId);
-				for (uint16_t primIdx = mesh.primitiveOffset, end = mesh.primitiveOffset + mesh.primitiveCount; primIdx != end; ++primIdx)
+				auto parts = modelManager->GetModelMeshParts(meshId.modelId);
+				for (uint16_t partIdx = mesh.partOffset, end = mesh.partOffset + mesh.partCount; partIdx != end; ++partIdx)
 				{
-					auto& prim = primitives[primIdx];
-					encoder->BindVertexArray(prim.vertexArrayId);
-					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
+					auto& part = parts[partIdx];
+					encoder->BindVertexArray(part.vertexArrayId);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
 				}
 
 				objectDrawsProcessed += 1;
@@ -986,12 +986,12 @@ void Renderer::DebugRender(DebugVectorRenderer* vectorRenderer)
 			if (meshId != MeshId::Null)
 			{
 				auto& mesh = modelManager->GetModelMeshes(meshId.modelId)[meshId.meshIndex];
-				auto primitives = modelManager->GetModelPrimitives(meshId.modelId);
-				for (uint16_t idx = mesh.primitiveOffset, end = mesh.primitiveOffset + mesh.primitiveCount; idx != end; ++idx)
+				auto parts = modelManager->GetModelMeshParts(meshId.modelId);
+				for (uint16_t idx = mesh.partOffset, end = mesh.partOffset + mesh.partCount; idx != end; ++idx)
 				{
-					auto& prim = primitives[idx];
-					int meshVertexCount = prim.uniqueVertexCount;
-					encoder->BindVertexArray(prim.vertexArrayId);
+					auto& part = parts[idx];
+					int meshVertexCount = part.uniqueVertexCount;
+					encoder->BindVertexArray(part.vertexArrayId);
 
 					// Geometry shader will turn points into lines
 					encoder->Draw(RenderPrimitiveMode::Points, 0, meshVertexCount);

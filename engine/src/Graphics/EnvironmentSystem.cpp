@@ -393,14 +393,14 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 			encoder->BindSampler(0, samplerId);
 
 			auto& mesh = modelManager->GetModelMeshes(cubeMeshId)[0];
-			auto& prim = modelManager->GetModelPrimitives(cubeMeshId)[0];
+			auto& part = modelManager->GetModelMeshParts(cubeMeshId)[0];
 
 			// Load shader
 
 			ShaderId equirectShaderId = shaderManager->FindShaderByPath(ConstStringView("engine/shaders/preprocess/equirect_to_cube.glsl"));
 			const ShaderData& equirectShader = shaderManager->GetShaderData(equirectShaderId);
 
-			encoder->BindVertexArray(prim.vertexArrayId);
+			encoder->BindVertexArray(part.vertexArrayId);
 			encoder->UseShaderProgram(equirectShader.driverId);
 
 			BindTexture(encoder, equirectShader, "equirectangular_map"_hash, equirectTextureId);
@@ -424,7 +424,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 					BindBufferRange(encoder, UniformBlockBinding::Viewport,
 						viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
 				}
 			}
 
@@ -467,7 +467,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 					BindBufferRange(encoder, UniformBlockBinding::Viewport,
 						viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
 				}
 			}
 
@@ -515,7 +515,7 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 						BindBufferRange(encoder, UniformBlockBinding::Viewport,
 							viewportUniformBufferId, viewportBlockStride * i, sizeof(ViewportUniformBlock));
 
-						encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
+						encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
 					}
 				}
 			}

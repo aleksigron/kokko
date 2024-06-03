@@ -42,18 +42,18 @@ struct ModelNode
 
 struct ModelMesh
 {
-	uint16_t primitiveOffset;
-	uint16_t primitiveCount;
+	uint16_t partOffset;
+	uint16_t partCount;
 
-	RenderIndexType indexType = RenderIndexType::None;
-	RenderPrimitiveMode primitiveMode = RenderPrimitiveMode::Triangles;
+	RenderIndexType indexType;
+	RenderPrimitiveMode primitiveMode;
 
 	const char* name;
 
 	AABB aabb;
 };
 
-struct ModelPrimitive
+struct ModelMeshPart
 {
 	uint32_t uniqueVertexCount;
 	uint32_t indexOffset;
@@ -71,12 +71,12 @@ struct ModelData
 
 	ModelNode* nodes = nullptr;
 	ModelMesh* meshes = nullptr;
-	ModelPrimitive* primitives = nullptr;
+	ModelMeshPart* meshParts = nullptr;
 	VertexAttribute* attributes = nullptr;
 
 	uint32_t nodeCount = 0;
 	uint32_t meshCount = 0;
-	uint32_t primitiveCount = 0;
+	uint32_t meshPartCount = 0;
 	uint32_t attributeCount = 0;
 
 	render::BufferId bufferId;
@@ -127,7 +127,7 @@ public:
 
 	ArrayView<const ModelNode> GetModelNodes(ModelId id) const;
 	ArrayView<const ModelMesh> GetModelMeshes(ModelId id) const;
-	ArrayView<const ModelPrimitive> GetModelPrimitives(ModelId id) const;
+	ArrayView<const ModelMeshPart> GetModelMeshParts(ModelId id) const;
 
 private:
 	Allocator* allocator;

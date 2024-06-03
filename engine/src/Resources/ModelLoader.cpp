@@ -16,20 +16,6 @@
 
 #include "System/Filesystem.hpp"
 
-/*
-Let's try to put some kind of procedure in here so I can think
-1. Count all model resources
-2. Allocate all required memory in one buffer
-3. Copy all geometry data into the buffer
-	- Keep track of the buffer views mapping in the buffer
-4. Load each mesh in model
-	- Load each primitive in mesh
-		- Each vertex attribute can come from separate buffer view
-		- Each one has its own offset relative to the geometry buffer start
-	- All primitives in a mesh share vertex format
-5. Load each node in model
-*/
-
 namespace
 {
 
@@ -37,7 +23,7 @@ struct CountResult
 {
 	size_t nodeCount = 0;
 	size_t meshCount = 0;
-	size_t primitiveCount = 0;
+	size_t meshPartCount = 0;
 	size_t attributeCount = 0;
 	size_t totalStringLength = 0;
 	size_t totalGeometryBytes = 0;
@@ -64,21 +50,21 @@ CountResult CountModelResources(cgltf_data* model, kokko::SortedArray<cgltf_buff
 		cgltf_mesh* mesh = &model->meshes[mi];
 
 		result.meshCount += 1;
-		result.primitiveCount += mesh->primitives_count;
+		result.meshPartCount += mesh->primitives_count;
 		result.totalStringLength += strlen(mesh->name) + 1;
 
 		for (size_t pi = 0; pi < mesh->primitives_count; ++pi)
 		{
-			cgltf_primitive* prim = &mesh->primitives[pi];
+			cgltf_primitive* cgltfPrim = &mesh->primitives[pi];
 
-			result.attributeCount += prim->attributes_count;
+			result.attributeCount += cgltfPrim->attributes_count;
 
-			if (prim->indices != nullptr)
-				uniqueGeometryBufferViews.InsertUnique(prim->indices->buffer_view);
+			if (cgltfPrim->indices != nullptr)
+				uniqueGeometryBufferViews.InsertUnique(cgltfPrim->indices->buffer_view);
 
-			for (size_t vai = 0; vai < prim->attributes_count; ++vai)
+			for (size_t vai = 0; vai < cgltfPrim->attributes_count; ++vai)
 			{
-				cgltf_attribute* attr = &prim->attributes[vai];
+				cgltf_attribute* attr = &cgltfPrim->attributes[vai];
 				uniqueGeometryBufferViews.InsertUnique(attr->data->buffer_view);
 			}
 		}
@@ -127,32 +113,32 @@ bool ModelLoader::LoadRuntime(ModelData *modelOut, Array<uint8_t> *geometryBuffe
 	// Allocate model info buffers
 
 	const size_t meshBytes = Math::RoundUpToMultiple(sizeof(ModelMesh), alignment);
-	const size_t primBytes = Math::RoundUpToMultiple(sizeof(ModelPrimitive), alignment);
+	const size_t partBytes = Math::RoundUpToMultiple(sizeof(ModelMeshPart), alignment);
 	const size_t attrBytes = Math::RoundUpToMultiple(sizeof(VertexAttribute) * createInfo.vertexFormat.attributeCount, alignment);
-	const size_t infoBytes = meshBytes + primBytes + attrBytes;
+	const size_t infoBytes = meshBytes + partBytes + attrBytes;
 
 	outputModel->buffer = allocator->Allocate(infoBytes, "ModelLoader model.buffer");
 	uint8_t* byteBuffer = static_cast<uint8_t*>(outputModel->buffer);
 
 	outputModel->nodes = nullptr;
 	outputModel->meshes = reinterpret_cast<ModelMesh*>(byteBuffer);
-	outputModel->primitives = reinterpret_cast<ModelPrimitive*>(byteBuffer + meshBytes);
-	outputModel->attributes = reinterpret_cast<VertexAttribute*>(byteBuffer + meshBytes + primBytes);
+	outputModel->meshParts = reinterpret_cast<ModelMeshPart*>(byteBuffer + meshBytes);
+	outputModel->attributes = reinterpret_cast<VertexAttribute*>(byteBuffer + meshBytes + partBytes);
 
 	ModelMesh& mesh = outputModel->meshes[0];
-	mesh.primitiveCount = 1;
-	mesh.primitiveOffset = 0;
+	mesh.partCount = 1;
+	mesh.partOffset = 0;
 	mesh.indexType = createInfo.indexType;
 	mesh.primitiveMode = createInfo.primitiveMode;
 	mesh.name = nullptr;
 	mesh.aabb = AABB();
 
-	ModelPrimitive& primitive = outputModel->primitives[0];
-	primitive.uniqueVertexCount = createInfo.vertexCount;
-	primitive.indexOffset = vertexBytes;
-	primitive.count = createInfo.indexType != RenderIndexType::None ? createInfo.indexCount : createInfo.vertexCount;
-	primitive.vertexFormat.attributes = outputModel->attributes;
-	primitive.vertexFormat.attributeCount = createInfo.vertexFormat.attributeCount;
+	ModelMeshPart& meshPart = outputModel->meshParts[0];
+	meshPart.uniqueVertexCount = createInfo.vertexCount;
+	meshPart.indexOffset = vertexBytes;
+	meshPart.count = createInfo.indexType != RenderIndexType::None ? createInfo.indexCount : createInfo.vertexCount;
+	meshPart.vertexFormat.attributes = outputModel->attributes;
+	meshPart.vertexFormat.attributeCount = createInfo.vertexFormat.attributeCount;
 
 	for (uint32_t attrIdx = 0; attrIdx < createInfo.vertexFormat.attributeCount; ++attrIdx)
 	{
@@ -162,7 +148,7 @@ bool ModelLoader::LoadRuntime(ModelData *modelOut, Array<uint8_t> *geometryBuffe
 
 	outputModel->nodeCount = 0;
 	outputModel->meshCount = 1;
-	outputModel->primitiveCount = 1;
+	outputModel->meshPartCount = 1;
 	outputModel->attributeCount = createInfo.vertexFormat.attributeCount;
 
 	Reset();
@@ -170,8 +156,28 @@ bool ModelLoader::LoadRuntime(ModelData *modelOut, Array<uint8_t> *geometryBuffe
     return true;
 }
 
-bool ModelLoader::LoadGlbFromBuffer(ModelData *modelOut, Array<uint8_t> *geometryBufferOut, ArrayView<const uint8_t> buffer)
+bool ModelLoader::LoadGlbFromBuffer(
+	ModelData *modelOut,
+	Array<uint8_t> *geometryBufferOut,
+	ArrayView<const uint8_t> buffer)
 {
+	/*
+	1. Count all model resources
+	2. Allocate all required memory for model info in one buffer
+	3. Allocate all required memory for geometry in another buffer
+		- This is because it will be released as soon as the data is uploaded to the GPU
+	3. Copy all geometry data into the buffer
+		- Keep track of the buffer views mapping in the buffer
+	4. Load each mesh in model
+		- Load each glTF primitive in mesh
+			- glTF primitives are called mesh parts in code to reduce confusion with the rendering API term primitive,
+			  which means triangle, point, line, etc.
+			- Mesh parts each have their own vertex format and vertex array for now. In the future, we should try to
+			  merge these when possible to make it possible to render all parts in one draw call.
+			- Each vertex attribute can come from separate buffer view
+	5. Load each node in model
+	*/
+
 	KOKKO_PROFILE_FUNCTION();
 
 	outputModel = modelOut;
@@ -211,14 +217,6 @@ bool ModelLoader::LoadGlbFromBuffer(ModelData *modelOut, Array<uint8_t> *geometr
 		cgltf_free(data);
 		return false;
 	}
-
-	if (countResult.meshCount > 1) {
-		KK_LOG_INFO("ModelLoader: MULTI_MESH");
-	}
-
-	if (countResult.primitiveCount > 1) {
-		KK_LOG_INFO("ModelLoader: MULTI_PRIMITIVE");
-	}
 	 
 	size_t geometryBufferBytes = countResult.totalGeometryBytes;
 	geometryBuffer->Resize(geometryBufferBytes);
@@ -245,25 +243,25 @@ bool ModelLoader::LoadGlbFromBuffer(ModelData *modelOut, Array<uint8_t> *geometr
 	constexpr size_t alignment = 8;
 	const size_t nodeBytes = Math::RoundUpToMultiple(sizeof(ModelNode) * countResult.nodeCount, alignment);
 	const size_t meshBytes = Math::RoundUpToMultiple(sizeof(ModelMesh) * countResult.meshCount, alignment);
-	const size_t primBytes = Math::RoundUpToMultiple(sizeof(ModelPrimitive) * countResult.primitiveCount, alignment);
+	const size_t partBytes = Math::RoundUpToMultiple(sizeof(ModelMeshPart) * countResult.meshPartCount, alignment);
 	const size_t attrBytes = Math::RoundUpToMultiple(sizeof(VertexAttribute) * countResult.attributeCount, alignment);
 	const size_t strBytes = countResult.totalStringLength;
-	const size_t infoBytes = nodeBytes + meshBytes + primBytes + attrBytes + strBytes;
+	const size_t infoBytes = nodeBytes + meshBytes + partBytes + attrBytes + strBytes;
 
 	outputModel->buffer = allocator->Allocate(infoBytes, "ModelLoader model.buffer");
 	uint8_t* byteBuffer = static_cast<uint8_t*>(outputModel->buffer);
 
-	textBuffer = ArrayView<char>(static_cast<char*>(outputModel->buffer) + nodeBytes + meshBytes + primBytes + attrBytes, strBytes);
+	textBuffer = ArrayView<char>(static_cast<char*>(outputModel->buffer) + nodeBytes + meshBytes + partBytes + attrBytes, strBytes);
 
 	outputModel->nodes = reinterpret_cast<ModelNode*>(byteBuffer);
 	outputModel->meshes = reinterpret_cast<ModelMesh*>(byteBuffer + nodeBytes);
-	outputModel->primitives = reinterpret_cast<ModelPrimitive*>(byteBuffer + nodeBytes + meshBytes);
-	outputModel->attributes = reinterpret_cast<VertexAttribute*>(byteBuffer + nodeBytes + meshBytes + primBytes);
+	outputModel->meshParts = reinterpret_cast<ModelMeshPart*>(byteBuffer + nodeBytes + meshBytes);
+	outputModel->attributes = reinterpret_cast<VertexAttribute*>(byteBuffer + nodeBytes + meshBytes + partBytes);
 
 	// These are used as counters to know how many have been inserted
 	outputModel->nodeCount = 0;
 	outputModel->meshCount = 0;
-	outputModel->primitiveCount = 0;
+	outputModel->meshPartCount = 0;
 	outputModel->attributeCount = 0;
 
 	// Load meshes
@@ -356,11 +354,11 @@ bool ModelLoader::LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 	if (cgltfMesh->primitives_count == 0)
 		return false;
 
-	const size_t primitiveCount = cgltfMesh->primitives_count;
-	const uint32_t primitiveOffset = outputModel->primitiveCount;
+	const size_t meshPartCount = cgltfMesh->primitives_count;
+	const uint32_t meshPartOffset = outputModel->meshPartCount;
 
-	modelMeshOut.primitiveCount = 0;
-	modelMeshOut.primitiveOffset = primitiveOffset;
+	modelMeshOut.partCount = 0;
+	modelMeshOut.partOffset = meshPartOffset;
 	modelMeshOut.name = nullptr;
 
 	Vec3f boundsMin;
@@ -369,13 +367,13 @@ bool ModelLoader::LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 	RenderIndexType indexType = RenderIndexType::None;
 	RenderPrimitiveMode primitiveMode = RenderPrimitiveMode::Triangles;
 
-	// A primitive is a separate part of a mesh
-	// Using multiple materials would create multiple primitives
+	// A glTF primitive is called mesh part in this code
+	// Using multiple materials would create multiple mesh parts
 
-	// Iterate through each primitive to gather info about attributes and buffer usage
-	for (size_t primIdx = 0; primIdx < primitiveCount; ++primIdx)
+	// Iterate through each mesh part to gather info about attributes and buffer usage
+	for (size_t partIdx = 0; partIdx < meshPartCount; ++partIdx)
 	{
-		const cgltf_primitive& cgltfPrim = cgltfMesh->primitives[primIdx];
+		const cgltf_primitive& cgltfPrim = cgltfMesh->primitives[partIdx];
 
 		size_t vertexCount = 0;
 
@@ -400,30 +398,30 @@ bool ModelLoader::LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 		size_t indexCount = 0;
 		if (cgltfPrim.indices != nullptr)
 		{
-			RenderIndexType primIndexType = RenderIndexType::None;
+			RenderIndexType partIndexType = RenderIndexType::None;
 			size_t indexSize = 0;
 			if (cgltfPrim.indices->component_type == cgltf_component_type_r_32u)
 			{
-				primIndexType = RenderIndexType::UnsignedInt;
+				partIndexType = RenderIndexType::UnsignedInt;
 				indexSize = 4;
 			}
 			else if (cgltfPrim.indices->component_type == cgltf_component_type_r_16u)
 			{
-				primIndexType = RenderIndexType::UnsignedShort;
+				partIndexType = RenderIndexType::UnsignedShort;
 				indexSize = 2;
 			}
 			else if (cgltfPrim.indices->component_type == cgltf_component_type_r_8u)
 			{
-				primIndexType = RenderIndexType::UnsignedByte;
+				partIndexType = RenderIndexType::UnsignedByte;
 				indexSize = 1;
 			}
 			else
 				assert(false && "Unsupported index type");
 
 			if (indexType != RenderIndexType::None)
-				assert(indexType == primIndexType);
+				assert(indexType == partIndexType);
 
-			indexType = primIndexType;
+			indexType = partIndexType;
 		}
 
 		// Vertex attributes
@@ -500,28 +498,24 @@ bool ModelLoader::LoadGltfMesh(cgltf_mesh* cgltfMesh, ModelMesh& modelMeshOut)
 			}
 		}
 		
-		ModelPrimitive& modelPrim = outputModel->primitives[primitiveOffset + primIdx];
-		modelPrim.uniqueVertexCount = vertexCount;
-		modelPrim.count = cgltfPrim.indices != nullptr ? cgltfPrim.indices->count : vertexCount;
-		modelPrim.indexOffset = 0;
+		ModelMeshPart& meshPart = outputModel->meshParts[meshPartOffset + partIdx];
+		meshPart.uniqueVertexCount = vertexCount;
+		meshPart.count = cgltfPrim.indices != nullptr ? cgltfPrim.indices->count : vertexCount;
+		meshPart.indexOffset = 0;
 
 		if (cgltfPrim.indices != nullptr)
 		{
 			auto indexBufferViewIdx = uniqueGeometryBufferViews.Find(cgltfPrim.indices->buffer_view);
 			if (indexBufferViewIdx >= 0)
-			{
-				modelPrim.indexOffset = geometryBufferViewRangeMap[indexBufferViewIdx].start + cgltfPrim.indices->offset;
-			}
+				meshPart.indexOffset = geometryBufferViewRangeMap[indexBufferViewIdx].start + cgltfPrim.indices->offset;
 			else
-			{
 				assert(false && "Index geometry buffer view not found in range map");
-			}
 		}
 
-		modelPrim.vertexFormat = VertexFormat(attributesBegin, cgltfPrim.attributes_count);
+		meshPart.vertexFormat = VertexFormat(attributesBegin, cgltfPrim.attributes_count);
 
-		outputModel->primitiveCount += 1;
-		modelMeshOut.primitiveCount += 1;
+		outputModel->meshPartCount += 1;
+		modelMeshOut.partCount += 1;
 	}
 
 	modelMeshOut.primitiveMode = primitiveMode;
@@ -587,16 +581,16 @@ TEST_CASE("ModelLoader.RuntimeModelNonIndexed")
 
 	CHECK(model.meshCount == 1);
 	CHECK(model.meshes[0].indexType == modelInfo.indexType);
-	CHECK(model.meshes[0].primitiveCount == 1);
-	CHECK(model.meshes[0].primitiveOffset == 0);
+	CHECK(model.meshes[0].partCount == 1);
+	CHECK(model.meshes[0].partOffset == 0);
 	CHECK(model.meshes[0].primitiveMode == modelInfo.primitiveMode);
 
-	CHECK(model.primitiveCount == 1);
-	CHECK(model.primitives[0].count == modelInfo.vertexCount);
-	CHECK(model.primitives[0].uniqueVertexCount == modelInfo.vertexCount);
-	CHECK(model.primitives[0].vertexFormat.attributeCount == KOKKO_ARRAY_ITEMS(vertexAttributes));
-	CHECK(model.primitives[0].vertexFormat.attributes[0].elemCount == vertexAttributes[0].elemCount);
-	CHECK(model.primitives[0].vertexFormat.attributes[0].elemType == vertexAttributes[0].elemType);
+	CHECK(model.meshPartCount == 1);
+	CHECK(model.meshParts[0].count == modelInfo.vertexCount);
+	CHECK(model.meshParts[0].uniqueVertexCount == modelInfo.vertexCount);
+	CHECK(model.meshParts[0].vertexFormat.attributeCount == KOKKO_ARRAY_ITEMS(vertexAttributes));
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].elemCount == vertexAttributes[0].elemCount);
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].elemType == vertexAttributes[0].elemType);
 }
 
 TEST_CASE("ModelLoader.RuntimeModelIndexed")
@@ -643,31 +637,31 @@ TEST_CASE("ModelLoader.RuntimeModelIndexed")
 
 	CHECK(model.meshCount == 1);
 	CHECK(model.meshes[0].indexType == modelInfo.indexType);
-	CHECK(model.meshes[0].primitiveCount == 1);
-	CHECK(model.meshes[0].primitiveOffset == 0);
+	CHECK(model.meshes[0].partCount == 1);
+	CHECK(model.meshes[0].partOffset == 0);
 	CHECK(model.meshes[0].primitiveMode == modelInfo.primitiveMode);
 
-	CHECK(model.primitiveCount == 1);
-	CHECK(model.primitives[0].count == modelInfo.indexCount);
-	CHECK(model.primitives[0].uniqueVertexCount == modelInfo.vertexCount);
-	CHECK(model.primitives[0].vertexFormat.attributeCount == KOKKO_ARRAY_ITEMS(vertexAttributes));
+	CHECK(model.meshPartCount == 1);
+	CHECK(model.meshParts[0].count == modelInfo.indexCount);
+	CHECK(model.meshParts[0].uniqueVertexCount == modelInfo.vertexCount);
+	CHECK(model.meshParts[0].vertexFormat.attributeCount == KOKKO_ARRAY_ITEMS(vertexAttributes));
 
-	for (uint32_t aIdx = 0; aIdx != model.primitives[0].vertexFormat.attributeCount; ++aIdx)
+	for (uint32_t aIdx = 0; aIdx != model.meshParts[0].vertexFormat.attributeCount; ++aIdx)
 	{
-		CHECK(model.primitives[0].vertexFormat.attributes[aIdx].elemCount == vertexAttributes[aIdx].elemCount);
-		CHECK(model.primitives[0].vertexFormat.attributes[aIdx].elemType == vertexAttributes[aIdx].elemType);
+		CHECK(model.meshParts[0].vertexFormat.attributes[aIdx].elemCount == vertexAttributes[aIdx].elemCount);
+		CHECK(model.meshParts[0].vertexFormat.attributes[aIdx].elemType == vertexAttributes[aIdx].elemType);
 	}
 
 	CHECK(geometryBuffer.GetCount() >= sizeof(vertexData) + sizeof(indexData));
 
 	const uint8_t* origGeom = reinterpret_cast<const uint8_t*>(vertexData);
 	const uint8_t* geom = geometryBuffer.GetData();
-	for (uint32_t vIdx = 0; vIdx != model.primitives[0].uniqueVertexCount; ++vIdx)
+	for (uint32_t vIdx = 0; vIdx != model.meshParts[0].uniqueVertexCount; ++vIdx)
 	{
-		for (uint32_t aIdx = 0; aIdx != model.primitives[0].vertexFormat.attributeCount; ++aIdx)
+		for (uint32_t aIdx = 0; aIdx != model.meshParts[0].vertexFormat.attributeCount; ++aIdx)
 		{
 			auto& origAttr = vertexAttributes[aIdx];
-			auto& attr = model.primitives[0].vertexFormat.attributes[aIdx];
+			auto& attr = model.meshParts[0].vertexFormat.attributes[aIdx];
 			auto origData = reinterpret_cast<const float*>(&origGeom[origAttr.offset + attr.stride * vIdx]);
 			auto attrData = reinterpret_cast<const float*>(&geom[attr.offset + attr.stride * vIdx]);
 			for (uint32_t eIdx = 0; eIdx != attr.elemCount; ++eIdx)
@@ -677,8 +671,8 @@ TEST_CASE("ModelLoader.RuntimeModelIndexed")
 		}
 	}
 
-	auto indices = reinterpret_cast<const uint16_t*>(&geom[model.primitives[0].indexOffset]);
-	for (uint32_t idx = 0; idx != model.primitives[0].count; ++idx)
+	auto indices = reinterpret_cast<const uint16_t*>(&geom[model.meshParts[0].indexOffset]);
+	for (uint32_t idx = 0; idx != model.meshParts[0].count; ++idx)
 	{
 		CHECK(indices[idx] == indexData[idx]);
 	}
@@ -702,26 +696,26 @@ TEST_CASE("ModelLoader.GlbModelIndexed")
 
 	CHECK(model.meshCount == 1);
 	CHECK(model.meshes[0].indexType == RenderIndexType::UnsignedShort);
-	CHECK(model.meshes[0].primitiveCount == 1);
-	CHECK(model.meshes[0].primitiveOffset == 0);
+	CHECK(model.meshes[0].partCount == 1);
+	CHECK(model.meshes[0].partOffset == 0);
 	CHECK(model.meshes[0].primitiveMode == RenderPrimitiveMode::Triangles);
 	CHECK(strcmp(model.meshes[0].name, "Mesh") == 0);
 
-	CHECK(model.primitiveCount == 1);
-	CHECK(model.primitives[0].count == 36);
-	CHECK(model.primitives[0].uniqueVertexCount == 24);
-	CHECK(model.primitives[0].vertexFormat.attributeCount == 2);
+	CHECK(model.meshPartCount == 1);
+	CHECK(model.meshParts[0].count == 36);
+	CHECK(model.meshParts[0].uniqueVertexCount == 24);
+	CHECK(model.meshParts[0].vertexFormat.attributeCount == 2);
 
-	CHECK(model.primitives[0].vertexFormat.attributes[0].elemCount == 3);
-	CHECK(model.primitives[0].vertexFormat.attributes[0].elemType == RenderVertexElemType::Float);
-	CHECK(model.primitives[0].vertexFormat.attributes[0].stride == 12);
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].elemCount == 3);
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].elemType == RenderVertexElemType::Float);
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].stride == 12);
 
-	CHECK(model.primitives[0].vertexFormat.attributes[1].elemCount == 3);
-	CHECK(model.primitives[0].vertexFormat.attributes[1].elemType == RenderVertexElemType::Float);
-	CHECK(model.primitives[0].vertexFormat.attributes[0].stride == 12);
+	CHECK(model.meshParts[0].vertexFormat.attributes[1].elemCount == 3);
+	CHECK(model.meshParts[0].vertexFormat.attributes[1].elemType == RenderVertexElemType::Float);
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].stride == 12);
 
-	size_t vertexDataSize = 3 * sizeof(float) * 2 * model.primitives[0].uniqueVertexCount;
-	size_t indexDataSize = 2 * model.primitives[0].count;
+	size_t vertexDataSize = 3 * sizeof(float) * 2 * model.meshParts[0].uniqueVertexCount;
+	size_t indexDataSize = 2 * model.meshParts[0].count;
 	CHECK(geometryBuffer.GetCount() >= vertexDataSize + indexDataSize);
 
 	ArrayView<const uint8_t> binaryData = buffer.GetSubView(1016, buffer.GetCount());
@@ -735,12 +729,12 @@ TEST_CASE("ModelLoader.GlbModelIndexed")
 
 	const uint8_t* origGeom = binaryData.GetData();
 	const uint8_t* geom = geometryBuffer.GetData();
-	for (uint32_t vIdx = 0; vIdx != model.primitives[0].uniqueVertexCount; ++vIdx)
+	for (uint32_t vIdx = 0; vIdx != model.meshParts[0].uniqueVertexCount; ++vIdx)
 	{
-		for (uint32_t aIdx = 0; aIdx != model.primitives[0].vertexFormat.attributeCount; ++aIdx)
+		for (uint32_t aIdx = 0; aIdx != model.meshParts[0].vertexFormat.attributeCount; ++aIdx)
 		{
 			auto& origAttr = vertexAttributes[aIdx];
-			auto& attr = model.primitives[0].vertexFormat.attributes[aIdx];
+			auto& attr = model.meshParts[0].vertexFormat.attributes[aIdx];
 			auto origData = reinterpret_cast<const float*>(&origGeom[origAttr.offset + origAttr.stride * vIdx]);
 			auto attrData = reinterpret_cast<const float*>(&geom[attr.offset + attr.stride * vIdx]);
 			for (uint32_t eIdx = 0; eIdx != attr.elemCount; ++eIdx)
@@ -751,8 +745,8 @@ TEST_CASE("ModelLoader.GlbModelIndexed")
 	}
 
 	auto originalIndices = reinterpret_cast<const uint16_t*>(&binaryData.GetData()[576]);
-	auto indices = reinterpret_cast<const uint16_t*>(&geom[model.primitives[0].indexOffset]);
-	for (uint32_t idx = 0; idx != model.primitives[0].count; ++idx)
+	auto indices = reinterpret_cast<const uint16_t*>(&geom[model.meshParts[0].indexOffset]);
+	for (uint32_t idx = 0; idx != model.meshParts[0].count; ++idx)
 	{
 		CHECK(indices[idx] == originalIndices[idx]);
 	}
@@ -776,26 +770,26 @@ TEST_CASE("ModelLoader.GlbModelIndexedInterleaved")
 
 	CHECK(model.meshCount == 1);
 	CHECK(model.meshes[0].indexType == RenderIndexType::UnsignedShort);
-	CHECK(model.meshes[0].primitiveCount == 1);
-	CHECK(model.meshes[0].primitiveOffset == 0);
+	CHECK(model.meshes[0].partCount == 1);
+	CHECK(model.meshes[0].partOffset == 0);
 	CHECK(model.meshes[0].primitiveMode == RenderPrimitiveMode::Triangles);
 	CHECK(strcmp(model.meshes[0].name, "Mesh") == 0);
 
-	CHECK(model.primitiveCount == 1);
-	CHECK(model.primitives[0].count == 36);
-	CHECK(model.primitives[0].uniqueVertexCount == 24);
-	CHECK(model.primitives[0].vertexFormat.attributeCount == 2);
+	CHECK(model.meshPartCount == 1);
+	CHECK(model.meshParts[0].count == 36);
+	CHECK(model.meshParts[0].uniqueVertexCount == 24);
+	CHECK(model.meshParts[0].vertexFormat.attributeCount == 2);
 
-	CHECK(model.primitives[0].vertexFormat.attributes[0].elemCount == 3);
-	CHECK(model.primitives[0].vertexFormat.attributes[0].elemType == RenderVertexElemType::Float);
-	CHECK(model.primitives[0].vertexFormat.attributes[0].stride == 24);
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].elemCount == 3);
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].elemType == RenderVertexElemType::Float);
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].stride == 24);
 
-	CHECK(model.primitives[0].vertexFormat.attributes[1].elemCount == 3);
-	CHECK(model.primitives[0].vertexFormat.attributes[1].elemType == RenderVertexElemType::Float);
-	CHECK(model.primitives[0].vertexFormat.attributes[0].stride == 24);
+	CHECK(model.meshParts[0].vertexFormat.attributes[1].elemCount == 3);
+	CHECK(model.meshParts[0].vertexFormat.attributes[1].elemType == RenderVertexElemType::Float);
+	CHECK(model.meshParts[0].vertexFormat.attributes[0].stride == 24);
 
-	size_t vertexDataSize = 3 * sizeof(float) * 2 * model.primitives[0].uniqueVertexCount;
-	size_t indexDataSize = 2 * model.primitives[0].count;
+	size_t vertexDataSize = 3 * sizeof(float) * 2 * model.meshParts[0].uniqueVertexCount;
+	size_t indexDataSize = 2 * model.meshParts[0].count;
 	CHECK(geometryBuffer.GetCount() >= vertexDataSize + indexDataSize);
 
 	ArrayView<const uint8_t> binaryData = buffer.GetSubView(984, buffer.GetCount());
@@ -809,12 +803,12 @@ TEST_CASE("ModelLoader.GlbModelIndexedInterleaved")
 
 	const uint8_t* origGeom = binaryData.GetData();
 	const uint8_t* geom = geometryBuffer.GetData();
-	for (uint32_t vIdx = 0; vIdx != model.primitives[0].uniqueVertexCount; ++vIdx)
+	for (uint32_t vIdx = 0; vIdx != model.meshParts[0].uniqueVertexCount; ++vIdx)
 	{
-		for (uint32_t aIdx = 0; aIdx != model.primitives[0].vertexFormat.attributeCount; ++aIdx)
+		for (uint32_t aIdx = 0; aIdx != model.meshParts[0].vertexFormat.attributeCount; ++aIdx)
 		{
 			auto& origAttr = vertexAttributes[aIdx];
-			auto& attr = model.primitives[0].vertexFormat.attributes[aIdx];
+			auto& attr = model.meshParts[0].vertexFormat.attributes[aIdx];
 			auto origData = reinterpret_cast<const float*>(&origGeom[origAttr.offset + origAttr.stride * vIdx]);
 			auto attrData = reinterpret_cast<const float*>(&geom[attr.offset + attr.stride * vIdx]);
 			for (uint32_t eIdx = 0; eIdx != attr.elemCount; ++eIdx)
@@ -825,8 +819,8 @@ TEST_CASE("ModelLoader.GlbModelIndexedInterleaved")
 	}
 
 	auto originalIndices = reinterpret_cast<const uint16_t*>(&binaryData.GetData()[576]);
-	auto indices = reinterpret_cast<const uint16_t*>(&geom[model.primitives[0].indexOffset]);
-	for (uint32_t idx = 0; idx != model.primitives[0].count; ++idx)
+	auto indices = reinterpret_cast<const uint16_t*>(&geom[model.meshParts[0].indexOffset]);
+	for (uint32_t idx = 0; idx != model.meshParts[0].count; ++idx)
 	{
 		CHECK(indices[idx] == originalIndices[idx]);
 	}
