@@ -111,9 +111,9 @@ void GraphicsFeatureSkybox::Render(const RenderParameters& parameters)
 	encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId);
 
 	auto& mesh = parameters.modelManager->GetModelMeshes(meshId)[0];
-	auto& prim = parameters.modelManager->GetModelPrimitives(meshId)[0];
-	encoder->BindVertexArray(prim.vertexArrayId);
-	encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
+	auto& part = parameters.modelManager->GetModelMeshParts(meshId)[0];
+	encoder->BindVertexArray(part.vertexArrayId);
+	encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
 }
 
 }

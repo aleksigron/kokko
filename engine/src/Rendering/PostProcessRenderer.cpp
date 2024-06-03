@@ -57,8 +57,8 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 	KOKKO_PROFILE_FUNCTION();
 
 	auto& mesh = modelManager->GetModelMeshes(fullscreenMeshId)[0];
-	auto& prim = modelManager->GetModelPrimitives(fullscreenMeshId)[0];
-	encoder->BindVertexArray(prim.vertexArrayId);
+	auto& part = modelManager->GetModelMeshParts(fullscreenMeshId)[0];
+	encoder->BindVertexArray(part.vertexArrayId);
 
 	for (unsigned int i = 0; i < count; ++i)
 	{
@@ -91,7 +91,7 @@ void PostProcessRenderer::RenderPasses(unsigned int count, const PostProcessRend
 		if (pass.textureCount > 0)
 			BindTextures(shader, pass.textureCount, pass.textureNameHashes, pass.textureIds, pass.samplerIds);
 
-		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
+		encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
 	}
 }
 

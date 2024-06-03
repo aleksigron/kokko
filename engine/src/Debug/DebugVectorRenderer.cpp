@@ -447,13 +447,13 @@ void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* 
 
 				ModelId meshId = staticMeshes[static_cast<unsigned int>(primitive.type)];
 				auto& mesh = modelManager->GetModelMeshes(meshId)[0];
-				auto& prim = modelManager->GetModelPrimitives(meshId)[0];
-				encoder->BindVertexArray(prim.vertexArrayId);
+				auto& part = modelManager->GetModelMeshParts(meshId)[0];
+				encoder->BindVertexArray(part.vertexArrayId);
 
 				if (mesh.indexType != RenderIndexType::None)
-					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, prim.count, prim.indexOffset, 0);
+					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
 				else
-					encoder->Draw(mesh.primitiveMode, 0, prim.count);
+					encoder->Draw(mesh.primitiveMode, 0, part.count);
 			}
 		}
 

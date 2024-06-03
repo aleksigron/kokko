@@ -268,8 +268,8 @@ void ParticleSystem::Render(const RenderParameters& parameters)
 	encoder->UseShaderProgram(renderShader.driverId);
 
 	auto& mesh = modelManager->GetModelMeshes(quadMeshId)[0];
-	auto& prim = modelManager->GetModelPrimitives(quadMeshId)[0];
-	encoder->BindVertexArray(prim.vertexArrayId);
+	auto& part = modelManager->GetModelMeshParts(quadMeshId)[0];
+	encoder->BindVertexArray(part.vertexArrayId);
 	encoder->DrawIndirect(mesh.primitiveMode, IndirectOffsetRender);
 
 	// Swap alive lists
