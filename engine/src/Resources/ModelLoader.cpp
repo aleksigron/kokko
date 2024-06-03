@@ -91,7 +91,7 @@ ModelLoader::ModelLoader(Allocator* allocator) :
 {
 }
 
-bool ModelLoader::LoadRuntime(ModelData *modelOut, Array<uint8_t> *geometryBufferOut, const ModelCreateInfo &createInfo)
+bool ModelLoader::LoadRuntime(ModelData* modelOut, Array<uint8_t>* geometryBufferOut, const ModelCreateInfo& createInfo)
 {
 	KOKKO_PROFILE_FUNCTION();
 
