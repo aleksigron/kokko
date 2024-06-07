@@ -213,8 +213,9 @@ void ModelManager::Reallocate(uint32_t required)
 	}
 	else
 	{
-		memcpy(newData.freelist, data.freelist, data.slotsUsed * sizeof(uint32_t));
-		memset(newData.freelist + data.slotsUsed * sizeof(uint32_t), 0, sizeof(uint32_t) * (required - data.slotsUsed));
+		size_t freelistSize = data.slotsUsed * sizeof(uint32_t);
+		memcpy(newData.freelist, data.freelist, freelistSize);
+		memset(newData.freelist + data.slotsUsed, 0, sizeof(uint32_t) * required - freelistSize);
 		memcpy(newData.model, data.model, data.slotsUsed * sizeof(ModelData));
 
 		allocator->Deallocate(data.buffer);
