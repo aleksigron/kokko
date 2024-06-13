@@ -203,11 +203,13 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 		{
 			ImGuiInputTextFlags roFlags = ImGuiInputTextFlags_ReadOnly;
 
+			ArrayView<const ModelMesh> modelMeshes;
+
 			context.temporaryString.Assign("No mesh");
 			MeshId meshId = meshComponentSystem->GetMeshId(meshComponent);
 			if (meshId != MeshId::Null)
 			{
-				auto modelMeshes = modelManager->GetModelMeshes(meshId.modelId);
+				modelMeshes = modelManager->GetModelMeshes(meshId.modelId);
 				auto modelUid = modelManager->GetModelUid(meshId.modelId);
 
 				if (modelUid.HasValue())
@@ -238,7 +240,33 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 				}
 			}
 
-			ImGui::InputText("Mesh", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);
+			if (modelMeshes.GetCount() != 0)
+			{
+				const char* items[] = { "AAAA" };
+				const char* previewString = context.temporaryString.GetCStr();
+				if (ImGui::BeginCombo("Mesh", previewString, ImGuiComboFlags_None))
+				{
+					for (uint32_t meshIdx = 0, count = modelMeshes.GetCount(); meshIdx != count; meshIdx++)
+					{
+						const bool isSelected = (meshIdx == meshId.meshIndex);
+						const ModelMesh& mesh = modelMeshes[meshIdx];
+						const char* name = mesh.name ? mesh.name : "Unnamed mesh";
+						if (ImGui::Selectable(name, isSelected))
+						{
+							meshComponentSystem->SetMeshId(meshComponent, MeshId{ meshId.modelId, meshIdx });
+						}
+
+						// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+			}
+			else
+			{
+				ImGui::InputText("Mesh", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);
+			}
 
 			if (ImGui::BeginDragDropTarget())
 			{
