@@ -150,7 +150,7 @@ void LevelSerializer::WriteEntity(c4::yml::NodeRef& entitySeq, Entity entity, Sc
 
 	const char* name = entityManager->GetDebugName(entity);
 	if (name != nullptr)
-		entityNode["entity_name"] = "mesh";
+		entityNode["entity_name"] = name;
 
 	ryml::NodeRef componentArray = entityNode["components"];
 	componentArray |= ryml::SEQ;
