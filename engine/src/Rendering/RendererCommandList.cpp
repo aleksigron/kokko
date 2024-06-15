@@ -9,7 +9,6 @@ namespace kokko
 void RendererCommandList::AddControl(
 	unsigned int viewport,
 	RenderPassType pass,
-	unsigned int order,
 	RendererControlType type,
 	unsigned int data)
 {
@@ -18,7 +17,6 @@ void RendererCommandList::AddControl(
 	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, static_cast<uint64_t>(pass));
 	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RendererCommandType::Control));
-	renderOrder.commandOrder.AssignValue(c, order);
 	renderOrder.commandType.AssignValue(c, static_cast<uint64_t>(type));
 	renderOrder.commandData.AssignValue(c, data);
 
@@ -28,7 +26,6 @@ void RendererCommandList::AddControl(
 void RendererCommandList::AddControl(
 	unsigned int viewport,
 	RenderPassType pass,
-	unsigned int order,
 	RendererControlType type,
 	unsigned int byteCount,
 	void* data)
@@ -41,7 +38,6 @@ void RendererCommandList::AddControl(
 	renderOrder.viewportIndex.AssignValue(c, viewport);
 	renderOrder.viewportPass.AssignValue(c, static_cast<uint64_t>(pass));
 	renderOrder.command.AssignValue(c, static_cast<uint64_t>(RendererCommandType::Control));
-	renderOrder.commandOrder.AssignValue(c, order);
 	renderOrder.commandType.AssignValue(c, static_cast<uint64_t>(type));
 
 	// Always insert a multiple of 8 bytes
@@ -63,7 +59,8 @@ void RendererCommandList::AddDraw(
 	RenderPassType pass,
 	float depth,
 	MaterialId material,
-	unsigned int renderObjectId)
+	unsigned int renderObjectId,
+	unsigned int meshPart)
 {
 	depth = (depth > 1.0f ? 1.0f : (depth < 0.0f ? 0.0f : depth));
 
@@ -88,6 +85,7 @@ void RendererCommandList::AddDraw(
 
 	renderOrder.materialId.AssignValue(c, material.i);
 	renderOrder.renderObject.AssignValue(c, renderObjectId);
+	renderOrder.meshPart.AssignValue(c, meshPart);
 
 	commands.PushBack(c);
 }

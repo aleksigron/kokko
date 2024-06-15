@@ -11,6 +11,16 @@
 			</ArrayItems>
 		</Expand>
 	</Type>
+	<Type Name="kokko::ArrayView&lt;*&gt;">
+		<DisplayString>{{ size={count} }}</DisplayString>
+		<Expand>
+			<Item Name="[size]">count</Item>
+			<ArrayItems>
+				<Size>count</Size>
+				<ValuePointer>data</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
 	<Type Name="kokko::Queue&lt;*&gt;">
 		<DisplayString>{{ size={count} }}</DisplayString>
 		<Expand>

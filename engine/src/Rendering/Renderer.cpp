@@ -367,12 +367,13 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 
 			if (mat != RenderOrderConfiguration::CallbackMaterialId)
 			{
-				MaterialId matId = MaterialId{ static_cast<unsigned int>(mat) };
+				MaterialId matId = MaterialId{ static_cast<uint16_t>(mat) };
 
 				if (matId == MaterialId::Null)
 					matId = fallbackMeshMaterial;
 
 				uint64_t objIdx = renderOrder.renderObject.GetValue(command);
+				uint16_t meshPart = static_cast<uint16_t>(renderOrder.meshPart.GetValue(command));
 
 				// Update viewport uniform block
 				if (vpIdx != lastVpIdx)
@@ -412,13 +413,9 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 
 				MeshId meshId = componentSystem->data.mesh[objIdx];
 				auto& mesh = modelManager->GetModelMeshes(meshId.modelId)[meshId.meshIndex];
-				auto parts = modelManager->GetModelMeshParts(meshId.modelId);
-				for (uint16_t partIdx = mesh.partOffset, end = mesh.partOffset + mesh.partCount; partIdx != end; ++partIdx)
-				{
-					auto& part = parts[partIdx];
-					encoder->BindVertexArray(part.vertexArrayId);
-					encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
-				}
+				auto& part = modelManager->GetModelMeshParts(meshId.modelId)[mesh.partOffset + meshPart];
+				encoder->BindVertexArray(part.vertexArrayId);
+				encoder->DrawIndexed(mesh.primitiveMode, mesh.indexType, part.count, part.indexOffset, 0);
 
 				objectDrawsProcessed += 1;
 			}
@@ -828,19 +825,19 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	// Create control commands for beginning of viewports and render passes
 
 	constexpr uint32_t firstViewportIndex = 0;
-	commandList.AddControl(0, RenderPassType::OpaqueGeometry, 0, RendererControlType::BeginViewport, firstViewportIndex);
+	commandList.AddControl(0, RenderPassType::OpaqueGeometry, RendererControlType::BeginViewport, firstViewportIndex);
 
 	for (unsigned int vpIdx = viewportIndicesShadowCascade.start; vpIdx < viewportIndicesShadowCascade.end; ++vpIdx)
 		if (vpIdx != firstViewportIndex)
-			commandList.AddControl(vpIdx, RenderPassType::OpaqueGeometry, 0, RendererControlType::BeginViewport);
+			commandList.AddControl(vpIdx, RenderPassType::OpaqueGeometry, RendererControlType::BeginViewport);
 
 	unsigned int fsvp = viewportIndexFullscreen;
 
 	if (fsvp != firstViewportIndex)
-		commandList.AddControl(fsvp, RenderPassType::OpaqueGeometry, 0, RendererControlType::BeginViewport);
+		commandList.AddControl(fsvp, RenderPassType::OpaqueGeometry, RendererControlType::BeginViewport);
 
-	commandList.AddControl(fsvp, RenderPassType::Skybox, 0, RendererControlType::BeginPass);
-	commandList.AddControl(fsvp, RenderPassType::Transparent, 0, RendererControlType::BeginPass);
+	commandList.AddControl(fsvp, RenderPassType::Skybox, RendererControlType::BeginPass);
+	commandList.AddControl(fsvp, RenderPassType::Transparent, RendererControlType::BeginPass);
 
 	// Create draw commands for render objects in scene
 
@@ -848,7 +845,7 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 	unsigned int visRequired = BitPack::CalculateRequired(componentCount);
 	objectVisibility.Resize(static_cast<size_t>(visRequired) * viewportCount);
 
-	const unsigned int compareTrIdx = static_cast<unsigned int>(TransparencyType::AlphaTest);
+	const uint8_t compareTrIdx = static_cast<uint8_t>(TransparencyType::AlphaTest);
 
 	BitPack* vis[MaxViewportCount];
 
@@ -874,14 +871,21 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		// Test visibility in shadow viewports
 		for (unsigned int vpIdx = 0, count = numShadowViewports; vpIdx < count; ++vpIdx)
 		{
-			if (BitPack::Get(vis[vpIdx], i) &&
-				static_cast<unsigned int>(componentSystem->data.transparency[i]) <= compareTrIdx)
+			if (BitPack::Get(vis[vpIdx], i))
 			{
 				const RenderViewport& vp = viewportData[vpIdx];
 
 				float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
-
-				commandList.AddDraw(vpIdx, RenderPassType::OpaqueGeometry, depth, shadowMaterial, i);
+				auto transparencies = componentSystem->GetTransparencyTypes(MeshComponentId{ i });
+				uint8_t partCount = static_cast<uint8_t>(transparencies.GetCount());
+				for (size_t partIndex = 0; partIndex != partCount; ++partIndex)
+				{
+					if (static_cast<uint8_t>(transparencies[partIndex]) <= compareTrIdx)
+					{
+						// TODO: Render all mesh parts in one draw call since all of them use the same material
+						commandList.AddDraw(vpIdx, RenderPassType::OpaqueGeometry, depth, shadowMaterial, i, partIndex);
+					}
+				}
 
 				objectDrawCount += 1;
 			}
@@ -890,15 +894,22 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		// Test visibility in fullscreen viewport
 		if (BitPack::Get(vis[fsvp], i))
 		{
-			MaterialId mat = componentSystem->data.material[i];
+			uint32_t meshIndex = componentSystem->data.mesh[i].meshIndex;
+			auto id = MeshComponentId{ i };
+			auto materials = componentSystem->GetMaterialIds(id);
+			auto transparencies = componentSystem->GetTransparencyTypes(id);
 			const RenderViewport& vp = viewportData[fsvp];
 
 			float depth = CalculateDepth(objPos, vp.position, vp.forward, vp.farMinusNear, vp.minusNear);
 
-			RenderPassType pass = ConvertTransparencyToPass(componentSystem->data.transparency[i]);
-			commandList.AddDraw(fsvp, pass, depth, mat, i);
+			uint8_t partCount = static_cast<uint8_t>(materials.GetCount());
+			for (size_t partIndex = 0; partIndex != partCount; ++partIndex)
+			{
+				RenderPassType pass = ConvertTransparencyToPass(transparencies[partIndex]);
+				commandList.AddDraw(fsvp, pass, depth, materials[partIndex], i, partIndex);
 
-			objectDrawCount += 1;
+				objectDrawCount += 1;
+			}
 		}
 	}
 

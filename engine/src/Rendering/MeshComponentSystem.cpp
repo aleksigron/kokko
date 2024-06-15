@@ -16,6 +16,36 @@ namespace kokko
 
 const MeshComponentId MeshComponentId::Null = MeshComponentId{ 0 };
 
+template <typename ItemType, typename SizeType, SizeType MaxCount>
+MeshComponentSystem::CompactStorage<ItemType, SizeType, MaxCount>::CompactStorage() : count(0) { }
+
+template <typename ItemType, typename SizeType, SizeType MaxCount>
+void MeshComponentSystem::CompactStorage<ItemType, SizeType, MaxCount>::Resize(SizeType newCount)
+{
+	assert(newCount <= MaxCount);
+
+	SizeType oldCount = count;
+	count = newCount;
+
+	for (SizeType i = oldCount, end = (newCount > MaxCount ? MaxCount : newCount); i != newCount; ++i)
+		data[i] = ItemType{};
+}
+
+template <typename ItemType, typename SizeType, SizeType MaxCount>
+ArrayView<ItemType> MeshComponentSystem::CompactStorage<ItemType, SizeType, MaxCount>::GetDataView()
+{
+	return ArrayView<ItemType>(count != 0 ? &data[0] : nullptr, count);
+}
+
+template <typename ItemType, typename SizeType, SizeType MaxCount>
+ArrayView<const ItemType> MeshComponentSystem::CompactStorage<ItemType, SizeType, MaxCount>::GetDataView() const
+{
+	return ArrayView<const ItemType>(count != 0 ? &data[0] : nullptr, count);
+}
+
+template class MeshComponentSystem::CompactStorage<MaterialId, uint16_t, 7>;
+template class MeshComponentSystem::CompactStorage<TransparencyType, uint8_t, 7>;
+
 MeshComponentSystem::MeshComponentSystem(Allocator* allocator, ModelManager* modelManager) :
 	allocator(allocator),
 	modelManager(modelManager),
@@ -87,8 +117,8 @@ void MeshComponentSystem::AddComponents(unsigned int count, const Entity* entiti
 
 		data.entity[id] = e;
 		data.mesh[id] = MeshId::Null;
-		data.material[id] = MaterialId::Null;
-		data.transparency[id] = TransparencyType::Opaque;
+		data.material[id] = MaterialStorage();
+		data.transparency[id] = TransparencyStorage();
 		data.bounds[id] = AABB();
 		data.transform[id] = Mat4x4f();
 
@@ -135,9 +165,11 @@ void MeshComponentSystem::RemoveAll()
 	data.count = 1;
 }
 
-void MeshComponentSystem::SetMeshId(MeshComponentId id, MeshId meshId)
+void MeshComponentSystem::SetMesh(MeshComponentId id, MeshId meshId, uint32_t partCount)
 {
 	data.mesh[id.i] = meshId;
+	data.material[id.i].Resize(partCount);
+	data.transparency[id.i].Resize(partCount);
 }
 
 MeshId MeshComponentSystem::GetMeshId(MeshComponentId id) const
@@ -145,20 +177,25 @@ MeshId MeshComponentSystem::GetMeshId(MeshComponentId id) const
 	return data.mesh[id.i];
 }
 
-void MeshComponentSystem::SetMaterial(MeshComponentId id, MaterialId materialId, TransparencyType transparency)
+void MeshComponentSystem::SetMaterial(MeshComponentId id, uint32_t partIndex, MaterialId materialId, TransparencyType transparency)
 {
-	data.material[id.i] = materialId;
-	data.transparency[id.i] = transparency;
+	auto materials = data.material[id.i].GetDataView();
+	assert(partIndex < materials.GetCount());
+	materials[partIndex] = materialId;
+
+	auto transparencies = data.transparency[id.i].GetDataView();
+	assert(partIndex < transparencies.GetCount());
+	transparencies[partIndex] = transparency;
 }
 
-MaterialId MeshComponentSystem::GetMaterialId(MeshComponentId id) const
+ArrayView<const MaterialId> MeshComponentSystem::GetMaterialIds(MeshComponentId id) const
 {
-	return data.material[id.i];
+	return data.material[id.i].GetDataView();
 }
 
-TransparencyType MeshComponentSystem::GetTransparencyType(MeshComponentId id) const
+ArrayView<const TransparencyType> MeshComponentSystem::GetTransparencyTypes(MeshComponentId id) const
 {
-	return data.transparency[id.i];
+	return data.transparency[id.i].GetDataView();
 }
 
 void MeshComponentSystem::Reallocate(unsigned int required)
@@ -172,8 +209,8 @@ void MeshComponentSystem::Reallocate(unsigned int required)
 	entityMap.Reserve(required);
 
 	InstanceData newData;
-	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(MaterialId) +
-		sizeof(TransparencyType) + sizeof(AABB) + sizeof(Mat4x4f));
+	unsigned int bytes = required * (sizeof(Entity) + sizeof(MeshId) + sizeof(MaterialStorage) +
+		sizeof(TransparencyStorage) + sizeof(AABB) + sizeof(Mat4x4f));
 
 	newData.buffer = this->allocator->Allocate(bytes, "MeshComponentSystem.data.buffer");
 	newData.count = data.count;
@@ -181,8 +218,8 @@ void MeshComponentSystem::Reallocate(unsigned int required)
 
 	newData.entity = static_cast<Entity*>(newData.buffer);
 	newData.mesh = reinterpret_cast<MeshId*>(newData.entity + required);
-	newData.material = reinterpret_cast<MaterialId*>(newData.mesh + required);
-	newData.transparency = reinterpret_cast<TransparencyType*>(newData.material + required);
+	newData.material = reinterpret_cast<MaterialStorage*>(newData.mesh + required);
+	newData.transparency = reinterpret_cast<TransparencyStorage*>(newData.material + required);
 	newData.bounds = reinterpret_cast<AABB*>(newData.transparency + required);
 	newData.transform = reinterpret_cast<Mat4x4f*>(newData.bounds + required);
 
@@ -190,8 +227,8 @@ void MeshComponentSystem::Reallocate(unsigned int required)
 	{
 		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
 		std::memcpy(newData.mesh, data.mesh, data.count * sizeof(MeshId));
-		std::memcpy(newData.material, data.material, data.count * sizeof(MaterialId));
-		std::memcpy(newData.transparency, data.transparency, data.count * sizeof(TransparencyType));
+		std::memcpy(newData.material, data.material, data.count * sizeof(MaterialStorage));
+		std::memcpy(newData.transparency, data.transparency, data.count * sizeof(TransparencyStorage));
 		std::memcpy(newData.bounds, data.bounds, data.count * sizeof(AABB));
 		std::memcpy(newData.transform, data.transform, data.count * sizeof(Mat4x4f));
 

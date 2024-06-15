@@ -9,7 +9,7 @@ namespace kokko
 
 struct RenderOrderConfiguration
 {
-	static const uint64_t CallbackMaterialId = (1 << 12) - 1;
+	static const uint64_t CallbackMaterialId = (1 << 11) - 1;
 	static const uint16_t MaxFeatureObjectId = (1 << 14) - 1;
 
 	RenderOrderConfiguration()
@@ -22,31 +22,31 @@ struct RenderOrderConfiguration
 
 		// For transparents
 
-		transparentDepth.SetDefinition(22, command.shift);
+		transparentDepth.SetDefinition(20, command.shift);
 
 		// For opaques
 
 		opaqueDepth.SetDefinition(8, command.shift);
-		opaquePadding.SetDefinition(14, opaqueDepth.shift);
+		opaquePadding.SetDefinition(12, opaqueDepth.shift);
 
 		// For all draw commands
 
-		materialId.SetDefinition(12, opaquePadding.shift);
+		materialId.SetDefinition(11, opaquePadding.shift);
+
+		// For regular mesh component draw commands
+
 		renderObject.SetDefinition(20, materialId.shift);
+		meshPart.SetDefinition(3, renderObject.shift);
 
 		// For custom renderer / graphics feature commands
-		// These replace renderObject
 
-		featureIndex.SetDefinition(6, materialId.shift);
+		featureIndex.SetDefinition(7, materialId.shift);
 		featureObjectId.SetDefinition(14, featureIndex.shift);
 
 		// CONTROL COMMANDS
 
-		// Ordering for commands for same viewport, layer and transparency
-		commandOrder.SetDefinition(4, command.shift);
-
 		// Type of command
-		commandType.SetDefinition(8, commandOrder.shift);
+		commandType.SetDefinition(8, command.shift);
 
 		// Command data or offset to buffer, depending on command type
 		commandData.SetDefinition(32, commandType.shift);
@@ -65,9 +65,9 @@ struct RenderOrderConfiguration
 	BitfieldVariable<uint64_t> opaquePadding;
 	BitfieldVariable<uint64_t> materialId;
 	BitfieldVariable<uint64_t> renderObject;
+	BitfieldVariable<uint64_t> meshPart;
 	BitfieldVariable<uint64_t> featureIndex; // Or custom renderer index
 	BitfieldVariable<uint64_t> featureObjectId;
-	BitfieldVariable<uint64_t> commandOrder;
 	BitfieldVariable<uint64_t> commandType;
 	BitfieldVariable<uint64_t> commandData;
 

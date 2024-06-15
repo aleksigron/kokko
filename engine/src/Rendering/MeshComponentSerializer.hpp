@@ -46,7 +46,7 @@ public:
 		auto materialNode = map.find_child("material");
 
 		if (meshNode.valid() && meshNode.has_val() &&
-			materialNode.valid() && materialNode.has_val())
+			materialNode.valid() && (materialNode.has_val() || materialNode.is_seq()))
 		{
 			MeshComponentId componentId = meshComponentSystem->AddComponent(entity);
 
@@ -63,25 +63,47 @@ public:
 					auto modelMeshes = res.modelManager->GetModelMeshes(modelId);
 
 					if (modelMeshes.GetCount() > meshUid.meshIndex)
-						meshComponentSystem->SetMeshId(componentId, MeshId{modelId, meshUid.meshIndex});
+					{
+						MeshId newMeshId = MeshId{ modelId, meshUid.meshIndex };
+						uint32_t partCount = modelMeshes[meshUid.meshIndex].partCount;
+						meshComponentSystem->SetMesh(componentId, newMeshId, partCount);
+					}
 				}
 			}
 
-			auto matUidStr = materialNode.val();
-			auto materialUid = Uid::FromString(ArrayView(matUidStr.str, matUidStr.len));
-
-			if (materialUid.HasValue())
+			auto parseAndSetMaterial = [&](ryml::ConstNodeRef node, uint32_t partIndex)
 			{
-				MaterialId materialId = res.materialManager->FindMaterialByUid(materialUid.GetValue());
+				auto matUidStr = node.val();
+				auto materialUid = Uid::FromString(ArrayView(matUidStr.str, matUidStr.len));
 
-				// We don't care if the material isn't found
-				// Renderer will use fallback material if Material::Null is specified
+				if (materialUid.HasValue())
+				{
+					MaterialId materialId = res.materialManager->FindMaterialByUid(materialUid.GetValue());
 
-				TransparencyType transparency = TransparencyType::Opaque;
-				if (materialId != MaterialId::Null)
-					transparency = res.materialManager->GetMaterialTransparency(materialId);
+					// We don't care if the material isn't found
+					// Renderer will use fallback material if Material::Null is specified
 
-				meshComponentSystem->SetMaterial(componentId, materialId, transparency);
+					TransparencyType transparency = TransparencyType::Opaque;
+					if (materialId != MaterialId::Null)
+						transparency = res.materialManager->GetMaterialTransparency(materialId);
+
+					meshComponentSystem->SetMaterial(componentId, partIndex, materialId, transparency);
+				}
+			};
+
+			if (materialNode.is_seq())
+			{
+				uint32_t index = 0;
+				for (auto node : materialNode)
+				{
+					parseAndSetMaterial(node, index);
+					++index;
+				}
+			}
+			else
+			{
+
+				parseAndSetMaterial(materialNode, 0);
 			}
 		}
 	}
@@ -118,17 +140,6 @@ public:
 				}
 			}
 
-			char materialUidStr[Uid::StringLength + 1];
-			materialUidStr[0] = '\0';
-
-			MaterialId materialId = meshComponentSystem->GetMaterialId(componentId);
-			if (materialId != MaterialId::Null)
-			{
-				Uid materialUid = res.materialManager->GetMaterialUid(materialId);
-				materialUid.WriteTo(materialUidStr);
-				materialUidStr[Uid::StringLength] = '\0';
-			}
-
 			ryml::NodeRef componentNode = componentArray.append_child();
 			componentNode |= ryml::MAP;
 			componentNode[GetComponentTypeKey()] = "mesh";
@@ -136,7 +147,32 @@ public:
 			if (validMesh)
 				componentNode["mesh"] << meshUidStr;
 
-			componentNode["material"] << materialUidStr;
+			char materialUidStr[Uid::StringLength + 1];
+			materialUidStr[0] = '\0';
+
+			auto materials = meshComponentSystem->GetMaterialIds(componentId);
+			if (materials.GetCount() != 0)
+			{
+				auto materialNode = componentNode.append_child(ryml::NodeInit(ryml::NodeType_e::SEQ, "material"));
+			
+				for (auto materialId : materials)
+				{
+					auto materialItem = materialNode.append_child();
+
+					if (materialId != MaterialId::Null)
+					{
+						Uid materialUid = res.materialManager->GetMaterialUid(materialId);
+						materialUid.WriteTo(materialUidStr);
+						materialUidStr[Uid::StringLength] = '\0';
+
+						materialItem << materialUidStr;
+					}
+					else
+					{
+						materialItem << "";
+					}
+				}
+			}
 		}
 	}
 };
