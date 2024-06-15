@@ -6,14 +6,20 @@
 
 #include "Core/Core.hpp"
 
+#include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
 
 #include "Rendering/CameraParameters.hpp"
+#include "Rendering/MeshComponentSystem.hpp"
 #include "Rendering/RenderTypes.hpp"
 
+#include "Resources/AssetLibrary.hpp"
+#include "Resources/ModelManager.hpp"
+
 #include "App/EditorContext.hpp"
+#include "App/EditorConstants.hpp"
 
 namespace kokko
 {
@@ -28,18 +34,21 @@ SceneView::SceneView() :
 	currentGizmoMode(ImGuizmo::LOCAL),
 	resizeRequested(false),
 	windowIsFocused(false),
-	windowIsHovered(false)
+	windowIsHovered(false),
+	modelManager(nullptr)
 {
 	Vec3f position(-3.0f, 2.0f, 6.0f);
 	Vec3f target(0.0f, 1.0f, 0.0f);
 	editorCamera.LookAt(position, target);
 }
 
-void SceneView::Initialize(kokko::render::Device* renderDevice, Window* window)
+void SceneView::Initialize(render::Device* renderDevice, Window* window, const ResourceManagers& resourceManagers)
 {
 	framebuffer.SetRenderDevice(renderDevice);
 
 	editorCamera.SetWindow(window);
+
+	modelManager = resourceManagers.modelManager;
 }
 
 void SceneView::Update(EditorContext&)
@@ -88,6 +97,25 @@ void SceneView::LateUpdate(EditorContext& context)
 				void* texId = reinterpret_cast<void*>(static_cast<size_t>(framebuffer.GetColorTextureId(0).i));
 
 				ImGui::Image(texId, size, uv0, uv1);
+
+				if (ImGui::BeginDragDropTarget())
+				{
+					const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+					if (payload != nullptr && payload->DataSize == sizeof(Uid))
+					{
+						Uid assetUid;
+						std::memcpy(&assetUid, payload->Data, payload->DataSize);
+
+						if (auto newAsset = context.assetLibrary->FindAssetByUid(assetUid))
+						{
+							if (newAsset->GetType() == AssetType::Model)
+								HandleModelDragDrop(context, newAsset);
+						}
+
+					}
+
+					ImGui::EndDragDropTarget();
+				}
 			}
 
 			// Draw tool buttons
@@ -145,7 +173,6 @@ void SceneView::LateUpdate(EditorContext& context)
 
 					if (ImGuizmo::Manipulate(view, proj, op, mode, objectTransform.ValuePointer()))
 					{
-
 						Mat4x4f local;
 
 						SceneObjectId parentObj = scene->GetParent(sceneObj);
@@ -225,9 +252,85 @@ void SceneView::ResizeFramebuffer()
 
 	RenderTextureSizedFormat format = RenderTextureSizedFormat::SRGB8;
 
-	framebuffer.Create(contentWidth, contentHeight,
-		Optional<RenderTextureSizedFormat>(), ArrayView<RenderTextureSizedFormat>(&format, 1));
+	framebuffer.Create(contentWidth, contentHeight, Optional<RenderTextureSizedFormat>(), ArrayView(&format, 1));
 }
 
+void SceneView::HandleModelDragDrop(EditorContext& context, const AssetInfo* asset)
+{
+	ModelId modelId = modelManager->FindModelByUid(asset->GetUid());
+	if (modelId != ModelId::Null)
+	{
+		ModelInfo model{
+			modelId,
+			modelManager->GetModelNodes(modelId),
+			modelManager->GetModelMeshes(modelId),
+			modelManager->GetModelMeshParts(modelId)
+		};
+		
+		if (model.nodes.GetCount() != 0)
+		{
+			// Create hierarchy of nodes stored in the model
+
+			for (int16_t index = 0, count = static_cast<int16_t>(model.nodes.GetCount()); index < count; ++index)
+			{
+				if (model.nodes[index].parent < 0)
+					LoadModelNode(context, model, index, SceneObjectId::Null);
+			}
+		}
+		else
+		{
+			// Only create one node and choose the first mesh for it
+			KK_LOG_INFO("No nodes");
+		}
+	}
 }
+
+void SceneView::LoadModelNode(
+	EditorContext& context, const ModelInfo& model, int16_t nodeIndex, SceneObjectId parent)
+{
+	const ModelNode& node = model.nodes[nodeIndex];
+
+	// TODO: Do actual loading
+	EntityManager* entityManager = context.world->GetEntityManager();
+	Scene* scene = context.world->GetScene();
+
+	Entity entity = entityManager->Create();
+
+	// Handle scene object creation
+
+	SceneObjectId objId = scene->AddSceneObject(entity);
+
+	SceneEditTransform editTransform;
+	float* translate = editTransform.translation.ValuePointer();
+	float* rotate = editTransform.rotation.ValuePointer();
+	float* scale = editTransform.scale.ValuePointer();
+	ImGuizmo::DecomposeMatrixToComponents(node.transform.ValuePointer(), translate, rotate, scale);
+
+	// DecomposeMatrixToComponents returns degrees, so convert to radians
+	editTransform.rotation = Math::DegreesToRadians(editTransform.rotation);
+
+	scene->SetLocalAndEditTransform(objId, node.transform, editTransform);
+	if (parent != SceneObjectId::Null)
+		scene->SetParent(objId, parent);
+
+	// Handle mesh component creation
+
+	if (node.meshIndex >= 0)
+	{
+		MeshComponentSystem* meshCompSystem = context.world->GetMeshComponentSystem();
+		MeshComponentId meshCompId = meshCompSystem->AddComponent(entity);
+		MeshId meshId{ model.modelId, static_cast<uint32_t>(node.meshIndex) };
+		meshCompSystem->SetMesh(meshCompId, meshId, model.meshes[node.meshIndex].partCount);
+	}
+
+	// Handle child nodes
+	for (int16_t childIdx = node.firstChild; childIdx >= 0;)
+	{
+		LoadModelNode(context, model, childIdx, objId);
+
+		childIdx = model.nodes[childIdx].nextSibling;
+	}
 }
+
+} // namespace editor
+} // namespace kokko

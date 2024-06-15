@@ -310,8 +310,8 @@ void ModelLoader::Reset()
 
 void ModelLoader::LoadGltfNode(
     int16_t parent,
-    cgltf_data *data,
-    cgltf_node *node)
+    cgltf_data* data,
+    cgltf_node* node)
 {
 	int16_t thisNodeIndex = static_cast<int16_t>(outputModel->nodeCount);
 	ModelNode& modelNode = outputModel->nodes[outputModel->nodeCount];
@@ -320,12 +320,26 @@ void ModelLoader::LoadGltfNode(
 	if (node->mesh != nullptr)
 	{
 		cgltf_mesh* meshesEnd = data->meshes + data->meshes_count;
-		if (node->mesh <= data->meshes && node->mesh < data->meshes + data->meshes_count)
+		if (node->mesh >= data->meshes && node->mesh < data->meshes + data->meshes_count)
 			modelNode.meshIndex = static_cast<int16_t>(node->mesh - data->meshes);
 	}
 
+
 	if (node->has_matrix)
 		std::memcpy(&(modelNode.transform), &(node->matrix), sizeof(float) * 16);
+	else if (node->has_translation || node->has_rotation || node->has_scale)
+	{
+		Mat4x4f transform;
+
+		if (node->has_translation)
+			transform = Mat4x4f::Translate(Vec3f(node->translation));
+		if (node->has_rotation)
+			transform = transform * Mat4x4f::RotateEuler(Vec3f(node->rotation));
+		if (node->has_scale)
+			transform = transform * Mat4x4f::Scale(Vec3f(node->scale));
+
+		modelNode.transform = transform;
+	}
 	else
 		modelNode.transform = Mat4x4f();
 	

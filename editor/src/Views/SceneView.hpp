@@ -4,30 +4,37 @@
 
 #include "Rendering/Framebuffer.hpp"
 
+#include "Resources/MeshId.hpp"
+
 #include "App/EditorCamera.hpp"
 
 #include "Views/EditorWindow.hpp"
 
-class Window;
-
 struct CameraParameters;
-struct EditorWindowInfo;
-struct EditorContext;
+struct SceneObjectId;
 
 namespace kokko
 {
 
-class World;
+class AssetInfo;
+class ModelManager;
+class Window;
+struct ModelNode;
+struct ModelMesh;
+struct ModelMeshPart;
+struct ResourceManagers;
 
 namespace editor
 {
+
+struct EditorContext;
 
 class SceneView : public EditorWindow
 {
 public:
 	SceneView();
 
-	void Initialize(kokko::render::Device* renderDevice, Window* window);
+	void Initialize(render::Device* renderDevice, Window* window, const ResourceManagers& resourceManagers);
 
 	virtual void Update(EditorContext&) override;
 	virtual void LateUpdate(EditorContext& context) override;
@@ -36,13 +43,29 @@ public:
 
 	void ResizeFramebufferIfRequested();
 
-	const kokko::render::Framebuffer& GetFramebuffer();
+	const render::Framebuffer& GetFramebuffer();
 	Vec2i GetContentAreaSize();
 
 	CameraParameters GetCameraParameters() const;
 
 private:
 	void ResizeFramebuffer();
+
+	void HandleModelDragDrop(EditorContext& context, const AssetInfo* asset);
+
+	struct ModelInfo
+	{
+		ModelId modelId;
+		ArrayView<const ModelNode> nodes;
+		ArrayView<const ModelMesh> meshes;
+		ArrayView<const ModelMeshPart> meshParts;
+	};
+
+	void LoadModelNode(
+		EditorContext& context,
+		const ModelInfo& model,
+		int16_t nodeIndex,
+		SceneObjectId parent);
 
 	int contentWidth;
 	int contentHeight;
@@ -55,7 +78,8 @@ private:
 	bool windowIsHovered;
 
 	EditorCamera editorCamera;
-	kokko::render::Framebuffer framebuffer;
+	render::Framebuffer framebuffer;
+	ModelManager* modelManager;
 };
 
 }
