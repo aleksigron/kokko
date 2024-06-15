@@ -9,9 +9,10 @@ template <typename T>
 struct Vec3
 {
 	T x, y, z;
-	
-	Vec3(): x(0), y(0), z(0) {}
+
+	Vec3() : x(0), y(0), z(0) {}
 	Vec3(T x, T y, T z): x(x), y(y), z(z) {}
+	Vec3(T v[3]) : x(v[0]), y(v[1]), z(v[2]) {}
 
 	T* ValuePointer() { return &x; }
 	const T* ValuePointer() const { return &x; }

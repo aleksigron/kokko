@@ -84,7 +84,8 @@ void EditorCore::Initialize(Engine* engine, ConsoleLogger* consoleLogger)
 	editorWindows.PushBack(entityView);
 
 	sceneView = allocator->MakeNew<SceneView>();
-	sceneView->Initialize(engine->GetRenderDevice(), engine->GetWindowManager()->GetWindow());
+	sceneView->Initialize(
+		engine->GetRenderDevice(), engine->GetWindowManager()->GetWindow(), engine->GetResourceManagers());
 	editorWindows.PushBack(sceneView);
 
 	AssetBrowserView* assetBrowserView = allocator->MakeNew<AssetBrowserView>(allocator);
