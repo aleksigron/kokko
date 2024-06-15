@@ -242,7 +242,6 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 
 			if (modelMeshes.GetCount() != 0)
 			{
-				const char* items[] = { "AAAA" };
 				const char* previewString = context.temporaryString.GetCStr();
 				if (ImGui::BeginCombo("Mesh", previewString, ImGuiComboFlags_None))
 				{
@@ -253,7 +252,9 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 						const char* name = mesh.name ? mesh.name : "Unnamed mesh";
 						if (ImGui::Selectable(name, isSelected))
 						{
-							meshComponentSystem->SetMeshId(meshComponent, MeshId{ meshId.modelId, meshIdx });
+							MeshId newMeshId = MeshId{ meshId.modelId, meshIdx };
+							uint32_t partCount = modelMeshes[meshIdx].partCount;
+							meshComponentSystem->SetMesh(meshComponent, newMeshId, partCount);
 						}
 
 						// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -271,7 +272,7 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 			if (ImGui::BeginDragDropTarget())
 			{
 				Optional<Uid> modelUid;
-				size_t meshIndex = 0;
+				uint32_t meshIndex = 0;
 
 				const ImGuiPayload* modelMeshPayload =
 					ImGui::AcceptDragDropPayload(EditorConstants::ModelMeshDragDropType);
@@ -309,7 +310,9 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 
 							if (modelMeshes.GetCount() > meshIndex)
 							{
-								meshComponentSystem->SetMeshId(meshComponent, MeshId{newModelId, static_cast<uint32_t>(meshIndex)});
+								MeshId newMeshId = MeshId{ newModelId, meshIndex };
+								uint32_t partCount = modelMeshes[meshIndex].partCount;
+								meshComponentSystem->SetMesh(meshComponent, newMeshId, partCount);
 
 								SceneObjectId sceneObj = scene->Lookup(context.selectedEntity);
 								if (sceneObj != SceneObjectId::Null)
@@ -322,43 +325,53 @@ void EntityView::DrawRenderComponent(EditorContext& context)
 				ImGui::EndDragDropTarget();
 			}
 
-			context.temporaryString.Assign("No material");
-			MaterialId materialId = meshComponentSystem->GetMaterialId(meshComponent);
-			if (materialId != MaterialId::Null)
+			ArrayView<const MaterialId> materials = meshComponentSystem->GetMaterialIds(meshComponent);
+			const uint32_t partCount = static_cast<uint32_t>(materials.GetCount());
+			for (uint32_t partIndex = 0; partIndex != partCount; ++partIndex)
 			{
-				Uid materialUid = materialManager->GetMaterialUid(materialId);
+				ImGui::PushID(static_cast<int>(partIndex));
 
-				if (auto asset = context.assetLibrary->FindAssetByUid(materialUid))
-					context.temporaryString.Assign(asset->GetFilename());
-			}
+				context.temporaryString.Assign("No material");
 
-			ImGui::InputText("Material", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);
-
-			if (ImGui::BeginDragDropTarget())
-			{
-				const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
-				if (payload != nullptr && payload->DataSize == sizeof(Uid))
+				MaterialId materialId = materials[partIndex];
+				if (materialId != MaterialId::Null)
 				{
-					Uid assetUid;
-					std::memcpy(&assetUid, payload->Data, payload->DataSize);
+					Uid materialUid = materialManager->GetMaterialUid(materialId);
 
-					if (auto newAsset = context.assetLibrary->FindAssetByUid(assetUid))
-					{
-						if (newAsset->GetType() == AssetType::Material)
-						{
-							MaterialId newMatId = materialManager->FindMaterialByUid(assetUid);
-							if (newMatId != MaterialId::Null && newMatId != materialId)
-							{
-								TransparencyType transparency = materialManager->GetMaterialTransparency(newMatId);
-
-								meshComponentSystem->SetMaterial(meshComponent, newMatId, transparency);
-							}
-						}
-					}
-
+					if (auto asset = context.assetLibrary->FindAssetByUid(materialUid))
+						context.temporaryString.Assign(asset->GetFilename());
 				}
 
-				ImGui::EndDragDropTarget();
+				ImGui::InputText("Material", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);
+
+				if (ImGui::BeginDragDropTarget())
+				{
+					const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+					if (payload != nullptr && payload->DataSize == sizeof(Uid))
+					{
+						Uid assetUid;
+						std::memcpy(&assetUid, payload->Data, payload->DataSize);
+
+						if (auto newAsset = context.assetLibrary->FindAssetByUid(assetUid))
+						{
+							if (newAsset->GetType() == AssetType::Material)
+							{
+								MaterialId newMatId = materialManager->FindMaterialByUid(assetUid);
+								if (newMatId != MaterialId::Null && newMatId != materialId)
+								{
+									TransparencyType transparency = materialManager->GetMaterialTransparency(newMatId);
+
+									meshComponentSystem->SetMaterial(meshComponent, partIndex, newMatId, transparency);
+								}
+							}
+						}
+
+					}
+
+					ImGui::EndDragDropTarget();
+				}
+
+				ImGui::PopID();
 			}
 
 			if (componentVisible == false)

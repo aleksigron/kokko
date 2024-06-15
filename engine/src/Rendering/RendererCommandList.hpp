@@ -40,14 +40,12 @@ struct RendererCommandList
 	void AddControl(
 		unsigned int viewport,
 		RenderPassType pass,
-		unsigned int controlOrder,
 		RendererControlType type,
 		unsigned int data = 0);
 
 	void AddControl(
 		unsigned int viewport,
 		RenderPassType pass,
-		unsigned int controlOrder,
 		RendererControlType type,
 		unsigned int byteCount,
 		void* data);
@@ -57,7 +55,8 @@ struct RendererCommandList
 		RenderPassType pass,
 		float depth,
 		MaterialId material,
-		unsigned int objIndex);
+		unsigned int objIndex,
+		unsigned int meshPart);
 
 	void AddDrawWithCallback(
 		unsigned int viewport,

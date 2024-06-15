@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/ArrayView.hpp"
 #include "Core/HashMap.hpp"
 
 #include "Graphics/TransformUpdateReceiver.hpp"
@@ -49,18 +50,35 @@ public:
 	void RemoveComponent(MeshComponentId id);
 	void RemoveAll();
 
-	void SetMeshId(MeshComponentId id, MeshId meshId);
+	void SetMesh(MeshComponentId id, MeshId meshId, uint32_t partCount);
 	MeshId GetMeshId(MeshComponentId id) const;
 
-	void SetMaterial(MeshComponentId id, MaterialId materialId, TransparencyType transparency);
-	MaterialId GetMaterialId(MeshComponentId id) const;
-	TransparencyType GetTransparencyType(MeshComponentId id) const;
+	void SetMaterial(MeshComponentId id, uint32_t partIndex, MaterialId materialId, TransparencyType transparency);
+	ArrayView<const MaterialId> GetMaterialIds(MeshComponentId id) const;
+	ArrayView<const TransparencyType> GetTransparencyTypes(MeshComponentId id) const;
 
 private:
 	void Reallocate(unsigned int required);
 
 	Allocator* allocator;
 	ModelManager* modelManager;
+
+	template <typename ItemType, typename SizeType, SizeType MaxCount>
+	class CompactStorage
+	{
+	public:
+		CompactStorage();
+		void Resize(SizeType newCount);
+		ArrayView<ItemType> GetDataView();
+		ArrayView<const ItemType> GetDataView() const;
+
+	private:
+		SizeType count;
+		ItemType data[MaxCount];
+	};
+
+	using MaterialStorage = CompactStorage<MaterialId, uint16_t, 7>;
+	using TransparencyStorage = CompactStorage<TransparencyType, uint8_t, 7>;
 
 	struct InstanceData
 	{
@@ -70,8 +88,8 @@ private:
 
 		Entity* entity;
 		MeshId* mesh;
-		MaterialId* material;
-		TransparencyType* transparency;
+		MaterialStorage* material;
+		TransparencyStorage* transparency;
 		AABB* bounds;
 		Mat4x4f* transform;
 	}
