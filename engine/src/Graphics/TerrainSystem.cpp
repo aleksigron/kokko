@@ -402,19 +402,23 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 	uniformStagingBuffer.Resize(tilesToRender.GetCount() * uniformBlockStride);
 
-	int blocksWritten = 0;
-	for (const auto& tile : tilesToRender)
 	{
-		const float halfTileCount = 0.5f * TerrainQuadTree::GetTilesPerDimension(tile.level);
-		const Vec2f levelOrigin(-halfTileCount, -halfTileCount);
+		KOKKO_PROFILE_SCOPE("Setup tile uniform data");
 
-		uniforms.tileOffset = levelOrigin + Vec2f(static_cast<float>(tile.x), static_cast<float>(tile.y));
-		uniforms.tileScale = TerrainQuadTree::GetTileScale(tile.level);
+		int blocksWritten = 0;
+		for (const auto& tile : tilesToRender)
+		{
+			const float halfTileCount = 0.5f * TerrainQuadTree::GetTilesPerDimension(tile.level);
+			const Vec2f levelOrigin(-halfTileCount, -halfTileCount);
 
-		uint8_t* dest = &uniformStagingBuffer[blocksWritten * uniformBlockStride];
-		std::memcpy(dest, &uniforms, sizeof(uniforms));
+			uniforms.tileOffset = levelOrigin + Vec2f(static_cast<float>(tile.x), static_cast<float>(tile.y));
+			uniforms.tileScale = TerrainQuadTree::GetTileScale(tile.level);
 
-		blocksWritten += 1;
+			uint8_t* dest = &uniformStagingBuffer[blocksWritten * uniformBlockStride];
+			std::memcpy(dest, &uniforms, sizeof(uniforms));
+
+			blocksWritten += 1;
+		}
 	}
 
 	unsigned int updateBytes = static_cast<unsigned int>(tilesToRender.GetCount() * uniformBlockStride);
@@ -449,24 +453,28 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 	encoder->BindSampler(0, textureSampler);
 
-	int blocksUsed = 0;
-	for (const auto& tile : tilesToRender)
 	{
-		intptr_t rangeOffset = blocksUsed * uniformBlockStride;
-		blocksUsed += 1;
+		KOKKO_PROFILE_SCOPE("Render tiles");
 
-		encoder->BindBufferRange(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId,
-			rangeOffset, uniformBlockStride);
-
-		if (heightMap != nullptr)
+		int blocksUsed = 0;
+		for (const auto& tile : tilesToRender)
 		{
-			render::TextureId heightTex = quadTree.GetTileHeightTexture(tile.level, tile.x, tile.y);
+			intptr_t rangeOffset = blocksUsed * uniformBlockStride;
+			blocksUsed += 1;
 
-			encoder->BindTextureToShader(heightMap->uniformLocation, 0, heightTex);
+			encoder->BindBufferRange(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId,
+				rangeOffset, uniformBlockStride);
+
+			if (heightMap != nullptr)
+			{
+				render::TextureId heightTex = quadTree.GetTileHeightTexture(tile.level, tile.x, tile.y);
+
+				encoder->BindTextureToShader(heightMap->uniformLocation, 0, heightTex);
+			}
+
+			encoder->DrawIndexed(
+				RenderPrimitiveMode::Triangles, RenderIndexType::UnsignedShort, vertexData.indexCount, 0, 0);
 		}
-
-		encoder->DrawIndexed(
-			RenderPrimitiveMode::Triangles, RenderIndexType::UnsignedShort, vertexData.indexCount, 0, 0);
 	}
 
 	tilesToRender.Clear();

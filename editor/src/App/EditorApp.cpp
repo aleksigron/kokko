@@ -204,11 +204,18 @@ void EditorApp::StartFrame()
 	core->ResizeSceneViewFramebufferIfRequested();
 
 	imguiImplOpenGL->NewFrame();
-	ImGui_ImplGlfw_NewFrame();
 
-	ImGui::NewFrame();
+	{
+		KOKKO_PROFILE_SCOPE("ImGui_ImplGlfw_NewFrame()");
+		ImGui_ImplGlfw_NewFrame();
+	}
+
+	{
+		KOKKO_PROFILE_SCOPE("ImGui::NewFrame()");
+		ImGui::NewFrame();
+	}
+
 	ImGuizmo::BeginFrame();
-
 	ImGuizmo::SetOrthographic(false);
 
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
@@ -243,7 +250,7 @@ void EditorApp::EndFrame(render::CommandEncoder* encoder)
 	core->EndFrame();
 
 	{
-		KOKKO_PROFILE_SCOPE("ImGui::Mesh()");
+		KOKKO_PROFILE_SCOPE("ImGui::Render()");
 		ImGui::Render();
 	}
 

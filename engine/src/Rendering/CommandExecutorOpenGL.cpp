@@ -28,6 +28,8 @@ CommandExecutorOpenGL::CommandExecutorOpenGL(Allocator* allocator) :
 
 void CommandExecutorOpenGL::Execute(const CommandBuffer* commandBuffer)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	cmdBuffer = commandBuffer;
 	uint32_t commandOffset = 0;
 
