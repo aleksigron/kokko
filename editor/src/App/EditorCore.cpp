@@ -160,6 +160,8 @@ void EditorCore::NotifyProjectChanged(const EditorProject* editorProject)
 
 void EditorCore::Update()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	if (editorContext.requestLoadLevel.HasValue())
 	{
 		if (editorContext.loadedLevel.HasValue() == false ||
@@ -179,12 +181,16 @@ void EditorCore::Update()
 
 void EditorCore::LateUpdate()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	for (EditorWindow* window : editorWindows)
 		window->LateUpdate(editorContext);
 }
 
 void EditorCore::EndFrame()
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	for (EditorWindow* window : editorWindows)
 		window->requestFocus = false;
 }

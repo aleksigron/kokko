@@ -103,6 +103,8 @@ void TerrainQuadTree::DestroyResources(Allocator* allocator, kokko::render::Devi
 void TerrainQuadTree::GetTilesToRender(const FrustumPlanes& frustum, const Mat4x4f& viewProj,
 	const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut)
 {
+	KOKKO_PROFILE_FUNCTION();
+
 	RenderTile(TerrainTileId{}, frustum, viewProj, renderDebug, resultOut);
 }
 

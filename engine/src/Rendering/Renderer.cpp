@@ -359,8 +359,6 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 		// If command is not control command, draw object
 		if (ParseControlCommand(command) == false)
 		{
-			KOKKO_PROFILE_SCOPE("Draw command");
-
 			uint64_t mat = renderOrder.materialId.GetValue(command);
 			uint64_t vpIdx = renderOrder.viewportIndex.GetValue(command);
 			const RenderViewport& viewport = viewportData[vpIdx];
@@ -566,8 +564,6 @@ bool Renderer::IsDrawCommand(uint64_t orderKey)
 
 bool Renderer::ParseControlCommand(uint64_t orderKey)
 {
-	KOKKO_PROFILE_FUNCTION();
-
 	if (renderOrder.command.GetValue(orderKey) == static_cast<uint64_t>(RendererCommandType::Draw))
 		return false;
 

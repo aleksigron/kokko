@@ -158,6 +158,8 @@ void Engine::Render(const Optional<CameraParameters>& editorCamera, const kokko:
 
 void Engine::EndFrame()
 {
+	KOKKO_PROFILE_SCOPE("Engine::EndFrame()");
+
 	commandExecutor->Execute(commandBuffer.Get());
 	commandBuffer->Clear();
 
