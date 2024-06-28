@@ -42,12 +42,23 @@ Entity EntityFactory::CreateEntity(World* world, ArrayView<EntityComponentType> 
 
 void EntityFactory::DestroyEntity(World* world, Entity entity)
 {
-	EntityManager* entityManager = world->GetEntityManager();
+	Scene* scene = world->GetScene();
+
+	SceneObjectId objId = scene->Lookup(entity);
+	if (objId != SceneObjectId::Null)
+	{
+		SceneObjectId child = scene->GetFirstChild(objId);
+		while (child != SceneObjectId::Null)
+		{
+			EntityFactory::DestroyEntity(world, scene->GetEntity(child));
+			child = scene->GetNextSibling(child);
+		}
+	}
 
 	for (size_t i = 0; i < ComponentTypeCount; ++i)
 		RemoveComponentIfExists(world, entity, static_cast<EntityComponentType>(i));
 
-	entityManager->Destroy(entity);
+	world->GetEntityManager()->Destroy(entity);
 }
 
 void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentType componentType)
