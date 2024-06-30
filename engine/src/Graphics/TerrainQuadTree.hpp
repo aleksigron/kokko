@@ -5,6 +5,8 @@
 
 #include "Core/Array.hpp"
 
+#include "Math/Vec3.hpp"
+
 class Allocator;
 
 struct FrustumPlanes;
@@ -42,7 +44,7 @@ public:
 		const TerrainParameters& params);
 	void DestroyResources(Allocator* allocator, kokko::render::Device* renderDevice);
 
-	void GetTilesToRender(const FrustumPlanes& frustum, const Mat4x4f& viewProj,
+	void GetTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
 		const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut);
 
 	int GetLevelCount() const;
@@ -65,12 +67,15 @@ public:
 	static float GetTileScale(int level);
 
 private:
-	void RenderTile(
-		const TerrainTileId& id,
-		const FrustumPlanes& frustum,
-		const Mat4x4f& vp,
-		const RenderDebugSettings& renderDebug,
-		Array<TerrainTileId>& resultOut);
+	struct GetRenderTilesParams
+	{
+		const FrustumPlanes& frustum;
+		const Vec3f& cameraPos;
+		const RenderDebugSettings& renderDebug;
+		Array<TerrainTileId>& resultOut;
+	};
+
+	void RenderTile(const TerrainTileId& id, GetRenderTilesParams& params);
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 

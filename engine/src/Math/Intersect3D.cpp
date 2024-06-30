@@ -12,8 +12,6 @@
 
 bool Intersect::FrustumAabb(const FrustumPlanes& frustum, const kokko::AABB& bounds)
 {
-	KOKKO_PROFILE_FUNCTION();
-
 	// For each plane in view frustum
 	for (unsigned int planeIdx = 0; planeIdx < 6; ++planeIdx)
 	{
