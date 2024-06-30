@@ -100,20 +100,15 @@ void TerrainQuadTree::DestroyResources(Allocator* allocator, kokko::render::Devi
 	allocator->Deallocate(tileTextureIds);
 }
 
-void TerrainQuadTree::GetTilesToRender(const FrustumPlanes& frustum, const Mat4x4f& viewProj,
+void TerrainQuadTree::GetTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
 	const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut)
 {
-	KOKKO_PROFILE_FUNCTION();
-
-	RenderTile(TerrainTileId{}, frustum, viewProj, renderDebug, resultOut);
+	KOKKO_PROFILE_SCOPE("TerrainQuadTree::GetTilesToRender()");
+	GetRenderTilesParams params{ frustum, cameraPos, renderDebug, resultOut };
+	RenderTile(TerrainTileId{}, params);
 }
 
-void TerrainQuadTree::RenderTile(
-	const TerrainTileId& id,
-	const FrustumPlanes& frustum,
-	const Mat4x4f& vp,
-	const RenderDebugSettings& renderDebug,
-	Array<TerrainTileId>& resultOut)
+void TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& params)
 {
 	float tileScale = GetTileScale(id.level);
 
@@ -127,49 +122,22 @@ void TerrainQuadTree::RenderTile(
 	tileBounds.extents = tileSize * 0.5f;
 	tileBounds.center = tileMin + tileBounds.extents;
 
-	if (Intersect::FrustumAabb(frustum, tileBounds) == false)
+	if (Intersect::FrustumAabb(params.frustum, tileBounds) == false)
 	{
 		return;
 	}
 
 	if (id.level + 1 == treeLevels)
 	{
-		resultOut.PushBack(id);
+		params.resultOut.PushBack(id);
+
 		return;
 	}
 	
-	constexpr float maximumSize = 0.5f;
+	constexpr float sizeFactor = 0.5f;
 
-	static const Vec3f boxCorners[] = {
-		Vec3f(-1.0f, 0.0f, -1.0f),
-		Vec3f(1.0f, 0.0f, -1.0f),
-		Vec3f(-1.0f, 0.0f, 1.0f),
-		Vec3f(1.0f, 0.0f, 1.0f)
-	};
-
-	Vec2f min(1e9f, 1e9f);
-	Vec2f max(-1e9f, -1e9f);
-
-	Vec3f screenCoord;
-
-	for (unsigned cornerIdx = 0; cornerIdx < 4; ++cornerIdx)
-	{
-		Vec3f corner = Vec3f::Hadamard(tileBounds.extents, boxCorners[cornerIdx]);
-
-		Vec4f proj = vp * Vec4f(tileBounds.center + corner, 1.0f);
-		screenCoord = Vec3f::Hadamard(proj.xyz() * (1.0f / proj.w), Vec3f(0.5f, -0.5f, 0.5f)) +
-			Vec3f(0.5f, 0.5f, 0.5f);
-
-		min.x = std::min(screenCoord.x, min.x);
-		min.y = std::min(screenCoord.y, min.y);
-		max.x = std::max(screenCoord.x, max.x);
-		max.y = std::max(screenCoord.y, max.y);
-	}
-
-	Vec2f size(max.x - min.x, max.y - min.y);
-
-	float sizeMaxAxis = std::max(size.x, size.y);
-	bool tileIsSmallEnough = sizeMaxAxis < maximumSize;
+	float distance = (tileBounds.center - params.cameraPos).Magnitude();
+	bool tileIsSmallEnough = tileWidth < distance * sizeFactor;
 
 	auto vr = Debug::Get()->GetVectorRenderer();
 	auto tr = Debug::Get()->GetTextRenderer();
@@ -177,9 +145,9 @@ void TerrainQuadTree::RenderTile(
 
 	if (tileIsSmallEnough)
 	{
-		resultOut.PushBack(id);
+		params.resultOut.PushBack(id);
 
-		if (renderDebug.IsFeatureEnabled(RenderDebugFeatureFlag::DrawTerrainTiles))
+		if (params.renderDebug.IsFeatureEnabled(RenderDebugFeatureFlag::DrawTerrainTiles))
 		{
 			Vec3f scale = tileSize;
 			scale.y = 0.0f;
@@ -187,11 +155,6 @@ void TerrainQuadTree::RenderTile(
 			Mat4x4f transform = Mat4x4f::Translate(tileBounds.center) * Mat4x4f::Scale(scale);
 
 			vr->DrawWireCube(transform, col);
-
-			char buf[32];
-			auto [out, size] = fmt::format_to_n(buf, sizeof(buf), "{:.3f}", sizeMaxAxis);
-
-			tr->AddTextNormalized(ConstStringView(buf, size), screenCoord.xy());
 		}
 	}
 	else
@@ -205,7 +168,7 @@ void TerrainQuadTree::RenderTile(
 				tileId.x = id.x * 2 + x;
 				tileId.y = id.y * 2 + y;
 
-				RenderTile(tileId, frustum, vp, renderDebug, resultOut);
+				RenderTile(tileId, params);
 			}
 		}
 	}
@@ -283,7 +246,7 @@ TEST_CASE("TerrainQuadTree.GetTileCountForLevelCount")
 
 float TerrainQuadTree::GetTileScale(int level)
 {
-	return std::pow(2.0f, static_cast<float>(-level));
+	return 1.0f / (1 << level);
 }
 
 TEST_CASE("TerrainQuadTree.GetTileScale")
