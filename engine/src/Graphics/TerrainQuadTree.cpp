@@ -102,15 +102,24 @@ void TerrainQuadTree::DestroyResources(render::Device* renderDevice)
 	allocator->Deallocate(tileTextureIds);
 }
 
-void TerrainQuadTree::GetTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
-	const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut)
+void TerrainQuadTree::UpdateTilesToRender(
+	const FrustumPlanes& frustum,
+	const Vec3f& cameraPos,
+	const RenderDebugSettings& renderDebug,
+	Array<TerrainTileId>& resultOut)
 {
-	KOKKO_PROFILE_SCOPE("TerrainQuadTree::GetTilesToRender()");
+	KOKKO_PROFILE_SCOPE("TerrainQuadTree::UpdateTilesToRender()");
 
 	nodes.Clear();
 
+	// Calculates optimal set of tiles to render and updates quad tree <nodes>
 	GetRenderTilesParams params{ frustum, cameraPos, renderDebug, resultOut };
 	RenderTile(TerrainTileId{}, params);
+
+	// Next we need to update the quad tree so that it forms a restricted quad tree
+	RestrictQuadTree();
+
+	// Then we create the final render tiles from the leaf nodes of the quad tree
 }
 
 int TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& params)
@@ -184,6 +193,11 @@ int TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& p
 	}
 
 	return nodeIndex;
+}
+
+void TerrainQuadTree::RestrictQuadTree()
+{
+
 }
 
 int TerrainQuadTree::GetLevelCount() const

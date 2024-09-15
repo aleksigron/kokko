@@ -53,7 +53,7 @@ public:
 		const TerrainParameters& params);
 	void DestroyResources(kokko::render::Device* renderDevice);
 
-	void GetTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
+	void UpdateTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
 		const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut);
 
 	int GetLevelCount() const;
@@ -86,6 +86,7 @@ private:
 
 	// Returns inserted node index (points to nodes array), or -1 if no insertion
 	int RenderTile(const TerrainTileId& id, GetRenderTilesParams& params);
+	void RestrictQuadTree();
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 
