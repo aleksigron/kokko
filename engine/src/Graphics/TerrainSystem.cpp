@@ -160,7 +160,7 @@ TerrainId TerrainSystem::AddTerrain(Entity entity, const TerrainParameters& para
 	data.entity[id] = entity;
 	data.textureScale[id] = params.textureScale;
 	data.textures[id] = TerrainTextures{};
-	data.quadTree[id] = TerrainQuadTree();
+	data.quadTree[id] = TerrainQuadTree(allocator);
 
 	data.count += 1;
 
@@ -322,7 +322,7 @@ void TerrainSystem::InitializeTerrain(TerrainId id, const TerrainParameters& par
 	kokko::TerrainQuadTree& quadTree = data.quadTree[id.i];
 
 	constexpr int treeLevels = 7;
-	quadTree.CreateResources(allocator, renderDevice, treeLevels, params);
+	quadTree.CreateResources(renderDevice, treeLevels, params);
 }
 
 void TerrainSystem::DeinitializeTerrain(TerrainId id)
@@ -331,7 +331,7 @@ void TerrainSystem::DeinitializeTerrain(TerrainId id)
 
 	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainSys_DestroyInstanceResources"));
 
-	data.quadTree[id.i].DestroyResources(allocator, renderDevice);
+	data.quadTree[id.i].DestroyResources(renderDevice);
 }
 
 void TerrainSystem::Reallocate(size_t required)
