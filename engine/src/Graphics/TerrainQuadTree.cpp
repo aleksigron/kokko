@@ -22,7 +22,9 @@
 namespace kokko
 {
 
-TerrainQuadTree::TerrainQuadTree() :
+TerrainQuadTree::TerrainQuadTree(Allocator* allocator) :
+	allocator(allocator),
+	nodes(allocator),
 	tiles(nullptr),
 	tileTextureIds(nullptr),
 	treeLevels(0),
@@ -33,7 +35,7 @@ TerrainQuadTree::TerrainQuadTree() :
 {
 }
 
-void TerrainQuadTree::CreateResources(Allocator* allocator, kokko::render::Device* renderDevice, int levels,
+void TerrainQuadTree::CreateResources(render::Device* renderDevice, uint8_t levels,
 	const TerrainParameters& params)
 {
 	constexpr int tileResolution = TerrainTile::Resolution;
@@ -70,7 +72,7 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, kokko::render::Devic
 		allocator->Allocate(tileCount * sizeof(uint32_t), "TerrainQuadTree.tileTextureIds"));
 	renderDevice->CreateTextures(RenderTextureTarget::Texture2d, tileCount, tileTextureIds);
 
-	for (int levelIdx = 0; levelIdx < treeLevels; ++levelIdx)
+	for (uint8_t levelIdx = 0; levelIdx < treeLevels; ++levelIdx)
 	{
 		int tilesPerDimension = GetTilesPerDimension(levelIdx);
 
@@ -91,7 +93,7 @@ void TerrainQuadTree::CreateResources(Allocator* allocator, kokko::render::Devic
 	}
 }
 
-void TerrainQuadTree::DestroyResources(Allocator* allocator, kokko::render::Device* renderDevice)
+void TerrainQuadTree::DestroyResources(render::Device* renderDevice)
 {
 	if (tileTextureIds != nullptr)
 		renderDevice->DestroyTextures(static_cast<unsigned int>(tileCount), tileTextureIds);
@@ -104,11 +106,14 @@ void TerrainQuadTree::GetTilesToRender(const FrustumPlanes& frustum, const Vec3f
 	const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut)
 {
 	KOKKO_PROFILE_SCOPE("TerrainQuadTree::GetTilesToRender()");
+
+	nodes.Clear();
+
 	GetRenderTilesParams params{ frustum, cameraPos, renderDebug, resultOut };
 	RenderTile(TerrainTileId{}, params);
 }
 
-void TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& params)
+int TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& params)
 {
 	float tileScale = GetTileScale(id.level);
 
@@ -124,24 +129,23 @@ void TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& 
 
 	if (Intersect::FrustumAabb(params.frustum, tileBounds) == false)
 	{
-		return;
-	}
-
-	if (id.level + 1 == treeLevels)
-	{
-		params.resultOut.PushBack(id);
-
-		return;
+		return -1;
 	}
 	
 	constexpr float sizeFactor = 0.5f;
 
-	float distance = (tileBounds.center - params.cameraPos).Magnitude();
-	bool tileIsSmallEnough = tileWidth < distance * sizeFactor;
+	bool lastLevel = id.level + 1 == treeLevels;
+	bool tileIsSmallEnough = lastLevel || (tileWidth < (tileBounds.center - params.cameraPos).Magnitude() * sizeFactor);
 
-	auto vr = Debug::Get()->GetVectorRenderer();
-	auto tr = Debug::Get()->GetTextRenderer();
-	Color col(1.0f, 0.0f, 1.0f);
+	int nodeIndex = static_cast<int>(nodes.GetCount());
+	assert(nodeIndex <= UINT16_MAX);
+	{
+		TerrainQuadTreeNode& node = nodes.PushBack();
+		node.x = id.x;
+		node.y = id.y;
+		node.level = id.level;
+		node.numChildren = 0;
+	}
 
 	if (tileIsSmallEnough)
 	{
@@ -154,7 +158,7 @@ void TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& 
 
 			Mat4x4f transform = Mat4x4f::Translate(tileBounds.center) * Mat4x4f::Scale(scale);
 
-			vr->DrawWireCube(transform, col);
+			Debug::Get()->GetVectorRenderer()->DrawWireCube(transform, Color(1.0f, 0.0f, 1.0f));
 		}
 	}
 	else
@@ -168,10 +172,18 @@ void TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& 
 				tileId.x = id.x * 2 + x;
 				tileId.y = id.y * 2 + y;
 
-				RenderTile(tileId, params);
+				int childIndex = RenderTile(tileId, params);
+				if (childIndex >= 0)
+				{
+					TerrainQuadTreeNode& node = nodes[nodeIndex];
+					node.children[node.numChildren] = static_cast<uint16_t>(childIndex);
+					node.numChildren += 1;
+				}
 			}
 		}
 	}
+
+	return nodeIndex;
 }
 
 int TerrainQuadTree::GetLevelCount() const
@@ -179,17 +191,17 @@ int TerrainQuadTree::GetLevelCount() const
 	return treeLevels;
 }
 
-const TerrainTile* TerrainQuadTree::GetTile(int level, int x, int y)
+const TerrainTile* TerrainQuadTree::GetTile(uint8_t level, int x, int y)
 {
 	return &tiles[GetTileIndex(level, x, y)];
 }
 
-render::TextureId TerrainQuadTree::GetTileHeightTexture(int level, int x, int y)
+render::TextureId TerrainQuadTree::GetTileHeightTexture(uint8_t level, int x, int y)
 {
 	return tileTextureIds[GetTileIndex(level, x, y)];
 }
 
-int TerrainQuadTree::GetTilesPerDimension(int level)
+int TerrainQuadTree::GetTilesPerDimension(uint8_t level)
 {
 	assert(level >= 0);
 	assert(level < 31);
@@ -204,7 +216,7 @@ TEST_CASE("TerrainQuadTree.GetTilesPerDimension")
 	CHECK(TerrainQuadTree::GetTilesPerDimension(3) == 8);
 }
 
-int TerrainQuadTree::GetTileIndex(int level, int x, int y)
+int TerrainQuadTree::GetTileIndex(uint8_t level, int x, int y)
 {
 	int levelStart = 0;
 	int levelSize = 1;
@@ -231,7 +243,7 @@ TEST_CASE("TerrainQuadTree.GetTileIndex")
 	CHECK(TerrainQuadTree::GetTileIndex(3, 0, 0) == 21);
 }
 
-int TerrainQuadTree::GetTileCountForLevelCount(int levelCount)
+int TerrainQuadTree::GetTileCountForLevelCount(uint8_t levelCount)
 {
 	return GetTileIndex(levelCount, 0, 0);
 }
@@ -244,7 +256,7 @@ TEST_CASE("TerrainQuadTree.GetTileCountForLevelCount")
 	CHECK(TerrainQuadTree::GetTileCountForLevelCount(3) == 21);
 }
 
-float TerrainQuadTree::GetTileScale(int level)
+float TerrainQuadTree::GetTileScale(uint8_t level)
 {
 	return 1.0f / (1 << level);
 }

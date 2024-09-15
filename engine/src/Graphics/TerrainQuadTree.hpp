@@ -35,14 +35,23 @@ struct TerrainTile
 	uint16_t heightData[ResolutionWithBorder * ResolutionWithBorder];
 };
 
+struct TerrainQuadTreeNode
+{
+	uint32_t x;
+	uint32_t y;
+	uint16_t children[4];
+	uint8_t numChildren;
+	uint8_t level;
+};
+
 class TerrainQuadTree
 {
 public:
-	TerrainQuadTree();
+	TerrainQuadTree(Allocator* allocator);
 
-	void CreateResources(Allocator* allocator, kokko::render::Device* renderDevice, int levels,
+	void CreateResources(kokko::render::Device* renderDevice, uint8_t levels,
 		const TerrainParameters& params);
-	void DestroyResources(Allocator* allocator, kokko::render::Device* renderDevice);
+	void DestroyResources(kokko::render::Device* renderDevice);
 
 	void GetTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
 		const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut);
@@ -58,13 +67,13 @@ public:
 	float GetHeight() const { return terrainHeight; }
 	void SetHeight(float height) { terrainHeight = height; }
 
-	const TerrainTile* GetTile(int level, int x, int y);
-	render::TextureId GetTileHeightTexture(int level, int x, int y);
+	const TerrainTile* GetTile(uint8_t level, int x, int y);
+	render::TextureId GetTileHeightTexture(uint8_t level, int x, int y);
 
-	static int GetTilesPerDimension(int level);
-	static int GetTileIndex(int level, int x, int y);
-	static int GetTileCountForLevelCount(int levelCount);
-	static float GetTileScale(int level);
+	static int GetTilesPerDimension(uint8_t level);
+	static int GetTileIndex(uint8_t level, int x, int y);
+	static int GetTileCountForLevelCount(uint8_t levelCount);
+	static float GetTileScale(uint8_t level);
 
 private:
 	struct GetRenderTilesParams
@@ -75,16 +84,19 @@ private:
 		Array<TerrainTileId>& resultOut;
 	};
 
-	void RenderTile(const TerrainTileId& id, GetRenderTilesParams& params);
+	// Returns inserted node index (points to nodes array), or -1 if no insertion
+	int RenderTile(const TerrainTileId& id, GetRenderTilesParams& params);
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 
 	static uint16_t TestData(float x, float y);
 
+	Allocator* allocator;
+	Array<TerrainQuadTreeNode> nodes;
 	TerrainTile* tiles;
 	render::TextureId* tileTextureIds;
 
-	int treeLevels;
+	uint8_t treeLevels;
 	int tileCount;
 	float terrainWidth;
 	float terrainBottom;
