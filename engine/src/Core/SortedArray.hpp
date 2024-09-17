@@ -29,7 +29,7 @@ private:
 		{
 			size_t m = (l + r + 1) / 2;
 
-			if (data[m] > value)
+			if (value < data[m])
 				r = m - 1;
 			else
 				l = m;
