@@ -4,6 +4,8 @@
 
 #include "doctest/doctest.h"
 
+#include "Core/SortedArray.hpp"
+
 #include "Debug/Debug.hpp"
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
@@ -111,18 +113,20 @@ void TerrainQuadTree::UpdateTilesToRender(
 	KOKKO_PROFILE_SCOPE("TerrainQuadTree::UpdateTilesToRender()");
 
 	nodes.Clear();
+	maxNodeLevel = 0;
 
 	// Calculates optimal set of tiles to render and updates quad tree <nodes>
-	GetRenderTilesParams params{ frustum, cameraPos, renderDebug, resultOut };
-	RenderTile(TerrainTileId{}, params);
+	UpdateTilesToRenderParams params{ frustum, cameraPos, renderDebug, resultOut };
+	BuildQuadTree(QuadTreeNodeId{}, params);
 
 	// Next we need to update the quad tree so that it forms a restricted quad tree
 	RestrictQuadTree();
 
 	// Then we create the final render tiles from the leaf nodes of the quad tree
+	QuadTreeToTiles();
 }
 
-int TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& params)
+int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, UpdateTilesToRenderParams& params)
 {
 	float tileScale = GetTileScale(id.level);
 
@@ -150,15 +154,16 @@ int TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& p
 	assert(nodeIndex <= UINT16_MAX);
 	{
 		TerrainQuadTreeNode& node = nodes.PushBack();
-		node.x = id.x;
-		node.y = id.y;
-		node.level = id.level;
-		node.numChildren = 0;
+		node.id = id;
+		for (int i = 0; i < 4; ++i)
+			node.children[i] = 0;
+
+		maxNodeLevel = std::max(maxNodeLevel, id.level);
 	}
 
 	if (tileIsSmallEnough)
 	{
-		params.resultOut.PushBack(id);
+		//params.resultOut.PushBack(id);
 
 		if (params.renderDebug.IsFeatureEnabled(RenderDebugFeatureFlag::DrawTerrainTiles))
 		{
@@ -176,18 +181,11 @@ int TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& p
 		{
 			for (int x = 0; x < 2; ++x)
 			{
-				TerrainTileId tileId;
-				tileId.level = id.level + 1;
-				tileId.x = id.x * 2 + x;
-				tileId.y = id.y * 2 + y;
+				QuadTreeNodeId tileId{ id.x * 2 + x, id.y * 2 + y, id.level + 1 };
 
-				int childIndex = RenderTile(tileId, params);
+				int childIndex = BuildQuadTree(tileId, params);
 				if (childIndex >= 0)
-				{
-					TerrainQuadTreeNode& node = nodes[nodeIndex];
-					node.children[node.numChildren] = static_cast<uint16_t>(childIndex);
-					node.numChildren += 1;
-				}
+					nodes[nodeIndex].children[y * 2 + x] = static_cast<uint16_t>(childIndex);
 			}
 		}
 	}
@@ -196,6 +194,54 @@ int TerrainQuadTree::RenderTile(const TerrainTileId& id, GetRenderTilesParams& p
 }
 
 void TerrainQuadTree::RestrictQuadTree()
+{
+	SortedArray<QuadTreeNodeId> parentsToCheck(allocator);
+	SortedArray<QuadTreeNodeId> neighborsToCheck(allocator);
+
+	uint8_t currentLevel = maxNodeLevel;
+	while (currentLevel > 1)
+	{
+		for (const auto& node : nodes)
+			if (node.id.level == currentLevel)
+				parentsToCheck.InsertUnique(GetParentId(node.id));
+
+		// Check
+		int tilesPerDim = GetTilesPerDimension(currentLevel - 1);
+		for (const auto& id : parentsToCheck)
+		{
+			// Bitwise AND is used to check if the potential tile has a different parent from current tile
+
+			if ((id.x & 1) == 0 && id.x > 0)
+				neighborsToCheck.InsertUnique(QuadTreeNodeId{ id.x - 1, id.y, id.level });
+			if ((id.x & 1) == 1 && id.x + 1 < tilesPerDim)
+				neighborsToCheck.InsertUnique(QuadTreeNodeId{ id.x + 1, id.y, id.level });
+			if ((id.y & 1) == 0 && id.y > 0)
+				neighborsToCheck.InsertUnique(QuadTreeNodeId{ id.x, id.y - 1, id.level });
+			if ((id.y & 1) == 1 && id.y + 1 < tilesPerDim)
+				neighborsToCheck.InsertUnique(QuadTreeNodeId{ id.x, id.y + 1, id.level });
+		}
+
+		for (const auto& id : neighborsToCheck)
+		{
+			// Try to find node in nodes
+			// If not, split parent tiles until we have the node
+
+			TerrainQuadTreeNode* currentNode = &nodes[0];
+			for (uint8_t level = 0; level <= id.level; ++level)
+			{
+				// Verify next level towards <id> exists
+				// If so, update currentNode and continue
+				// Otherwise, split
+			}
+		}
+
+		parentsToCheck.Clear();
+		neighborsToCheck.Clear();
+		currentLevel -= 1;
+	}
+}
+
+void TerrainQuadTree::QuadTreeToTiles()
 {
 
 }
@@ -312,6 +358,14 @@ uint16_t TerrainQuadTree::TestData(float x, float y)
 		sum += std::sin(x * f * i) * a / i + std::sin(y * f * i) * a / i;
 	}
 	return static_cast<uint16_t>(sum * UINT16_MAX);
+}
+
+QuadTreeNodeId TerrainQuadTree::GetParentId(const QuadTreeNodeId& id)
+{
+	if (id.level == 0)
+		return id;
+
+	return QuadTreeNodeId{ id.x / 2, id.y / 2, static_cast<uint8_t>(id.level - 1) };
 }
 
 }

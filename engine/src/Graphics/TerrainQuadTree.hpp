@@ -35,13 +35,31 @@ struct TerrainTile
 	uint16_t heightData[ResolutionWithBorder * ResolutionWithBorder];
 };
 
-struct TerrainQuadTreeNode
+struct QuadTreeNodeId
 {
 	uint32_t x;
 	uint32_t y;
-	uint16_t children[4];
-	uint8_t numChildren;
 	uint8_t level;
+
+	bool operator==(const QuadTreeNodeId& other) const
+	{
+		return x == other.x && y == other.y && level == other.level;
+	}
+
+	bool operator<(const QuadTreeNodeId& other) const
+	{
+		if (level < other.level) return true;
+		if (level > other.level) return false;
+		if (x < other.level) return true;
+		if (x > other.level) return false;
+		return y < other.y;
+	}
+};
+
+struct TerrainQuadTreeNode
+{
+	QuadTreeNodeId id;
+	uint16_t children[4];
 };
 
 class TerrainQuadTree
@@ -76,7 +94,7 @@ public:
 	static float GetTileScale(uint8_t level);
 
 private:
-	struct GetRenderTilesParams
+	struct UpdateTilesToRenderParams
 	{
 		const FrustumPlanes& frustum;
 		const Vec3f& cameraPos;
@@ -85,12 +103,15 @@ private:
 	};
 
 	// Returns inserted node index (points to nodes array), or -1 if no insertion
-	int RenderTile(const TerrainTileId& id, GetRenderTilesParams& params);
+	int BuildQuadTree(const QuadTreeNodeId& id, UpdateTilesToRenderParams& params);
 	void RestrictQuadTree();
+	void QuadTreeToTiles();
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 
 	static uint16_t TestData(float x, float y);
+
+	static QuadTreeNodeId GetParentId(const QuadTreeNodeId& id);
 
 	Allocator* allocator;
 	Array<TerrainQuadTreeNode> nodes;
@@ -98,6 +119,7 @@ private:
 	render::TextureId* tileTextureIds;
 
 	uint8_t treeLevels;
+	uint8_t maxNodeLevel;
 	int tileCount;
 	float terrainWidth;
 	float terrainBottom;
