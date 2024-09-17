@@ -380,7 +380,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	// Select tiles to render
 
 	TerrainQuadTree& quadTree = data.quadTree[id.i];
-	quadTree.GetTilesToRender(viewport.frustum, viewport.position, parameters.renderDebug, tilesToRender);
+	quadTree.UpdateTilesToRender(viewport.frustum, viewport.position, parameters.renderDebug, tilesToRender);
 
 	// Update uniform buffer
 
