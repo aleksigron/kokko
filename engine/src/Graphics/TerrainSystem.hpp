@@ -135,7 +135,7 @@ private:
 	}
 	data;
 
-	Array<TerrainTileId> tilesToRender;
+	Array<QuadTreeNodeId> tilesToRender;
 
 	Array<uint8_t> uniformStagingBuffer;
 
