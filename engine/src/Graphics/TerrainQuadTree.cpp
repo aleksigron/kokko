@@ -108,7 +108,7 @@ void TerrainQuadTree::UpdateTilesToRender(
 	const FrustumPlanes& frustum,
 	const Vec3f& cameraPos,
 	const RenderDebugSettings& renderDebug,
-	Array<TerrainTileId>& resultOut)
+	Array<QuadTreeNodeId>& resultOut)
 {
 	KOKKO_PROFILE_SCOPE("TerrainQuadTree::UpdateTilesToRender()");
 
@@ -119,11 +119,15 @@ void TerrainQuadTree::UpdateTilesToRender(
 	UpdateTilesToRenderParams params{ frustum, cameraPos, renderDebug, resultOut };
 	BuildQuadTree(QuadTreeNodeId{}, params);
 
+	size_t oldNodeCount = nodes.GetCount();
+
 	// Next we need to update the quad tree so that it forms a restricted quad tree
 	RestrictQuadTree();
 
+	//KK_LOG_DEBUG("Nodes, original: {}, after restriction: {}", oldNodeCount, nodes.GetCount());
+
 	// Then we create the final render tiles from the leaf nodes of the quad tree
-	QuadTreeToTiles();
+	QuadTreeToTiles(0, params);
 }
 
 int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, UpdateTilesToRenderParams& params)
@@ -155,16 +159,12 @@ int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, UpdateTilesToRender
 	{
 		TerrainQuadTreeNode& node = nodes.PushBack();
 		node.id = id;
-		for (int i = 0; i < 4; ++i)
-			node.children[i] = 0;
 
 		maxNodeLevel = std::max(maxNodeLevel, id.level);
 	}
 
 	if (tileIsSmallEnough)
 	{
-		//params.resultOut.PushBack(id);
-
 		if (params.renderDebug.IsFeatureEnabled(RenderDebugFeatureFlag::DrawTerrainTiles))
 		{
 			Vec3f scale = tileSize;
@@ -229,9 +229,42 @@ void TerrainQuadTree::RestrictQuadTree()
 			TerrainQuadTreeNode* currentNode = &nodes[0];
 			for (uint8_t level = 0; level <= id.level; ++level)
 			{
+				if (level == id.level)
+					break;
+
+				uint8_t childLevel = static_cast<uint8_t>(level + 1);
+				int levelDiff = id.level - childLevel;
+				int childX = id.x >> levelDiff;
+				int childY = id.y >> levelDiff;
+				int childIndex = (childY & 1) * 2 + (childX & 1);
+
 				// Verify next level towards <id> exists
-				// If so, update currentNode and continue
-				// Otherwise, split
+				// Node always has all the children or none of them
+				// If currentNode doesn't have children, split
+				if (currentNode->children[0] == 0)
+				{
+					for (int y = 0; y < 2; ++y)
+					{
+						for (int x = 0; x < 2; ++x)
+						{
+							// Create child node
+							size_t newNodeIndex = nodes.GetCount();
+							assert(newNodeIndex <= UINT16_MAX);
+							TerrainQuadTreeNode& newNode = nodes.PushBack();
+							const QuadTreeNodeId& curId = currentNode->id;
+							newNode.id = QuadTreeNodeId{ curId.x * 2 + x, curId.y * 2 + y, childLevel };
+							currentNode->children[y * 2 + x] = static_cast<uint16_t>(newNodeIndex);
+						}
+					}
+				}
+
+				// Update currentNode and continue
+				int childNodeIndex = currentNode->children[childIndex];
+
+				assert(childNodeIndex != 0);
+
+				currentNode = &nodes[childNodeIndex];
+				continue;
 			}
 		}
 
@@ -241,9 +274,18 @@ void TerrainQuadTree::RestrictQuadTree()
 	}
 }
 
-void TerrainQuadTree::QuadTreeToTiles()
+void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderParams& params)
 {
+	const TerrainQuadTreeNode& node = nodes[nodeIndex];
+	if (node.children[0] == 0) // Node has no children
+	{
+		params.resultOut.PushBack(node.id);
+		return;
+	}
 
+	for (int y = 0; y < 2; ++y)
+		for (int x = 0; x < 2; ++x)
+			QuadTreeToTiles(node.children[y * 2 + x], params);
 }
 
 int TerrainQuadTree::GetLevelCount() const

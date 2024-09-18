@@ -59,7 +59,7 @@ struct QuadTreeNodeId
 struct TerrainQuadTreeNode
 {
 	QuadTreeNodeId id;
-	uint16_t children[4];
+	uint16_t children[4] = { 0, 0, 0, 0 };
 };
 
 class TerrainQuadTree
@@ -72,7 +72,7 @@ public:
 	void DestroyResources(kokko::render::Device* renderDevice);
 
 	void UpdateTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
-		const RenderDebugSettings& renderDebug, Array<TerrainTileId>& resultOut);
+		const RenderDebugSettings& renderDebug, Array<QuadTreeNodeId>& resultOut);
 
 	int GetLevelCount() const;
 
@@ -99,13 +99,13 @@ private:
 		const FrustumPlanes& frustum;
 		const Vec3f& cameraPos;
 		const RenderDebugSettings& renderDebug;
-		Array<TerrainTileId>& resultOut;
+		Array<QuadTreeNodeId>& resultOut;
 	};
 
 	// Returns inserted node index (points to nodes array), or -1 if no insertion
 	int BuildQuadTree(const QuadTreeNodeId& id, UpdateTilesToRenderParams& params);
 	void RestrictQuadTree();
-	void QuadTreeToTiles();
+	void QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderParams& params);
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 
