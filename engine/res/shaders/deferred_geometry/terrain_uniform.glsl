@@ -8,7 +8,7 @@ layout(std140, binding = BLOCK_BINDING_OBJECT) uniform TerrainBlock
 	vec2 tile_offset;
 	float tile_scale;
 	float terrain_size;
-	float terrain_resolution;
+	float terrain_side_verts;
 	float height_origin;
 	float height_range;
 	float metalness;

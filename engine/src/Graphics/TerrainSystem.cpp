@@ -46,7 +46,7 @@ struct TerrainUniformBlock
 	alignas(4) float tileScale;
 
 	alignas(4) float terrainSize;
-	alignas(4) float terrainResolution;
+	alignas(4) float terrainSideVerts;
 	alignas(4) float heightOrigin;
 	alignas(4) float heightRange;
 
@@ -244,20 +244,20 @@ void TerrainSystem::CreateVertexData()
 {
 	// Create vertex data
 
-	int sideVerts = TerrainTile::Resolution + 1;
+	constexpr int sideVerts = TerrainTile::VerticesPerSide;
 	unsigned int vertCount = sideVerts * sideVerts;
 	size_t vertexComponents = 2;
 	size_t vertSize = sizeof(float) * vertexComponents;
 	unsigned int vertBytes = static_cast<unsigned int>(vertSize * vertCount);
 	float* vertexBuf = static_cast<float*>(allocator->Allocate(vertBytes, "TerrainSystem.CreateVertexData() vertexBuf"));
 
-	int sideQuads = TerrainTile::Resolution;
+	constexpr int sideQuads = TerrainTile::QuadsPerSide;
 	int quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
 	unsigned int indexCount = sideQuads * sideQuads * quadIndices;
 	unsigned int indexBytes = indexCount * sizeof(uint16_t);
 	uint16_t* indexBuf = static_cast<uint16_t*>(allocator->Allocate(indexBytes, "TerrainSystem.CreateVertexData() indexBuf"));
-
-	float quadSize = 1.0f / TerrainTile::Resolution;
+	
+	float quadSize = 1.0f / sideQuads;
 
 	// Set vertex data
 	for (size_t y = 0; y < sideVerts; ++y)
@@ -394,7 +394,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	uniforms.tileOffset = Vec2f();
 	uniforms.tileScale = 1.0f;
 	uniforms.terrainSize = terrainWidth;
-	uniforms.terrainResolution = static_cast<float>(TerrainTile::Resolution);
+	uniforms.terrainSideVerts = static_cast<float>(TerrainTile::VerticesPerSide);
 	uniforms.heightOrigin = quadTree.GetBottom();
 	uniforms.heightRange = terrainHeight;
 	uniforms.metalness = 0.0f;

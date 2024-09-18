@@ -41,8 +41,7 @@ TerrainQuadTree::TerrainQuadTree(Allocator* allocator) :
 void TerrainQuadTree::CreateResources(render::Device* renderDevice, uint8_t levels,
 	const TerrainParameters& params)
 {
-	constexpr int tileResolution = TerrainTile::Resolution;
-	constexpr int texResolution = TerrainTile::ResolutionWithBorder;
+	constexpr int texResolution = TerrainTile::TexelsPerSide;
 
 	treeLevels = levels;
 	tileCount = GetTileCountForLevelCount(levels);
@@ -386,18 +385,18 @@ TEST_CASE("TerrainQuadTree.GetTileScale")
 
 void TerrainQuadTree::CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale)
 {
-	constexpr int texResolution = TerrainTile::ResolutionWithBorder;
-	float tileRes = static_cast<float>(TerrainTile::Resolution);
+	const float quadScale = 1.0f / TerrainTile::QuadsPerSide;
 
-	for (int pixY = 0; pixY < texResolution; ++pixY)
+	for (int texY = 0; texY < TerrainTile::TexelsPerSide; ++texY)
 	{
-		for (int pixX = 0; pixX < texResolution; ++pixX)
+		for (int texX = 0; texX < TerrainTile::TexelsPerSide; ++texX)
 		{
-			float cx = (pixX / tileRes + tileX) * tileScale;
-			float cy = (pixY / tileRes + tileY) * tileScale;
+			float cx = ((texX - 1) * quadScale + tileX) * tileScale;
+			float cy = ((texY - 1) * quadScale + tileY) * tileScale;
 
-			size_t pixelIndex = pixY * texResolution + pixX;
-			tile.heightData[pixelIndex] = TestData(cx, cy);
+			int pixelIndex = texY * TerrainTile::TexelsPerTextureRow + texX;
+			uint16_t value = TestData(cx, cy);
+			tile.heightData[pixelIndex] = value;
 		}
 	}
 }
