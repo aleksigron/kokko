@@ -17,15 +17,19 @@ uniform sampler2D height_map;
 
 vec3 calc_position(vec2 offset)
 {
-	float height_sample = texture(height_map, position + offset).r;
-	vec2 xy_pos = (position + offset + uniforms.tile_offset) * uniforms.terrain_size * uniforms.tile_scale;
+	const float texel_size = 1.0 / (uniforms.terrain_side_verts + 2);
+	const vec2 origin = vec2(1.5) * texel_size;
+	const float border_scale_factor = (uniforms.terrain_side_verts - 1) / (uniforms.terrain_side_verts + 2);
+	vec2 pos_tile_space = position + offset;
+	vec2 tex_coord = origin + pos_tile_space * border_scale_factor;
+	float height_sample = texture(height_map, tex_coord).r;
+	vec2 xy_pos = (pos_tile_space + uniforms.tile_offset) * uniforms.terrain_size * uniforms.tile_scale;
 	return vec3(xy_pos.x, uniforms.height_origin + height_sample * uniforms.height_range, xy_pos.y);
 }
 
 void main()
 {
-	float offset_amount = 1.0 / uniforms.terrain_resolution;
-	float w_offset = uniforms.terrain_size / uniforms.terrain_resolution * 2.0;
+	float offset_amount = 1.0 / (uniforms.terrain_side_verts - 1);
 
 	vec3 p_0 = calc_position(vec2(0.0, 0.0));
 	vec3 p_right = calc_position(vec2(offset_amount, 0.0));

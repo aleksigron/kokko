@@ -29,10 +29,12 @@ class Device;
 
 struct TerrainTile
 {
-	static constexpr int Resolution = 31;
-	static constexpr int ResolutionWithBorder = Resolution + 1;
+	static constexpr int QuadsPerSide = 32;
+	static constexpr int VerticesPerSide = QuadsPerSide + 1;
+	static constexpr int TexelsPerSide = VerticesPerSide + 2;
+	static constexpr int TexelsPerTextureRow = TexelsPerSide + 1; // Texel data rows need a stride of 4 
 
-	uint16_t heightData[ResolutionWithBorder * ResolutionWithBorder];
+	uint16_t heightData[TexelsPerTextureRow * TexelsPerSide];
 };
 
 struct QuadTreeNodeId
