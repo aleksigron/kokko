@@ -30,6 +30,7 @@ TerrainQuadTree::TerrainQuadTree(Allocator* allocator) :
 	tiles(nullptr),
 	tileTextureIds(nullptr),
 	treeLevels(0),
+	maxNodeLevel(0),
 	tileCount(0),
 	terrainWidth(0.0f),
 	terrainBottom(0.0f),
@@ -124,8 +125,6 @@ void TerrainQuadTree::UpdateTilesToRender(
 	// Next we need to update the quad tree so that it forms a restricted quad tree
 	RestrictQuadTree();
 
-	//KK_LOG_DEBUG("Nodes, original: {}, after restriction: {}", oldNodeCount, nodes.GetCount());
-
 	// Then we create the final render tiles from the leaf nodes of the quad tree
 	QuadTreeToTiles(0, params);
 }
@@ -145,9 +144,7 @@ int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, UpdateTilesToRender
 	tileBounds.center = tileMin + tileBounds.extents;
 
 	if (Intersect::FrustumAabb(params.frustum, tileBounds) == false)
-	{
 		return -1;
-	}
 	
 	constexpr float sizeFactor = 0.5f;
 
@@ -205,7 +202,6 @@ void TerrainQuadTree::RestrictQuadTree()
 			if (node.id.level == currentLevel)
 				parentsToCheck.InsertUnique(GetParentId(node.id));
 
-		// Check
 		int tilesPerDim = GetTilesPerDimension(currentLevel - 1);
 		for (const auto& id : parentsToCheck)
 		{
@@ -239,9 +235,13 @@ void TerrainQuadTree::RestrictQuadTree()
 				int childIndex = (childY & 1) * 2 + (childX & 1);
 
 				// Verify next level towards <id> exists
-				// Node always has all the children or none of them
-				// If currentNode doesn't have children, split
-				if (currentNode->children[0] == 0)
+				// If currentNode has no children, split
+				bool hasChildren = false;
+				for (int i = 0; i < 4; ++i)
+					if (currentNode->children[i] != 0)
+						hasChildren = true;
+
+				if (hasChildren == false)
 				{
 					for (int y = 0; y < 2; ++y)
 					{
@@ -257,11 +257,12 @@ void TerrainQuadTree::RestrictQuadTree()
 						}
 					}
 				}
+				// If it has some children, but not our target tile, skip work on it
+				else if (currentNode->children[childIndex] == 0)
+					break;
 
 				// Update currentNode and continue
 				int childNodeIndex = currentNode->children[childIndex];
-
-				assert(childNodeIndex != 0);
 
 				currentNode = &nodes[childNodeIndex];
 				continue;
@@ -277,15 +278,27 @@ void TerrainQuadTree::RestrictQuadTree()
 void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderParams& params)
 {
 	const TerrainQuadTreeNode& node = nodes[nodeIndex];
-	if (node.children[0] == 0) // Node has no children
+
+	bool hasChildren = false;
+	for (int i = 0; i < 4; ++i)
+		if (node.children[i] != 0)
+			hasChildren = true;
+
+	if (hasChildren == false)
 	{
 		params.resultOut.PushBack(node.id);
 		return;
 	}
 
 	for (int y = 0; y < 2; ++y)
+	{
 		for (int x = 0; x < 2; ++x)
-			QuadTreeToTiles(node.children[y * 2 + x], params);
+		{
+			uint16_t childIndex = node.children[y * 2 + x];
+			if (childIndex != 0)
+				QuadTreeToTiles(childIndex, params);
+		}
+	}
 }
 
 int TerrainQuadTree::GetLevelCount() const
