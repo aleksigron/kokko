@@ -82,14 +82,14 @@ TerrainSystem::~TerrainSystem()
 {
 	RemoveAll();
 
-	if (vertexData.indexBuffer != 0)
-		renderDevice->DestroyBuffers(1, &vertexData.indexBuffer);
+	if (vertexData.indexBuffers[0] != 0)
+		renderDevice->DestroyBuffers(MeshType_COUNT, vertexData.indexBuffers);
 
 	if (vertexData.vertexBuffer != 0)
 		renderDevice->DestroyBuffers(1, &vertexData.vertexBuffer);
 
-	if (vertexData.vertexArray != 0)
-		renderDevice->DestroyVertexArrays(1, &vertexData.vertexArray);
+	if (vertexData.vertexArrays[0] != 0)
+		renderDevice->DestroyVertexArrays(MeshType_COUNT, vertexData.vertexArrays);
 
 	if (uniformBufferId != 0)
 		renderDevice->DestroyBuffers(1, &uniformBufferId);
@@ -138,7 +138,7 @@ void TerrainSystem::Initialize()
 
 	// Vertex data
 
-	CreateVertexData();
+	CreateVertexAndIndexData();
 }
 
 TerrainId TerrainSystem::Lookup(Entity e)
@@ -238,79 +238,6 @@ void TerrainSystem::Submit(const SubmitParameters& parameters)
 		float depth = 0.0f; // TODO: Calculate
 		parameters.commandList.AddToFullscreenViewport(RenderPassType::OpaqueGeometry, depth, i);
 	}
-}
-
-void TerrainSystem::CreateVertexData()
-{
-	// Create vertex data
-
-	constexpr int sideVerts = TerrainTile::VerticesPerSide;
-	unsigned int vertCount = sideVerts * sideVerts;
-	size_t vertexComponents = 2;
-	size_t vertSize = sizeof(float) * vertexComponents;
-	unsigned int vertBytes = static_cast<unsigned int>(vertSize * vertCount);
-	float* vertexBuf = static_cast<float*>(allocator->Allocate(vertBytes, "TerrainSystem.CreateVertexData() vertexBuf"));
-
-	constexpr int sideQuads = TerrainTile::QuadsPerSide;
-	int quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
-	unsigned int indexCount = sideQuads * sideQuads * quadIndices;
-	unsigned int indexBytes = indexCount * sizeof(uint16_t);
-	uint16_t* indexBuf = static_cast<uint16_t*>(allocator->Allocate(indexBytes, "TerrainSystem.CreateVertexData() indexBuf"));
-	
-	float quadSize = 1.0f / sideQuads;
-
-	// Set vertex data
-	for (size_t y = 0; y < sideVerts; ++y)
-	{
-		for (size_t x = 0; x < sideVerts; ++x)
-		{
-			size_t vertIndex = y * sideVerts + x;
-			vertexBuf[vertIndex * vertexComponents + 0] = x * quadSize;
-			vertexBuf[vertIndex * vertexComponents + 1] = y * quadSize;
-		}
-	}
-
-	// Set index data
-	for (size_t y = 0; y < sideQuads; ++y)
-	{
-		for (size_t x = 0; x < sideQuads; ++x)
-		{
-			size_t quadStart = (y * sideQuads + x) * quadIndices;
-			indexBuf[quadStart + 0] = static_cast<uint16_t>(y * sideVerts + x);
-			indexBuf[quadStart + 1] = static_cast<uint16_t>((y + 1) * sideVerts + x);
-			indexBuf[quadStart + 2] = static_cast<uint16_t>(y * sideVerts + (x + 1));
-			indexBuf[quadStart + 3] = static_cast<uint16_t>((y + 1) * sideVerts + x);
-			indexBuf[quadStart + 4] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 1));
-			indexBuf[quadStart + 5] = static_cast<uint16_t>(y * sideVerts + (x + 1));
-		}
-	}
-
-	renderDevice->CreateVertexArrays(1, &vertexData.vertexArray);
-	renderDevice->CreateBuffers(1, &vertexData.vertexBuffer);
-	renderDevice->CreateBuffers(1, &vertexData.indexBuffer);
-	vertexData.indexCount = indexCount;
-
-	// Bind and upload index buffer
-	renderDevice->SetBufferStorage(vertexData.indexBuffer, indexBytes, indexBuf, BufferStorageFlags::None);
-
-	// Bind and upload vertex buffer
-	renderDevice->SetBufferStorage(vertexData.vertexBuffer, vertBytes, vertexBuf, BufferStorageFlags::None);
-
-	VertexAttribute vertexAttributes[] = { VertexAttribute::pos2 };
-	VertexFormat vertexFormatPos(vertexAttributes, KOKKO_ARRAY_ITEMS(vertexAttributes));
-	vertexFormatPos.CalcOffsetsAndSizeInterleaved();
-	const VertexAttribute& attr = vertexAttributes[0];
-
-	renderDevice->SetVertexArrayVertexBuffer(vertexData.vertexArray, 0, vertexData.vertexBuffer, 0, attr.stride);
-	renderDevice->SetVertexArrayIndexBuffer(vertexData.vertexArray, vertexData.indexBuffer);
-
-	renderDevice->EnableVertexAttribute(vertexData.vertexArray, attr.attrIndex);
-	renderDevice->SetVertexAttribFormat(
-		vertexData.vertexArray, attr.attrIndex, attr.elemCount, attr.elemType, attr.offset);
-	renderDevice->SetVertexAttribBinding(vertexData.vertexArray, attr.attrIndex, 0);
-
-	allocator->Deallocate(indexBuf);
-	allocator->Deallocate(vertexBuf);
 }
 
 void TerrainSystem::InitializeTerrain(TerrainId id, const TerrainParameters& params)
@@ -447,7 +374,6 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 		encoder->BindTextureToShader(albedoMap->uniformLocation, 1, textureObjectId);
 	}
 
-	encoder->BindVertexArray(vertexData.vertexArray);
 
 	// For height texture
 
@@ -459,6 +385,10 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 		int blocksUsed = 0;
 		for (const auto& tile : tilesToRender)
 		{
+			int tileMeshTypeIndex = MeshType_TopSparse;
+
+			encoder->BindVertexArray(vertexData.vertexArrays[tileMeshTypeIndex]);
+
 			intptr_t rangeOffset = blocksUsed * uniformBlockStride;
 			blocksUsed += 1;
 
@@ -472,12 +402,123 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 				encoder->BindTextureToShader(heightMap->uniformLocation, 0, heightTex);
 			}
 
-			encoder->DrawIndexed(
-				RenderPrimitiveMode::Triangles, RenderIndexType::UnsignedShort, vertexData.indexCount, 0, 0);
+			encoder->DrawIndexed(RenderPrimitiveMode::Triangles, RenderIndexType::UnsignedShort,
+				vertexData.indexCounts[tileMeshTypeIndex], 0, 0);
 		}
 	}
 
 	tilesToRender.Clear();
 }
 
+void TerrainSystem::CreateVertexAndIndexData()
+{
+	// Create vertex data
+
+	constexpr int sideVerts = TerrainTile::VerticesPerSide;
+	unsigned int vertCount = sideVerts * sideVerts;
+	size_t vertexComponents = 2;
+	size_t vertSize = sizeof(float) * vertexComponents;
+	unsigned int vertBytes = static_cast<unsigned int>(vertSize * vertCount);
+	float* vertexBuf = static_cast<float*>(allocator->Allocate(vertBytes, "TerrainSystem.CreateVertexData() vertexBuf"));
+
+	constexpr int sideQuads = TerrainTile::QuadsPerSide;
+	int quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
+	unsigned int maxIndexCount = sideQuads * sideQuads * quadIndices;
+	unsigned int maxIndexBytes = maxIndexCount * sizeof(uint16_t);
+	uint16_t* indexBuf = static_cast<uint16_t*>(allocator->Allocate(maxIndexBytes, "TerrainSystem.CreateVertexData() indexBuf"));
+
+	float quadSize = 1.0f / sideQuads;
+
+	renderDevice->CreateVertexArrays(MeshType_COUNT, vertexData.vertexArrays);
+	renderDevice->CreateBuffers(1, &vertexData.vertexBuffer);
+	renderDevice->CreateBuffers(MeshType_COUNT, vertexData.indexBuffers);
+
+	// Set vertex data
+	for (size_t y = 0; y < sideVerts; ++y)
+	{
+		for (size_t x = 0; x < sideVerts; ++x)
+		{
+			size_t vertIndex = y * sideVerts + x;
+			vertexBuf[vertIndex * vertexComponents + 0] = x * quadSize;
+			vertexBuf[vertIndex * vertexComponents + 1] = y * quadSize;
+		}
+	}
+
+	// Upload vertex buffer
+	renderDevice->SetBufferStorage(vertexData.vertexBuffer, vertBytes, vertexBuf, BufferStorageFlags::None);
+
+	{ // MeshType_Regular
+		for (int y = 0; y < sideQuads; ++y)
+		{
+			for (int x = 0; x < sideQuads; ++x)
+			{
+				int quadStart = (y * sideQuads + x) * quadIndices;
+				indexBuf[quadStart + 0] = static_cast<uint16_t>(y * sideVerts + x);
+				indexBuf[quadStart + 1] = static_cast<uint16_t>((y + 1) * sideVerts + x);
+				indexBuf[quadStart + 2] = static_cast<uint16_t>(y * sideVerts + (x + 1));
+				indexBuf[quadStart + 3] = static_cast<uint16_t>((y + 1) * sideVerts + x);
+				indexBuf[quadStart + 4] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 1));
+				indexBuf[quadStart + 5] = static_cast<uint16_t>(y * sideVerts + (x + 1));
+			}
+		}
+
+		vertexData.indexCounts[MeshType_Regular] = maxIndexCount;
+		renderDevice->SetBufferStorage(
+			vertexData.indexBuffers[MeshType_Regular], maxIndexBytes, indexBuf, BufferStorageFlags::None);
+	}
+	
+	{ // MeshType_TopSparse
+		int indexCount = 0;
+
+		for (int y = 0, x = 0; x < sideQuads; x += 2)
+		{
+			indexBuf[indexCount + 0] = static_cast<uint16_t>(y * sideVerts + x);
+			indexBuf[indexCount + 1] = static_cast<uint16_t>((y + 1) * sideVerts + x);
+			indexBuf[indexCount + 2] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 1));
+			indexBuf[indexCount + 3] = static_cast<uint16_t>(y * sideVerts + x);
+			indexBuf[indexCount + 4] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 1));
+			indexBuf[indexCount + 5] = static_cast<uint16_t>(y * sideVerts + (x + 2));
+			indexBuf[indexCount + 6] = static_cast<uint16_t>(y * sideVerts + (x + 2));
+			indexBuf[indexCount + 7] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 1));
+			indexBuf[indexCount + 8] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 2));
+			indexCount += 9;
+		}
+
+		for (int y = 1; y < sideQuads; ++y)
+		{
+			for (int x = 0; x < sideQuads; ++x)
+			{
+				indexBuf[indexCount + 0] = static_cast<uint16_t>(y * sideVerts + x);
+				indexBuf[indexCount + 1] = static_cast<uint16_t>((y + 1) * sideVerts + x);
+				indexBuf[indexCount + 2] = static_cast<uint16_t>(y * sideVerts + (x + 1));
+				indexBuf[indexCount + 3] = static_cast<uint16_t>((y + 1) * sideVerts + x);
+				indexBuf[indexCount + 4] = static_cast<uint16_t>((y + 1) * sideVerts + (x + 1));
+				indexBuf[indexCount + 5] = static_cast<uint16_t>(y * sideVerts + (x + 1));
+				indexCount += 6;
+			}
+		}
+
+		int indexBytes = indexCount * sizeof(uint16_t);
+		vertexData.indexCounts[MeshType_TopSparse] = indexCount;
+		renderDevice->SetBufferStorage(
+			vertexData.indexBuffers[MeshType_TopSparse], indexBytes, indexBuf, BufferStorageFlags::None);
+	}
+
+	VertexAttribute vertexAttributes[] = { VertexAttribute::pos2 };
+	VertexFormat vertexFormatPos(vertexAttributes, KOKKO_ARRAY_ITEMS(vertexAttributes));
+	vertexFormatPos.CalcOffsetsAndSizeInterleaved();
+	const VertexAttribute& attr = vertexAttributes[0];
+
+	render::VertexArrayId vertexArray = vertexData.vertexArrays[MeshType_TopSparse];
+	renderDevice->SetVertexArrayVertexBuffer(vertexArray, 0, vertexData.vertexBuffer, 0, attr.stride);
+	renderDevice->SetVertexArrayIndexBuffer(vertexArray, vertexData.indexBuffers[MeshType_TopSparse]);
+
+	renderDevice->EnableVertexAttribute(vertexArray, attr.attrIndex);
+	renderDevice->SetVertexAttribFormat(
+		vertexArray, attr.attrIndex, attr.elemCount, attr.elemType, attr.offset);
+	renderDevice->SetVertexAttribBinding(vertexArray, attr.attrIndex, 0);
+
+	allocator->Deallocate(indexBuf);
+	allocator->Deallocate(vertexBuf);
+}
 }
