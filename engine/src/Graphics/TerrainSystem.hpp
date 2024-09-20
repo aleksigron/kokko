@@ -97,13 +97,27 @@ private:
 
 	HashMap<unsigned int, TerrainId> entityMap;
 
+	enum MeshType
+	{
+		MeshType_Regular,
+		MeshType_TopSparse,
+		MeshType_TopRightSparse,
+		MeshType_RightSparse,
+		MeshType_RightBottomSparse,
+		MeshType_BottomSparse,
+		MeshType_BottomLeftSparse,
+		MeshType_LeftSparse,
+		MeshType_LeftTopSparse,
+
+		MeshType_COUNT
+	};
+
 	struct VertexData
 	{
-		render::VertexArrayId vertexArray;
+		render::VertexArrayId vertexArrays[MeshType_COUNT];
 		render::BufferId vertexBuffer;
-		render::BufferId indexBuffer;
-
-		int indexCount;
+		render::BufferId indexBuffers[MeshType_COUNT];
+		int indexCounts[MeshType_COUNT];
 	};
 	VertexData vertexData;
 
@@ -138,12 +152,12 @@ private:
 
 	Array<uint8_t> uniformStagingBuffer;
 
-	void CreateVertexData();
-
 	void InitializeTerrain(TerrainId id, const TerrainParameters& params);
 	void DeinitializeTerrain(TerrainId id);
 
 	void Reallocate(size_t required);
+
+	void CreateVertexAndIndexData();
 };
 
 }
