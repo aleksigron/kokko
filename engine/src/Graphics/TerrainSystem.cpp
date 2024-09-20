@@ -402,8 +402,8 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 				encoder->BindTextureToShader(heightMap->uniformLocation, 0, heightTex);
 			}
 
-			encoder->DrawIndexed(RenderPrimitiveMode::Triangles, RenderIndexType::UnsignedShort,
-				vertexData.indexCounts[tileMeshTypeIndex], 0, 0);
+			int count = vertexData.indexCounts[tileMeshTypeIndex];
+			encoder->DrawIndexed(RenderPrimitiveMode::Triangles, RenderIndexType::UnsignedShort, count, 0, 0);
 		}
 	}
 
@@ -448,26 +448,30 @@ void TerrainSystem::CreateVertexAndIndexData()
 	renderDevice->SetBufferStorage(vertexData.vertexBuffer, vertBytes, vertexBuf, BufferStorageFlags::None);
 
 	auto vertexIndex = [](int x, int y) { return static_cast<uint16_t>(y * TerrainTile::VerticesPerSide + x); };
+	auto basicQuad = [&indexBuf, &vertexIndex](int x, int y, int& count)
+	{
+		indexBuf[count + 0] = vertexIndex(x, y);
+		indexBuf[count + 1] = vertexIndex(x, y + 1);
+		indexBuf[count + 2] = vertexIndex(x + 1, y);
+		indexBuf[count + 3] = vertexIndex(x, y + 1);
+		indexBuf[count + 4] = vertexIndex(x + 1, y + 1);
+		indexBuf[count + 5] = vertexIndex(x + 1, y);
+		count += 6;
+	};
 
 	// MeshType_Regular
 	{
-		for (int y = 0; y < sideQuads; ++y)
-		{
-			for (int x = 0; x < sideQuads; ++x)
-			{
-				int quadStart = (y * sideQuads + x) * quadIndices;
-				indexBuf[quadStart + 0] = vertexIndex(x, y);
-				indexBuf[quadStart + 1] = vertexIndex(x, y + 1);
-				indexBuf[quadStart + 2] = vertexIndex(x + 1, y);
-				indexBuf[quadStart + 3] = vertexIndex(x, y + 1);
-				indexBuf[quadStart + 4] = vertexIndex(x + 1, y + 1);
-				indexBuf[quadStart + 5] = vertexIndex(x + 1, y);
-			}
-		}
+		int indexCount = 0;
 
-		vertexData.indexCounts[MeshType_Regular] = maxIndexCount;
+		for (int y = 0; y < sideQuads; ++y)
+			for (int x = 0; x < sideQuads; ++x)
+				basicQuad(x, y, indexCount);
+
+		assert(indexCount <= maxIndexCount);
+		int indexBytes = indexCount * sizeof(uint16_t);
+		vertexData.indexCounts[MeshType_Regular] = indexCount;
 		renderDevice->SetBufferStorage(
-			vertexData.indexBuffers[MeshType_Regular], maxIndexBytes, indexBuf, BufferStorageFlags::None);
+			vertexData.indexBuffers[MeshType_Regular], indexBytes, indexBuf, BufferStorageFlags::None);
 	}
 	
 	// MeshType_TopSparse
@@ -489,18 +493,8 @@ void TerrainSystem::CreateVertexAndIndexData()
 		}
 
 		for (int y = 1; y < sideQuads; ++y)
-		{
 			for (int x = 0; x < sideQuads; ++x)
-			{
-				indexBuf[indexCount + 0] = vertexIndex(x, y);
-				indexBuf[indexCount + 1] = vertexIndex(x, y + 1);
-				indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
-				indexBuf[indexCount + 3] = vertexIndex(x, y + 1);
-				indexBuf[indexCount + 4] = vertexIndex(x + 1, y + 1);
-				indexBuf[indexCount + 5] = vertexIndex(x + 1, y);
-				indexCount += 6;
-			}
-		}
+				basicQuad(x, y, indexCount);
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
@@ -558,15 +552,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 			for (int x = 0; x < sideQuads; ++x)
 			{
 				if (x < sideQuads - 1)
-				{
-					indexBuf[indexCount + 0] = vertexIndex(x, y);
-					indexBuf[indexCount + 1] = vertexIndex(x, y + 1);
-					indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
-					indexBuf[indexCount + 3] = vertexIndex(x, y + 1);
-					indexBuf[indexCount + 4] = vertexIndex(x + 1, y + 1);
-					indexBuf[indexCount + 5] = vertexIndex(x + 1, y);
-					indexCount += 6;
-				}
+					basicQuad(x, y, indexCount);
 				else if ((y & 1) == 0)
 				{
 					indexBuf[indexCount + 0] = vertexIndex(x, y);
@@ -599,15 +585,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 			for (int x = 0; x < sideQuads; ++x)
 			{
 				if (x < sideQuads - 1)
-				{
-					indexBuf[indexCount + 0] = vertexIndex(x, y);
-					indexBuf[indexCount + 1] = vertexIndex(x, y + 1);
-					indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
-					indexBuf[indexCount + 3] = vertexIndex(x, y + 1);
-					indexBuf[indexCount + 4] = vertexIndex(x + 1, y + 1);
-					indexBuf[indexCount + 5] = vertexIndex(x + 1, y);
-					indexCount += 6;
-				}
+					basicQuad(x, y, indexCount);
 				else if ((y & 1) == 0)
 				{
 					indexBuf[indexCount + 0] = vertexIndex(x, y);
@@ -640,15 +618,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 			for (int x = 0; x < sideQuads; ++x)
 			{
 				if (x < sideQuads - 1)
-				{
-					indexBuf[indexCount + 0] = vertexIndex(x, y);
-					indexBuf[indexCount + 1] = vertexIndex(x, y + 1);
-					indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
-					indexBuf[indexCount + 3] = vertexIndex(x, y + 1);
-					indexBuf[indexCount + 4] = vertexIndex(x + 1, y + 1);
-					indexBuf[indexCount + 5] = vertexIndex(x + 1, y);
-					indexCount += 6;
-				}
+					basicQuad(x, y, indexCount);
 				else if ((y & 1) == 0)
 				{
 					// +-+
@@ -715,19 +685,228 @@ void TerrainSystem::CreateVertexAndIndexData()
 			vertexData.indexBuffers[MeshType_RightBottomSparse], indexBytes, indexBuf, BufferStorageFlags::None);
 	}
 
+	// MeshType_TopSparse
+	{
+		int indexCount = 0;
+
+		for (int y = 0; y < sideQuads - 1; ++y)
+			for (int x = 0; x < sideQuads; ++x)
+				basicQuad(x, y, indexCount);
+
+		for (int y = sideQuads - 1, x = 0; x < sideQuads; x += 2)
+		{
+			indexBuf[indexCount + 0] = vertexIndex(x, y);
+			indexBuf[indexCount + 1] = vertexIndex(x, y + 1);
+			indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
+			indexBuf[indexCount + 3] = vertexIndex(x + 1, y);
+			indexBuf[indexCount + 4] = vertexIndex(x, y + 1);
+			indexBuf[indexCount + 5] = vertexIndex(x + 2, y + 1);
+			indexBuf[indexCount + 6] = vertexIndex(x + 1, y);
+			indexBuf[indexCount + 7] = vertexIndex(x + 2, y + 1);
+			indexBuf[indexCount + 8] = vertexIndex(x + 2, y);
+			indexCount += 9;
+		}
+
+		assert(indexCount <= maxIndexCount);
+		int indexBytes = indexCount * sizeof(uint16_t);
+		vertexData.indexCounts[MeshType_BottomSparse] = indexCount;
+		renderDevice->SetBufferStorage(
+			vertexData.indexBuffers[MeshType_BottomSparse], indexBytes, indexBuf, BufferStorageFlags::None);
+	}
+
+	// MeshType_BottomLeftSparse
+	{
+		int indexCount = 0;
+
+		for (int y = 0; y < sideQuads - 1; ++y)
+		{
+			for (int x = 0; x < sideQuads; ++x)
+			{
+				if (x > 0)
+					basicQuad(x, y, indexCount);
+				else if ((y & 1) == 0)
+				{
+					// +-+
+					// |\|
+					// | +
+					// |/
+					// +
+					indexBuf[indexCount + 0] = vertexIndex(x, y);
+					indexBuf[indexCount + 1] = vertexIndex(x + 1, y + 1);
+					indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
+					indexBuf[indexCount + 3] = vertexIndex(x, y);
+					indexBuf[indexCount + 4] = vertexIndex(x, y + 2);
+					indexBuf[indexCount + 5] = vertexIndex(x + 1, y + 1);
+					indexCount += 6;
+
+					if (y < sideQuads - 2)
+					{
+						//   +
+						//  /|
+						// +-+
+						indexBuf[indexCount + 0] = vertexIndex(x + 1, y + 1);
+						indexBuf[indexCount + 1] = vertexIndex(x, y + 2);
+						indexBuf[indexCount + 2] = vertexIndex(x + 1, y + 2);
+						indexCount += 3;
+					}
+				}
+			}
+		}
+
+		for (int y = sideQuads - 1, x = 0; x < sideQuads; x += 2)
+		{
+			if (x > 0)
+			{
+				// +-+
+				// |/
+				// +
+				indexBuf[indexCount + 0] = vertexIndex(x, y);
+				indexBuf[indexCount + 1] = vertexIndex(x, y + 1);
+				indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
+				indexCount += 3;
+			}
+
+			//   +-+
+			//  / \|
+			// +---+
+			indexBuf[indexCount + 0] = vertexIndex(x, y + 1);
+			indexBuf[indexCount + 1] = vertexIndex(x + 2, y + 1);
+			indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
+			indexBuf[indexCount + 3] = vertexIndex(x + 1, y);
+			indexBuf[indexCount + 4] = vertexIndex(x + 2, y + 1);
+			indexBuf[indexCount + 5] = vertexIndex(x + 2, y);
+			indexCount += 6;
+		}
+
+		assert(indexCount <= maxIndexCount);
+		int indexBytes = indexCount * sizeof(uint16_t);
+		vertexData.indexCounts[MeshType_BottomLeftSparse] = indexCount;
+		renderDevice->SetBufferStorage(
+			vertexData.indexBuffers[MeshType_BottomLeftSparse], indexBytes, indexBuf, BufferStorageFlags::None);
+	}
+
+	// MeshType_LeftSparse
+	{
+		int indexCount = 0;
+
+		for (int y = 0; y < sideQuads; ++y)
+		{
+			for (int x = 0; x < sideQuads; ++x)
+			{
+				if (x > 0)
+					basicQuad(x, y, indexCount);
+				else if ((y & 1) == 0)
+				{
+					indexBuf[indexCount + 0] = vertexIndex(x, y);
+					indexBuf[indexCount + 1] = vertexIndex(x + 1, y + 1);
+					indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
+					indexBuf[indexCount + 3] = vertexIndex(x, y);
+					indexBuf[indexCount + 4] = vertexIndex(x, y + 2);
+					indexBuf[indexCount + 5] = vertexIndex(x + 1, y + 1);
+					indexBuf[indexCount + 6] = vertexIndex(x + 1, y + 1);
+					indexBuf[indexCount + 7] = vertexIndex(x, y + 2);
+					indexBuf[indexCount + 8] = vertexIndex(x + 1, y + 2);
+					indexCount += 9;
+				}
+			}
+		}
+
+		assert(indexCount <= maxIndexCount);
+		int indexBytes = indexCount * sizeof(uint16_t);
+		vertexData.indexCounts[MeshType_LeftSparse] = indexCount;
+		renderDevice->SetBufferStorage(
+			vertexData.indexBuffers[MeshType_LeftSparse], indexBytes, indexBuf, BufferStorageFlags::None);
+	}
+
+	// MeshType_LeftTopSparse
+	{
+		int indexCount = 0;
+
+		for (int y = 0, x = 0; x < sideQuads; x += 2)
+		{
+			if (x > 0)
+			{
+				// +
+				// |\
+				// +-+
+				indexBuf[indexCount + 0] = vertexIndex(x, y);
+				indexBuf[indexCount + 1] = vertexIndex(x, y + 1);
+				indexBuf[indexCount + 2] = vertexIndex(x + 1, y + 1);
+				indexCount += 3;
+			}
+			else
+			{
+				// +
+				// |\
+				// | +
+				// |/|
+				// +-+
+				indexBuf[indexCount + 0] = vertexIndex(x, y);
+				indexBuf[indexCount + 1] = vertexIndex(x, y + 2);
+				indexBuf[indexCount + 2] = vertexIndex(x + 1, y + 1);
+				indexBuf[indexCount + 3] = vertexIndex(x + 1, y + 1);
+				indexBuf[indexCount + 4] = vertexIndex(x, y + 2);
+				indexBuf[indexCount + 5] = vertexIndex(x + 1, y + 2);
+				indexCount += 6;
+			}
+
+			// +---+
+			//  \ /|
+			//   +-+
+			indexBuf[indexCount + 0] = vertexIndex(x, y);
+			indexBuf[indexCount + 1] = vertexIndex(x + 1, y + 1);
+			indexBuf[indexCount + 2] = vertexIndex(x + 2, y);
+			indexBuf[indexCount + 3] = vertexIndex(x + 2, y);
+			indexBuf[indexCount + 4] = vertexIndex(x + 1, y + 1);
+			indexBuf[indexCount + 5] = vertexIndex(x + 2, y + 1);
+			indexCount += 6;
+		}
+
+		for (int y = 1; y < sideQuads; ++y)
+		{
+			for (int x = 0; x < sideQuads; ++x)
+			{
+				if (x > 0)
+					basicQuad(x, y, indexCount);
+				else if ((y & 1) == 0)
+				{
+					indexBuf[indexCount + 0] = vertexIndex(x, y);
+					indexBuf[indexCount + 1] = vertexIndex(x + 1, y + 1);
+					indexBuf[indexCount + 2] = vertexIndex(x + 1, y);
+					indexBuf[indexCount + 3] = vertexIndex(x, y);
+					indexBuf[indexCount + 4] = vertexIndex(x, y + 2);
+					indexBuf[indexCount + 5] = vertexIndex(x + 1, y + 1);
+					indexBuf[indexCount + 6] = vertexIndex(x + 1, y + 1);
+					indexBuf[indexCount + 7] = vertexIndex(x, y + 2);
+					indexBuf[indexCount + 8] = vertexIndex(x + 1, y + 2);
+					indexCount += 9;
+				}
+			}
+		}
+
+		assert(indexCount <= maxIndexCount);
+		int indexBytes = indexCount * sizeof(uint16_t);
+		vertexData.indexCounts[MeshType_LeftTopSparse] = indexCount;
+		renderDevice->SetBufferStorage(
+			vertexData.indexBuffers[MeshType_LeftTopSparse], indexBytes, indexBuf, BufferStorageFlags::None);
+	}
+
 	VertexAttribute vertexAttributes[] = { VertexAttribute::pos2 };
 	VertexFormat vertexFormatPos(vertexAttributes, KOKKO_ARRAY_ITEMS(vertexAttributes));
 	vertexFormatPos.CalcOffsetsAndSizeInterleaved();
 	const VertexAttribute& attr = vertexAttributes[0];
 
-	render::VertexArrayId vertexArray = vertexData.vertexArrays[MeshType_Regular];
-	renderDevice->SetVertexArrayVertexBuffer(vertexArray, 0, vertexData.vertexBuffer, 0, attr.stride);
-	renderDevice->SetVertexArrayIndexBuffer(vertexArray, vertexData.indexBuffers[MeshType_RightBottomSparse]);
+	// Initialize vertex buffers
+	for (int i = 0; i < MeshType_COUNT; ++i)
+	{
+		render::VertexArrayId vertexArray = vertexData.vertexArrays[i];
+		renderDevice->SetVertexArrayVertexBuffer(vertexArray, 0, vertexData.vertexBuffer, 0, attr.stride);
+		renderDevice->SetVertexArrayIndexBuffer(vertexArray, vertexData.indexBuffers[i]);
 
-	renderDevice->EnableVertexAttribute(vertexArray, attr.attrIndex);
-	renderDevice->SetVertexAttribFormat(
-		vertexArray, attr.attrIndex, attr.elemCount, attr.elemType, attr.offset);
-	renderDevice->SetVertexAttribBinding(vertexArray, attr.attrIndex, 0);
+		renderDevice->EnableVertexAttribute(vertexArray, attr.attrIndex);
+		renderDevice->SetVertexAttribFormat(vertexArray, attr.attrIndex, attr.elemCount, attr.elemType, attr.offset);
+		renderDevice->SetVertexAttribBinding(vertexArray, attr.attrIndex, 0);
+	}
 
 	allocator->Deallocate(indexBuf);
 	allocator->Deallocate(vertexBuf);
