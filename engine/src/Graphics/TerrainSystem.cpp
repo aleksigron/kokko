@@ -385,7 +385,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 		int blocksUsed = 0;
 		for (const auto& tile : tilesToRender)
 		{
-			uint8_t tileMeshTypeIndex = static_cast<uint8_t>(tile.meshType);
+			uint8_t tileMeshTypeIndex = static_cast<uint8_t>(tile.edgeType);
 			if (tileMeshTypeIndex != prevMeshType)
 			{
 				encoder->BindVertexArray(vertexData.vertexArrays[tileMeshTypeIndex]);
@@ -472,7 +472,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
-		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainMeshType::Regular);
+		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::Regular);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
 			vertexData.indexBuffers[meshTypeIndex], indexBytes, indexBuf, BufferStorageFlags::None);
@@ -502,7 +502,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
-		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainMeshType::TopSparse);
+		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::TopSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
 			vertexData.indexBuffers[meshTypeIndex], indexBytes, indexBuf, BufferStorageFlags::None);
@@ -576,7 +576,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
-		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainMeshType::TopRightSparse);
+		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::TopRightSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
 			vertexData.indexBuffers[meshTypeIndex], indexBytes, indexBuf, BufferStorageFlags::None);
@@ -610,7 +610,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
-		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainMeshType::RightSparse);
+		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::RightSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
 			vertexData.indexBuffers[meshTypeIndex], indexBytes, indexBuf, BufferStorageFlags::None);
@@ -687,7 +687,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
-		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainMeshType::RightBottomSparse);
+		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::RightBottomSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
 			vertexData.indexBuffers[meshTypeIndex], indexBytes, indexBuf, BufferStorageFlags::None);
@@ -717,7 +717,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
-		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainMeshType::BottomSparse);
+		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::BottomSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
 			vertexData.indexBuffers[meshTypeIndex], indexBytes, indexBuf, BufferStorageFlags::None);
@@ -789,7 +789,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
-		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainMeshType::BottomLeftSparse);
+		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::BottomLeftSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
 			vertexData.indexBuffers[meshTypeIndex], indexBytes, indexBuf, BufferStorageFlags::None);
@@ -823,7 +823,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
-		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainMeshType::LeftSparse);
+		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::LeftSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
 			vertexData.indexBuffers[meshTypeIndex], indexBytes, indexBuf, BufferStorageFlags::None);
@@ -897,7 +897,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 		assert(indexCount <= maxIndexCount);
 		int indexBytes = indexCount * sizeof(uint16_t);
-		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainMeshType::LeftTopSparse);
+		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::LeftTopSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
 			vertexData.indexBuffers[meshTypeIndex], indexBytes, indexBuf, BufferStorageFlags::None);
