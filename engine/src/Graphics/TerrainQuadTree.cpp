@@ -108,7 +108,7 @@ void TerrainQuadTree::UpdateTilesToRender(
 	const FrustumPlanes& frustum,
 	const Vec3f& cameraPos,
 	const RenderDebugSettings& renderDebug,
-	Array<QuadTreeNodeId>& resultOut)
+	Array<TerrainTileDrawInfo>& resultOut)
 {
 	KOKKO_PROFILE_SCOPE("TerrainQuadTree::UpdateTilesToRender()");
 
@@ -128,7 +128,7 @@ void TerrainQuadTree::UpdateTilesToRender(
 	QuadTreeToTiles(0, params);
 }
 
-int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, UpdateTilesToRenderParams& params)
+int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesToRenderParams& params)
 {
 	float tileScale = GetTileScale(id.level);
 
@@ -285,7 +285,7 @@ void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderPar
 
 	if (hasChildren == false)
 	{
-		params.resultOut.PushBack(node.id);
+		params.resultOut.PushBack(TerrainTileDrawInfo{ node.id, TerrainMeshType::Regular });
 		return;
 	}
 

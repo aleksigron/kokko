@@ -97,27 +97,14 @@ private:
 
 	HashMap<unsigned int, TerrainId> entityMap;
 
-	enum MeshType
-	{
-		MeshType_Regular,
-		MeshType_TopSparse,
-		MeshType_TopRightSparse,
-		MeshType_RightSparse,
-		MeshType_RightBottomSparse,
-		MeshType_BottomSparse,
-		MeshType_BottomLeftSparse,
-		MeshType_LeftSparse,
-		MeshType_LeftTopSparse,
-
-		MeshType_COUNT
-	};
+	static constexpr size_t MeshTypeCount = 9;
 
 	struct VertexData
 	{
-		render::VertexArrayId vertexArrays[MeshType_COUNT];
+		render::VertexArrayId vertexArrays[MeshTypeCount];
 		render::BufferId vertexBuffer;
-		render::BufferId indexBuffers[MeshType_COUNT];
-		int indexCounts[MeshType_COUNT];
+		render::BufferId indexBuffers[MeshTypeCount];
+		int indexCounts[MeshTypeCount];
 	};
 	VertexData vertexData;
 
@@ -148,7 +135,7 @@ private:
 	}
 	data;
 
-	Array<QuadTreeNodeId> tilesToRender;
+	Array<TerrainTileDrawInfo> tilesToRender;
 
 	Array<uint8_t> uniformStagingBuffer;
 
