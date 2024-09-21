@@ -24,6 +24,28 @@
 namespace kokko
 {
 
+namespace
+{
+
+struct EdgeTypeDependents
+{
+	uint16_t dependentNodeIndices[2];
+	uint32_t numDependents;
+	bool dependeeIsSparse;
+
+	EdgeTypeDependents() : numDependents(0), dependeeIsSparse(false) {}
+
+	void AddDependent(uint16_t dependent)
+	{
+		uint32_t idx = numDependents;
+		assert(idx < KOKKO_ARRAY_ITEMS(dependentNodeIndices));
+		dependentNodeIndices[idx] = dependent;
+		numDependents += 1;
+	}
+};
+
+} // namespace
+
 TerrainQuadTree::TerrainQuadTree(Allocator* allocator) :
 	allocator(allocator),
 	nodes(allocator),
@@ -117,7 +139,7 @@ void TerrainQuadTree::UpdateTilesToRender(
 
 	// Calculates optimal set of tiles to render and updates quad tree <nodes>
 	UpdateTilesToRenderParams params{ frustum, cameraPos, renderDebug, resultOut };
-	BuildQuadTree(QuadTreeNodeId{}, params);
+	int rootNodeIndex = BuildQuadTree(QuadTreeNodeId{}, params);
 
 	size_t oldNodeCount = nodes.GetCount();
 
@@ -125,7 +147,7 @@ void TerrainQuadTree::UpdateTilesToRender(
 	RestrictQuadTree();
 
 	// Then we create the final render tiles from the leaf nodes of the quad tree
-	QuadTreeToTiles(0, params);
+	QuadTreeToTiles(rootNodeIndex, params);
 }
 
 int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesToRenderParams& params)
@@ -274,6 +296,75 @@ void TerrainQuadTree::RestrictQuadTree()
 	}
 }
 
+void TerrainQuadTree::CalculateEdgeTypes()
+{
+	// Key = dependee node id, Value = dependent node ids
+	HashMap<QuadTreeNodeId, EdgeTypeDependents> edgeDependencies(allocator);
+
+	auto addDependency = [&edgeDependencies](const QuadTreeNodeId& dependee, uint16_t dependentNodeIndex)
+	{
+		auto pair = edgeDependencies.Lookup(dependee);
+		if (pair == nullptr)
+			pair = edgeDependencies.Insert(dependee);
+
+		pair->second.AddDependent(dependentNodeIndex);
+	};
+
+	for (uint16_t nodeIndex = 0, nodeCount = nodes.GetCount(); nodeIndex != nodeCount; ++nodeIndex)
+	{
+		const TerrainQuadTreeNode& node = nodes[nodeIndex];
+		if (node.HasChildren() == false)
+		{
+			QuadTreeNodeId id = node.id;
+			int tilesPerDim = GetTilesPerDimension(id.level);
+			if ((id.x & 1) == 0 && id.x > 0)
+				addDependency(QuadTreeNodeId{ id.x - 1, id.y, id.level }, nodeIndex);
+			if ((id.x & 1) == 1 && id.x + 1 < tilesPerDim)
+				addDependency(QuadTreeNodeId{ id.x + 1, id.y, id.level }, nodeIndex);
+			if ((id.y & 1) == 0 && id.y > 0)
+				addDependency(QuadTreeNodeId{ id.x, id.y - 1, id.level }, nodeIndex);
+			if ((id.y & 1) == 1 && id.y + 1 < tilesPerDim)
+				addDependency(QuadTreeNodeId{ id.x, id.y + 1, id.level }, nodeIndex);
+		}
+	}
+
+	for (const auto& pair : edgeDependencies)
+	{
+		const QuadTreeNodeId& dependee = pair.first;
+		// Try to find node in nodes
+		// If not, mark edge status as sparse
+
+		TerrainQuadTreeNode* currentNode = &nodes[0];
+		for (uint8_t level = 0; level <= dependee.level; ++level)
+		{
+			if (level == dependee.level)
+				break;
+
+			uint8_t childLevel = static_cast<uint8_t>(level + 1);
+			int levelDiff = dependee.level - childLevel;
+			int childX = dependee.x >> levelDiff;
+			int childY = dependee.y >> levelDiff;
+			int childIndex = (childY & 1) * 2 + (childX & 1);
+
+			// Verify next level towards <id> exists
+			if (currentNode->HasChildren() == false)
+			{
+				// TODO: Mark dependent edge as sparse
+			}
+			// If it has some children, but not our target tile, skip work on it
+			else if (currentNode->children[childIndex] == 0)
+				break;
+
+			// Update currentNode and continue
+			int childNodeIndex = currentNode->children[childIndex];
+
+			currentNode = &nodes[childNodeIndex];
+		}
+	}
+
+	edgeDependencies.Clear();
+}
+
 void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderParams& params)
 {
 	const TerrainQuadTreeNode& node = nodes[nodeIndex];
@@ -285,7 +376,7 @@ void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderPar
 
 	if (hasChildren == false)
 	{
-		params.resultOut.PushBack(TerrainTileDrawInfo{ node.id, TerrainMeshType::Regular });
+		params.resultOut.PushBack(TerrainTileDrawInfo{ node.id, node.edgeType });
 		return;
 	}
 
@@ -422,4 +513,4 @@ QuadTreeNodeId TerrainQuadTree::GetParentId(const QuadTreeNodeId& id)
 	return QuadTreeNodeId{ id.x / 2, id.y / 2, static_cast<uint8_t>(id.level - 1) };
 }
 
-}
+} // namespace kokko

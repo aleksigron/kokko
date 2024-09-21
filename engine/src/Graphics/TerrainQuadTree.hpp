@@ -58,13 +58,7 @@ struct QuadTreeNodeId
 	}
 };
 
-struct TerrainQuadTreeNode
-{
-	QuadTreeNodeId id;
-	uint16_t children[4] = { 0, 0, 0, 0 };
-};
-
-enum class TerrainMeshType : uint8_t
+enum class TerrainEdgeType : uint8_t
 {
 	Regular,
 	TopSparse,
@@ -77,10 +71,22 @@ enum class TerrainMeshType : uint8_t
 	LeftTopSparse
 };
 
+struct TerrainQuadTreeNode
+{
+	QuadTreeNodeId id;
+	uint16_t children[4] = { 0, 0, 0, 0 };
+	TerrainEdgeType edgeType = TerrainEdgeType::Regular;
+
+	uint16_t HasChildren() const
+	{
+		return children[0] != 0 || children[1] != 0 || children[2] != 0 || children[3] != 0;
+	}
+};
+
 struct TerrainTileDrawInfo
 {
 	QuadTreeNodeId id;
-	TerrainMeshType meshType;
+	TerrainEdgeType edgeType;
 };
 
 class TerrainQuadTree
@@ -126,6 +132,7 @@ private:
 	// Returns inserted node index (points to nodes array), or -1 if no insertion
 	int BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesToRenderParams& params);
 	void RestrictQuadTree();
+	void CalculateEdgeTypes();
 	void QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderParams& params);
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
