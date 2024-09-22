@@ -14,7 +14,6 @@ class Allocator;
 struct FrustumPlanes;
 struct Mat4x4f;
 struct CameraParameters;
-struct TerrainTileId;
 
 namespace kokko
 {
@@ -60,7 +59,7 @@ struct QuadTreeNodeId
 	}
 };
 
-uint32_t Hash32(const QuadTreeNodeId& value, uint32_t seed);
+uint32_t HashValue32(const QuadTreeNodeId& value, uint32_t seed);
 
 enum class TerrainEdgeType : uint8_t
 {

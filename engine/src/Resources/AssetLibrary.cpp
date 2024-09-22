@@ -528,11 +528,11 @@ uint64_t AssetLibrary::CalculateHash(AssetType type, ArrayView<const uint8_t> co
 	{
 		String normalized(allocator);
 		NormalizeLineEndings(content, normalized);
-		hash = Hash64(normalized.GetData(), normalized.GetLength(), 0);
+		hash = HashValue64(normalized.GetData(), normalized.GetLength(), 0);
 	}
 	else
 	{
-		hash = Hash64(content.GetData(), content.GetCount(), 0);
+		hash = HashValue64(content.GetData(), content.GetCount(), 0);
 	}
 	return hash;
 }

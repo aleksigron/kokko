@@ -204,7 +204,7 @@ uint64_t FilePickerDialog::StartDialog(const Descriptor& descriptor)
 	selectedFilePath = std::filesystem::path();
 
 	this->descriptor = descriptor;
-	currentTitleHash = kokko::Hash64(descriptor.popupTitle, std::strlen(descriptor.popupTitle), 0);
+	currentTitleHash = kokko::HashValue64(descriptor.popupTitle, std::strlen(descriptor.popupTitle), 0);
 
 	ImGui::OpenPopup(descriptor.popupTitle);
 

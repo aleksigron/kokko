@@ -518,9 +518,9 @@ bool operator!=(ConstStringView lhs, const String& rhs)
 	return operator==(lhs, rhs) == false;
 }
 
-uint32_t Hash32(const String& value, uint32_t seed)
+uint32_t HashValue32(const String& value, uint32_t seed)
 {
-	return Hash32(value.GetData(), value.GetLength(), seed);
+	return HashValue32(value.GetData(), value.GetLength(), seed);
 }
 
 }

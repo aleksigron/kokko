@@ -102,4 +102,6 @@ bool operator!=(const char* lhs, const String& rhs);
 bool operator!=(const String& lhs, ConstStringView rhs);
 bool operator!=(ConstStringView lhs, const String& rhs);
 
+uint32_t HashValue32(const String& data, uint32_t seed);
+
 }
