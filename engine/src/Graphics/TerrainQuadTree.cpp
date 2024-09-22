@@ -46,6 +46,13 @@ struct EdgeTypeDependents
 
 } // namespace
 
+uint32_t Hash32(const QuadTreeNodeId& value, uint32_t seed)
+{
+	uint32_t hash = Hash32(&value.x, sizeof(value.x), seed);
+	hash = Hash32(&value.y, sizeof(value.y), hash);
+	return Hash32(&value.level, sizeof(value.level), hash);
+}
+
 TerrainQuadTree::TerrainQuadTree(Allocator* allocator) :
 	allocator(allocator),
 	nodes(allocator),
