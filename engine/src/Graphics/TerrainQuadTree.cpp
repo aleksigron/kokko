@@ -44,6 +44,73 @@ struct EdgeTypeDependents
 	}
 };
 
+enum TerrainEdgeMask
+{
+	TerrainEdgeMask_Regular = 0,
+	TerrainEdgeMask_TopSparse = 1 << 0,
+	TerrainEdgeMask_RightSparse = 1 << 1,
+	TerrainEdgeMask_BottomSparse = 1 << 2,
+	TerrainEdgeMask_LeftSparse = 1 << 3,
+	TerrainEdgeMask_TopRightSparse = TerrainEdgeMask_TopSparse | TerrainEdgeMask_RightSparse,
+	TerrainEdgeMask_RightBottomSparse = TerrainEdgeMask_RightSparse | TerrainEdgeMask_BottomSparse,
+	TerrainEdgeMask_BottomLeftSparse = TerrainEdgeMask_BottomSparse | TerrainEdgeMask_LeftSparse,
+	TerrainEdgeMask_LeftTopSparse = TerrainEdgeMask_LeftSparse | TerrainEdgeMask_TopSparse
+};
+
+TerrainEdgeMask EdgeTypeToMask(TerrainEdgeType type)
+{
+	switch (type)
+	{
+	case kokko::TerrainEdgeType::Regular:
+		return TerrainEdgeMask_Regular;
+	case kokko::TerrainEdgeType::TopSparse:
+		return TerrainEdgeMask_TopSparse;
+	case kokko::TerrainEdgeType::TopRightSparse:
+		return TerrainEdgeMask_TopRightSparse;
+	case kokko::TerrainEdgeType::RightSparse:
+		return TerrainEdgeMask_RightSparse;
+	case kokko::TerrainEdgeType::RightBottomSparse:
+		return TerrainEdgeMask_RightBottomSparse;
+	case kokko::TerrainEdgeType::BottomSparse:
+		return TerrainEdgeMask_BottomSparse;
+	case kokko::TerrainEdgeType::BottomLeftSparse:
+		return TerrainEdgeMask_BottomLeftSparse;
+	case kokko::TerrainEdgeType::LeftSparse:
+		return TerrainEdgeMask_LeftSparse;
+	case kokko::TerrainEdgeType::LeftTopSparse:
+		return TerrainEdgeMask_LeftTopSparse;
+	default:
+		return TerrainEdgeMask_Regular;
+	}
+}
+
+TerrainEdgeType EdgeMaskToType(TerrainEdgeMask mask)
+{
+	switch (mask)
+	{
+	case TerrainEdgeMask_Regular:
+		return TerrainEdgeType::Regular;
+	case TerrainEdgeMask_TopSparse:
+		return TerrainEdgeType::TopSparse;
+	case TerrainEdgeMask_TopRightSparse:
+		return TerrainEdgeType::TopRightSparse;
+	case TerrainEdgeMask_RightSparse:
+		return TerrainEdgeType::RightSparse;
+	case TerrainEdgeMask_RightBottomSparse:
+		return TerrainEdgeType::RightBottomSparse;
+	case TerrainEdgeMask_BottomSparse:
+		return TerrainEdgeType::BottomSparse;
+	case TerrainEdgeMask_BottomLeftSparse:
+		return TerrainEdgeType::BottomLeftSparse;
+	case TerrainEdgeMask_LeftSparse:
+		return TerrainEdgeType::LeftSparse;
+	case TerrainEdgeMask_LeftTopSparse:
+		return TerrainEdgeType::LeftTopSparse;
+	default:
+		return TerrainEdgeType::Regular;
+	}
+}
+
 } // namespace
 
 uint32_t Hash32(const QuadTreeNodeId& value, uint32_t seed)
@@ -152,6 +219,8 @@ void TerrainQuadTree::UpdateTilesToRender(
 
 	// Next we need to update the quad tree so that it forms a restricted quad tree
 	RestrictQuadTree();
+
+	CalculateEdgeTypes();
 
 	// Then we create the final render tiles from the leaf nodes of the quad tree
 	QuadTreeToTiles(rootNodeIndex, params);
@@ -335,7 +404,7 @@ void TerrainQuadTree::CalculateEdgeTypes()
 		}
 	}
 
-	for (const auto& pair : edgeDependencies)
+	for (auto& pair : edgeDependencies)
 	{
 		const QuadTreeNodeId& dependee = pair.first;
 		// Try to find node in nodes
@@ -356,7 +425,23 @@ void TerrainQuadTree::CalculateEdgeTypes()
 			// Verify next level towards <id> exists
 			if (currentNode->HasChildren() == false)
 			{
-				// TODO: Mark dependent edge as sparse
+				// Mark dependent edge as sparse
+				EdgeTypeDependents& dependents = pair.second;
+				dependents.dependeeIsSparse = true;
+				for (uint32_t i = 0; i < dependents.numDependents; ++i)
+				{
+					TerrainQuadTreeNode& dependentNode = nodes[dependents.dependentNodeIndices[i]];
+					int edgeMask = EdgeTypeToMask(dependentNode.edgeType);
+					int diffX = dependee.x - dependentNode.id.x;
+					int diffY = dependee.y - dependentNode.id.y;
+
+					if (diffX != 0)
+						edgeMask |= diffX < 0 ? TerrainEdgeMask_LeftSparse : TerrainEdgeMask_RightSparse;
+					else
+						edgeMask |= diffY < 0 ? TerrainEdgeMask_TopSparse : TerrainEdgeMask_BottomSparse;
+
+					dependentNode.edgeType = EdgeMaskToType(static_cast<TerrainEdgeMask>(edgeMask));
+				}
 			}
 			// If it has some children, but not our target tile, skip work on it
 			else if (currentNode->children[childIndex] == 0)

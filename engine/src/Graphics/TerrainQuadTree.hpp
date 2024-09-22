@@ -39,9 +39,9 @@ struct TerrainTile
 
 struct QuadTreeNodeId
 {
-	uint32_t x;
-	uint32_t y;
-	uint8_t level;
+	uint32_t x = 0;
+	uint32_t y = 0;
+	uint8_t level = 0;
 
 	bool operator==(const QuadTreeNodeId& other) const
 	{
