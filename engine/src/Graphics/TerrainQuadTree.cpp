@@ -27,23 +27,6 @@ namespace kokko
 namespace
 {
 
-struct EdgeTypeDependents
-{
-	uint16_t dependentNodeIndices[2];
-	uint32_t numDependents;
-	bool dependeeIsSparse;
-
-	EdgeTypeDependents() : numDependents(0), dependeeIsSparse(false) {}
-
-	void AddDependent(uint16_t dependent)
-	{
-		uint32_t idx = numDependents;
-		assert(idx < KOKKO_ARRAY_ITEMS(dependentNodeIndices));
-		dependentNodeIndices[idx] = dependent;
-		numDependents += 1;
-	}
-};
-
 enum TerrainEdgeMask
 {
 	TerrainEdgeMask_Regular = 0,
@@ -120,9 +103,21 @@ uint32_t Hash32(const QuadTreeNodeId& value, uint32_t seed)
 	return Hash32(&value.level, sizeof(value.level), hash);
 }
 
-TerrainQuadTree::TerrainQuadTree(Allocator* allocator) :
+void TerrainQuadTree::EdgeTypeDependents::AddDependent(uint16_t dependent)
+{
+	uint32_t idx = numDependents;
+	assert(idx < KOKKO_ARRAY_ITEMS(dependentNodeIndices));
+	dependentNodeIndices[idx] = dependent;
+	numDependents += 1;
+}
+
+TerrainQuadTree::TerrainQuadTree(Allocator* allocator, render::Device* renderDevice) :
 	allocator(allocator),
+	renderDevice(renderDevice),
 	nodes(allocator),
+	parentsToCheck(allocator),
+	neighborsToCheck(allocator),
+	edgeDependencies(allocator),
 	tiles(nullptr),
 	tileTextureIds(nullptr),
 	treeLevels(0),
@@ -134,8 +129,16 @@ TerrainQuadTree::TerrainQuadTree(Allocator* allocator) :
 {
 }
 
-void TerrainQuadTree::CreateResources(render::Device* renderDevice, uint8_t levels,
-	const TerrainParameters& params)
+TerrainQuadTree::~TerrainQuadTree()
+{
+	if (tileTextureIds != nullptr)
+		renderDevice->DestroyTextures(static_cast<uint32_t>(tileCount), tileTextureIds);
+
+	allocator->Deallocate(tiles);
+	allocator->Deallocate(tileTextureIds);
+}
+
+void TerrainQuadTree::CreateResources(uint8_t levels, const TerrainParameters& params)
 {
 	constexpr int texResolution = TerrainTile::TexelsPerSide;
 
@@ -189,15 +192,6 @@ void TerrainQuadTree::CreateResources(render::Device* renderDevice, uint8_t leve
 			}
 		}
 	}
-}
-
-void TerrainQuadTree::DestroyResources(render::Device* renderDevice)
-{
-	if (tileTextureIds != nullptr)
-		renderDevice->DestroyTextures(static_cast<unsigned int>(tileCount), tileTextureIds);
-
-	allocator->Deallocate(tiles);
-	allocator->Deallocate(tileTextureIds);
 }
 
 void TerrainQuadTree::UpdateTilesToRender(
@@ -275,7 +269,7 @@ int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesTo
 		{
 			for (int x = 0; x < 2; ++x)
 			{
-				QuadTreeNodeId tileId{ id.x * 2 + x, id.y * 2 + y, id.level + 1 };
+				QuadTreeNodeId tileId{ id.x * 2 + x, id.y * 2 + y, static_cast<uint8_t>(id.level + 1) };
 
 				int childIndex = BuildQuadTree(tileId, params);
 				if (childIndex >= 0)
@@ -289,17 +283,13 @@ int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesTo
 
 void TerrainQuadTree::RestrictQuadTree()
 {
-	SortedArray<QuadTreeNodeId> parentsToCheck(allocator);
-	SortedArray<QuadTreeNodeId> neighborsToCheck(allocator);
-
-	uint8_t currentLevel = maxNodeLevel;
-	while (currentLevel > 1)
+	for (uint8_t currentLevel = maxNodeLevel; currentLevel > 1; --currentLevel)
 	{
 		for (const auto& node : nodes)
 			if (node.id.level == currentLevel)
 				parentsToCheck.InsertUnique(GetParentId(node.id));
 
-		int tilesPerDim = GetTilesPerDimension(currentLevel - 1);
+		uint32_t tilesPerDim = GetTilesPerDimension(currentLevel - 1);
 		for (const auto& id : parentsToCheck)
 		{
 			// Bitwise AND is used to check if the potential tile has a different parent from current tile
@@ -368,39 +358,26 @@ void TerrainQuadTree::RestrictQuadTree()
 
 		parentsToCheck.Clear();
 		neighborsToCheck.Clear();
-		currentLevel -= 1;
 	}
 }
 
 void TerrainQuadTree::CalculateEdgeTypes()
 {
-	// Key = dependee node id, Value = dependent node ids
-	HashMap<QuadTreeNodeId, EdgeTypeDependents> edgeDependencies(allocator);
-
-	auto addDependency = [&edgeDependencies](const QuadTreeNodeId& dependee, uint16_t dependentNodeIndex)
-	{
-		auto pair = edgeDependencies.Lookup(dependee);
-		if (pair == nullptr)
-			pair = edgeDependencies.Insert(dependee);
-
-		pair->second.AddDependent(dependentNodeIndex);
-	};
-
 	for (uint16_t nodeIndex = 0, nodeCount = nodes.GetCount(); nodeIndex != nodeCount; ++nodeIndex)
 	{
 		const TerrainQuadTreeNode& node = nodes[nodeIndex];
 		if (node.HasChildren() == false)
 		{
 			QuadTreeNodeId id = node.id;
-			int tilesPerDim = GetTilesPerDimension(id.level);
+			uint32_t tilesPerDim = GetTilesPerDimension(id.level);
 			if ((id.x & 1) == 0 && id.x > 0)
-				addDependency(QuadTreeNodeId{ id.x - 1, id.y, id.level }, nodeIndex);
+				AddEdgeDependency(QuadTreeNodeId{ id.x - 1, id.y, id.level }, nodeIndex);
 			if ((id.x & 1) == 1 && id.x + 1 < tilesPerDim)
-				addDependency(QuadTreeNodeId{ id.x + 1, id.y, id.level }, nodeIndex);
+				AddEdgeDependency(QuadTreeNodeId{ id.x + 1, id.y, id.level }, nodeIndex);
 			if ((id.y & 1) == 0 && id.y > 0)
-				addDependency(QuadTreeNodeId{ id.x, id.y - 1, id.level }, nodeIndex);
+				AddEdgeDependency(QuadTreeNodeId{ id.x, id.y - 1, id.level }, nodeIndex);
 			if ((id.y & 1) == 1 && id.y + 1 < tilesPerDim)
-				addDependency(QuadTreeNodeId{ id.x, id.y + 1, id.level }, nodeIndex);
+				AddEdgeDependency(QuadTreeNodeId{ id.x, id.y + 1, id.level }, nodeIndex);
 		}
 	}
 
@@ -427,7 +404,6 @@ void TerrainQuadTree::CalculateEdgeTypes()
 			{
 				// Mark dependent edge as sparse
 				EdgeTypeDependents& dependents = pair.second;
-				dependents.dependeeIsSparse = true;
 				for (uint32_t i = 0; i < dependents.numDependents; ++i)
 				{
 					TerrainQuadTreeNode& dependentNode = nodes[dependents.dependentNodeIndices[i]];
@@ -455,6 +431,15 @@ void TerrainQuadTree::CalculateEdgeTypes()
 	}
 
 	edgeDependencies.Clear();
+}
+
+void TerrainQuadTree::AddEdgeDependency(const QuadTreeNodeId& dependee, uint16_t dependentNodeIndex)
+{
+	auto pair = edgeDependencies.Lookup(dependee);
+	if (pair == nullptr)
+		pair = edgeDependencies.Insert(dependee);
+
+	pair->second.AddDependent(dependentNodeIndex);
 }
 
 void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderParams& params)
@@ -498,7 +483,7 @@ render::TextureId TerrainQuadTree::GetTileHeightTexture(uint8_t level, int x, in
 	return tileTextureIds[GetTileIndex(level, x, y)];
 }
 
-int TerrainQuadTree::GetTilesPerDimension(uint8_t level)
+uint32_t TerrainQuadTree::GetTilesPerDimension(uint8_t level)
 {
 	assert(level >= 0);
 	assert(level < 31);
