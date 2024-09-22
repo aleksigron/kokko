@@ -58,6 +58,8 @@ struct QuadTreeNodeId
 	}
 };
 
+uint32_t Hash32(const QuadTreeNodeId& value, uint32_t seed);
+
 enum class TerrainEdgeType : uint8_t
 {
 	Regular,
