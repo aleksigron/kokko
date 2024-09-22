@@ -49,7 +49,7 @@ public:
 			{
 				++current;
 
-				if (current == end || current->first)
+				if (current == end || !(current->first == KeyType{}))
 				{
 					break;
 				}
@@ -102,7 +102,7 @@ private:
 
 			for (; existing != end; ++existing)
 			{
-				if (existing->first != KeyType{}) // Pair has value
+				if (!(existing->first == KeyType{})) // Pair has value
 				{
 					for (size_t i = GetIndex(kokko::Hash32(existing->first, 0u));; i = GetIndex(i + 1))
 					{
@@ -178,7 +178,7 @@ public:
 			KeyValuePair* itr = data;
 			KeyValuePair* end = data + allocated;
 			for (; itr != end; ++itr)
-				if (itr->first != KeyType{})
+				if (!(itr->first == KeyType{}))
 					itr->second.~ValueType();
 
 			if (zeroUsed)
@@ -240,7 +240,7 @@ public:
 		KeyValuePair* end = data + allocated;
 		for (; itr != end; ++itr)
 		{
-			if (itr->first != KeyType{})
+			if (!(itr->first == KeyType{}))
 			{
 				itr->second.~ValueType();
 				itr->first = KeyType{};
@@ -304,7 +304,7 @@ public:
 
 	KeyValuePair* Lookup(const KeyType& key)
 	{
-		if (key != KeyType{})
+		if (!(key == KeyType{}))
 		{
 			if (data != nullptr)
 			{
@@ -355,7 +355,7 @@ public:
 		if (data == nullptr)
 			ReserveInternal(16);
 
-		if (key != KeyType{})
+		if (!(key == KeyType{}))
 		{
 			for (;;)
 			for (size_t i = GetIndex(kokko::Hash32(key, 0u));; i = GetIndex(i + 1))
