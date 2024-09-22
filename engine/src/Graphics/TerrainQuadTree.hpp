@@ -4,6 +4,8 @@
 #include <cstdint>
 
 #include "Core/Array.hpp"
+#include "Core/HashMap.hpp"
+#include "Core/SortedArray.hpp"
 
 #include "Math/Vec3.hpp"
 
@@ -94,11 +96,11 @@ struct TerrainTileDrawInfo
 class TerrainQuadTree
 {
 public:
-	TerrainQuadTree(Allocator* allocator);
+	TerrainQuadTree(Allocator* allocator, render::Device* renderDevice);
+	TerrainQuadTree(const TerrainQuadTree&) = delete;
+	~TerrainQuadTree();
 
-	void CreateResources(kokko::render::Device* renderDevice, uint8_t levels,
-		const TerrainParameters& params);
-	void DestroyResources(kokko::render::Device* renderDevice);
+	void CreateResources(uint8_t levels, const TerrainParameters& params);
 
 	void UpdateTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
 		const RenderDebugSettings& renderDebug, Array<TerrainTileDrawInfo>& resultOut);
@@ -117,7 +119,7 @@ public:
 	const TerrainTile* GetTile(uint8_t level, int x, int y);
 	render::TextureId GetTileHeightTexture(uint8_t level, int x, int y);
 
-	static int GetTilesPerDimension(uint8_t level);
+	static uint32_t GetTilesPerDimension(uint8_t level);
 	static int GetTileIndex(uint8_t level, int x, int y);
 	static int GetTileCountForLevelCount(uint8_t levelCount);
 	static float GetTileScale(uint8_t level);
@@ -131,10 +133,19 @@ private:
 		Array<TerrainTileDrawInfo>& resultOut;
 	};
 
+	struct EdgeTypeDependents
+	{
+		uint16_t dependentNodeIndices[2];
+		uint32_t numDependents = 0;
+
+		void AddDependent(uint16_t dependent);
+	};
+
 	// Returns inserted node index (points to nodes array), or -1 if no insertion
 	int BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesToRenderParams& params);
 	void RestrictQuadTree();
 	void CalculateEdgeTypes();
+	void AddEdgeDependency(const QuadTreeNodeId& dependee, uint16_t dependentNodeIndex);
 	void QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderParams& params);
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
@@ -144,7 +155,11 @@ private:
 	static QuadTreeNodeId GetParentId(const QuadTreeNodeId& id);
 
 	Allocator* allocator;
+	render::Device* renderDevice;
 	Array<TerrainQuadTreeNode> nodes;
+	SortedArray<QuadTreeNodeId> parentsToCheck;
+	SortedArray<QuadTreeNodeId> neighborsToCheck;
+	HashMap<QuadTreeNodeId, EdgeTypeDependents> edgeDependencies; // Key = dependee node, Value = dependent nodes
 	TerrainTile* tiles;
 	render::TextureId* tileTextureIds;
 

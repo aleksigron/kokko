@@ -160,7 +160,7 @@ TerrainId TerrainSystem::AddTerrain(Entity entity, const TerrainParameters& para
 	data.entity[id] = entity;
 	data.textureScale[id] = params.textureScale;
 	data.textures[id] = TerrainTextures{};
-	data.quadTree[id] = TerrainQuadTree(allocator);
+	new (&data.quadTree[id]) TerrainQuadTree(allocator, renderDevice);
 
 	data.count += 1;
 
@@ -249,7 +249,7 @@ void TerrainSystem::InitializeTerrain(TerrainId id, const TerrainParameters& par
 	kokko::TerrainQuadTree& quadTree = data.quadTree[id.i];
 
 	constexpr int treeLevels = 7;
-	quadTree.CreateResources(renderDevice, treeLevels, params);
+	quadTree.CreateResources(treeLevels, params);
 }
 
 void TerrainSystem::DeinitializeTerrain(TerrainId id)
@@ -258,7 +258,7 @@ void TerrainSystem::DeinitializeTerrain(TerrainId id)
 
 	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainSys_DestroyInstanceResources"));
 
-	data.quadTree[id.i].DestroyResources(renderDevice);
+	data.quadTree[id.i].~TerrainQuadTree();
 }
 
 void TerrainSystem::Reallocate(size_t required)
@@ -417,17 +417,17 @@ void TerrainSystem::CreateVertexAndIndexData()
 {
 	// Create vertex data
 
-	constexpr int sideVerts = TerrainTile::VerticesPerSide;
-	unsigned int vertCount = sideVerts * sideVerts;
+	constexpr uint32_t sideVerts = TerrainTile::VerticesPerSide;
+	uint32_t vertCount = sideVerts * sideVerts;
 	size_t vertexComponents = 2;
 	size_t vertSize = sizeof(float) * vertexComponents;
-	unsigned int vertBytes = static_cast<unsigned int>(vertSize * vertCount);
+	uint32_t vertBytes = static_cast<uint32_t>(vertSize * vertCount);
 	float* vertexBuf = static_cast<float*>(allocator->Allocate(vertBytes, "TerrainSystem.CreateVertexData() vertexBuf"));
 
 	constexpr int sideQuads = TerrainTile::QuadsPerSide;
-	int quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
-	unsigned int maxIndexCount = sideQuads * sideQuads * quadIndices;
-	unsigned int maxIndexBytes = maxIndexCount * sizeof(uint16_t);
+	uint32_t quadIndices = 3 * 2; // 3 indices per triangle, 2 triangles per quad
+	uint32_t maxIndexCount = sideQuads * sideQuads * quadIndices;
+	uint32_t maxIndexBytes = maxIndexCount * sizeof(uint16_t);
 	uint16_t* indexBuf = static_cast<uint16_t*>(allocator->Allocate(maxIndexBytes, "TerrainSystem.CreateVertexData() indexBuf"));
 
 	float quadSize = 1.0f / sideQuads;
@@ -451,7 +451,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 	renderDevice->SetBufferStorage(vertexData.vertexBuffer, vertBytes, vertexBuf, BufferStorageFlags::None);
 
 	auto vertexIndex = [](int x, int y) { return static_cast<uint16_t>(y * TerrainTile::VerticesPerSide + x); };
-	auto basicQuad = [&indexBuf, &vertexIndex](int x, int y, int& count)
+	auto basicQuad = [&indexBuf, &vertexIndex](int x, int y, uint32_t& count)
 	{
 		indexBuf[count + 0] = vertexIndex(x, y);
 		indexBuf[count + 1] = vertexIndex(x, y + 1);
@@ -464,14 +464,14 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 	// MeshType_Regular
 	{
-		int indexCount = 0;
+		uint32_t indexCount = 0;
 
 		for (int y = 0; y < sideQuads; ++y)
 			for (int x = 0; x < sideQuads; ++x)
 				basicQuad(x, y, indexCount);
 
 		assert(indexCount <= maxIndexCount);
-		int indexBytes = indexCount * sizeof(uint16_t);
+		uint32_t indexBytes = indexCount * sizeof(uint16_t);
 		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::Regular);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
@@ -480,7 +480,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 	
 	// MeshType_TopSparse
 	{
-		int indexCount = 0;
+		uint32_t indexCount = 0;
 
 		for (int y = 0, x = 0; x < sideQuads; x += 2)
 		{
@@ -501,7 +501,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 				basicQuad(x, y, indexCount);
 
 		assert(indexCount <= maxIndexCount);
-		int indexBytes = indexCount * sizeof(uint16_t);
+		uint32_t indexBytes = indexCount * sizeof(uint16_t);
 		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::TopSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
@@ -510,7 +510,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 	// MeshType_TopRightSparse
 	{
-		int indexCount = 0;
+		uint32_t indexCount = 0;
 
 		for (int y = 0, x = 0; x < sideQuads; x += 2)
 		{
@@ -575,7 +575,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 		}
 
 		assert(indexCount <= maxIndexCount);
-		int indexBytes = indexCount * sizeof(uint16_t);
+		uint32_t indexBytes = indexCount * sizeof(uint16_t);
 		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::TopRightSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
@@ -584,7 +584,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 	// MeshType_RightSparse
 	{
-		int indexCount = 0;
+		uint32_t indexCount = 0;
 
 		for (int y = 0; y < sideQuads; ++y)
 		{
@@ -609,7 +609,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 		}
 
 		assert(indexCount <= maxIndexCount);
-		int indexBytes = indexCount * sizeof(uint16_t);
+		uint32_t indexBytes = indexCount * sizeof(uint16_t);
 		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::RightSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
@@ -618,7 +618,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 	// MeshType_RightBottomSparse
 	{
-		int indexCount = 0;
+		uint32_t indexCount = 0;
 
 		for (int y = 0; y < sideQuads - 1; ++y)
 		{
@@ -686,7 +686,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 		}
 
 		assert(indexCount <= maxIndexCount);
-		int indexBytes = indexCount * sizeof(uint16_t);
+		uint32_t indexBytes = indexCount * sizeof(uint16_t);
 		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::RightBottomSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
@@ -695,7 +695,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 	// MeshType_TopSparse
 	{
-		int indexCount = 0;
+		uint32_t indexCount = 0;
 
 		for (int y = 0; y < sideQuads - 1; ++y)
 			for (int x = 0; x < sideQuads; ++x)
@@ -716,7 +716,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 		}
 
 		assert(indexCount <= maxIndexCount);
-		int indexBytes = indexCount * sizeof(uint16_t);
+		uint32_t indexBytes = indexCount * sizeof(uint16_t);
 		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::BottomSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
@@ -725,7 +725,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 	// MeshType_BottomLeftSparse
 	{
-		int indexCount = 0;
+		uint32_t indexCount = 0;
 
 		for (int y = 0; y < sideQuads - 1; ++y)
 		{
@@ -797,7 +797,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 	// MeshType_LeftSparse
 	{
-		int indexCount = 0;
+		uint32_t indexCount = 0;
 
 		for (int y = 0; y < sideQuads; ++y)
 		{
@@ -822,7 +822,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 		}
 
 		assert(indexCount <= maxIndexCount);
-		int indexBytes = indexCount * sizeof(uint16_t);
+		uint32_t indexBytes = indexCount * sizeof(uint16_t);
 		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::LeftSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
@@ -831,7 +831,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 
 	// MeshType_LeftTopSparse
 	{
-		int indexCount = 0;
+		uint32_t indexCount = 0;
 
 		for (int y = 0, x = 0; x < sideQuads; x += 2)
 		{
@@ -896,7 +896,7 @@ void TerrainSystem::CreateVertexAndIndexData()
 		}
 
 		assert(indexCount <= maxIndexCount);
-		int indexBytes = indexCount * sizeof(uint16_t);
+		uint32_t indexBytes = indexCount * sizeof(uint16_t);
 		uint8_t meshTypeIndex = static_cast<uint8_t>(TerrainEdgeType::LeftTopSparse);
 		vertexData.indexCounts[meshTypeIndex] = indexCount;
 		renderDevice->SetBufferStorage(
@@ -923,4 +923,5 @@ void TerrainSystem::CreateVertexAndIndexData()
 	allocator->Deallocate(indexBuf);
 	allocator->Deallocate(vertexBuf);
 }
-}
+
+} // namespace kokko
