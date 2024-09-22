@@ -104,7 +104,7 @@ private:
 			{
 				if (!(existing->first == KeyType{})) // Pair has value
 				{
-					for (size_t i = GetIndex(kokko::Hash32(existing->first, 0u));; i = GetIndex(i + 1))
+					for (size_t i = GetIndex(kokko::Hash32<KeyType>()(existing->first, 0u));; i = GetIndex(i + 1))
 					{
 						if (newData[i].first == KeyType{}) // Insert here
 						{
@@ -308,7 +308,7 @@ public:
 		{
 			if (data != nullptr)
 			{
-				for (size_t i = GetIndex(kokko::Hash32(key, 0u));; i = GetIndex(i + 1))
+				for (size_t i = GetIndex(kokko::Hash32<KeyType>()(key, 0u));; i = GetIndex(i + 1))
 				{
 					KeyValuePair* pair = data + i;
 
@@ -332,7 +332,7 @@ public:
 		{
 			if (data != nullptr)
 			{
-				for (size_t i = GetIndex(kokko::Hash32(key, 0u));; i = GetIndex(i + 1))
+				for (size_t i = GetIndex(kokko::Hash32<KeyType>()(key, 0u));; i = GetIndex(i + 1))
 				{
 					KeyValuePair* pair = data + i;
 
@@ -358,7 +358,7 @@ public:
 		if (!(key == KeyType{}))
 		{
 			for (;;)
-			for (size_t i = GetIndex(kokko::Hash32(key, 0u));; i = GetIndex(i + 1))
+			for (size_t i = GetIndex(kokko::Hash32<KeyType>()(key, 0u));; i = GetIndex(i + 1))
 			{
 				KeyValuePair* pair = data + i;
 
@@ -422,7 +422,7 @@ public:
 						return;
 					}
 
-					KeyValuePair* ideal = data + GetIndex(kokko::Hash32(neighbor->first, 0u));
+					KeyValuePair* ideal = data + GetIndex(kokko::Hash32<KeyType>()(neighbor->first, 0u));
 					if (GetOffset(ideal, pair) < GetOffset(ideal, neighbor))
 					{
 						// Swap with neighbor, then make neighbor the new cell to remove.

@@ -55,9 +55,9 @@ void Uid::WriteTo(ArrayView<char> out) const
 	IntegerToHexadecimal(raw[1], out.GetSubView(charsPerRaw, charsPerRaw * 2));
 }
 
-uint32_t Hash32(const Uid& uid, uint32_t seed)
+uint32_t HashValue32(const Uid& uid, uint32_t seed)
 {
-	return Hash32(&uid, sizeof(Uid), seed);
+	return HashValue32(&uid, sizeof(Uid), seed);
 }
 
 TEST_CASE("Uid.Serialization")

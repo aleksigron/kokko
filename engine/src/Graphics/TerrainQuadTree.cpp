@@ -96,11 +96,11 @@ TerrainEdgeType EdgeMaskToType(TerrainEdgeMask mask)
 
 } // namespace
 
-uint32_t Hash32(const QuadTreeNodeId& value, uint32_t seed)
+uint32_t HashValue32(const QuadTreeNodeId& value, uint32_t seed)
 {
-	uint32_t hash = Hash32(&value.x, sizeof(value.x), seed);
-	hash = Hash32(&value.y, sizeof(value.y), hash);
-	return Hash32(&value.level, sizeof(value.level), hash);
+	uint32_t hash = HashValue32(&value.x, sizeof(value.x), seed);
+	hash = HashValue32(&value.y, sizeof(value.y), hash);
+	return HashValue32(&value.level, sizeof(value.level), hash);
 }
 
 void TerrainQuadTree::EdgeTypeDependents::AddDependent(uint16_t dependent)

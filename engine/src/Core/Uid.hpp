@@ -34,4 +34,6 @@ struct Uid
 	void WriteTo(ArrayView<char> out) const;
 };
 
+uint32_t HashValue32(const Uid& data, uint32_t seed);
+
 }

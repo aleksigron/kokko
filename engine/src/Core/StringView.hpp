@@ -54,6 +54,6 @@ struct StringView
 using MutableStringView = StringView<char>;
 using ConstStringView = StringView<const char>;
 
-uint32_t Hash32(const ConstStringView& value, uint32_t seed);
+uint32_t HashValue32(const ConstStringView& value, uint32_t seed);
 
 }

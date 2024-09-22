@@ -332,9 +332,9 @@ TEST_CASE("StringView can find last substring")
 template struct StringView<char>;
 template struct StringView<const char>;
 
-uint32_t Hash32(const ConstStringView& value, uint32_t seed)
+uint32_t HashValue32(const ConstStringView& value, uint32_t seed)
 {
-	return Hash32(value.str, value.len, seed);
+	return HashValue32(value.str, value.len, seed);
 }
 
 }
