@@ -69,7 +69,6 @@ TerrainSystem::TerrainSystem(
 	entityMap(allocator),
 	vertexData(VertexData{}),
 	textureSampler(0),
-	tilesToRender(allocator),
 	uniformStagingBuffer(allocator)
 {
 	data = InstanceData{};
@@ -249,7 +248,7 @@ void TerrainSystem::InitializeTerrain(TerrainId id, const TerrainParameters& par
 	kokko::TerrainQuadTree& quadTree = data.quadTree[id.i];
 
 	constexpr int treeLevels = 7;
-	quadTree.CreateResources(treeLevels, params);
+	quadTree.Initialize(treeLevels, params);
 }
 
 void TerrainSystem::DeinitializeTerrain(TerrainId id)
@@ -401,7 +400,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 			if (heightMap != nullptr)
 			{
-				render::TextureId heightTex = quadTree.GetTileHeightTexture(tile.id.level, tile.id.x, tile.id.y);
+				render::TextureId heightTex = quadTree.GetTileHeightTexture(tile.id);
 
 				encoder->BindTextureToShader(heightMap->uniformLocation, 0, heightTex);
 			}

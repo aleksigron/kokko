@@ -117,11 +117,9 @@ public:
 	float GetHeight() const { return terrainHeight; }
 	void SetHeight(float height) { terrainHeight = height; }
 
-	const TerrainTile* GetTile(uint8_t level, int x, int y);
-	render::TextureId GetTileHeightTexture(uint8_t level, int x, int y);
+	render::TextureId GetTileHeightTexture(const QuadTreeNodeId& id);
 
 	static uint32_t GetTilesPerDimension(uint8_t level);
-	static int GetTileIndex(uint8_t level, int x, int y);
 	static int GetTileCountForLevelCount(uint8_t levelCount);
 	static float GetTileScale(uint8_t level);
 
@@ -163,13 +161,16 @@ private:
 	SortedArray<QuadTreeNodeId> parentsToCheck;
 	SortedArray<QuadTreeNodeId> neighborsToCheck;
 	HashMap<QuadTreeNodeId, EdgeTypeDependents> edgeDependencies; // Key = dependee node, Value = dependent nodes
+	HashMap<QuadTreeNodeId, uint32_t> tileIdToIndexMap;
 
 	struct TileData
 	{
 		TerrainTile* heightData;
 		render::TextureId* textureIds;
 
+		void* buffer;
 		uint32_t count;
+		uint32_t textureInitCount;
 		uint32_t allocated;
 	} tileData;
 
