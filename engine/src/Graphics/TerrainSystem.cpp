@@ -307,7 +307,8 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	// Select tiles to render
 
 	TerrainQuadTree& quadTree = data.quadTree[id.i];
-	quadTree.UpdateTilesToRender(viewport.frustum, viewport.position, parameters.renderDebug, tilesToRender);
+	quadTree.UpdateTilesToRender(viewport.frustum, viewport.position, parameters.renderDebug);
+	ArrayView<const TerrainTileDrawInfo> tiles = quadTree.GetTilesToRender();
 
 	// Update uniform buffer
 
@@ -327,13 +328,13 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	uniforms.metalness = 0.0f;
 	uniforms.roughness = 0.5f;
 
-	uniformStagingBuffer.Resize(tilesToRender.GetCount() * uniformBlockStride);
+	uniformStagingBuffer.Resize(tiles.GetCount() * uniformBlockStride);
 
 	{
 		KOKKO_PROFILE_SCOPE("Setup tile uniform data");
 
 		int blocksWritten = 0;
-		for (const auto& tile : tilesToRender)
+		for (const auto& tile : tiles)
 		{
 			const float halfTileCount = 0.5f * TerrainQuadTree::GetTilesPerDimension(tile.id.level);
 			const Vec2f levelOrigin(-halfTileCount, -halfTileCount);
@@ -348,7 +349,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 		}
 	}
 
-	unsigned int updateBytes = static_cast<unsigned int>(tilesToRender.GetCount() * uniformBlockStride);
+	uint32_t updateBytes = static_cast<uint32_t>(tiles.GetCount() * uniformBlockStride);
 
 	renderDevice->SetBufferSubData(uniformBufferId, 0, updateBytes, uniformStagingBuffer.GetData());
 
@@ -383,7 +384,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 		uint8_t prevMeshType = 255;
 		int blocksUsed = 0;
-		for (const auto& tile : tilesToRender)
+		for (const auto& tile : tiles)
 		{
 			uint8_t tileMeshTypeIndex = static_cast<uint8_t>(tile.edgeType);
 			if (tileMeshTypeIndex != prevMeshType)
@@ -409,8 +410,6 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 			encoder->DrawIndexed(RenderPrimitiveMode::Triangles, RenderIndexType::UnsignedShort, count, 0, 0);
 		}
 	}
-
-	tilesToRender.Clear();
 }
 
 void TerrainSystem::CreateVertexAndIndexData()
