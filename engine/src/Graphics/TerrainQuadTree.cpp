@@ -115,40 +115,40 @@ TerrainQuadTree::TerrainQuadTree(Allocator* allocator, render::Device* renderDev
 	allocator(allocator),
 	renderDevice(renderDevice),
 	nodes(allocator),
+	drawTiles(allocator),
 	parentsToCheck(allocator),
 	neighborsToCheck(allocator),
 	edgeDependencies(allocator),
-	tiles(nullptr),
-	tileTextureIds(nullptr),
 	treeLevels(0),
 	maxNodeLevel(0),
-	tileCount(0),
 	terrainWidth(0.0f),
 	terrainBottom(0.0f),
 	terrainHeight(0.0f)
 {
+	tileData = TileData{};
 }
 
 TerrainQuadTree::~TerrainQuadTree()
 {
-	if (tileTextureIds != nullptr)
-		renderDevice->DestroyTextures(static_cast<uint32_t>(tileCount), tileTextureIds);
+	if (tileData.textureIds != nullptr)
+		renderDevice->DestroyTextures(tileData.count, tileData.textureIds);
 
-	allocator->Deallocate(tiles);
-	allocator->Deallocate(tileTextureIds);
+	if (tileData.heightData != nullptr)
+		allocator->Deallocate(tileData.heightData);
+
+	if (tileData.heightData != nullptr)
+		allocator->Deallocate(tileData.textureIds);
 }
 
-void TerrainQuadTree::CreateResources(uint8_t levels, const TerrainParameters& params)
+void TerrainQuadTree::Initialize(uint8_t levels, const TerrainParameters& params)
 {
-	constexpr int texResolution = TerrainTile::TexelsPerSide;
-
 	treeLevels = levels;
-	tileCount = GetTileCountForLevelCount(levels);
 
 	terrainWidth = params.terrainSize;
 	terrainBottom = params.heightOrigin;
 	terrainHeight = params.heightRange;
 
+	/*
 	void* buffer = allocator->Allocate(tileCount * sizeof(TerrainTile), "TerrainQuadTree.tiles");
 	tiles = static_cast<TerrainTile*>(buffer);
 
@@ -192,21 +192,22 @@ void TerrainQuadTree::CreateResources(uint8_t levels, const TerrainParameters& p
 			}
 		}
 	}
+	*/
 }
 
 void TerrainQuadTree::UpdateTilesToRender(
 	const FrustumPlanes& frustum,
 	const Vec3f& cameraPos,
-	const RenderDebugSettings& renderDebug,
-	Array<TerrainTileDrawInfo>& resultOut)
+	const RenderDebugSettings& renderDebug)
 {
 	KOKKO_PROFILE_SCOPE("TerrainQuadTree::UpdateTilesToRender()");
 
 	nodes.Clear();
+	drawTiles.Clear();
 	maxNodeLevel = 0;
 
 	// Calculates optimal set of tiles to render and updates quad tree <nodes>
-	UpdateTilesToRenderParams params{ frustum, cameraPos, renderDebug, resultOut };
+	UpdateTilesToRenderParams params{ frustum, cameraPos, renderDebug };
 	int rootNodeIndex = BuildQuadTree(QuadTreeNodeId{}, params);
 
 	size_t oldNodeCount = nodes.GetCount();
@@ -214,10 +215,19 @@ void TerrainQuadTree::UpdateTilesToRender(
 	// Next we need to update the quad tree so that it forms a restricted quad tree
 	RestrictQuadTree();
 
+	// Calculate edge types for rendering
 	CalculateEdgeTypes();
 
 	// Then we create the final render tiles from the leaf nodes of the quad tree
-	QuadTreeToTiles(rootNodeIndex, params);
+	QuadTreeToTiles(rootNodeIndex);
+
+	// Load visible tiles
+	LoadTiles();
+}
+
+ArrayView<const TerrainTileDrawInfo> TerrainQuadTree::GetTilesToRender() const
+{
+	return ArrayView(drawTiles.GetData(), drawTiles.GetCount());
 }
 
 int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesToRenderParams& params)
@@ -283,6 +293,8 @@ int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesTo
 
 void TerrainQuadTree::RestrictQuadTree()
 {
+	KOKKO_PROFILE_SCOPE("TerrainQuadTree::RestrictQuadTree()");
+
 	for (uint8_t currentLevel = maxNodeLevel; currentLevel > 1; --currentLevel)
 	{
 		for (const auto& node : nodes)
@@ -363,6 +375,8 @@ void TerrainQuadTree::RestrictQuadTree()
 
 void TerrainQuadTree::CalculateEdgeTypes()
 {
+	KOKKO_PROFILE_SCOPE("TerrainQuadTree::CalculateEdgeTypes()");
+
 	for (uint16_t nodeIndex = 0, nodeCount = nodes.GetCount(); nodeIndex != nodeCount; ++nodeIndex)
 	{
 		const TerrainQuadTreeNode& node = nodes[nodeIndex];
@@ -442,18 +456,13 @@ void TerrainQuadTree::AddEdgeDependency(const QuadTreeNodeId& dependee, uint16_t
 	pair->second.AddDependent(dependentNodeIndex);
 }
 
-void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderParams& params)
+void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex)
 {
 	const TerrainQuadTreeNode& node = nodes[nodeIndex];
 
-	bool hasChildren = false;
-	for (int i = 0; i < 4; ++i)
-		if (node.children[i] != 0)
-			hasChildren = true;
-
-	if (hasChildren == false)
+	if (node.HasChildren() == false)
 	{
-		params.resultOut.PushBack(TerrainTileDrawInfo{ node.id, node.edgeType });
+		drawTiles.PushBack(TerrainTileDrawInfo{ node.id, node.edgeType });
 		return;
 	}
 
@@ -463,9 +472,14 @@ void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderPar
 		{
 			uint16_t childIndex = node.children[y * 2 + x];
 			if (childIndex != 0)
-				QuadTreeToTiles(childIndex, params);
+				QuadTreeToTiles(childIndex);
 		}
 	}
+}
+
+void TerrainQuadTree::LoadTiles()
+{
+
 }
 
 int TerrainQuadTree::GetLevelCount() const

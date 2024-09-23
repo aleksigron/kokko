@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "Core/ArrayView.hpp"
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/SortedArray.hpp"
@@ -99,10 +100,11 @@ public:
 	TerrainQuadTree(const TerrainQuadTree&) = delete;
 	~TerrainQuadTree();
 
-	void CreateResources(uint8_t levels, const TerrainParameters& params);
+	void Initialize(uint8_t levels, const TerrainParameters& params);
 
 	void UpdateTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
-		const RenderDebugSettings& renderDebug, Array<TerrainTileDrawInfo>& resultOut);
+		const RenderDebugSettings& renderDebug);
+	ArrayView<const TerrainTileDrawInfo> GetTilesToRender() const;
 
 	int GetLevelCount() const;
 
@@ -129,7 +131,6 @@ private:
 		const FrustumPlanes& frustum;
 		const Vec3f& cameraPos;
 		const RenderDebugSettings& renderDebug;
-		Array<TerrainTileDrawInfo>& resultOut;
 	};
 
 	struct EdgeTypeDependents
@@ -145,7 +146,8 @@ private:
 	void RestrictQuadTree();
 	void CalculateEdgeTypes();
 	void AddEdgeDependency(const QuadTreeNodeId& dependee, uint16_t dependentNodeIndex);
-	void QuadTreeToTiles(uint16_t nodeIndex, UpdateTilesToRenderParams& params);
+	void QuadTreeToTiles(uint16_t nodeIndex);
+	void LoadTiles();
 
 	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
 
@@ -155,16 +157,24 @@ private:
 
 	Allocator* allocator;
 	render::Device* renderDevice;
+
 	Array<TerrainQuadTreeNode> nodes;
+	Array<TerrainTileDrawInfo> drawTiles;
 	SortedArray<QuadTreeNodeId> parentsToCheck;
 	SortedArray<QuadTreeNodeId> neighborsToCheck;
 	HashMap<QuadTreeNodeId, EdgeTypeDependents> edgeDependencies; // Key = dependee node, Value = dependent nodes
-	TerrainTile* tiles;
-	render::TextureId* tileTextureIds;
+
+	struct TileData
+	{
+		TerrainTile* heightData;
+		render::TextureId* textureIds;
+
+		uint32_t count;
+		uint32_t allocated;
+	} tileData;
 
 	uint8_t treeLevels;
 	uint8_t maxNodeLevel;
-	int tileCount;
 	float terrainWidth;
 	float terrainBottom;
 	float terrainHeight;

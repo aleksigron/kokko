@@ -135,8 +135,6 @@ private:
 	}
 	data;
 
-	Array<TerrainTileDrawInfo> tilesToRender;
-
 	Array<uint8_t> uniformStagingBuffer;
 
 	void InitializeTerrain(TerrainId id, const TerrainParameters& params);
