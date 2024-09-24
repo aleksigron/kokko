@@ -134,11 +134,8 @@ TerrainQuadTree::~TerrainQuadTree()
 	if (tileData.textureIds != nullptr)
 		renderDevice->DestroyTextures(tileData.count, tileData.textureIds);
 
-	if (tileData.heightData != nullptr)
-		allocator->Deallocate(tileData.heightData);
-
-	if (tileData.heightData != nullptr)
-		allocator->Deallocate(tileData.textureIds);
+	if (tileData.buffer != nullptr)
+		allocator->Deallocate(tileData.buffer);
 }
 
 void TerrainQuadTree::Initialize(uint8_t levels, const TerrainParameters& params)
