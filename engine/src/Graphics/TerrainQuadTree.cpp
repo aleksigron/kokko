@@ -436,20 +436,29 @@ void TerrainQuadTree::LoadTiles()
 {
 	size_t tileCount = drawTiles.GetCount();
 
-	if (tileCount > tileData.allocated)
+	uint32_t missingTiles = 0;
+	for (const TerrainTileDrawInfo& tile : drawTiles)
+	{
+		auto pair = tileIdToIndexMap.Lookup(tile.id);
+		if (pair == nullptr)
+			missingTiles += 1;
+	}
+	const uint32_t required = tileData.count + missingTiles;
+
+	if (required > tileData.allocated)
 	{
 		// Reallocate
-		size_t required = Math::RoundUpToMultiple(tileCount * 4 / 3, 16llu);
-		size_t bytes = required * (sizeof(TerrainTile) + sizeof(render::TextureId));
+		uint32_t newAllocated = Math::RoundUpToMultiple(required * 4 / 3, 16u);
+		size_t bytes = newAllocated * (sizeof(TerrainTile) + sizeof(render::TextureId));
 
 		TileData newData;
 		newData.buffer = allocator->Allocate(bytes, "TerrainQuadTree.tileData.buffer");
 		newData.count = tileData.count;
 		newData.textureInitCount = tileData.textureInitCount;
-		newData.allocated = required;
+		newData.allocated = newAllocated;
 
 		newData.heightData = static_cast<TerrainTile*>(newData.buffer);
-		newData.textureIds = reinterpret_cast<render::TextureId*>(newData.heightData + required);
+		newData.textureIds = reinterpret_cast<render::TextureId*>(newData.heightData + newAllocated);
 
 		if (tileData.buffer != nullptr)
 		{
@@ -463,17 +472,17 @@ void TerrainQuadTree::LoadTiles()
 	}
 
 	constexpr int texResolution = TerrainTile::TexelsPerSide;
-	if (tileCount > tileData.textureInitCount)
+	if (required > tileData.textureInitCount)
 	{
 		render::TextureId* newTextures = &tileData.textureIds[tileData.textureInitCount];
-		uint32_t newTextureCount = tileCount - tileData.textureInitCount;
+		uint32_t newTextureCount = required - tileData.textureInitCount;
 		renderDevice->CreateTextures(RenderTextureTarget::Texture2d, newTextureCount, newTextures);
 
-		for (uint32_t i = tileData.textureInitCount; i < tileCount; ++i)
+		for (uint32_t i = tileData.textureInitCount; i < required; ++i)
 			renderDevice->SetTextureStorage2D(
 				tileData.textureIds[i], 1, RenderTextureSizedFormat::R16, texResolution, texResolution);
 
-		tileData.textureInitCount = tileCount;
+		tileData.textureInitCount = required;
 	}
 
 	for (const TerrainTileDrawInfo& tile : drawTiles)
