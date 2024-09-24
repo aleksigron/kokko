@@ -164,8 +164,8 @@ void TerrainQuadTree::UpdateTilesToRender(
 	// Calculates optimal set of tiles to render and updates quad tree <nodes>
 	UpdateTilesToRenderParams params{ frustum, cameraPos, renderDebug };
 	int rootNodeIndex = BuildQuadTree(QuadTreeNodeId{}, params);
-
-	size_t oldNodeCount = nodes.GetCount();
+	if (rootNodeIndex == -1)
+		return;
 
 	// Next we need to update the quad tree so that it forms a restricted quad tree
 	RestrictQuadTree();
