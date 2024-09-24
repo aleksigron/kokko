@@ -106,7 +106,7 @@ public:
 		const RenderDebugSettings& renderDebug);
 	ArrayView<const TerrainTileDrawInfo> GetTilesToRender() const;
 
-	int GetLevelCount() const;
+	int GetLevelCount() const { return treeLevels; }
 
 	float GetSize() const { return terrainWidth; }
 	void SetSize(float size) { terrainWidth = size; }
@@ -120,7 +120,6 @@ public:
 	render::TextureId GetTileHeightTexture(const QuadTreeNodeId& id);
 
 	static uint32_t GetTilesPerDimension(uint8_t level);
-	static int GetTileCountForLevelCount(uint8_t levelCount);
 	static float GetTileScale(uint8_t level);
 
 private:

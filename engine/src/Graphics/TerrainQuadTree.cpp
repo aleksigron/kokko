@@ -509,11 +509,6 @@ void TerrainQuadTree::LoadTiles()
 	}
 }
 
-int TerrainQuadTree::GetLevelCount() const
-{
-	return treeLevels;
-}
-
 render::TextureId TerrainQuadTree::GetTileHeightTexture(const QuadTreeNodeId& id)
 {
 	auto pair = tileIdToIndexMap.Lookup(id);
@@ -536,28 +531,6 @@ TEST_CASE("TerrainQuadTree.GetTilesPerDimension")
 	CHECK(TerrainQuadTree::GetTilesPerDimension(1) == 2);
 	CHECK(TerrainQuadTree::GetTilesPerDimension(2) == 4);
 	CHECK(TerrainQuadTree::GetTilesPerDimension(3) == 8);
-}
-
-int TerrainQuadTree::GetTileCountForLevelCount(uint8_t levelCount)
-{
-	int levelStart = 0;
-	int levelSize = 1;
-
-	for (int i = 0; i < levelCount; ++i)
-	{
-		levelStart += levelSize * levelSize;
-		levelSize *= 2;
-	}
-
-	return levelStart;
-}
-
-TEST_CASE("TerrainQuadTree.GetTileCountForLevelCount")
-{
-	CHECK(TerrainQuadTree::GetTileCountForLevelCount(0) == 0);
-	CHECK(TerrainQuadTree::GetTileCountForLevelCount(1) == 1);
-	CHECK(TerrainQuadTree::GetTileCountForLevelCount(2) == 5);
-	CHECK(TerrainQuadTree::GetTileCountForLevelCount(3) == 21);
 }
 
 float TerrainQuadTree::GetTileScale(uint8_t level)

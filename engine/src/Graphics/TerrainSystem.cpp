@@ -64,6 +64,7 @@ TerrainSystem::TerrainSystem(
 	shaderManager(shaderManager),
 	textureManager(textureManager),
 	uniformBlockStride(0),
+	uniformBlocksAllocated(0),
 	uniformBufferId(0),
 	terrainShader(ShaderId::Null),
 	entityMap(allocator),
@@ -110,14 +111,7 @@ void TerrainSystem::Initialize()
 	int aligment = 0;
 	renderDevice->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
 
-	uniformBlockStride = (sizeof(TerrainUniformBlock) + aligment - 1) / aligment * aligment;
-
-	// TODO: recreate buffer based on tree levels and tile count
-	int tileCount = TerrainQuadTree::GetTileCountForLevelCount(6);
-	int uniformBytes = uniformBlockStride * tileCount;
-
-	renderDevice->CreateBuffers(1, &uniformBufferId);
-	renderDevice->SetBufferStorage(uniformBufferId, uniformBytes, nullptr, BufferStorageFlags::Dynamic);
+	uniformBlockStride = Math::RoundUpToMultiple(sizeof(TerrainUniformBlock), static_cast<size_t>(aligment));
 
 	// Material
 
@@ -308,6 +302,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	TerrainQuadTree& quadTree = data.quadTree[id.i];
 	quadTree.UpdateTilesToRender(viewport.frustum, viewport.position, parameters.renderDebug);
 	ArrayView<const TerrainTileDrawInfo> tiles = quadTree.GetTilesToRender();
+	uint32_t tileCount = static_cast<uint32_t>(tiles.GetCount());
 
 	// Update uniform buffer
 
@@ -329,10 +324,24 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 	uniformStagingBuffer.Resize(tiles.GetCount() * uniformBlockStride);
 
+	if (tileCount > uniformBlocksAllocated)
+	{
+		uint32_t newAllocated = Math::RoundUpToMultiple(tileCount * 4 / 3, 16u);
+		uint32_t newByteCount = newAllocated * uniformBlockStride;
+
+		if (uniformBufferId != render::BufferId::Null)
+			renderDevice->DestroyBuffers(1, &uniformBufferId);
+
+		renderDevice->CreateBuffers(1, &uniformBufferId);
+		renderDevice->SetBufferStorage(uniformBufferId, newByteCount, nullptr, BufferStorageFlags::Dynamic);
+
+		uniformBlocksAllocated = newAllocated;
+	}
+
 	{
 		KOKKO_PROFILE_SCOPE("Setup tile uniform data");
 
-		int blocksWritten = 0;
+		uint32_t blocksWritten = 0;
 		for (const auto& tile : tiles)
 		{
 			const float halfTileCount = 0.5f * TerrainQuadTree::GetTilesPerDimension(tile.id.level);
@@ -348,7 +357,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 		}
 	}
 
-	uint32_t updateBytes = static_cast<uint32_t>(tiles.GetCount() * uniformBlockStride);
+	uint32_t updateBytes = tileCount * uniformBlockStride;
 
 	renderDevice->SetBufferSubData(uniformBufferId, 0, updateBytes, uniformStagingBuffer.GetData());
 

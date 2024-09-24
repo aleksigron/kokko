@@ -90,7 +90,8 @@ private:
 	ShaderManager* shaderManager;
 	TextureManager* textureManager;
 	
-	unsigned int uniformBlockStride;
+	uint32_t uniformBlockStride;
+	uint32_t uniformBlocksAllocated;
 	render::BufferId uniformBufferId;
 
 	ShaderId terrainShader;
