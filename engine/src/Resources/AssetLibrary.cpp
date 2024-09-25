@@ -14,8 +14,6 @@
 
 #include "System/Filesystem.hpp"
 
-#include "Engine/EngineConstants.hpp"
-
 namespace kokko
 {
 namespace
@@ -34,6 +32,17 @@ void CreateMetadataJson(rapidjson::Document& document, uint64_t hash, const kokk
 
 	rapidjson::Value uidValue(uidStrBuf, kokko::Uid::StringLength, alloc);
 	document.AddMember("uid", uidValue, alloc);	
+}
+
+void CreateTextureMetadataJson(rapidjson::Document& document, uint64_t hash, const kokko::Uid& uid,
+	const TextureAssetMetadata& texture)
+{
+	CreateMetadataJson(document, hash, uid);
+
+	rapidjson::Document::AllocatorType& alloc = document.GetAllocator();
+
+	rapidjson::Value genMipsValue(texture.generateMipmaps);
+	document.AddMember("generate_mipmaps", genMipsValue, alloc);
 }
 
 bool WriteDocumentToFile(
@@ -123,7 +132,8 @@ AssetLibrary::AssetLibrary(Allocator* allocator, Filesystem* filesystem) :
 	filesystem(filesystem),
 	uidToIndexMap(allocator),
 	pathToIndexMap(allocator),
-	assets(allocator)
+	assets(allocator),
+	textureMetadata(allocator)
 {
 }
 
@@ -153,14 +163,16 @@ const AssetInfo* AssetLibrary::FindAssetByVirtualPath(const String& virtualPath)
 		return nullptr;
 }
 
-Optional<Uid> AssetLibrary::CreateAsset(AssetType type, ConstStringView pathRelativeToAssets, ArrayView<const uint8_t> content)
+Optional<Uid> AssetLibrary::CreateAsset(
+	AssetType type, ConstStringView pathRelativeToAssets, ArrayView<const uint8_t> content)
 {
 	Uid assetUid = Uid::Create();
 	uint64_t calculatedHash = CalculateHash(type, content);
+	int32_t metadataIndex = -1;
 	uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
 	ConstStringView mount = ConstStringView(EngineConstants::VirtualMountAssets);
 
-	assets.PushBack(AssetInfo(allocator, mount, pathRelativeToAssets, assetUid, calculatedHash, type));
+	assets.PushBack(AssetInfo(allocator, mount, pathRelativeToAssets, assetUid, calculatedHash, metadataIndex, type));
 	const String& virtualPath = assets.GetBack().GetVirtualPath();
 
 	if (filesystem->Write(virtualPath.GetCStr(), content, false) == false)
@@ -295,6 +307,17 @@ bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> c
 	return true;
 }
 
+const TextureAssetMetadata* AssetLibrary::GetTextureMetadata(const AssetInfo* asset) const
+{
+	assert(asset != nullptr);
+	assert(asset->type == AssetType::Texture);
+
+	if (asset == nullptr || asset->type != AssetType::Texture || asset->metadataIndex < 0)
+		return nullptr;
+
+	return &textureMetadata[asset->metadataIndex];
+}
+
 void AssetLibrary::SetAppScopeConfig(const AssetScopeConfiguration& config)
 {
 	applicationConfig = config;
@@ -390,7 +413,10 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 			document.ParseInsitu(metaContent.GetData());
 
 			if (document.GetParseError() != rapidjson::kParseErrorNone)
-				KK_LOG_ERROR("Error parsing meta file: {}", metaPathStr.c_str());
+			{
+				KK_LOG_ERROR("Error parsing meta file: {}. New file is generated if existing file is removed.",
+					metaPathStr.c_str());
+			}
 			else
 			{
 				auto hashItr = document.FindMember("hash");
@@ -425,8 +451,17 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 		else // Meta file couldn't be read
 		{
 			assetUid = Uid::Create();
+			AssetType assetTypeVal = assetType.GetValue();
 
-			CreateMetadataJson(document, calculatedHash, assetUid);
+			if (assetTypeVal == AssetType::Texture)
+			{
+				TextureAssetMetadata metadata;
+				CreateTextureMetadataJson(document, calculatedHash, assetUid, metadata);
+			}
+			else
+			{
+				CreateMetadataJson(document, calculatedHash, assetUid);
+			}
 
 			needsToWriteMetaFile = true;
 		}
@@ -457,10 +492,11 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 		auto relativeStdStr = relative.generic_u8string();
 
 		uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
+		int32_t metadataIndex = -1;
 
 		assets.PushBack(AssetInfo(
 			allocator, virtualMount, ConstStringView(relativeStdStr.c_str(), relativeStdStr.length()),
-			assetUid, calculatedHash, assetType.GetValue()));
+			assetUid, calculatedHash, metadataIndex, assetType.GetValue()));
 
 		auto uidPair = uidToIndexMap.Insert(assetUid);
 		uidPair->second = assetRefIndex;
@@ -522,11 +558,18 @@ uint64_t AssetLibrary::CalculateHash(AssetType type, ArrayView<const uint8_t> co
 	return hash;
 }
 
-AssetInfo::AssetInfo(Allocator* allocator, ConstStringView virtualMount, ConstStringView relativePath,
-	Uid uid, uint64_t contentHash, AssetType type) :
+AssetInfo::AssetInfo(
+	Allocator* allocator,
+	ConstStringView virtualMount,
+	ConstStringView relativePath,
+	Uid uid,
+	uint64_t contentHash,
+	int32_t metadataIndex,
+	AssetType type) :
 	virtualPath(allocator),
 	uid(uid),
 	contentHash(contentHash),
+	metadataIndex(metadataIndex),
 	type(type)
 {
 	virtualPath.Reserve(virtualMount.len + 1 + relativePath.len);
@@ -570,6 +613,7 @@ TEST_CASE("AssetInfo.VirtualPathParts")
 		ConstStringView("materials/deferred_geometry/fallback.material"),
 		uid,
 		12570451739923486631ull,
+		-1,
 		AssetType::Material);
 
 	CHECK(assetInfo.GetVirtualPath() == ConstStringView("engine/materials/deferred_geometry/fallback.material"));

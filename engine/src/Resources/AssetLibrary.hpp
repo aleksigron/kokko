@@ -17,13 +17,18 @@ namespace kokko
 
 class Filesystem;
 
-enum class AssetType
+enum class AssetType : uint8_t
 {
 	Level,
 	Material,
 	Model,
 	Shader,
 	Texture
+};
+
+struct TextureAssetMetadata
+{
+	bool generateMipmaps = true;
 };
 
 struct AssetScopeConfiguration
@@ -36,7 +41,7 @@ class AssetInfo
 {
 public:
 	AssetInfo(Allocator* allocator, ConstStringView virtualMount, ConstStringView relativePath,
-		Uid uid, uint64_t contentHash, AssetType type);
+		Uid uid, uint64_t contentHash, int32_t metadataIndex, AssetType type);
 
 	void UpdateFilename(ConstStringView newFilename);
 
@@ -60,6 +65,7 @@ private:
 
 	Uid uid;
 	uint64_t contentHash;
+	int32_t metadataIndex;
 	AssetType type;
 };
 
@@ -72,9 +78,12 @@ public:
 	const AssetInfo* FindAssetByUid(const Uid& uid);
 	const AssetInfo* FindAssetByVirtualPath(const String& virtualPath);
 
+	// Creating a new asset invalidates any pointers obtained from FindAssetBy*()
 	Optional<Uid> CreateAsset(AssetType type, ConstStringView pathRelativeToAssets, ArrayView<const uint8_t> content);
 	bool RenameAsset(const Uid& uid, ConstStringView newFilename);
 	bool UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> content);
+
+	const TextureAssetMetadata* GetTextureMetadata(const AssetInfo* asset) const;
 
 	void SetAppScopeConfig(const AssetScopeConfiguration& config);
 	void SetProjectScopeConfig(const AssetScopeConfiguration& config);
@@ -92,6 +101,7 @@ private:
 	HashMap<String, uint32_t> pathToIndexMap;
 
 	Array<AssetInfo> assets;
+	Array<TextureAssetMetadata> textureMetadata;
 	AssetScopeConfiguration applicationConfig;
 	AssetScopeConfiguration projectConfig;
 };
