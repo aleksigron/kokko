@@ -23,11 +23,7 @@ namespace
 {
 int MipLevelsFromDimensions(int width, int height)
 {
-	if (Math::IsPowerOfTwo(static_cast<uint64_t>(width)) == false ||
-		Math::IsPowerOfTwo(static_cast<uint64_t>(height)) == false)
-		return 1;
-
-	unsigned int smaller = static_cast<unsigned int>(width > height ? height : width);
+	uint32_t smaller = static_cast<uint32_t>(width > height ? height : width);
 
 	int levels = 1;
 	while ((smaller >>= 1) > 0)
