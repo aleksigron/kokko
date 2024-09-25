@@ -469,53 +469,38 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 		pathPair->second = assetRefIndex;
 	};
 
+	auto scanScope = [&processEntry](const fs::path& resDir, ConstStringView virtualMount)
+	{
+		std::error_code itrError;
+		auto dirItr = fs::recursive_directory_iterator(resDir, itrError);
+		if (itrError)
+		{
+			KK_LOG_ERROR("Assets in {} couldn't be processed, check the current working directory.", resDir.string().c_str());
+			return false;
+		}
+
+		for (const auto& entry : dirItr)
+			processEntry(virtualMount, resDir, entry);
+	};
+
 	if (scanEngine)
 	{
 		const fs::path engineResDir = fs::absolute(EngineConstants::EngineResourcePath);
 		const ConstStringView virtualMountEngine(EngineConstants::VirtualMountEngine);
 
-		std::error_code engineItrError;
-		auto engineItr = fs::recursive_directory_iterator(engineResDir, engineItrError);
-		if (engineItrError)
-		{
-			KK_LOG_ERROR("Engine assets couldn't be processed, please check the current working directory.");
-			return false;
-		}
-
-		for (const auto& entry : engineItr)
-			processEntry(virtualMountEngine, engineResDir, entry);
+		scanScope(engineResDir, virtualMountEngine);
 	}
 
 	if (scanApp)
 	{
 		const fs::path& assetDir = fs::absolute(applicationConfig.assetFolderPath);
 
-		std::error_code appItrError;
-		auto appItr = fs::recursive_directory_iterator(assetDir, appItrError);
-		if (appItrError)
-		{
-			KK_LOG_ERROR("Application assets couldn't be processed, please check the current working directory.");
-			return false;
-		}
-
-		for (const auto& entry : appItr)
-			processEntry(applicationConfig.virtualMountName.GetRef(), assetDir, entry);
+		scanScope(assetDir, applicationConfig.virtualMountName.GetRef());
 	}
 
 	if (scanProject)
 	{
-		const fs::path& assetDir = projectConfig.assetFolderPath;
-
-		std::error_code projectItrError;
-		auto projectItr = fs::recursive_directory_iterator(assetDir, projectItrError);
-		if (projectItrError)
-		{
-			KK_LOG_ERROR("Project assets couldn't be processed: {}", projectItrError.message().c_str());
-			return false;
-		}
-
-		for (const auto& entry : projectItr)
-			processEntry(projectConfig.virtualMountName.GetRef(), assetDir, entry);
+		scanScope(projectConfig.assetFolderPath, projectConfig.virtualMountName.GetRef());
 	}
 
 	return true;
