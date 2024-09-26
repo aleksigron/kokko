@@ -19,7 +19,7 @@ namespace kokko
 namespace
 {
 
-void CreateMetadataJson(rapidjson::Document& document, uint64_t hash, const kokko::Uid& uid)
+void CreateBaseMetadataJson(rapidjson::Document& document, uint64_t hash, const kokko::Uid& uid)
 {
 	char uidStrBuf[kokko::Uid::StringLength];
 	uid.WriteTo(uidStrBuf);
@@ -35,14 +35,27 @@ void CreateMetadataJson(rapidjson::Document& document, uint64_t hash, const kokk
 }
 
 void CreateTextureMetadataJson(rapidjson::Document& document, uint64_t hash, const kokko::Uid& uid,
-	const TextureAssetMetadata& texture)
+	const TextureAssetMetadata& metadata)
 {
-	CreateMetadataJson(document, hash, uid);
+	CreateBaseMetadataJson(document, hash, uid);
 
 	rapidjson::Document::AllocatorType& alloc = document.GetAllocator();
 
-	rapidjson::Value genMipsValue(texture.generateMipmaps);
+	rapidjson::Value genMipsValue(metadata.generateMipmaps);
 	document.AddMember("generate_mipmaps", genMipsValue, alloc);
+}
+
+int32_t LoadTextureMetadata(const rapidjson::Document& document, Array<TextureAssetMetadata>& metadataArray)
+{
+	TextureAssetMetadata metadata;
+
+	auto genMipmapsItr = document.FindMember("generate_mipmaps");
+	if (genMipmapsItr != document.MemberEnd() && genMipmapsItr->value.IsBool())
+		metadata.generateMipmaps = genMipmapsItr->value.GetBool();
+
+	int32_t index = static_cast<int32_t>(metadataArray.GetCount());
+	metadataArray.PushBack(metadata);
+	return index;
 }
 
 bool WriteDocumentToFile(
@@ -183,7 +196,10 @@ Optional<Uid> AssetLibrary::CreateAsset(
 	}
 
 	rapidjson::Document document;
-	CreateMetadataJson(document, calculatedHash, assetUid);
+	if (type == AssetType::Texture)
+		CreateTextureMetadataJson(document, calculatedHash, assetUid, TextureAssetMetadata());
+	else
+		CreateBaseMetadataJson(document, calculatedHash, assetUid);
 
 	String metaPath = virtualPath + EngineConstants::MetadataExtension;
 	rapidjson::StringBuffer jsonStringBuffer;
@@ -283,9 +299,19 @@ bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> c
 
 		// Update metadata file
 		rapidjson::Document document;
-		CreateMetadataJson(document, calculatedHash, asset.uid);
+		if (asset.type == AssetType::Texture)
+		{
+			TextureAssetMetadata metadata;
 
-		String assetVirtualPath = asset.GetVirtualPath();
+			if (asset.metadataIndex >= 0)
+				metadata = textureMetadata[asset.metadataIndex];
+
+			CreateTextureMetadataJson(document, calculatedHash, asset.uid, metadata);
+		}
+		else
+			CreateBaseMetadataJson(document, calculatedHash, asset.uid);
+
+		const String& assetVirtualPath = asset.GetVirtualPath();
 		String metaVirtualPath = assetVirtualPath + EngineConstants::MetadataExtension;
 
 		rapidjson::StringBuffer jsonStringBuffer;
@@ -316,6 +342,41 @@ const TextureAssetMetadata* AssetLibrary::GetTextureMetadata(const AssetInfo* as
 		return nullptr;
 
 	return &textureMetadata[asset->metadataIndex];
+}
+
+bool AssetLibrary::UpdateTextureMetadata(const Uid& uid, const TextureAssetMetadata& metadata)
+{
+	auto pair = uidToIndexMap.Lookup(uid);
+	if (pair == nullptr)
+		return false;
+
+	AssetInfo& asset = assets[pair->second];
+
+	assert(asset.type == AssetType::Texture);
+
+	if (asset.metadataIndex < 0)
+	{
+		// Create metadata
+		asset.metadataIndex = static_cast<int32_t>(textureMetadata.GetCount());
+		textureMetadata.PushBack(metadata);
+	}
+	else
+	{
+		// Update existing metadata
+		textureMetadata[asset.metadataIndex] = metadata;
+	}
+
+	rapidjson::Document document;
+	CreateTextureMetadataJson(document, asset.contentHash, asset.uid, metadata);
+
+	String metaVirtualPath = asset.GetVirtualPath() + EngineConstants::MetadataExtension;
+
+	rapidjson::StringBuffer jsonStringBuffer;
+	if (WriteDocumentToFile(filesystem, metaVirtualPath.GetCStr(), document, jsonStringBuffer) == false)
+	{
+		KK_LOG_ERROR("Couldn't write asset meta file: {}", metaVirtualPath.GetCStr());
+		return false;
+	}
 }
 
 void AssetLibrary::SetAppScopeConfig(const AssetScopeConfiguration& config)
@@ -407,6 +468,7 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 		metaPathStr = metaPath.u8string();
 
 		bool needsToWriteMetaFile = false;
+		AssetType assetTypeVal = assetType.GetValue();
 
 		if (filesystem->ReadText(metaPathStr.c_str(), metaContent))
 		{
@@ -451,7 +513,6 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 		else // Meta file couldn't be read
 		{
 			assetUid = Uid::Create();
-			AssetType assetTypeVal = assetType.GetValue();
 
 			if (assetTypeVal == AssetType::Texture)
 			{
@@ -460,7 +521,7 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 			}
 			else
 			{
-				CreateMetadataJson(document, calculatedHash, assetUid);
+				CreateBaseMetadataJson(document, calculatedHash, assetUid);
 			}
 
 			needsToWriteMetaFile = true;
@@ -485,7 +546,8 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 
 		if (err)
 		{
-			KK_LOG_ERROR("Asset path could not be made relative, error: {}", err.message().c_str());
+			KK_LOG_ERROR("Asset path {} could not be made relative, error: {}", currentPath.u8string().c_str(),
+				err.message().c_str());
 			return;
 		}
 
@@ -493,6 +555,8 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 
 		uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
 		int32_t metadataIndex = -1;
+		if (assetTypeVal == AssetType::Texture)
+			metadataIndex = LoadTextureMetadata(document, textureMetadata);
 
 		assets.PushBack(AssetInfo(
 			allocator, virtualMount, ConstStringView(relativeStdStr.c_str(), relativeStdStr.length()),

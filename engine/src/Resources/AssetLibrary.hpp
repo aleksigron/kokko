@@ -78,12 +78,13 @@ public:
 	const AssetInfo* FindAssetByUid(const Uid& uid);
 	const AssetInfo* FindAssetByVirtualPath(const String& virtualPath);
 
-	// Creating a new asset invalidates any pointers obtained from FindAssetBy*()
+	// Creating a new asset invalidates any pointers obtained from FindAsset*() or Get*Metadata()
 	Optional<Uid> CreateAsset(AssetType type, ConstStringView pathRelativeToAssets, ArrayView<const uint8_t> content);
 	bool RenameAsset(const Uid& uid, ConstStringView newFilename);
 	bool UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> content);
 
 	const TextureAssetMetadata* GetTextureMetadata(const AssetInfo* asset) const;
+	bool UpdateTextureMetadata(const Uid& uid, const TextureAssetMetadata& metadata);
 
 	void SetAppScopeConfig(const AssetScopeConfiguration& config);
 	void SetProjectScopeConfig(const AssetScopeConfiguration& config);
