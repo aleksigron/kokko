@@ -400,6 +400,17 @@ void AssetView::DrawTexture(EditorContext& context, const AssetInfo* asset)
 	ImVec2 uv1(1.0f, 0.0f);
 
 	ImGui::Image(texId, size, uv0, uv1);
+
+	const TextureAssetMetadata* metadataPtr = context.assetLibrary->GetTextureMetadata(asset);
+	if (metadataPtr == nullptr)
+		return;
+
+	TextureAssetMetadata metadata = *metadataPtr;
+
+	if (ImGui::Checkbox("Generate mipmaps", &metadata.generateMipmaps))
+	{
+		context.assetLibrary->UpdateTextureMetadata(asset->GetUid(), metadata);
+	}
 }
 
 }
