@@ -10,26 +10,14 @@
 #include "Core/StringView.hpp"
 #include "Core/Uid.hpp"
 
+#include "Resources/AssetType.hpp"
+
 class Allocator;
 
 namespace kokko
 {
 
 class Filesystem;
-
-enum class AssetType : uint8_t
-{
-	Level,
-	Material,
-	Model,
-	Shader,
-	Texture
-};
-
-struct TextureAssetMetadata
-{
-	bool generateMipmaps = true;
-};
 
 struct AssetScopeConfiguration
 {

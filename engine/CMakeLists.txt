@@ -268,6 +268,7 @@ set (KOKKO_SOURCES
 	src/Resources/AssetLibrary.cpp
 	src/Resources/AssetLibrary.hpp
 	src/Resources/AssetLoader.hpp
+	src/Resources/AssetType.hpp
 	src/Resources/BitmapFont.cpp
 	src/Resources/BitmapFont.hpp
 	src/Resources/ImageData.cpp

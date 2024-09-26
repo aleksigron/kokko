@@ -94,7 +94,7 @@ public:
 		RenderTextureTarget target, RenderTextureSizedFormat format, int levels, Vec2i size);
 
 private:
-	bool LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool preferLinear);
+	bool LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool genMipmaps, bool preferLinear);
 };
 
 } // namespace kokko

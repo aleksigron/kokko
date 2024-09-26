@@ -84,6 +84,7 @@ bool IsTextAsset(AssetType type)
 	case AssetType::Material:
 	case AssetType::Shader:
 		return true;
+	case AssetType::Unknown:
 	case AssetType::Model:
 	case AssetType::Texture:
 		return false;
@@ -377,6 +378,8 @@ bool AssetLibrary::UpdateTextureMetadata(const Uid& uid, const TextureAssetMetad
 		KK_LOG_ERROR("Couldn't write asset meta file: {}", metaVirtualPath.GetCStr());
 		return false;
 	}
+
+	return true;
 }
 
 void AssetLibrary::SetAppScopeConfig(const AssetScopeConfiguration& config)
@@ -430,7 +433,7 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 
 		// TODO: Make extension detection case-independent
 
-		Optional<AssetType> assetType;
+		AssetType assetType = AssetType::Unknown;
 		if (currentExt == levelExt)
 			assetType = AssetType::Level;
 		else if (currentExt == modelGltfExt ||
@@ -447,19 +450,20 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 			currentExt == textureHdrExt)
 			assetType = AssetType::Texture;
 
-		if (assetType.HasValue() == false)
+		if (assetType == AssetType::Unknown)
 		{
 			KK_LOG_WARN("File didn't match known asset types: {}", assetPathStr.c_str());
 			return;
 		}
 
+		fileContent.Clear();
 		if (filesystem->ReadBinary(assetPathStr.c_str(), fileContent) == false)
 		{
 			KK_LOG_ERROR("Couldn't read asset file: {}", assetPathStr.c_str());
 			return;
 		}
 
-		uint64_t calculatedHash = CalculateHash(assetType.GetValue(), fileContent.GetView());
+		uint64_t calculatedHash = CalculateHash(assetType, fileContent.GetView());
 		Uid assetUid;
 
 		// Open meta file
@@ -468,8 +472,8 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 		metaPathStr = metaPath.u8string();
 
 		bool needsToWriteMetaFile = false;
-		AssetType assetTypeVal = assetType.GetValue();
 
+		metaContent.Clear();
 		if (filesystem->ReadText(metaPathStr.c_str(), metaContent))
 		{
 			document.ParseInsitu(metaContent.GetData());
@@ -514,7 +518,7 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 		{
 			assetUid = Uid::Create();
 
-			if (assetTypeVal == AssetType::Texture)
+			if (assetType == AssetType::Texture)
 			{
 				TextureAssetMetadata metadata;
 				CreateTextureMetadataJson(document, calculatedHash, assetUid, metadata);
@@ -555,12 +559,12 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 
 		uint32_t assetRefIndex = static_cast<uint32_t>(assets.GetCount());
 		int32_t metadataIndex = -1;
-		if (assetTypeVal == AssetType::Texture)
+		if (assetType == AssetType::Texture)
 			metadataIndex = LoadTextureMetadata(document, textureMetadata);
 
 		assets.PushBack(AssetInfo(
 			allocator, virtualMount, ConstStringView(relativeStdStr.c_str(), relativeStdStr.length()),
-			assetUid, calculatedHash, metadataIndex, assetType.GetValue()));
+			assetUid, calculatedHash, metadataIndex, assetType));
 
 		auto uidPair = uidToIndexMap.Insert(assetUid);
 		uidPair->second = assetRefIndex;
@@ -581,6 +585,8 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 
 		for (const auto& entry : dirItr)
 			processEntry(virtualMount, resDir, entry);
+
+		return true;
 	};
 
 	if (scanEngine)
@@ -588,19 +594,22 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 		const fs::path engineResDir = fs::absolute(EngineConstants::EngineResourcePath);
 		const ConstStringView virtualMountEngine(EngineConstants::VirtualMountEngine);
 
-		scanScope(engineResDir, virtualMountEngine);
+		if (scanScope(engineResDir, virtualMountEngine) == false)
+			return false;
 	}
 
 	if (scanApp)
 	{
 		const fs::path& assetDir = fs::absolute(applicationConfig.assetFolderPath);
 
-		scanScope(assetDir, applicationConfig.virtualMountName.GetRef());
+		if (scanScope(assetDir, applicationConfig.virtualMountName.GetRef()) == false)
+			return false;
 	}
 
 	if (scanProject)
 	{
-		scanScope(projectConfig.assetFolderPath, projectConfig.virtualMountName.GetRef());
+		if (scanScope(projectConfig.assetFolderPath, projectConfig.virtualMountName.GetRef()) == false)
+			return false;
 	}
 
 	return true;

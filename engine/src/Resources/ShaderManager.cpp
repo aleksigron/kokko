@@ -147,8 +147,8 @@ ShaderId ShaderManager::FindShaderByUid(const kokko::Uid& uid)
 		this->Reallocate(data.count + 1);
 
 	Array<uint8_t> file(allocator);
-
-	if (assetLoader->LoadAsset(uid, file))
+	AssetLoader::LoadResult loadResult = assetLoader->LoadAsset(uid, file);
+	if (loadResult.success)
 	{
 		auto virtualPathResult = assetLoader->GetAssetVirtualPath(uid);
 		const kokko::String& virtualPath = virtualPathResult.GetValue();
