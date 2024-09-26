@@ -260,13 +260,20 @@ TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid, bool preferLin
 	if (data.count == data.allocated)
 		this->Reallocate(data.count + 1);
 
-	Array<uint8_t> file(allocator);
-
-	if (assetLoader->LoadAsset(uid, file))
+	Array<uint8_t> buffer(allocator);
+	AssetLoader::LoadResult loadResult = assetLoader->LoadAsset(uid, buffer);
+	if (loadResult.success)
 	{
+		assert(loadResult.assetType == AssetType::Texture);
+
+		TextureAssetMetadata metadata;
+		if (loadResult.metadataSize == sizeof(metadata))
+			memcpy(&metadata, buffer.GetData(), loadResult.metadataSize);
+
 		TextureId id = CreateTexture();
 
-		if (LoadWithStbImage(id, file.GetView(), preferLinear))
+		auto assetView = buffer.GetSubView(loadResult.assetStart, loadResult.assetStart + loadResult.assetSize);
+		if (LoadWithStbImage(id, assetView, metadata.generateMipmaps, preferLinear))
 		{
 			data.texture[id.i].uid = uid;
 
@@ -301,7 +308,7 @@ TextureId TextureManager::FindTextureByPath(kokko::ConstStringView path, bool pr
 	return TextureId::Null;
 }
 
-bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool preferLinear)
+bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool genMipmaps, bool preferLinear)
 {
 	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrComponents;
@@ -358,7 +365,7 @@ bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> byt
 		{
 			KOKKO_PROFILE_SCOPE("Create and upload texture");
 
-			int mipLevels = MipLevelsFromDimensions(width, height);
+			int mipLevels = genMipmaps ? MipLevelsFromDimensions(width, height) : 1;
 
 			renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &textureObjectId);
 			renderDevice->SetTextureStorage2D(textureObjectId, mipLevels, sizedFormat, width, height);

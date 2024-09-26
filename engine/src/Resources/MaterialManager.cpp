@@ -147,7 +147,8 @@ MaterialId MaterialManager::FindMaterialByUid(const kokko::Uid& uid)
 
 	Array<uint8_t> file(allocator);
 
-	if (assetLoader->LoadAsset(uid, file))
+	AssetLoader::LoadResult loadResult = assetLoader->LoadAsset(uid, file);
+	if (loadResult.success)
 	{
 		MaterialId id = CreateMaterial();
 

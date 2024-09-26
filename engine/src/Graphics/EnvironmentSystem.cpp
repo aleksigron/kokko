@@ -346,9 +346,9 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 			float* equirectData;
 
 			{
-				Array<uint8_t> fileBytes(allocator);
-
-				if (assetLoader->LoadAsset(env.sourceTextureUid.GetValue(), fileBytes) == false)
+				Array<uint8_t> buffer(allocator);
+				AssetLoader::LoadResult loadResult = assetLoader->LoadAsset(env.sourceTextureUid.GetValue(), buffer);
+				if (loadResult.success == false)
 				{
 					KK_LOG_ERROR("Couldn't read source texture for environment map");
 					continue;
@@ -357,9 +357,9 @@ void EnvironmentSystem::Upload(render::CommandEncoder* encoder)
 				{
 					KOKKO_PROFILE_SCOPE("stbi_loadf_from_memory()");
 
-					uint8_t* fileBytesPtr = fileBytes.GetData();
-					int length = static_cast<int>(fileBytes.GetCount());
-					equirectData = stbi_loadf_from_memory(fileBytesPtr, length, &equirectWidth, &equirectHeight, &nrComponents, 0);
+					uint8_t* bytesPtr = buffer.GetData() + loadResult.assetStart;
+					int length = static_cast<int>(loadResult.assetSize);
+					equirectData = stbi_loadf_from_memory(bytesPtr, length, &equirectWidth, &equirectHeight, &nrComponents, 0);
 				}
 			}
 

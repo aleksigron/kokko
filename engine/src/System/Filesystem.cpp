@@ -92,9 +92,10 @@ bool Filesystem::ReadBinaryInternal(const char* path, Array<uint8_t>& output)
 		std::rewind(fileHandle);
 
 		// Get the file contents
-		output.Resize(fileLength);
-		size_t read = std::fread(output.GetData(), 1, fileLength, fileHandle);
-		output.Resize(read);
+		size_t origOutputLen = output.GetCount();
+		output.Resize(origOutputLen + fileLength);
+		size_t read = std::fread(output.GetData() + origOutputLen, 1, fileLength, fileHandle);
+		output.Resize(origOutputLen + read);
 
 		std::fclose(fileHandle);
 
@@ -118,10 +119,10 @@ bool Filesystem::ReadTextInternal(const char* path, kokko::String& output)
 		std::rewind(fileHandle);
 
 		// Get the file contents
-		output.Resize(fileLength);
-
-		size_t read = std::fread(output.GetData(), 1, fileLength, fileHandle);
-		output.Resize(read);
+		size_t origOutputLen = output.GetLength();
+		output.Resize(origOutputLen + fileLength);
+		size_t read = std::fread(output.GetData() + origOutputLen, 1, fileLength, fileHandle);
+		output.Resize(origOutputLen + read);
 
 		std::fclose(fileHandle);
 

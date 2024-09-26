@@ -6,6 +6,8 @@
 #include "Core/Optional.hpp"
 #include "Core/StringView.hpp"
 
+#include "Resources/AssetType.hpp"
+
 namespace kokko
 {
 
@@ -15,7 +17,16 @@ struct Uid;
 class AssetLoader
 {
 public:
-	virtual bool LoadAsset(const Uid& uid, Array<uint8_t>& output) = 0;
+	struct LoadResult
+	{
+		bool success = false;
+		AssetType assetType = AssetType::Unknown;
+		uint32_t metadataSize = 0;
+		uint32_t assetStart = 0;
+		uint32_t assetSize = 0;
+	};
+
+	virtual LoadResult LoadAsset(const Uid& uid, Array<uint8_t>& output) = 0;
 	virtual Optional<Uid> GetAssetUidByVirtualPath(const ConstStringView& path) = 0;
 	virtual Optional<String> GetAssetVirtualPath(const Uid& uid) = 0;
 };
