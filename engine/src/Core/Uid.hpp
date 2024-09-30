@@ -31,6 +31,16 @@ struct Uid
 		return operator==(other) == false;
 	}
 
+	bool operator<(const Uid& other) const
+	{
+		if (raw[0] < other.raw[0])
+			return true;
+		if (raw[0] > other.raw[0])
+			return false;
+
+		return raw[1] < other.raw[1];
+	}
+
 	void WriteTo(ArrayView<char> out) const;
 };
 

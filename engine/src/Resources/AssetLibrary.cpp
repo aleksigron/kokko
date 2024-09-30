@@ -147,7 +147,8 @@ AssetLibrary::AssetLibrary(Allocator* allocator, Filesystem* filesystem) :
 	uidToIndexMap(allocator),
 	pathToIndexMap(allocator),
 	assets(allocator),
-	textureMetadata(allocator)
+	textureMetadata(allocator),
+	updatedAssets(allocator)
 {
 }
 
@@ -331,6 +332,8 @@ bool AssetLibrary::UpdateAssetContent(const Uid& uid, ArrayView<const uint8_t> c
 		}
 	}
 
+	updatedAssets.InsertUnique(uid);
+
 	return true;
 }
 
@@ -378,6 +381,8 @@ bool AssetLibrary::UpdateTextureMetadata(const Uid& uid, const TextureAssetMetad
 		KK_LOG_ERROR("Couldn't write asset meta file: {}", metaVirtualPath.GetCStr());
 		return false;
 	}
+
+	updatedAssets.InsertUnique(uid);
 
 	return true;
 }
@@ -613,6 +618,38 @@ bool AssetLibrary::ScanAssets(bool scanEngine, bool scanApp, bool scanProject)
 	}
 
 	return true;
+}
+
+bool AssetLibrary::GetNextUpdatedAssetUid(AssetType typeFilter, Uid& uid)
+{
+	size_t index = 0;
+	while (index < updatedAssets.GetCount())
+	{
+		if (auto pair = uidToIndexMap.Lookup(updatedAssets[index]))
+		{
+			const AssetInfo& asset = assets[pair->second];
+			if (asset.type == typeFilter)
+			{
+				uid = asset.uid;
+				updatedAssets.Remove(index);
+				return true;
+			}
+		}
+		else
+		{
+			char uidStrBuf[Uid::StringLength + 1];
+			updatedAssets[index].WriteTo(uidStrBuf);
+			uidStrBuf[Uid::StringLength] = '\0';
+
+			KK_LOG_WARN("Updated asset Uid {} not found in assets, removing.", uidStrBuf);
+			updatedAssets.Remove(index);
+			continue;
+		}
+
+		index += 1;
+	}
+
+	return false;
 }
 
 uint64_t AssetLibrary::CalculateHash(AssetType type, ArrayView<const uint8_t> content)

@@ -14,18 +14,32 @@ TestRunnerAssetLoader::TestRunnerAssetLoader(Allocator* allocator, Filesystem* f
 {
 }
 
-bool TestRunnerAssetLoader::LoadAsset(const Uid& uid, Array<uint8_t>& output)
+AssetLoader::LoadResult TestRunnerAssetLoader::LoadAsset(const Uid& uid, Array<uint8_t>& output)
 {
 	if (auto asset = assetLibrary->FindAssetByUid(uid))
 	{
-		auto pathStr = asset->GetVirtualPath();
+		LoadResult result;
+		result.assetType = asset->GetType();
+		if (result.assetType == AssetType::Texture)
+		{
+			const TextureAssetMetadata* metadata = assetLibrary->GetTextureMetadata(asset);
+			result.metadataSize = static_cast<uint32_t>(sizeof(TextureAssetMetadata));
+			result.assetStart = Math::RoundUpToMultiple(result.metadataSize, 16u);
+
+			output.Resize(result.assetStart);
+			memcpy(output.GetData(), metadata, result.metadataSize);
+		}
+
+		const String& pathStr = asset->GetVirtualPath();
 		if (filesystem->ReadBinary(pathStr.GetCStr(), output))
 		{
-			return true;
+			result.success = true;
+			result.assetSize = output.GetCount() - result.assetStart;
+			return result;
 		}
 	}
 
-	return false;
+	return LoadResult();
 }
 
 Optional<Uid> TestRunnerAssetLoader::GetAssetUidByVirtualPath(const ConstStringView& path)
