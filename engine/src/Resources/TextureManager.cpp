@@ -83,7 +83,8 @@ Optional<RenderTextureSizedFormat> SizedFormatFromBaseFormatAndType(
 	KK_LOG_ERROR("Couldn't find sized texture format");
 	return Optional<RenderTextureSizedFormat>();
 }
-}
+
+} // namespace
 
 TextureId TextureId::Null = TextureId{ 0 };
 
@@ -238,9 +239,9 @@ void TextureManager::RemoveTexture(TextureId id)
 
 	if (data.texture[id.i].textureObjectId != 0)
 	{
-		auto objectId = data.texture[id.i].textureObjectId;
+		render::TextureId objectId = data.texture[id.i].textureObjectId;
 		renderDevice->DestroyTextures(1, &objectId);
-		data.texture[id.i].textureObjectId = kokko::render::TextureId();
+		data.texture[id.i].textureObjectId = render::TextureId();
 	}
 
 	--data.count;
@@ -533,6 +534,50 @@ void TextureManager::AllocateTextureStorage(TextureId id, RenderTextureTarget ta
 	else
 	{
 		KK_LOG_ERROR("Can't allocate texture storage again");
+	}
+}
+
+void TextureManager::Update()
+{
+	Array<uint8_t> buffer(allocator);
+
+	Uid uid;
+	while (assetLoader->GetNextUpdatedAssetUid(AssetType::Texture, uid))
+	{
+		auto* pair = uidMap.Lookup(uid);
+		if (pair != nullptr)
+		{
+			TextureId id{ pair->second };
+
+			buffer.Clear();
+			AssetLoader::LoadResult loadResult = assetLoader->LoadAsset(uid, buffer);
+			if (loadResult.success)
+			{
+				if (data.texture[id.i].textureObjectId != render::TextureId::Null)
+				{
+					renderDevice->DestroyTextures(1, &data.texture[id.i].textureObjectId);
+					data.texture[id.i].textureObjectId = render::TextureId::Null;
+				}
+
+				assert(loadResult.assetType == AssetType::Texture);
+
+				TextureAssetMetadata metadata;
+				if (loadResult.metadataSize == sizeof(metadata))
+					memcpy(&metadata, buffer.GetData(), loadResult.metadataSize);
+
+				bool preferLinear = false;
+				auto assetView = buffer.GetSubView(loadResult.assetStart, loadResult.assetStart + loadResult.assetSize);
+				if (LoadWithStbImage(id, assetView, metadata.generateMipmaps, preferLinear) == false)
+				{
+					KK_LOG_ERROR("Texture failed to update");
+				}
+			}
+		}
+		else
+		{
+			FindTextureByUid(uid);
+		}
+
 	}
 }
 

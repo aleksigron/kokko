@@ -62,5 +62,10 @@ Optional<String> EditorAssetLoader::GetAssetVirtualPath(const Uid& uid)
 	return Optional<String>();
 }
 
+bool EditorAssetLoader::GetNextUpdatedAssetUid(AssetType typeFilter, Uid& uid)
+{
+	return assetLibrary->GetNextUpdatedAssetUid(typeFilter, uid);
 }
-}
+
+} // namespace editor
+} // namespace kokko

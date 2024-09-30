@@ -38,8 +38,8 @@ class TextureManager
 {
 private:
 	Allocator* allocator;
-	kokko::AssetLoader* assetLoader;
-	kokko::render::Device* renderDevice;
+	AssetLoader* assetLoader;
+	render::Device* renderDevice;
 
 	struct InstanceData
 	{
@@ -53,7 +53,7 @@ private:
 	data;
 
 	unsigned int freeListFirst;
-	HashMap<kokko::Uid, TextureId> uidMap;
+	HashMap<Uid, TextureId> uidMap;
 
 	enum ConstantTextures
 	{
@@ -69,7 +69,7 @@ private:
 	void Reallocate(unsigned int required);
 
 public:
-	TextureManager(Allocator* allocator, kokko::AssetLoader* assetLoader, kokko::render::Device* renderDevice);
+	TextureManager(Allocator* allocator, AssetLoader* assetLoader, render::Device* renderDevice);
 	~TextureManager();
 
 	void Initialize();
@@ -77,9 +77,8 @@ public:
 	TextureId CreateTexture();
 	void RemoveTexture(TextureId id);
 
-	// TODO: Create a way for asset loader or some other mechanism to provide the metadata
-	TextureId FindTextureByUid(const kokko::Uid& uid, bool preferLinear = false);
-	TextureId FindTextureByPath(kokko::ConstStringView path, bool preferLinear = false);
+	TextureId FindTextureByUid(const Uid& uid, bool preferLinear = false);
+	TextureId FindTextureByPath(ConstStringView path, bool preferLinear = false);
 
 	TextureId GetId_White2D() const { return constantTextures[ConstTex_White2D]; }
 	TextureId GetId_Black2D() const { return constantTextures[ConstTex_Black2D]; }
@@ -92,6 +91,8 @@ public:
 
 	void AllocateTextureStorage(TextureId id,
 		RenderTextureTarget target, RenderTextureSizedFormat format, int levels, Vec2i size);
+
+	void Update();
 
 private:
 	bool LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool genMipmaps, bool preferLinear);

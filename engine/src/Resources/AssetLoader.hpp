@@ -29,6 +29,8 @@ public:
 	virtual LoadResult LoadAsset(const Uid& uid, Array<uint8_t>& output) = 0;
 	virtual Optional<Uid> GetAssetUidByVirtualPath(const ConstStringView& path) = 0;
 	virtual Optional<String> GetAssetVirtualPath(const Uid& uid) = 0;
+
+	virtual bool GetNextUpdatedAssetUid(AssetType typeFilter, Uid& uid) { return false; }
 };
 
 }

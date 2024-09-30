@@ -6,6 +6,7 @@
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
 #include "Core/Optional.hpp"
+#include "Core/SortedArray.hpp"
 #include "Core/String.hpp"
 #include "Core/StringView.hpp"
 #include "Core/Uid.hpp"
@@ -79,6 +80,8 @@ public:
 
 	bool ScanAssets(bool scanEngine, bool scanApp, bool scanProject);
 
+	bool GetNextUpdatedAssetUid(AssetType typeFilter, Uid& uid);
+
 private:
 	uint64_t CalculateHash(AssetType type, ArrayView<const uint8_t> content);
 
@@ -91,6 +94,7 @@ private:
 
 	Array<AssetInfo> assets;
 	Array<TextureAssetMetadata> textureMetadata;
+	SortedArray<Uid> updatedAssets;
 	AssetScopeConfiguration applicationConfig;
 	AssetScopeConfiguration projectConfig;
 };

@@ -24,6 +24,8 @@ public:
 	virtual Optional<Uid> GetAssetUidByVirtualPath(const ConstStringView& path) override;
 	virtual Optional<String> GetAssetVirtualPath(const Uid& uid) override;
 
+	virtual bool GetNextUpdatedAssetUid(AssetType typeFilter, Uid& uid) override;
+
 private:
 	Filesystem* filesystem;
 	AssetLibrary* assetLibrary;
