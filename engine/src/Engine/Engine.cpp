@@ -135,11 +135,13 @@ void Engine::StartFrame()
 		Instrumentation::Get().EndSession();
 }
 
-void Engine::UpdateWorld()
+void Engine::Update()
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	time->Update();
+	textureManager.instance->Update();
+
 	world.instance->Update(windowManager.instance->GetWindow()->GetInputManager());
 }
 

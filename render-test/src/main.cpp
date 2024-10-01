@@ -183,7 +183,7 @@ int main(int argc, char** argv)
 				KOKKO_PROFILE_SCOPE("Run render test");
 
 				engine.StartFrame();
-				engine.UpdateWorld();
+				engine.Update();
 				engine.Render(Optional<CameraParameters>(), framebuffer);
 				engine.EndFrame();
 			}
