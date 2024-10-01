@@ -247,7 +247,7 @@ void TextureManager::RemoveTexture(TextureId id)
 	--data.count;
 }
 
-TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid, bool preferLinear)
+TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -274,7 +274,7 @@ TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid, bool preferLin
 		TextureId id = CreateTexture();
 
 		auto assetView = buffer.GetSubView(loadResult.assetStart, loadResult.assetStart + loadResult.assetSize);
-		if (LoadWithStbImage(id, assetView, metadata.generateMipmaps, preferLinear))
+		if (LoadWithStbImage(id, assetView, metadata))
 		{
 			data.texture[id.i].uid = uid;
 
@@ -296,20 +296,20 @@ TextureId TextureManager::FindTextureByUid(const kokko::Uid& uid, bool preferLin
 	return TextureId::Null;
 }
 
-TextureId TextureManager::FindTextureByPath(kokko::ConstStringView path, bool preferLinear)
+TextureId TextureManager::FindTextureByPath(kokko::ConstStringView path)
 {
 	KOKKO_PROFILE_FUNCTION();
 
 	auto uidResult = assetLoader->GetAssetUidByVirtualPath(path);
 	if (uidResult.HasValue())
 	{
-		return FindTextureByUid(uidResult.GetValue(), preferLinear);
+		return FindTextureByUid(uidResult.GetValue());
 	}
 
 	return TextureId::Null;
 }
 
-bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool genMipmaps, bool preferLinear)
+bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, TextureAssetMetadata metadata)
 {
 	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrComponents;
@@ -347,13 +347,13 @@ bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> byt
 
 		case 3:
 			formatFound = true;
-			sizedFormat = preferLinear ? RenderTextureSizedFormat::RGB8 : RenderTextureSizedFormat::SRGB8;
+			sizedFormat = metadata.preferLinear ? RenderTextureSizedFormat::RGB8 : RenderTextureSizedFormat::SRGB8;
 			baseFormat = RenderTextureBaseFormat::RGB;
 			break;
 
 		case 4:
 			formatFound = true;
-			sizedFormat = preferLinear ? RenderTextureSizedFormat::RGBA8 : RenderTextureSizedFormat::SRGB8_A8;
+			sizedFormat = metadata.preferLinear ? RenderTextureSizedFormat::RGBA8 : RenderTextureSizedFormat::SRGB8_A8;
 			baseFormat = RenderTextureBaseFormat::RGBA;
 			break;
 
@@ -366,7 +366,7 @@ bool TextureManager::LoadWithStbImage(TextureId id, ArrayView<const uint8_t> byt
 		{
 			KOKKO_PROFILE_SCOPE("Create and upload texture");
 
-			int mipLevels = genMipmaps ? MipLevelsFromDimensions(width, height) : 1;
+			int mipLevels = metadata.generateMipmaps ? MipLevelsFromDimensions(width, height) : 1;
 
 			renderDevice->CreateTextures(RenderTextureTarget::Texture2d, 1, &textureObjectId);
 			renderDevice->SetTextureStorage2D(textureObjectId, mipLevels, sizedFormat, width, height);
@@ -567,7 +567,7 @@ void TextureManager::Update()
 
 				bool preferLinear = false;
 				auto assetView = buffer.GetSubView(loadResult.assetStart, loadResult.assetStart + loadResult.assetSize);
-				if (LoadWithStbImage(id, assetView, metadata.generateMipmaps, preferLinear) == false)
+				if (LoadWithStbImage(id, assetView, metadata) == false)
 				{
 					KK_LOG_ERROR("Texture failed to update");
 				}

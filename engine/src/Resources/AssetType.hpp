@@ -18,6 +18,7 @@ enum class AssetType : uint8_t
 struct TextureAssetMetadata
 {
 	bool generateMipmaps = true;
+	bool preferLinear = false;
 };
 
 }
