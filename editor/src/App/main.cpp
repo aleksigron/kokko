@@ -138,7 +138,7 @@ int main(int argc, char** argv)
 			engine.StartFrame();
 			editor.StartFrame();
 
-			engine.UpdateWorld();
+			engine.Update();
 
 			// Because editor can change the state of the world and systems,
 			// let's run those updates at the same part of the frame as other updates

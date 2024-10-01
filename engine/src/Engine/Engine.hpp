@@ -71,7 +71,7 @@ public:
 	bool Initialize(const kokko::WindowSettings& windowSettings);
 
 	void StartFrame();
-	void UpdateWorld();
+	void Update();
 	void Render(const Optional<CameraParameters>& editorCamera, const kokko::render::Framebuffer& framebuffer);
 	void EndFrame();
 
