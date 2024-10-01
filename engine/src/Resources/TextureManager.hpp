@@ -20,6 +20,7 @@ struct ImageData;
 namespace kokko
 {
 class AssetLoader;
+struct TextureAssetMetadata;
 
 namespace render
 {
@@ -77,8 +78,8 @@ public:
 	TextureId CreateTexture();
 	void RemoveTexture(TextureId id);
 
-	TextureId FindTextureByUid(const Uid& uid, bool preferLinear = false);
-	TextureId FindTextureByPath(ConstStringView path, bool preferLinear = false);
+	TextureId FindTextureByUid(const Uid& uid);
+	TextureId FindTextureByPath(ConstStringView path);
 
 	TextureId GetId_White2D() const { return constantTextures[ConstTex_White2D]; }
 	TextureId GetId_Black2D() const { return constantTextures[ConstTex_Black2D]; }
@@ -95,7 +96,7 @@ public:
 	void Update();
 
 private:
-	bool LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, bool genMipmaps, bool preferLinear);
+	bool LoadWithStbImage(TextureId id, ArrayView<const uint8_t> bytes, TextureAssetMetadata metadata);
 };
 
 } // namespace kokko

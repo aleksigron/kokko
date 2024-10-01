@@ -133,7 +133,7 @@ bool MaterialSerializer::DeserializeMaterial(MaterialId id, ConstStringView conf
 			auto uidParseResult = Uid::FromString(uidStrView);
 
 			if (uidParseResult.HasValue())
-				textureId = textureManager->FindTextureByUid(uidParseResult.GetValue(), isNormalTexture);
+				textureId = textureManager->FindTextureByUid(uidParseResult.GetValue());
 		}
 
 		if (textureId == TextureId::Null)

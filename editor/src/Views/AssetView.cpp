@@ -407,11 +407,16 @@ void AssetView::DrawTexture(EditorContext& context, const AssetInfo* asset)
 
 	TextureAssetMetadata metadata = *metadataPtr;
 
-	if (ImGui::Checkbox("Generate mipmaps", &metadata.generateMipmaps))
+	bool changed = false;
+
+	changed |= ImGui::Checkbox("Generate mipmaps", &metadata.generateMipmaps);
+	changed |= ImGui::Checkbox("Prefer linear color", &metadata.preferLinear);
+
+	if (changed)
 	{
 		context.assetLibrary->UpdateTextureMetadata(asset->GetUid(), metadata);
 	}
 }
 
-}
-}
+} // namespace editor
+} // namespace kokko
