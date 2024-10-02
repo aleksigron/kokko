@@ -111,6 +111,53 @@ void TerrainQuadTree::EdgeTypeDependents::AddDependent(uint16_t dependent)
 	numDependents += 1;
 }
 
+TerrainQuadTree::TileData::TileData(TileData&& other) noexcept :
+	heightData(other.heightData),
+	textureIds(other.textureIds),
+	buffer(other.buffer),
+	count(other.count),
+	textureInitCount(other.textureInitCount),
+	allocated(other.allocated)
+{
+	other.heightData = nullptr;
+	other.textureIds = nullptr;
+	other.buffer = nullptr;
+	other.count = 0;
+	other.textureInitCount = 0;
+	other.allocated = 0;
+}
+
+TerrainQuadTree::TileData& TerrainQuadTree::TileData::operator=(TileData&& other) noexcept
+{
+	heightData = other.heightData;
+	textureIds = other.textureIds;
+	buffer = other.buffer;
+	count = other.count;
+	textureInitCount = other.textureInitCount;
+	allocated = other.allocated;
+
+	other.heightData = nullptr;
+	other.textureIds = nullptr;
+	other.buffer = nullptr;
+	other.count = 0;
+	other.textureInitCount = 0;
+	other.allocated = 0;
+
+	return *this;
+}
+
+TerrainQuadTree::TerrainQuadTree() :
+	allocator(nullptr),
+	renderDevice(nullptr),
+	nodes(nullptr),
+	drawTiles(nullptr),
+	parentsToCheck(nullptr),
+	neighborsToCheck(nullptr),
+	edgeDependencies(nullptr),
+	tileIdToIndexMap(nullptr)
+{
+}
+
 TerrainQuadTree::TerrainQuadTree(Allocator* allocator, render::Device* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
@@ -119,18 +166,54 @@ TerrainQuadTree::TerrainQuadTree(Allocator* allocator, render::Device* renderDev
 	parentsToCheck(allocator),
 	neighborsToCheck(allocator),
 	edgeDependencies(allocator),
-	tileIdToIndexMap(allocator),
-	treeLevels(0),
-	maxNodeLevel(0),
-	terrainWidth(0.0f),
-	terrainBottom(0.0f),
-	terrainHeight(0.0f)
+	tileIdToIndexMap(allocator)
 {
-	tileData = TileData{};
+}
+
+TerrainQuadTree::TerrainQuadTree(TerrainQuadTree&& other) noexcept :
+	allocator(other.allocator),
+	renderDevice(other.renderDevice),
+	nodes(std::move(other.nodes)),
+	drawTiles(std::move(other.drawTiles)),
+	parentsToCheck(std::move(other.parentsToCheck)),
+	neighborsToCheck(std::move(other.neighborsToCheck)),
+	edgeDependencies(std::move(other.edgeDependencies)),
+	tileIdToIndexMap(std::move(other.tileIdToIndexMap)),
+	tileData(std::move(other.tileData)),
+	treeLevels(other.treeLevels),
+	maxNodeLevel(other.maxNodeLevel),
+	terrainWidth(other.terrainWidth),
+	terrainBottom(other.terrainBottom),
+	terrainHeight(other.terrainHeight)
+{
+}
+
+TerrainQuadTree& TerrainQuadTree::operator=(TerrainQuadTree&& other) noexcept
+{
+	allocator = other.allocator;
+	renderDevice = other.renderDevice;
+	nodes = std::move(other.nodes);
+	drawTiles = std::move(other.drawTiles);
+	parentsToCheck = std::move(other.parentsToCheck);
+	neighborsToCheck = std::move(other.neighborsToCheck);
+	edgeDependencies = std::move(other.edgeDependencies);
+	tileIdToIndexMap = std::move(other.tileIdToIndexMap);
+	tileData = std::move(other.tileData);
+	treeLevels = other.treeLevels;
+	maxNodeLevel = other.maxNodeLevel;
+	terrainWidth = other.terrainWidth;
+	terrainBottom = other.terrainBottom;
+	terrainHeight = other.terrainHeight;
+
+	return *this;
 }
 
 TerrainQuadTree::~TerrainQuadTree()
 {
+	KOKKO_PROFILE_FUNCTION();
+
+	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainQuadTree_Destruct"));
+
 	if (tileData.textureIds != nullptr)
 		renderDevice->DestroyTextures(tileData.count, tileData.textureIds);
 
@@ -465,7 +548,7 @@ void TerrainQuadTree::LoadTiles()
 			allocator->Deallocate(tileData.buffer);
 		}
 
-		tileData = newData;
+		tileData = std::move(newData);
 	}
 
 	constexpr int texResolution = TerrainTile::TexelsPerSide;

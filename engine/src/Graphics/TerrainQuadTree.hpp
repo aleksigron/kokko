@@ -96,9 +96,14 @@ struct TerrainTileDrawInfo
 class TerrainQuadTree
 {
 public:
+	TerrainQuadTree();
 	TerrainQuadTree(Allocator* allocator, render::Device* renderDevice);
+	TerrainQuadTree(TerrainQuadTree&& other) noexcept;
 	TerrainQuadTree(const TerrainQuadTree&) = delete;
 	~TerrainQuadTree();
+
+	TerrainQuadTree& operator=(const TerrainQuadTree&) = delete;
+	TerrainQuadTree& operator=(TerrainQuadTree&& other) noexcept;
 
 	void Initialize(uint8_t levels, const TerrainParameters& params);
 
@@ -164,20 +169,27 @@ private:
 
 	struct TileData
 	{
-		TerrainTile* heightData;
-		render::TextureId* textureIds;
+		TerrainTile* heightData = nullptr;
+		render::TextureId* textureIds = nullptr;
 
-		void* buffer;
-		uint32_t count;
-		uint32_t textureInitCount;
-		uint32_t allocated;
+		void* buffer = nullptr;
+		uint32_t count = 0;
+		uint32_t textureInitCount = 0;
+		uint32_t allocated = 0;
+
+		TileData() = default;
+		TileData(const TileData&) = delete;
+		TileData(TileData&& other) noexcept;
+
+		TileData& operator=(const TileData&) = delete;
+		TileData& operator=(TileData&& other) noexcept;
 	} tileData;
 
-	uint8_t treeLevels;
-	uint8_t maxNodeLevel;
-	float terrainWidth;
-	float terrainBottom;
-	float terrainHeight;
+	uint8_t treeLevels = 0;
+	uint8_t maxNodeLevel = 0;
+	float terrainWidth = 0.0f;
+	float terrainBottom = 0.0f;
+	float terrainHeight = 0.0f;
 };
 
 }
