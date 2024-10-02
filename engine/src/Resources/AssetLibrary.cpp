@@ -43,6 +43,9 @@ void CreateTextureMetadataJson(rapidjson::Document& document, uint64_t hash, con
 
 	rapidjson::Value genMipsValue(metadata.generateMipmaps);
 	document.AddMember("generate_mipmaps", genMipsValue, alloc);
+
+	rapidjson::Value linearValue(metadata.preferLinear);
+	document.AddMember("prefer_linear", linearValue, alloc);
 }
 
 int32_t LoadTextureMetadata(const rapidjson::Document& document, Array<TextureAssetMetadata>& metadataArray)
@@ -52,6 +55,10 @@ int32_t LoadTextureMetadata(const rapidjson::Document& document, Array<TextureAs
 	auto genMipmapsItr = document.FindMember("generate_mipmaps");
 	if (genMipmapsItr != document.MemberEnd() && genMipmapsItr->value.IsBool())
 		metadata.generateMipmaps = genMipmapsItr->value.GetBool();
+
+	auto preferLinearItr = document.FindMember("prefer_linear");
+	if (preferLinearItr != document.MemberEnd() && preferLinearItr->value.IsBool())
+		metadata.preferLinear = preferLinearItr->value.GetBool();
 
 	int32_t index = static_cast<int32_t>(metadataArray.GetCount());
 	metadataArray.PushBack(metadata);
