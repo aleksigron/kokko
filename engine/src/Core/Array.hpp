@@ -132,6 +132,14 @@ public:
 		++count;
 	}
 
+	template <class... Args> 
+	void EmplaceBack(Args&&... args)
+	{
+		Reserve(count + 1);
+		new (data + count) ValueType(std::forward<Args>(args)...);
+		++count;
+	}
+
 	/**
 	 * Insert the specified items to the back of the array
 	 */
