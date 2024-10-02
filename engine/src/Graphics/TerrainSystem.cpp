@@ -54,10 +54,13 @@ struct TerrainUniformBlock
 	alignas(4) float roughness;
 };
 
-TerrainSystem::TerrainSystem(
-	Allocator* allocator,
-	kokko::render::Device* renderDevice,
-	ShaderManager* shaderManager,
+TerrainSystem::TerrainInstance::TerrainInstance(TerrainQuadTree&& quadTree) :
+	entity(Entity::Null),
+	quadTree(std::move(quadTree))
+{
+}
+
+TerrainSystem::TerrainSystem(Allocator* allocator, render::Device* renderDevice, ShaderManager* shaderManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
 	renderDevice(renderDevice),
@@ -70,12 +73,11 @@ TerrainSystem::TerrainSystem(
 	entityMap(allocator),
 	vertexData(VertexData{}),
 	textureSampler(0),
-	uniformStagingBuffer(allocator)
+	uniformStagingBuffer(allocator),
+	instances(allocator)
 {
-	data = InstanceData{};
-	data.count = 1; // Reserve index 0 as TerrainId::Null value
-
-	this->Reallocate(16);
+	instances.Reserve(16);
+	instances.PushBack(); // Reserve index 0 as Null
 }
 
 TerrainSystem::~TerrainSystem()
@@ -96,8 +98,6 @@ TerrainSystem::~TerrainSystem()
 
 	if (textureSampler != 0)
 		renderDevice->DestroySamplers(1, &textureSampler);
-
-	allocator->Deallocate(data.buffer);
 }
 
 void TerrainSystem::Initialize()
@@ -142,151 +142,98 @@ TerrainId TerrainSystem::Lookup(Entity e)
 
 TerrainId TerrainSystem::AddTerrain(Entity entity, const TerrainParameters& params)
 {
-	if (data.count + 1 > data.allocated)
-		this->Reallocate(data.count + 1);
-
-	unsigned int id = static_cast<unsigned int>(data.count);
+	uint32_t id = static_cast<uint32_t>(instances.GetCount());
 
 	auto mapPair = entityMap.Insert(entity.id);
 	mapPair->second.i = id;
 
-	data.entity[id] = entity;
-	data.textureScale[id] = params.textureScale;
-	data.textures[id] = TerrainTextures{};
-	new (&data.quadTree[id]) TerrainQuadTree(allocator, renderDevice);
+	instances.EmplaceBack(TerrainQuadTree(allocator, renderDevice));
+	TerrainInstance& instance = instances.GetBack();
+	instance.entity = entity;
+	instance.textureScale = params.textureScale;
 
-	data.count += 1;
+	constexpr int treeLevels = 7;
+	instances[id].quadTree.Initialize(treeLevels, params);
 
-	TerrainId terrainId{ id };
-	InitializeTerrain(terrainId, params);
-
-	return terrainId;
+	return TerrainId{ id };
 }
 
 void TerrainSystem::RemoveTerrain(TerrainId id)
 {
-	assert(id != TerrainId::Null);
-	assert(id.i < data.count);
+	size_t count = instances.GetCount();
 
-	DeinitializeTerrain(id);
+	assert(id != TerrainId::Null);
+	assert(id.i < count);
+
+	TerrainInstance& instance = instances[id.i];
 
 	// Remove from entity map
-	Entity entity = data.entity[id.i];
-	auto* pair = entityMap.Lookup(entity.id);
+	auto* pair = entityMap.Lookup(instance.entity.id);
 	if (pair != nullptr)
 		entityMap.Remove(pair);
 
-	if (data.count > 2 && id.i + 1 < data.count) // We need to swap another object
+	if (count > 2 && id.i + 1 < count) // We need to swap another object
 	{
-		size_t swapIdx = data.count - 1;
+		size_t swapIdx = count - 1;
 
 		// Update the swapped objects id in the entity map
-		auto* swapKv = entityMap.Lookup(data.entity[swapIdx].id);
+		auto* swapKv = entityMap.Lookup(instances[swapIdx].entity.id);
 		if (swapKv != nullptr)
 			swapKv->second = id;
 
-		data.entity[id.i] = data.entity[swapIdx];
-		data.textureScale[id.i] = data.textureScale[swapIdx];
-		data.quadTree[id.i] = data.quadTree[swapIdx];
+		instance.entity = instances[swapIdx].entity;
+		instance.textureScale = instances[swapIdx].textureScale;
+		instance.albedoTexture = instances[swapIdx].albedoTexture;
+		instance.roughnessTexture = instances[swapIdx].roughnessTexture;
+		instance.quadTree = std::move(instances[swapIdx].quadTree);
 	}
 
-	--data.count;
+	instances.PopBack();
 }
 
 void TerrainSystem::RemoveAll()
 {
-	for (size_t i = 1; i < data.count; ++i)
-		DeinitializeTerrain(TerrainId{ static_cast<unsigned int>(i) });
-
+	instances.Resize(1);
 	entityMap.Clear();
-	data.count = 1;
 }
 
 TextureId TerrainSystem::GetAlbedoTextureId(TerrainId id) const
 {
-	return data.textures[id.i].albedoTexture.textureId;
+	assert(id.i != 0 && id.i < instances.GetCount());
+
+	return instances[id.i].albedoTexture.id;
 }
 
 void TerrainSystem::SetAlbedoTexture(TerrainId id, TextureId textureId, render::TextureId textureObject)
 {
-	data.textures[id.i].albedoTexture.textureId = textureId;
-	data.textures[id.i].albedoTexture.textureObjectId = textureObject;
+	assert(id.i != 0 && id.i < instances.GetCount());
+
+	instances[id.i].albedoTexture.id = textureId;
+	instances[id.i].albedoTexture.renderId = textureObject;
 }
 
 TextureId TerrainSystem::GetRoughnessTextureId(TerrainId id) const
 {
-	return data.textures[id.i].roughnessTexture.textureId;
+	assert(id.i != 0 && id.i < instances.GetCount());
+
+	return instances[id.i].roughnessTexture.id;
 }
 
 void TerrainSystem::SetRoughnessTexture(TerrainId id, TextureId textureId, render::TextureId textureObject)
 {
-	data.textures[id.i].roughnessTexture.textureId = textureId;
-	data.textures[id.i].roughnessTexture.textureObjectId = textureObject;
+	assert(id.i != 0 && id.i < instances.GetCount());
+
+	instances[id.i].roughnessTexture.id = textureId;
+	instances[id.i].roughnessTexture.renderId = textureObject;
 }
 
 void TerrainSystem::Submit(const SubmitParameters& parameters)
 {
-	for (size_t i = 1; i < data.count; ++i)
+	for (size_t i = 1, count = instances.GetCount(); i < count; ++i)
 	{
 		float depth = 0.0f; // TODO: Calculate
 		parameters.commandList.AddToFullscreenViewport(RenderPassType::OpaqueGeometry, depth, i);
 	}
-}
-
-void TerrainSystem::InitializeTerrain(TerrainId id, const TerrainParameters& params)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainSys_CreateInstanceResources"));
-
-	kokko::TerrainQuadTree& quadTree = data.quadTree[id.i];
-
-	constexpr int treeLevels = 7;
-	quadTree.Initialize(treeLevels, params);
-}
-
-void TerrainSystem::DeinitializeTerrain(TerrainId id)
-{
-	KOKKO_PROFILE_FUNCTION();
-
-	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainSys_DestroyInstanceResources"));
-
-	data.quadTree[id.i].~TerrainQuadTree();
-}
-
-void TerrainSystem::Reallocate(size_t required)
-{
-	if (required <= data.allocated)
-		return;
-
-	required = static_cast<unsigned int>(Math::UpperPowerOfTwo(required));
-
-	// Reserve same amount in entity map
-	entityMap.Reserve(required);
-
-	InstanceData newData;
-	size_t bytes = required * (sizeof(Entity) + sizeof(Vec2f) + sizeof(TerrainQuadTree));
-
-	newData.buffer = allocator->Allocate(bytes, "TerrainSystem.data.buffer");
-	newData.count = data.count;
-	newData.allocated = required;
-
-	newData.entity = static_cast<Entity*>(newData.buffer);
-	newData.textureScale = reinterpret_cast<Vec2f*>(newData.entity + required);
-	newData.textures = reinterpret_cast<TerrainTextures*>(newData.textureScale + required);
-	newData.quadTree = reinterpret_cast<TerrainQuadTree*>(newData.textures + required);
-
-	if (data.buffer != nullptr)
-	{
-		std::memcpy(newData.entity, data.entity, data.count * sizeof(Entity));
-		std::memcpy(newData.textureScale, data.textureScale, data.count * sizeof(Vec2f));
-		std::memcpy(newData.textures, data.textures, data.count * sizeof(TerrainTextures));
-		std::memcpy(newData.quadTree, data.quadTree, data.count * sizeof(TerrainQuadTree));
-
-		allocator->Deallocate(data.buffer);
-	}
-
-	data = newData;
 }
 
 void TerrainSystem::Render(const RenderParameters& parameters)
@@ -299,7 +246,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 	// Select tiles to render
 
-	TerrainQuadTree& quadTree = data.quadTree[id.i];
+	TerrainQuadTree& quadTree = instances[id.i].quadTree;
 	quadTree.UpdateTilesToRender(viewport.frustum, viewport.position, parameters.renderDebug);
 	ArrayView<const TerrainTileDrawInfo> tiles = quadTree.GetTilesToRender();
 	uint32_t tileCount = static_cast<uint32_t>(tiles.GetCount());
@@ -312,7 +259,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	TerrainUniformBlock uniforms;
 	uniforms.MVP = viewport.viewProjection;
 	uniforms.MV = viewport.view.inverse;
-	uniforms.textureScale = data.textureScale[id.i];
+	uniforms.textureScale = instances[id.i].textureScale;
 	uniforms.tileOffset = Vec2f();
 	uniforms.tileScale = 1.0f;
 	uniforms.terrainSize = terrainWidth;
@@ -372,8 +319,8 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	if (albedoMap != nullptr)
 	{
 		kokko::render::TextureId textureObjectId;
-		if (data.textures[id.i].albedoTexture.textureObjectId != 0)
-			textureObjectId = data.textures[id.i].albedoTexture.textureObjectId;
+		if (instances[id.i].albedoTexture.renderId != 0)
+			textureObjectId = instances[id.i].albedoTexture.renderId;
 		else
 		{
 			TextureId emptyAlbedoId = textureManager->GetId_White2D();

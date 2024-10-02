@@ -63,17 +63,17 @@ public:
 
 	void RemoveAll();
 
-	float GetSize(TerrainId id) const { return data.quadTree[id.i].GetSize(); }
-	void SetSize(TerrainId id, float size) { data.quadTree[id.i].SetSize(size); }
+	float GetSize(TerrainId id) const { return instances[id.i].quadTree.GetSize(); }
+	void SetSize(TerrainId id, float size) { instances[id.i].quadTree.SetSize(size); }
 
-	float GetBottom(TerrainId id) const { return data.quadTree[id.i].GetBottom(); }
-	void SetBottom(TerrainId id, float bottom) { data.quadTree[id.i].SetBottom(bottom); }
+	float GetBottom(TerrainId id) const { return instances[id.i].quadTree.GetBottom(); }
+	void SetBottom(TerrainId id, float bottom) { instances[id.i].quadTree.SetBottom(bottom); }
 
-	float GetHeight(TerrainId id) const { return data.quadTree[id.i].GetHeight(); }
-	void SetHeight(TerrainId id, float height) { data.quadTree[id.i].SetHeight(height); }
+	float GetHeight(TerrainId id) const { return instances[id.i].quadTree.GetHeight(); }
+	void SetHeight(TerrainId id, float height) { instances[id.i].quadTree.SetHeight(height); }
 
-	Vec2f GetTextureScale(TerrainId id) const { return data.textureScale[id.i]; }
-	void SetTextureScale(TerrainId id, Vec2f scale) { data.textureScale[id.i] = scale; }
+	Vec2f GetTextureScale(TerrainId id) const { return instances[id.i].textureScale; }
+	void SetTextureScale(TerrainId id, Vec2f scale) { instances[id.i].textureScale = scale; }
 
 	TextureId GetAlbedoTextureId(TerrainId id) const;
 	void SetAlbedoTexture(TerrainId id, TextureId textureId, render::TextureId textureObject);
@@ -113,35 +113,26 @@ private:
 
 	struct TextureInfo
 	{
-		TextureId textureId;
-		render::TextureId textureObjectId;
+		TextureId id = TextureId::Null;
+		render::TextureId renderId = render::TextureId::Null;
 	};
 
-	struct TerrainTextures
+	struct TerrainInstance
 	{
+		Entity entity;
+		Vec2f textureScale;
+
 		TextureInfo albedoTexture;
 		TextureInfo roughnessTexture;
+
+		TerrainQuadTree quadTree;
+
+		TerrainInstance() = default;
+		explicit TerrainInstance(TerrainQuadTree&& quadTree);
 	};
 
-	struct InstanceData
-	{
-		size_t count;
-		size_t allocated;
-		void* buffer;
-
-		Entity* entity;
-		Vec2f* textureScale;
-		TerrainTextures* textures;
-		TerrainQuadTree* quadTree;
-	}
-	data;
-
+	Array<TerrainInstance> instances;
 	Array<uint8_t> uniformStagingBuffer;
-
-	void InitializeTerrain(TerrainId id, const TerrainParameters& params);
-	void DeinitializeTerrain(TerrainId id);
-
-	void Reallocate(size_t required);
 
 	void CreateVertexAndIndexData();
 };
