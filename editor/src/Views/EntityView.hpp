@@ -39,7 +39,7 @@ private:
 	void DrawButtons(Entity selectedEntity, World* world);
 
 	void DrawSceneComponent(Entity selectedEntity, World* world);
-	void DrawRenderComponent(EditorContext& context);
+	void DrawMeshComponent(EditorContext& context);
 	void DrawCameraComponent(Entity selectedEntity, World* world);
 	void DrawLightComponent(Entity selectedEntity, World* world);
 
@@ -57,5 +57,5 @@ public:
 	virtual void Update(EditorContext& context) override;
 };
 
-}
-}
+} // namespace editor
+} // namespace kokko

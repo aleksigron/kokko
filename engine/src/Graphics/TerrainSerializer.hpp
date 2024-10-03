@@ -52,6 +52,17 @@ public:
 
 		TerrainId id = terrainSystem->AddTerrain(entity, terrain);
 
+		auto heightNode = map.find_child("height_texture");
+		if (heightNode.valid() && heightNode.has_val())
+		{
+			auto uidSubstr = heightNode.val();
+			auto uidOpt = Uid::FromString(ArrayView(uidSubstr.str, uidSubstr.len));
+			if (uidOpt.HasValue())
+			{
+				terrainSystem->SetHeightTexture(id, uidOpt.GetValue());
+			}
+		}
+
 		auto albedoNode = map.find_child("albedo_texture");
 		if (albedoNode.valid() && albedoNode.has_val())
 		{
@@ -107,6 +118,13 @@ public:
 			componentNode["terrain_height"] << heightRange;
 
 			char uidStr[Uid::StringLength + 1];
+
+			if (auto heightTexture = terrainSystem->GetHeightTexture(terrainId))
+			{
+				heightTexture.GetValue().WriteTo(ArrayView(uidStr));
+				uidStr[Uid::StringLength] = '\0';
+				componentNode["height_texture"] << uidStr;
+			}
 
 			TextureId albedoTextureId = terrainSystem->GetAlbedoTextureId(terrainId);
 			if (albedoTextureId != TextureId::Null)

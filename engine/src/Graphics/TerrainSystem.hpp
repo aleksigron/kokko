@@ -5,7 +5,9 @@
 
 #include "Core/Array.hpp"
 #include "Core/HashMap.hpp"
+#include "Core/Optional.hpp"
 #include "Core/StringView.hpp"
+#include "Core/Uid.hpp"
 
 #include "Graphics/TerrainQuadTree.hpp"
 
@@ -75,6 +77,9 @@ public:
 	Vec2f GetTextureScale(TerrainId id) const { return instances[id.i].textureScale; }
 	void SetTextureScale(TerrainId id, Vec2f scale) { instances[id.i].textureScale = scale; }
 
+	Optional<Uid> GetHeightTexture(TerrainId id) const;
+	void SetHeightTexture(TerrainId id, Uid textureUid);
+
 	TextureId GetAlbedoTextureId(TerrainId id) const;
 	void SetAlbedoTexture(TerrainId id, TextureId textureId, render::TextureId textureObject);
 
@@ -119,9 +124,11 @@ private:
 
 	struct TerrainInstance
 	{
-		Entity entity;
+		Entity entity = Entity::Null;
 		Vec2f textureScale;
 
+		Uid heightTextureUid;
+		bool hasHeightTexture = false;
 		TextureInfo albedoTexture;
 		TextureInfo roughnessTexture;
 
