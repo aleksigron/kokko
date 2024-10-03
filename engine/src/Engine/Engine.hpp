@@ -53,7 +53,7 @@ private:
 	kokko::render::CommandExecutor* commandExecutor;
 
 	InstanceAllocatorPair<kokko::WindowManager> windowManager;
-	kokko::UniquePtr<Time> time;
+	kokko::UniquePtr<Time> engineTime;
 	InstanceAllocatorPair<Debug> debug;
 	InstanceAllocatorPair<kokko::ModelManager> modelManager;
 	InstanceAllocatorPair<kokko::TextureManager> textureManager;
