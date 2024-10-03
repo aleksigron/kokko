@@ -14,6 +14,7 @@ include_directories(
 	${PROJECT_ROOT}/deps/rapidjson/include
 	${PROJECT_ROOT}/deps/imgui
 	${PROJECT_ROOT}/deps/imguizmo
+	${PROJECT_ROOT}/deps/stb_image_write/include
 )
 
 set (IMGUI_SOURCES
@@ -31,6 +32,11 @@ set (IMGUI_SOURCES
 set (IMGUIZMO_SOURCES
 	${PROJECT_ROOT}/deps/imguizmo/ImGuizmo.cpp
 	${PROJECT_ROOT}/deps/imguizmo/ImGuizmo.h
+)
+
+set (STB_IMAGE_WRITE_SOURCES
+	${PROJECT_ROOT}/deps/stb_image_write/include/stb_image_write/stb_image_write.h
+	${PROJECT_ROOT}/deps/stb_image_write/src/stb_image_write.cpp
 )
 
 set (EDITOR_SOURCES
@@ -78,11 +84,13 @@ set (EDITOR_SOURCES
 
 source_group(Dependencies\\imgui FILES ${IMGUI_SOURCES})
 source_group(Dependencies\\imguizmo FILES ${IMGUIZMO_SOURCES})
+source_group(Dependencies\\stb_image_write FILES ${STB_IMAGE_WRITE_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" FILES ${EDITOR_SOURCES})
 
 set(SOURCES
 	${IMGUI_SOURCES}
 	${IMGUIZMO_SOURCES}
+	${STB_IMAGE_WRITE_SOURCES}
 	${EDITOR_SOURCES}
 )
 
