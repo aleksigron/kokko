@@ -212,10 +212,13 @@ TerrainQuadTree::~TerrainQuadTree()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainQuadTree_Destruct"));
+	if (renderDevice != nullptr)
+	{
+		auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainQuadTree_Destruct"));
 
-	if (tileData.textureIds != nullptr)
-		renderDevice->DestroyTextures(tileData.count, tileData.textureIds);
+		if (tileData.textureIds != nullptr)
+			renderDevice->DestroyTextures(tileData.count, tileData.textureIds);
+	}
 
 	if (tileData.buffer != nullptr)
 		allocator->Deallocate(tileData.buffer);

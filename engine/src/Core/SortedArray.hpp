@@ -44,9 +44,16 @@ private:
 	}
 
 public:
-	SortedArray(Allocator* allocator) :
-		a(allocator)
+	explicit SortedArray(Allocator* allocator) : a(allocator) {}
+	SortedArray(const SortedArray&) = delete;
+	SortedArray(SortedArray&& other) : a(std::move(other.a)) {}
+	~SortedArray() = default;
+
+	SortedArray& operator=(const SortedArray&) = delete;
+	SortedArray& operator=(SortedArray&& other)
 	{
+		a = std::move(other.a);
+		return *this;
 	}
 
 	size_t GetCount() const { return a.GetCount(); }
