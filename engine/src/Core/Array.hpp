@@ -23,7 +23,7 @@ private:
 	size_t allocated;
 
 public:
-	Array(Allocator* allocator) :
+	explicit Array(Allocator* allocator) :
 		allocator(allocator),
 		data(nullptr),
 		count(0),
@@ -31,12 +31,44 @@ public:
 	{
 	}
 
+	Array(const Array&) = delete;
+
+	Array(Array&& other) :
+		allocator(other.allocator),
+		data(other.data),
+		count(other.count),
+		allocated(other.allocated)
+	{
+		other.data = nullptr;
+		other.count = 0;
+		other.allocated = 0;
+	}
+
 	~Array()
 	{
 		for (size_t i = 0; i < count; ++i)
 			data[i].~ValueType();
 
-		allocator->Deallocate(this->data);
+		if (data != nullptr)
+			allocator->Deallocate(data);
+	}
+
+	Array& operator=(const Array&) = delete;
+	Array& operator=(Array&& other)
+	{
+		if (data != nullptr)
+			allocator->Deallocate(data);
+
+		allocator = other.allocator;
+		data = other.data;
+		count = other.count;
+		allocated = other.allocated;
+
+		other.data = nullptr;
+		other.count = 0;
+		other.allocated = 0;
+
+		return *this;
 	}
 
 	size_t GetCount() const { return this->count; }
