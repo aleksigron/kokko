@@ -1,6 +1,7 @@
 #include "Engine/Engine.hpp"
 
 #include <cstdio>
+#include <time.h>
 
 #include "Core/Core.hpp"
 #include "Core/String.hpp"
@@ -14,6 +15,8 @@
 #include "Engine/World.hpp"
 
 #include "Graphics/Scene.hpp"
+
+#include "Math/Random.hpp"
 
 #include "Memory/RootAllocator.hpp"
 
@@ -48,6 +51,9 @@ Engine::Engine(
 {
 	KOKKO_PROFILE_FUNCTION();
 
+	// FIXME: If two engine instances are launched on the same second, they will generate the same random sequence
+	Random::Seed(static_cast<unsigned int>(time(0)));
+
 	Allocator* alloc = RootAllocator::GetDefaultAllocator();
     systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 
@@ -62,7 +68,7 @@ Engine::Engine(
 
     kokko::Window* mainWindow = windowManager.instance->GetWindow();
 
-	time = kokko::MakeUnique<Time>(systemAllocator);
+	engineTime = kokko::MakeUnique<Time>(systemAllocator);
 
 	debug.CreateScope(allocatorManager, "Debug", alloc);
 	debug.New(debug.allocator, allocatorManager, renderDevice, filesystem);
@@ -139,7 +145,7 @@ void Engine::Update()
 {
 	KOKKO_PROFILE_FUNCTION();
 
-	time->Update();
+	engineTime->Update();
 	textureManager.instance->Update();
 
 	world.instance->Update(windowManager.instance->GetWindow()->GetInputManager());
