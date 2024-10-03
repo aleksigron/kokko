@@ -197,6 +197,24 @@ void TerrainSystem::RemoveAll()
 	entityMap.Clear();
 }
 
+Optional<Uid> TerrainSystem::GetHeightTexture(TerrainId id) const
+{
+	assert(id.i != 0 && id.i < instances.GetCount());
+
+	if (instances[id.i].hasHeightTexture == false)
+		return Optional<Uid>();
+
+	return instances[id.i].heightTextureUid;
+}
+
+void TerrainSystem::SetHeightTexture(TerrainId id, Uid textureUid)
+{
+	assert(id.i != 0 && id.i < instances.GetCount());
+
+	instances[id.i].heightTextureUid = textureUid;
+	instances[id.i].hasHeightTexture = true;
+}
+
 TextureId TerrainSystem::GetAlbedoTextureId(TerrainId id) const
 {
 	assert(id.i != 0 && id.i < instances.GetCount());

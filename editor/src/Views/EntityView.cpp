@@ -82,7 +82,7 @@ void EntityView::Update(EditorContext& context)
 				DrawButtons(context.selectedEntity, world);
 
 				DrawSceneComponent(context.selectedEntity, world);
-				DrawRenderComponent(context);
+				DrawMeshComponent(context);
 				DrawCameraComponent(context.selectedEntity, world);
 				DrawLightComponent(context.selectedEntity, world);
 				DrawTerrainComponent(context, world);
@@ -185,7 +185,7 @@ void EntityView::DrawSceneComponent(Entity selectedEntity, World* world)
 	}
 }
 
-void EntityView::DrawRenderComponent(EditorContext& context)
+void EntityView::DrawMeshComponent(EditorContext& context)
 {
 	Scene* scene = context.world->GetScene();
 	MeshComponentSystem* meshComponentSystem = context.world->GetMeshComponentSystem();
@@ -559,6 +559,49 @@ void EntityView::DrawTerrainComponent(EditorContext& context, World* world)
 			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
 			if (ImGui::DragFloat2("Texture scale", textureScale.ValuePointer(), 0.01f, 0.01f))
 				terrainSystem->SetTextureScale(terrainId, textureScale);
+
+			// Height map texture
+
+			context.temporaryString.Assign("No texture");
+			if (auto heightTextureUid = terrainSystem->GetHeightTexture(terrainId))
+			{
+				if (auto asset = context.assetLibrary->FindAssetByUid(heightTextureUid.GetValue()))
+				{
+					context.temporaryString.Clear();
+					context.temporaryString.Append(asset->GetFilename());
+				}
+				else
+					KK_LOG_ERROR("Texture not found in asset library");
+			}
+
+			ImGuiInputTextFlags roFlags = ImGuiInputTextFlags_ReadOnly;
+
+			ImGui::InputText("Heightmap", context.temporaryString.GetData(), context.temporaryString.GetLength(), roFlags);
+
+			if (ImGui::BeginDragDropTarget())
+			{
+				const auto* payload = ImGui::AcceptDragDropPayload(EditorConstants::AssetDragDropType);
+				if (payload != nullptr && payload->DataSize == sizeof(Uid))
+				{
+					Uid newUid;
+					std::memcpy(&newUid, payload->Data, payload->DataSize);
+
+					if (auto newAsset = context.assetLibrary->FindAssetByUid(newUid))
+					{
+						if (newAsset->GetType() == AssetType::Texture)
+							terrainSystem->SetHeightTexture(terrainId, newUid);
+						else
+							KK_LOG_ERROR("Asset was not a texture");
+					}
+					else
+						KK_LOG_ERROR("Texture not found in asset library");
+				}
+
+				ImGui::EndDragDropTarget();
+			}
+
+
+			// Surface textures
 
 			auto albedoOpt = DrawTerrainTexture(context,
 				terrainSystem->GetAlbedoTextureId(terrainId), "Albedo");
