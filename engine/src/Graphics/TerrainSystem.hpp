@@ -17,16 +17,22 @@
 #include "Resources/ShaderId.hpp"
 
 class Allocator;
-class RenderDevice;
-class MeshManager;
-class ShaderManager;
-class TextureManager;
-class Renderer;
 
 struct Entity;
 
 namespace kokko
 {
+
+class AssetLoader;
+class MeshManager;
+class Renderer;
+class ShaderManager;
+class TextureManager;
+
+namespace render
+{
+class Device;
+}
 
 struct TerrainId
 {
@@ -51,7 +57,8 @@ class TerrainSystem : public GraphicsFeature
 public:
 	TerrainSystem(
 		Allocator* allocator,
-		kokko::render::Device* renderDevice,
+		AssetLoader* assetLoader,
+		render::Device* renderDevice,
 		ShaderManager* shaderManager,
 		TextureManager* textureManager);
 	~TerrainSystem();
@@ -91,7 +98,8 @@ public:
 
 private:
 	Allocator* allocator;
-	kokko::render::Device* renderDevice;
+	AssetLoader* assetLoader;
+	render::Device* renderDevice;
 	ShaderManager* shaderManager;
 	TextureManager* textureManager;
 	
@@ -127,8 +135,14 @@ private:
 		Entity entity = Entity::Null;
 		Vec2f textureScale;
 
+		bool hasHeightTextureUid = false;
 		Uid heightTextureUid;
-		bool hasHeightTexture = false;
+
+		void* heightTextureData = nullptr;
+		uint32_t heightTextureWidth = 0;
+		uint32_t heightTextureHeight = 0;
+		uint32_t heightTextureChannels = 0;
+
 		TextureInfo albedoTexture;
 		TextureInfo roughnessTexture;
 
@@ -136,11 +150,14 @@ private:
 
 		TerrainInstance() = default;
 		explicit TerrainInstance(TerrainQuadTree&& quadTree);
+
+		TerrainInstance& operator=(TerrainInstance&& other);
 	};
 
 	Array<TerrainInstance> instances;
 	Array<uint8_t> uniformStagingBuffer;
 
+	bool LoadHeightmap(TerrainId id, Uid textureUid);
 	void CreateVertexAndIndexData();
 };
 
