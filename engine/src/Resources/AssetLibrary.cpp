@@ -98,7 +98,7 @@ bool IsTextAsset(AssetType type)
 	default:
 		return false;
 	}
-}	
+}
 
 void NormalizeLineEndings(ArrayView<const uint8_t> bytes, String& resultOut)
 {

@@ -4,6 +4,8 @@
 #include <cmath>
 #include <cstring>
 
+#include "stb_image/stb_image.h"
+
 #include "Core/Core.hpp"
 
 #include "Engine/Entity.hpp"
@@ -25,6 +27,7 @@
 #include "Rendering/Uniform.hpp"
 #include "Rendering/VertexFormat.hpp"
 
+#include "Resources/AssetLoader.hpp"
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
@@ -60,9 +63,41 @@ TerrainSystem::TerrainInstance::TerrainInstance(TerrainQuadTree&& quadTree) :
 {
 }
 
-TerrainSystem::TerrainSystem(Allocator* allocator, render::Device* renderDevice, ShaderManager* shaderManager,
+TerrainSystem::TerrainInstance& TerrainSystem::TerrainInstance::operator=(TerrainInstance&& other)
+{
+	entity = other.entity;
+	textureScale = other.textureScale;
+	hasHeightTextureUid = other.hasHeightTextureUid;
+	heightTextureUid = other.heightTextureUid;
+	heightTextureData = other.heightTextureData;
+	heightTextureWidth = other.heightTextureWidth;
+	heightTextureHeight = other.heightTextureHeight;
+	heightTextureChannels = other.heightTextureChannels;
+	albedoTexture = other.albedoTexture;
+	roughnessTexture = other.roughnessTexture;
+	quadTree = std::move(other.quadTree);
+
+	other.entity = Entity::Null;
+	other.textureScale = Vec2f();
+	other.hasHeightTextureUid = false;
+	other.heightTextureData = nullptr;
+	other.heightTextureWidth = 0;
+	other.heightTextureHeight = 0;
+	other.heightTextureChannels = 0;
+	other.albedoTexture = TextureInfo();
+	other.roughnessTexture = TextureInfo();
+
+	return *this;
+}
+
+TerrainSystem::TerrainSystem(
+	Allocator* allocator,
+	AssetLoader* assetLoader,
+	render::Device* renderDevice,
+	ShaderManager* shaderManager,
 	TextureManager* textureManager) :
 	allocator(allocator),
+	assetLoader(assetLoader),
 	renderDevice(renderDevice),
 	shaderManager(shaderManager),
 	textureManager(textureManager),
@@ -172,20 +207,16 @@ void TerrainSystem::RemoveTerrain(TerrainId id)
 	if (pair != nullptr)
 		entityMap.Remove(pair);
 
-	if (count > 2 && id.i + 1 < count) // We need to swap another object
+	if (count > 2 && id.i + 1 < count) // We need to move another object
 	{
-		size_t swapIdx = count - 1;
+		size_t moveIdx = count - 1;
 
-		// Update the swapped objects id in the entity map
-		auto* swapKv = entityMap.Lookup(instances[swapIdx].entity.id);
-		if (swapKv != nullptr)
-			swapKv->second = id;
+		// Update the swapped object's id in the entity map
+		auto* moveKv = entityMap.Lookup(instances[moveIdx].entity.id);
+		if (moveKv != nullptr)
+			moveKv->second = id;
 
-		instance.entity = instances[swapIdx].entity;
-		instance.textureScale = instances[swapIdx].textureScale;
-		instance.albedoTexture = instances[swapIdx].albedoTexture;
-		instance.roughnessTexture = instances[swapIdx].roughnessTexture;
-		instance.quadTree = std::move(instances[swapIdx].quadTree);
+		instance = std::move(instances[moveIdx]);
 	}
 
 	instances.PopBack();
@@ -201,7 +232,7 @@ Optional<Uid> TerrainSystem::GetHeightTexture(TerrainId id) const
 {
 	assert(id.i != 0 && id.i < instances.GetCount());
 
-	if (instances[id.i].hasHeightTexture == false)
+	if (instances[id.i].hasHeightTextureUid == false)
 		return Optional<Uid>();
 
 	return instances[id.i].heightTextureUid;
@@ -211,8 +242,16 @@ void TerrainSystem::SetHeightTexture(TerrainId id, Uid textureUid)
 {
 	assert(id.i != 0 && id.i < instances.GetCount());
 
-	instances[id.i].heightTextureUid = textureUid;
-	instances[id.i].hasHeightTexture = true;
+	if (instances[id.i].hasHeightTextureUid == false || instances[id.i].heightTextureUid != textureUid)
+	{
+		if (LoadHeightmap(id, textureUid))
+		{
+			instances[id.i].heightTextureUid = textureUid;
+			instances[id.i].hasHeightTextureUid = true;
+		}
+		else
+			KK_LOG_ERROR("Terrain height texture was not set, because loading failed");
+	}
 }
 
 TextureId TerrainSystem::GetAlbedoTextureId(TerrainId id) const
@@ -383,6 +422,53 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 			encoder->DrawIndexed(RenderPrimitiveMode::Triangles, RenderIndexType::UnsignedShort, count, 0, 0);
 		}
 	}
+}
+
+bool TerrainSystem::LoadHeightmap(TerrainId id, Uid textureUid)
+{
+	Array<uint8_t> buffer(allocator);
+	AssetLoader::LoadResult loadResult = assetLoader->LoadAsset(textureUid, buffer);
+	if (loadResult.success == false)
+		return false;
+
+	assert(loadResult.assetType == AssetType::Texture);
+
+	TextureAssetMetadata metadata;
+	if (loadResult.metadataSize == sizeof(metadata))
+		memcpy(&metadata, buffer.GetData(), loadResult.metadataSize);
+
+	auto assetView = buffer.GetSubView(loadResult.assetStart, loadResult.assetStart + loadResult.assetSize);
+
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrComponents;
+	void* imageBytes = nullptr;
+
+	{
+		KOKKO_PROFILE_SCOPE("stbi_load_16_from_memory()");
+
+		const uint8_t* fileBytesPtr = assetView.GetData();
+		int length = static_cast<int>(assetView.GetCount());
+		imageBytes = stbi_load_16_from_memory(fileBytesPtr, length, &width, &height, &nrComponents, 1);
+	}
+
+	if (imageBytes != nullptr)
+	{
+		TerrainInstance& instance = instances[id.i];
+
+		if (instance.heightTextureData != nullptr)
+			stbi_image_free(instance.heightTextureData);
+
+		instance.heightTextureData = imageBytes;
+		instance.heightTextureWidth = width;
+		instance.heightTextureHeight = height;
+		instance.heightTextureChannels = nrComponents;
+
+		return true;
+	}
+	else
+		KK_LOG_ERROR("Couldn't load terrain heightmap with stb_image");
+
+	return false;
 }
 
 void TerrainSystem::CreateVertexAndIndexData()
