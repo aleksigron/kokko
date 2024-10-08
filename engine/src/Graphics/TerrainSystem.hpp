@@ -44,12 +44,24 @@ struct TerrainId
 	static const TerrainId Null;
 };
 
+/*
 struct TerrainParameters
 {
 	float terrainSize = 64.0f;
 	Vec2f textureScale = Vec2f(0.25f, 0.25f);
 	float heightOrigin = -1.0f;
 	float heightRange = 2.0f;
+};
+*/
+struct TerrainHeightmapInfo
+{
+	uint16_t* data = nullptr;
+	uint32_t width = 0;
+	uint32_t height = 0;
+	uint32_t channels = 0;
+
+	TerrainHeightmapInfo& operator=(const TerrainHeightmapInfo& other) = delete;
+	TerrainHeightmapInfo& operator=(TerrainHeightmapInfo&& other) noexcept;
 };
 
 class TerrainSystem : public GraphicsFeature
@@ -67,7 +79,7 @@ public:
 
 	TerrainId Lookup(Entity e);
 
-	TerrainId AddTerrain(Entity entity, const TerrainParameters& params);
+	TerrainId AddTerrain(Entity entity);
 	void RemoveTerrain(TerrainId id);
 
 	void RemoveAll();
@@ -133,15 +145,12 @@ private:
 	struct TerrainInstance
 	{
 		Entity entity = Entity::Null;
-		Vec2f textureScale;
+		Vec2f textureScale = Vec2f(1.0f, 1.0f);
 
 		bool hasHeightTextureUid = false;
 		Uid heightTextureUid;
 
-		void* heightTextureData = nullptr;
-		uint32_t heightTextureWidth = 0;
-		uint32_t heightTextureHeight = 0;
-		uint32_t heightTextureChannels = 0;
+		TerrainHeightmapInfo heightmap;
 
 		TextureInfo albedoTexture;
 		TextureInfo roughnessTexture;
@@ -151,7 +160,7 @@ private:
 		TerrainInstance() = default;
 		explicit TerrainInstance(TerrainQuadTree&& quadTree);
 
-		TerrainInstance& operator=(TerrainInstance&& other);
+		TerrainInstance& operator=(TerrainInstance&& other) noexcept;
 	};
 
 	Array<TerrainInstance> instances;

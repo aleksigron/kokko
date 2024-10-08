@@ -32,30 +32,44 @@ public:
 
 	virtual void DeserializeComponent(const c4::yml::ConstNodeRef& map, Entity entity) override
 	{
-		TerrainParameters terrain;
+		TerrainId id = terrainSystem->AddTerrain(entity);
 
 		auto sizeNode = map.find_child("terrain_size");
 		if (sizeNode.valid() && sizeNode.has_val() && sizeNode.val().is_real())
-			sizeNode >> terrain.terrainSize;
+		{
+			float size;
+			sizeNode >> size;
+			terrainSystem->SetSize(id, size);
+		}
 
 		auto scaleNode = map.find_child("texture_scale");
 		if (scaleNode.valid() && scaleNode.has_val())
-			scaleNode >> terrain.textureScale;
+		{
+			Vec2f textureScale;
+			scaleNode >> textureScale;
+			terrainSystem->SetTextureScale(id, textureScale);
+		}
 
 		auto minNode = map.find_child("terrain_bottom");
 		if (minNode.valid() && minNode.has_val() && minNode.val().is_real())
-			minNode >> terrain.heightOrigin;
-
-		auto maxNode = map.find_child("terrain_height");
-		if (maxNode.valid() && maxNode.has_val() && maxNode.val().is_real())
-			maxNode >> terrain.heightRange;
-
-		TerrainId id = terrainSystem->AddTerrain(entity, terrain);
-
-		auto heightNode = map.find_child("height_texture");
-		if (heightNode.valid() && heightNode.has_val())
 		{
-			auto uidSubstr = heightNode.val();
+			float bottom;
+			minNode >> bottom;
+			terrainSystem->SetBottom(id, bottom);
+		}
+
+		auto heightNode = map.find_child("terrain_height");
+		if (heightNode.valid() && heightNode.has_val() && heightNode.val().is_real())
+		{
+			float height;
+			heightNode >> height;
+			terrainSystem->SetHeight(id, height);
+		}
+
+		auto heightTexNode = map.find_child("height_texture");
+		if (heightTexNode.valid() && heightTexNode.has_val())
+		{
+			auto uidSubstr = heightTexNode.val();
 			auto uidOpt = Uid::FromString(ArrayView(uidSubstr.str, uidSubstr.len));
 			if (uidOpt.HasValue())
 			{
