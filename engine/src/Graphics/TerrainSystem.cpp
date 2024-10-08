@@ -63,16 +63,28 @@ TerrainSystem::TerrainInstance::TerrainInstance(TerrainQuadTree&& quadTree) :
 {
 }
 
-TerrainSystem::TerrainInstance& TerrainSystem::TerrainInstance::operator=(TerrainInstance&& other)
+TerrainHeightmapInfo& TerrainHeightmapInfo::operator=(TerrainHeightmapInfo&& other) noexcept
+{
+	data = other.data;
+	width = other.width;
+	height = other.height;
+	channels = other.channels;
+
+	other.data = nullptr;
+	other.width = 0;
+	other.height = 0;
+	other.channels = 0;
+
+	return *this;
+}
+
+TerrainSystem::TerrainInstance& TerrainSystem::TerrainInstance::operator=(TerrainInstance&& other) noexcept
 {
 	entity = other.entity;
 	textureScale = other.textureScale;
 	hasHeightTextureUid = other.hasHeightTextureUid;
 	heightTextureUid = other.heightTextureUid;
-	heightTextureData = other.heightTextureData;
-	heightTextureWidth = other.heightTextureWidth;
-	heightTextureHeight = other.heightTextureHeight;
-	heightTextureChannels = other.heightTextureChannels;
+	heightmap = std::move(other.heightmap);
 	albedoTexture = other.albedoTexture;
 	roughnessTexture = other.roughnessTexture;
 	quadTree = std::move(other.quadTree);
@@ -80,10 +92,6 @@ TerrainSystem::TerrainInstance& TerrainSystem::TerrainInstance::operator=(Terrai
 	other.entity = Entity::Null;
 	other.textureScale = Vec2f();
 	other.hasHeightTextureUid = false;
-	other.heightTextureData = nullptr;
-	other.heightTextureWidth = 0;
-	other.heightTextureHeight = 0;
-	other.heightTextureChannels = 0;
 	other.albedoTexture = TextureInfo();
 	other.roughnessTexture = TextureInfo();
 
@@ -175,7 +183,7 @@ TerrainId TerrainSystem::Lookup(Entity e)
 	return pair != nullptr ? pair->second : TerrainId{};
 }
 
-TerrainId TerrainSystem::AddTerrain(Entity entity, const TerrainParameters& params)
+TerrainId TerrainSystem::AddTerrain(Entity entity)
 {
 	uint32_t id = static_cast<uint32_t>(instances.GetCount());
 
@@ -185,10 +193,6 @@ TerrainId TerrainSystem::AddTerrain(Entity entity, const TerrainParameters& para
 	instances.EmplaceBack(TerrainQuadTree(allocator, renderDevice));
 	TerrainInstance& instance = instances.GetBack();
 	instance.entity = entity;
-	instance.textureScale = params.textureScale;
-
-	constexpr int treeLevels = 7;
-	instances[id].quadTree.Initialize(treeLevels, params);
 
 	return TerrainId{ id };
 }
@@ -441,7 +445,7 @@ bool TerrainSystem::LoadHeightmap(TerrainId id, Uid textureUid)
 
 	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrComponents;
-	void* imageBytes = nullptr;
+	uint16_t* imageBytes = nullptr;
 
 	{
 		KOKKO_PROFILE_SCOPE("stbi_load_16_from_memory()");
@@ -455,13 +459,15 @@ bool TerrainSystem::LoadHeightmap(TerrainId id, Uid textureUid)
 	{
 		TerrainInstance& instance = instances[id.i];
 
-		if (instance.heightTextureData != nullptr)
-			stbi_image_free(instance.heightTextureData);
+		if (instance.heightmap.data != nullptr)
+			stbi_image_free(instance.heightmap.data);
 
-		instance.heightTextureData = imageBytes;
-		instance.heightTextureWidth = width;
-		instance.heightTextureHeight = height;
-		instance.heightTextureChannels = nrComponents;
+		instance.heightmap.data = imageBytes;
+		instance.heightmap.width = width;
+		instance.heightmap.height = height;
+		instance.heightmap.channels = nrComponents;
+
+		instance.quadTree.SetHeightmap(&instance.heightmap);
 
 		return true;
 	}

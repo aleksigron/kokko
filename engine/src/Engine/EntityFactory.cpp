@@ -102,7 +102,7 @@ void EntityFactory::AddComponent(World* world, Entity entity, EntityComponentTyp
 		TerrainSystem* terrainSystem = world->GetTerrainSystem();
 		TerrainId terrainId = terrainSystem->Lookup(entity);
 		if (terrainId == TerrainId::Null)
-			terrainId = terrainSystem->AddTerrain(entity, TerrainParameters());
+			terrainId = terrainSystem->AddTerrain(entity);
 		break;
 	}
 	case EntityComponentType::Particle:

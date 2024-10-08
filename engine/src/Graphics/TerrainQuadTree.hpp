@@ -20,8 +20,7 @@ namespace kokko
 {
 
 class RenderDebugSettings;
-
-struct TerrainParameters;
+struct TerrainHeightmapInfo;
 
 namespace render
 {
@@ -105,7 +104,7 @@ public:
 	TerrainQuadTree& operator=(const TerrainQuadTree&) = delete;
 	TerrainQuadTree& operator=(TerrainQuadTree&& other) noexcept;
 
-	void Initialize(uint8_t levels, const TerrainParameters& params);
+	void SetHeightmap(const TerrainHeightmapInfo* heightmap);
 
 	void UpdateTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
 		const RenderDebugSettings& renderDebug);
@@ -150,12 +149,9 @@ private:
 	void AddEdgeDependency(const QuadTreeNodeId& dependee, uint16_t dependentNodeIndex);
 	void QuadTreeToTiles(uint16_t nodeIndex);
 	void LoadTiles();
+	void LoadTileData(TerrainTile& tile, const QuadTreeNodeId& id);
 
-	static void CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale);
-
-	static uint16_t TestData(float x, float y);
-
-	static QuadTreeNodeId GetParentId(const QuadTreeNodeId& id);
+	Vec3f GetTileOrigin(const QuadTreeNodeId& id) const;
 
 	Allocator* allocator;
 	render::Device* renderDevice;
@@ -185,6 +181,7 @@ private:
 		TileData& operator=(TileData&& other) noexcept;
 	} tileData;
 
+	const TerrainHeightmapInfo* heightmap = nullptr;
 	uint8_t treeLevels = 0;
 	uint8_t maxNodeLevel = 0;
 	float terrainWidth = 0.0f;

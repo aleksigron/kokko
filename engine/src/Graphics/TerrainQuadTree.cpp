@@ -94,6 +94,77 @@ TerrainEdgeType EdgeMaskToType(TerrainEdgeMask mask)
 	}
 }
 
+QuadTreeNodeId GetParentId(const QuadTreeNodeId& id)
+{
+	if (id.level == 0)
+		return id;
+
+	return QuadTreeNodeId{ id.x / 2, id.y / 2, static_cast<uint8_t>(id.level - 1) };
+}
+
+uint8_t GetLevelsFromHeightmapResolution(uint32_t resolution)
+{
+	uint32_t tilesAtHighestLevel = resolution / TerrainTile::QuadsPerSide;
+
+	uint8_t levels = 0;
+	while (tilesAtHighestLevel > 0)
+	{
+		levels += 1;
+		tilesAtHighestLevel /= 2;
+	}
+
+	return levels;
+}
+
+TEST_CASE("Terrain.GetLevelsFromHeightmapResolution")
+{
+	CHECK(GetLevelsFromHeightmapResolution(0) == 0);
+	CHECK(GetLevelsFromHeightmapResolution(1) == 0);
+	CHECK(GetLevelsFromHeightmapResolution(31) == 0);
+	CHECK(GetLevelsFromHeightmapResolution(32) == 1);
+	CHECK(GetLevelsFromHeightmapResolution(33) == 1);
+	CHECK(GetLevelsFromHeightmapResolution(63) == 1);
+	CHECK(GetLevelsFromHeightmapResolution(64) == 2);
+	CHECK(GetLevelsFromHeightmapResolution(128) == 3);
+	CHECK(GetLevelsFromHeightmapResolution(256) == 4);
+	CHECK(GetLevelsFromHeightmapResolution(512) == 5);
+	CHECK(GetLevelsFromHeightmapResolution(1024) == 6);
+	CHECK(GetLevelsFromHeightmapResolution(2048) == 7);
+	CHECK(GetLevelsFromHeightmapResolution(4096) == 8);
+	CHECK(GetLevelsFromHeightmapResolution(8192) == 9);
+}
+
+uint16_t TestData(float x, float y)
+{
+	float f = 0.02f;
+	float a = 0.12f;
+
+	float sum = 0.5f;
+	for (int i = 1; i <= 13; i += 6)
+	{
+		sum += std::sin(x * f * i) * a / i + std::sin(y * f * i) * a / i;
+	}
+	return static_cast<uint16_t>(sum * UINT16_MAX);
+}
+
+void CreateTileTestData(TerrainTile& tile, uint32_t tileX, uint32_t tileY, float tileScale)
+{
+	const float quadScale = 1.0f / TerrainTile::QuadsPerSide;
+
+	for (int texY = 0; texY < TerrainTile::TexelsPerSide; ++texY)
+	{
+		for (int texX = 0; texX < TerrainTile::TexelsPerSide; ++texX)
+		{
+			float cx = ((texX - 1) * quadScale + tileX) * tileScale;
+			float cy = ((texY - 1) * quadScale + tileY) * tileScale;
+
+			int pixelIndex = texY * TerrainTile::TexelsPerTextureRow + texX;
+			uint16_t value = TestData(cx, cy);
+			tile.heightData[pixelIndex] = value;
+		}
+	}
+}
+
 } // namespace
 
 uint32_t HashValue32(const QuadTreeNodeId& value, uint32_t seed)
@@ -224,13 +295,12 @@ TerrainQuadTree::~TerrainQuadTree()
 		allocator->Deallocate(tileData.buffer);
 }
 
-void TerrainQuadTree::Initialize(uint8_t levels, const TerrainParameters& params)
+void TerrainQuadTree::SetHeightmap(const TerrainHeightmapInfo* heightmap)
 {
-	treeLevels = levels;
+	// TODO: Check if existing resources need to be cleared if heightmap is changed
 
-	terrainWidth = params.terrainSize;
-	terrainBottom = params.heightOrigin;
-	terrainHeight = params.heightRange;
+	this->treeLevels = GetLevelsFromHeightmapResolution(heightmap->width);
+	this->heightmap = heightmap;
 }
 
 void TerrainQuadTree::UpdateTilesToRender(
@@ -271,11 +341,8 @@ ArrayView<const TerrainTileDrawInfo> TerrainQuadTree::GetTilesToRender() const
 int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesToRenderParams& params)
 {
 	float tileScale = GetTileScale(id.level);
-
-	float halfTerrainSize = terrainWidth * 0.5f;
-	Vec3f levelOrigin(-halfTerrainSize, 0.0f, -halfTerrainSize);
 	float tileWidth = terrainWidth * tileScale;
-	Vec3f tileMin = levelOrigin + Vec3f(id.x * tileWidth, terrainBottom, id.y * tileWidth);
+	Vec3f tileMin = GetTileOrigin(id);
 	Vec3f tileSize(tileWidth, terrainHeight, tileWidth);
 
 	AABB tileBounds;
@@ -579,7 +646,7 @@ void TerrainQuadTree::LoadTiles()
 			int tilesPerDimension = GetTilesPerDimension(tile.id.level);
 			float tileScale = terrainWidth / tilesPerDimension;
 
-			CreateTileTestData(heightData, tile.id.x, tile.id.y, tileScale);
+			LoadTileData(heightData, tile.id);
 
 			renderDevice->SetTextureSubImage2D(tileData.textureIds[tileIdx], 0, 0, 0,
 				texResolution, texResolution, RenderTextureBaseFormat::R,
@@ -590,6 +657,45 @@ void TerrainQuadTree::LoadTiles()
 			tileData.count += 1;
 		}
 	}
+}
+
+void TerrainQuadTree::LoadTileData(TerrainTile& tile, const QuadTreeNodeId& id)
+{
+	if (heightmap == nullptr || heightmap->data == nullptr)
+	{
+		CreateTileTestData(tile, id.x, id.y, GetTileScale(id.level));
+		return;
+	}
+
+	const uint32_t tilesPerDimension = GetTilesPerDimension(id.level);
+	const uint32_t inWidth = heightmap->width;
+	const uint32_t inHeight = heightmap->height;
+	const uint32_t pixelsPerTileWidth = inWidth / tilesPerDimension;
+	const uint32_t pixelsPerTileHeight = inHeight / tilesPerDimension;
+	const uint32_t pixelsPerQuadWidth = pixelsPerTileWidth / TerrainTile::QuadsPerSide;
+	const uint32_t pixelsPerQuadHeight = pixelsPerTileHeight / TerrainTile::QuadsPerSide;
+
+	for (int outputY = 0; outputY < TerrainTile::TexelsPerSide; ++outputY)
+	{
+		for (int outputX = 0; outputX < TerrainTile::TexelsPerSide; ++outputX)
+		{
+			int inputX = pixelsPerTileWidth * id.x + pixelsPerQuadWidth * (outputX - 1);
+			int inputY = pixelsPerTileHeight * id.y + pixelsPerQuadHeight * (outputY - 1);
+			int clampedX = std::clamp(inputX, 0, static_cast<int>(inWidth - 1));
+			int clampedY = std::clamp(inputY, 0, static_cast<int>(inHeight - 1));
+			int inputIdx = clampedY * inWidth + clampedX;
+
+			int outputIdx = outputY * TerrainTile::TexelsPerTextureRow + outputX;
+			tile.heightData[outputIdx] = heightmap->data[inputIdx];
+		}
+	}
+}
+
+Vec3f TerrainQuadTree::GetTileOrigin(const QuadTreeNodeId& id) const
+{
+	float halfSize = terrainWidth * 0.5f;
+	float tileWidth = terrainWidth * GetTileScale(id.level);
+	return Vec3f(id.x * tileWidth - halfSize, terrainBottom, id.y * tileWidth - halfSize);
 }
 
 render::TextureId TerrainQuadTree::GetTileHeightTexture(const QuadTreeNodeId& id)
@@ -627,45 +733,6 @@ TEST_CASE("TerrainQuadTree.GetTileScale")
 	CHECK(TerrainQuadTree::GetTileScale(1) == doctest::Approx(0.5f));
 	CHECK(TerrainQuadTree::GetTileScale(2) == doctest::Approx(0.25f));
 	CHECK(TerrainQuadTree::GetTileScale(3) == doctest::Approx(0.125f));
-}
-
-void TerrainQuadTree::CreateTileTestData(TerrainTile& tile, int tileX, int tileY, float tileScale)
-{
-	const float quadScale = 1.0f / TerrainTile::QuadsPerSide;
-
-	for (int texY = 0; texY < TerrainTile::TexelsPerSide; ++texY)
-	{
-		for (int texX = 0; texX < TerrainTile::TexelsPerSide; ++texX)
-		{
-			float cx = ((texX - 1) * quadScale + tileX) * tileScale;
-			float cy = ((texY - 1) * quadScale + tileY) * tileScale;
-
-			int pixelIndex = texY * TerrainTile::TexelsPerTextureRow + texX;
-			uint16_t value = TestData(cx, cy);
-			tile.heightData[pixelIndex] = value;
-		}
-	}
-}
-
-uint16_t TerrainQuadTree::TestData(float x, float y)
-{
-	float f = 0.02f;
-	float a = 0.12f;
-
-	float sum = 0.5f;
-	for (int i = 1; i <= 13; i += 6)
-	{
-		sum += std::sin(x * f * i) * a / i + std::sin(y * f * i) * a / i;
-	}
-	return static_cast<uint16_t>(sum * UINT16_MAX);
-}
-
-QuadTreeNodeId TerrainQuadTree::GetParentId(const QuadTreeNodeId& id)
-{
-	if (id.level == 0)
-		return id;
-
-	return QuadTreeNodeId{ id.x / 2, id.y / 2, static_cast<uint8_t>(id.level - 1) };
 }
 
 } // namespace kokko
