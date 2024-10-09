@@ -1,6 +1,7 @@
 #version 450
 #property height_map tex2d
 #property albedo_map tex2d
+#property roughness_map tex2d
 
 #stage vertex
 #include "engine/shaders/common/constants.glsl"
@@ -59,12 +60,14 @@ in VS_TO_FS {
 } fs_in;
 
 uniform sampler2D albedo_map;
+uniform sampler2D roughness_map;
 
 void main()
 {
 	vec3 N = normalize(fs_in.normal);
+	float roughness = texture(roughness_map, fs_in.tex_coord).r * uniforms.roughness;
 
 	g_albedo = texture(albedo_map, fs_in.tex_coord).rgb;
 	g_normal = pack_normal(N);
-	g_material = vec3(uniforms.metalness, uniforms.roughness, 0.0);
+	g_material = vec3(uniforms.metalness, roughness, 0.0);
 }

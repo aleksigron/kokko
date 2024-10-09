@@ -619,6 +619,10 @@ void EntityView::DrawTerrainComponent(EditorContext& context, World* world)
 				terrainSystem->SetRoughnessTexture(terrainId, roughOpt.GetValue(), texture.textureObjectId);
 			}
 
+			float roughnessValue = terrainSystem->GetRoughnessValue(terrainId);
+			if (ImGui::SliderFloat("Roughness value", &roughnessValue, 0.0f, 1.0f))
+				terrainSystem->SetRoughnessValue(terrainId, roughnessValue);
+
 			if (componentVisible == false)
 				terrainSystem->RemoveTerrain(terrainId);
 		}

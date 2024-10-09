@@ -72,6 +72,7 @@ TerrainSystem::TerrainInstance& TerrainSystem::TerrainInstance::operator=(Terrai
 	heightmapSize = other.heightmapSize;
 	albedoTexture = other.albedoTexture;
 	roughnessTexture = other.roughnessTexture;
+	roughnessValue = other.roughnessValue;
 	quadTree = std::move(other.quadTree);
 
 	other.entity = Entity::Null;
@@ -81,6 +82,7 @@ TerrainSystem::TerrainInstance& TerrainSystem::TerrainInstance::operator=(Terrai
 	other.heightmapSize = 0;
 	other.albedoTexture = TextureInfo();
 	other.roughnessTexture = TextureInfo();
+	other.roughnessValue = 1.0f;
 
 	return *this;
 }
@@ -275,6 +277,18 @@ void TerrainSystem::SetRoughnessTexture(TerrainId id, TextureId textureId, rende
 	instances[id.i].roughnessTexture.renderId = textureObject;
 }
 
+float TerrainSystem::GetRoughnessValue(TerrainId id) const
+{
+	return instances[id.i].roughnessValue;
+}
+
+void TerrainSystem::SetRoughnessValue(TerrainId id, float roughness)
+{
+	assert(id.i != 0 && id.i < instances.GetCount());
+
+	instances[id.i].roughnessValue = roughness;
+}
+
 void TerrainSystem::Submit(const SubmitParameters& parameters)
 {
 	for (size_t i = 1, count = instances.GetCount(); i < count; ++i)
@@ -294,7 +308,8 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 	// Select tiles to render
 
-	TerrainQuadTree& quadTree = instances[id.i].quadTree;
+	TerrainInstance& instance = instances[id.i];
+	TerrainQuadTree& quadTree = instance.quadTree;
 	quadTree.UpdateTilesToRender(viewport.frustum, viewport.position, parameters.renderDebug);
 	ArrayView<const TerrainTileDrawInfo> tiles = quadTree.GetTilesToRender();
 	uint32_t tileCount = static_cast<uint32_t>(tiles.GetCount());
@@ -307,7 +322,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	TerrainUniformBlock uniforms;
 	uniforms.MVP = viewport.viewProjection;
 	uniforms.MV = viewport.view.inverse;
-	uniforms.textureScale = instances[id.i].textureScale;
+	uniforms.textureScale = instance.textureScale;
 	uniforms.tileOffset = Vec2f();
 	uniforms.tileScale = 1.0f;
 	uniforms.terrainSize = terrainWidth;
@@ -315,7 +330,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 	uniforms.heightOrigin = quadTree.GetBottom();
 	uniforms.heightRange = terrainHeight;
 	uniforms.metalness = 0.0f;
-	uniforms.roughness = 0.5f;
+	uniforms.roughness = instance.roughnessValue;
 
 	uniformStagingBuffer.Resize(tiles.GetCount() * uniformBlockStride);
 
@@ -363,6 +378,7 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 
 	const TextureUniform* heightMap = shader.uniforms.FindTextureUniformByNameHash("height_map"_hash);
 	const TextureUniform* albedoMap = shader.uniforms.FindTextureUniformByNameHash("albedo_map"_hash);
+	const TextureUniform* roughnessMap = shader.uniforms.FindTextureUniformByNameHash("roughness_map"_hash);
 
 	if (albedoMap != nullptr)
 	{
@@ -376,6 +392,20 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 		}
 
 		encoder->BindTextureToShader(albedoMap->uniformLocation, 1, textureObjectId);
+	}
+
+	if (roughnessMap != nullptr)
+	{
+		kokko::render::TextureId textureObjectId;
+		if (instances[id.i].roughnessTexture.renderId != 0)
+			textureObjectId = instances[id.i].roughnessTexture.renderId;
+		else
+		{
+			TextureId emptyRoughnessId = textureManager->GetId_White2D();
+			textureObjectId = textureManager->GetTextureData(emptyRoughnessId).textureObjectId;
+		}
+
+		encoder->BindTextureToShader(roughnessMap->uniformLocation, 2, textureObjectId);
 	}
 
 	// For height texture
