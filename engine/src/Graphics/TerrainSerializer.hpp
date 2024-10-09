@@ -66,6 +66,14 @@ public:
 			terrainSystem->SetHeight(id, height);
 		}
 
+		auto roughnessNode = map.find_child("roughness_value");
+		if (roughnessNode.valid() && roughnessNode.has_val() && roughnessNode.val().is_real())
+		{
+			float roughness;
+			roughnessNode >> roughness;
+			terrainSystem->SetRoughnessValue(id, roughness);
+		}
+
 		auto heightTexNode = map.find_child("height_texture");
 		if (heightTexNode.valid() && heightTexNode.has_val())
 		{
@@ -94,10 +102,10 @@ public:
 			}
 		}
 
-		auto roughnessNode = map.find_child("roughness_texture");
-		if (roughnessNode.valid() && roughnessNode.has_val())
+		auto roughnessTexNode = map.find_child("roughness_texture");
+		if (roughnessTexNode.valid() && roughnessTexNode.has_val())
 		{
-			auto uidSubstr = roughnessNode.val();
+			auto uidSubstr = roughnessTexNode.val();
 			auto uidOpt = Uid::FromString(ArrayView(uidSubstr.str, uidSubstr.len));
 			if (uidOpt.HasValue())
 			{
@@ -125,11 +133,13 @@ public:
 			float heightOrigin = terrainSystem->GetBottom(terrainId);
 			float heightRange = terrainSystem->GetHeight(terrainId);
 			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
+			float roughnessValue = terrainSystem->GetRoughnessValue(terrainId);
 
 			componentNode["terrain_size"] << size;
 			componentNode["texture_scale"] << textureScale;
 			componentNode["terrain_bottom"] << heightOrigin;
 			componentNode["terrain_height"] << heightRange;
+			componentNode["roughness_value"] << roughnessValue;
 
 			char uidStr[Uid::StringLength + 1];
 

@@ -95,6 +95,9 @@ public:
 	TextureId GetRoughnessTextureId(TerrainId id) const;
 	void SetRoughnessTexture(TerrainId id, TextureId textureId, render::TextureId textureObject);
 
+	float GetRoughnessValue(TerrainId id) const;
+	void SetRoughnessValue(TerrainId id, float roughness);
+
 	virtual void Submit(const SubmitParameters& parameters) override;
 	virtual void Render(const RenderParameters& parameters) override;
 
@@ -145,6 +148,7 @@ private:
 
 		TextureInfo albedoTexture;
 		TextureInfo roughnessTexture;
+		float roughnessValue = 1.0f;
 
 		TerrainQuadTree quadTree;
 
