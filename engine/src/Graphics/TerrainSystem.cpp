@@ -58,24 +58,8 @@ struct TerrainUniformBlock
 };
 
 TerrainSystem::TerrainInstance::TerrainInstance(TerrainQuadTree&& quadTree) :
-	entity(Entity::Null),
 	quadTree(std::move(quadTree))
 {
-}
-
-TerrainHeightmapInfo& TerrainHeightmapInfo::operator=(TerrainHeightmapInfo&& other) noexcept
-{
-	data = other.data;
-	width = other.width;
-	height = other.height;
-	channels = other.channels;
-
-	other.data = nullptr;
-	other.width = 0;
-	other.height = 0;
-	other.channels = 0;
-
-	return *this;
 }
 
 TerrainSystem::TerrainInstance& TerrainSystem::TerrainInstance::operator=(TerrainInstance&& other) noexcept
@@ -84,7 +68,8 @@ TerrainSystem::TerrainInstance& TerrainSystem::TerrainInstance::operator=(Terrai
 	textureScale = other.textureScale;
 	hasHeightTextureUid = other.hasHeightTextureUid;
 	heightTextureUid = other.heightTextureUid;
-	heightmap = std::move(other.heightmap);
+	heightmapPixels = other.heightmapPixels;
+	heightmapSize = other.heightmapSize;
 	albedoTexture = other.albedoTexture;
 	roughnessTexture = other.roughnessTexture;
 	quadTree = std::move(other.quadTree);
@@ -92,6 +77,8 @@ TerrainSystem::TerrainInstance& TerrainSystem::TerrainInstance::operator=(Terrai
 	other.entity = Entity::Null;
 	other.textureScale = Vec2f();
 	other.hasHeightTextureUid = false;
+	other.heightmapPixels = nullptr;
+	other.heightmapSize = 0;
 	other.albedoTexture = TextureInfo();
 	other.roughnessTexture = TextureInfo();
 
@@ -455,26 +442,29 @@ bool TerrainSystem::LoadHeightmap(TerrainId id, Uid textureUid)
 		imageBytes = stbi_load_16_from_memory(fileBytesPtr, length, &width, &height, &nrComponents, 1);
 	}
 
-	if (imageBytes != nullptr)
+	if (imageBytes == nullptr)
 	{
-		TerrainInstance& instance = instances[id.i];
-
-		if (instance.heightmap.data != nullptr)
-			stbi_image_free(instance.heightmap.data);
-
-		instance.heightmap.data = imageBytes;
-		instance.heightmap.width = width;
-		instance.heightmap.height = height;
-		instance.heightmap.channels = nrComponents;
-
-		instance.quadTree.SetHeightmap(&instance.heightmap);
-
-		return true;
+		KK_LOG_ERROR("Terrain heightmap loading failed: image loading failed");
+		return false;
 	}
-	else
-		KK_LOG_ERROR("Couldn't load terrain heightmap with stb_image");
 
-	return false;
+	if (width != height)
+	{
+		KK_LOG_ERROR("Terrain heightmap loading failed: image isn't square");
+		return false;
+	}
+
+	TerrainInstance& instance = instances[id.i];
+
+	if (instance.heightmapPixels != nullptr)
+		stbi_image_free(instance.heightmapPixels);
+
+	instance.heightmapPixels = imageBytes;
+	instance.heightmapSize = width;
+
+	instance.quadTree.SetHeightmap(imageBytes, width);
+
+	return true;
 }
 
 void TerrainSystem::CreateVertexAndIndexData()

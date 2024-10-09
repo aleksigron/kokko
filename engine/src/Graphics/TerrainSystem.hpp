@@ -53,16 +53,6 @@ struct TerrainParameters
 	float heightRange = 2.0f;
 };
 */
-struct TerrainHeightmapInfo
-{
-	uint16_t* data = nullptr;
-	uint32_t width = 0;
-	uint32_t height = 0;
-	uint32_t channels = 0;
-
-	TerrainHeightmapInfo& operator=(const TerrainHeightmapInfo& other) = delete;
-	TerrainHeightmapInfo& operator=(TerrainHeightmapInfo&& other) noexcept;
-};
 
 class TerrainSystem : public GraphicsFeature
 {
@@ -150,7 +140,8 @@ private:
 		bool hasHeightTextureUid = false;
 		Uid heightTextureUid;
 
-		TerrainHeightmapInfo heightmap;
+		uint16_t* heightmapPixels = nullptr;
+		uint32_t heightmapSize = 0;
 
 		TextureInfo albedoTexture;
 		TextureInfo roughnessTexture;
