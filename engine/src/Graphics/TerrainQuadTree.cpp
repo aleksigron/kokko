@@ -295,12 +295,17 @@ TerrainQuadTree::~TerrainQuadTree()
 		allocator->Deallocate(tileData.buffer);
 }
 
-void TerrainQuadTree::SetHeightmap(const TerrainHeightmapInfo* heightmap)
+void TerrainQuadTree::SetHeightmap(const uint16_t* pixels, uint32_t resolution)
 {
-	// TODO: Check if existing resources need to be cleared if heightmap is changed
+	if (pixels != heightmapPixels || resolution != heightmapSize)
+	{
+		tileData.count = 0;
+		tileIdToIndexMap.Clear();
 
-	this->treeLevels = GetLevelsFromHeightmapResolution(heightmap->width);
-	this->heightmap = heightmap;
+		treeLevels = GetLevelsFromHeightmapResolution(resolution);
+		heightmapPixels = pixels;
+		heightmapSize = resolution;
+	}
 }
 
 void TerrainQuadTree::UpdateTilesToRender(
@@ -661,32 +666,28 @@ void TerrainQuadTree::LoadTiles()
 
 void TerrainQuadTree::LoadTileData(TerrainTile& tile, const QuadTreeNodeId& id)
 {
-	if (heightmap == nullptr || heightmap->data == nullptr)
+	if (heightmapPixels == nullptr)
 	{
 		CreateTileTestData(tile, id.x, id.y, GetTileScale(id.level));
 		return;
 	}
 
 	const uint32_t tilesPerDimension = GetTilesPerDimension(id.level);
-	const uint32_t inWidth = heightmap->width;
-	const uint32_t inHeight = heightmap->height;
-	const uint32_t pixelsPerTileWidth = inWidth / tilesPerDimension;
-	const uint32_t pixelsPerTileHeight = inHeight / tilesPerDimension;
-	const uint32_t pixelsPerQuadWidth = pixelsPerTileWidth / TerrainTile::QuadsPerSide;
-	const uint32_t pixelsPerQuadHeight = pixelsPerTileHeight / TerrainTile::QuadsPerSide;
+	const uint32_t pixelsPerTile = heightmapSize / tilesPerDimension;
+	const uint32_t pixelsPerQuad = pixelsPerTile / TerrainTile::QuadsPerSide;
 
 	for (int outputY = 0; outputY < TerrainTile::TexelsPerSide; ++outputY)
 	{
 		for (int outputX = 0; outputX < TerrainTile::TexelsPerSide; ++outputX)
 		{
-			int inputX = pixelsPerTileWidth * id.x + pixelsPerQuadWidth * (outputX - 1);
-			int inputY = pixelsPerTileHeight * id.y + pixelsPerQuadHeight * (outputY - 1);
-			int clampedX = std::clamp(inputX, 0, static_cast<int>(inWidth - 1));
-			int clampedY = std::clamp(inputY, 0, static_cast<int>(inHeight - 1));
-			int inputIdx = clampedY * inWidth + clampedX;
+			int inputX = pixelsPerTile * id.x + pixelsPerQuad * (outputX - 1);
+			int inputY = pixelsPerTile * id.y + pixelsPerQuad * (outputY - 1);
+			int clampedX = std::clamp(inputX, 0, static_cast<int>(heightmapSize - 1));
+			int clampedY = std::clamp(inputY, 0, static_cast<int>(heightmapSize - 1));
+			int inputIdx = clampedY * heightmapSize + clampedX;
 
 			int outputIdx = outputY * TerrainTile::TexelsPerTextureRow + outputX;
-			tile.heightData[outputIdx] = heightmap->data[inputIdx];
+			tile.heightData[outputIdx] = heightmapPixels[inputIdx];
 		}
 	}
 }

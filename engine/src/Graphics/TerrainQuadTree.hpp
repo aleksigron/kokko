@@ -104,7 +104,7 @@ public:
 	TerrainQuadTree& operator=(const TerrainQuadTree&) = delete;
 	TerrainQuadTree& operator=(TerrainQuadTree&& other) noexcept;
 
-	void SetHeightmap(const TerrainHeightmapInfo* heightmap);
+	void SetHeightmap(const uint16_t* pixels, uint32_t resolution);
 
 	void UpdateTilesToRender(const FrustumPlanes& frustum, const Vec3f& cameraPos,
 		const RenderDebugSettings& renderDebug);
@@ -181,7 +181,9 @@ private:
 		TileData& operator=(TileData&& other) noexcept;
 	} tileData;
 
-	const TerrainHeightmapInfo* heightmap = nullptr;
+	const uint16_t* heightmapPixels = nullptr;
+	uint32_t heightmapSize = 0;
+
 	uint8_t treeLevels = 0;
 	uint8_t maxNodeLevel = 0;
 	float terrainWidth = 0.0f;
