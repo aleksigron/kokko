@@ -255,7 +255,8 @@ TerrainQuadTree::TerrainQuadTree(TerrainQuadTree&& other) noexcept :
 	maxNodeLevel(other.maxNodeLevel),
 	terrainWidth(other.terrainWidth),
 	terrainBottom(other.terrainBottom),
-	terrainHeight(other.terrainHeight)
+	terrainHeight(other.terrainHeight),
+	lodSizeFactor(other.lodSizeFactor)
 {
 }
 
@@ -275,6 +276,7 @@ TerrainQuadTree& TerrainQuadTree::operator=(TerrainQuadTree&& other) noexcept
 	terrainWidth = other.terrainWidth;
 	terrainBottom = other.terrainBottom;
 	terrainHeight = other.terrainHeight;
+	lodSizeFactor = other.lodSizeFactor;
 
 	return *this;
 }
@@ -356,11 +358,10 @@ int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesTo
 
 	if (Intersect::FrustumAabb(params.frustum, tileBounds) == false)
 		return -1;
-	
-	constexpr float sizeFactor = 0.5f;
 
 	bool lastLevel = id.level + 1 == treeLevels;
-	bool tileIsSmallEnough = lastLevel || (tileWidth < (tileBounds.center - params.cameraPos).Magnitude() * sizeFactor);
+	bool tileIsSmallEnough =
+		lastLevel || (tileWidth < (tileBounds.center - params.cameraPos).Magnitude() * lodSizeFactor);
 
 	int nodeIndex = static_cast<int>(nodes.GetCount());
 	assert(nodeIndex <= UINT16_MAX);

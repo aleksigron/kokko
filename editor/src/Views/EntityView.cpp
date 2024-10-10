@@ -546,6 +546,8 @@ void EntityView::DrawTerrainComponent(EditorContext& context, World* world)
 			float terrainSize = terrainSystem->GetSize(terrainId);
 			float heightOrigin = terrainSystem->GetBottom(terrainId);
 			float heightRange = terrainSystem->GetHeight(terrainId);
+			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
+			float lodSizeFactor = terrainSystem->GetLodSizeFactor(terrainId);
 
 			if (ImGui::DragFloat("Terrain size", &terrainSize, 1.0f, 1.0f))
 				terrainSystem->SetSize(terrainId, terrainSize);
@@ -556,9 +558,11 @@ void EntityView::DrawTerrainComponent(EditorContext& context, World* world)
 			if (ImGui::DragFloat("Height range", &heightRange, 0.1f, 0.1f))
 				terrainSystem->SetHeight(terrainId, heightRange);
 
-			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
 			if (ImGui::DragFloat2("Texture scale", textureScale.ValuePointer(), 0.01f, 0.01f))
 				terrainSystem->SetTextureScale(terrainId, textureScale);
+
+			if (ImGui::SliderFloat("LOD size factor", &lodSizeFactor, 0.2f, 2.0f))
+				terrainSystem->SetLodSizeFactor(terrainId, lodSizeFactor);
 
 			// Height map texture
 

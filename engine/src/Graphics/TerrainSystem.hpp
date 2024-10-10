@@ -86,6 +86,9 @@ public:
 	Vec2f GetTextureScale(TerrainId id) const { return instances[id.i].textureScale; }
 	void SetTextureScale(TerrainId id, Vec2f scale) { instances[id.i].textureScale = scale; }
 
+	float GetLodSizeFactor(TerrainId id) const { return instances[id.i].quadTree.GetLodSizeFactor(); }
+	void SetLodSizeFactor(TerrainId id, float factor) { instances[id.i].quadTree.SetLodSizeFactor(factor); }
+
 	Optional<Uid> GetHeightTexture(TerrainId id) const;
 	void SetHeightTexture(TerrainId id, Uid textureUid);
 
