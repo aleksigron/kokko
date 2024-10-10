@@ -121,6 +121,9 @@ public:
 	float GetHeight() const { return terrainHeight; }
 	void SetHeight(float height) { terrainHeight = height; }
 
+	float GetLodSizeFactor() const { return lodSizeFactor; }
+	void SetLodSizeFactor(float factor) { lodSizeFactor = factor; }
+
 	render::TextureId GetTileHeightTexture(const QuadTreeNodeId& id);
 
 	static uint32_t GetTilesPerDimension(uint8_t level);
@@ -189,6 +192,7 @@ private:
 	float terrainWidth = 0.0f;
 	float terrainBottom = 0.0f;
 	float terrainHeight = 0.0f;
+	float lodSizeFactor = 0.5f;
 };
 
 }

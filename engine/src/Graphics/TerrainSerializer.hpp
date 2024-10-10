@@ -66,6 +66,14 @@ public:
 			terrainSystem->SetHeight(id, height);
 		}
 
+		auto lodSizeNode = map.find_child("lod_size_factor");
+		if (lodSizeNode.valid() && lodSizeNode.has_val() && lodSizeNode.val().is_real())
+		{
+			float lodSizeFactor;
+			lodSizeNode >> lodSizeFactor;
+			terrainSystem->SetLodSizeFactor(id, lodSizeFactor);
+		}
+
 		auto roughnessNode = map.find_child("roughness_value");
 		if (roughnessNode.valid() && roughnessNode.has_val() && roughnessNode.val().is_real())
 		{
@@ -133,12 +141,14 @@ public:
 			float heightOrigin = terrainSystem->GetBottom(terrainId);
 			float heightRange = terrainSystem->GetHeight(terrainId);
 			Vec2f textureScale = terrainSystem->GetTextureScale(terrainId);
+			float lodSizeFactor = terrainSystem->GetLodSizeFactor(terrainId);
 			float roughnessValue = terrainSystem->GetRoughnessValue(terrainId);
 
 			componentNode["terrain_size"] << size;
 			componentNode["texture_scale"] << textureScale;
 			componentNode["terrain_bottom"] << heightOrigin;
 			componentNode["terrain_height"] << heightRange;
+			componentNode["lod_size_factor"] << lodSizeFactor;
 			componentNode["roughness_value"] << roughnessValue;
 
 			char uidStr[Uid::StringLength + 1];
