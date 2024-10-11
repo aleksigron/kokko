@@ -300,7 +300,7 @@ void TerrainSystem::Submit(const SubmitParameters& parameters)
 
 void TerrainSystem::Render(const RenderParameters& parameters)
 {
-	KOKKO_PROFILE_FUNCTION();
+	KOKKO_PROFILE_SCOPE("TerrainSystem::Render");
 
 	TerrainId id{ static_cast<uint32_t>(parameters.featureObjectId) };
 	const auto& viewport = parameters.fullscreenViewport;
@@ -420,6 +420,9 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 		for (const auto& tile : tiles)
 		{
 			uint8_t tileMeshTypeIndex = static_cast<uint8_t>(tile.edgeType);
+			if (tileMeshTypeIndex >= MeshTypeCount)
+				continue;
+
 			if (tileMeshTypeIndex != prevMeshType)
 			{
 				encoder->BindVertexArray(vertexData.vertexArrays[tileMeshTypeIndex]);

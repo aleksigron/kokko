@@ -33,9 +33,14 @@ struct TerrainTile
 	static constexpr int QuadsPerSide = 32;
 	static constexpr int VerticesPerSide = QuadsPerSide + 1;
 	static constexpr int TexelsPerSide = VerticesPerSide + 2;
-	static constexpr int TexelsPerTextureRow = TexelsPerSide + 1; // Texel data rows need a stride of 4 
+	static constexpr int TexelsPerTextureRow = TexelsPerSide + 1; // Texel data rows need a stride of 4
 
-	uint16_t heightData[TexelsPerTextureRow * TexelsPerSide];
+	double timeLastUsed = -1.0;
+};
+
+struct TerrainTileHeightData
+{
+	uint16_t data[TerrainTile::TexelsPerTextureRow * TerrainTile::TexelsPerSide];
 };
 
 struct QuadTreeNodeId
@@ -152,7 +157,7 @@ private:
 	void AddEdgeDependency(const QuadTreeNodeId& dependee, uint16_t dependentNodeIndex);
 	void QuadTreeToTiles(uint16_t nodeIndex);
 	void LoadTiles();
-	void LoadTileData(TerrainTile& tile, const QuadTreeNodeId& id);
+	void LoadTileData(const QuadTreeNodeId& id, TerrainTileHeightData& heightDataOut);
 
 	Vec3f GetTileOrigin(const QuadTreeNodeId& id) const;
 
@@ -164,11 +169,11 @@ private:
 	SortedArray<QuadTreeNodeId> parentsToCheck;
 	SortedArray<QuadTreeNodeId> neighborsToCheck;
 	HashMap<QuadTreeNodeId, EdgeTypeDependents> edgeDependencies; // Key = dependee node, Value = dependent nodes
-	HashMap<QuadTreeNodeId, uint32_t> tileIdToIndexMap;
+	HashMap<QuadTreeNodeId, uint32_t> tileIdToIndexMap; // Index into tileData
 
 	struct TileData
 	{
-		TerrainTile* heightData = nullptr;
+		TerrainTile* tiles = nullptr;
 		render::TextureId* textureIds = nullptr;
 
 		void* buffer = nullptr;

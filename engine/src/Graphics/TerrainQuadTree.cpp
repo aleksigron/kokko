@@ -147,7 +147,7 @@ uint16_t TestData(float x, float y)
 	return static_cast<uint16_t>(sum * UINT16_MAX);
 }
 
-void CreateTileTestData(TerrainTile& tile, uint32_t tileX, uint32_t tileY, float tileScale)
+void CreateTileTestData(TerrainTileHeightData& tile, uint32_t tileX, uint32_t tileY, float tileScale)
 {
 	const float quadScale = 1.0f / TerrainTile::QuadsPerSide;
 
@@ -160,7 +160,7 @@ void CreateTileTestData(TerrainTile& tile, uint32_t tileX, uint32_t tileY, float
 
 			int pixelIndex = texY * TerrainTile::TexelsPerTextureRow + texX;
 			uint16_t value = TestData(cx, cy);
-			tile.heightData[pixelIndex] = value;
+			tile.data[pixelIndex] = value;
 		}
 	}
 }
@@ -183,14 +183,14 @@ void TerrainQuadTree::EdgeTypeDependents::AddDependent(uint16_t dependent)
 }
 
 TerrainQuadTree::TileData::TileData(TileData&& other) noexcept :
-	heightData(other.heightData),
+	tiles(other.tiles),
 	textureIds(other.textureIds),
 	buffer(other.buffer),
 	count(other.count),
 	textureInitCount(other.textureInitCount),
 	allocated(other.allocated)
 {
-	other.heightData = nullptr;
+	other.tiles = nullptr;
 	other.textureIds = nullptr;
 	other.buffer = nullptr;
 	other.count = 0;
@@ -200,14 +200,14 @@ TerrainQuadTree::TileData::TileData(TileData&& other) noexcept :
 
 TerrainQuadTree::TileData& TerrainQuadTree::TileData::operator=(TileData&& other) noexcept
 {
-	heightData = other.heightData;
+	tiles = other.tiles;
 	textureIds = other.textureIds;
 	buffer = other.buffer;
 	count = other.count;
 	textureInitCount = other.textureInitCount;
 	allocated = other.allocated;
 
-	other.heightData = nullptr;
+	other.tiles = nullptr;
 	other.textureIds = nullptr;
 	other.buffer = nullptr;
 	other.count = 0;
@@ -613,12 +613,12 @@ void TerrainQuadTree::LoadTiles()
 		newData.textureInitCount = tileData.textureInitCount;
 		newData.allocated = newAllocated;
 
-		newData.heightData = static_cast<TerrainTile*>(newData.buffer);
-		newData.textureIds = reinterpret_cast<render::TextureId*>(newData.heightData + newAllocated);
+		newData.tiles = static_cast<TerrainTile*>(newData.buffer);
+		newData.textureIds = reinterpret_cast<render::TextureId*>(newData.tiles + newAllocated);
 
 		if (tileData.buffer != nullptr)
 		{
-			std::memcpy(newData.heightData, tileData.heightData, tileData.count * sizeof(TerrainTile));
+			std::memcpy(newData.tiles, tileData.tiles, tileData.count * sizeof(TerrainTile));
 			std::memcpy(newData.textureIds, tileData.textureIds, tileData.textureInitCount * sizeof(render::TextureId));
 
 			allocator->Deallocate(tileData.buffer);
@@ -641,35 +641,33 @@ void TerrainQuadTree::LoadTiles()
 		tileData.textureInitCount = required;
 	}
 
-	for (const TerrainTileDrawInfo& tile : drawTiles)
+	TerrainTileHeightData heightData;
+
+	for (const TerrainTileDrawInfo& drawTile : drawTiles)
 	{
-		auto pair = tileIdToIndexMap.Lookup(tile.id);
+		auto pair = tileIdToIndexMap.Lookup(drawTile.id);
 		if (pair == nullptr)
 		{
 			uint32_t tileIdx = tileData.count;
-			TerrainTile& heightData = tileData.heightData[tileIdx];
 
-			int tilesPerDimension = GetTilesPerDimension(tile.id.level);
-			float tileScale = terrainWidth / tilesPerDimension;
-
-			LoadTileData(heightData, tile.id);
+			LoadTileData(drawTile.id, heightData);
 
 			renderDevice->SetTextureSubImage2D(tileData.textureIds[tileIdx], 0, 0, 0,
 				texResolution, texResolution, RenderTextureBaseFormat::R,
-				RenderTextureDataType::UnsignedShort, tileData.heightData[tileIdx].heightData);
+				RenderTextureDataType::UnsignedShort, heightData.data);
 
-			pair = tileIdToIndexMap.Insert(tile.id);
+			pair = tileIdToIndexMap.Insert(drawTile.id);
 			pair->second = tileIdx;
 			tileData.count += 1;
 		}
 	}
 }
 
-void TerrainQuadTree::LoadTileData(TerrainTile& tile, const QuadTreeNodeId& id)
+void TerrainQuadTree::LoadTileData(const QuadTreeNodeId& id, TerrainTileHeightData& heightDataOut)
 {
 	if (heightmapPixels == nullptr)
 	{
-		CreateTileTestData(tile, id.x, id.y, GetTileScale(id.level));
+		CreateTileTestData(heightDataOut, id.x, id.y, GetTileScale(id.level));
 		return;
 	}
 
@@ -688,7 +686,7 @@ void TerrainQuadTree::LoadTileData(TerrainTile& tile, const QuadTreeNodeId& id)
 			int inputIdx = clampedY * heightmapSize + clampedX;
 
 			int outputIdx = outputY * TerrainTile::TexelsPerTextureRow + outputX;
-			tile.heightData[outputIdx] = heightmapPixels[inputIdx];
+			heightDataOut.data[outputIdx] = heightmapPixels[inputIdx];
 		}
 	}
 }
