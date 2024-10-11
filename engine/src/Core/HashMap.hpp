@@ -405,7 +405,7 @@ public:
 			if (data != nullptr &&
 				pair >= data &&
 				pair < data + allocated &&
-				pair->first != KeyType{})
+				!(pair->first == KeyType{}))
 			{
 				// Remove this cell by shuffling neighboring cells
 				// so there are no gaps in anyone's probe chain
