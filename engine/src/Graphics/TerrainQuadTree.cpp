@@ -21,6 +21,8 @@
 #include "Rendering/CameraParameters.hpp"
 #include "Rendering/RenderDevice.hpp"
 
+#include "System/Time.hpp"
+
 namespace kokko
 {
 
@@ -590,6 +592,45 @@ void TerrainQuadTree::QuadTreeToTiles(uint16_t nodeIndex)
 
 void TerrainQuadTree::LoadTiles()
 {
+	const double currentTime = Time::GetRunningTime();
+	const double oldTileThresholdTime = currentTime - 10.0;
+
+	// Unload tiles that haven't been used for a while
+	for (uint32_t i = 0; i < tileData.count; )
+	{
+		if (tileData.tiles[i].timeLastUsed < oldTileThresholdTime)
+		{
+			QuadTreeNodeId deletedTileId = tileData.tiles[i].id;
+			if (i + 1 < tileData.count) // Move the last tile into this slot
+			{
+				uint32_t moveIdx = tileData.count - 1;
+				QuadTreeNodeId movedTileId = tileData.tiles[moveIdx].id;
+
+				tileData.tiles[i] = tileData.tiles[moveIdx];
+
+				// Swap texture IDs
+				render::TextureId tempTexture = tileData.textureIds[i];
+				tileData.textureIds[i] = tileData.textureIds[moveIdx];
+				tileData.textureIds[moveIdx] = tempTexture;
+
+				// Update moved tile's ID to index mapping
+				if (auto pair = tileIdToIndexMap.Lookup(movedTileId))
+					pair->second = i;
+			}
+
+			// Remove deleted tile's ID to index mapping
+			if (auto pair = tileIdToIndexMap.Lookup(deletedTileId))
+				tileIdToIndexMap.Remove(pair);
+
+			tileData.count -= 1;
+			continue;
+		}
+		
+		i += 1;
+	}
+
+	// Load new tiles that are missing
+
 	size_t tileCount = drawTiles.GetCount();
 
 	uint32_t missingTiles = 0;
@@ -646,9 +687,17 @@ void TerrainQuadTree::LoadTiles()
 	for (const TerrainTileDrawInfo& drawTile : drawTiles)
 	{
 		auto pair = tileIdToIndexMap.Lookup(drawTile.id);
-		if (pair == nullptr)
+		if (pair != nullptr)
+		{
+			tileData.tiles[pair->second].timeLastUsed = currentTime;
+		}
+		else
 		{
 			uint32_t tileIdx = tileData.count;
+
+			TerrainTile& tile = tileData.tiles[tileIdx];
+			tile.id = drawTile.id;
+			tile.timeLastUsed = currentTime;
 
 			LoadTileData(drawTile.id, heightData);
 

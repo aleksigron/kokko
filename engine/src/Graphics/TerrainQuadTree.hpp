@@ -28,21 +28,6 @@ struct TextureId;
 class Device;
 }
 
-struct TerrainTile
-{
-	static constexpr int QuadsPerSide = 32;
-	static constexpr int VerticesPerSide = QuadsPerSide + 1;
-	static constexpr int TexelsPerSide = VerticesPerSide + 2;
-	static constexpr int TexelsPerTextureRow = TexelsPerSide + 1; // Texel data rows need a stride of 4
-
-	double timeLastUsed = -1.0;
-};
-
-struct TerrainTileHeightData
-{
-	uint16_t data[TerrainTile::TexelsPerTextureRow * TerrainTile::TexelsPerSide];
-};
-
 struct QuadTreeNodeId
 {
 	uint32_t x = 0;
@@ -62,6 +47,22 @@ struct QuadTreeNodeId
 		if (x > other.level) return false;
 		return y < other.y;
 	}
+};
+
+struct TerrainTile
+{
+	static constexpr int QuadsPerSide = 32;
+	static constexpr int VerticesPerSide = QuadsPerSide + 1;
+	static constexpr int TexelsPerSide = VerticesPerSide + 2;
+	static constexpr int TexelsPerTextureRow = TexelsPerSide + 1; // Texel data rows need a stride of 4
+
+	double timeLastUsed = -1.0;
+	QuadTreeNodeId id;
+};
+
+struct TerrainTileHeightData
+{
+	uint16_t data[TerrainTile::TexelsPerTextureRow * TerrainTile::TexelsPerSide];
 };
 
 uint32_t HashValue32(const QuadTreeNodeId& value, uint32_t seed);
@@ -178,7 +179,7 @@ private:
 
 		void* buffer = nullptr;
 		uint32_t count = 0;
-		uint32_t textureInitCount = 0;
+		uint32_t textureInitCount = 0; // Textures with storage allocated, but not necessarily in use
 		uint32_t allocated = 0;
 
 		TileData() = default;
