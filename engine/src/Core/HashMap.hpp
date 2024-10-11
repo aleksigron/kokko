@@ -328,7 +328,7 @@ public:
 
 	const KeyValuePair* Lookup(const KeyType& key) const
 	{
-		if (key != KeyType{})
+		if (!(key == KeyType{}))
 		{
 			if (data != nullptr)
 			{

@@ -26,6 +26,13 @@
 namespace kokko
 {
 
+struct TerrainTileHeightData
+{
+	uint16_t min;
+	uint16_t max;
+	uint16_t data[TerrainTile::TexelsPerTextureRow * TerrainTile::TexelsPerSide];
+};
+
 namespace
 {
 
@@ -162,6 +169,8 @@ void CreateTileTestData(TerrainTileHeightData& tile, uint32_t tileX, uint32_t ti
 
 			int pixelIndex = texY * TerrainTile::TexelsPerTextureRow + texX;
 			uint16_t value = TestData(cx, cy);
+			tile.min = std::min(tile.min, value);
+			tile.max = std::max(tile.max, value);
 			tile.data[pixelIndex] = value;
 		}
 	}
@@ -349,21 +358,14 @@ ArrayView<const TerrainTileDrawInfo> TerrainQuadTree::GetTilesToRender() const
 
 int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesToRenderParams& params)
 {
-	float tileScale = GetTileScale(id.level);
-	float tileWidth = terrainWidth * tileScale;
-	Vec3f tileMin = GetTileOrigin(id);
-	Vec3f tileSize(tileWidth, terrainHeight, tileWidth);
-
-	AABB tileBounds;
-	tileBounds.extents = tileSize * 0.5f;
-	tileBounds.center = tileMin + tileBounds.extents;
+	AABB tileBounds = FindApproximateTileBounds(id);
+	float width = tileBounds.extents.x * 2.0f;
 
 	if (Intersect::FrustumAabb(params.frustum, tileBounds) == false)
 		return -1;
 
 	bool lastLevel = id.level + 1 == treeLevels;
-	bool tileIsSmallEnough =
-		lastLevel || (tileWidth < (tileBounds.center - params.cameraPos).Magnitude() * lodSizeFactor);
+	bool tileIsSmallEnough = lastLevel || (width < (tileBounds.center - params.cameraPos).Magnitude() * lodSizeFactor);
 
 	int nodeIndex = static_cast<int>(nodes.GetCount());
 	assert(nodeIndex <= UINT16_MAX);
@@ -378,12 +380,14 @@ int TerrainQuadTree::BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesTo
 	{
 		if (params.renderDebug.IsFeatureEnabled(RenderDebugFeatureFlag::DrawTerrainTiles))
 		{
-			Vec3f scale = tileSize;
-			scale.y = 0.0f;
+			Vec3f scale = tileBounds.extents * 2.0f;
+			scale.y = 0;
 
 			Mat4x4f transform = Mat4x4f::Translate(tileBounds.center) * Mat4x4f::Scale(scale);
 
-			Debug::Get()->GetVectorRenderer()->DrawWireCube(transform, Color(1.0f, 0.0f, 1.0f));
+			float alpha = 1.0f - (treeLevels - id.level) / static_cast<float>(treeLevels);
+			Color color(1.0f, 0.0f, 1.0f, alpha * alpha);
+			Debug::Get()->GetVectorRenderer()->DrawWireCube(transform, color);
 		}
 	}
 	else
@@ -695,11 +699,13 @@ void TerrainQuadTree::LoadTiles()
 		{
 			uint32_t tileIdx = tileData.count;
 
+			LoadTileData(drawTile.id, heightData);
+
 			TerrainTile& tile = tileData.tiles[tileIdx];
 			tile.id = drawTile.id;
 			tile.timeLastUsed = currentTime;
-
-			LoadTileData(drawTile.id, heightData);
+			tile.minHeight = heightData.min;
+			tile.maxHeight = heightData.max;
 
 			renderDevice->SetTextureSubImage2D(tileData.textureIds[tileIdx], 0, 0, 0,
 				texResolution, texResolution, RenderTextureBaseFormat::R,
@@ -724,6 +730,9 @@ void TerrainQuadTree::LoadTileData(const QuadTreeNodeId& id, TerrainTileHeightDa
 	const uint32_t pixelsPerTile = heightmapSize / tilesPerDimension;
 	const uint32_t pixelsPerQuad = pixelsPerTile / TerrainTile::QuadsPerSide;
 
+	uint16_t min = UINT16_MAX;
+	uint16_t max = 0;
+
 	for (int outputY = 0; outputY < TerrainTile::TexelsPerSide; ++outputY)
 	{
 		for (int outputX = 0; outputX < TerrainTile::TexelsPerSide; ++outputX)
@@ -735,16 +744,51 @@ void TerrainQuadTree::LoadTileData(const QuadTreeNodeId& id, TerrainTileHeightDa
 			int inputIdx = clampedY * heightmapSize + clampedX;
 
 			int outputIdx = outputY * TerrainTile::TexelsPerTextureRow + outputX;
-			heightDataOut.data[outputIdx] = heightmapPixels[inputIdx];
+			uint16_t val = heightmapPixels[inputIdx];
+
+			min = std::min(min, val);
+			max = std::max(max, val);
+			heightDataOut.data[outputIdx] = val;
 		}
 	}
+
+	heightDataOut.min = min;
+	heightDataOut.max = max;
 }
 
-Vec3f TerrainQuadTree::GetTileOrigin(const QuadTreeNodeId& id) const
+AABB TerrainQuadTree::FindApproximateTileBounds(const QuadTreeNodeId& id) const
 {
+	auto pair = tileIdToIndexMap.Lookup(id);
+	QuadTreeNodeId searchId = id;
+	while (pair == nullptr)
+	{
+		if (searchId.level == 0)
+			break;
+
+		searchId = GetParentId(searchId);
+		tileIdToIndexMap.Lookup(searchId);
+	}
+
+	float minHeight = terrainBottom;
+	float maxHeight = terrainBottom + terrainHeight;
+	if (pair != nullptr)
+	{
+		TerrainTile& tile = tileData.tiles[pair->second];
+		minHeight = tile.minHeight / static_cast<float>(UINT16_MAX) * terrainHeight + terrainBottom;
+		maxHeight = tile.maxHeight / static_cast<float>(UINT16_MAX) * terrainHeight + terrainBottom;
+	}
+
+	float tileScale = GetTileScale(id.level);
+	float tileWidth = terrainWidth * tileScale;
 	float halfSize = terrainWidth * 0.5f;
-	float tileWidth = terrainWidth * GetTileScale(id.level);
-	return Vec3f(id.x * tileWidth - halfSize, terrainBottom, id.y * tileWidth - halfSize);
+	Vec3f tileMin(id.x * tileWidth - halfSize, minHeight, id.y * tileWidth - halfSize);
+	Vec3f tileSize(tileWidth, maxHeight - minHeight, tileWidth);
+
+	AABB bounds;
+	bounds.extents = tileSize * 0.5f;
+	bounds.center = tileMin + bounds.extents;
+
+	return bounds;
 }
 
 render::TextureId TerrainQuadTree::GetTileHeightTexture(const QuadTreeNodeId& id)
