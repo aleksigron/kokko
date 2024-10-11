@@ -45,7 +45,7 @@ DebugVectorRenderer::DebugVectorRenderer(
 	bufferAlignedSize(0)
 {
 	primitiveCount = 0;
-	primitiveAllocated = 1024;
+	primitiveAllocated = 2048;
 
 	size_t primitivesSize = sizeof(Primitive) * primitiveAllocated;
 	primitives = static_cast<Primitive*>(allocator->Allocate(primitivesSize, "DebugVectorRenderer.primitives"));
@@ -428,7 +428,10 @@ void DebugVectorRenderer::Render(kokko::render::CommandEncoder* encoder, World* 
 			const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 
 			encoder->DepthTestDisable();
-			encoder->BlendingDisable();
+			encoder->BlendingEnable();
+			encoder->SetBlendEquation(0, RenderBlendEquation::Add);
+			encoder->SetBlendFunctionSeparate(0, RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha,
+				RenderBlendFactor::One, RenderBlendFactor::Zero);
 			encoder->SetViewport(viewport.position.x, viewport.position.y, viewport.size.x, viewport.size.y);
 
 			encoder->UseShaderProgram(shader.driverId);

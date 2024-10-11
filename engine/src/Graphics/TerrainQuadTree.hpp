@@ -20,7 +20,8 @@ namespace kokko
 {
 
 class RenderDebugSettings;
-struct TerrainHeightmapInfo;
+struct AABB;
+struct TerrainTileHeightData;
 
 namespace render
 {
@@ -49,6 +50,8 @@ struct QuadTreeNodeId
 	}
 };
 
+uint32_t HashValue32(const QuadTreeNodeId& value, uint32_t seed);
+
 struct TerrainTile
 {
 	static constexpr int QuadsPerSide = 32;
@@ -58,14 +61,9 @@ struct TerrainTile
 
 	double timeLastUsed = -1.0;
 	QuadTreeNodeId id;
+	uint16_t minHeight;
+	uint16_t maxHeight;
 };
-
-struct TerrainTileHeightData
-{
-	uint16_t data[TerrainTile::TexelsPerTextureRow * TerrainTile::TexelsPerSide];
-};
-
-uint32_t HashValue32(const QuadTreeNodeId& value, uint32_t seed);
 
 enum class TerrainEdgeType : uint8_t
 {
@@ -160,7 +158,7 @@ private:
 	void LoadTiles();
 	void LoadTileData(const QuadTreeNodeId& id, TerrainTileHeightData& heightDataOut);
 
-	Vec3f GetTileOrigin(const QuadTreeNodeId& id) const;
+	AABB FindApproximateTileBounds(const QuadTreeNodeId& id) const;
 
 	Allocator* allocator;
 	render::Device* renderDevice;
