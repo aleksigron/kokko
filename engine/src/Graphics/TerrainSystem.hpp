@@ -44,16 +44,6 @@ struct TerrainId
 	static const TerrainId Null;
 };
 
-/*
-struct TerrainParameters
-{
-	float terrainSize = 64.0f;
-	Vec2f textureScale = Vec2f(0.25f, 0.25f);
-	float heightOrigin = -1.0f;
-	float heightRange = 2.0f;
-};
-*/
-
 class TerrainSystem : public GraphicsFeature
 {
 public:
