@@ -211,7 +211,7 @@ public:
 		return *this;
 	}
 
-	HashMap& operator=(HashMap&& other)
+	HashMap& operator=(HashMap&& other) noexcept
 	{
 		if (data != nullptr)
 		{
@@ -396,6 +396,11 @@ public:
 
 			return &zeroPair;
 		}
+	}
+
+	void Remove(const Iterator& iterator)
+	{
+		Remove(iterator.current);
 	}
 
 	void Remove(KeyValuePair* pair)

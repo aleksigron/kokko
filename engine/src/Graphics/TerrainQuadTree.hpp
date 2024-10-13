@@ -78,18 +78,6 @@ enum class TerrainEdgeType : uint8_t
 	LeftTopSparse
 };
 
-struct TerrainQuadTreeNode
-{
-	QuadTreeNodeId id;
-	uint16_t children[4] = { 0, 0, 0, 0 };
-	TerrainEdgeType edgeType = TerrainEdgeType::Regular;
-
-	uint16_t HasChildren() const
-	{
-		return children[0] != 0 || children[1] != 0 || children[2] != 0 || children[3] != 0;
-	}
-};
-
 struct TerrainTileDrawInfo
 {
 	QuadTreeNodeId id;
@@ -134,6 +122,18 @@ public:
 	static float GetTileScale(uint8_t level);
 
 private:
+	struct TerrainQuadTreeNode
+	{
+		QuadTreeNodeId id;
+		uint16_t children[4] = { 0, 0, 0, 0 };
+		TerrainEdgeType edgeType = TerrainEdgeType::Regular;
+
+		uint16_t HasChildren() const
+		{
+			return children[0] != 0 || children[1] != 0 || children[2] != 0 || children[3] != 0;
+		}
+	};
+
 	struct UpdateTilesToRenderParams
 	{
 		const FrustumPlanes& frustum;
@@ -149,6 +149,13 @@ private:
 		void AddDependent(uint16_t dependent);
 	};
 
+	struct HeightCacheEntry
+	{
+		uint16_t min;
+		uint16_t max;
+		double lastAccessTime;
+	};
+
 	// Returns inserted node index (points to nodes array), or -1 if no insertion
 	int BuildQuadTree(const QuadTreeNodeId& id, const UpdateTilesToRenderParams& params);
 	void RestrictQuadTree();
@@ -157,8 +164,6 @@ private:
 	void QuadTreeToTiles(uint16_t nodeIndex);
 	void LoadTiles();
 	void LoadTileData(const QuadTreeNodeId& id, TerrainTileHeightData& heightDataOut);
-
-	AABB FindApproximateTileBounds(const QuadTreeNodeId& id) const;
 
 	Allocator* allocator;
 	render::Device* renderDevice;
@@ -169,6 +174,7 @@ private:
 	SortedArray<QuadTreeNodeId> neighborsToCheck;
 	HashMap<QuadTreeNodeId, EdgeTypeDependents> edgeDependencies; // Key = dependee node, Value = dependent nodes
 	HashMap<QuadTreeNodeId, uint32_t> tileIdToIndexMap; // Index into tileData
+	HashMap<QuadTreeNodeId, HeightCacheEntry> nodeHeightCache;
 
 	struct TileData
 	{
@@ -197,6 +203,7 @@ private:
 	float terrainBottom = 0.0f;
 	float terrainHeight = 0.0f;
 	float lodSizeFactor = 0.5f;
+	double currentTime = -1.0;
 };
 
 }
