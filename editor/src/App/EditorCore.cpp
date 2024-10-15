@@ -211,6 +211,8 @@ void EditorCore::OpenLevel(Uid levelAssetUid)
 
 		if (filesystem->ReadText(asset->GetVirtualPath().GetCStr(), sceneConfig))
 		{
+			editorContext.world->ClearAllEntities();
+
 			editorContext.world->GetSerializer()->DeserializeFromString(
 				MutableStringView(sceneConfig.GetData(), sceneConfig.GetLength()));
 
