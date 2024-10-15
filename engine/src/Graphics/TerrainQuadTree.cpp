@@ -471,7 +471,7 @@ void TerrainQuadTree::RestrictQuadTree()
 			// Try to find node in nodes
 			// If not, split parent tiles until we have the node
 
-			TerrainQuadTreeNode* currentNode = &nodes[0];
+			int currentNodeIdx = 0;
 			for (uint8_t level = 0; level <= id.level; ++level)
 			{
 				if (level == id.level)
@@ -481,39 +481,32 @@ void TerrainQuadTree::RestrictQuadTree()
 				int levelDiff = id.level - childLevel;
 				int childX = id.x >> levelDiff;
 				int childY = id.y >> levelDiff;
-				int childIndex = (childY & 1) * 2 + (childX & 1);
+				int childIdx = (childY & 1) * 2 + (childX & 1);
 
 				// Verify next level towards <id> exists
-				// If currentNode has no children, split
-				bool hasChildren = false;
-				for (int i = 0; i < 4; ++i)
-					if (currentNode->children[i] != 0)
-						hasChildren = true;
-
-				if (hasChildren == false)
+				// If current node has no children, split
+				if (nodes[currentNodeIdx].HasChildren() == false)
 				{
 					for (int y = 0; y < 2; ++y)
 					{
 						for (int x = 0; x < 2; ++x)
 						{
 							// Create child node
-							size_t newNodeIndex = nodes.GetCount();
-							assert(newNodeIndex <= UINT16_MAX);
+							size_t newNodeIdx = nodes.GetCount();
+							assert(newNodeIdx <= UINT16_MAX);
 							TerrainQuadTreeNode& newNode = nodes.PushBack();
-							const QuadTreeNodeId& curId = currentNode->id;
+							const QuadTreeNodeId& curId = nodes[currentNodeIdx].id;
 							newNode.id = QuadTreeNodeId{ curId.x * 2 + x, curId.y * 2 + y, childLevel };
-							currentNode->children[y * 2 + x] = static_cast<uint16_t>(newNodeIndex);
+							nodes[currentNodeIdx].children[y * 2 + x] = static_cast<uint16_t>(newNodeIdx);
 						}
 					}
 				}
 				// If it has some children, but not our target tile, skip work on it
-				else if (currentNode->children[childIndex] == 0)
+				else if (nodes[currentNodeIdx].children[childIdx] == 0)
 					break;
 
-				// Update currentNode and continue
-				int childNodeIndex = currentNode->children[childIndex];
-
-				currentNode = &nodes[childNodeIndex];
+				// Update currentNodeIdx and continue
+				currentNodeIdx = nodes[currentNodeIdx].children[childIdx];
 				continue;
 			}
 		}
