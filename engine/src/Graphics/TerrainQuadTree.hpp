@@ -54,7 +54,7 @@ uint32_t HashValue32(const QuadTreeNodeId& value, uint32_t seed);
 
 struct TerrainTile
 {
-	static constexpr int QuadsPerSide = 32;
+	static constexpr int QuadsPerSide = 64;
 	static constexpr int VerticesPerSide = QuadsPerSide + 1;
 	static constexpr int TexelsPerSide = VerticesPerSide + 2;
 	static constexpr int TexelsPerTextureRow = TexelsPerSide + 1; // Texel data rows need a stride of 4

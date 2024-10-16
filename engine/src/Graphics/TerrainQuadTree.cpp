@@ -129,18 +129,17 @@ TEST_CASE("Terrain.GetLevelsFromHeightmapResolution")
 {
 	CHECK(GetLevelsFromHeightmapResolution(0) == 0);
 	CHECK(GetLevelsFromHeightmapResolution(1) == 0);
-	CHECK(GetLevelsFromHeightmapResolution(31) == 0);
-	CHECK(GetLevelsFromHeightmapResolution(32) == 1);
-	CHECK(GetLevelsFromHeightmapResolution(33) == 1);
-	CHECK(GetLevelsFromHeightmapResolution(63) == 1);
-	CHECK(GetLevelsFromHeightmapResolution(64) == 2);
-	CHECK(GetLevelsFromHeightmapResolution(128) == 3);
-	CHECK(GetLevelsFromHeightmapResolution(256) == 4);
-	CHECK(GetLevelsFromHeightmapResolution(512) == 5);
-	CHECK(GetLevelsFromHeightmapResolution(1024) == 6);
-	CHECK(GetLevelsFromHeightmapResolution(2048) == 7);
-	CHECK(GetLevelsFromHeightmapResolution(4096) == 8);
-	CHECK(GetLevelsFromHeightmapResolution(8192) == 9);
+	CHECK(GetLevelsFromHeightmapResolution(63) == 0);
+	CHECK(GetLevelsFromHeightmapResolution(64) == 1);
+	CHECK(GetLevelsFromHeightmapResolution(65) == 1);
+	CHECK(GetLevelsFromHeightmapResolution(127) == 1);
+	CHECK(GetLevelsFromHeightmapResolution(128) == 2);
+	CHECK(GetLevelsFromHeightmapResolution(256) == 3);
+	CHECK(GetLevelsFromHeightmapResolution(512) == 4);
+	CHECK(GetLevelsFromHeightmapResolution(1024) == 5);
+	CHECK(GetLevelsFromHeightmapResolution(2048) == 6);
+	CHECK(GetLevelsFromHeightmapResolution(4096) == 7);
+	CHECK(GetLevelsFromHeightmapResolution(8192) == 8);
 }
 
 uint16_t TestData(float x, float y)
