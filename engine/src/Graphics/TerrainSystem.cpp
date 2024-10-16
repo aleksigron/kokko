@@ -100,8 +100,10 @@ TerrainSystem::TerrainSystem(
 	textureManager(textureManager),
 	uniformBlockStride(0),
 	uniformBlocksAllocated(0),
+	uniformBlocksRendered(0),
 	uniformBufferId(0),
 	terrainShader(ShaderId::Null),
+	terrainDepthShader(ShaderId::Null),
 	entityMap(allocator),
 	vertexData(VertexData{}),
 	textureSampler(0),
@@ -138,18 +140,22 @@ void TerrainSystem::Initialize()
 
 	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("TerrainSys_InitResources"));
 
-	// Create uniform buffer
+	// Get uniform buffer alignment
 
 	int aligment = 0;
 	renderDevice->GetIntegerValue(RenderDeviceParameter::UniformBufferOffsetAlignment, &aligment);
 
 	uniformBlockStride = Math::RoundUpToMultiple(sizeof(TerrainUniformBlock), static_cast<size_t>(aligment));
 
-	// Material
+	// Shaders
 
-	ConstStringView path("engine/shaders/deferred_geometry/terrain.glsl");
-	terrainShader = shaderManager->FindShaderByPath(path);
+	terrainShader = shaderManager->FindShaderByPath(
+		ConstStringView("engine/shaders/deferred_geometry/terrain.glsl"));
 	assert(terrainShader != ShaderId::Null);
+
+	terrainDepthShader = shaderManager->FindShaderByPath(
+		ConstStringView("engine/shaders/deferred_geometry/terrain_depth.glsl"));
+	assert(terrainDepthShader != ShaderId::Null);
 
 	// Sampler
 
@@ -289,12 +295,125 @@ void TerrainSystem::SetRoughnessValue(TerrainId id, float roughness)
 	instances[id.i].roughnessValue = roughness;
 }
 
-void TerrainSystem::Submit(const SubmitParameters& parameters)
+void TerrainSystem::Upload(const UploadParameters& parameters)
 {
+	uniformBlocksRendered = 0;
+
 	for (size_t i = 1, count = instances.GetCount(); i < count; ++i)
 	{
-		float depth = 0.0f; // TODO: Calculate
-		parameters.commandList.AddToFullscreenViewport(RenderPassType::OpaqueGeometry, depth, i);
+		// FIXME: Rendering will not be correct if multiple terrain instances exist in the world
+		// All uniform block info needs to be made instance-specific
+
+		const RenderViewport& fullscreenViewport = parameters.viewports[parameters.fullscreenViewportIndex];
+
+		// Select tiles to render
+
+		TerrainInstance& instance = instances[i];
+		TerrainQuadTree& quadTree = instance.quadTree;
+		quadTree.UpdateTilesToRender(fullscreenViewport.frustum, fullscreenViewport.position, parameters.renderDebug);
+		ArrayView<const TerrainTileDrawInfo> tiles = quadTree.GetTilesToRender();
+		uint32_t tileCount = static_cast<uint32_t>(tiles.GetCount());
+
+		// Update uniform buffer
+
+		float terrainWidth = quadTree.GetSize();
+		float terrainHeight = quadTree.GetHeight();
+
+		TerrainUniformBlock uniforms;
+		uniforms.textureScale = instance.textureScale;
+		uniforms.tileOffset = Vec2f();
+		uniforms.tileScale = 1.0f;
+		uniforms.terrainSize = terrainWidth;
+		uniforms.terrainSideVerts = static_cast<float>(TerrainTile::VerticesPerSide);
+		uniforms.heightOrigin = quadTree.GetBottom();
+		uniforms.heightRange = terrainHeight;
+		uniforms.metalness = 0.0f;
+		uniforms.roughness = instance.roughnessValue;
+
+		int viewportCount = parameters.shadowViewportsEndIndex - parameters.shadowViewportsBeginIndex + 1;
+		uint32_t uniformBlockCount = tileCount * viewportCount;
+		uniformStagingBuffer.Resize(uniformBlockCount * uniformBlockStride);
+
+		if (uniformBlockCount > uniformBlocksAllocated)
+		{
+			uint32_t newAllocated = Math::RoundUpToMultiple(uniformBlockCount * 4 / 3, 16u);
+			uint32_t newByteCount = newAllocated * uniformBlockStride;
+
+			if (uniformBufferId != render::BufferId::Null)
+				renderDevice->DestroyBuffers(1, &uniformBufferId);
+
+			renderDevice->CreateBuffers(1, &uniformBufferId);
+			renderDevice->SetBufferStorage(uniformBufferId, newByteCount, nullptr, BufferStorageFlags::Dynamic);
+
+			uniformBlocksAllocated = newAllocated;
+		}
+
+		{
+			KOKKO_PROFILE_SCOPE("Setup tile uniform data");
+
+			auto updateTileInfo = [&uniforms](const TerrainTileDrawInfo& tile)
+			{
+				const float halfTileCount = 0.5f * TerrainQuadTree::GetTilesPerDimension(tile.id.level);
+				const Vec2f levelOrigin(-halfTileCount, -halfTileCount);
+
+				uniforms.tileOffset = levelOrigin + Vec2f(static_cast<float>(tile.id.x), static_cast<float>(tile.id.y));
+				uniforms.tileScale = TerrainQuadTree::GetTileScale(tile.id.level);
+			};
+
+			uint32_t blocksWritten = 0;
+
+			auto writeToBuffer = [this, &uniforms, &blocksWritten]()
+			{
+				uint8_t* dest = &uniformStagingBuffer[blocksWritten * uniformBlockStride];
+				std::memcpy(dest, &uniforms, sizeof(uniforms));
+
+				blocksWritten += 1;
+			};
+
+			// Shadow viewports
+			uint32_t vpEnd = parameters.shadowViewportsEndIndex;
+			for (uint32_t vpIdx = parameters.shadowViewportsBeginIndex; vpIdx != vpEnd; ++vpIdx)
+			{
+				uniforms.MVP = parameters.viewports[vpIdx].viewProjection;
+				uniforms.MV = parameters.viewports[vpIdx].view.inverse;
+
+				for (const auto& tile : tiles)
+				{
+					updateTileInfo(tile);
+					writeToBuffer();
+				}
+			}
+
+			uniforms.MVP = fullscreenViewport.viewProjection;
+			uniforms.MV = fullscreenViewport.view.inverse;
+
+			// Fullscreen viewport
+			for (const auto& tile : tiles)
+			{
+				updateTileInfo(tile);
+				writeToBuffer();
+			}
+		}
+
+		uint32_t updateBytes = uniformBlockCount * uniformBlockStride;
+
+		renderDevice->SetBufferSubData(uniformBufferId, 0, updateBytes, uniformStagingBuffer.GetData());
+	}
+}
+
+void TerrainSystem::Submit(const SubmitParameters& params)
+{
+	float depth = 0.0f; // Render (mostly) first
+
+	for (size_t i = 1, count = instances.GetCount(); i < count; ++i)
+	{
+		params.commandList->AddToViewport(params.fullscreenViewportIndex, RenderPassType::OpaqueGeometry, depth, i);
+
+		const size_t vpEnd = params.shadowViewportsEndIndex;
+		for (size_t vpIdx = params.shadowViewportsBeginIndex; vpIdx != vpEnd; ++vpIdx)
+		{
+			params.commandList->AddToViewport(vpIdx, RenderPassType::OpaqueGeometry, depth, i);
+		}
 	}
 }
 
@@ -302,121 +421,60 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 {
 	KOKKO_PROFILE_SCOPE("TerrainSystem::Render");
 
-	TerrainId id{ static_cast<uint32_t>(parameters.featureObjectId) };
-	const auto& viewport = parameters.fullscreenViewport;
+	TerrainInstance& instance = instances[parameters.featureObjectId];
+	TerrainQuadTree& quadTree = instance.quadTree;
+	ArrayView<const TerrainTileDrawInfo> tiles = quadTree.GetTilesToRender();
+
 	render::CommandEncoder* encoder = parameters.encoder;
 
-	// Select tiles to render
-
-	TerrainInstance& instance = instances[id.i];
-	TerrainQuadTree& quadTree = instance.quadTree;
-	quadTree.UpdateTilesToRender(viewport.frustum, viewport.position, parameters.renderDebug);
-	ArrayView<const TerrainTileDrawInfo> tiles = quadTree.GetTilesToRender();
-	uint32_t tileCount = static_cast<uint32_t>(tiles.GetCount());
-
-	// Update uniform buffer
-
-	float terrainWidth = quadTree.GetSize();
-	float terrainHeight = quadTree.GetHeight();
-
-	TerrainUniformBlock uniforms;
-	uniforms.MVP = viewport.viewProjection;
-	uniforms.MV = viewport.view.inverse;
-	uniforms.textureScale = instance.textureScale;
-	uniforms.tileOffset = Vec2f();
-	uniforms.tileScale = 1.0f;
-	uniforms.terrainSize = terrainWidth;
-	uniforms.terrainSideVerts = static_cast<float>(TerrainTile::VerticesPerSide);
-	uniforms.heightOrigin = quadTree.GetBottom();
-	uniforms.heightRange = terrainHeight;
-	uniforms.metalness = 0.0f;
-	uniforms.roughness = instance.roughnessValue;
-
-	uniformStagingBuffer.Resize(tiles.GetCount() * uniformBlockStride);
-
-	if (tileCount > uniformBlocksAllocated)
-	{
-		uint32_t newAllocated = Math::RoundUpToMultiple(tileCount * 4 / 3, 16u);
-		uint32_t newByteCount = newAllocated * uniformBlockStride;
-
-		if (uniformBufferId != render::BufferId::Null)
-			renderDevice->DestroyBuffers(1, &uniformBufferId);
-
-		renderDevice->CreateBuffers(1, &uniformBufferId);
-		renderDevice->SetBufferStorage(uniformBufferId, newByteCount, nullptr, BufferStorageFlags::Dynamic);
-
-		uniformBlocksAllocated = newAllocated;
-	}
-
-	{
-		KOKKO_PROFILE_SCOPE("Setup tile uniform data");
-
-		uint32_t blocksWritten = 0;
-		for (const auto& tile : tiles)
-		{
-			const float halfTileCount = 0.5f * TerrainQuadTree::GetTilesPerDimension(tile.id.level);
-			const Vec2f levelOrigin(-halfTileCount, -halfTileCount);
-
-			uniforms.tileOffset = levelOrigin + Vec2f(static_cast<float>(tile.id.x), static_cast<float>(tile.id.y));
-			uniforms.tileScale = TerrainQuadTree::GetTileScale(tile.id.level);
-
-			uint8_t* dest = &uniformStagingBuffer[blocksWritten * uniformBlockStride];
-			std::memcpy(dest, &uniforms, sizeof(uniforms));
-
-			blocksWritten += 1;
-		}
-	}
-
-	uint32_t updateBytes = tileCount * uniformBlockStride;
-
-	renderDevice->SetBufferSubData(uniformBufferId, 0, updateBytes, uniformStagingBuffer.GetData());
-
-	const ShaderData& shader = shaderManager->GetShaderData(terrainShader);
-
-	// Draw
+	const bool isFullscreenViewport = parameters.renderingViewportIndex == parameters.fullscreenViewportIndex;
+	ShaderId shaderId = isFullscreenViewport ? terrainShader : terrainDepthShader;
+	const ShaderData& shader = shaderManager->GetShaderData(shaderId);
 	encoder->UseShaderProgram(shader.driverId);
+	encoder->BindSampler(0, textureSampler); // For height texture
 
 	const TextureUniform* heightMap = shader.uniforms.FindTextureUniformByNameHash("height_map"_hash);
-	const TextureUniform* albedoMap = shader.uniforms.FindTextureUniformByNameHash("albedo_map"_hash);
-	const TextureUniform* roughnessMap = shader.uniforms.FindTextureUniformByNameHash("roughness_map"_hash);
 
-	if (albedoMap != nullptr)
+	if (isFullscreenViewport)
 	{
-		kokko::render::TextureId textureObjectId;
-		if (instances[id.i].albedoTexture.renderId != 0)
-			textureObjectId = instances[id.i].albedoTexture.renderId;
-		else
+		const TextureUniform* albedoMap = shader.uniforms.FindTextureUniformByNameHash("albedo_map"_hash);
+		const TextureUniform* roughnessMap = shader.uniforms.FindTextureUniformByNameHash("roughness_map"_hash);
+
+		if (albedoMap != nullptr)
 		{
-			TextureId emptyAlbedoId = textureManager->GetId_White2D();
-			textureObjectId = textureManager->GetTextureData(emptyAlbedoId).textureObjectId;
+			kokko::render::TextureId textureObjectId;
+			if (instance.albedoTexture.renderId != 0)
+				textureObjectId = instance.albedoTexture.renderId;
+			else
+			{
+				TextureId emptyAlbedoId = textureManager->GetId_White2D();
+				textureObjectId = textureManager->GetTextureData(emptyAlbedoId).textureObjectId;
+			}
+
+			encoder->BindTextureToShader(albedoMap->uniformLocation, 1, textureObjectId);
 		}
 
-		encoder->BindTextureToShader(albedoMap->uniformLocation, 1, textureObjectId);
-	}
-
-	if (roughnessMap != nullptr)
-	{
-		kokko::render::TextureId textureObjectId;
-		if (instances[id.i].roughnessTexture.renderId != 0)
-			textureObjectId = instances[id.i].roughnessTexture.renderId;
-		else
+		if (roughnessMap != nullptr)
 		{
-			TextureId emptyRoughnessId = textureManager->GetId_White2D();
-			textureObjectId = textureManager->GetTextureData(emptyRoughnessId).textureObjectId;
-		}
+			kokko::render::TextureId textureObjectId;
+			if (instance.roughnessTexture.renderId != 0)
+				textureObjectId = instance.roughnessTexture.renderId;
+			else
+			{
+				TextureId emptyRoughnessId = textureManager->GetId_White2D();
+				textureObjectId = textureManager->GetTextureData(emptyRoughnessId).textureObjectId;
+			}
 
-		encoder->BindTextureToShader(roughnessMap->uniformLocation, 2, textureObjectId);
+			encoder->BindTextureToShader(roughnessMap->uniformLocation, 2, textureObjectId);
+		}
 	}
 
-	// For height texture
-
-	encoder->BindSampler(0, textureSampler);
+	// TODO: Cull tiles to render in shadow viewports
 
 	{
 		KOKKO_PROFILE_SCOPE("Render tiles");
 
 		uint8_t prevMeshType = 255;
-		int blocksUsed = 0;
 		for (const auto& tile : tiles)
 		{
 			uint8_t tileMeshTypeIndex = static_cast<uint8_t>(tile.edgeType);
@@ -429,8 +487,8 @@ void TerrainSystem::Render(const RenderParameters& parameters)
 				prevMeshType = tileMeshTypeIndex;
 			}
 
-			intptr_t rangeOffset = blocksUsed * uniformBlockStride;
-			blocksUsed += 1;
+			intptr_t rangeOffset = uniformBlocksRendered * uniformBlockStride;
+			uniformBlocksRendered += 1;
 
 			encoder->BindBufferRange(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, uniformBufferId,
 				rangeOffset, uniformBlockStride);

@@ -60,8 +60,12 @@ public:
 
 		const RenderDebugSettings& renderDebug;
 		const CameraParameters& cameraParameters;
-		const RenderViewport& fullscreenViewport;
-		ArrayView<const RenderViewport> shadowViewports;
+
+		ArrayView<const RenderViewport> viewports;
+		uint32_t fullscreenViewportIndex;
+		uint32_t shadowViewportsBeginIndex;
+		uint32_t shadowViewportsEndIndex;
+
 		const RenderGraphResources* renderGraphResources;
 		render::FramebufferId finalTargetFramebufferId;
 	};
@@ -71,15 +75,16 @@ public:
 		render::Device* renderDevice;
 	};
 
-	struct SubmitParameters
+	struct SubmitParameters : public CommonRenderParameters
 	{
-		GraphicsFeatureCommandList& commandList;
+		GraphicsFeatureCommandList* commandList;
 	};
 
 	struct RenderParameters : public CommonRenderParameters
 	{
 		render::CommandEncoder* encoder;
 
+		uint32_t renderingViewportIndex;
 		uint16_t featureObjectId;
 	};
 

@@ -11,7 +11,7 @@ namespace CascadedShadowMap
 {
 int GetShadowCascadeResolution()
 {
-	return 1024;
+	return 1536;
 }
 
 unsigned int GetCascadeCount()
@@ -102,7 +102,7 @@ void CalculateCascadeFrusta(
 
 		float diameter = radius * 2.0f;
 
-		const float frontShadowRenderingDistance = 10.0f;
+		const float frontShadowRenderingDistance = 1000.0f;
 
 		ProjectionParameters cascProj;
 		cascProj.projection = ProjectionType::Orthographic;
@@ -135,7 +135,7 @@ void CalculateSplitDepths(const ProjectionParameters& projection, float* depthsO
 
 void CalculateSplitDepths(float near, float far, float* depthsOut)
 {
-	const float maxShadowDistance = 100.0f;
+	const float maxShadowDistance = 1000.0f;
 	const float shadowSplitLogFactor = 0.8f;
 
 	far = std::min(maxShadowDistance, far);

@@ -86,7 +86,8 @@ void GraphicsFeatureTonemapping::Upload(const UploadParameters& parameters)
 
 void GraphicsFeatureTonemapping::Submit(const SubmitParameters& parameters)
 {
-	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::PostProcess, renderOrder, 0);
+	parameters.commandList->AddToViewportWithOrder(
+		parameters.fullscreenViewportIndex, RenderPassType::PostProcess, renderOrder, 0);
 }
 
 void GraphicsFeatureTonemapping::Render(const RenderParameters& parameters)
@@ -108,7 +109,7 @@ void GraphicsFeatureTonemapping::Render(const RenderParameters& parameters)
 	pass.uniformBufferRangeSize = sizeof(TonemapUniformBlock);
 
 	pass.framebufferId = parameters.finalTargetFramebufferId;
-	pass.viewportSize = parameters.fullscreenViewport.viewportRectangle.size;
+	pass.viewportSize = parameters.viewports[parameters.fullscreenViewportIndex].viewportRectangle.size;
 	pass.shaderId = shaderId;
 	pass.enableBlending = false;
 
