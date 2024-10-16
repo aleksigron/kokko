@@ -14,15 +14,14 @@ enum class RenderPassType;
 class GraphicsFeatureCommandList
 {
 public:
-	GraphicsFeatureCommandList(RendererCommandList& list, uint64_t fullscreenViewport, uint64_t featureIndex);
+	GraphicsFeatureCommandList(RendererCommandList& list, uint64_t featureIndex);
 
 	void AddToStartOfFrame(uint16_t object);
-	void AddToFullscreenViewport(RenderPassType pass, float depth, uint16_t object);
-	void AddToFullscreenViewportWithOrder(RenderPassType pass, uint64_t order, uint16_t object);
+	void AddToViewport(uint32_t viewportIndex, RenderPassType pass, float depth, uint16_t object);
+	void AddToViewportWithOrder(uint32_t viewportIndex, RenderPassType pass, uint64_t order, uint16_t object);
 
 private:
 	RendererCommandList& list;
-	uint64_t fullscreenViewportIndex;
 	uint64_t featureIndex;
 
 	friend class Renderer;

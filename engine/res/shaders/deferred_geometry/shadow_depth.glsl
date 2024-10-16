@@ -4,7 +4,7 @@
 #include "engine/shaders/common/constants.glsl"
 #include "engine/shaders/common/transform_block.glsl"
 
-layout(location = 0) in vec3 position;
+layout(location = VERTEX_ATTR_INDEX_POS) in vec3 position;
 
 void main()
 {
@@ -12,9 +12,7 @@ void main()
 }
 
 #stage fragment
-layout(location = 0) out float depth;
 
 void main()
 {
-    depth = gl_FragCoord.z;
 }

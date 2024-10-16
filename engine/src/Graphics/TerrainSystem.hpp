@@ -91,6 +91,7 @@ public:
 	float GetRoughnessValue(TerrainId id) const;
 	void SetRoughnessValue(TerrainId id, float roughness);
 
+	virtual void Upload(const UploadParameters& parameters) override;
 	virtual void Submit(const SubmitParameters& parameters) override;
 	virtual void Render(const RenderParameters& parameters) override;
 
@@ -103,9 +104,11 @@ private:
 	
 	uint32_t uniformBlockStride;
 	uint32_t uniformBlocksAllocated;
+	uint32_t uniformBlocksRendered;
 	render::BufferId uniformBufferId;
 
 	ShaderId terrainShader;
+	ShaderId terrainDepthShader;
 
 	HashMap<unsigned int, TerrainId> entityMap;
 

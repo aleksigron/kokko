@@ -199,7 +199,7 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 	{
 		LightingUniformBlock lightingUniforms;
 
-		const RenderViewport& fsvp = parameters.fullscreenViewport;
+		const RenderViewport& fsvp = parameters.viewports[parameters.fullscreenViewportIndex];
 
 		// Update directional light viewports
 		Array<LightId>& directionalLights = lightResultArray;
@@ -317,9 +317,10 @@ void GraphicsFeatureDeferredLighting::Upload(const UploadParameters& parameters)
 		bias[13] = 0.5f;
 
 		// Update transforms and split depths for each shadow cascade
-		for (size_t vpIdx = 0, vpCount = parameters.shadowViewports.GetCount(); vpIdx != vpCount; ++vpIdx)
+		const size_t vpEnd = parameters.shadowViewportsEndIndex;
+		for (size_t vpIdx = parameters.shadowViewportsBeginIndex; vpIdx != vpEnd; ++vpIdx)
 		{
-			Mat4x4f viewToLight = parameters.shadowViewports[vpIdx].viewProjection * fsvp.view.forward;
+			Mat4x4f viewToLight = parameters.viewports[vpIdx].viewProjection * fsvp.view.forward;
 			Mat4x4f shadowMat = bias * viewToLight;
 
 			lightingUniforms.shadowMatrices[vpIdx] = shadowMat;
@@ -343,10 +344,11 @@ void GraphicsFeatureDeferredLighting::Submit(const SubmitParameters& parameters)
 {
 	if (brdfLutFramebufferId != 0)
 	{
-		parameters.commandList.AddToStartOfFrame(RenderOrderConfiguration::MaxFeatureObjectId);
+		parameters.commandList->AddToStartOfFrame(RenderOrderConfiguration::MaxFeatureObjectId);
 	}
 
-	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::OpaqueLighting, renderOrder, 0);
+	parameters.commandList->AddToViewportWithOrder(
+		parameters.fullscreenViewportIndex, RenderPassType::OpaqueLighting, renderOrder, 0);
 }
 
 void GraphicsFeatureDeferredLighting::Render(const RenderParameters& parameters)

@@ -137,7 +137,7 @@ void GraphicsFeatureBloom::Upload(const UploadParameters& parameters)
 
 	kokko::render::Device* renderDevice = parameters.renderDevice;
 	PostProcessRenderer* postProcessRenderer = parameters.postProcessRenderer;
-	Vec2i framebufferSize = parameters.fullscreenViewport.viewportRectangle.size;
+	Vec2i framebufferSize = parameters.viewports[parameters.fullscreenViewportIndex].viewportRectangle.size;
 
 	RenderTarget* currentSource = nullptr;
 	RenderTarget* currentDestination = nullptr;
@@ -248,7 +248,9 @@ void GraphicsFeatureBloom::Upload(const UploadParameters& parameters)
 
 	// APPLY PASS
 
-	ApplyUniforms* applyBlock = reinterpret_cast<ApplyUniforms*>(&uniformStagingBuffer[uniformBlockStride * renderPasses.GetCount()]);
+	ApplyUniforms* applyBlock =
+		reinterpret_cast<ApplyUniforms*>(&uniformStagingBuffer[uniformBlockStride * renderPasses.GetCount()]);
+
 	for (size_t i = 0; i < MaxKernelSize; ++i)
 		applyBlock->kernel[i] = blurKernel[i];
 
@@ -267,12 +269,14 @@ void GraphicsFeatureBloom::Upload(const UploadParameters& parameters)
 	renderPasses.PushBack(pass);
 
 	// Update uniform buffer
-	renderDevice->SetBufferSubData(uniformBufferId, 0, uniformBlockStride * renderPasses.GetCount(), uniformStagingBuffer.GetData());
+	renderDevice->SetBufferSubData(
+		uniformBufferId, 0, uniformBlockStride * renderPasses.GetCount(), uniformStagingBuffer.GetData());
 }
 
 void GraphicsFeatureBloom::Submit(const SubmitParameters& parameters)
 {
-	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::PostProcess, renderOrder, 0);
+	parameters.commandList->AddToViewportWithOrder(
+		parameters.fullscreenViewportIndex, RenderPassType::PostProcess, renderOrder, 0);
 }
 
 void GraphicsFeatureBloom::Render(const RenderParameters& parameters)

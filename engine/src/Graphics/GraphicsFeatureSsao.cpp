@@ -141,7 +141,7 @@ void GraphicsFeatureSsao::Upload(const UploadParameters& parameters)
 	KOKKO_PROFILE_FUNCTION();
 
 	kokko::render::Device* device = parameters.renderDevice;
-	Vec2i framebufferSize = parameters.fullscreenViewport.viewportRectangle.size;
+	Vec2i framebufferSize = parameters.viewports[parameters.fullscreenViewportIndex].viewportRectangle.size;
 
 	float noiseSizef = static_cast<float>(NoiseTextureSize);
 
@@ -169,12 +169,13 @@ void GraphicsFeatureSsao::Upload(const UploadParameters& parameters)
 
 void GraphicsFeatureSsao::Submit(const SubmitParameters& parameters)
 {
-	parameters.commandList.AddToFullscreenViewportWithOrder(RenderPassType::OpaqueLighting, renderOrder, 0);
+	parameters.commandList->AddToViewportWithOrder(
+		parameters.fullscreenViewportIndex, RenderPassType::OpaqueLighting, renderOrder, 0);
 }
 
 void GraphicsFeatureSsao::Render(const RenderParameters& parameters)
 {
-	Vec2i framebufferSize = parameters.fullscreenViewport.viewportRectangle.size;
+	Vec2i framebufferSize = parameters.viewports[parameters.fullscreenViewportIndex].viewportRectangle.size;
 
 	// Get render targets
 

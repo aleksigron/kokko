@@ -339,12 +339,14 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 		lightManager,
 		*renderDebug,
 		cameraParams,
-		viewportData[viewportIndexFullscreen],
-		ArrayView(viewportData + viewportIndicesShadowCascade.start,
-			viewportIndicesShadowCascade.end - viewportIndicesShadowCascade.start),
+		ArrayView(&viewportData[0], viewportCount),
+		viewportIndexFullscreen,
+		viewportIndicesShadowCascade.start,
+		viewportIndicesShadowCascade.GetLength(),
 		renderGraphResources.Get(),
 		targetFramebuffer.GetFramebufferId(),
 		encoder,
+		0,
 		0
 	};
 
@@ -421,6 +423,7 @@ void Renderer::Render(Window* window, const Optional<CameraParameters>& editorCa
 			{
 				uint64_t featureIndex = renderOrder.featureIndex.GetValue(command);
 
+				featureRenderParams.renderingViewportIndex = vpIdx;
 				featureRenderParams.featureObjectId = renderOrder.featureObjectId.GetValue(command);
 
 				graphicsFeatures[featureIndex]->Render(featureRenderParams);
@@ -923,8 +926,10 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 			lightManager,
 			*renderDebug,
 			cameraParameters,
-			viewportData[viewportIndexFullscreen],
-			ArrayView(&viewportData[viewportIndicesShadowCascade.start], viewportIndicesShadowCascade.GetLength()),
+			ArrayView(&viewportData[0], viewportCount),
+			viewportIndexFullscreen,
+			viewportIndicesShadowCascade.start,
+			viewportIndicesShadowCascade.GetLength(),
 			renderGraphResources.Get(),
 			targetFramebufferId,
 			device
@@ -936,12 +941,34 @@ unsigned int Renderer::PopulateCommandList(const Optional<CameraParameters>& edi
 		}
 	}
 
-	for (size_t i = 0, count = graphicsFeatures.GetCount(); i < count; ++i)
 	{
-		uint64_t featureIndex = static_cast<uint64_t>(i);
-		kokko::GraphicsFeatureCommandList featureCommandList(commandList, viewportIndexFullscreen, featureIndex);
-		kokko::GraphicsFeature::SubmitParameters params{ featureCommandList };
-		graphicsFeatures[i]->Submit(params);
+		GraphicsFeature::SubmitParameters submitParams
+		{
+			postProcessRenderer.Get(),
+			modelManager,
+			shaderManager,
+			textureManager,
+			cameraSystem,
+			environmentSystem,
+			lightManager,
+			*renderDebug,
+			cameraParameters,
+			ArrayView(&viewportData[0], viewportCount),
+			viewportIndexFullscreen,
+			viewportIndicesShadowCascade.start,
+			viewportIndicesShadowCascade.GetLength(),
+			renderGraphResources.Get(),
+			targetFramebufferId,
+			nullptr
+		};
+
+		for (size_t i = 0, count = graphicsFeatures.GetCount(); i < count; ++i)
+		{
+			uint64_t featureIndex = static_cast<uint64_t>(i);
+			GraphicsFeatureCommandList featureCommandList(commandList, featureIndex);
+			submitParams.commandList = &featureCommandList;
+			graphicsFeatures[i]->Submit(submitParams);
+		}
 	}
 
 	commandList.Sort();

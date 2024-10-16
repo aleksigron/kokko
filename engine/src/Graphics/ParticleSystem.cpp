@@ -168,10 +168,11 @@ void ParticleSystem::Upload(const UploadParameters& parameters)
 
 		renderDevice->SetBufferSubData(emitter.bufferIds[Buffer_UpdateUniforms], 0, sizeof(UpdateParticleBlock), &updateUniforms);
 
+		const RenderViewport& fullscreenViewport = parameters.viewports[parameters.fullscreenViewportIndex];
 		TransformUniformBlock transformUniforms;
 		transformUniforms.M = transform;
-		transformUniforms.MV = parameters.fullscreenViewport.view.inverse * transform;
-		transformUniforms.MVP = parameters.fullscreenViewport.viewProjection * transform;
+		transformUniforms.MV = fullscreenViewport.view.inverse * transform;
+		transformUniforms.MVP = fullscreenViewport.viewProjection * transform;
 
 		renderDevice->SetBufferSubData(emitter.bufferIds[Buffer_RenderTransform], 0, sizeof(TransformUniformBlock), &transformUniforms);
 	}
@@ -185,7 +186,8 @@ void ParticleSystem::Submit(const SubmitParameters& parameters)
 	{
 		EmitterData& emitter = data.emitter[i];
 		float depth = 0.0f; // TODO: Calculate
-		parameters.commandList.AddToFullscreenViewport(RenderPassType::Transparent, depth, static_cast<uint16_t>(i));
+		parameters.commandList->AddToViewport(
+			parameters.fullscreenViewportIndex, RenderPassType::Transparent, depth, static_cast<uint16_t>(i));
 	}
 }
 
@@ -261,7 +263,8 @@ void ParticleSystem::Render(const RenderParameters& parameters)
 	encoder->MemoryBarrier(shaderStorageAndDrawIndirectBarrier);
 
 	encoder->BindBuffer(RenderBufferTarget::DrawIndirectBuffer, emitter.bufferIds[Buffer_Indirect]);
-	encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport, parameters.fullscreenViewport.uniformBlockObject);
+	encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Viewport,
+		parameters.viewports[parameters.fullscreenViewportIndex].uniformBlockObject);
 	encoder->BindBufferBase(RenderBufferTarget::UniformBuffer, UniformBlockBinding::Object, emitter.bufferIds[Buffer_RenderTransform]);
 
 	const ShaderData& renderShader = shaderManager->GetShaderData(renderShaderId);

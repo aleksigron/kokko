@@ -81,7 +81,7 @@ void GraphicsFeatureSkybox::Upload(const UploadParameters& parameters)
 
 void GraphicsFeatureSkybox::Submit(const SubmitParameters& parameters)
 {
-	parameters.commandList.AddToFullscreenViewport(RenderPassType::Skybox, 0.0f, 0);
+	parameters.commandList->AddToViewport(parameters.fullscreenViewportIndex, RenderPassType::Skybox, 0.0f, 0);
 }
 
 void GraphicsFeatureSkybox::Render(const RenderParameters& parameters)
