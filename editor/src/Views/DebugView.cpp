@@ -58,6 +58,10 @@ void DebugView::Update(EditorContext& context)
 			if (ImGui::Checkbox("Draw terrain tiles", &drawTerrain))
 				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawTerrainTiles, drawTerrain);
 
+			bool terrainShadows = features.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::ExperimentalTerrainShadows);
+			if (ImGui::Checkbox("Experimental terrain shadows", &terrainShadows))
+				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::ExperimentalTerrainShadows, terrainShadows);
+
 			if (ImGui::Button("Capture profile"))
 			{
 				debug->RequestBeginProfileSession();
