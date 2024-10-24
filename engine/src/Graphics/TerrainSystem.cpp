@@ -295,22 +295,23 @@ void TerrainSystem::SetRoughnessValue(TerrainId id, float roughness)
 	instances[id.i].roughnessValue = roughness;
 }
 
-void TerrainSystem::Upload(const UploadParameters& parameters)
+void TerrainSystem::Upload(const UploadParameters& params)
 {
 	uniformBlocksRendered = 0;
+	const bool drawShadows = params.renderDebug.IsFeatureEnabled(RenderDebugFeatureFlag::ExperimentalTerrainShadows);
 
 	for (size_t i = 1, count = instances.GetCount(); i < count; ++i)
 	{
 		// FIXME: Rendering will not be correct if multiple terrain instances exist in the world
 		// All uniform block info needs to be made instance-specific
 
-		const RenderViewport& fullscreenViewport = parameters.viewports[parameters.fullscreenViewportIndex];
+		const RenderViewport& fullscreenViewport = params.viewports[params.fullscreenViewportIndex];
 
 		// Select tiles to render
 
 		TerrainInstance& instance = instances[i];
 		TerrainQuadTree& quadTree = instance.quadTree;
-		quadTree.UpdateTilesToRender(fullscreenViewport.frustum, fullscreenViewport.position, parameters.renderDebug);
+		quadTree.UpdateTilesToRender(fullscreenViewport.frustum, fullscreenViewport.position, params.renderDebug);
 		ArrayView<const TerrainTileDrawInfo> tiles = quadTree.GetTilesToRender();
 		uint32_t tileCount = static_cast<uint32_t>(tiles.GetCount());
 
@@ -330,7 +331,8 @@ void TerrainSystem::Upload(const UploadParameters& parameters)
 		uniforms.metalness = 0.0f;
 		uniforms.roughness = instance.roughnessValue;
 
-		int viewportCount = parameters.shadowViewportsEndIndex - parameters.shadowViewportsBeginIndex + 1;
+		int shadowViewports = drawShadows ? params.shadowViewportsEndIndex - params.shadowViewportsBeginIndex : 0;
+		int viewportCount = shadowViewports + 1;
 		uint32_t uniformBlockCount = tileCount * viewportCount;
 		uniformStagingBuffer.Resize(uniformBlockCount * uniformBlockStride);
 
@@ -371,16 +373,19 @@ void TerrainSystem::Upload(const UploadParameters& parameters)
 			};
 
 			// Shadow viewports
-			uint32_t vpEnd = parameters.shadowViewportsEndIndex;
-			for (uint32_t vpIdx = parameters.shadowViewportsBeginIndex; vpIdx != vpEnd; ++vpIdx)
+			if (drawShadows)
 			{
-				uniforms.MVP = parameters.viewports[vpIdx].viewProjection;
-				uniforms.MV = parameters.viewports[vpIdx].view.inverse;
-
-				for (const auto& tile : tiles)
+				uint32_t vpEnd = params.shadowViewportsEndIndex;
+				for (uint32_t vpIdx = params.shadowViewportsBeginIndex; vpIdx != vpEnd; ++vpIdx)
 				{
-					updateTileInfo(tile);
-					writeToBuffer();
+					uniforms.MVP = params.viewports[vpIdx].viewProjection;
+					uniforms.MV = params.viewports[vpIdx].view.inverse;
+
+					for (const auto& tile : tiles)
+					{
+						updateTileInfo(tile);
+						writeToBuffer();
+					}
 				}
 			}
 
@@ -409,10 +414,13 @@ void TerrainSystem::Submit(const SubmitParameters& params)
 	{
 		params.commandList->AddToViewport(params.fullscreenViewportIndex, RenderPassType::OpaqueGeometry, depth, i);
 
-		const size_t vpEnd = params.shadowViewportsEndIndex;
-		for (size_t vpIdx = params.shadowViewportsBeginIndex; vpIdx != vpEnd; ++vpIdx)
+		if (params.renderDebug.IsFeatureEnabled(RenderDebugFeatureFlag::ExperimentalTerrainShadows))
 		{
-			params.commandList->AddToViewport(vpIdx, RenderPassType::OpaqueGeometry, depth, i);
+			const size_t vpEnd = params.shadowViewportsEndIndex;
+			for (size_t vpIdx = params.shadowViewportsBeginIndex; vpIdx != vpEnd; ++vpIdx)
+			{
+				params.commandList->AddToViewport(vpIdx, RenderPassType::OpaqueGeometry, depth, i);
+			}
 		}
 	}
 }
