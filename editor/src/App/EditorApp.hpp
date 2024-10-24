@@ -42,8 +42,6 @@ namespace editor
 class ConsoleLogger;
 class EditorCore;
 
-enum class EditorWindowType;
-
 class EditorApp
 {
 public:

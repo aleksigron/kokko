@@ -34,7 +34,7 @@ namespace editor
 {
 
 EntityView::EntityView() :
-	EditorWindow("Properties"),
+	EditorWindow("Properties", EditorWindowGroup::Regular),
 	materialManager(nullptr),
 	meshManager(nullptr),
 	modelManager(nullptr),

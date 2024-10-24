@@ -353,14 +353,24 @@ void EditorApp::DrawMainMenuBar()
 
 		if (ImGui::BeginMenu("View"))
 		{
-			for (EditorWindow* window : core->GetWindows())
+			auto drawWindowGroupList = [this](EditorWindowGroup group)
 			{
-				if (ImGui::MenuItem(window->windowTitle, nullptr))
+				for (EditorWindow* window : core->GetWindows())
 				{
-					window->windowIsOpen = true;
-					window->requestFocus = true;
+					if (window->windowGroup == group)
+					{
+						if (ImGui::MenuItem(window->windowTitle, nullptr))
+						{
+							window->windowIsOpen = true;
+							window->requestFocus = true;
+						}
+					}
 				}
-			}
+			};
+
+			drawWindowGroupList(EditorWindowGroup::Regular);
+			ImGui::Separator();
+			drawWindowGroupList(EditorWindowGroup::Debug);
 
 			ImGui::EndMenu();
 		}

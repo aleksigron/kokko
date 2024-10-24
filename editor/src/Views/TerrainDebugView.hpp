@@ -9,18 +9,14 @@ namespace kokko
 namespace editor
 {
 
-class DebugView : public EditorWindow
+class TerrainDebugView : public EditorWindow
 {
 public:
-	DebugView();
+	TerrainDebugView();
 
 	void Initialize(Debug* debug);
-
 	virtual void Update(EditorContext& context) override;
-
-private:
-	Debug* debug;
 };
 
-}
-}
+} // namespace editor
+} // namespace kokko

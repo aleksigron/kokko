@@ -218,8 +218,8 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 
 	// Draw debug mode guide
 	char buffer[128];
-	const char* format = "[F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile  [F8]Vsync: %c, %.1f fps";
-	std::snprintf(buffer, sizeof(buffer), format, timeChar, cullChar, memChar, vsyncChar, currentFrameRate);
+	const char* format = "[F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile, %.1f fps";
+	std::snprintf(buffer, sizeof(buffer), format, timeChar, cullChar, memChar, currentFrameRate);
 	textRenderer->AddText(kokko::ConstStringView(buffer), Vec2f(0.0f, 0.0f));
 
 	// Add frame time to debug graph

@@ -27,7 +27,7 @@ namespace editor
 {
 
 SceneView::SceneView() :
-	EditorWindow("Scene"),
+	EditorWindow("Scene", EditorWindowGroup::Regular),
 	contentWidth(0),
 	contentHeight(0),
 	currentGizmoOperation(ImGuizmo::TRANSLATE),

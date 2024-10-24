@@ -18,7 +18,7 @@ namespace editor
 {
 
 DebugView::DebugView() :
-	EditorWindow("Debug"),
+	EditorWindow("Debug", EditorWindowGroup::Debug),
 	debug(nullptr)
 {
 }
@@ -53,14 +53,6 @@ void DebugView::Update(EditorContext& context)
 			bool drawNormals = features.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawNormals);
 			if (ImGui::Checkbox("Draw mesh normals", &drawNormals))
 				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawNormals, drawNormals);
-
-			bool drawTerrain = features.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawTerrainTiles);
-			if (ImGui::Checkbox("Draw terrain tiles", &drawTerrain))
-				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawTerrainTiles, drawTerrain);
-
-			bool terrainShadows = features.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::ExperimentalTerrainShadows);
-			if (ImGui::Checkbox("Experimental terrain shadows", &terrainShadows))
-				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::ExperimentalTerrainShadows, terrainShadows);
 
 			if (ImGui::Button("Capture profile"))
 			{
