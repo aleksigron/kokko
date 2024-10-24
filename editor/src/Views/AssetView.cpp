@@ -22,7 +22,7 @@ namespace editor
 {
 
 AssetView::AssetView(Allocator* allocator) :
-	EditorWindow("Asset"),
+	EditorWindow("Asset", EditorWindowGroup::Regular),
 	allocator(allocator),
 	materialManager(nullptr),
 	shaderManager(nullptr),

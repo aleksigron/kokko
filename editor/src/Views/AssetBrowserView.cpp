@@ -21,7 +21,7 @@ namespace editor
 {
 
 AssetBrowserView::AssetBrowserView(Allocator* allocator) :
-	EditorWindow("Asset Browser"),
+	EditorWindow("Asset Browser", EditorWindowGroup::Regular),
 	allocator(allocator),
 	currentVirtualRoot(allocator),
 	currentDirectory(allocator),

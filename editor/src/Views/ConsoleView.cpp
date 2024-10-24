@@ -26,7 +26,7 @@ namespace editor
 {
 
 ConsoleView::ConsoleView(Allocator* allocator) :
-	EditorWindow("Console"),
+	EditorWindow("Console", EditorWindowGroup::Debug),
 	allocator(allocator),
 	entries(allocator),
 	stringData(nullptr),

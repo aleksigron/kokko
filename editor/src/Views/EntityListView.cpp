@@ -19,7 +19,7 @@ namespace editor
 {
 
 EntityListView::EntityListView() :
-	EditorWindow("Entities"),
+	EditorWindow("Entities", EditorWindowGroup::Regular),
 	requestScrollToEntity(Entity::Null),
 	requestSetSceneObjectParent(SceneObjectId::Null, SceneObjectId::Null)
 {

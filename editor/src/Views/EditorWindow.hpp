@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace kokko
 {
 namespace editor
@@ -7,20 +9,18 @@ namespace editor
 
 struct EditorContext;
 
-enum class EditorWindowType
+enum class EditorWindowGroup : uint8_t
 {
-	Entities,
-	Properties,
-	Scene,
-	AssetBrowser,
-	Debug,
+	Regular = 0,
+	Debug = 1
 };
 
 class EditorWindow
 {
 public:
-	explicit EditorWindow(const char* title) :
+	EditorWindow(const char* title, EditorWindowGroup group) :
 		windowTitle(title),
+		windowGroup(group),
 		windowIsOpen(true),
 		requestFocus(false)
 	{
@@ -39,9 +39,10 @@ public:
 	virtual void ReleaseEngineResources() {}
 
 	const char* windowTitle;
+	EditorWindowGroup windowGroup;
 	bool windowIsOpen;
 	bool requestFocus;
 };
 
-}
-}
+} // namespace editor
+} // namespace kokko

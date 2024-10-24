@@ -80,6 +80,8 @@ set (EDITOR_SOURCES
 	src/Views/FilePickerDialog.hpp
 	src/Views/SceneView.cpp
 	src/Views/SceneView.hpp
+	src/Views/TerrainDebugView.cpp
+	src/Views/TerrainDebugView.hpp
 )
 
 source_group(Dependencies\\imgui FILES ${IMGUI_SOURCES})

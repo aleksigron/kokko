@@ -29,6 +29,7 @@
 #include "Views/EntityListView.hpp"
 #include "Views/EntityView.hpp"
 #include "Views/SceneView.hpp"
+#include "Views/TerrainDebugView.hpp"
 
 namespace kokko
 {
@@ -103,6 +104,10 @@ void EditorCore::Initialize(Engine* engine, ConsoleLogger* consoleLogger)
 	ConsoleView* consoleView = allocator->MakeNew<ConsoleView>(allocator);
 	editorWindows.PushBack(consoleView);
 	consoleLogger->SetConsoleView(consoleView);
+
+	TerrainDebugView* terrainDebugView = allocator->MakeNew<TerrainDebugView>();
+	terrainDebugView->Initialize(engine->GetDebug());
+	editorWindows.PushBack(terrainDebugView);
 }
 
 void EditorCore::Deinitialize()
@@ -219,9 +224,17 @@ void EditorCore::OpenLevel(Uid levelAssetUid)
 			editorContext.loadedLevel = levelAssetUid;
 			return;
 		}
+		else
+			KK_LOG_ERROR("Couldn't read level file {}", asset->GetVirtualPath().GetCStr());
 	}
-
-	KK_LOG_ERROR("EditorCore: Couldn't load level");
+	else
+	{
+		char assetUidStr[Uid::StringLength + 1];
+		levelAssetUid.WriteTo(ArrayView(assetUidStr));
+		assetUidStr[Uid::StringLength] = '\0';
+		
+		KK_LOG_ERROR("Couldn't find level asset UID {}", assetUidStr);
+	}
 }
 
 void EditorCore::SaveLevel()
