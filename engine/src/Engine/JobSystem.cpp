@@ -1,6 +1,7 @@
 #include "Engine/JobSystem.hpp"
 
 #include <cassert>
+#include <cfloat>
 #include <cstddef>
 #include <new>
 
@@ -25,7 +26,9 @@ JobSystem::JobSystem(Allocator* allocator, size_t numWorkers) :
 	jobAllocators(nullptr),
 	jobQueues(nullptr),
 	workerCount(numWorkers),
-	workers(nullptr)
+	workers(nullptr),
+	runWorkers(false),
+	exitWorkers(false)
 {
 	assert(workerCount > 0);
 }
@@ -80,14 +83,14 @@ void JobSystem::Deinitialize()
 
 	if (workers != nullptr)
 	{
-		for (int i = 0; i < workerCount; ++i)
-			workers[i].RequestExit();
+		{
+			// Lock must be acquired before notifying the condition
+			std::lock_guard<std::mutex> lock(conditionMutex);
+			runWorkers = true;
+			exitWorkers = true;
+		}
 
-		// Lock must be acquired before notifying the condition
-		std::unique_lock<std::mutex> lock(conditionMutex);
-		lock.unlock();
-
-		jobAddedCondition.notify_all();
+		runWorkerCV.notify_all();
 
 		for (int i = 0; i < workerCount; ++i)
 			workers[i].WaitToExit();
@@ -174,8 +177,12 @@ void JobSystem::Enqueue(Job* job)
 	JobQueue* queue = GetCurrentThreadJobQueue();
 
 	queue->Push(job);
-
-	jobAddedCondition.notify_all();
+	
+	{
+		std::lock_guard<std::mutex> lock(conditionMutex);
+		runWorkers = true;
+	}
+	runWorkerCV.notify_all();
 }
 
 void JobSystem::Wait(const Job* job)
@@ -314,6 +321,10 @@ static void TestJob(TestJobConstantData* constant, TestJobData* data, size_t cou
 			data[index].pos[0] = posx + velx * hdt;
 			data[index].pos[1] = posy + vely * hdt;
 			data[index].pos[2] = posz + velz * hdt;
+
+			data[index].vel[0] = velx;
+			data[index].vel[1] = vely;
+			data[index].vel[2] = velz;
 		}
 	}
 };
@@ -328,16 +339,16 @@ static void ResetTestData(TestJobData* data, size_t count)
 		data[i].pos[1] = 0.0f;
 		data[i].pos[2] = 0.0f;
 
-		data[i].vel[0] = 4.0f;
+		data[i].vel[0] = 2.0f;
 		data[i].vel[1] = 4.0f;
-		data[i].vel[2] = 4.0f;
+		data[i].vel[2] = 6.0f;
 	}
 }
 
 TEST_CASE("JobSystem")
 {
-	constexpr size_t IterationCount = 5;
-	constexpr size_t DataCount = 5'000'000;
+	constexpr size_t IterationCount = 50;
+	constexpr size_t DataCount = 1'000'000;
 
 	TestJobConstantData jobConstantData;
 	jobConstantData.deltaTime = 0.01f;
@@ -357,7 +368,7 @@ TEST_CASE("JobSystem")
 	{
 		ResetTestData(results, DataCount);
 
-		JobSystem jobSystem(allocator, 7);
+		JobSystem jobSystem(allocator, 5);
 		Job* job;
 
 		{
@@ -365,7 +376,7 @@ TEST_CASE("JobSystem")
 
 			jobSystem.Initialize();
 
-			size_t splitCount = 1 << 12;
+			size_t splitCount = 1 << 11;
 			job = JobHelpers::CreateParallelFor(&jobSystem, &jobConstantData, results, DataCount, TestJob, splitCount);
 
 			jobSystem.Enqueue(job);
@@ -380,7 +391,8 @@ TEST_CASE("JobSystem")
 
 			jobSystem.Deinitialize();
 
-			bool resultsMatch = true;
+			int mismatchCount = 0;
+			float prevResult[6] = { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX };
 			for (int j = 0; j < DataCount; ++j)
 			{
 				if (results[j].pos[0] != validationResult.pos[0] ||
@@ -390,12 +402,29 @@ TEST_CASE("JobSystem")
 					results[j].vel[1] != validationResult.vel[1] ||
 					results[j].vel[2] != validationResult.vel[2])
 				{
-					resultsMatch = false;
-					break;
+					mismatchCount += 1;
+
+					KK_LOG_INFO("Index: {}", j);
+
+					if (results[j].pos[0] != prevResult[0] || results[j].pos[1] != prevResult[1] || results[j].pos[2] != prevResult[2] || results[j].vel[0] != prevResult[3] || results[j].vel[1] != prevResult[4] || results[j].vel[2] != prevResult[5])
+					{
+						KK_LOG_INFO("{} {} {} {} {} {}", results[j].pos[0], results[j].pos[1], results[j].pos[2], results[j].vel[0], results[j].vel[1], results[j].vel[2]);
+						prevResult[0] = results[j].pos[0];
+						prevResult[1] = results[j].pos[1];
+						prevResult[2] = results[j].pos[2];
+						prevResult[3] = results[j].vel[0];
+						prevResult[4] = results[j].vel[1];
+						prevResult[5] = results[j].vel[2];
+					}
 				}
 			}
 
-			CHECK(resultsMatch == true);
+			if (mismatchCount != 0)
+			{
+				KK_LOG_INFO("Correct: {} {} {} {} {} {}", validationResult.pos[0], validationResult.pos[1], validationResult.pos[2], validationResult.vel[0], validationResult.vel[1], validationResult.vel[2]);
+			}
+
+			CHECK(mismatchCount == 0);
 		}
 	}
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <atomic>
 #include <cstddef>
 #include <thread>
 
@@ -13,19 +12,16 @@ public:
 
 	void StartThread();
 
-	void RequestExit();
 	void WaitToExit();
 
 private:
 	std::thread thread;
 	size_t threadIndex;
 	JobSystem* jobSystem;
-	std::atomic_bool exitRequested;
 
 	// Set padding size to align the class size to a cache line to avoid false sharing
 	static const size_t CacheLine = 64;
-	static const size_t MemberBytes =
-		sizeof(std::thread) + sizeof(size_t) + sizeof(JobSystem*) + sizeof(std::atomic_bool);
+	static const size_t MemberBytes = sizeof(std::thread) + sizeof(size_t) + sizeof(JobSystem*);
 	uint8_t padding[(MemberBytes + CacheLine - 1) / CacheLine * CacheLine - MemberBytes];
 
 	void ThreadMain();

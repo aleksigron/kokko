@@ -76,7 +76,9 @@ private:
 	JobWorker* workers;
 
 	std::mutex conditionMutex;
-	std::condition_variable jobAddedCondition;
+	std::condition_variable runWorkerCV;
+	bool runWorkers;
+	bool exitWorkers;
 
 	friend class JobWorker;
 };
