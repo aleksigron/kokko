@@ -108,4 +108,9 @@ target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
 	IMGUI_IMPL_OPENGL_LOADER_GLAD
 )
 
+if(KOKKO_USE_SANITIZER)
+target_compile_options(${EXECUTABLE_NAME} INTERFACE -fsanitize=${KOKKO_USE_SANITIZER})
+target_link_options(${EXECUTABLE_NAME} INTERFACE -fsanitize=${KOKKO_USE_SANITIZER})
+endif()
+
 target_link_libraries(${EXECUTABLE_NAME} ${KOKKO_LIB})

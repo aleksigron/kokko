@@ -417,3 +417,8 @@ find_package(OpenGL REQUIRED)
 target_link_libraries(${KOKKO_LIB} PUBLIC OpenGL::GL)
 target_compile_definitions(${KOKKO_LIB} PUBLIC KOKKO_USE_OPENGL)
 endif()
+
+if(KOKKO_USE_SANITIZER)
+target_compile_options(${KOKKO_LIB} INTERFACE -fsanitize=${KOKKO_USE_SANITIZER})
+target_link_options(${KOKKO_LIB} INTERFACE -fsanitize=${KOKKO_USE_SANITIZER})
+endif()
