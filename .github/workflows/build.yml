@@ -19,8 +19,11 @@ jobs:
               name: "Windows MSVC",
               os: windows-latest,
               generator: "",
+              cmake_defines: "",
               build_type: Release,
               cc: "cl", cxx: "cl",
+              compile_flags: "",
+              link_flags: "",
               dependencies: "",
               build_product: "kokko-editor.exe"
             }
@@ -28,6 +31,27 @@ jobs:
               name: "Linux GCC",
               os: ubuntu-latest,
               generator: "",
+              cmake_defines: "",
+              build_type: Release,
+              cc: "gcc", cxx: "g++",
+              dependencies: "sudo apt-get update && sudo apt-get install xorg-dev",
+              build_product: "kokko-editor"
+            }
+          - {
+              name: "Linux GCC TSan",
+              os: ubuntu-latest,
+              generator: "",
+              cmake_defines: "-DKOKKO_USE_SANITIZER=thread",
+              build_type: Release,
+              cc: "gcc", cxx: "g++",
+              dependencies: "sudo apt-get update && sudo apt-get install xorg-dev",
+              build_product: "kokko-editor"
+            }
+          - {
+              name: "Linux GCC UBSan",
+              os: ubuntu-latest,
+              generator: "",
+              cmake_defines: "-DKOKKO_USE_SANITIZER=undefined",
               build_type: Release,
               cc: "gcc", cxx: "g++",
               dependencies: "sudo apt-get update && sudo apt-get install xorg-dev",
@@ -37,6 +61,7 @@ jobs:
               name: "MacOS Clang",
               os: macos-latest,
               generator: "-G Xcode",
+              cmake_defines: "",
               build_type: Release,
               cc: "clang", cxx: "clang",
               dependencies: "",
@@ -57,11 +82,10 @@ jobs:
         CXX: ${{matrix.config.cxx}}
       run: |
         mkdir build
-        cmake -B build ${{matrix.config.generator}} -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_LIBWEBPMUX=OFF -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
+        cmake -B build ${{matrix.config.generator}} ${{matrix.config.cmake_defines}} -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_LIBWEBPMUX=OFF -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
 
     - name: Build
-      # GitHub runners have 2 vCPU, run 3 parallel build jobs
-      run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --parallel 3
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --parallel
 
     - name: Run tests
       run: |
