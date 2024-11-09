@@ -348,7 +348,7 @@ static void ResetTestData(TestJobData* data, size_t count)
 TEST_CASE("JobSystem")
 {
 	constexpr size_t IterationCount = 50;
-	constexpr size_t DataCount = 1'000'000;
+	constexpr size_t DataCount = 5'000'000;
 
 	TestJobConstantData jobConstantData;
 	jobConstantData.deltaTime = 0.01f;
@@ -376,7 +376,7 @@ TEST_CASE("JobSystem")
 
 			jobSystem.Initialize();
 
-			size_t splitCount = 1 << 11;
+			size_t splitCount = 1 << 13;
 			job = JobHelpers::CreateParallelFor(&jobSystem, &jobConstantData, results, DataCount, TestJob, splitCount);
 
 			jobSystem.Enqueue(job);
@@ -404,7 +404,7 @@ TEST_CASE("JobSystem")
 				{
 					mismatchCount += 1;
 
-					KK_LOG_INFO("Index: {}", j);
+					//KK_LOG_INFO("Index: {}", j);
 
 					if (results[j].pos[0] != prevResult[0] || results[j].pos[1] != prevResult[1] || results[j].pos[2] != prevResult[2] || results[j].vel[0] != prevResult[3] || results[j].vel[1] != prevResult[4] || results[j].vel[2] != prevResult[5])
 					{
