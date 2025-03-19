@@ -21,6 +21,7 @@ JobQueue::JobQueue(Allocator* allocator) :
 	top(0),
 	bottom(0)
 {
+	std::memset(padding, 0, sizeof(padding));
 	jobs = static_cast<Job**>(allocator->Allocate(MaxJobCount * sizeof(Job), "JobQueue.jobs"));
 }
 

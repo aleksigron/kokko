@@ -10,8 +10,7 @@ namespace kokko
 
 JobWorker::JobWorker(size_t threadIndex, JobSystem* jobSystem) :
 	threadIndex(threadIndex),
-	jobSystem(jobSystem),
-	exitRequested(false)
+	jobSystem(jobSystem)
 {
 	std::memset(padding, 0, sizeof(padding));
 }
@@ -20,11 +19,6 @@ void JobWorker::StartThread()
 {
 	if (thread.joinable() == false)
 		thread = std::thread(&JobWorker::ThreadMain, this);
-}
-
-void JobWorker::RequestExit()
-{
-	exitRequested.store(true);
 }
 
 void JobWorker::WaitToExit()
@@ -64,19 +58,15 @@ void JobWorker::ThreadMain()
 		// We only start waiting on the condition variable if we failed to get a job
 		// MaxGetJobTryCount times in a row.
 
-		exit = exitRequested.load();
-		if (exit == true)
-			break;
-
 		// Allow wake-ups even when we don't know if there is work to do
 		// That means we try get a job but we will return here if no jobs are available
 		std::unique_lock<std::mutex> lock(jobSystem->conditionMutex);
 		{
 			KOKKO_PROFILE_SCOPE("CondWait");
-			jobSystem->jobAddedCondition.wait(lock);
+			jobSystem->runWorkerCV.wait(lock, [this]() { return jobSystem->runWorkers; });
 		}
 
-		exit = exitRequested.load();
+		exit = jobSystem->exitWorkers;
 	}
 
 	// We need to make sure no one is accidentally modifying the thread index
