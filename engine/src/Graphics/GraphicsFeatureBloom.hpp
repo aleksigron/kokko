@@ -10,10 +10,10 @@
 
 #include "Resources/ShaderId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 class GraphicsFeatureBloom : public GraphicsFeature
 {
@@ -54,4 +54,4 @@ private:
 	render::SamplerId linearSamplerId;
 };
 
-}
+} // namespace kokko

@@ -5,6 +5,9 @@
 
 #include "Math/Vec3.hpp"
 
+namespace kokko
+{
+
 template<class T>
 bool from_chars(ryml::csubstr buf, Vec2<T>* v);
 
@@ -16,3 +19,5 @@ size_t to_chars(ryml::substr buf, const Vec2<T>& v);
 
 template<class T>
 size_t to_chars(ryml::substr buf, const Vec3<T>& v);
+
+} // namespace kokko

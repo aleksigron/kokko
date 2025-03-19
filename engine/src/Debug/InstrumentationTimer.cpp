@@ -4,6 +4,9 @@
 
 #include "Debug/Instrumentation.hpp"
 
+namespace kokko
+{
+
 InstrumentationTimer::InstrumentationTimer(const char* name)
 	: name(name), stopped(false)
 {
@@ -34,3 +37,4 @@ void InstrumentationTimer::Stop()
 	stopped = true;
 }
 
+} // namespace kokko

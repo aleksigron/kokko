@@ -10,11 +10,14 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 const SceneObjectId SceneObjectId::Null = SceneObjectId{};
 
 static bool NotNull(SceneObjectId id) { return id != SceneObjectId::Null; }
 
-Scene::Scene(Allocator* allocator):
+Scene::Scene(Allocator* allocator) :
 	allocator(allocator),
 	entityMap(allocator),
 	updatedEntities(allocator),
@@ -100,7 +103,7 @@ void Scene::AddSceneObject(unsigned int count, Entity* entities, SceneObjectId* 
 		Entity e = entities[i];
 
 		auto mapPair = entityMap.Insert(e.id);
-		mapPair->second = SceneObjectId { id };
+		mapPair->second = SceneObjectId{ id };
 
 		data.entity[id] = e;
 		data.local[id] = Mat4x4f();
@@ -301,7 +304,7 @@ void Scene::SetEditTransform(SceneObjectId id, const SceneEditTransform& editTra
 {
 	data.editTransform[id.i] = editTransform;
 
-	Mat4x4f transform = Mat4x4f::Translate(editTransform.translation) * 
+	Mat4x4f transform = Mat4x4f::Translate(editTransform.translation) *
 		Mat4x4f::RotateEuler(editTransform.rotation) *
 		Mat4x4f::Scale(editTransform.scale);
 
@@ -377,3 +380,5 @@ void Scene::NotifyUpdatedTransforms(size_t receiverCount, TransformUpdateReceive
 	updatedEntities.Clear();
 	updatedTransforms.Clear();
 }
+
+} // namespace kokko

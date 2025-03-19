@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 template <typename T1, typename T2>
 struct Pair
 {
@@ -19,3 +22,5 @@ struct Pair
 	Pair& operator=(const Pair& other) = default;
 	Pair& operator=(Pair&& other) = default;
 };
+
+} // namespace kokko

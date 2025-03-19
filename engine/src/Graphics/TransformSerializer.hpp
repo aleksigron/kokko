@@ -8,6 +8,9 @@
 
 #include "Resources/YamlCustomTypes.hpp"
 
+namespace kokko
+{
+
 class TransformSerializer
 {
 private:
@@ -59,3 +62,5 @@ public:
 		return sceneObject;
 	}
 };
+
+} // namespace kokko

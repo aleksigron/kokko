@@ -4,11 +4,10 @@
 
 #include "EditorWindow.hpp"
 
-class Allocator;
-
 namespace kokko
 {
 
+class Allocator;
 class AssetInfo;
 class MaterialManager;
 class ShaderManager;

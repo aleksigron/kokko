@@ -3,6 +3,9 @@
 #include "Memory/Allocator.hpp"
 #include "Memory/AllocatorManager.hpp"
 
+namespace kokko
+{
+
 class Allocator;
 class AllocatorManager;
 
@@ -33,3 +36,5 @@ struct InstanceAllocatorPair
 	Type* instance;
 	Allocator* allocator;
 };
+
+} // namespace kokko

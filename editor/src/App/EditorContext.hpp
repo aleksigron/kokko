@@ -8,11 +8,11 @@
 
 struct ImFont;
 
-class Allocator;
 
 namespace kokko
 {
 
+class Allocator;
 class AssetLibrary;
 class FilesystemResolver;
 class World;

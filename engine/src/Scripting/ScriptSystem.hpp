@@ -9,12 +9,10 @@
 
 namespace kokko
 {
-class World;
-}
-
-class InputManager;
 class Allocator;
+class InputManager;
 class NativeScriptComponent;
+class World;
 
 class ScriptSystem
 {
@@ -22,9 +20,9 @@ private:
 	void* app;
 	Allocator* allocator;
 
-	kokko::Array<NativeScriptComponent*> scripts;
-	kokko::Array<NativeScriptComponent*> scriptsToInit;
-	kokko::Array<NativeScriptComponent*> scriptsToDestroy;
+	Array<NativeScriptComponent*> scripts;
+	Array<NativeScriptComponent*> scriptsToInit;
+	Array<NativeScriptComponent*> scriptsToDestroy;
 
 	HashMap<unsigned int, unsigned int> entityMap;
 
@@ -57,7 +55,7 @@ public:
 	ScriptType* GetEntityScriptAs(Entity e)
 	{
 		auto* pair = entityMap.Lookup(e.id);
-		
+
 		if (pair != nullptr)
 			return dynamic_cast<ScriptType*>(scripts[pair->second]);
 		else
@@ -66,3 +64,5 @@ public:
 
 	void UpdateScripts(kokko::World* world, InputManager* inputManager);
 };
+
+} // namespace kokko

@@ -13,11 +13,10 @@
 
 #include "Resources/AssetType.hpp"
 
-class Allocator;
-
 namespace kokko
 {
 
+class Allocator;
 class Filesystem;
 
 struct AssetScopeConfiguration

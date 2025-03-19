@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+namespace kokko
+{
+
 template <typename T>
 struct BitfieldVariable
 {
@@ -41,3 +44,5 @@ struct BitfieldVariable
 		return value;
 	}
 };
+
+} // namespace kokko

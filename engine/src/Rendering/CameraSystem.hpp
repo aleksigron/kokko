@@ -16,10 +16,10 @@
 
 #include "Math/Projection.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 struct CameraComponent
 {

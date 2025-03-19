@@ -25,6 +25,10 @@
 #include "Resources/ShaderManager.hpp"
 #include "Resources/TextureManager.hpp"
 
+
+namespace kokko
+{
+
 namespace
 {
 
@@ -75,9 +79,6 @@ void BindBufferRange(kokko::render::CommandEncoder* encoder, unsigned int bindin
 }
 
 } // Anonymous namespace
-
-namespace kokko
-{
 
 const EnvironmentId EnvironmentId::Null = EnvironmentId{ 0 };
 

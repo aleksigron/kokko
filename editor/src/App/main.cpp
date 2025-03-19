@@ -57,14 +57,14 @@ kokko::WindowSettings GetWindowSettings(const kokko::editor::EditorUserSettings&
 
 int main(int argc, char** argv)
 {
-	RootAllocator rootAllocator;
-	Allocator* defaultAlloc = RootAllocator::GetDefaultAllocator();
+	kokko::RootAllocator rootAllocator;
+	kokko::Allocator* defaultAlloc = kokko::RootAllocator::GetDefaultAllocator();
 	kokko::Logger logger(defaultAlloc);
 	kokko::Log::SetLogInstance(&logger);
 	kokko::editor::ConsoleLogger consoleLogger(defaultAlloc);
 	logger.SetReceiver(&consoleLogger);
 
-	Instrumentation& instr = Instrumentation::Get();
+	kokko::Instrumentation& instr = kokko::Instrumentation::Get();
 	instr.BeginSession("unit_test_trace.json");
 
 	doctest::Context ctx;
@@ -78,12 +78,12 @@ int main(int argc, char** argv)
 	instr.EndSession();
 	instr.BeginSession("startup_trace.json");
 
-	AllocatorManager* allocManager = defaultAlloc->MakeNew<AllocatorManager>(defaultAlloc);
+	kokko::AllocatorManager* allocManager = defaultAlloc->MakeNew<kokko::AllocatorManager>(defaultAlloc);
 
 	// Virtual filesystem
 	// Initial virtual mount points before editor project is loaded
 
-	Allocator* filesystemAllocator = allocManager->CreateAllocatorScope("Filesystem", defaultAlloc);
+	kokko::Allocator* filesystemAllocator = allocManager->CreateAllocatorScope("Filesystem", defaultAlloc);
 	kokko::FilesystemResolverVirtual resolver(filesystemAllocator);
 	kokko::Filesystem filesystem(filesystemAllocator, &resolver);
 
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 	};
 	resolver.SetMountPoints(kokko::ArrayView(mounts));
 
-	Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
+	kokko::Allocator* appAllocator = allocManager->CreateAllocatorScope("EditorApp", defaultAlloc);
 	kokko::editor::EditorApp editor(appAllocator, &filesystem, &resolver);
 	kokko::AssetLibrary* assetLibrary = editor.GetAssetLibrary();
 
@@ -115,7 +115,7 @@ int main(int argc, char** argv)
 
 	// Engine
 
-	Engine engine(allocManager, &filesystem, &assetLoader);
+	kokko::Engine engine(allocManager, &filesystem, &assetLoader);
 
 	if (assetLibrary->ScanAssets(true, true, false) == false)
 	{

@@ -2,6 +2,9 @@
 
 #include "Engine/JobSystem.hpp"
 
+namespace kokko
+{
+
 class JobHelpers
 {
 public:
@@ -73,3 +76,5 @@ private:
 		}
 	}
 };
+
+} // namespace kokko

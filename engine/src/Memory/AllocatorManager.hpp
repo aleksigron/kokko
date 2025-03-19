@@ -4,6 +4,9 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 class MetricAllocator;
 
 class AllocatorManager
@@ -43,3 +46,5 @@ public:
 	std::size_t GetAllocatedSizeForScopeIndex(unsigned int index) const;
 	std::size_t GetAllocationCountForScopeIndex(unsigned int index) const;
 };
+
+} // namespace kokko

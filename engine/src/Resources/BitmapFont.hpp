@@ -9,12 +9,10 @@
 
 #include "Rendering/RenderResourceId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+class Allocator;
 class TextureManager;
-}
 
 struct BitmapGlyph
 {
@@ -61,3 +59,5 @@ public:
 
 	bool LoadFromBDF(kokko::TextureManager* textureManager, kokko::ConstStringView content);
 };
+
+} // namespace kokko

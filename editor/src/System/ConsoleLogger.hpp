@@ -4,10 +4,11 @@
 
 #include "System/Logger.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
+
 namespace editor
 {
 

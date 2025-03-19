@@ -3,13 +3,12 @@
 #include "Math/Vec3.hpp"
 #include "Math/Projection.hpp"
 
-struct Mat3x3f;
-struct Mat4x4fBijection;
-struct CameraParameters;
-
-
 namespace kokko
 {
+
+struct CameraParameters;
+struct Mat3x3f;
+struct Mat4x4fBijection;
 
 class Window;
 

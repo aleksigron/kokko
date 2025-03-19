@@ -4,6 +4,9 @@
 #include <cstddef>
 #include <thread>
 
+namespace kokko
+{
+
 class JobSystem;
 
 class JobWorker
@@ -30,3 +33,5 @@ private:
 
 	void ThreadMain();
 };
+
+} // namespace kokko

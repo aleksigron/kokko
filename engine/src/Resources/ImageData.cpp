@@ -1,5 +1,8 @@
 #include "Resources/ImageData.hpp"
 
+namespace kokko
+{
+
 ImageData::ImageData() :
 	imageData(nullptr),
 	imageDataSize(0),
@@ -10,3 +13,5 @@ ImageData::ImageData() :
 	compressed(false)
 {
 }
+
+} // namespace kokko

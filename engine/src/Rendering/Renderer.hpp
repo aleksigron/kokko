@@ -19,21 +19,15 @@
 
 #include "Resources/MaterialData.hpp"
 
-class Allocator;
-class Scene;
-class RenderTargetContainer;
-class Framebuffer;
-
-struct CameraParameters;
-struct RenderViewport;
-
 namespace kokko
 {
 
+class Allocator;
 class CameraSystem;
 class DebugVectorRenderer;
 class EnvironmentSystem;
 class GraphicsFeature;
+class Framebuffer;
 class LightManager;
 class MaterialManager;
 class MeshComponentSystem;
@@ -41,11 +35,15 @@ class ModelManager;
 class PostProcessRenderer;
 class RenderDebugSettings;
 class RenderGraphResources;
+class RenderTargetContainer;
+class Scene;
 class ShaderManager;
 class TextureManager;
 class UniformData;
 class Window;
 
+struct CameraParameters;
+struct RenderViewport;
 struct ResourceManagers;
 
 namespace render

@@ -5,6 +5,9 @@
 
 #include "doctest/doctest.h"
 
+namespace kokko
+{
+
 Vec3f Color::FromSrgbToLinear(const Vec3f& srgb)
 {
 	auto toLinear = [](float v) { return v <= 0.04045f ? v / 12.92f : std::pow((v + 0.055f) / 1.055f, 2.4f); };
@@ -52,3 +55,5 @@ TEST_CASE("Color.ConvertLinearSrgb")
 		CHECK(linToSrgbToLin[2] == doctest::Approx(linearColors[i][2]));
 	}
 }
+
+} // namespace kokko

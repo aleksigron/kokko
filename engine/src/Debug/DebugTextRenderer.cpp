@@ -24,7 +24,7 @@
 
 struct UniformBlock
 {
-	alignas(16) Vec2f shadowOffset;
+	alignas(16) kokko::Vec2f shadowOffset;
 };
 
 namespace kokko

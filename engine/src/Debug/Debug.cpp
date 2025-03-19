@@ -33,6 +33,9 @@
 #include "System/Log.hpp"
 #include "System/Time.hpp"
 
+namespace kokko
+{
+
 Debug* Debug::singletonInstance = nullptr;
 
 static void RenderDebugCallback(const kokko::render::Device::DebugMessage& message)
@@ -104,7 +107,7 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 	KOKKO_PROFILE_FUNCTION();
 
 #ifdef KOKKO_USE_METAL
-    return;
+	return;
 #endif
 
 	Vec2i framebufferSize(framebuffer.GetWidth(), framebuffer.GetHeight());
@@ -175,7 +178,7 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 
 		// Check vsync switching
 
-        // TODO: Fix debug key shortcuts
+		// TODO: Fix debug key shortcuts
 		//vsync = window->GetSwapInterval() != 0;
 		if (input->GetKeyDown(KeyCode::F8))
 		{
@@ -270,3 +273,5 @@ bool Debug::ShouldEndProfileSession()
 
 	return ended;
 }
+
+} // namespace kokko

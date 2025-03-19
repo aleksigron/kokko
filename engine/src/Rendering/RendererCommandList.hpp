@@ -7,10 +7,10 @@
 #include "Rendering/RenderOrder.hpp"
 #include "Rendering/RenderPassType.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 enum class RendererCommandType
 {

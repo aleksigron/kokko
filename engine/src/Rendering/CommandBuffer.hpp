@@ -1,10 +1,9 @@
 #pragma once
 
-class Allocator;
-
 namespace kokko
 {
 
+class Allocator;
 class NativeSurface;
 class RenderPass;
 

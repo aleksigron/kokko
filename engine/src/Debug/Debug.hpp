@@ -6,34 +6,32 @@
 
 #include "Math/Vec2.hpp"
 
-class Allocator;
-class AllocatorManager;
-class Renderer;
-
-class DebugGraph;
-class DebugMemoryStats;
-
-struct ViewRectangle;
-struct CameraParameters;
-
 namespace kokko
 {
+
+class Allocator;
+class AllocatorManager;
+class DebugGraph;
+class DebugMemoryStats;
 class DebugCulling;
 class DebugTextRenderer;
 class DebugVectorRenderer;
 class Filesystem;
 class ModelManager;
+class Renderer;
 class ShaderManager;
 class TextureManager;
 class Window;
 class World;
+
+struct ViewRectangle;
+struct CameraParameters;
 
 namespace render
 {
 class CommandEncoder;
 class Device;
 class Framebuffer;
-}
 }
 
 class Debug
@@ -70,7 +68,7 @@ private:
 
 public:
 	Debug(Allocator* allocator, AllocatorManager* allocManager, kokko::render::Device* renderDevice,
-        kokko::Filesystem* filesystem);
+		kokko::Filesystem* filesystem);
 	~Debug();
 
 	static Debug* Get() { return singletonInstance; }
@@ -93,3 +91,5 @@ public:
 	bool ShouldBeginProfileSession() const;
 	bool ShouldEndProfileSession();
 };
+
+} // namespace kokko

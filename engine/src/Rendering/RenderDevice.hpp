@@ -8,10 +8,10 @@
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/RenderResourceId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 // Dummy type to disallow implicit pointer casting
 class NativeRenderDevice;

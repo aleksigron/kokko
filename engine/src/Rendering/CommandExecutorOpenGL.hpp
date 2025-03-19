@@ -9,10 +9,10 @@
 #include "Rendering/RenderCommand.hpp"
 #include "Rendering/CommandExecutor.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 namespace render
 {

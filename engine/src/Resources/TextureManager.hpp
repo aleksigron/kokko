@@ -14,12 +14,12 @@
 
 #include "Resources/TextureId.hpp"
 
-class Allocator;
-struct ImageData;
-
 namespace kokko
 {
+class Allocator;
 class AssetLoader;
+
+struct ImageData;
 struct TextureAssetMetadata;
 
 namespace render

@@ -4,9 +4,12 @@
 
 #include "Memory/MetricAllocator.hpp"
 
+namespace kokko
+{
+
 TEST_CASE("Array can hold items")
 {
-	kokko::Array<int> a(Allocator::GetDefault());
+	Array<int> a(Allocator::GetDefault());
 
 	CHECK(a.GetCount() == 0);
 	a.PushBack(1);
@@ -19,7 +22,7 @@ TEST_CASE("Array can hold items")
 
 TEST_CASE("Array multiple items can be inserted")
 {
-	kokko::Array<int> a(Allocator::GetDefault());
+	Array<int> a(Allocator::GetDefault());
 
 	int values[] = { 0, 1, 2 };
 	a.Insert(0, values, 3);
@@ -32,7 +35,7 @@ TEST_CASE("Array multiple items can be inserted")
 
 TEST_CASE("Array items can be removed")
 {
-	kokko::Array<int> a(Allocator::GetDefault());
+	Array<int> a(Allocator::GetDefault());
 
 	int values[] = { 0, 1, 2 };
 	a.Insert(0, values, 3);
@@ -40,7 +43,7 @@ TEST_CASE("Array items can be removed")
 	a.Remove(2);
 	CHECK(a.GetCount() == 2);
 	CHECK(a.GetBack() == 1);
-	
+
 	a.Remove(0);
 	CHECK(a.GetCount() == 1);
 	CHECK(a[0] == 1);
@@ -48,7 +51,7 @@ TEST_CASE("Array items can be removed")
 
 TEST_CASE("Array can be iterated")
 {
-	kokko::Array<int> a(Allocator::GetDefault());
+	Array<int> a(Allocator::GetDefault());
 
 	int values[] = { 0, 1, 2 };
 	a.Insert(0, values, 3);
@@ -57,8 +60,8 @@ TEST_CASE("Array can be iterated")
 
 	{
 		int iterationCount = 0;
-		kokko::Array<int>::Iterator itr = a.begin();
-		kokko::Array<int>::Iterator end = a.end();
+		Array<int>::Iterator itr = a.begin();
+		Array<int>::Iterator end = a.end();
 		for (; itr != end; ++itr)
 		{
 			CHECK(*itr == iterationCount);
@@ -81,7 +84,7 @@ TEST_CASE("Array memory is allocated and released")
 	Allocator* allocator = Allocator::GetDefault();
 	MetricAllocator metricAllocator(nullptr, allocator);
 	{
-		kokko::Array<int> a(&metricAllocator);
+		Array<int> a(&metricAllocator);
 
 		int values[] = { 0, 1, 2 };
 		a.Insert(0, values, 3);
@@ -93,3 +96,5 @@ TEST_CASE("Array memory is allocated and released")
 	CHECK(metricAllocator.GetTotalAllocationCount() == 0);
 	CHECK(metricAllocator.GetTotalAllocationSize() == 0);
 }
+
+} // namespace kokko

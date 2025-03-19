@@ -8,32 +8,30 @@
 #include "Resources/LevelSerializer.hpp"
 #include "Resources/ResourceManagers.hpp"
 
-class Allocator;
-class AllocatorManager;
-class InputManager;
-
-struct CameraParameters;
-
-class EntityManager;
-class Scene;
-class ScriptSystem;
-
-class ComponentSerializer;
-
 namespace kokko
 {
+
+class Allocator;
+class AllocatorManager;
 class AssetLoader;
 class CameraSystem;
+class ComponentSerializer;
 class DebugVectorRenderer;
+class EntityManager;
 class EnvironmentSystem;
 class Filesystem;
+class InputManager;
 class LightManager;
 class MeshComponentSystem;
 class ParticleSystem;
 class Renderer;
 class RenderDebugSettings;
+class Scene;
+class ScriptSystem;
 class TerrainSystem;
 class Window;
+
+struct CameraParameters;
 
 namespace render
 {

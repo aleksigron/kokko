@@ -13,10 +13,9 @@
 #include "Resources/MaterialData.hpp"
 #include "Resources/ShaderId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+class Allocator;
 class AssetLoader;
 class MaterialSerializer;
 class ShaderManager;

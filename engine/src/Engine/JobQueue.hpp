@@ -5,6 +5,9 @@
 
 #include "Core/Core.hpp"
 
+namespace kokko
+{
+
 class Allocator;
 
 struct Job;
@@ -32,3 +35,5 @@ private:
 	static const size_t MemberBytes = sizeof(Allocator*) + sizeof(Job**) + sizeof(long) * 2;
 	uint8_t padding[(MemberBytes + CL - 1) / CL * CL - MemberBytes];
 };
+
+} // namespace kokko

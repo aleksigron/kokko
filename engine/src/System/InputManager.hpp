@@ -4,15 +4,16 @@
 
 struct GLFWwindow;
 
+namespace kokko
+{
+
+class Allocator;
+class InputSource;
+class InputView;
 class KeyboardInput;
 class KeyboardInputView;
 class TextInput;
 class PointerInput;
-
-class InputSource;
-class InputView;
-
-class Allocator;
 
 class InputManager
 {
@@ -21,7 +22,7 @@ private:
 
 	Allocator* allocator;
 
-	kokko::UniquePtr<InputSource> inputSource;
+	UniquePtr<InputSource> inputSource;
 	InputView* gameInputView;
 
 	void UpdateInputViews();
@@ -38,3 +39,5 @@ public:
 	InputSource* GetInputSource() { return inputSource.Get(); }
 	InputView* GetGameInputView() { return gameInputView; }
 };
+
+} // namespace kokko

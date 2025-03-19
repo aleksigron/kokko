@@ -10,17 +10,15 @@
 
 #include "Math/Vec3.hpp"
 
-class Allocator;
-
-struct FrustumPlanes;
-struct Mat4x4f;
-struct CameraParameters;
-
 namespace kokko
 {
-
+class Allocator;
 class RenderDebugSettings;
+
 struct AABB;
+struct CameraParameters;
+struct FrustumPlanes;
+struct Mat4x4f;
 struct TerrainTileHeightData;
 
 namespace render

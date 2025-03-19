@@ -5,6 +5,9 @@
 
 #include "Math/Vec3.hpp"
 
+namespace kokko
+{
+
 template <typename T>
 class Optional;
 
@@ -40,3 +43,5 @@ struct Mat3x3f
 Mat3x3f operator*(const Mat3x3f& a, const Mat3x3f& b);
 Vec3f operator*(const Mat3x3f& m, const Vec3f& v);
 Vec3f operator*(const Vec3f& v, const Mat3x3f& m);
+
+} // namespace kokko

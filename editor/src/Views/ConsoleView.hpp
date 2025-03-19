@@ -10,10 +10,10 @@
 
 struct ImGuiInputTextCallbackData;
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 namespace editor
 {

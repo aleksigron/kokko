@@ -13,16 +13,15 @@
 
 #include "Views/FilePickerDialog.hpp"
 
-class Allocator;
-class Engine;
-
-struct CameraParameters;
-struct EngineSettings;
-
 namespace kokko
 {
 
+struct CameraParameters;
+struct EngineSettings;
 struct Uid;
+
+class Allocator;
+class Engine;
 class Filesystem;
 class World;
 

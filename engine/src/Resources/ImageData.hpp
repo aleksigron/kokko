@@ -6,6 +6,9 @@
 
 #include "Rendering/RenderTypes.hpp"
 
+namespace kokko
+{
+
 struct ImageData
 {
 	unsigned char* imageData;
@@ -20,3 +23,5 @@ struct ImageData
 
 	ImageData();
 };
+
+} // namespace kokko

@@ -5,10 +5,11 @@
 #include "Core/Optional.hpp"
 #include "Core/Uid.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
+
 namespace editor
 {
 

@@ -6,6 +6,9 @@
 
 #include "Scripting/NativeScriptComponent.hpp"
 
+namespace kokko
+{
+
 ScriptSystem::ScriptSystem(Allocator* allocator) :
 	app(nullptr),
 	allocator(allocator),
@@ -53,3 +56,5 @@ void ScriptSystem::UpdateScripts(kokko::World* world, InputManager* inputManager
 	for (size_t i = 0, count = scripts.GetCount(); i < count; ++i)
 		scripts[i]->OnUpdate(scriptContext);
 }
+
+} // namespace kokko

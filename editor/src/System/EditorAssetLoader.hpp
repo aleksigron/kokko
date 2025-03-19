@@ -4,11 +4,10 @@
 
 #include "Resources/AssetLoader.hpp"
 
-class Allocator;
-
 namespace kokko
 {
 
+class Allocator;
 class AssetLibrary;
 class Filesystem;
 

@@ -36,12 +36,12 @@ int main(int argc, char** argv)
 {
 	// Setup RootAllocator and logging
 
-	RootAllocator rootAllocator;
-	Allocator* defaultAlloc = RootAllocator::GetDefaultAllocator();
+	kokko::RootAllocator rootAllocator;
+	kokko::Allocator* defaultAlloc = kokko::RootAllocator::GetDefaultAllocator();
 	kokko::Logger logger(defaultAlloc);
 	kokko::Log::SetLogInstance(&logger);
 
-	Instrumentation& instr = Instrumentation::Get();
+	kokko::Instrumentation& instr = kokko::Instrumentation::Get();
 	instr.BeginSession("render_test_trace.json");
 
 	// Setup other engine systems
@@ -68,9 +68,9 @@ int main(int argc, char** argv)
 	};
 	assetLibrary.SetAppScopeConfig(assetConfig);
 
-	AllocatorManager allocManager(defaultAlloc);
+	kokko::AllocatorManager allocManager(defaultAlloc);
 	kokko::TestRunnerAssetLoader assetLoader(defaultAlloc, &filesystem, &assetLibrary);
-	Engine engine(&allocManager, &filesystem, &assetLoader);
+	kokko::Engine engine(&allocManager, &filesystem, &assetLoader);
 	engine.GetSettings()->enableDebugTools = false;
 
 	if (assetLibrary.ScanAssets(true, true, false) == false)
@@ -115,11 +115,12 @@ int main(int argc, char** argv)
 	constexpr int totalBytes = imageBytes + stride; // Reserve one row for swapping row order
 
 	kokko::render::Framebuffer framebuffer;
-	RenderTextureSizedFormat colorFormat[] = { RenderTextureSizedFormat::SRGB8 };
+	kokko::RenderTextureSizedFormat colorFormat[] = { kokko::RenderTextureSizedFormat::SRGB8 };
 	kokko::render::Device* renderDevice = engine.GetRenderDevice();
 	kokko::render::CommandEncoder* encoder = engine.GetCommandEncoder();
 	framebuffer.SetRenderDevice(renderDevice);
-	framebuffer.Create(width, height, Optional<RenderTextureSizedFormat>(), kokko::ArrayView(colorFormat));
+	framebuffer.Create(
+		width, height, kokko::Optional<kokko::RenderTextureSizedFormat>(), kokko::ArrayView(colorFormat));
 
 	kokko::Array<uint8_t> resultPixelArray(defaultAlloc);
 	resultPixelArray.Resize(totalBytes);
@@ -184,7 +185,7 @@ int main(int argc, char** argv)
 
 				engine.StartFrame();
 				engine.Update();
-				engine.Render(Optional<CameraParameters>(), framebuffer);
+				engine.Render(kokko::Optional<kokko::CameraParameters>(), framebuffer);
 				engine.EndFrame();
 			}
 
@@ -196,7 +197,7 @@ int main(int argc, char** argv)
 				// When supporting Vulkan, we will need to use vkCmdBlitImage or
 				// vkCmdCopyImage to copy to host-visible memory
 				renderDevice->ReadFramebufferPixels(0, 0, width, height,
-					RenderTextureBaseFormat::RGB, RenderTextureDataType::UnsignedByte, resultPixels);
+					kokko::RenderTextureBaseFormat::RGB, kokko::RenderTextureDataType::UnsignedByte, resultPixels);
 			}
 
 			{

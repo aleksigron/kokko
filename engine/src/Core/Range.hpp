@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+namespace kokko
+{
+
 template <typename T>
 struct Range
 {
@@ -22,3 +25,5 @@ struct Range
 		return end - start;
 	}
 };
+
+} // namespace kokko

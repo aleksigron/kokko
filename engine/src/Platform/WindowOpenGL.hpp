@@ -2,11 +2,10 @@
 
 #include "Platform/Window.hpp"
 
-class Allocator;
-
 namespace kokko
 {
 
+class Allocator;
 
 class WindowOpenGL : public Window
 {

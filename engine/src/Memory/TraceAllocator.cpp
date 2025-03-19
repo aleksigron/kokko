@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+namespace kokko
+{
+
 TraceAllocator::TraceAllocator(const char* memoryScope, Allocator* allocator) :
 	MetricAllocator(memoryScope, allocator),
 	allocations(allocator)
@@ -59,3 +62,5 @@ void TraceAllocator::OutputAllocations(FILE* stream)
 	else
 		fprintf(stream, "\tNo allocations");
 }
+
+} // namespace kokko

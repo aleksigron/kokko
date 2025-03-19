@@ -1,5 +1,8 @@
 #include "Resources/YamlCustomTypes.hpp"
 
+namespace kokko
+{
+
 template<class T>
 bool from_chars(ryml::csubstr buf, Vec2<T>* v)
 {
@@ -33,3 +36,5 @@ size_t to_chars(ryml::substr buf, const Vec3<T>& v)
 }
 
 template size_t to_chars<float>(ryml::substr buf, const Vec3<float>& v);
+
+} // namespace kokko

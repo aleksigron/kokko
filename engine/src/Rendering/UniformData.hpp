@@ -11,10 +11,10 @@
 #include "Rendering/UniformList.hpp"
 #include "Rendering/RenderResourceId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+class Allocator;
+
 struct BufferUniform;
 struct TextureUniform;
 

@@ -13,11 +13,10 @@
 #include "Resources/MeshId.hpp"
 #include "Resources/TextureId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
 
+class Allocator;
 class AssetLoader;
 class Filesystem;
 class ModelManager;

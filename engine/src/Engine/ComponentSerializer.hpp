@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-struct Entity;
-
 namespace c4
 {
 namespace yml
@@ -12,6 +10,11 @@ class ConstNodeRef;
 class NodeRef;
 }
 }
+
+namespace kokko
+{
+
+struct Entity;
 
 class ComponentSerializer
 {
@@ -24,3 +27,5 @@ public:
 	virtual void DeserializeComponent(const c4::yml::ConstNodeRef& map, Entity entity) = 0;
 	virtual void SerializeComponent(c4::yml::NodeRef& componentArray, Entity entity) = 0;
 };
+
+} // namespace kokko

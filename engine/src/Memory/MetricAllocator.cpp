@@ -2,7 +2,10 @@
 
 #include <cassert>
 
-MetricAllocator::MetricAllocator(const char* memoryScope, Allocator* allocator):
+namespace kokko
+{
+
+MetricAllocator::MetricAllocator(const char* memoryScope, Allocator* allocator) :
 	allocator(allocator),
 	memoryScopeName(memoryScope),
 	allocatedSize(0),
@@ -74,3 +77,5 @@ std::size_t MetricAllocator::GetAllocatedSize(void* ptr)
 {
 	return allocator->GetAllocatedSize(ptr);
 }
+
+} // namespace kokko

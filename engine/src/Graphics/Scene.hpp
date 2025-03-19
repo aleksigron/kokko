@@ -9,8 +9,11 @@
 
 #include "Math/Mat4x4.hpp"
 
-class Camera;
+namespace kokko
+{
+
 class Allocator;
+class Camera;
 class TransformUpdateReceiver;
 
 struct SceneObjectId
@@ -49,7 +52,7 @@ private:
 	{
 		unsigned int count;
 		unsigned int allocated;
-		void *buffer;
+		void* buffer;
 
 		Entity* entity;
 		Mat4x4f* local;
@@ -124,3 +127,5 @@ public:
 
 	void NotifyUpdatedTransforms(size_t receiverCount, TransformUpdateReceiver** updateReceivers);
 };
+
+} // namespace kokko

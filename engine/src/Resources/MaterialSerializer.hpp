@@ -2,11 +2,10 @@
 
 #include "Core/StringView.hpp"
 
-class Allocator;
-
 namespace kokko
 {
 
+class Allocator;
 class MaterialManager;
 class ShaderManager;
 class String;

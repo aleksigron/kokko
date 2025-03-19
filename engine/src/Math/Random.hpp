@@ -3,6 +3,9 @@
 #include <random>
 #include <cstdint>
 
+namespace kokko
+{
+
 class Random
 {
 private:
@@ -23,3 +26,5 @@ public:
 	static int64_t Int64(int64_t min, int64_t max);
 	static uint64_t Uint64(uint64_t min, uint64_t max);
 };
+
+} // namespace kokko

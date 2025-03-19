@@ -14,10 +14,10 @@
 
 #include "Rendering/Light.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 class LightManager : public TransformUpdateReceiver
 {

@@ -6,10 +6,10 @@
 
 #include "Rendering/RenderResourceId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 namespace render
 {

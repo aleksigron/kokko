@@ -6,6 +6,9 @@
 
 #include "Memory/MetricAllocator.hpp"
 
+namespace kokko
+{
+
 class TraceAllocator : public MetricAllocator
 {
 private:
@@ -31,3 +34,5 @@ public:
 
 	void OutputAllocations(FILE* stream);
 };
+
+} // namespace kokko

@@ -5,6 +5,9 @@
 #include "Math/Mat4x4.hpp"
 #include "Math/Projection.hpp"
 
+namespace kokko
+{
+
 struct FrustumPlanes
 {
 	// Order: near, left, top, right, bottom, far
@@ -116,3 +119,5 @@ struct FrustumPoints
 		points[7] = farCenter - halfFarUp + halfFarRight; // Far bottom right
 	}
 };
+
+} // namespace kokko

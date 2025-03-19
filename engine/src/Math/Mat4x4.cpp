@@ -9,6 +9,9 @@
 #include "Math/Mat3x3.hpp"
 #include "Math/Vec2.hpp"
 
+namespace kokko
+{
+
 Mat4x4f::Mat4x4f() :
 	m{ 1, 0, 0, 0,
 	   0, 1, 0, 0,
@@ -475,3 +478,5 @@ Mat4x4f operator*(const Mat4x4f& a, const Mat4x4f& b)
 
 	return result;
 }
+
+} // namespace kokko

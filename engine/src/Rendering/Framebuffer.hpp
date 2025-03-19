@@ -10,12 +10,13 @@
 
 #include "Rendering/RenderResourceId.hpp"
 
+namespace kokko
+{
+
 enum class RenderTextureSizedFormat;
 enum class RenderTextureCompareMode;
 enum class RenderDepthCompareFunc;
 
-namespace kokko
-{
 namespace render
 {
 

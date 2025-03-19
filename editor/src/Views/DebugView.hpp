@@ -2,10 +2,11 @@
 
 #include "EditorWindow.hpp"
 
-class Debug;
-
 namespace kokko
 {
+
+class Debug;
+
 namespace editor
 {
 

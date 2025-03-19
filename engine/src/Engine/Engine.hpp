@@ -6,24 +6,24 @@
 #include "Engine/EngineSettings.hpp"
 #include "Engine/InstanceAllocatorPair.hpp"
 
-class Allocator;
-class AllocatorManager;
-class Debug;
-class Time;
-
-struct CameraParameters;
-
 namespace kokko
 {
+
+class Allocator;
+class AllocatorManager;
 class AssetLoader;
+class Debug;
 class Filesystem;
 class MaterialManager;
 class MeshManager;
 class ModelManager;
 class ShaderManager;
 class TextureManager;
+class Time;
 class WindowManager;
 class World;
+
+struct CameraParameters;
 struct ResourceManagers;
 struct WindowSettings;
 
@@ -35,7 +35,6 @@ class CommandExecutor;
 class Device;
 class Framebuffer;
 }
-}
 
 class Engine
 {
@@ -43,51 +42,53 @@ private:
 	Allocator* systemAllocator;
 	Allocator* debugNameAllocator;
 
-	kokko::EngineSettings settings;
+	EngineSettings settings;
 
-	kokko::Filesystem* filesystem;
-	kokko::AssetLoader* assetLoader;
-    kokko::render::Device* renderDevice;
-	kokko::UniquePtr<kokko::render::CommandBuffer> commandBuffer;
-	kokko::UniquePtr<kokko::render::CommandEncoder> commandEncoder;
-	kokko::render::CommandExecutor* commandExecutor;
+	Filesystem* filesystem;
+	AssetLoader* assetLoader;
+	render::Device* renderDevice;
+	UniquePtr<render::CommandBuffer> commandBuffer;
+	UniquePtr<render::CommandEncoder> commandEncoder;
+	render::CommandExecutor* commandExecutor;
 
-	InstanceAllocatorPair<kokko::WindowManager> windowManager;
-	kokko::UniquePtr<Time> engineTime;
+	InstanceAllocatorPair<WindowManager> windowManager;
+	UniquePtr<Time> engineTime;
 	InstanceAllocatorPair<Debug> debug;
-	InstanceAllocatorPair<kokko::ModelManager> modelManager;
-	InstanceAllocatorPair<kokko::TextureManager> textureManager;
-	InstanceAllocatorPair<kokko::ShaderManager> shaderManager;
-	InstanceAllocatorPair<kokko::MaterialManager> materialManager;
-	InstanceAllocatorPair<kokko::World> world;
+	InstanceAllocatorPair<ModelManager> modelManager;
+	InstanceAllocatorPair<TextureManager> textureManager;
+	InstanceAllocatorPair<ShaderManager> shaderManager;
+	InstanceAllocatorPair<MaterialManager> materialManager;
+	InstanceAllocatorPair<World> world;
 
 public:
 	Engine(
 		AllocatorManager* allocatorManager,
-		kokko::Filesystem* filesystem,
-		kokko::AssetLoader* assetLoader);
+		Filesystem* filesystem,
+		AssetLoader* assetLoader);
 	~Engine();
 
-	bool Initialize(const kokko::WindowSettings& windowSettings);
+	bool Initialize(const WindowSettings& windowSettings);
 
 	void StartFrame();
 	void Update();
-	void Render(const Optional<CameraParameters>& editorCamera, const kokko::render::Framebuffer& framebuffer);
+	void Render(const Optional<CameraParameters>& editorCamera, const render::Framebuffer& framebuffer);
 	void EndFrame();
 
 	void SetAppPointer(void* app);
 
-	kokko::EngineSettings* GetSettings() { return &settings; }
-	kokko::WindowManager* GetWindowManager() { return windowManager.instance; }
-	kokko::render::Device* GetRenderDevice() { return renderDevice; }
-	kokko::render::CommandEncoder* GetCommandEncoder() { return commandEncoder.Get(); }
+	EngineSettings* GetSettings() { return &settings; }
+	WindowManager* GetWindowManager() { return windowManager.instance; }
+	render::Device* GetRenderDevice() { return renderDevice; }
+	render::CommandEncoder* GetCommandEncoder() { return commandEncoder.Get(); }
 	Debug* GetDebug() { return debug.instance; }
-	kokko::Filesystem* GetFilesystem() { return filesystem; }
-	kokko::ModelManager* GetModelManager() { return modelManager.instance; }
-	kokko::ShaderManager* GetShaderManager() { return shaderManager.instance; }
-	kokko::TextureManager* GetTextureManager() { return textureManager.instance; }
-	kokko::MaterialManager* GetMaterialManager() { return materialManager.instance; }
-	kokko::World* GetWorld() { return world.instance; }
+	Filesystem* GetFilesystem() { return filesystem; }
+	ModelManager* GetModelManager() { return modelManager.instance; }
+	ShaderManager* GetShaderManager() { return shaderManager.instance; }
+	TextureManager* GetTextureManager() { return textureManager.instance; }
+	MaterialManager* GetMaterialManager() { return materialManager.instance; }
+	World* GetWorld() { return world.instance; }
 
-	kokko::ResourceManagers GetResourceManagers();
+	ResourceManagers GetResourceManagers();
 };
+
+} // namespace kokko

@@ -2,6 +2,9 @@
 
 #include <cstdio>
 
+namespace kokko
+{
+
 const Entity Entity::Null = Entity(0);
 
 EntityManager::EntityManager(Allocator* mainAllocator, Allocator* debugNameAllocator) :
@@ -71,7 +74,7 @@ const char* EntityManager::GetDebugNameWithFallback(Entity entity)
 		return setName;
 	else
 	{
-        
+
 		std::snprintf(unnamedEntityBuffer, sizeof(unnamedEntityBuffer), "Entity %u", entity.id);
 		return unnamedEntityBuffer;
 	}
@@ -151,3 +154,5 @@ EntityManager::Iterator& EntityManager::Iterator::operator++()
 
 	return *this;
 }
+
+} // namespace kokko

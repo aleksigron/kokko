@@ -13,11 +13,10 @@
 
 #include "Resources/ShaderId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
 
+class Allocator;
 class AssetLoader;
 class Filesystem;
 

@@ -4,6 +4,9 @@
 
 #include "Core/Optional.hpp"
 
+namespace kokko
+{
+
 namespace
 {
 
@@ -18,7 +21,7 @@ void MultiplyCells(Mat3x3f& m, float f)
 		m[i] = m[i] * f;
 }
 
-}
+} // namespace
 
 Mat3x3f::Mat3x3f() : m{ 1, 0, 0, 0, 1, 0, 0, 0, 1 } {}
 
@@ -157,7 +160,7 @@ TEST_CASE("Mat3x3f.GetInverse")
 	Optional<Mat3x3f> inverseResult = matrix.GetInverse();
 
 	CHECK(inverseResult.HasValue() == true);
-	
+
 	const Mat3x3f& inverse = inverseResult.GetValue();
 
 	CHECK(inverse[0] == doctest::Approx(0.2f));
@@ -299,3 +302,5 @@ Vec3f operator*(const Vec3f& v, const Mat3x3f& m)
 		m[3] * v.y + m[4] * v.y + m[5] * v.y,
 		m[6] * v.z + m[7] * v.z + m[8] * v.z);
 }
+
+} // namespace kokko

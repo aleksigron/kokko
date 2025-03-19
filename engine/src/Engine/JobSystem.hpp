@@ -7,6 +7,9 @@
 #include "Engine/Job.hpp"
 #include "Engine/JobFunction.hpp"
 
+namespace kokko
+{
+
 class Allocator;
 class JobAllocator;
 class JobQueue;
@@ -61,7 +64,7 @@ private:
 	void Finish(Job* job);
 
 	Job* GetJobToExecute();
-	
+
 	Job* AllocateJob();
 
 	JobQueue* GetCurrentThreadJobQueue();
@@ -80,3 +83,5 @@ private:
 
 	friend class JobWorker;
 };
+
+} // namespace kokko

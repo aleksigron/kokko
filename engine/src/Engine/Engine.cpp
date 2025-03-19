@@ -42,6 +42,9 @@
 #include "System/Time.hpp"
 #include "System/WindowManager.hpp"
 
+namespace kokko
+{
+
 Engine::Engine(
 	AllocatorManager* allocatorManager,
 	kokko::Filesystem* filesystem,
@@ -55,18 +58,18 @@ Engine::Engine(
 	Random::Seed(static_cast<unsigned int>(time(0)));
 
 	Allocator* alloc = RootAllocator::GetDefaultAllocator();
-    systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
+	systemAllocator = allocatorManager->CreateAllocatorScope("System", alloc);
 
-    renderDevice = kokko::render::Device::Create(systemAllocator);
+	renderDevice = kokko::render::Device::Create(systemAllocator);
 	commandBuffer = kokko::MakeUnique<kokko::render::CommandBuffer>(systemAllocator, systemAllocator);
 	commandEncoder = kokko::MakeUnique<kokko::render::CommandEncoder>(
 		systemAllocator, systemAllocator, commandBuffer.Get());
 	commandExecutor = kokko::render::CommandExecutor::Create(systemAllocator);
-    
-    windowManager.CreateScope(allocatorManager, "Window", alloc);
-    windowManager.New(windowManager.allocator);
 
-    kokko::Window* mainWindow = windowManager.instance->GetWindow();
+	windowManager.CreateScope(allocatorManager, "Window", alloc);
+	windowManager.New(windowManager.allocator);
+
+	kokko::Window* mainWindow = windowManager.instance->GetWindow();
 
 	engineTime = kokko::MakeUnique<Time>(systemAllocator);
 
@@ -109,7 +112,7 @@ Engine::~Engine()
 	windowManager.Delete();
 
 	systemAllocator->MakeDelete(commandExecutor);
-    systemAllocator->MakeDelete(renderDevice);
+	systemAllocator->MakeDelete(renderDevice);
 }
 
 bool Engine::Initialize(const kokko::WindowSettings& windowSettings)
@@ -171,12 +174,12 @@ void Engine::EndFrame()
 	commandExecutor->Execute(commandBuffer.Get());
 	commandBuffer->Clear();
 
-    kokko::Window* window = windowManager.instance->GetWindow();
-    window->Swap();
-    windowManager.instance->ProcessEvents();
-    window->UpdateInput();
+	kokko::Window* window = windowManager.instance->GetWindow();
+	window->Swap();
+	windowManager.instance->ProcessEvents();
+	window->UpdateInput();
 
-    window->SetSwapInterval(settings.verticalSync ? 1 : 0);
+	window->SetSwapInterval(settings.verticalSync ? 1 : 0);
 }
 
 void Engine::SetAppPointer(void* app)
@@ -193,3 +196,5 @@ kokko::ResourceManagers Engine::GetResourceManagers()
 	resManagers.textureManager = textureManager.instance;
 	return resManagers;
 }
+
+} // namespace kokko

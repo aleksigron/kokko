@@ -15,6 +15,9 @@
 
 #include "System/IncludeOpenGL.hpp"
 
+namespace kokko
+{
+
 BitmapFont::BitmapFont(Allocator* allocator) :
 	allocator(allocator),
 	textureId(0),
@@ -123,76 +126,76 @@ bool BitmapFont::LoadFromBDF(kokko::TextureManager* textureManager, kokko::Const
 		{
 			switch (hash)
 			{
-				case "FONTBOUNDINGBOX"_hash:
+			case "FONTBOUNDINGBOX"_hash:
+			{
+				genericGlyphSize.x = ParseInt(tokens[1]);
+				genericGlyphSize.y = ParseInt(tokens[2]);
+
+				glyphSize.x = static_cast<float>(genericGlyphSize.x);
+				glyphSize.y = static_cast<float>(genericGlyphSize.y);
+
+				glyphSafeSize = glyphSize + Vec2f(2.0f, 2.0f);
+			}
+			break;
+
+			case "CHARS"_hash:
+			{
+				readGlyphs = 0;
+
+				int glyphCount = ParseInt(tokens[1]);
+
+				if (glyphCount > 0)
 				{
-					genericGlyphSize.x = ParseInt(tokens[1]);
-					genericGlyphSize.y = ParseInt(tokens[2]);
+					size_t skipStep = glyphSkipListStep;
+					size_t skipListLength = glyphCount + ((skipStep - 1)) / skipStep;
 
-					glyphSize.x = static_cast<float>(genericGlyphSize.x);
-					glyphSize.y = static_cast<float>(genericGlyphSize.y);
+					size_t skipListSize = skipListLength * sizeof(size_t);
+					this->glyphSkipList = static_cast<size_t*>(allocator->Allocate(skipListSize, "BitmapFont.glyphSkiplist"));
 
-					glyphSafeSize = glyphSize + Vec2f(2.0f, 2.0f);
+					size_t glyphsSize = glyphCount * sizeof(BitmapGlyph);
+					this->glyphs = static_cast<BitmapGlyph*>(allocator->Allocate(glyphsSize, "BitmapFont.glyphs"));
+
+					this->glyphCount = glyphCount;
+
+					textureSize = CalculateTextureSize(glyphCount, glyphSafeSize);
+					int pixelCount = static_cast<int>(textureSize.x * textureSize.y);
+					textureBuffer.Resize(pixelCount);
+
+					// Set buffer to zero so we don't have to worry about unused parts
+					std::memset(textureBuffer.GetData(), 0, textureBuffer.GetCount());
+
+					glyphsOnAxes.x = int(textureSize.x / glyphSafeSize.x);
+					glyphsOnAxes.y = int(textureSize.y / glyphSafeSize.y);
 				}
-					break;
+			}
+			break;
 
-				case "CHARS"_hash:
-				{
-					readGlyphs = 0;
+			case "ENCODING"_hash:
+				currentGlyph->codePoint = ParseInt(tokens[1]);
+				break;
 
-					int glyphCount = ParseInt(tokens[1]);
+			case "BBX"_hash:
+			{
+				currentGlyph->size.x = float(ParseInt(tokens[1]));
+				currentGlyph->size.y = float(ParseInt(tokens[2]));
 
-					if (glyphCount > 0)
-					{
-						size_t skipStep = glyphSkipListStep;
-						size_t skipListLength = glyphCount + ((skipStep - 1)) / skipStep;
+				int col = readGlyphs % glyphsOnAxes.x;
+				int row = readGlyphs / glyphsOnAxes.x;
 
-						size_t skipListSize = skipListLength * sizeof(size_t);
-						this->glyphSkipList = static_cast<size_t*>(allocator->Allocate(skipListSize, "BitmapFont.glyphSkiplist"));
+				Vec2f* uv = &(currentGlyph->texturePosition);
+				uv->x = col * glyphSafeSize.x + 1.0f;
+				uv->y = row * glyphSafeSize.y + 1.0f;
+			}
+			break;
 
-						size_t glyphsSize = glyphCount * sizeof(BitmapGlyph);
-						this->glyphs = static_cast<BitmapGlyph*>(allocator->Allocate(glyphsSize, "BitmapFont.glyphs"));
+			case "BITMAP"_hash:
+			{
+				readBitmapRows = 0;
+			}
+			break;
 
-						this->glyphCount = glyphCount;
-
-						textureSize = CalculateTextureSize(glyphCount, glyphSafeSize);
-						int pixelCount = static_cast<int>(textureSize.x * textureSize.y);
-						textureBuffer.Resize(pixelCount);
-
-						// Set buffer to zero so we don't have to worry about unused parts
-						std::memset(textureBuffer.GetData(), 0, textureBuffer.GetCount());
-
-						glyphsOnAxes.x = int(textureSize.x / glyphSafeSize.x);
-						glyphsOnAxes.y = int(textureSize.y / glyphSafeSize.y);
-					}
-				}
-					break;
-
-				case "ENCODING"_hash:
-					currentGlyph->codePoint = ParseInt(tokens[1]);
-					break;
-
-				case "BBX"_hash:
-				{
-					currentGlyph->size.x = float(ParseInt(tokens[1]));
-					currentGlyph->size.y = float(ParseInt(tokens[2]));
-
-					int col = readGlyphs % glyphsOnAxes.x;
-					int row = readGlyphs / glyphsOnAxes.x;
-
-					Vec2f* uv = &(currentGlyph->texturePosition);
-					uv->x = col * glyphSafeSize.x + 1.0f;
-					uv->y = row * glyphSafeSize.y + 1.0f;
-				}
-					break;
-
-				case "BITMAP"_hash:
-				{
-					readBitmapRows = 0;
-				}
-					break;
-					
-				default:
-					break;
+			default:
+				break;
 			}
 		}
 		else // readingBitmap >= 0
@@ -272,7 +275,7 @@ bool BitmapFont::LoadFromBDF(kokko::TextureManager* textureManager, kokko::Const
 		textureManager->Upload_2D(id, imageData, false);
 
 		textureId = textureManager->GetTextureData(id).textureObjectId;
-		
+
 		return true;
 	}
 	else
@@ -394,3 +397,5 @@ bool BitmapFont::CompareGlyphCodePointAsc(const BitmapGlyph& lhs, const BitmapGl
 {
 	return lhs.codePoint < rhs.codePoint;
 }
+
+} // namespace kokko

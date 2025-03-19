@@ -1,9 +1,9 @@
 #pragma once
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 namespace render
 {
