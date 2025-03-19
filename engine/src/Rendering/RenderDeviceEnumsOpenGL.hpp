@@ -4,6 +4,9 @@
 
 #include "Rendering/RenderTypes.hpp"
 
+namespace kokko
+{
+
 uint32_t ConvertDeviceParameter(RenderDeviceParameter parameter);
 uint32_t ConvertClipOriginMode(RenderClipOriginMode origin);
 uint32_t ConvertClipDepthMode(RenderClipDepthMode depth);
@@ -32,3 +35,5 @@ RenderDebugSource ConvertDebugSource(uint32_t source);
 RenderDebugType ConvertDebugType(uint32_t type);
 RenderDebugSeverity ConvertDebugSeverity(uint32_t severity);
 uint32_t ConvertObjectType(RenderObjectType type);
+
+} // namespace kokko

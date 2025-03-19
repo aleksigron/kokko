@@ -4,14 +4,17 @@
 
 #include "Math/Vec3.hpp"
 
+namespace kokko
+{
+
 template <typename T>
 struct Vec4
 {
 	T x, y, z, w;
-	
-	Vec4(): x(0), y(0), z(0), w(0) {}
-	Vec4(const Vec3<T>& xyz, T w): x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
-	Vec4(T x, T y, T z, T w): x(x), y(y), z(z), w(w) {}
+
+	Vec4() : x(0), y(0), z(0), w(0) {}
+	Vec4(const Vec3<T>& xyz, T w) : x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
+	Vec4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
 
 	T* ValuePointer() { return &x; }
 	const T* ValuePointer() const { return &x; }
@@ -66,3 +69,5 @@ inline Vec4<T> operator*(const T& lhs, const Vec4<T>& rhs)
 using Vec4i = Vec4<int>;
 using Vec4f = Vec4<float>;
 using Vec4d = Vec4<double>;
+
+} // namespace kokko

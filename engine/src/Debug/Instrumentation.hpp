@@ -2,6 +2,9 @@
 
 #include <cstddef>
 
+namespace kokko
+{
+
 class Instrumentation
 {
 private:
@@ -29,3 +32,5 @@ public:
 		return instance;
 	}
 };
+
+} // namespace kokko

@@ -4,10 +4,10 @@
 
 #include "System/LogLevel.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 class Logger
 {

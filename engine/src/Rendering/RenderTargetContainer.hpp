@@ -5,14 +5,14 @@
 #include "Rendering/RenderTypes.hpp"
 #include "Rendering/RenderResourceId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
+
 namespace render
 {
 class Device;
-}
 }
 
 struct RenderTarget
@@ -54,3 +54,5 @@ public:
 
 	void DestroyAllRenderTargets();
 };
+
+} // namespace kokko

@@ -12,6 +12,9 @@
 // Lock free implementation is based on post on Molecular Musings blog
 // https://blog.molecular-matters.com/2015/09/25/job-system-2-0-lock-free-work-stealing-part-3-going-lock-free/
 
+namespace kokko
+{
+
 JobQueue::JobQueue(Allocator* allocator) :
 	allocator(allocator),
 	jobs(nullptr),
@@ -106,3 +109,5 @@ Job* JobQueue::Steal()
 		return nullptr;
 	}
 }
+
+} // namespace kokko

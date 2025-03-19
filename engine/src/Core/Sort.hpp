@@ -2,6 +2,9 @@
 
 #include <cstdlib>
 
+namespace kokko
+{
+
 template <typename T>
 void InsertionSortAsc(T* array, size_t count)
 {
@@ -139,3 +142,5 @@ void ShellSortDesc(T* array, size_t count)
 		}
 	}
 }
+
+} // namespace kokko

@@ -2,12 +2,10 @@
 
 #include "Math/Rectangle.hpp"
 
-class AllocatorManager;
-
 namespace kokko
 {
+class AllocatorManager;
 class DebugTextRenderer;
-}
 
 class DebugMemoryStats
 {
@@ -25,3 +23,5 @@ public:
 
 	void UpdateAndDraw();
 };
+
+} // namespace kokko

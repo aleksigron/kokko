@@ -4,6 +4,9 @@
 
 #include "fmt/format.h"
 
+namespace kokko
+{
+
 Instrumentation::Instrumentation() : fileHandle(nullptr), profileCount(0)
 {
 }
@@ -43,20 +46,20 @@ void Instrumentation::WriteProfile(const char* name, double start, double end, s
 		FILE* file = static_cast<FILE*>(fileHandle);
 
 		char comma = profileCount > 0 ? ',' : ' ';
-		
+
 		profileCount += 1;
 
 		fmt::print(
 			file,
 			FMT_STRING("{:c}{{"
-			"\"cat\":\"function\","
-			"\"dur\":{:f},"
-			"\"name\":\"{}\","
-			"\"ph\":\"X\","
-			"\"pid\":0,"
-			"\"tid\":{:d},"
-			"\"ts\":{:f}"
-			"}}"),
+				"\"cat\":\"function\","
+				"\"dur\":{:f},"
+				"\"name\":\"{}\","
+				"\"ph\":\"X\","
+				"\"pid\":0,"
+				"\"tid\":{:d},"
+				"\"ts\":{:f}"
+				"}}"),
 			comma, end - start, name, threadId, start);
 	}
 }
@@ -75,3 +78,5 @@ void Instrumentation::EndSession()
 		profileCount = 0;
 	}
 }
+
+} // namespace kokko

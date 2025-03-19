@@ -6,16 +6,17 @@
 
 #include "Math/Vec2.hpp"
 
-class Allocator;
-class InputManager;
-
-struct Mat4x4f;
 struct GLFWwindow;
 
 namespace kokko
 {
+
+class Allocator;
+class InputManager;
 class NativeRenderDevice;
 class NativeSurface;
+
+struct Mat4x4f;
 struct TextureHandle;
 
 struct WindowSettings;

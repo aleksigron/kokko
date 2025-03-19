@@ -5,6 +5,9 @@
 #include "Engine/Job.hpp"
 #include "Engine/JobSystem.hpp"
 
+namespace kokko
+{
+
 JobWorker::JobWorker(size_t threadIndex, JobSystem* jobSystem) :
 	threadIndex(threadIndex),
 	jobSystem(jobSystem),
@@ -56,8 +59,7 @@ void JobWorker::ThreadMain()
 			{
 				getJobTryCount += 1;
 			}
-		}
-		while (getJobTryCount < MaxGetJobTryCount);
+		} while (getJobTryCount < MaxGetJobTryCount);
 		// GetJobToExecute can return nullptr even when there are jobs remaining.
 		// We only start waiting on the condition variable if we failed to get a job
 		// MaxGetJobTryCount times in a row.
@@ -80,3 +82,5 @@ void JobWorker::ThreadMain()
 	// We need to make sure no one is accidentally modifying the thread index
 	assert(JobSystem::currentThreadIndex == threadIndex);
 }
+
+} // namespace kokko

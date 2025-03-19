@@ -9,7 +9,10 @@
 
 #include "System/IncludeGLFW.hpp"
 
-InputManager::InputManager(Allocator* allocator):
+namespace kokko
+{
+
+InputManager::InputManager(Allocator* allocator) :
 	windowHandle(nullptr),
 	allocator(allocator)
 {
@@ -46,3 +49,5 @@ void InputManager::UpdateInputViews()
 void InputManager::OnTextInputEnableChanged(bool textInputEnabled)
 {
 }
+
+} // namespace kokko

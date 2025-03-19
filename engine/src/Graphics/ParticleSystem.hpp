@@ -11,6 +11,9 @@
 #include "Resources/MeshId.hpp"
 #include "Resources/ShaderId.hpp"
 
+namespace kokko
+{
+
 class Allocator;
 class RenderDevice;
 class ShaderManager;
@@ -18,9 +21,6 @@ class ModelManager;
 class Renderer;
 
 struct Entity;
-
-namespace kokko
-{
 
 struct ParticleEmitterId
 {

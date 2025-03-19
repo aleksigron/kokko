@@ -5,6 +5,9 @@
 #include "System/IncludeGLFW.hpp"
 #include "System/InputManager.hpp"
 
+namespace kokko
+{
+
 InputSource::InputSource() :
 	InputView("InputSource"),
 	windowHandle(nullptr),
@@ -68,8 +71,7 @@ void InputSource::UpdateInput()
 		mouseButtonState[i] = static_cast<ButtonState>((keyIsDown << 1) | diff);
 
 		++i;
-	}
-	while (i < MouseButtonCount);
+	} while (i < MouseButtonCount);
 
 	// Keyboard
 
@@ -276,3 +278,5 @@ void InputSource::CharCallback(unsigned int codepoint)
 		eventCharInputCount += 1;
 	}
 }
+
+} // namespace kokko

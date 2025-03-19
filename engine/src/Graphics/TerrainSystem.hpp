@@ -16,18 +16,17 @@
 #include "Resources/TextureId.hpp"
 #include "Resources/ShaderId.hpp"
 
-class Allocator;
-
-struct Entity;
-
 namespace kokko
 {
 
+class Allocator;
 class AssetLoader;
 class MeshManager;
 class Renderer;
 class ShaderManager;
 class TextureManager;
+
+struct Entity;
 
 namespace render
 {

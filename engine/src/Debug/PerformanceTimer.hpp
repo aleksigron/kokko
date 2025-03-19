@@ -2,6 +2,9 @@
 
 #include <chrono>
 
+namespace kokko
+{
+
 class PerformanceTimer
 {
 private:
@@ -32,3 +35,5 @@ public:
 		return std::chrono::duration_cast<std::chrono::nanoseconds>(GetDurationFromStartToNow()).count();
 	}
 };
+
+} // namespace kokko

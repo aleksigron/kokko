@@ -16,16 +16,16 @@
 #include "Resources/MeshId.hpp"
 #include "Resources/ShaderId.hpp"
 
-struct Entity;
-struct CameraParameters;
-class Allocator;
-class Window;
-
 namespace kokko
 {
 
+struct Entity;
+struct CameraParameters;
+
+class Allocator;
 class ModelManager;
 class ShaderManager;
+class Window;
 class World;
 
 namespace render

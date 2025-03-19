@@ -3,11 +3,14 @@
 #include <cmath>
 #include <cstddef>
 
+namespace kokko
+{
+
 template <typename T>
 struct Vec2
 {
 	T x, y;
-	
+
 	Vec2(): x(0), y(0) {}
 	Vec2(T x, T y): x(x), y(y) {}
 
@@ -22,7 +25,7 @@ struct Vec2
 	{
 		return Vec2<CastType>(static_cast<CastType>(x), static_cast<CastType>(y));
 	}
-	
+
 	// Normalize the vector
 	void Normalize()
 	{
@@ -30,7 +33,7 @@ struct Vec2
 		x /= magnitude;
 		y /= magnitude;
 	}
-	
+
 	// Return a normalized version of the vector
 	Vec2 GetNormalized() const
 	{
@@ -38,19 +41,19 @@ struct Vec2
 		normalized.Normalize();
 		return normalized;
 	}
-	
+
 	// Magnitude of the vector
 	T Magnitude() const
 	{
 		return T(std::sqrt((x * x) + (y * y)));
 	}
-	
+
 	// Squared magnitude of the vector
 	T SqrMagnitude() const
 	{
 		return (x * x) + (y * y);
 	}
-	
+
 	// Negation of the vector
 	Vec2 operator-() const
 	{
@@ -90,7 +93,7 @@ struct Vec2
 	{
 		return Vec2(lhs.x * rhs.x, lhs.y * rhs.y);
 	}
-	
+
 	// Dot product of two vectors
 	static T Dot(const Vec2& lhs, const Vec2& rhs)
 	{
@@ -129,3 +132,5 @@ inline Vec2<T> operator*(const T& lhs, const Vec2<T>& rhs)
 using Vec2i = Vec2<int>;
 using Vec2f = Vec2<float>;
 using Vec2d = Vec2<double>;
+
+} // namespace kokko

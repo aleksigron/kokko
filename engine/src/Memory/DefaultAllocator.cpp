@@ -9,6 +9,9 @@
 
 #include "Math/Math.hpp"
 
+namespace kokko
+{
+
 void* DefaultAllocator::Allocate(std::size_t size, const char* debugTag)
 {
 	return AllocateAligned(size, DefaultMinAlign, debugTag);
@@ -30,7 +33,7 @@ void* DefaultAllocator::AllocateAligned(size_t size, size_t alignment, const cha
 
 	if (alloc == nullptr)
 		return nullptr;
-	
+
 	void* spacePtr = static_cast<char*>(alloc) + MetadataSize;
 	void* aligned = std::align(alignment, size, spacePtr, spaceSize);
 
@@ -72,3 +75,5 @@ TEST_CASE("DefaultAllocator.AllocateAligned")
 		allocator.Deallocate(allocation);
 	}
 }
+
+} // namespace kokko

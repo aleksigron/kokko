@@ -5,6 +5,9 @@
 
 #include "Math/Vec4.hpp"
 
+namespace kokko
+{
+
 struct Mat3x3f;
 
 template <typename T>
@@ -19,10 +22,10 @@ struct alignas(16) Mat4x4f
 
 	Mat4x4f();
 	Mat4x4f(const Mat3x3f& m3);
-	
+
 	float& operator[](size_t index);
 	const float& operator[](size_t index) const;
-	
+
 	float* ValuePointer();
 	const float* ValuePointer() const;
 
@@ -58,3 +61,5 @@ struct Mat4x4fBijection
 	Mat4x4f forward;
 	Mat4x4f inverse;
 };
+
+} // namespace kokko

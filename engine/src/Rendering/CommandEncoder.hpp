@@ -11,10 +11,10 @@
 #include "Rendering/RenderResourceId.hpp"
 #include "Rendering/CommandEncoderDebugScope.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 namespace render
 {

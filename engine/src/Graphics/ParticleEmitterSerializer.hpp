@@ -9,6 +9,9 @@
 
 #include "Graphics/ParticleSystem.hpp"
 
+namespace kokko
+{
+
 class ParticleEmitterSerializer final : public ComponentSerializer
 {
 public:
@@ -52,3 +55,5 @@ public:
 private:
 	kokko::ParticleSystem* particleSystem;
 };
+
+} // namespace kokko

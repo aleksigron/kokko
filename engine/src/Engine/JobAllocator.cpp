@@ -9,6 +9,9 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 JobAllocator::JobAllocator(Allocator* allocator) :
 	allocator(allocator),
 	jobs(nullptr),
@@ -40,3 +43,5 @@ void JobAllocator::Reset()
 	assert(jobIndex < JobSystem::MaxJobsPerThreadPerFrame);
 	jobIndex.store(0);
 }
+
+} // namespace kokko

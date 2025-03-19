@@ -2,6 +2,9 @@
 
 #include "Math/Vec2.hpp"
 
+namespace kokko
+{
+
 template<typename T>
 struct Rectangle
 {
@@ -13,8 +16,8 @@ struct Rectangle
 	}
 
 	Rectangle(T pos_x, T pos_y, T width, T height) :
-	position(pos_x, pos_y),
-	size(width, height)
+		position(pos_x, pos_y),
+		size(width, height)
 	{
 	}
 
@@ -81,3 +84,5 @@ This is used, for example, when setting a viewport rectangle in OpenGL.
 struct ViewRectangle : public Rectangle<int>
 {
 };
+
+} // namespace kokko

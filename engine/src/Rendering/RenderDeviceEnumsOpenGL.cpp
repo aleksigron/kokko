@@ -2,6 +2,9 @@
 
 #include "System/IncludeOpenGL.hpp"
 
+namespace kokko
+{
+
 uint32_t ConvertDeviceParameter(RenderDeviceParameter parameter)
 {
 	switch (parameter)
@@ -401,3 +404,5 @@ uint32_t ConvertObjectType(RenderObjectType type)
 	default: return 0;
 	}
 }
+
+} // namespace kokko

@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 enum class LogLevel
 {
 	Debug,
@@ -7,3 +10,5 @@ enum class LogLevel
 	Warning,
 	Error
 };
+
+} // namespace kokko

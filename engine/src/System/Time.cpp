@@ -4,6 +4,9 @@
 
 #include "System/IncludeGLFW.hpp"
 
+namespace kokko
+{
+
 Time* Time::instance = nullptr;
 const double Time::MinDeltaTime = 0.0001;
 const double Time::MaxDeltaTime = 0.1;
@@ -23,10 +26,12 @@ void Time::Update()
 {
 	double previousTime = frameStart;
 	frameStart = glfwGetTime();
-	
+
 	currentTime = frameStart;
 	currentDelta = std::fmin(std::fmax(frameStart - previousTime, MinDeltaTime), MaxDeltaTime);
 	currentDeltaFloat = static_cast<float>(currentDelta);
 
 	++frameNumber;
 }
+
+} // namespace kokko

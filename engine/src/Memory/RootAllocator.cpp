@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+namespace kokko
+{
+
 Allocator* RootAllocator::defaultAllocator = nullptr;
 unsigned char RootAllocator::buffer[sizeof(DefaultAllocator)];
 
@@ -27,3 +30,5 @@ Allocator* RootAllocator::GetDefaultAllocator()
 {
 	return defaultAllocator;
 }
+
+} // namespace kokko

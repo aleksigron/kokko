@@ -1,5 +1,8 @@
 #include "Math/Random.hpp"
 
+namespace kokko
+{
+
 thread_local std::default_random_engine Random::randomEngine;
 
 void Random::Seed(unsigned int seed)
@@ -46,3 +49,5 @@ uint64_t Random::Uint64(uint64_t min, uint64_t max)
 {
 	return std::uniform_int_distribution<uint64_t>(min, max)(randomEngine);
 }
+
+} // namespace kokko

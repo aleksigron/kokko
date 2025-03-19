@@ -2,6 +2,9 @@
 
 #include "Memory/DefaultAllocator.hpp"
 
+namespace kokko
+{
+
 class RootAllocator
 {
 public:
@@ -15,3 +18,5 @@ private:
 
 	static unsigned char buffer[sizeof(DefaultAllocator)];
 };
+
+} // namespace kokko

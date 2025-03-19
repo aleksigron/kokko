@@ -2,17 +2,22 @@
 
 #include "doctest/doctest.h"
 
-Vec3f Math::DegreesToRadians(const Vec3f& degrees)
+namespace kokko
+{
+namespace Math
+{
+
+Vec3f DegreesToRadians(const Vec3f& degrees)
 {
 	return degrees * Const::DegToRad;
 }
 
-Vec3f Math::RadiansToDegrees(const Vec3f& radians)
+Vec3f RadiansToDegrees(const Vec3f& radians)
 {
 	return radians * Const::RadToDeg;
 }
 
-float Math::Lerp(float a, float b, float t)
+float Lerp(float a, float b, float t)
 {
 	// Based on https://github.com/emsr/cxx_linear/blob/master/lerp.h
 
@@ -29,7 +34,7 @@ float Math::Lerp(float a, float b, float t)
 	}
 }
 
-float Math::SrgbFloatToLinear(float srgb)
+float SrgbFloatToLinear(float srgb)
 {
 	if (srgb > 0.04045f)
 		return std::pow((srgb + 0.055f) / 1.055f, 2.4f);
@@ -37,12 +42,12 @@ float Math::SrgbFloatToLinear(float srgb)
 		return srgb / 12.92f;
 }
 
-float Math::SrgbByteToLinear(uint8_t srgb)
+float SrgbByteToLinear(uint8_t srgb)
 {
 	return SrgbFloatToLinear(srgb / 255.0f);
 }
 
-float Math::DampenMultiplier(float dampenPerSecond, float deltaTime)
+float DampenMultiplier(float dampenPerSecond, float deltaTime)
 {
 	return std::pow(dampenPerSecond, deltaTime);
 }
@@ -88,7 +93,7 @@ TEST_CASE("Math::DampenMultiplier")
 	}
 }
 
-bool Math::IsPowerOfTwo(uint64_t v)
+bool IsPowerOfTwo(uint64_t v)
 {
 	if (v == 0)
 		return false;
@@ -131,3 +136,6 @@ TEST_CASE("Math::UpperPowerOfTwo")
 	CHECK(Math::UpperPowerOfTwo((1ull << 32) + 0) == 1ull << 32);
 	CHECK(Math::UpperPowerOfTwo((1ull << 32) + 1) == 1ull << 33);
 }
+
+} // namespace Math
+} // namespace kokko

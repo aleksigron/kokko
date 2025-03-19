@@ -4,6 +4,9 @@
 
 #include "Scripting/ScriptContext.hpp"
 
+namespace kokko
+{
+
 class NativeScriptComponent
 {
 protected:
@@ -16,3 +19,5 @@ public:
 
 	friend class ScriptSystem;
 };
+
+} // namespace kokko

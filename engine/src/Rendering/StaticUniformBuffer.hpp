@@ -7,6 +7,9 @@
 #include "Math/Vec3.hpp"
 #include "Math/Vec2.hpp"
 
+namespace kokko
+{
+
 template <typename Type, size_t Count>
 class UniformBlockArray
 {
@@ -25,10 +28,10 @@ public:
 
 namespace UniformBlockBinding
 {
-	static constexpr unsigned int Global = 0;
-	static constexpr unsigned int Viewport = 1;
-	static constexpr unsigned int Material = 2;
-	static constexpr unsigned int Object = 3;
+static constexpr unsigned int Global = 0;
+static constexpr unsigned int Viewport = 1;
+static constexpr unsigned int Material = 2;
+static constexpr unsigned int Object = 3;
 };
 
 struct ViewportUniformBlock
@@ -44,3 +47,5 @@ struct TransformUniformBlock
 	alignas(16) Mat4x4f MV;
 	alignas(16) Mat4x4f M;
 };
+
+} // namespace kokko

@@ -4,6 +4,9 @@
 
 #include "Color.hpp"
 
+namespace kokko
+{
+
 struct ColorSrgb
 {
 	unsigned char r, g, b, a;
@@ -50,3 +53,5 @@ struct ColorSrgb
 		this->a = static_cast<unsigned char>(linear.a * 255.0f);
 	}
 };
+
+} // namespace kokko

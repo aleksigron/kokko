@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 enum class KeyCode
 {
 	Unknown = -1,
@@ -124,3 +127,5 @@ enum class KeyCode
 	RightSuper = 347,
 	Menu = 348
 };
+
+} // namespace kokko

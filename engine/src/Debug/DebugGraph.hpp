@@ -6,12 +6,10 @@
 #include "Math/Vec3.hpp"
 #include "Math/Rectangle.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+class Allocator;
 class DebugVectorRenderer;
-}
 
 class DebugGraph
 {
@@ -42,3 +40,5 @@ public:
 
 	double GetAverageOverLastSeconds(double seconds);
 };
+
+} // namespace kokko

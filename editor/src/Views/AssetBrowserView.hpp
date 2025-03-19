@@ -9,13 +9,12 @@
 
 #include "EditorWindow.hpp"
 
-class Allocator;
-
 struct ImVec2;
 
 namespace kokko
 {
 
+class Allocator;
 class AssetInfo;
 
 struct TextureId;

@@ -2,6 +2,9 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 class DefaultAllocator : public Allocator
 {
 private:
@@ -14,3 +17,5 @@ public:
 	virtual void Deallocate(void* ptr) override;
 	virtual size_t GetAllocatedSize(void* ptr) override;
 };
+
+} // namespace kokko

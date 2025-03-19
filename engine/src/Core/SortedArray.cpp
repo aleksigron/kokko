@@ -4,9 +4,12 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 TEST_CASE("SortedArray sorts inserted items")
 {
-	kokko::SortedArray<int> a(Allocator::GetDefault());
+	SortedArray<int> a(Allocator::GetDefault());
 
 	CHECK(a.GetCount() == 0);
 	a.Insert(2);
@@ -19,7 +22,7 @@ TEST_CASE("SortedArray sorts inserted items")
 
 TEST_CASE("SortedArray InsertUnique only allows unique items")
 {
-	kokko::SortedArray<int> a(Allocator::GetDefault());
+	SortedArray<int> a(Allocator::GetDefault());
 
 	a.InsertUnique(2);
 	CHECK(a.GetCount() == 1);
@@ -36,7 +39,7 @@ TEST_CASE("SortedArray InsertUnique only allows unique items")
 
 TEST_CASE("SortedArray Contains correctly finds items")
 {
-	kokko::SortedArray<int> a(Allocator::GetDefault());
+	SortedArray<int> a(Allocator::GetDefault());
 
 	a.Insert(2);
 	a.Insert(1);
@@ -52,7 +55,7 @@ TEST_CASE("SortedArray Contains correctly finds items")
 
 TEST_CASE("SortedArray Find correctly finds items")
 {
-	kokko::SortedArray<int> a(Allocator::GetDefault());
+	SortedArray<int> a(Allocator::GetDefault());
 
 	a.Insert(0);
 	a.Insert(1);
@@ -69,3 +72,5 @@ TEST_CASE("SortedArray Find correctly finds items")
 	a.Insert(2);
 	CHECK(a.Find(2) >= 0);
 }
+
+} // namespace kokko

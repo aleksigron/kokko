@@ -1,5 +1,8 @@
 #pragma once
 
+namespace kokko
+{
+
 struct BitPack
 {
 	using DataType = unsigned int;
@@ -7,7 +10,7 @@ struct BitPack
 	constexpr static unsigned int BitsPerPack = 32;
 	constexpr static unsigned int ValueMask = 0x1;
 	constexpr static unsigned int CellIndexMask = BitsPerPack - 1;
-	constexpr static unsigned int PackIndexMask = ~ CellIndexMask;
+	constexpr static unsigned int PackIndexMask = ~CellIndexMask;
 	constexpr static unsigned int PackIndexShift = 5;
 
 	constexpr static unsigned int PackIndex(unsigned int index) { return (index & PackIndexMask) >> PackIndexShift; }
@@ -29,7 +32,7 @@ struct BitPack
 	{
 		packs[PackIndex(index)].Set(CellIndex(index), v);
 	}
-	
+
 	/**
 	 * Get a single value from an array of BitPack
 	 */
@@ -68,3 +71,5 @@ struct BitPack
 		return static_cast<bool>((data >> index) & ValueMask);
 	}
 };
+
+} // namespace kokko

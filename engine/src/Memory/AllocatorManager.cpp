@@ -5,6 +5,9 @@
 #include "Memory/MetricAllocator.hpp"
 #include "Memory/TraceAllocator.hpp"
 
+namespace kokko
+{
+
 AllocatorManager::AllocatorManager(Allocator* allocator) :
 	alloc(allocator),
 	scopes(nullptr),
@@ -94,3 +97,5 @@ std::size_t AllocatorManager::GetAllocationCountForScopeIndex(unsigned int index
 {
 	return scopes[index]->GetTotalAllocationCount();
 }
+
+} // namespace kokko

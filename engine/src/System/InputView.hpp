@@ -4,6 +4,9 @@
 
 #include "System/KeyCode.hpp"
 
+namespace kokko
+{
+
 class InputView
 {
 private:
@@ -127,3 +130,5 @@ public:
 		return GetBlockTextInput() ? 0 : source->GetInputChar(index);
 	}
 };
+
+} // namespace kokko

@@ -1,5 +1,8 @@
 #include "Rendering/VertexFormat.hpp"
 
+namespace kokko
+{
+
 VertexAttribute VertexAttribute::pos2 = VertexAttribute(VertexFormat::AttributeIndexPos, 2);
 VertexAttribute VertexAttribute::pos3 = VertexAttribute(VertexFormat::AttributeIndexPos, 3);
 VertexAttribute VertexAttribute::pos4 = VertexAttribute(VertexFormat::AttributeIndexPos, 4);
@@ -61,3 +64,5 @@ const VertexAttribute& VertexAttribute::GetTextureCoordAttribute(unsigned int in
 		else return uvw2;
 	}
 }
+
+} // namespace kokko

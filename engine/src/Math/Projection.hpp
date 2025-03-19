@@ -2,6 +2,9 @@
 
 #include "Math/Mat4x4.hpp"
 
+namespace kokko
+{
+
 enum class ProjectionType
 {
 	Perspective,
@@ -92,3 +95,5 @@ struct ProjectionParameters
 	void SetAspectRatio(float width, float height) { aspect = width / height; }
 	void SetAspectRatio(int width, int height) { aspect = width / static_cast<float>(height); }
 };
+
+} // namespace kokko

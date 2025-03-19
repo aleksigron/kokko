@@ -11,12 +11,11 @@
 
 #include "Resources/MeshId.hpp"
 
-class Allocator;
-class BitmapFont;
-
 namespace kokko
 {
 
+class Allocator;
+class BitmapFont;
 class Filesystem;
 class ModelManager;
 class TextureManager;

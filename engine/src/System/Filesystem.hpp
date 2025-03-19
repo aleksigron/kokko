@@ -5,10 +5,9 @@
 #include "Core/Array.hpp"
 #include "Core/String.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+class Allocator;
 class FilesystemResolver;
 
 class Filesystem

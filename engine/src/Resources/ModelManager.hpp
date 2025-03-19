@@ -16,10 +16,10 @@
 
 #include "Resources/ModelLoader.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 namespace render
 {

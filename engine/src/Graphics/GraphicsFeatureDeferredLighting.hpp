@@ -10,10 +10,10 @@
 #include "Resources/MeshId.hpp"
 #include "Resources/ShaderId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 class GraphicsFeatureDeferredLighting : public GraphicsFeature
 {

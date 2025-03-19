@@ -4,6 +4,9 @@
 
 struct GLFWwindow;
 
+namespace kokko
+{
+
 class InputSource final : public InputView
 {
 private:
@@ -83,3 +86,5 @@ public:
 	virtual int GetInputCharCount() override;
 	virtual unsigned int GetInputChar(int index) override;
 };
+
+} // namespace kokko

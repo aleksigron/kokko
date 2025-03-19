@@ -7,6 +7,9 @@
 
 #include "Rendering/RenderResourceId.hpp"
 
+namespace kokko
+{
+
 struct RenderViewport
 {
 	Vec3f position;
@@ -26,3 +29,5 @@ struct RenderViewport
 
 	kokko::render::BufferId uniformBlockObject;
 };
+
+} // namespace kokko

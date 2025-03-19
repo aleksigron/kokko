@@ -8,6 +8,9 @@
 
 #include "Rendering/RenderTypes.hpp"
 
+namespace kokko
+{
+
 struct VertexAttribute
 {
 	VertexAttribute() = default;
@@ -86,3 +89,5 @@ struct VertexFormat
 		AttributeIndexUV2
 	};
 };
+
+} // namespace kokko

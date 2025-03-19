@@ -2,11 +2,10 @@
 
 #include "Core/ArrayView.hpp"
 
-struct Entity;
-
 namespace kokko
 {
 
+struct Entity;
 class World;
 
 enum class EntityComponentType

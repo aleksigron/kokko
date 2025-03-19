@@ -10,10 +10,10 @@
 
 #include "Resources/ShaderId.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 class GraphicsFeatureSsao : public GraphicsFeature
 {

@@ -3,7 +3,6 @@
 namespace kokko
 {
 class World;
-}
 
 class AppSettings;
 class InputManager;
@@ -11,6 +10,8 @@ class InputManager;
 struct ScriptContext
 {
 	void* app;
-	kokko::World* world;
+	World* world;
 	InputManager* inputManager;
 };
+
+} // namespace kokko

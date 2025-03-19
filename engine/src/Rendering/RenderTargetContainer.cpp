@@ -1,9 +1,13 @@
 #include "Rendering/RenderTargetContainer.hpp"
 
+#include <cassert>
+
 #include "Memory/Allocator.hpp"
 
 #include "Rendering/RenderDevice.hpp"
-#include <cassert>
+
+namespace kokko
+{
 
 RenderTargetContainer::RenderTargetContainer(Allocator* allocator, kokko::render::Device* renderDevice) :
 	allocator(allocator),
@@ -27,7 +31,7 @@ RenderTarget RenderTargetContainer::AcquireRenderTarget(Vec2i size, RenderTextur
 			targetInfo.target.size.x == size.x && targetInfo.target.size.y == size.y)
 		{
 			targetInfo.inUse = true;
-			
+
 			return targetInfo.target;
 		}
 	}
@@ -95,3 +99,5 @@ void RenderTargetContainer::DestroyAllRenderTargets()
 
 	renderTargetCount = 0;
 }
+
+} // namespace kokko

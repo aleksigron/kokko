@@ -6,6 +6,9 @@
 
 #include "Engine/JobFunction.hpp"
 
+namespace kokko
+{
+
 struct Job
 {
 	JobFunction function;
@@ -35,3 +38,5 @@ struct Job
 		std::memcpy(&valueOut, data, sizeof(T));
 	}
 };
+
+} // namespace kokko

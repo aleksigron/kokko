@@ -10,7 +10,12 @@
 #include "Math/Mat4x4.hpp"
 #include "Math/Vec2.hpp"
 
-bool Intersect::FrustumAabb(const FrustumPlanes& frustum, const kokko::AABB& bounds)
+namespace kokko
+{
+namespace Intersect
+{
+
+bool FrustumAabb(const FrustumPlanes& frustum, const kokko::AABB& bounds)
 {
 	// For each plane in view frustum
 	for (unsigned int planeIdx = 0; planeIdx < 6; ++planeIdx)
@@ -32,7 +37,7 @@ bool Intersect::FrustumAabb(const FrustumPlanes& frustum, const kokko::AABB& bou
 	return true;
 }
 
-void Intersect::FrustumAabbN(
+void FrustumAabbN(
 	const FrustumPlanes& frustum,
 	unsigned int count,
 	const kokko::AABB* bounds,
@@ -72,7 +77,7 @@ void Intersect::FrustumAabbN(
 	}
 }
 
-void Intersect::FrustumAABBMinSize(
+void FrustumAABBMinSize(
 	const FrustumPlanes& frustum,
 	const Mat4x4f& viewProjection,
 	float minimumSize,
@@ -130,7 +135,7 @@ void Intersect::FrustumAABBMinSize(
 			for (unsigned cornerIdx = 0; cornerIdx < 8; ++cornerIdx)
 			{
 				Vec3f corner = Vec3f::Hadamard(extents, boxCornerMultipliers[cornerIdx]);
-				
+
 				Vec4f proj = viewProjection * Vec4f(center + corner, 1.0f);
 				Vec3f scr = proj.xyz() * (1.0f / proj.w) * 0.5f + half3;
 
@@ -153,7 +158,7 @@ void Intersect::FrustumAABBMinSize(
 	}
 }
 
-void Intersect::FrustumSphere(
+void FrustumSphere(
 	const FrustumPlanes& frustum,
 	unsigned int count,
 	const Vec3f* positions,
@@ -189,3 +194,6 @@ void Intersect::FrustumSphere(
 		BitPack::Set(intersectedOut, sphereIdx, inside);
 	}
 }
+
+} // namespace Intersect
+} // namespace kokko

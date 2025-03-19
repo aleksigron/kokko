@@ -38,11 +38,11 @@ void EmitYamlTreeToString(const ryml::Tree& tree, String& out)
 
 } // namespace
 
-LevelSerializer::LevelSerializer(Allocator* allocator, kokko::render::Device* renderDevice) :
+LevelSerializer::LevelSerializer(Allocator* allocator, render::Device* renderDevice) :
 	allocator(allocator),
 	renderDevice(renderDevice),
 	world(nullptr),
-	resourceManagers(kokko::ResourceManagers{}),
+	resourceManagers(ResourceManagers{}),
 	transformSerializer(nullptr),
 	componentSerializers(allocator)
 {
@@ -56,7 +56,7 @@ LevelSerializer::~LevelSerializer()
 	allocator->MakeDelete(transformSerializer);
 }
 
-void LevelSerializer::Initialize(kokko::World* world, const kokko::ResourceManagers& resourceManagers)
+void LevelSerializer::Initialize(World* world, const ResourceManagers& resourceManagers)
 {
 	this->world = world;
 	this->resourceManagers = resourceManagers;
@@ -69,7 +69,7 @@ void LevelSerializer::Initialize(kokko::World* world, const kokko::ResourceManag
 	componentSerializers.PushBack(allocator->MakeNew<ParticleEmitterSerializer>(world->GetParticleSystem()));
 	componentSerializers.PushBack(allocator->MakeNew<TerrainSerializer>(
 		world->GetTerrainSystem(), resourceManagers.textureManager));
-	componentSerializers.PushBack(allocator->MakeNew<kokko::EnvironmentSerializer>(world->GetEnvironmentSystem()));
+	componentSerializers.PushBack(allocator->MakeNew<EnvironmentSerializer>(world->GetEnvironmentSystem()));
 }
 
 void LevelSerializer::DeserializeFromString(MutableStringView data)
@@ -77,7 +77,7 @@ void LevelSerializer::DeserializeFromString(MutableStringView data)
 	KOKKO_PROFILE_FUNCTION();
 
 	// Create scope to mark GPU frame capture
-	auto scope = renderDevice->CreateDebugScope(0, kokko::ConstStringView("World_DeserializeLevel"));
+	auto scope = renderDevice->CreateDebugScope(0, ConstStringView("World_DeserializeLevel"));
 
 	ryml::Tree tree = ryml::parse_in_place(ryml::substr(data.str, data.len));
 
@@ -88,7 +88,7 @@ void LevelSerializer::DeserializeFromString(MutableStringView data)
 	}
 }
 
-void LevelSerializer::SerializeToString(kokko::String& out)
+void LevelSerializer::SerializeToString(String& out)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -121,7 +121,7 @@ void LevelSerializer::DeserializeEntitiesFromString(ConstStringView data, SceneO
 	CreateObjects(tree.rootref(), parent);
 }
 
-void LevelSerializer::SerializeEntitiesToString(ArrayView<Entity> serializeEntities, kokko::String& serializedOut)
+void LevelSerializer::SerializeEntitiesToString(ArrayView<Entity> serializeEntities, String& serializedOut)
 {
 	KOKKO_PROFILE_FUNCTION();
 
@@ -229,7 +229,7 @@ SceneObjectId LevelSerializer::CreateComponents(
 			if (typeNode.valid() && typeNode.has_val())
 			{
 				auto typeStr = typeNode.val();
-				uint32_t typeHash = kokko::HashString(typeStr.data(), typeStr.size());
+				uint32_t typeHash = HashString(typeStr.data(), typeStr.size());
 
 				if (typeHash == "transform"_hash)
 					createdTransform = transformSerializer->Deserialize(node, entity, parent);

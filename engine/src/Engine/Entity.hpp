@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+namespace kokko
+{
+
 struct Entity
 {
 	uint32_t id;
@@ -13,3 +16,5 @@ struct Entity
 
 	static const Entity Null;
 };
+
+} // namespace kokko

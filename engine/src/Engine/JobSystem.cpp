@@ -18,6 +18,9 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 thread_local size_t JobSystem::currentThreadIndex = 0;
 
 JobSystem::JobSystem(Allocator* allocator, size_t numWorkers) :
@@ -237,7 +240,7 @@ Job* JobSystem::GetJobToExecute()
 
 	const size_t threadCount = workerCount + 1;
 	const size_t lastQueueIndex = threadCount - 1;
-		
+
 	// Get start index by random number generation
 	size_t threadIndex = static_cast<size_t>(Random::Uint64(0, lastQueueIndex));
 
@@ -401,3 +404,5 @@ TEST_CASE("JobSystem")
 
 	allocator->Deallocate(resultsBuffer);
 }
+
+} // namespace kokko

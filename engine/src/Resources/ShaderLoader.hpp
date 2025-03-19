@@ -11,11 +11,10 @@
 
 #include "Rendering/RenderTypes.hpp"
 
-class Allocator;
-
 namespace kokko
 {
 
+class Allocator;
 class Filesystem;
 
 struct ShaderData;

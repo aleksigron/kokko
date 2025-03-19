@@ -7,8 +7,11 @@
 #include "Math/Math.hpp"
 #include "Math/Frustum.hpp"
 
+namespace kokko
+{
 namespace CascadedShadowMap
 {
+
 int GetShadowCascadeResolution()
 {
 	return 1536;
@@ -154,4 +157,5 @@ void CalculateSplitDepths(float near, float far, float* depthsOut)
 	depthsOut[cascadeCountInt - 1] = far;
 }
 
-} // namespace CascadedShadowMap 
+} // namespace CascadedShadowMap
+} // namespace kokko

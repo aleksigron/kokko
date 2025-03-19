@@ -10,19 +10,19 @@
 
 #include "Views/EditorWindow.hpp"
 
-struct CameraParameters;
-struct SceneObjectId;
-
 namespace kokko
 {
 
 class AssetInfo;
 class ModelManager;
 class Window;
+
+struct CameraParameters;
 struct ModelNode;
 struct ModelMesh;
 struct ModelMeshPart;
 struct ResourceManagers;
+struct SceneObjectId;
 
 namespace editor
 {

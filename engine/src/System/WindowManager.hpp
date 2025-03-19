@@ -6,11 +6,10 @@
 #include "Math/Vec2.hpp"
 #include "Math/Mat4x4.hpp"
 
-class Allocator;
-class InputManager;
-
 namespace kokko
 {
+class Allocator;
+class InputManager;
 class NativeRenderDevice;
 class Window;
 struct WindowSettings;

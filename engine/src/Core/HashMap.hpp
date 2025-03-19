@@ -11,6 +11,9 @@
 
 #include "Memory/Allocator.hpp"
 
+namespace kokko
+{
+
 template <typename KeyType, typename ValueType>
 class HashMap
 {
@@ -358,29 +361,29 @@ public:
 		if (!(key == KeyType{}))
 		{
 			for (;;)
-			for (size_t i = GetIndex(kokko::Hash32<KeyType>()(key, 0u));; i = GetIndex(i + 1))
-			{
-				KeyValuePair* pair = data + i;
-
-				if (pair->first == key) // Found
-					return pair;
-
-				if (pair->first == KeyType{}) // Insert here
+				for (size_t i = GetIndex(kokko::Hash32<KeyType>()(key, 0u));; i = GetIndex(i + 1))
 				{
-					if ((population + 1) * 4 >= allocated * 3)
+					KeyValuePair* pair = data + i;
+
+					if (pair->first == key) // Found
+						return pair;
+
+					if (pair->first == KeyType{}) // Insert here
 					{
-						ReserveInternal(allocated * 2);
-						break; // Back to outer loop, find first again
+						if ((population + 1) * 4 >= allocated * 3)
+						{
+							ReserveInternal(allocated * 2);
+							break; // Back to outer loop, find first again
+						}
+
+						++population;
+
+						pair->first = key;
+						new (&pair->second) ValueType;
+
+						return pair;
 					}
-
-					++population;
-
-					pair->first = key;
-					new (&pair->second) ValueType;
-
-					return pair;
 				}
-			}
 		}
 		else
 		{
@@ -459,3 +462,5 @@ public:
 		this->ReserveInternal(desiredSize);
 	}
 };
+
+} // namespace kokko

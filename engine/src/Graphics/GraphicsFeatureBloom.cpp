@@ -332,4 +332,4 @@ void GraphicsFeatureBloom::CreateKernel(int kernelExtent)
 		blurKernel[i] *= multiplier;
 }
 
-}
+} // namespace kokko

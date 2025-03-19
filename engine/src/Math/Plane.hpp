@@ -2,6 +2,9 @@
 
 #include "Math/Vec3.hpp"
 
+namespace kokko
+{
+
 struct Plane
 {
 	Vec3f normal;
@@ -13,3 +16,5 @@ struct Plane
 		this->distance = -Vec3f::Dot(n, p);
 	}
 };
+
+} // namespace kokko

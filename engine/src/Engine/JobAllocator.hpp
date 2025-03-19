@@ -6,6 +6,9 @@
 
 #include "Engine/JobSystem.hpp"
 
+namespace kokko
+{
+
 class Allocator;
 
 struct Job;
@@ -29,3 +32,5 @@ private:
 	static const size_t MemberBytes = sizeof(Allocator*) + sizeof(Job*) + sizeof(std::atomic_size_t);
 	uint8_t padding[(MemberBytes + CL - 1) / CL * CL - MemberBytes];
 };
+
+} // namespace kokko

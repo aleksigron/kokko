@@ -5,10 +5,10 @@
 
 #include "System/FilesystemResolver.hpp"
 
-class Allocator;
-
 namespace kokko
 {
+
+class Allocator;
 
 class FilesystemResolverVirtual : public FilesystemResolver
 {

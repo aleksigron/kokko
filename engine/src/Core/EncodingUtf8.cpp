@@ -2,6 +2,9 @@
 
 #include "doctest/doctest.h"
 
+namespace kokko
+{
+
 size_t EncodingUtf8::EncodeCodepoint(uint32_t codepoint, char* utf8BytesOut)
 {
 	if (codepoint <= 0x7F)
@@ -141,3 +144,5 @@ TEST_CASE("EncodingUtf8.FindLastCharacter")
 	kokko::ConstStringView view2(buf2);
 	CHECK(EncodingUtf8::FindLastCharacter(view2) == view2.len);
 }
+
+} // namespace kokko

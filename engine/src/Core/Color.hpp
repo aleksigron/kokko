@@ -2,6 +2,9 @@
 
 #include "Math/Vec3.hpp"
 
+namespace kokko
+{
+
 struct Color
 {
 	static Vec3f FromSrgbToLinear(const Vec3f& srgb);
@@ -89,3 +92,5 @@ inline Color operator-(const Color& lhs, const Color& rhs)
 {
 	return Color(lhs.r - rhs.r, lhs.g - rhs.g, lhs.b - rhs.b, lhs.a - rhs.a);
 }
+
+} // namespace kokko

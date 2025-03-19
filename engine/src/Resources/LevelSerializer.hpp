@@ -6,13 +6,6 @@
 
 #include "Resources/ResourceManagers.hpp"
 
-class Allocator;
-class ComponentSerializer;
-class TransformSerializer;
-
-struct Entity;
-struct SceneObjectId;
-
 namespace c4
 {
 namespace yml
@@ -24,8 +17,14 @@ class NodeRef;
 
 namespace kokko
 {
+class Allocator;
+class ComponentSerializer;
+class TransformSerializer;
 class String;
 class World;
+
+struct Entity;
+struct SceneObjectId;
 
 namespace render
 {

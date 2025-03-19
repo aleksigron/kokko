@@ -11,21 +11,20 @@
 
 #include "Views/FilePickerDialog.hpp"
 
-class Allocator;
-class Engine;
-
-struct CameraParameters;
 
 namespace kokko
 {
 
+class Allocator;
 class AssetLibrary;
+class Engine;
 class Filesystem;
 class FilesystemResolverVirtual;
 class ImguiImplOpenGL;
 class Window;
 class World;
 
+struct CameraParameters;
 struct Uid;
 struct EngineSettings;
 

@@ -2,6 +2,9 @@
 
 #include <utility>
 
+namespace kokko
+{
+
 template <typename T>
 class Optional
 {
@@ -63,3 +66,5 @@ public:
 		return value;
 	}
 };
+
+} // namespace kokko

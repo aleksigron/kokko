@@ -9,6 +9,9 @@
 
 #include "Engine/Entity.hpp"
 
+namespace kokko
+{
+
 class Allocator;
 
 class EntityManager
@@ -79,3 +82,5 @@ public:
 	Iterator begin() { return Iterator(*this); }
 	Iterator end() { return Iterator(*this, entityRangeEnd, static_cast<uint32_t>(freeIndices.GetCount())); }
 };
+
+} // namespace kokko

@@ -5,6 +5,9 @@
 
 #include "Core/Core.hpp"
 
+namespace kokko
+{
+
 class Allocator
 {
 public:
@@ -33,3 +36,5 @@ public:
 
 	static Allocator* GetDefault();
 };
+
+} // namespace kokko

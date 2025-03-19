@@ -4,6 +4,9 @@
 
 #include "doctest/doctest.h"
 
+namespace kokko
+{
+
 TEST_CASE("BitfieldVariable.GetValue")
 {
 	BitfieldVariable<uint32_t> var0;
@@ -42,3 +45,5 @@ TEST_CASE("BitfieldVariable.AssignZero")
 	CHECK(var0.GetValue(val) == 0);
 	CHECK(var1.GetValue(val) == 0);
 }
+
+} // namespace kokko

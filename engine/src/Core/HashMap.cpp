@@ -4,6 +4,9 @@
 
 #include "Core/String.hpp"
 
+namespace kokko
+{
+
 TEST_CASE("HashMap.LookupAndModify")
 {
 	Allocator* allocator = Allocator::GetDefault();
@@ -142,7 +145,7 @@ TEST_CASE("HashMap.Iterator")
 	constexpr int count = 16;
 	bool intFound[count] = { false };
 	bool nonExistantFound = false;
-	
+
 	for (int i = 0; i < count; ++i)
 	{
 		map.Insert(i)->second = i;
@@ -194,3 +197,5 @@ TEST_CASE("HashMap.IteratorEmpty")
 
 	CHECK(count == 0);
 }
+
+} // namespace kokko

@@ -5,6 +5,9 @@
 
 #include "Engine/Entity.hpp"
 
+namespace kokko
+{
+
 template <typename ComponentData>
 class ComponentSystemDefaultImpl
 {
@@ -60,7 +63,7 @@ public:
 		EntityComponent& component = componentData.PushBack();
 		component.entity = e;
 		component.data = ComponentData();
-		
+
 		return ComponentId{ id };
 	}
 
@@ -111,3 +114,5 @@ private:
 	Array<EntityComponent> componentData;
 	HashMap<unsigned int, ComponentId> entityMap;
 };
+
+} // namespace kokko

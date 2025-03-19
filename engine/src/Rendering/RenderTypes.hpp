@@ -47,8 +47,6 @@ struct RenderPassStencilAttachment : public RenderPassAttachment
     uint32_t clearStencil;
 };
 
-} // namespace kokko
-
 enum class RenderDeviceParameter
 {
 	MaxUniformBlockSize,
@@ -399,3 +397,5 @@ struct MemoryBarrierFlags
 	bool shaderStorage : 1;
 	bool queryBuffer : 1;
 };
+
+} // namespace kokko

@@ -9,6 +9,9 @@
 #include "System/Time.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
 
+namespace kokko
+{
+
 DebugGraph::DebugGraph(Allocator* allocator, kokko::DebugVectorRenderer* vr) :
 	vectorRenderer(vr),
 	data(allocator),
@@ -115,3 +118,5 @@ double DebugGraph::GetAverageOverLastSeconds(double seconds)
 	else
 		return 0.0;
 }
+
+} // namespace kokko

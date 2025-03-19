@@ -2,6 +2,9 @@
 
 #include <chrono>
 
+namespace kokko
+{
+
 class InstrumentationTimer
 {
 private:
@@ -15,3 +18,5 @@ public:
 
 	void Stop();
 };
+
+} // namespace kokko
