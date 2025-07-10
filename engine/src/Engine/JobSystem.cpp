@@ -86,11 +86,11 @@ void JobSystem::Deinitialize()
 		for (int i = 0; i < workerCount; ++i)
 			workers[i].RequestExit();
 
-		// Lock must be acquired before notifying the condition
-		std::unique_lock<std::mutex> lock(conditionMutex);
-		lock.unlock();
-
-		jobAddedCondition.notify_all();
+		{
+			// Lock must be acquired before notifying the condition 
+			std::lock_guard<std::mutex> lock(conditionMutex);
+			jobAddedCondition.notify_all();
+		}
 
 		for (int i = 0; i < workerCount; ++i)
 			workers[i].WaitToExit();
