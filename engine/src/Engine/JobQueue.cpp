@@ -21,6 +21,7 @@ JobQueue::JobQueue(Allocator* allocator) :
 	top(0),
 	bottom(0)
 {
+	std::memset(padding, 0, sizeof(padding));
 	jobs = static_cast<Job**>(allocator->Allocate(MaxJobCount * sizeof(Job), "JobQueue.jobs"));
 }
 
@@ -43,8 +44,7 @@ Job* JobQueue::Pop()
 {
 	// Read-modify-write to bottom must happen before the load from top
 	// This is accomplished with acquire ordering
-	int64_t prevBottom = bottom.fetch_sub(1, std::memory_order_acquire);
-	int64_t b = prevBottom - 1;
+	int64_t b = bottom.fetch_sub(1, std::memory_order_acquire) - 1;
 
 	int64_t t = top.load(std::memory_order_relaxed);
 	if (t <= b)
@@ -54,19 +54,21 @@ Job* JobQueue::Pop()
 		if (t != b)
 		{
 			// There's still more than one item left in the queue
-			assert((void*)job != (void*)0xcdcdcdcdcdcdcdcd);
 			return job;
 		}
 
 		// This is the last item in the queue
-		if (top.compare_exchange_strong(t, t + 1, std::memory_order_relaxed) == false)
+		// Original code uses Windows intrinsic _InterlockedCompareExchange
+		// Unlike _InterlockedCompareExchange, compare_exchange_strong changes expected, so we create a copy here
+		// _InterlockedCompareExchange serves as a full memory barrier, so we need at least acq_rel memory ordering
+		int64_t expectedT = t;
+		if (top.compare_exchange_strong(expectedT, t + 1, std::memory_order_acq_rel) == false)
 		{
 			// A concurrent steal operation removed an element from the queue
 			job = nullptr;
 		}
 
 		bottom.store(t + 1, std::memory_order_relaxed);
-		assert((void*)job != (void*)0xcdcdcdcdcdcdcdcd);
 		return job;
 	}
 	else
@@ -100,7 +102,6 @@ Job* JobQueue::Steal()
 			return nullptr;
 		}
 
-		assert((void*)job != (void*)0xcdcdcdcdcdcdcdcd);
 		return job;
 	}
 	else
