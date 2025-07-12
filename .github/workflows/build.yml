@@ -42,7 +42,7 @@ jobs:
               os: ubuntu-latest,
               generator: "",
               cmake_defines: "-DKOKKO_USE_SANITIZER=address",
-              build_type: Release,
+              build_type: Debug,
               cc: "gcc", cxx: "g++",
               dependencies: "sudo apt-get update && sudo apt-get install xorg-dev",
               build_product: "kokko-editor"
