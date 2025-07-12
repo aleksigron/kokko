@@ -181,11 +181,19 @@ public:
 			KeyValuePair* itr = data;
 			KeyValuePair* end = data + allocated;
 			for (; itr != end; ++itr)
+			{
 				if (!(itr->first == KeyType{}))
+				{
+					itr->first.~KeyType();
 					itr->second.~ValueType();
+				}
+			}
 
 			if (zeroUsed)
+			{
+				zeroPair.first.~KeyType();
 				zeroPair.second.~ValueType();
+			}
 
 			allocator->Deallocate(data);
 		}
@@ -361,6 +369,7 @@ public:
 		if (!(key == KeyType{}))
 		{
 			for (;;)
+			{
 				for (size_t i = GetIndex(kokko::Hash32<KeyType>()(key, 0u));; i = GetIndex(i + 1))
 				{
 					KeyValuePair* pair = data + i;
@@ -384,6 +393,7 @@ public:
 						return pair;
 					}
 				}
+			}
 		}
 		else
 		{
