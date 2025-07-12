@@ -38,7 +38,17 @@ jobs:
               build_product: "kokko-editor"
             }
           - {
-              name: "Linux GCC TSan",
+              name: "Linux GCC Asan",
+              os: ubuntu-latest,
+              generator: "",
+              cmake_defines: "-DKOKKO_USE_SANITIZER=address",
+              build_type: Release,
+              cc: "gcc", cxx: "g++",
+              dependencies: "sudo apt-get update && sudo apt-get install xorg-dev",
+              build_product: "kokko-editor"
+            }
+          - {
+              name: "Linux GCC Tsan",
               os: ubuntu-latest,
               generator: "",
               cmake_defines: "-DKOKKO_USE_SANITIZER=thread",
@@ -48,7 +58,7 @@ jobs:
               build_product: "kokko-editor"
             }
           - {
-              name: "Linux GCC UBSan",
+              name: "Linux GCC UBsan",
               os: ubuntu-latest,
               generator: "",
               cmake_defines: "-DKOKKO_USE_SANITIZER=undefined",
