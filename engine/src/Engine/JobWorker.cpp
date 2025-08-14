@@ -41,7 +41,7 @@ void JobWorker::ThreadMain()
 
 	while (exit == false)
 	{
-		static const size_t MaxGetJobTryCount = 10;
+		static const size_t MaxGetJobTryCount = 4;
 		size_t getJobTryCount = 0;
 
 		Job* job;
@@ -68,12 +68,12 @@ void JobWorker::ThreadMain()
 		if (exit == true)
 			break;
 
-		// Allow wake-ups even when we don't know if there is work to do
-		// That means we try get a job but we will return here if no jobs are available
 		std::unique_lock<std::mutex> lock(jobSystem->conditionMutex);
 		{
 			KOKKO_PROFILE_SCOPE("CondWait");
-			jobSystem->jobAddedCondition.wait(lock);
+			jobSystem->workerNotifyCondition.wait(lock, [&] {
+				return exitRequested.load() || jobSystem->IsWorkAvailable();
+			});
 		}
 
 		exit = exitRequested.load();

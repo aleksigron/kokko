@@ -111,4 +111,9 @@ Job* JobQueue::Steal()
 	}
 }
 
+bool JobQueue::HasWork() const
+{
+	return top.load() != bottom.load();
+}
+
 } // namespace kokko

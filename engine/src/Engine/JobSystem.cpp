@@ -89,7 +89,7 @@ void JobSystem::Deinitialize()
 		{
 			// Lock must be acquired before notifying the condition 
 			std::lock_guard<std::mutex> lock(conditionMutex);
-			jobAddedCondition.notify_all();
+			workerNotifyCondition.notify_all();
 		}
 
 		for (int i = 0; i < workerCount; ++i)
@@ -178,7 +178,7 @@ void JobSystem::Enqueue(Job* job)
 
 	queue->Push(job);
 
-	jobAddedCondition.notify_all();
+	workerNotifyCondition.notify_all();
 }
 
 void JobSystem::Wait(const Job* job)
@@ -265,6 +265,23 @@ Job* JobSystem::GetJobToExecute()
 	return nullptr;
 }
 
+bool JobSystem::IsWorkAvailable()
+{
+	size_t threadIndex = currentThreadIndex;
+	const size_t threadCount = workerCount + 1;
+	for (size_t i = 0; i < threadCount; ++i)
+	{
+		if (jobQueues[threadIndex].HasWork())
+		{
+			return true;
+		}
+
+		threadIndex = (threadIndex + 1) % threadCount;
+	}
+
+	return false;
+}
+
 Job* JobSystem::AllocateJob()
 {
 	return jobAllocators[currentThreadIndex].AllocateJob();
@@ -339,7 +356,7 @@ static void ResetTestData(TestJobData* data, size_t count)
 
 TEST_CASE("JobSystem")
 {
-	constexpr size_t IterationCount = 5;
+	constexpr size_t IterationCount = 10;
 	constexpr size_t DataCount = 5'000'000;
 
 	TestJobConstantData jobConstantData;
