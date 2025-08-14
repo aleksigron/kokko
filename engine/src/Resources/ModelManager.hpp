@@ -65,6 +65,8 @@ struct ModelMeshPart
 
 struct ModelData
 {
+	void ReleaseMemory(Allocator* allocator);
+
 	void* buffer = nullptr;
 
 	kokko::Uid uid;
