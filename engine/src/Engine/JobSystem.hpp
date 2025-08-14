@@ -65,6 +65,8 @@ private:
 
 	Job* GetJobToExecute();
 
+	bool IsWorkAvailable();
+
 	Job* AllocateJob();
 
 	JobQueue* GetCurrentThreadJobQueue();
@@ -79,7 +81,7 @@ private:
 	JobWorker* workers;
 
 	std::mutex conditionMutex;
-	std::condition_variable jobAddedCondition;
+	std::condition_variable workerNotifyCondition;
 
 	friend class JobWorker;
 };

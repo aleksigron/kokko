@@ -22,6 +22,8 @@ public:
 	Job* Pop();
 	Job* Steal();
 
+	bool HasWork() const;
+
 private:
 	static const size_t MaxJobCount = 1 << 12;
 	static const size_t JobIndexMask = MaxJobCount - 1;
