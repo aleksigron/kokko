@@ -26,8 +26,13 @@ ModelManager::ModelManager(Allocator* allocator, AssetLoader* assetLoader, rende
 ModelManager::~ModelManager()
 {
 	for (size_t i = 1; i < data.slotsUsed; ++i)
+	{
 		if (data.model[i].buffer != nullptr)
-			allocator->Deallocate(data.model[i].buffer);
+		{
+			ReleaseRenderData(data.model[i]);
+			data.model[i].ReleaseMemory(allocator);
+		}
+	}
 }
 
 ModelId ModelManager::FindModelByUid(const kokko::Uid& uid)

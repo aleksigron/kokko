@@ -84,6 +84,23 @@ CountResult CountModelResources(cgltf_data* model, kokko::SortedArray<cgltf_buff
 namespace kokko
 {
 
+void ModelData::ReleaseMemory(Allocator* allocator)
+{
+	allocator->Deallocate(buffer);
+
+	buffer = nullptr;
+
+	nodes = nullptr;
+	meshes = nullptr;
+	meshParts = nullptr;
+	attributes = nullptr;
+
+	nodeCount = 0;
+	meshCount = 0;
+	meshPartCount = 0;
+	attributeCount = 0;
+}
+
 ModelLoader::ModelLoader(Allocator* allocator) :
 	allocator(allocator),
 	uniqueGeometryBufferViews(allocator),
@@ -605,6 +622,8 @@ TEST_CASE("ModelLoader.RuntimeModelNonIndexed")
 	CHECK(model.meshParts[0].vertexFormat.attributeCount == KOKKO_ARRAY_ITEMS(vertexAttributes));
 	CHECK(model.meshParts[0].vertexFormat.attributes[0].elemCount == vertexAttributes[0].elemCount);
 	CHECK(model.meshParts[0].vertexFormat.attributes[0].elemType == vertexAttributes[0].elemType);
+
+	model.ReleaseMemory(allocator);
 }
 
 TEST_CASE("ModelLoader.RuntimeModelIndexed")
@@ -690,6 +709,8 @@ TEST_CASE("ModelLoader.RuntimeModelIndexed")
 	{
 		CHECK(indices[idx] == indexData[idx]);
 	}
+
+	model.ReleaseMemory(allocator);
 }
 
 TEST_CASE("ModelLoader.GlbModelIndexed")
@@ -764,6 +785,8 @@ TEST_CASE("ModelLoader.GlbModelIndexed")
 	{
 		CHECK(indices[idx] == originalIndices[idx]);
 	}
+
+	model.ReleaseMemory(allocator);
 }
 
 TEST_CASE("ModelLoader.GlbModelIndexedInterleaved")
@@ -838,6 +861,8 @@ TEST_CASE("ModelLoader.GlbModelIndexedInterleaved")
 	{
 		CHECK(indices[idx] == originalIndices[idx]);
 	}
+
+	model.ReleaseMemory(allocator);
 }
 
 } // namespace kokko
