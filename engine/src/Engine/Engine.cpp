@@ -180,6 +180,8 @@ void Engine::EndFrame()
 	window->UpdateInput();
 
 	window->SetSwapInterval(settings.verticalSync ? 1 : 0);
+
+	KOKKO_FRAME_MARK();
 }
 
 void Engine::SetAppPointer(void* app)
