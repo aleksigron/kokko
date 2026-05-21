@@ -2,24 +2,21 @@
 
 #define KOKKO_ARRAY_ITEMS(x) (sizeof(x) / sizeof(x[0]))
 
-#define KK_UNIQUE_NAME_(name, counter) name##counter
-#define KK_UNIQUE_NAME(name, counter) KK_UNIQUE_NAME_(name, counter)
-
-#define KOKKO_PROFILING_ENABLED 1
-
 #ifdef _MSC_VER
 #define KOKKO_FUNC_SIG __FUNCSIG__
 #else
 #define KOKKO_FUNC_SIG __PRETTY_FUNCTION__
 #endif
 
-#if KOKKO_PROFILING_ENABLED
-#include "Debug/InstrumentationTimer.hpp"
-#define KOKKO_PROFILE_SCOPE(name) ::kokko::InstrumentationTimer KK_UNIQUE_NAME(instrTimer, __LINE__)(name)
+#if TRACY_ENABLE
+#include "tracy/Tracy.hpp"
+#define KOKKO_PROFILE_SCOPE(name) ZoneScoped(name)
 #define KOKKO_PROFILE_FUNCTION() KOKKO_PROFILE_SCOPE(KOKKO_FUNC_SIG)
+#define KOKKO_FRAME_MARK() FrameMark
 #else
 #define KOKKO_PROFILE_SCOPE(name)
 #define KOKKO_PROFILE_FUNCTION()
+#define KOKKO_FRAME_MARK()
 #endif
 
 #include "System/Log.hpp"
