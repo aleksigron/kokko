@@ -101,10 +101,6 @@ set (KOKKO_SOURCES
 	src/Debug/DebugUtil.hpp
 	src/Debug/DebugVectorRenderer.cpp
 	src/Debug/DebugVectorRenderer.hpp
-	src/Debug/Instrumentation.cpp
-	src/Debug/Instrumentation.hpp
-	src/Debug/InstrumentationTimer.cpp
-	src/Debug/InstrumentationTimer.hpp
 	src/Debug/PerformanceTimer.hpp
 	src/Engine/ComponentSerializer.hpp
 	src/Engine/ComponentSystemDefaultImpl.hpp

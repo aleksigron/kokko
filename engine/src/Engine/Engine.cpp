@@ -9,7 +9,6 @@
 #include "Debug/Debug.hpp"
 #include "Debug/DebugTextRenderer.hpp"
 #include "Debug/DebugVectorRenderer.hpp"
-#include "Debug/Instrumentation.hpp"
 
 #include "Engine/EntityManager.hpp"
 #include "Engine/World.hpp"
@@ -137,11 +136,6 @@ bool Engine::Initialize(const kokko::WindowSettings& windowSettings)
 
 void Engine::StartFrame()
 {
-	if (debug.instance->ShouldBeginProfileSession())
-		Instrumentation::Get().BeginSession("runtime_trace.json");
-
-	if (debug.instance->ShouldEndProfileSession())
-		Instrumentation::Get().EndSession();
 }
 
 void Engine::Update()
