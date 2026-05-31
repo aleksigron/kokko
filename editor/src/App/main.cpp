@@ -1,7 +1,5 @@
 #include "doctest/doctest.h"
 
-#include "Debug/Instrumentation.hpp"
-
 #include "Engine/Engine.hpp"
 #include "Engine/EngineConstants.hpp"
 
@@ -64,9 +62,6 @@ int main(int argc, char** argv)
 	kokko::editor::ConsoleLogger consoleLogger(defaultAlloc);
 	logger.SetReceiver(&consoleLogger);
 
-	kokko::Instrumentation& instr = kokko::Instrumentation::Get();
-	instr.BeginSession("unit_test_trace.json");
-
 	doctest::Context ctx;
 	ctx.setOption("abort-after", 5);
 	ctx.applyCommandLine(argc, argv);
@@ -74,9 +69,6 @@ int main(int argc, char** argv)
 	int res = ctx.run();
 	if (ctx.shouldExit())
 		return res;
-
-	instr.EndSession();
-	instr.BeginSession("startup_trace.json");
 
 	kokko::AllocatorManager* allocManager = defaultAlloc->MakeNew<kokko::AllocatorManager>(defaultAlloc);
 
@@ -119,8 +111,6 @@ int main(int argc, char** argv)
 
 	if (assetLibrary->ScanAssets(true, true, false) == false)
 	{
-		instr.EndSession();
-
 		res = -1;
 	}
 	else if (engine.Initialize(windowSettings))
@@ -130,8 +120,6 @@ int main(int argc, char** argv)
 		editor.Initialize(&engine, &consoleLogger);
 
 		engine.SetAppPointer(&editor);
-
-		instr.EndSession();
 
 		while (engine.GetWindowManager()->GetWindow()->GetShouldClose() == false)
 		{
@@ -157,8 +145,6 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		instr.EndSession();
-
 		res = -1;
 	}
 

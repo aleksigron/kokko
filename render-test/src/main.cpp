@@ -7,8 +7,6 @@
 #include "Core/Array.hpp"
 #include "Core/Core.hpp"
 
-#include "Debug/Instrumentation.hpp"
-
 #include "Engine/Engine.hpp"
 #include "Engine/EngineConstants.hpp"
 #include "Engine/World.hpp"
@@ -41,9 +39,6 @@ int main(int argc, char** argv)
 	kokko::Logger logger(defaultAlloc);
 	kokko::Log::SetLogInstance(&logger);
 
-	kokko::Instrumentation& instr = kokko::Instrumentation::Get();
-	instr.BeginSession("render_test_trace.json");
-
 	// Setup other engine systems
 
 	kokko::FilesystemResolverVirtual::MountPoint mounts[] = {
@@ -75,7 +70,6 @@ int main(int argc, char** argv)
 
 	if (assetLibrary.ScanAssets(true, true, false) == false)
 	{
-		instr.EndSession();
 		return -1;
 	}
 	
@@ -89,7 +83,6 @@ int main(int argc, char** argv)
 
 	if (engine.Initialize(windowSettings) == false)
 	{
-		instr.EndSession();
 		return -1;
 	}
 
@@ -304,8 +297,6 @@ int main(int argc, char** argv)
 		// Swap window buffers to allow better frame capture
 		engine.GetWindowManager()->GetWindow()->Swap();
 	}
-
-	instr.EndSession();
 
 	if (failedTests != 0 || erroredTests != 0)
 	{

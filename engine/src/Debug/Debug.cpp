@@ -10,7 +10,6 @@
 #include "Debug/DebugGraph.hpp"
 #include "Debug/DebugCulling.hpp"
 #include "Debug/DebugMemoryStats.hpp"
-#include "Debug/Instrumentation.hpp"
 
 #include "Engine/World.hpp"
 
