@@ -50,10 +50,6 @@ private:
 
 	kokko::Window* window;
 
-	bool profileInProgress;
-	bool profileStarted;
-	unsigned int endProfileOnFrame;
-
 	double currentFrameTime;
 	double nextFrameRateUpdate;
 
@@ -85,11 +81,6 @@ public:
 
 	kokko::DebugTextRenderer* GetTextRenderer() { return textRenderer.Get(); }
 	kokko::DebugVectorRenderer* GetVectorRenderer() { return vectorRenderer.Get(); }
-
-	void RequestBeginProfileSession();
-
-	bool ShouldBeginProfileSession() const;
-	bool ShouldEndProfileSession();
 };
 
 } // namespace kokko

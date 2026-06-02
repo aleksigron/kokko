@@ -155,7 +155,8 @@ int main(int argc, char** argv)
 		KK_LOG_INFO("Run test: {}", testNameStr.c_str());
 
 		{
-			KOKKO_PROFILE_SCOPE(testNameStr.c_str());
+			KOKKO_PROFILE_SCOPE("Render test");
+			KOKKO_PROFILE_ADDTEXT(testNameStr.c_str());
 
 			kokko::World* world = engine.GetWorld();
 			world->ClearAllEntities();

@@ -54,9 +54,6 @@ Debug::Debug(
 	allocator(allocator),
 	renderDevice(renderDevice),
 	window(nullptr),
-	profileInProgress(false),
-	profileStarted(false),
-	endProfileOnFrame(0),
 	currentFrameTime(0.0),
 	nextFrameRateUpdate(-1.0),
 	mode(DebugMode::None)
@@ -170,11 +167,6 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 			this->mode = DebugMode::MemoryStats;
 		}
 
-		if (input->GetKeyDown(KeyCode::F7) && profileInProgress == false)
-		{
-			RequestBeginProfileSession();
-		}
-
 		// Check vsync switching
 
 		// TODO: Fix debug key shortcuts
@@ -220,7 +212,7 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 
 	// Draw debug mode guide
 	char buffer[128];
-	const char* format = "[F2]FrameTime%c [F3]Culling%c [F4]Memory%c [F7] Start profile, %.1f fps";
+	const char* format = "[F2]FrameTime%c [F3]Culling%c [F4]Memory%c, %.1f fps";
 	std::snprintf(buffer, sizeof(buffer), format, timeChar, cullChar, memChar, currentFrameRate);
 	textRenderer->AddText(kokko::ConstStringView(buffer), Vec2f(0.0f, 0.0f));
 
@@ -243,34 +235,6 @@ void Debug::Render(kokko::render::CommandEncoder* encoder, kokko::World* world,
 
 	vectorRenderer->Render(encoder, world, viewport, editorCamera);
 	textRenderer->Render(encoder);
-}
-
-void Debug::RequestBeginProfileSession()
-{
-	if (profileInProgress == false)
-	{
-		profileInProgress = true;
-		profileStarted = false;
-		endProfileOnFrame = Time::GetFrameNumber() + 100;
-	}
-}
-
-bool Debug::ShouldBeginProfileSession() const
-{
-	return profileInProgress && profileStarted == false;
-}
-
-bool Debug::ShouldEndProfileSession()
-{
-	bool ended = profileInProgress && Time::GetFrameNumber() >= endProfileOnFrame;
-
-	if (ended)
-	{
-		profileInProgress = false;
-		endProfileOnFrame = 0;
-	}
-
-	return ended;
 }
 
 } // namespace kokko

@@ -53,11 +53,6 @@ void DebugView::Update(EditorContext& context)
 			bool drawNormals = features.IsFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawNormals);
 			if (ImGui::Checkbox("Draw mesh normals", &drawNormals))
 				features.SetFeatureEnabled(kokko::RenderDebugFeatureFlag::DrawNormals, drawNormals);
-
-			if (ImGui::Button("Capture profile"))
-			{
-				debug->RequestBeginProfileSession();
-			}
 		}
 
 		if (requestFocus)
