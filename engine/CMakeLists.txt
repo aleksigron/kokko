@@ -379,19 +379,21 @@ set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(${PROJECT_ROOT}/deps/rapidyaml rapidyaml-build)
 
-FetchContent_Declare(
-	tracy
-	GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-	GIT_TAG v0.13.1
-	GIT_SHALLOW TRUE
-	GIT_PROGRESS TRUE
-)
-set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
-set(TRACY_ON_DEMAND ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(tracy)
+option(KOKKO_USE_TRACY "Enable Tracy profiler" ON)
 
-target_link_libraries(${KOKKO_LIB} PUBLIC TracyClient)
-target_compile_definitions(${KOKKO_LIB} PUBLIC "TRACY_ENABLE=${TRACY_ENABLE}" "TRACY_ON_DEMAND=${TRACY_ON_DEMAND}")
+if(${KOKKO_USE_TRACY})
+	FetchContent_Declare(
+		tracy
+		GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+		GIT_TAG v0.13.1
+		GIT_SHALLOW TRUE
+		GIT_PROGRESS TRUE
+	)
+	FetchContent_MakeAvailable(tracy)
+
+	target_link_libraries(${KOKKO_LIB} PUBLIC TracyClient)
+	target_compile_definitions(${KOKKO_LIB} PUBLIC "TRACY_ENABLE=1" "TRACY_ON_DEMAND=1")
+endif()
 
 # Set kokko library include directories and link libraries
 

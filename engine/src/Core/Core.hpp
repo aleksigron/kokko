@@ -9,13 +9,25 @@
 #endif
 
 #if TRACY_ENABLE
+#include <stdio.h>
 #include "tracy/Tracy.hpp"
-#define KOKKO_PROFILE_SCOPE(name) ZoneScoped(name)
-#define KOKKO_PROFILE_FUNCTION() KOKKO_PROFILE_SCOPE(KOKKO_FUNC_SIG)
+#define KOKKO_PROFILE_FUNCTION() ZoneScoped
+#define KOKKO_PROFILE_SCOPE(name) ZoneScopedN(name)
+#define KOKKO_PROFILE_ADDTEXT(fmt, ...) \
+    do { \
+        char tracy_buf[256]; \
+        int tracy_written = snprintf(tracy_buf, sizeof(tracy_buf), fmt, ##__VA_ARGS__); \
+        if (tracy_written > 0) { \
+            size_t tracy_len = (static_cast<size_t>(tracy_written) < sizeof(tracy_buf)) \
+                            ? static_cast<size_t>(tracy_written) : (sizeof(tracy_buf) - 1); \
+            TracyMessage(tracy_buf, tracy_len); \
+        } \
+    } while(false)
 #define KOKKO_FRAME_MARK() FrameMark
 #else
-#define KOKKO_PROFILE_SCOPE(name)
 #define KOKKO_PROFILE_FUNCTION()
+#define KOKKO_PROFILE_SCOPE(name)
+#define KOKKO_PROFILE_ADDTEXT(fmt, ...)
 #define KOKKO_FRAME_MARK()
 #endif
 
